@@ -37,11 +37,9 @@ func _inner_tags(m *ice.Message, dir string, value string) {
 		}
 		file, ls := ls[1], strings.SplitN(ls[2], ";\"", 2)
 		text := strings.TrimSuffix(strings.TrimPrefix(ls[0], "/^"), "$/")
-		if text, line := _inner_line(m, kit.Path(dir, file), text); dir == "" {
-			m.PushRecord(kit.Dict(nfs.PATH, path.Dir(file)+ice.PS, nfs.FILE, path.Base(file), nfs.LINE, kit.Format(line), mdb.TEXT, text))
-		} else {
-			m.PushRecord(kit.Dict(nfs.PATH, dir, nfs.FILE, strings.TrimPrefix(file, nfs.PWD), nfs.LINE, kit.Format(line), mdb.TEXT, text))
-		}
+		text, line := _inner_line(m, kit.Path(dir, file), text)
+		_ls := nfs.SplitPath(m, path.Join(dir, file))
+		m.PushRecord(kit.Dict(nfs.PATH, _ls[0], nfs.FILE, _ls[1], nfs.LINE, kit.Format(line), mdb.TEXT, text))
 	}
 }
 func _inner_line(m *ice.Message, file, text string) (string, int) {
@@ -95,9 +93,7 @@ func init() {
 				case ctx.INDEX:
 					m.Cmdy(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND, ice.OptionFields(ctx.INDEX))
 				case ctx.ARGS:
-					if m.Option(ctx.INDEX) != "" {
-						m.Cmdy(m.Option(ctx.INDEX))
-					}
+					kit.If(m.Option(ctx.INDEX) != "", func() { m.Cmdy(m.Option(ctx.INDEX)) })
 				case nfs.PATH:
 					m.Cmdy(nfs.DIR, p, nfs.DIR_CLI_FIELDS)
 					kit.If(strings.HasPrefix(p, bind[0]), func() { m.Cmdy(nfs.DIR, strings.Replace(p, bind[0], bind[1], 1), nfs.DIR_CLI_FIELDS) })
@@ -113,7 +109,7 @@ func init() {
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _inner_show(m, arg[0], arg[1], arg[2]) }},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _inner_exec(m, arg[0], arg[1], arg[2]) }},
 			nfs.GREP:   {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(nfs.GREP, arg) }},
-			nfs.TAGS:   {Hand: func(m *ice.Message, arg ...string) { _inner_tags(m, m.Option(nfs.PATH), arg[0]) }}, FAVOR: {},
+			nfs.TAGS:   {Hand: func(m *ice.Message, arg ...string) { _inner_tags(m, m.Option(nfs.PATH), arg[0]) }},
 			NAVIGATE: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(NAVIGATE, kit.Ext(m.Option(mdb.FILE)), m.Option(nfs.FILE), m.Option(nfs.PATH))
 			}},
@@ -131,16 +127,6 @@ func init() {
 			}
 		}},
 	})
-}
-func InnerPath(arg ...string) (dir, file string) {
-	p := strings.TrimPrefix(path.Join(arg...), kit.Path("")+ice.PS)
-	if list := strings.Split(p, ice.PS); strings.HasPrefix(p, nfs.USR) {
-		return path.Join(list[:2]...) + ice.PS, path.Join(list[2:]...)
-	} else if strings.HasPrefix(p, ice.ISH_PLUGED) {
-		return path.Join(list[:5]...) + ice.PS, path.Join(list[5:]...)
-	} else {
-		return list[0] + ice.PS, path.Join(list[1:]...)
-	}
 }
 func PlugAction() ice.Actions {
 	return ice.Actions{

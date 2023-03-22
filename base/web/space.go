@@ -46,19 +46,20 @@ func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 	})
 }
 func _space_fork(m *ice.Message) {
-	buffer := kit.Dict(m.Configv(BUFFER))
-	if conn, e := websocket.Upgrade(m.W, m.R, nil, kit.Int(buffer["r"]), kit.Int(buffer["w"])); m.Assert(e) {
+	if conn, e := websocket.Upgrade(m.W, m.R, nil, ice.MOD_BUFS, ice.MOD_BUFS); m.Assert(e) {
 		text := kit.Select(m.Option(ice.MSG_USERADDR), m.Option(mdb.TEXT))
 		name := strings.ToLower(kit.ReplaceAll(kit.Select(m.Option(ice.MSG_USERADDR), m.Option(mdb.NAME)), ice.PT, "_", ice.DF, "_"))
 		args := kit.Simple(mdb.TYPE, kit.Select(WORKER, m.Option(mdb.TYPE)), mdb.NAME, name, mdb.TEXT, text, m.OptionSimple(SHARE, RIVER, ice.MSG_USERUA, cli.DAEMON))
 		m.Go(func() {
 			defer mdb.HashCreateDeferRemove(m, args, kit.Dict(mdb.TARGET, conn))()
-			defer gdb.EventDeferEvent(m, SPACE_OPEN, args)(SPACE_CLOSE, args)
+			// defer gdb.EventDeferEvent(m, SPACE_OPEN, args)(SPACE_CLOSE, args)
 			switch m.Option(mdb.TYPE) {
 			case WORKER:
 				defer gdb.EventDeferEvent(m, DREAM_OPEN, args)(DREAM_CLOSE, args)
 			case CHROME:
 				m.Go(func() { m.Sleep30ms().Cmd(SPACE, name, cli.PWD, name) })
+			case aaa.LOGIN:
+				gdb.EventDeferEvent(m, SPACE_LOGIN, args)
 			}
 			_space_handle(m, false, name, conn)
 		})
@@ -73,7 +74,7 @@ func _space_handle(m *ice.Message, safe bool, name string, conn *websocket.Conn)
 		}
 		msg := m.Spawn(b)
 		source, target := kit.Simple(msg.Optionv(ice.MSG_SOURCE), name), kit.Simple(msg.Optionv(ice.MSG_TARGET))
-		// msg.Log("recv", "%v->%v %v %v", source, target, msg.Detailv(), msg.FormatMeta())
+		msg.Log("recv", "%v->%v %v %v", source, target, msg.Detailv(), msg.DumpMeta(nil))
 		if next := msg.Option(ice.MSG_TARGET); next == "" || len(target) == 0 {
 			if msg.Optionv(ice.MSG_HANDLE, ice.TRUE); safe { // 下行命令
 				gdb.Event(msg, SPACE_LOGIN)
@@ -111,16 +112,17 @@ func _space_exec(msg *ice.Message, source, target []string, conn *websocket.Conn
 	default:
 		if aaa.Right(msg, msg.Detailv()) {
 			msg = msg.Cmd()
+			msg.Option("debug", msg.Option("debug"))
 		}
 	}
 	defer msg.Cost(kit.Format("%v->%v %v %v", source, target, msg.Detailv(), msg.FormatSize()))
-	_space_echo(msg.Set(ice.MSG_OPTS), []string{}, kit.Revert(kit.Simple(source)), conn)
+	_space_echo(msg.Set(ice.MSG_OPTS), []string{}, kit.Reverse(kit.Simple(source)), conn)
 }
 func _space_echo(m *ice.Message, source, target []string, conn *websocket.Conn) {
 	if m.Options(ice.MSG_SOURCE, source, ice.MSG_TARGET, target[1:]); m.Warn(conn.WriteMessage(1, []byte(m.FormatMeta()))) {
 		mdb.HashRemove(m, mdb.NAME, target[0])
 	} else {
-		m.Log("send", "%v->%v %v %v", source, target, m.Detailv(), m.FormatMeta())
+		m.Log("send", "%v->%v %v %v", source, target, m.Detailv(), m.DumpMeta(nil))
 	}
 }
 func _space_send(m *ice.Message, space string, arg ...string) {
@@ -142,7 +144,7 @@ func _space_send(m *ice.Message, space string, arg ...string) {
 			_space_echo(m, []string{addSend(m, m)}, target, conn)
 		}
 	}) {
-		call(m, m.Config(kit.Keys(TIMEOUT, "c")), func(res *ice.Message) { m.Copy(res) })
+		call(m, "30s", func(res *ice.Message) { m.Copy(res) })
 	} else if kit.IndexOf([]string{ice.OPS, ice.DEV, ice.SHY}, target[0]) > -1 {
 		return
 	} else {
@@ -159,9 +161,7 @@ const (
 	WORKER = "worker"
 )
 const (
-	BUFFER  = "buffer"
-	REDIAL  = "redial"
-	TIMEOUT = "timeout"
+	REDIAL = "redial"
 
 	SPACE_START = "space.start"
 	SPACE_OPEN  = "space.open"
@@ -222,8 +222,7 @@ func init() {
 			}},
 			ice.PS: {Hand: func(m *ice.Message, arg ...string) { _space_fork(m) }},
 		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,type,name,text", ctx.ACTION, OPEN,
-			REDIAL, kit.Dict("a", 3000, "b", 1000, "c", 1000), TIMEOUT, kit.Dict("c", "10s"),
-			BUFFER, kit.Dict("r", ice.MOD_BUFS, "w", ice.MOD_BUFS),
+			REDIAL, kit.Dict("a", 3000, "b", 1000, "c", 1000),
 		), mdb.ClearHashOnExitAction(), SpaceAction(), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 {
 				mdb.HashSelect(m, arg...).Sort("type,name,text")

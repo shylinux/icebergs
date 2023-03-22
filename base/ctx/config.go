@@ -32,7 +32,7 @@ func _config_only(v ice.Any, arg ...string) bool {
 func _config_save(m *ice.Message, name string, arg ...string) {
 	data, msg := ice.Map{}, m.Spawn(m.Source())
 	for _, k := range arg {
-		if v := msg.Confv(k); _config_only(v, mdb.META) {
+		if v := mdb.Confv(msg, k); _config_only(v, mdb.META) {
 			continue
 		} else {
 			data[k] = v

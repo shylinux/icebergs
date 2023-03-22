@@ -5,6 +5,7 @@ import (
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
@@ -37,7 +38,7 @@ func init() {
 				ctx.ProcessField(m, ctx.CONFIG, arg, arg...)
 			}},
 		}, ctx.CmdAction(), aaa.WhiteAction(ctx.COMMAND, ice.RUN)), Hand: func(m *ice.Message, arg ...string) {
-			m.Result(kit.Select(m.Config(TITLE), ice.Info.Make.Email))
+			m.Result(kit.Select(mdb.Config(m, TITLE), ice.Info.Make.Email))
 		}},
 	})
 }

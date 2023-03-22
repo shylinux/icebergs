@@ -158,9 +158,9 @@ func ZoneKey(m *ice.Message) string {
 	return ZoneShort(m)
 }
 func ZoneShort(m *ice.Message) string {
-	return kit.Select(ZONE, m.Config(SHORT), m.Config(SHORT) != UNIQ)
+	return kit.Select(ZONE, Config(m, SHORT), Config(m, SHORT) != UNIQ)
 }
-func ZoneField(m *ice.Message) string { return kit.Select(ZONE_FIELD, m.Config(FIELD)) }
+func ZoneField(m *ice.Message) string { return kit.Select(ZONE_FIELD, Config(m, FIELD)) }
 func ZoneInputs(m *ice.Message, arg ...Any) {
 	m.Cmdy(INPUTS, m.PrefixKey(), "", ZONE, m.Option(ZoneKey(m)), arg)
 }
@@ -193,9 +193,9 @@ func ZoneModify(m *ice.Message, arg ...Any) {
 }
 func ZoneSelect(m *ice.Message, arg ...string) *ice.Message {
 	arg = kit.Slice(arg, 0, 2)
-	m.Fields(len(arg), kit.Select(kit.Fields(TIME, m.Config(SHORT), COUNT), m.Config(FIELDS)), ZoneField(m))
+	m.Fields(len(arg), kit.Select(kit.Fields(TIME, Config(m, SHORT), COUNT), Config(m, FIELDS)), ZoneField(m))
 	if m.Cmdy(SELECT, m.PrefixKey(), "", ZONE, arg, logs.FileLineMeta(-1)); len(arg) == 0 {
-		m.PushAction(m.Config(ACTION), REMOVE).StatusTimeCount().Sort(ZoneShort(m))
+		m.PushAction(Config(m, ACTION), REMOVE).StatusTimeCount().Sort(ZoneShort(m))
 	} else if len(arg) == 1 {
 		// m.StatusTimeCountTotal(_mdb_getmeta(m, m.PrefixKey(), kit.Keys(HASH, HashSelectField(m, arg[0], HASH)), COUNT))
 		m.StatusTimeCount()
@@ -204,7 +204,7 @@ func ZoneSelect(m *ice.Message, arg ...string) *ice.Message {
 }
 func ZoneExport(m *ice.Message, arg ...Any) {
 	if m.OptionFields() == "" {
-		m.OptionFields(m.Config(SHORT), ZoneField(m))
+		m.OptionFields(Config(m, SHORT), ZoneField(m))
 	}
 	m.Cmdy(EXPORT, m.PrefixKey(), "", ZONE, arg)
 }

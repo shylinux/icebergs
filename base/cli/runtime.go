@@ -222,6 +222,6 @@ func init() {
 }
 func NodeInfo(m *ice.Message, arg ...string) {
 	m.Conf(RUNTIME, kit.Keys(NODE, mdb.TIME), m.Time())
-	ice.Info.NodeName = m.Conf(RUNTIME, kit.Keys(NODE, mdb.NAME), kit.Select(ice.Info.NodeName, arg, 0))
-	ice.Info.NodeType = m.Conf(RUNTIME, kit.Keys(NODE, mdb.TYPE), kit.Select(ice.Info.NodeType, arg, 1))
+	ice.Info.NodeName = mdb.Conf(m, RUNTIME, kit.Keys(NODE, mdb.NAME), kit.Select(ice.Info.NodeName, arg, 0))
+	ice.Info.NodeType = mdb.Conf(m, RUNTIME, kit.Keys(NODE, mdb.TYPE), kit.Select(ice.Info.NodeType, arg, 1))
 }

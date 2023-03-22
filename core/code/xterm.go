@@ -37,13 +37,12 @@ func (s _xterm) Close() error {
 	return s.Cmd.Process.Kill()
 }
 func _xterm_get(m *ice.Message, h string) _xterm {
-	if h = kit.Select(m.Option(mdb.HASH), h); m.Assert(h != "") && mdb.HashSelectField(m, m.Option(mdb.HASH, h), mdb.TYPE) == "" {
-		mdb.HashCreate(m, m.OptionSimple(mdb.HashField(m)))
-	}
+	h = kit.Select(m.Option(mdb.HASH), h)
+	m.Assert(h != "")
 	mdb.HashModify(m, mdb.TIME, m.Time(), web.VIEW, m.Option(ice.MSG_DAEMON))
 	return mdb.HashSelectTarget(m, h, func(value ice.Maps) ice.Any {
 		text := strings.Split(value[mdb.TEXT], ice.NL)
-		ls := kit.Split(kit.Select(nfs.SH, strings.Split(value[mdb.TYPE], " # ")[0]))
+		ls := kit.Split(strings.Split(kit.Select(nfs.SH, value[mdb.TYPE]), " # ")[0])
 		cmd := exec.Command(cli.SystemFind(m, ls[0]), ls[1:]...)
 		cmd.Dir = nfs.MkdirAll(m, kit.Path(value[nfs.PATH]))
 		cmd.Env = append(cmd.Env, os.Environ()...)
@@ -54,7 +53,6 @@ func _xterm_get(m *ice.Message, h string) _xterm {
 			defer tty.Close()
 			defer mdb.HashRemove(m, mdb.HASH, h)
 			m.Log(cli.START, strings.Join(cmd.Args, ice.SP))
-			m.Option(ice.LOG_DISABLE, ice.TRUE)
 			buf := make([]byte, ice.MOD_BUFS)
 			for {
 				if n, e := tty.Read(buf); !m.Warn(e) && e == nil {
@@ -81,9 +79,7 @@ func _xterm_echo(m *ice.Message, h string, str string) {
 	web.PushNoticeGrow(m, h, str)
 }
 func _xterm_cmds(m *ice.Message, h string, cmd string, arg ...ice.Any) {
-	if cmd != "" {
-		_xterm_get(m, h).Writeln(cmd, arg...)
-	}
+	kit.If(cmd != "", func() { _xterm_get(m, h).Writeln(cmd, arg...) })
 	ctx.ProcessHold(m)
 }
 
@@ -92,6 +88,11 @@ const XTERM = "xterm"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		XTERM: {Name: "xterm hash auto", Help: "命令行", Actions: ice.MergeActions(ice.Actions{
+			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
+				if arg[0] == mdb.FOREACH && arg[1] == "" {
+					m.PushSearch(mdb.TYPE, web.LINK, mdb.NAME, m.CommandKey(), mdb.TEXT, web.MergePodCmds(m, "", "", log.DEBUG, ice.TRUE))
+				}
+			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch mdb.HashInputs(m, arg); arg[0] {
 				case mdb.TYPE:
@@ -105,12 +106,17 @@ func init() {
 					m.Cmdy(nfs.DIR, ice.USR_LOCAL_WORK, nfs.PATH)
 					m.Cmdy(nfs.DIR, ice.USR_LOCAL_REPOS, nfs.PATH)
 					m.Cmdy(nfs.DIR, ice.USR_LOCAL_DAEMON, nfs.PATH)
+				case nfs.FILE:
+					push := func(arg ...string) { m.Push(nfs.FILE, strings.Join(arg, ice.DF)) }
+					m.Cmd("", func(value ice.Maps) {
+						kit.If(value[mdb.TYPE] == web.LAYOUT, func() { push(web.LAYOUT, value[mdb.HASH], value[mdb.NAME]) })
+					})
+					m.Cmd("", mdb.INPUTS, mdb.TYPE, func(value ice.Maps) { push(ssh.SHELL, value[mdb.TYPE]) })
+					m.Cmd(nfs.CAT, kit.HomePath(".bash_history"), func(text string) { push(text) })
+					m.Cmd(nfs.CAT, kit.HomePath(".zsh_history"), func(text string) { push(text) })
+					m.Cmd(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND, "", "", ice.OptionFields(ctx.INDEX), func(value ice.Maps) { push(ctx.INDEX, value[ctx.INDEX]) })
 				}
 			}},
-			web.DREAM_CREATE: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd("", mdb.CREATE, mdb.TYPE, BASH, m.OptionSimple(mdb.NAME), nfs.PATH, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME)))
-			}},
-			mdb.CREATE: {Name: "create type*=sh name text path theme:textarea", Hand: func(m *ice.Message, arg ...string) { mdb.HashCreate(m) }},
 			web.RESIZE: {Hand: func(m *ice.Message, arg ...string) {
 				_xterm_get(m, "").Setsize(m.OptionDefault("rows", "24"), m.OptionDefault("cols", "80"))
 			}},
@@ -119,25 +125,19 @@ func init() {
 					_xterm_get(m, "").Write(string(b))
 				}
 			}},
-			INSTALL: {Hand: func(m *ice.Message, arg ...string) {
-				_xterm_cmds(m, kit.Select("", arg, 0), m.Cmdx(PUBLISH, ice.CONTEXTS, INSTALL))
-			}},
-			log.DEBUG: {Hand: func(m *ice.Message, arg ...string) {
-				_xterm_cmds(m, kit.Select("", arg, 0), "cd ~/contexts; tail -f var/log/bench.log")
-			}},
 			web.OUTPUT: {Help: "全屏", Hand: func(m *ice.Message, arg ...string) {
 				web.ProcessWebsite(m, "", "", m.OptionSimple(mdb.HASH), ctx.STYLE, web.OUTPUT)
+			}},
+			web.DREAM_CREATE: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd("", mdb.CREATE, mdb.TYPE, BASH, m.OptionSimple(mdb.NAME), nfs.PATH, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME)))
 			}},
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				kit.Switch(m.Option(mdb.TYPE), kit.Simple(web.SERVER, web.WORKER), func() { m.PushButton(kit.Dict(m.CommandKey(), "命令")) })
 			}},
-			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) {
-				kit.If(arg[1] == m.CommandKey(), func() { ctx.ProcessField(m, m.PrefixKey(), []string{}, arg...) })
-			}},
 			ctx.PROCESS: {Hand: func(m *ice.Message, arg ...string) {
 				ctx.ProcessField(m, m.PrefixKey(), func() string { return m.Cmdx("", mdb.CREATE, arg) }, arg...)
 			}},
-		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,path,view,theme"), web.DreamAction(), ctx.ProcessAction(), ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, ctx.CmdAction(), ctx.ProcessAction(), web.DreamAction(), mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,path,view,theme")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) == 0 {
 				m.PushAction(web.OUTPUT, mdb.REMOVE).Action(mdb.CREATE, mdb.PRUNES)
 			} else {
@@ -153,6 +153,5 @@ func init() {
 }
 
 func ProcessXterm(m *ice.Message, cmds, text string, arg ...string) {
-	m.Option(nfs.PATH, "")
-	m.Cmdy(ctx.COMMAND, XTERM).Push(ctx.ARGS, kit.Format([]string{m.Cmdx(XTERM, mdb.CREATE, mdb.TYPE, cmds, mdb.NAME, kit.Select("", arg, 0), mdb.TEXT, text)})).ProcessField(XTERM)
+	ctx.Process(m, XTERM, []string{mdb.TYPE, cmds, mdb.NAME, kit.Select("", arg, 0), mdb.TEXT, text}, arg...)
 }

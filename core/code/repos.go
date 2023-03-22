@@ -11,8 +11,7 @@ const (
 const REPOS = nfs.REPOS
 
 func init() {
-	const GIT_REPOS = "web.code.git.repos"
-	Index.MergeCommands(ice.Commands{
-		REPOS: {Name: "repos name auto", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(GIT_REPOS, arg) }},
-	})
+	Index.MergeCommands(ice.Commands{REPOS: {Name: "repos name auto", Actions: ice.Actions{
+		"status": {Hand: func(m *ice.Message, arg ...string) { m.Cmdy("web.code.git.status", arg) }},
+	}, Hand: func(m *ice.Message, arg ...string) { m.Cmdy("web.code.git.repos", arg) }}})
 }

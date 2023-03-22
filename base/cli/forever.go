@@ -19,7 +19,7 @@ func BinPath(arg ...string) string {
 	push := func(p string) { kit.If(kit.IndexOf(list, p) == -1, func() { list = append(list, p) }) }
 	kit.For(arg, func(p string) {
 		list = append(list, kit.Path(p, ice.BIN), kit.Path(p, ice.USR_PUBLISH), kit.Path(p, ice.USR_LOCAL_BIN), kit.Path(p, ice.USR_LOCAL_GO_BIN))
-		for _, l := range kit.Revert(strings.Split(ice.Pulse.Cmdx(nfs.CAT, kit.Path(p, ice.ETC_PATH)), ice.NL)) {
+		for _, l := range kit.Reverse(strings.Split(ice.Pulse.Cmdx(nfs.CAT, kit.Path(p, ice.ETC_PATH)), ice.NL)) {
 			kit.If(strings.TrimSpace(l) != "" && !strings.HasPrefix(strings.TrimSpace(l), "#"), func() { push(kit.Path(p, l)) })
 		}
 	})

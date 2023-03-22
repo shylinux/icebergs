@@ -71,15 +71,14 @@ func _autogen_gits(m *ice.Message, arg ...string) string {
 	return kit.Join(res, ice.NL)
 }
 func _autogen_git(m *ice.Message, arg ...string) ice.Map {
-	return kit.Dict(
-		mdb.TIME, m.Time(), nfs.PATH, kit.Path(""), arg,
+	return kit.Dict(arg,
+		mdb.TIME, m.Time(), nfs.PATH, kit.Path(""), web.DOMAIN, web.UserHost(m),
 		mdb.HASH, m.Cmdx(cli.SYSTEM, GIT, "log", "-n1", `--pretty=%H`),
 		nfs.REMOTE, m.Cmdx(cli.SYSTEM, GIT, "config", "remote.origin.url"),
 		nfs.BRANCH, m.Cmdx(cli.SYSTEM, GIT, "rev-parse", "--abbrev-ref", "HEAD"),
 		nfs.VERSION, m.Cmdx(cli.SYSTEM, GIT, "describe", "--tags"),
 		aaa.EMAIL, m.Cmdx(cli.SYSTEM, GIT, "config", "user.email"),
 		aaa.USERNAME, kit.Select(ice.Info.Username, m.Cmdx(cli.SYSTEM, GIT, "config", "user.name")),
-		web.DOMAIN, tcp.PublishLocalhost(m, kit.Split(m.Option(ice.MSG_USERWEB), ice.QS)[0]),
 	)
 }
 func _autogen_mod(m *ice.Message, file string) (mod string) {
@@ -101,10 +100,6 @@ const AUTOGEN = "autogen"
 func init() {
 	const (
 		VERSION = "version"
-	)
-	const (
-		USR_RELEASE_CONF_GO    = "usr/release/conf.go"
-		USR_RELEASE_BINPACK_GO = "usr/release/binpack.go"
 	)
 	Index.MergeCommands(ice.Commands{
 		AUTOGEN: {Name: "autogen path auto script module version", Help: "生成", Actions: ice.Actions{
@@ -140,6 +135,10 @@ func init() {
 			DEVPACK: {Help: "开发", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(WEBPACK, mdb.REMOVE) }},
 			WEBPACK: {Help: "打包", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(WEBPACK, mdb.CREATE) }},
 			BINPACK: {Help: "打包", Hand: func(m *ice.Message, arg ...string) {
+				const (
+					USR_RELEASE_CONF_GO    = "usr/release/conf.go"
+					USR_RELEASE_BINPACK_GO = "usr/release/binpack.go"
+				)
 				if m.Cmd(BINPACK, mdb.CREATE); nfs.ExistsFile(m, ice.USR_RELEASE) && m.Option(ice.MSG_USERPOD) == "" {
 					nfs.Copy(m, func(buf []byte, offset int) []byte {
 						kit.If(offset == 0, func() { buf = bytes.Replace(buf, []byte("package main"), []byte("package ice"), 1) })

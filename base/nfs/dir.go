@@ -168,6 +168,7 @@ const (
 	LINE = "line"
 
 	OPENS = "opens"
+	FIND  = "find"
 )
 const DIR = "dir"
 
@@ -195,21 +196,14 @@ func init() {
 			TRASH: {Hand: func(m *ice.Message, arg ...string) { m.Cmd(TRASH, mdb.CREATE, m.Option(PATH)) }},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			root, dir := kit.Select(PWD, m.Option(DIR_ROOT)), kit.Select(PWD, arg, 0)
-			if strings.HasPrefix(dir, ice.PS) {
-				root, dir = ice.PS, strings.TrimPrefix(dir, ice.PS)
-			}
-			if root == ice.PS && dir == ice.PS {
-				root, dir = PWD, PWD
-			}
+			kit.If(strings.HasPrefix(dir, ice.PS), func() { root, dir = ice.PS, strings.TrimPrefix(dir, ice.PS) })
+			kit.If(root == ice.PS && dir == ice.PS, func() { root, dir = PWD, PWD })
 			if !aaa.Right(m, path.Join(root, dir)) {
 				return
 			}
+			m.Logs(FIND, DIR_ROOT, root, PATH, dir, DIR_TYPE, m.Option(DIR_TYPE))
 			fields := kit.Split(kit.Select(kit.Select(DIR_DEF_FIELDS, m.OptionFields()), kit.Join(kit.Slice(arg, 1))))
-			if root != "" {
-				m.Logs(mdb.SELECT, DIR_ROOT, root, dir)
-			}
-			_dir_list(m, root, dir, 0, m.Option(DIR_DEEP) == ice.TRUE, kit.Select(TYPE_BOTH, m.Option(DIR_TYPE)), kit.Regexp(m.Option(DIR_REG)), fields)
-			m.StatusTimeCount()
+			_dir_list(m, root, dir, 0, m.Option(DIR_DEEP) == ice.TRUE, kit.Select(TYPE_BOTH, m.Option(DIR_TYPE)), kit.Regexp(m.Option(DIR_REG)), fields).StatusTimeCount()
 		}},
 	})
 }
@@ -227,7 +221,7 @@ func Relative(m *ice.Message, p string) string {
 	return p
 }
 func SplitPath(m *ice.Message, p string) []string {
-	if ls := kit.Split(p, ice.PS); len(ls) == 1 {
+	if ls := kit.Split(kit.Select(ice.SRC_MAIN_GO, p), ice.PS); len(ls) == 1 {
 		return []string{PWD, ls[0]}
 	} else if ls[0] == ice.USR {
 		return []string{strings.Join(ls[:2], ice.PS) + ice.PS, strings.Join(ls[2:], ice.PS)}

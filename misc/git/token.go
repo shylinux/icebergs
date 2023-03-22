@@ -39,12 +39,12 @@ func init() {
 				m.Cmd(nfs.SAVE, kit.HomePath(FILE), strings.Join(list, ice.NL)+ice.NL)
 			}},
 			web.PP(GET): {Hand: func(m *ice.Message, arg ...string) {
-				web.AllowOrigin(m, "*")
+				web.RenderOrigin(m.W, "*")
 				m.Cmd(nfs.CAT, kit.HomePath(FILE), func(text string) {
 					if u := kit.ParseURL(text); u.Host == arg[0] {
 						if p, ok := u.User.Password(); ok {
 							m.Echo(u.User.Username()).Echo(p)
-							web.AllowOrigin(m, u.Scheme+"://"+u.Host)
+							web.RenderOrigin(m.W, u.Scheme+"://"+u.Host)
 						}
 					}
 				})
@@ -56,7 +56,7 @@ func init() {
 			}},
 		}, mdb.HashAction(mdb.EXPIRE, mdb.MONTH, mdb.SHORT, aaa.USERNAME, mdb.FIELD, "time,username,token")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) > 0 && m.Length() > 0 {
-				p := strings.Replace(m.Option(ice.MSG_USERHOST), "://", kit.Format("://%s:%s@", m.Option(ice.MSG_USERNAME), m.Append(TOKEN)), 1)
+				p := strings.Replace(web.UserHost(m), "://", kit.Format("://%s:%s@", m.Option(ice.MSG_USERNAME), m.Append(TOKEN)), 1)
 				m.OptionDefault(tcp.HOST, LOCAL)
 				if m.Push("url", p).EchoScript(p).EchoScript(nfs.Template(m, "echo.sh", p)); m.Option(ice.CMD) == m.PrefixKey() {
 					m.ProcessReplace(kit.MergeURL2(m.Option(tcp.HOST), m.PrefixPath(SET), TOKEN, p))

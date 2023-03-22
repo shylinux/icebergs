@@ -33,7 +33,7 @@ func _option(m *ice.Message, kind, name, text string, arg ...string) *ice.Messag
 }
 
 func _wiki_path(m *ice.Message, arg ...string) string {
-	return path.Join(m.Config(nfs.PATH), path.Join(arg...))
+	return path.Join(mdb.Config(m, nfs.PATH), path.Join(arg...))
 }
 func _wiki_link(m *ice.Message, text string) string {
 	if !kit.HasPrefix(text, ice.PS, ice.HTTP) {

@@ -45,7 +45,7 @@ func init() {
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case SERVICE:
-					m.Push(arg[0], m.Cmd(web.SPIDE, ice.DEV).Append(web.CLIENT_ORIGIN)+"/publish/")
+					m.Push(arg[0], kit.MergeURL2(m.Cmd(web.SPIDE, ice.DEV).Append(web.CLIENT_ORIGIN), "/publish/"))
 				case VERSION:
 					m.Push(arg[0], "1.15.5", "1.17.3")
 				default:

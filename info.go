@@ -39,6 +39,7 @@ var Info = struct {
 	Index Map
 
 	Important bool
+	Localhost bool
 
 	merges []MergeHandler
 	render map[string]func(*Message, ...Any) string
@@ -55,8 +56,8 @@ server: https://shylinux.com
 source: https://shylinux.com/x/contexts
 `,
 	File:  Maps{},
-	Gomod: Maps{},
 	Route: Maps{},
+	Gomod: Maps{},
 	Index: Map{},
 
 	render: map[string]func(*Message, ...Any) string{},

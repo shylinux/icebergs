@@ -107,11 +107,6 @@ func init() {
 			LOGIN: {Hand: func(m *ice.Message, arg ...string) {
 				m.EchoQRCode(m.Cmd(SHARE, mdb.CREATE, mdb.TYPE, LOGIN).Option(mdb.LINK)).ProcessInner()
 			}},
-			SERVE_PARSE: {Hand: func(m *ice.Message, arg ...string) {
-				if kit.Select("", arg, 0) == SHARE {
-					m.Logs("Refer", arg[0], arg[1]).Option(arg[0], arg[1])
-				}
-			}},
 			SERVE_LOGIN: {Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(ice.MSG_USERNAME) == "" && m.Option(SHARE) != "" {
 					switch msg := m.Cmd(SHARE, m.Option(SHARE)); msg.Append(mdb.TYPE) {
@@ -134,7 +129,7 @@ func init() {
 				case LOGIN:
 					m.RenderRedirect(ice.PS, ice.MSG_SESSID, aaa.SessCreate(m, msg.Append(aaa.USERNAME)))
 				default:
-					RenderMain(m, "", "")
+					RenderMain(m)
 				}
 			}},
 		}, mdb.HashAction(mdb.FIELD, "time,hash,username,usernick,userrole,river,storm,type,name,text", mdb.EXPIRE, "72h"), ServeAction(), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {

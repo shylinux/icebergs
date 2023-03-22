@@ -3,6 +3,7 @@ package ice
 import (
 	"bufio"
 	"os"
+	"path"
 	"strings"
 
 	kit "shylinux.com/x/toolkits"
@@ -14,15 +15,19 @@ func (m *Message) ActionKey() string {
 func (m *Message) CommandKey() string {
 	return strings.TrimPrefix(strings.TrimSuffix(m._key, PS), PS)
 }
+func (m *Message) PrefixRawKey(arg ...Any) string {
+	return kit.Keys(m.Prefix(m._key), kit.Keys(arg...))
+}
 func (m *Message) PrefixKey(arg ...Any) string {
 	return kit.Keys(m.Prefix(m.CommandKey()), kit.Keys(arg...))
-}
-func (m *Message) PrefixPath(arg ...Any) string {
-	return strings.TrimPrefix(strings.ReplaceAll(kit.Keys(m.Prefix(m.CommandKey()), kit.Keys(arg...)), PT, PS), "web") + PS
 }
 func (m *Message) Prefix(arg ...string) string {
 	return m.Target().PrefixKey(arg...)
 }
+func (m *Message) PrefixPath(arg ...Any) string {
+	return strings.TrimPrefix(path.Join(strings.ReplaceAll(m.PrefixRawKey(arg...), PT, PS)), "web") + PS
+}
+
 func (m *Message) Config(key string, arg ...Any) string {
 	return kit.Format(m.Configv(key, arg...))
 }

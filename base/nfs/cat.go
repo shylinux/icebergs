@@ -154,7 +154,7 @@ func init() {
 	})
 }
 func IsSourceFile(m *ice.Message, ext string) bool {
-	return m.Conf(CAT, kit.Keym(SOURCE, ext)) == ice.TRUE
+	return mdb.Conf(m, Prefix(CAT), kit.Keym(SOURCE, ext)) == ice.TRUE
 }
 func OptionLoad(m *ice.Message, file string) *ice.Message {
 	if f, e := OpenFile(m, file); e == nil {

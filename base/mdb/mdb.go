@@ -295,9 +295,6 @@ var _lock = task.Lock{}
 var _locks = map[string]*task.Lock{}
 
 func getLock(m *ice.Message, key string) *task.Lock {
-	if key == "" {
-		key = m.PrefixKey()
-	}
 	defer _lock.Lock()()
 	l, ok := _locks[key]
 	if !ok {
@@ -306,16 +303,40 @@ func getLock(m *ice.Message, key string) *task.Lock {
 	}
 	return l
 }
-func Lock(m *ice.Message, arg ...ice.Any) func()  { return getLock(m, kit.Keys(arg...)).Lock() }
-func RLock(m *ice.Message, arg ...ice.Any) func() { return getLock(m, kit.Keys(arg...)).RLock() }
+func Lock(m *ice.Message, arg ...ice.Any) func() {
+	key := kit.Select(m.PrefixKey(), kit.Keys(arg...))
+	m.Option("_lock", key)
+	return getLock(m, key).Lock()
+}
+func RLock(m *ice.Message, arg ...ice.Any) func() {
+	key := kit.Select(m.PrefixKey(), kit.Keys(arg...))
+	m.Option("_lock", key)
+	return getLock(m, key).RLock()
+}
 
 func Config(m *ice.Message, key string, arg ...ice.Any) string {
+	return kit.Format(Configv(m, key, arg...))
+}
+func Configv(m *ice.Message, key string, arg ...ice.Any) ice.Any {
 	if len(arg) > 0 {
-		defer Lock(m, m.PrefixKey(), key)()
-	} else {
-		defer RLock(m, m.PrefixKey(), key)()
+		Confv(m, m.PrefixKey(), kit.Keym(key), arg[0])
 	}
-	return m.Config(key, arg...)
+	return Confv(m, m.PrefixKey(), kit.Keym(key))
+}
+func Confv(m *ice.Message, arg ...ice.Any) ice.Any {
+	key := kit.Format(arg[0])
+	if ctx, ok := ice.Info.Index[key].(*ice.Context); ok {
+		key = ctx.PrefixKey(key)
+	}
+	if len(arg) > 1 {
+		defer Lock(m, key)()
+	} else {
+		defer RLock(m, key)()
+	}
+	return m.Confv(arg...)
+}
+func Conf(m *ice.Message, arg ...ice.Any) string {
+	return kit.Format(Confv(m, arg...))
 }
 
 var cache = sync.Map{}

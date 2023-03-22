@@ -141,10 +141,10 @@ func (m *Message) ProcessDisplay(arg ...Any) {
 	m.Process(PROCESS_DISPLAY)
 	m.Option(MSG_DISPLAY, arg...)
 }
-
-func (m *Message) ProcessField(arg ...Any) {
+func (m *Message) ProcessField(arg ...Any) *Message {
 	m.Process(PROCESS_FIELD)
 	m.Option(FIELD_PREFIX, arg...)
+	return m
 }
 func (m *Message) ProcessInner()           { m.Process(PROCESS_INNER) }
 func (m *Message) ProcessAgain()           { m.Process(PROCESS_AGAIN) }

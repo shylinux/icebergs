@@ -10,16 +10,18 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
+func require(arg ...string) string { return path.Join(ice.PS, ice.REQUIRE, path.Join(arg...)) }
+
 const HTML = "html"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
 		HTML: {Name: "html path auto", Help: "网页", Actions: ice.MergeActions(ice.Actions{
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
-				m.EchoIFrame(kit.MergeURL(path.Join(ice.PS, ice.REQUIRE, arg[2], arg[1]), "_v", kit.Hashs(mdb.UNIQ)))
+				m.EchoIFrame(kit.MergeURL(require(arg[2], arg[1]), "_v", kit.Hashs(mdb.UNIQ)))
 			}},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
-				m.EchoIFrame(kit.MergeURL(path.Join(ice.PS, ice.REQUIRE, arg[2], arg[1]), "_v", kit.Hashs(mdb.UNIQ)))
+				m.EchoIFrame(kit.MergeURL(require(arg[2], arg[1]), "_v", kit.Hashs(mdb.UNIQ)))
 			}},
 			TEMPLATE: {Hand: func(m *ice.Message, arg ...string) {
 				m.Echo(kit.Renders(nfs.TemplateText(m, "demo.html"), ice.Maps{ice.LIST: kit.Format(kit.List(kit.Dict(ctx.INDEX, ctx.GetFileCmd(kit.ExtChange(path.Join(arg[2], arg[1]), GO)))))})).RenderResult()

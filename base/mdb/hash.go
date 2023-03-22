@@ -177,16 +177,14 @@ func HashKey(m *ice.Message) string {
 	return HashShort(m)
 }
 func HashShort(m *ice.Message) string {
-	return kit.Select(HASH, m.Config(SHORT), m.Config(SHORT) != UNIQ)
+	return kit.Select(HASH, Config(m, SHORT), Config(m, SHORT) != UNIQ)
 }
-func HashField(m *ice.Message) string { return kit.Select(HASH_FIELD, m.Config(FIELD)) }
+func HashField(m *ice.Message) string { return kit.Select(HASH_FIELD, Config(m, FIELD)) }
 func HashInputs(m *ice.Message, arg ...Any) *ice.Message {
 	return m.Cmdy(INPUTS, m.PrefixKey(), "", HASH, arg)
 }
 func HashCreate(m *ice.Message, arg ...Any) string {
-	if len(arg) == 0 {
-		arg = append(arg, m.OptionSimple(strings.Replace(HashField(m), "hash,", "", 1)))
-	}
+	kit.If(len(arg) == 0 || len(kit.Simple(arg)) == 0, func() { arg = append(arg, m.OptionSimple(strings.Replace(HashField(m), "hash,", "", 1))) })
 	return m.Echo(m.Cmdx(append(kit.List(INSERT, m.PrefixKey(), "", HASH, logs.FileLineMeta(-1)), arg...)...)).Result()
 }
 func HashRemove(m *ice.Message, arg ...Any) *ice.Message {
@@ -210,7 +208,7 @@ func HashSelect(m *ice.Message, arg ...string) *ice.Message {
 		m.Fields(len(kit.Slice(arg, 0, 1)), HashField(m))
 	}
 	m.Cmdy(SELECT, m.PrefixKey(), "", HASH, HashShort(m), arg, logs.FileLineMeta(-1))
-	if m.PushAction(m.Config(ACTION), REMOVE); !m.FieldsIsDetail() {
+	if m.PushAction(Config(m, ACTION), REMOVE); !m.FieldsIsDetail() {
 		return m.StatusTimeCount()
 	}
 	return m.StatusTime()
@@ -258,11 +256,7 @@ func HashSelectDetail(m *ice.Message, key string, cb Any) (has bool) {
 func HashSelectDetails(m *ice.Message, key string, cb func(ice.Map) bool) ice.Map {
 	val := kit.Dict()
 	HashSelectDetail(m, key, func(value ice.Map) {
-		if cb(value) {
-			for k, v := range value {
-				val[k] = v
-			}
-		}
+		kit.If(cb(value), func() { kit.For(value, func(k string, v ice.Any) { val[k] = v }) })
 	})
 	return val
 }

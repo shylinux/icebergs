@@ -36,8 +36,12 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		FAVOR: {Name: "favor hash auto create getClipboardData getLocation scanQRCode record1 record2 upload", Help: "收藏夹", Actions: ice.MergeActions(ice.Actions{
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				if arg[0] == mdb.FOREACH && arg[1] == "" {
-					m.Cmd("", ice.OptionFields("")).Tables(func(value ice.Maps) { m.PushSearch(value) })
+				if arg[0] == mdb.FOREACH {
+					m.Cmd("", ice.OptionFields("")).Tables(func(value ice.Maps) {
+						if arg[1] == "" || arg[1] == value[mdb.TYPE] || strings.Contains(value[mdb.TEXT], arg[1]) {
+							m.PushSearch(value)
+						}
+					})
 				}
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
@@ -86,17 +90,17 @@ func init() {
 				ctx.ProcessField(m, ls[0], ls[1:], arg...)
 			}},
 			"vimer": {Help: "源码", Hand: func(m *ice.Message, arg ...string) {
-				ctx.ProcessField(m, web.CODE_VIMER, []string{m.Option(mdb.TEXT)}, arg...)
+				ctx.Process(m, "", nfs.SplitPath(m, m.Option(mdb.TEXT)), arg...)
 			}},
 			"xterm": {Help: "命令", Hand: func(m *ice.Message, arg ...string) {
-				ctx.ProcessField(m, web.CODE_XTERM, []string{m.Option(mdb.TEXT)}, arg...)
+				ctx.Process(m, "", []string{mdb.TYPE, m.Option(mdb.TEXT), mdb.NAME, m.Option(mdb.NAME), mdb.TEXT, ""}, arg...)
 			}},
 			cli.OPENS: {Hand: func(m *ice.Message, arg ...string) { cli.Opens(m, m.Option(mdb.TEXT)) }},
 			ice.RUN: {Hand: func(m *ice.Message, arg ...string) {
 				m.Option(mdb.TYPE, mdb.HashSelects(m.Spawn(), m.Option(mdb.HASH)).Append(mdb.TYPE))
 				ctx.Run(m, arg...)
 			}},
-		}, mdb.HashAction(), ctx.CmdAction(), KeyboardAction(), mdb.ImportantDataAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, ctx.CmdAction(), mdb.HashAction(), mdb.ImportantDataAction(), KeyboardAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 && arg[0] == ctx.ACTION {
 				m.Option(mdb.TYPE, mdb.HashSelects(m.Spawn(), m.Option(mdb.HASH)).Append(mdb.TYPE))
 				gdb.Event(m, FAVOR_ACTION, arg)

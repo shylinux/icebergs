@@ -94,7 +94,7 @@ func init() {
 					m.Option(k, web.SHARE_LOCAL+k)
 				}
 			}
-			m.Echo(kit.Select(kit.Select("", strings.SplitN(ice.Info.Make.Remote, "://", 2), 1), m.Config(TITLE))).OptionFromConfig(MENUS)
+			m.Echo(kit.Select(kit.Select("", strings.SplitN(ice.Info.Make.Remote, "://", 2), 1), mdb.Config(m, TITLE))).Option(MENUS, mdb.Config(m, MENUS))
 		}},
 	})
 }

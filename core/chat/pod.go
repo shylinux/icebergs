@@ -17,13 +17,7 @@ const POD = "pod"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		POD: {Name: "pod", Help: "节点", Actions: ice.MergeActions(ice.Actions{
-			web.SERVE_PARSE: {Hand: func(m *ice.Message, arg ...string) {
-				if kit.Select("", arg, 0) == CHAT {
-					kit.Fetch(arg[1:], func(k, v string) { m.Logs("Refer", k, v).Options(k, v) })
-				}
-			}},
-		}, ctx.CmdAction(), web.ServeAction(), web.ApiAction(), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {
+		POD: {Name: "pod", Help: "节点", Actions: ice.MergeActions(ctx.CmdAction(), web.ServeAction(), web.ApiAction(), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {
 			if web.OptionAgentIs(m, "curl", "wget") {
 				m.Cmdy(web.SHARE_LOCAL, ice.BIN_ICE_BIN, kit.Dict(ice.POD, kit.Select("", arg, 0), ice.MSG_USERROLE, aaa.TECH))
 				return
@@ -34,7 +28,7 @@ func init() {
 				if m.Cmd(web.SPACE, arg[0]).Length() == 0 && nfs.ExistsFile(m, path.Join(ice.USR_LOCAL_WORK, arg[0])) {
 					m.Cmd(web.DREAM, cli.START, kit.Dict(mdb.NAME, arg[0]))
 				}
-				web.RenderMain(aaa.UserRoot(m), arg[0], "")
+				web.RenderMain(m)
 			} else if arg[1] == CMD {
 				web.RenderPodCmd(m, arg[0], arg[2], arg[3:])
 			} else if arg[1] == WEBSITE {

@@ -114,7 +114,7 @@ func init() {
 				case mdb.NAME, nfs.TEMPLATE:
 					_dream_list(m).Cut("name,status,time")
 				case nfs.REPOS:
-					if msg := m.Cmd(SPIDE, ice.OPS, SPIDE_MSG, m.Option(ice.MSG_USERHOST)+"/x/list"); !msg.IsErr() {
+					if msg := m.Cmd(SPIDE, ice.OPS, SPIDE_MSG, UserHost(m)+"/x/list"); !msg.IsErr() {
 						m.Copy(msg)
 					}
 					for _, dev := range []string{ice.OPS, ice.DEV} {
@@ -160,7 +160,6 @@ func init() {
 			if len(arg) == 0 {
 				_dream_list(m)
 			} else if arg[0] == ctx.ACTION {
-				m.Option(ice.POD, m.Option(nfs.NAME))
 				gdb.Event(m, DREAM_ACTION, arg)
 			} else {
 				m.Cmdy(nfs.CAT, arg[1:], kit.Dict(nfs.DIR_ROOT, path.Join(ice.USR_LOCAL_WORK, arg[0])))
@@ -170,5 +169,18 @@ func init() {
 }
 
 func DreamAction() ice.Actions {
-	return gdb.EventsAction(DREAM_OPEN, DREAM_CLOSE, DREAM_INPUTS, DREAM_TABLES, DREAM_ACTION)
+	return ice.MergeActions(ice.Actions{
+		DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { DreamProcess(m, []string{}, arg...) }},
+	}, gdb.EventsAction(DREAM_OPEN, DREAM_CLOSE, DREAM_INPUTS, DREAM_TABLES, DREAM_ACTION))
+}
+func DreamProcess(m *ice.Message, args ice.Any, arg ...string) {
+	if kit.HasPrefixList(arg, ice.RUN) {
+		ctx.ProcessField(m, m.PrefixKey(), args, kit.Slice(arg, 1)...)
+	} else if kit.HasPrefixList(arg, ctx.ACTION, m.CommandKey()) {
+		if arg = kit.Slice(arg, 2); kit.HasPrefixList(arg, DREAM) {
+			m.Cmdy(SPACE, m.Option(ice.MSG_USERPOD, arg[1]), m.PrefixKey(), ctx.ACTION, DREAM_ACTION, ice.RUN, arg[2:])
+		} else if dream := m.Option(mdb.NAME); dream != "" {
+			m.Cmdy(SPACE, dream, m.PrefixKey(), ctx.ACTION, DREAM_ACTION, ice.RUN, arg).Optionv(ice.FIELD_PREFIX, kit.Simple(ctx.ACTION, m.CommandKey(), DREAM, dream, ice.RUN))
+		}
+	}
 }

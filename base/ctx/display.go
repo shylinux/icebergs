@@ -59,5 +59,5 @@ func DisplayBase(m Message, file string, arg ...ice.Any) Message {
 	return m
 }
 func Toolkit(m *ice.Message, arg ...string) {
-	m.Option(ice.MSG_TOOLKIT, kit.Select(m.Config(mdb.TOOLS), kit.Fields(arg)))
+	m.Option(ice.MSG_TOOLKIT, kit.Select(mdb.Config(m, mdb.TOOLS), kit.Fields(arg)))
 }

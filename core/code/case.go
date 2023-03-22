@@ -15,7 +15,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		CASE: {Name: "case dev zone id auto insert", Help: "用例", Actions: ice.MergeActions(ice.Actions{
 			mdb.INSERT: {Name: "insert zone*=demo name=hi cmd=GET,POST api*=/chat/cmd/web.chat.favor arg:textarea res:textarea"},
-			cli.CHECK: {Name: "check", Help: "检查", Hand: func(m *ice.Message, arg ...string) {
+			cli.CHECK: {Help: "检查", Hand: func(m *ice.Message, arg ...string) {
 				if m.ProcessInner(); len(arg) > 1 {
 					success := 0
 					m.Cmd("", arg[0], arg[1], func(value ice.Maps) {

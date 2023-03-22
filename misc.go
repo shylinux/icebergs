@@ -300,17 +300,21 @@ func (c *Context) _action(m *Message, cmd *Command, key string, sub string, h *A
 						if strings.HasPrefix(arg[i], PS) {
 							break
 						}
-						if arg[i+1] != "" {
-							m.Option(arg[i], arg[i+1])
-						}
+						// if arg[i+1] != "" {
+						// 	m.Option(arg[i], arg[i+1])
+						// }
+						m.Option(arg[i], arg[i+1])
 					}
 				} else {
 					order = true
 				}
 			}
 			if order {
-				if value := kit.Select("", arg, i); value != "" {
-					m.Option(name, value)
+				// if value := kit.Select("", arg, i); value != "" {
+				// 	m.Option(name, value)
+				// }
+				if i < len(arg) {
+					m.Option(name, arg[i])
 				}
 			}
 			if m.Warn(m.OptionDefault(name, kit.Format(kit.Value(v, VALUE))) == "" && kit.Value(v, "need") == "must", ErrNotValid, name) {

@@ -29,14 +29,9 @@ func init() {
 				cli.IsAlpine(m, "python2")
 				cli.IsAlpine(m, "python3")
 			}},
-			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
-				cmds, text := "python -i "+path.Join(arg[2], arg[1]), ""
-				ProcessXterm(m, cmds, text)
-			}},
-			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
-				_py_exec(m, path.Join(arg[2], arg[1]))
-			}},
-			TEMPLATE: {Hand: func(m *ice.Message, arg ...string) { m.Echo(`print "hello world"`) }},
+			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { ProcessXterm(m, "python -i "+path.Join(arg[2], arg[1]), "") }},
+			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _py_exec(m, path.Join(arg[2], arg[1])) }},
+			TEMPLATE:   {Hand: func(m *ice.Message, arg ...string) { m.Echo(nfs.Template(m, "demo.py")) }},
 		}, PlugAction())},
 	})
 }

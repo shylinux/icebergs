@@ -81,8 +81,7 @@ func (m *Message) Render(cmd string, arg ...Any) *Message {
 		}
 		return m
 	}
-	m.Options(MSG_OUTPUT, cmd, MSG_ARGS, arg)
-	return m
+	return m.Options(MSG_OUTPUT, cmd, MSG_ARGS, arg)
 }
 func (m *Message) RenderTemplate(arg ...Any) *Message {
 	return m.Render(RENDER_TEMPLATE, arg...)

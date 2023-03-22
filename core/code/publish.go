@@ -46,7 +46,7 @@ func _publish_file(m *ice.Message, file string, arg ...string) string {
 func _publish_contexts(m *ice.Message, arg ...string) {
 	m.Option(nfs.DIR_ROOT, "")
 	for _, k := range kit.Default(arg, ice.MISC) {
-		m.Options(web.DOMAIN, m.Option(ice.MSG_USERHOST), cli.CTX_ENV, kit.Select("", ice.SP+kit.JoinKV(ice.EQ, ice.SP, cli.CTX_POD, m.Option(ice.MSG_USERPOD)), m.Option(ice.MSG_USERPOD) != ""))
+		m.Options(web.DOMAIN, web.UserHost(m), cli.CTX_ENV, kit.Select("", ice.SP+kit.JoinKV(ice.EQ, ice.SP, cli.CTX_POD, m.Option(ice.MSG_USERPOD)), m.Option(ice.MSG_USERPOD) != ""))
 		switch k {
 		case INSTALL:
 			m.Echo(strings.TrimSpace(nfs.Template(m, kit.Keys(ice.MISC, SH))))

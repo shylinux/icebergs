@@ -26,7 +26,7 @@ func PushNotice(m *ice.Message, arg ...ice.Any) {
 		msg.Optionv(ice.MSG_OPTS, msg.Optionv(ice.MSG_OPTION, []string{}))
 		msg.Cmd(SPACE, m.Option(ice.MSG_DAEMON), arg)
 	} else {
-		m.Cmd("web.spide", ice.OPS, MergeURL2(m, SHARE_TOAST+m.Option(ice.MSG_DAEMON)), "arg", kit.Format(arg))
+		m.Cmd(Prefix(SPIDE), ice.OPS, MergeURL2(m, SHARE_TOAST+m.Option(ice.MSG_DAEMON)), ice.ARG, kit.Format(arg))
 	}
 }
 func PushNoticeGrow(m *ice.Message, arg ...ice.Any) {
@@ -166,4 +166,12 @@ func ProcessIframe(m *ice.Message, name, link string, arg ...string) {
 		arg = []string{m.Cmdx("web.chat.iframe", mdb.CREATE, mdb.TYPE, LINK, mdb.NAME, name, LINK, link)}
 	}
 	ctx.ProcessField(m, "web.chat.iframe", arg, arg...)
+}
+
+func UserHost(m *ice.Message) string {
+	if u := OptionUserWeb(m); strings.Contains(u.Host, tcp.LOCALHOST) {
+		return m.Option(ice.MSG_USERHOST, tcp.PublishLocalhost(m, u.Scheme+"://"+u.Host))
+	} else {
+		return m.Option(ice.MSG_USERHOST, u.Scheme+"://"+u.Host)
+	}
 }

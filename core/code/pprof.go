@@ -52,12 +52,12 @@ func init() {
 				u := web.OptionUserWeb(m)
 				p := u.Hostname() + ice.DF + m.Cmdx(tcp.PORT, aaa.RIGHT)
 				m.Cmd(cli.DAEMON, m.Configv(PPROF), "-http="+p, m.Option(BINNARY), m.Option(nfs.FILE))
-				m.Echo("http://%s/ui/top", p).ProcessInner()
+				m.Sleep("3s").ProcessOpen(kit.Format("http://%s/ui/top", p))
 			}},
 		}, mdb.ZoneAction(mdb.FIELDS, "time,zone,count,binnary,service,seconds", mdb.FIELD, "time,id,text,file", PPROF, kit.List(GO, "tool", PPROF))), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.ZoneSelect(m, arg...); len(arg) == 0 {
-				m.EchoAnchor(web.MergeLink(m, "/debug/pprof/"))
 				m.PushAction(cli.START, mdb.REMOVE).Action(mdb.CREATE)
+				m.EchoAnchor(web.MergeLink(m, "/debug/pprof/"))
 			} else {
 				m.Tables(func(value ice.Maps) { m.PushDownload(mdb.LINK, "pprof.pd.gz", value[nfs.FILE]).PushButton(web.SERVE) })
 			}

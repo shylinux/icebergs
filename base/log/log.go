@@ -32,6 +32,7 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 			if !ok {
 				return true
 			}
+			continue
 			for _, file := range []string{m.Conf(SHOW, kit.Keys(l.l, FILE)), BENCH} {
 				if file == "" {
 					continue

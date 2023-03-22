@@ -9,7 +9,6 @@ import (
 	"time"
 
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -21,41 +20,23 @@ const (
 	COOKIE = "cookie"
 	STATUS = "status"
 )
-const (
-	WEBSITE = "website"
-	RESIZE  = "resize"
-	OUTPUT  = "output"
-	INPUT   = "input"
-	VIEW    = "view"
-
-	CODE_VIMER = "web.code.vimer"
-	CODE_INNER = "web.code.inner"
-	CODE_XTERM = "web.code.xterm"
-	WIKI_WORD  = "web.wiki.word"
-	CHAT_FAVOR = "web.chat.favor"
-)
 
 func Render(m *ice.Message, cmd string, args ...ice.Any) bool {
 	if cmd == ice.RENDER_VOID {
 		return true
 	}
 	arg := kit.Simple(args...)
-	if len(arg) == 0 {
-		args = nil
-	}
-	if cmd != "" && cmd != ice.RENDER_DOWNLOAD {
+	kit.If(len(arg) == 0, func() { args = nil })
+	if cmd != "" && (cmd != ice.RENDER_DOWNLOAD || m.R.Method != http.MethodGet) {
 		defer func() { m.Logs("Render", cmd, args) }()
 	}
 	switch cmd {
 	case COOKIE: // value [name [path [expire]]]
 		RenderCookie(m, arg[0], arg[1:]...)
-
 	case STATUS, ice.RENDER_STATUS: // [code [text]]
 		RenderStatus(m.W, kit.Int(kit.Select("200", arg, 0)), strings.Join(kit.Slice(arg, 1), " "))
-
 	case ice.RENDER_REDIRECT: // url [arg...]
 		http.Redirect(m.W, m.R, kit.MergeURL(arg[0], arg[1:]), http.StatusTemporaryRedirect)
-
 	case ice.RENDER_DOWNLOAD: // file [type [name]]
 		if strings.HasPrefix(arg[0], ice.HTTP) {
 			RenderRedirect(m, arg[0])
@@ -69,7 +50,6 @@ func Render(m *ice.Message, cmd string, args ...ice.Any) bool {
 			defer f.Close()
 			io.Copy(m.W, f)
 		}
-
 	case ice.RENDER_RESULT:
 		if len(arg) > 0 { // [str [arg...]]
 			m.W.Write([]byte(kit.Format(arg[0], args[1:]...)))
@@ -79,11 +59,9 @@ func Render(m *ice.Message, cmd string, args ...ice.Any) bool {
 			}
 			m.W.Write([]byte(m.Result()))
 		}
-
 	case ice.RENDER_JSON:
 		RenderType(m.W, nfs.JSON, "")
 		m.W.Write([]byte(arg[0]))
-
 	default:
 		if cmd != "" && cmd != ice.RENDER_RAW {
 			m.Echo(kit.Format(cmd, args...))
@@ -91,9 +69,15 @@ func Render(m *ice.Message, cmd string, args ...ice.Any) bool {
 		RenderType(m.W, nfs.JSON, "")
 		m.DumpMeta(m.W)
 	}
+	m.Render(ice.RENDER_VOID)
 	return true
 }
 
+func CookieName(url string) string { return ice.MSG_SESSID + "_" + kit.ParseURLMap(url)[tcp.PORT] }
+func RenderCookie(m *ice.Message, value string, arg ...string) { // name path expire
+	http.SetCookie(m.W, &http.Cookie{Value: value, Name: kit.Select(CookieName(m.Option(ice.MSG_USERWEB)), arg, 0),
+		Path: kit.Select(ice.PS, arg, 1), Expires: time.Now().Add(kit.Duration(kit.Select(mdb.MONTH, arg, 2)))})
+}
 func RenderType(w http.ResponseWriter, name, mime string) {
 	if mime == "" {
 		switch kit.Ext(name) {
@@ -107,93 +91,73 @@ func RenderType(w http.ResponseWriter, name, mime string) {
 	}
 	RenderHeader(w, ContentType, mime)
 }
+func RenderOrigin(w http.ResponseWriter, origin string) {
+	RenderHeader(w, "Access-Control-Allow-Origin", origin)
+}
 func RenderHeader(w http.ResponseWriter, key, value string) {
 	w.Header().Set(key, value)
-}
-func RenderCookie(m *ice.Message, value string, arg ...string) { // name path expire
-	expire := time.Now().Add(kit.Duration(kit.Select(m.Conf(aaa.SESS, kit.Keym(mdb.EXPIRE)), arg, 2)))
-	http.SetCookie(m.W, &http.Cookie{Value: value,
-		Name: kit.Select(CookieName(m.Option(ice.MSG_USERWEB)), arg, 0), Path: kit.Select(ice.PS, arg, 1), Expires: expire})
 }
 func RenderStatus(w http.ResponseWriter, code int, text string) {
 	w.WriteHeader(code)
 	w.Write([]byte(text))
 }
-func RenderRefresh(m *ice.Message, arg ...string) { // url text delay
-	Render(m, ice.RENDER_RESULT, kit.Format(`
-<html>
-<head>
-	<meta http-equiv="refresh" content="%s; url='%s'">
-</head>
-<body>
-	%s
-</body>
-</html>
-`, kit.Select("3", arg, 2), kit.Select(m.Option(ice.MSG_USERWEB), arg, 0), kit.Select("loading...", arg, 1)))
-	m.Render(ice.RENDER_VOID)
-}
 func RenderRedirect(m *ice.Message, arg ...ice.Any) {
 	Render(m, ice.RENDER_REDIRECT, arg...)
-	m.Render(ice.RENDER_VOID)
 }
 func RenderDownload(m *ice.Message, arg ...ice.Any) {
 	Render(m, ice.RENDER_DOWNLOAD, arg...)
-	m.Render(ice.RENDER_VOID)
 }
 func RenderResult(m *ice.Message, arg ...ice.Any) {
 	Render(m, ice.RENDER_RESULT, arg...)
-	m.Render(ice.RENDER_VOID)
 }
-func RenderTemplate(m *ice.Message, file string, arg ...ice.Any) {
-	m.RenderResult(kit.Renders(kit.Format(m.Cmdx(nfs.CAT, path.Join(ice.SRC_TEMPLATE, WEB, file)), arg...), m))
+func RenderTemplate(m *ice.Message, file string, arg ...ice.Any) *ice.Message {
+	return m.RenderResult(kit.Renders(kit.Format(m.Cmdx(nfs.CAT, path.Join(ice.SRC_TEMPLATE, WEB, file)), arg...), m))
 }
-
-func AllowOrigin(m *ice.Message, origin string) {
-	m.W.Header().Set("Access-Control-Allow-Origin", origin)
+func RenderRefresh(m *ice.Message, arg ...string) { // url text delay
+	RenderTemplate(m, "refresh.html", kit.Select("3", arg, 2), kit.Select(m.Option(ice.MSG_USERWEB), arg, 0), kit.Select("loading...", arg, 1))
 }
-func CookieName(url string) string {
-	return ice.MSG_SESSID + "_" + kit.ReplaceAll(kit.ParseURLMap(url)[tcp.PORT], ".", "_", ":", "_")
-	return ice.MSG_SESSID + "_" + kit.ReplaceAll(kit.ParseURLMap(url)[tcp.HOST], ".", "_", ":", "_")
-}
-
-func RenderIndex(m *ice.Message, repos string, file ...string) *ice.Message {
+func RenderIndex(m *ice.Message, file ...string) *ice.Message {
 	if m.IsCliUA() {
 		return m.RenderDownload(path.Join(ice.USR_INTSHELL, kit.Select(ice.INDEX_SH, path.Join(file...))))
 	}
 	return m.RenderDownload(path.Join(ice.USR_VOLCANOS, kit.Select("page/"+ice.INDEX_HTML, path.Join(file...))))
-
-	if repos == "" {
-		repos = kit.Select(ice.VOLCANOS, ice.INTSHELL, m.IsCliUA())
-	}
-	p := func() string {
-		defer mdb.RLock(m, "web.serve")()
-		return path.Join(m.Conf(SERVE, kit.Keym(repos, nfs.PATH)), kit.Select(m.Conf(SERVE, kit.Keym(repos, INDEX)), path.Join(file...)))
-	}
-	return m.RenderDownload(p())
 }
-func RenderMain(m *ice.Message, pod, index string, arg ...ice.Any) *ice.Message {
-	if script := m.Cmdx(Space(m, pod), nfs.CAT, kit.Select(ice.SRC_MAIN_JS, index)); script != "" {
-		return m.Echo(kit.Renders(m.Cmdx(nfs.CAT, path.Join(ice.SRC_TEMPLATE, "web/main.html")), ice.Maps{nfs.VERSION: renderVersion(m), nfs.SCRIPT: script})).RenderResult()
+func RenderMain(m *ice.Message) *ice.Message {
+	if m.IsCliUA() {
+		return m.RenderDownload(path.Join(ice.USR_INTSHELL, ice.INDEX_SH))
 	}
-	return RenderIndex(m, ice.VOLCANOS)
-}
-func RenderCmd(m *ice.Message, cmd string, arg ...ice.Any) {
-	RenderPodCmd(m, "", cmd, arg...)
+	return RenderTemplate(m.Options(nfs.VERSION, renderVersion(m)), "main.html")
 }
 func RenderCmds(m *ice.Message, list ...ice.Any) {
-	m.Echo(kit.Renders(m.Cmdx(nfs.CAT, path.Join(ice.SRC_TEMPLATE, "web/cmd.html")), ice.Maps{nfs.VERSION: renderVersion(m), ice.LIST: kit.Format(list)})).RenderResult()
+	RenderTemplate(m.Options(nfs.VERSION, renderVersion(m), mdb.LIST, kit.Format(list)), "cmds.html")
 }
 func RenderPodCmd(m *ice.Message, pod, cmd string, arg ...ice.Any) {
 	msg := m.Cmd(Space(m, pod), ctx.COMMAND, kit.Select("web.wiki.word", cmd))
-	list := kit.Format(kit.List(kit.Dict(msg.AppendSimple(mdb.NAME, mdb.HELP),
+	RenderCmds(m, kit.Dict(msg.AppendSimple(mdb.NAME, mdb.HELP),
 		ctx.INDEX, cmd, ctx.ARGS, kit.Simple(arg), ctx.DISPLAY, m.Option(ice.MSG_DISPLAY),
 		mdb.LIST, kit.UnMarshal(msg.Append(mdb.LIST)), mdb.META, kit.UnMarshal(msg.Append(mdb.META)),
-	)))
-	m.Echo(kit.Renders(m.Cmdx(nfs.CAT, path.Join(ice.SRC_TEMPLATE, "web/cmd.html")), ice.Maps{nfs.VERSION: renderVersion(m), ice.LIST: list})).RenderResult()
+	))
 }
+func RenderCmd(m *ice.Message, cmd string, arg ...ice.Any) { RenderPodCmd(m, "", cmd, arg...) }
 func renderVersion(m *ice.Message) string {
 	if strings.Contains(m.R.URL.RawQuery, "debug=true") {
 		return kit.Format("?_v=%v&_t=%d", ice.Info.Make.Version, time.Now().Unix())
 	}
 	return ""
 }
+
+const (
+	WEBSITE = "website"
+	RESIZE  = "resize"
+	LAYOUT  = "layout"
+	OUTPUT  = "output"
+	INPUT   = "input"
+	VIEW    = "view"
+	CHAT    = "chat"
+
+	CODE_VIMER = "web.code.vimer"
+	CODE_INNER = "web.code.inner"
+	CODE_XTERM = "web.code.xterm"
+	CHAT_FAVOR = "web.chat.favor"
+	WIKI_WORD  = "web.wiki.word"
+)

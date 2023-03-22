@@ -19,8 +19,8 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		FAVOR: {Name: "favor zone id auto insert", Help: "收藏夹", Actions: ice.MergeActions(ice.Actions{
 			code.INNER: {Hand: func(m *ice.Message, arg ...string) {
-				dir, file := code.InnerPath(kit.Select("", m.Option(cli.PWD), !path.IsAbs(m.Option(nfs.FILE))), m.Option(nfs.FILE))
-				ctx.ProcessField(m, "", []string{dir, file, m.Option(nfs.LINE)}, arg...)
+				ls := nfs.SplitPath(m, path.Join(kit.Select("", m.Option(cli.PWD), !path.IsAbs(m.Option(nfs.FILE))), m.Option(nfs.FILE)))
+				ctx.ProcessField(m, "", []string{ls[0], ls[1], m.Option(nfs.LINE)}, arg...)
 			}},
 		}, mdb.ZoneAction(mdb.FIELD, "time,id,type,name,text,file,line,pwd")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.ZoneSelect(m, arg...); len(arg) == 0 {

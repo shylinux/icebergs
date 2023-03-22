@@ -117,7 +117,7 @@ func init() {
 				_webpack_can(m)
 				m.Cmdy("")
 			}},
-			mdb.REMOVE: {Help: "调试", Hand: func(m *ice.Message, arg ...string) {
+			mdb.REMOVE: {Help: "开发", Hand: func(m *ice.Message, arg ...string) {
 				_webpack_cache(m.Spawn(), _volcanos(m), false)
 				m.Cmdy(nfs.DIR, _volcanos(m, PAGE))
 			}},

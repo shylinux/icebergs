@@ -59,7 +59,7 @@ func _css_exec(m *ice.Message, arg ...string) {
 		}
 	} else {
 		ctx.ProcessCommand(m, kit.Select(ice.CAN_PLUGIN, ctx.GetFileCmd(kit.ExtChange(path.Join(arg[2], arg[1]), GO))), kit.Simple())
-		m.Push(ctx.STYLE, path.Join("/require", path.Join(arg[2], arg[1])))
+		m.Push(ctx.STYLE, require(arg[2], arg[1]))
 	}
 }
 

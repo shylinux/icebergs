@@ -2,6 +2,7 @@ package ice
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -183,31 +184,34 @@ func (m *Message) FormatCost() string {
 func (m *Message) FormatSize() string {
 	return kit.Format("%dx%d %v", m.Length(), len(m.meta[MSG_APPEND]), kit.Simple(m.meta[MSG_APPEND]))
 }
-func (m *Message) DumpMeta(w io.Writer) {
-	m.meta[MSG_OPTION] = kit.Filters(m.meta[MSG_OPTION], "sessid", "cmds", "fields", "_option", "_handle", "_output", "", "_name", "_index", "log.caller", "aaa.checker")
+func (m *Message) DumpMeta(w io.Writer, arg ...string) (res string) {
+	kit.If(len(arg) == 0 && m.Option(DEBUG) == TRUE, func() { arg = []string{SP, SP, NL} })
+	if w == nil {
+		buf := bytes.NewBuffer(make([]byte, 1024))
+		defer func() { res = buf.String() }()
+		w = buf
+	}
 	kit.For(m.meta[MSG_OPTION], func(i int, k string) {
 		kit.If(len(m.meta[k]) == 0 || len(m.meta[k]) == 1 && m.meta[k][0] == "", func() { m.meta[MSG_OPTION][i] = "" })
 	})
-	bio := bufio.NewWriter(w)
+	m.meta[MSG_OPTION] = kit.Filters(m.meta[MSG_OPTION], MSG_CMDS, MSG_FIELDS, MSG_SESSID, MSG_OPTS, MSG_HANDLE, MSG_OUTPUT, MSG_INDEX, "", "aaa.checker")
+	bio, count, NL := bufio.NewWriter(w), 0, kit.Select("", arg, 2)
 	defer bio.Flush()
-	echo := func(k string) {
+	echo := func(arg ...Any) { fmt.Fprint(bio, arg...) }
+	push := func(k string) {
 		if len(m.meta[k]) == 0 {
 			return
 		}
-		kit.If(k != MSG_DETAIL, func() { fmt.Fprintln(bio, FS) })
-		fmt.Fprint(bio, kit.Format(" %q: ", k))
+		kit.If(count > 0, func() { echo(FS, NL) })
+		echo(kit.Format("%s%q:%s", kit.Select("", arg, 0), k, kit.Select("", arg, 1)))
 		b, _ := json.Marshal(m.meta[k])
 		bio.Write(b)
+		count++
 	}
-	fmt.Fprintln(bio, "{")
-	defer fmt.Fprintln(bio, "}")
-	echo(MSG_DETAIL)
-	echo(MSG_OPTION)
-	kit.For(m.meta[MSG_OPTION], func(k string) { echo(k) })
-	kit.For(m.meta[MSG_APPEND], func(k string) { echo(k) })
-	echo(MSG_APPEND)
-	echo(MSG_RESULT)
-	fmt.Fprintln(bio)
+	echo("{", NL)
+	defer echo("}", NL)
+	kit.For(kit.Simple(MSG_DETAIL, MSG_OPTION, m.meta[MSG_OPTION], m.meta[MSG_APPEND], MSG_APPEND, MSG_RESULT), push)
+	return
 }
 func (m *Message) FormatMeta() string {
 	return kit.Format(m.meta)

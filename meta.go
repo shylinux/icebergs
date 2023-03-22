@@ -420,7 +420,7 @@ func (m *Message) Detailv(arg ...Any) []string {
 	}
 	return m.meta[MSG_DETAIL]
 }
-func (m *Message) Options(arg ...Any) Any {
+func (m *Message) Options(arg ...Any) *Message {
 	for i := 0; i < len(arg); i += 2 {
 		switch val := arg[i].(type) {
 		case Maps:
@@ -440,7 +440,7 @@ func (m *Message) Options(arg ...Any) Any {
 			m.Optionv(kit.Format(arg[i]), arg[i+1])
 		}
 	}
-	return m.Optionv(kit.Format(arg[0]))
+	return m
 }
 func (m *Message) Optionv(key string, arg ...Any) Any {
 	if len(arg) > 0 {

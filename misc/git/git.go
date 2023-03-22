@@ -12,7 +12,7 @@ import (
 )
 
 func _git_url(m *ice.Message, repos string) string {
-	return kit.MergeURL2(m.Option(ice.MSG_USERHOST), "/x/"+path.Join(repos)+".git")
+	return kit.MergeURL2(web.UserHost(m), "/x/"+path.Join(repos)+".git")
 }
 func _git_dir(arg ...string) string                       { return path.Join(path.Join(arg...), ".git") }
 func _git_cmd(m *ice.Message, arg ...string) *ice.Message { return m.Cmd(cli.SYSTEM, GIT, arg) }

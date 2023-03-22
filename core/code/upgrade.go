@@ -21,7 +21,7 @@ func init() {
 			nfs.TARGET, kit.Dict(mdb.LIST, kit.List(mdb.TYPE, ice.BIN, nfs.FILE, ice.ICE_BIN)),
 			nfs.BINARY, kit.Dict(mdb.LIST, kit.List(mdb.TYPE, nfs.TAR, nfs.FILE, "contexts.bin.tar.gz")),
 			nfs.SOURCE, kit.Dict(mdb.LIST, kit.List(mdb.TYPE, nfs.TAR, nfs.FILE, "contexts.src.tar.gz")),
-			COMPILE, kit.Dict(mdb.LIST, kit.List(mdb.TYPE, nfs.TAR, nfs.FILE, "go1.15.15", nfs.PATH, "usr/local/")),
+			COMPILE, kit.Dict(mdb.LIST, kit.List(mdb.TYPE, nfs.TAR, nfs.FILE, "go1.15.5", nfs.PATH, ice.USR_LOCAL)),
 		), mdb.META, kit.Dict(mdb.FIELD, "type,file,path"))},
 	}, Commands: ice.Commands{
 		UPGRADE: {Name: "upgrade item=target,binary,source,compile run restart", Help: "升级", Actions: ice.MergeActions(ice.Actions{

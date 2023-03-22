@@ -17,7 +17,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		web.P(SSO): {Name: "/sso", Help: "授权", Actions: aaa.WhiteAction(), Hand: func(m *ice.Message, arg ...string) {
 			if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin) || m.Warn(m.Option(cli.BACK) == "", ice.ErrNotValid) {
-				web.RenderIndex(m, ice.VOLCANOS)
+				web.RenderIndex(m)
 				return
 			}
 			m.RenderRedirect(kit.MergeURL(m.Option(cli.BACK), ice.MSG_SESSID, m.Cmdx(web.SPACE, m.Option(web.SPACE), aaa.SESS, mdb.CREATE,

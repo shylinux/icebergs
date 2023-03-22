@@ -177,6 +177,7 @@ const ( // MSG
 	MSG_ACTION = "_action"
 	MSG_STATUS = "_status"
 
+	MSG_INDEX  = "_index"
 	MSG_ALIAS  = "_alias"
 	MSG_SCRIPT = "_script"
 	MSG_OUTPUT = "_output"
@@ -317,6 +318,9 @@ const ( // web
 
 	THEME = "theme"
 	TITLE = "title"
+)
+const ( // gdb
+	DEBUG = "debug"
 )
 const ( // nfs
 	SOURCE = "source"

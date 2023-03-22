@@ -280,7 +280,7 @@ func init() {
 			}},
 			"oauth": {Help: "授权", Hand: func(m *ice.Message, arg ...string) {
 				m.ProcessOpen(kit.MergeURL2(kit.Select(ice.Info.Make.Remote, m.Cmdx(cli.SYSTEM, "git", "remote", "get-url", "origin")), "/chat/cmd/web.code.git.token",
-					aaa.USERNAME, m.Option(ice.MSG_USERNAME), tcp.HOST, m.Option(ice.MSG_USERHOST)))
+					aaa.USERNAME, m.Option(ice.MSG_USERNAME), tcp.HOST, web.UserHost(m)))
 			}},
 			"token": {Name: "token token", Help: "令牌", Hand: func(m *ice.Message, arg ...string) {
 				list := []string{m.Option(TOKEN)}

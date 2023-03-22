@@ -26,7 +26,6 @@ func init() {
 		m.Option(web.SPIDE_HEADER, web.Accept, web.ContentJSON, web.Authorization, "token "+kit.Select(m.Option(ACCESS_TOKEN), arg, 0))
 		return m
 	}
-
 	Index.MergeCommands(ice.Commands{
 		OAUTH: {Name: "oauth hash auto", Help: "授权", Actions: ice.MergeActions(ice.Actions{
 			ctx.CONFIG: {Name: "config client_id client_secret redirect_uri", Help: "配置", Hand: func(m *ice.Message, arg ...string) {

@@ -53,6 +53,7 @@ const (
 	PROTOCOL = "protocol"
 	HOSTPORT = "hostport"
 	HOSTNAME = "hostname"
+	NODENAME = "nodename"
 )
 const (
 	LISTEN = "listen"

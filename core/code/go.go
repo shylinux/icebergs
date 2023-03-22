@@ -121,7 +121,18 @@ func init() {
 				m.Echo(nfs.Template(m, "demo.go"), path.Base(path.Dir(path.Join(arg[2], arg[1]))))
 			}},
 			COMPLETE: {Hand: func(m *ice.Message, arg ...string) { _go_complete(m, arg...) }},
-			NAVIGATE: {Hand: func(m *ice.Message, arg ...string) { _c_tags(m, "gotags", "-f", nfs.TAGS, "-R", nfs.PWD) }},
+			NAVIGATE: {Hand: func(m *ice.Message, arg ...string) {
+				for _, cmd := range []string{"guru", "gopls"} {
+					if ls := kit.Split(m.Cmdx(cli.SYSTEM, cmd, "definition", m.Option(nfs.PATH)+m.Option(nfs.FILE)+ice.DF+"#"+m.Option("offset")), ice.DF); len(ls) > 0 {
+						if strings.HasPrefix(ls[0], kit.Path("")) {
+							_ls := nfs.SplitPath(m, strings.TrimPrefix(ls[0], kit.Path("")+ice.PS))
+							m.Push(nfs.PATH, _ls[0]).Push(nfs.FILE, _ls[1]).Push(nfs.LINE, ls[1])
+							return
+						}
+					}
+				}
+				_c_tags(m, "gotags", "-f", nfs.TAGS, "-R", nfs.PWD)
+			}},
 		}, PlugAction())},
 		MOD: {Actions: ice.MergeActions(ice.Actions{
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _mod_show(m, path.Join(arg[2], arg[1])) }},

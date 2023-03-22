@@ -61,8 +61,8 @@ func SessCheck(m *ice.Message, sessid string) bool {
 }
 func SessAuth(m *ice.Message, value ice.Any, arg ...string) *ice.Message {
 	return m.Auth(
-		USERNAME, m.Option(ice.MSG_USERNAME, kit.Value(value, USERNAME)),
 		USERNICK, m.Option(ice.MSG_USERNICK, kit.Value(value, USERNICK)),
+		USERNAME, m.Option(ice.MSG_USERNAME, kit.Value(value, USERNAME)),
 		USERROLE, m.Option(ice.MSG_USERROLE, kit.Value(value, USERROLE)),
 		arg, logs.FileLineMeta(kit.Select(logs.FileLine(-1), m.Option("aaa.checker"))),
 	)

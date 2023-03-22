@@ -55,8 +55,8 @@ func init() {
 					m.PushSearch(mdb.TYPE, nfs.FILE, mdb.NAME, "main", mdb.TEXT, ice.SRC_MAIN_GO)
 					m.PushSearch(mdb.TYPE, nfs.FILE, mdb.NAME, "main", mdb.TEXT, ice.SRC_MAIN_SH)
 					m.PushSearch(mdb.TYPE, nfs.FILE, mdb.NAME, "main", mdb.TEXT, ice.SRC_MAIN_JS)
-					m.PushSearch(mdb.TYPE, web.LINK, mdb.NAME, "admin", mdb.TEXT, kit.MergeURL(m.Option(ice.MSG_USERHOST)+ice.PS, log.DEBUG, ice.TRUE))
-					m.PushSearch(mdb.TYPE, web.LINK, mdb.NAME, VIMER, mdb.TEXT, web.MergePodCmds(m, "", web.CODE_VIMER, log.DEBUG, ice.TRUE))
+					m.PushSearch(mdb.TYPE, web.LINK, mdb.NAME, "admin", mdb.TEXT, kit.MergeURL(web.UserHost(m)+ice.PS, log.DEBUG, ice.TRUE))
+					m.PushSearch(mdb.TYPE, web.LINK, mdb.NAME, m.CommandKey(), mdb.TEXT, web.MergePodCmds(m, "", "", log.DEBUG, ice.TRUE))
 				}
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
@@ -162,9 +162,6 @@ func init() {
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				kit.Switch(m.Option(mdb.TYPE), kit.Simple(web.SERVER, web.WORKER), func() { m.PushButton(kit.Dict(m.CommandKey(), "源码")) })
 			}},
-			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) {
-				kit.If(arg[1] == m.CommandKey(), func() { ctx.ProcessField(m, m.PrefixKey(), []string{}, arg...) })
-			}},
 		}, mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path"), web.DreamAction(), aaa.RoleAction(ctx.COMMAND)), Hand: func(m *ice.Message, arg ...string) {
 			if m.Cmdy(INNER, arg); arg[0] != ctx.ACTION {
 				kit.If(len(arg) > 1, func() { mdb.HashCreate(m.Spawn(), nfs.PATH, path.Join(kit.Slice(arg, 0, 2)...)) })
@@ -186,7 +183,10 @@ func init() {
 	ice.AddMerges(func(c *ice.Context, key string, cmd *ice.Command, sub string, action *ice.Action) (ice.Handler, ice.Handler) {
 		switch sub {
 		case TEMPLATE, COMPLETE, NAVIGATE:
-			return func(m *ice.Message, arg ...string) { m.Cmd(sub, mdb.CREATE, key, m.PrefixKey()) }, nil
+			return func(m *ice.Message, arg ...string) {
+				m.Option(mdb.SHORT, mdb.TYPE)
+				m.Cmd(sub, mdb.CREATE, key, m.PrefixKey())
+			}, nil
 		}
 		return nil, nil
 	})

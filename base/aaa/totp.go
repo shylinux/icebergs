@@ -45,25 +45,20 @@ const TOTP = "totp"
 
 func init() {
 	const (
-		SECRET = "secret"
-		PERIOD = "period"
 		NUMBER = "number"
+		PERIOD = "period"
+		SECRET = "secret"
 	)
 	Index.MergeCommands(ice.Commands{
 		TOTP: {Name: "totp name auto create", Help: "令牌", Actions: ice.MergeActions(ice.Actions{
-			mdb.CREATE: {Name: "create name*=hi secret period*=30 number*=6", Hand: func(m *ice.Message, arg ...string) {
-				if m.Option(SECRET) == "" {
-					m.Option(SECRET, _totp_gen(kit.Int64(m.Option(PERIOD))))
-				}
-				mdb.HashCreate(m, m.OptionSimple(mdb.NAME, SECRET, PERIOD, NUMBER))
+			mdb.CREATE: {Name: "create name*=hi number*=6 period*=30 secret", Hand: func(m *ice.Message, arg ...string) {
+				kit.If(m.Option(SECRET) == "", func() { m.Option(SECRET, _totp_gen(kit.Int64(m.Option(PERIOD)))) })
+				mdb.HashCreate(m, m.OptionSimple(mdb.NAME, NUMBER, PERIOD, SECRET))
 			}},
-		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,secret,period,number", mdb.LINK, "otpauth://totp/%s?secret=%s")), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,number,period,secret", mdb.LINK, "otpauth://totp/%s?secret=%s")), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m.Spawn(), arg...).Tables(func(value ice.Maps) {
-				if len(arg) > 0 {
-					m.OptionFields(ice.FIELDS_DETAIL)
-				}
-				m.Push(mdb.TIME, m.Time())
-				m.Push(mdb.NAME, value[mdb.NAME])
+				kit.If(len(arg) > 0, func() { m.OptionFields(ice.FIELDS_DETAIL) })
+				m.Push(mdb.TIME, m.Time()).Push(mdb.NAME, value[mdb.NAME])
 				period := kit.Int64(value[PERIOD])
 				m.Push(mdb.EXPIRE, period-time.Now().Unix()%period)
 				m.Push(mdb.VALUE, _totp_get(value[SECRET], period, kit.Int(value[NUMBER])))
@@ -71,8 +66,7 @@ func init() {
 					m.PushQRCode(mdb.SCAN, kit.Format(mdb.Config(m, mdb.LINK), value[mdb.NAME], value[SECRET]))
 					m.Echo(m.Append(mdb.VALUE))
 				} else {
-					m.PushAction(mdb.REMOVE)
-					m.StatusTimeCount()
+					m.PushAction(mdb.REMOVE).StatusTimeCount()
 				}
 			})
 		}},

@@ -70,9 +70,7 @@ func _runtime_hostinfo(m *ice.Message) {
 }
 func _runtime_diskinfo(m *ice.Message) {
 	m.Spawn().Split(kit.Replace(m.Cmdx(SYSTEM, "df", "-h"), "Mounted on", "Mountedon"), "", ice.SP, ice.NL).Table(func(index int, value ice.Maps, head []string) {
-		if strings.HasPrefix(value["Filesystem"], "/dev") {
-			m.Push("", value, head)
-		}
+		kit.If(strings.HasPrefix(value["Filesystem"], "/dev"), func() { m.Push("", value, head) })
 	})
 	m.RenameAppend("%iused", "piused", "Use%", "Usep")
 	ctx.DisplayStory(m, "pie.js?field=Size")

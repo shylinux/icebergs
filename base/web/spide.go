@@ -13,7 +13,6 @@ import (
 	"time"
 
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -67,7 +66,7 @@ func _spide_show(m *ice.Message, name string, arg ...string) {
 		return
 	}
 	defer res.Body.Close()
-	if m.Config(LOGHEADERS) == ice.TRUE {
+	if mdb.Config(m, LOGHEADERS) == ice.TRUE {
 		for k, v := range res.Header {
 			m.Logs(mdb.IMPORT, k, v)
 		}
@@ -274,7 +273,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		SPIDE: {Name: "spide client.name action=raw,msg,save,cache method=GET,PUT,POST,DELETE url format=form,part,json,data,file arg run create", Help: "蜘蛛侠", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				conf := m.Confm(cli.RUNTIME, cli.CONF)
+				conf := mdb.Confm(m, cli.RUNTIME, cli.CONF)
 				m.Cmd("", mdb.CREATE, ice.OPS, kit.Select("http://127.0.0.1:9020", conf[cli.CTX_OPS]))
 				m.Cmd("", mdb.CREATE, ice.DEV, kit.Select(kit.Select("https://contexts.com.cn", ice.Info.Make.Domain), conf[cli.CTX_DEV]))
 				m.Cmd("", mdb.CREATE, ice.COM, kit.Select("https://contexts.com.cn", conf[cli.CTX_COM]))
@@ -303,10 +302,6 @@ func init() {
 			} else {
 				_spide_show(m, arg[0], arg[1:]...)
 			}
-		}},
-		"/spide-demo/": {Actions: aaa.WhiteAction(), Hand: func(m *ice.Message, arg ...string) {
-			m.Push("hi", "hello")
-			m.Echo("hello world")
 		}},
 		http.MethodGet: {Name: "GET url key value run", Help: "蜘蛛侠", Hand: func(m *ice.Message, arg ...string) {
 			m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx(SPIDE, ice.DEV, SPIDE_RAW, http.MethodGet, arg[0], arg[1:]))))

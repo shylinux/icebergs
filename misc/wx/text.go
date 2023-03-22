@@ -10,7 +10,7 @@ import (
 )
 
 func _wx_reply(m *ice.Message, tmpl string) {
-	if res, err := kit.Render(m.Config(nfs.TEMPLATE), m); err == nil {
+	if res, err := kit.Render(mdb.Config(m, nfs.TEMPLATE), m); err == nil {
 		m.SetResult().RenderResult(string(res))
 	}
 }

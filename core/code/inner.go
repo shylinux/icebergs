@@ -134,7 +134,7 @@ func PlugAction() ice.Actions {
 			kit.For([]string{mdb.PLUGIN, mdb.RENDER, mdb.ENGINE}, func(cmd string) { m.Cmd(cmd, mdb.CREATE, m.CommandKey(), m.PrefixKey()) })
 			LoadPlug(m, m.CommandKey())
 		}},
-		mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) { m.Echo(m.Config(PLUG)) }},
+		mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) { m.Echo(mdb.Config(m, PLUG)) }},
 		mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1])) }},
 		mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1])) }},
 		mdb.SELECT: {Hand: func(m *ice.Message, arg ...string) {
@@ -149,7 +149,7 @@ func PlugAction() ice.Actions {
 func LoadPlug(m *ice.Message, lang ...string) {
 	for _, lang := range lang {
 		m.Conf(nfs.CAT, kit.Keym(nfs.SOURCE, kit.Ext(lang)), ice.TRUE)
-		m.Confm(lang, kit.Keym(PLUG, PREPARE), func(k string, v ice.Any) {
+		mdb.Confm(m, lang, kit.Keym(PLUG, PREPARE), func(k string, v ice.Any) {
 			kit.For(kit.Simple(v), func(v string) { m.Conf(lang, kit.Keym(PLUG, KEYWORD, v), k) })
 		})
 	}

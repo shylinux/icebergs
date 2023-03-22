@@ -68,7 +68,7 @@ func init() {
 				m.Push(mdb.EXPIRE, period-time.Now().Unix()%period)
 				m.Push(mdb.VALUE, _totp_get(value[SECRET], period, kit.Int(value[NUMBER])))
 				if len(arg) > 0 {
-					m.PushQRCode(mdb.SCAN, kit.Format(m.Config(mdb.LINK), value[mdb.NAME], value[SECRET]))
+					m.PushQRCode(mdb.SCAN, kit.Format(mdb.Config(m, mdb.LINK), value[mdb.NAME], value[SECRET]))
 					m.Echo(m.Append(mdb.VALUE))
 				} else {
 					m.PushAction(mdb.REMOVE)

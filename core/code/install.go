@@ -199,10 +199,10 @@ func init() {
 
 func InstallAction(args ...ice.Any) ice.Actions {
 	return ice.Actions{ice.CTX_INIT: mdb.AutoConfig(args...),
-		web.DOWNLOAD: {Help: "下载", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(INSTALL, web.DOWNLOAD, m.Config(nfs.SOURCE)) }},
-		cli.BUILD:    {Help: "构建", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(INSTALL, cli.BUILD, m.Config(nfs.SOURCE)) }},
+		web.DOWNLOAD: {Help: "下载", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(INSTALL, web.DOWNLOAD, mdb.Config(m, nfs.SOURCE)) }},
+		cli.BUILD:    {Help: "构建", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(INSTALL, cli.BUILD, mdb.Config(m, nfs.SOURCE)) }},
 		cli.ORDER: {Help: "加载", Hand: func(m *ice.Message, arg ...string) {
-			m.Cmdy(INSTALL, cli.ORDER, m.Config(nfs.SOURCE), path.Join(_INSTALL, ice.BIN))
+			m.Cmdy(INSTALL, cli.ORDER, mdb.Config(m, nfs.SOURCE), path.Join(_INSTALL, ice.BIN))
 		}},
 		nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) { nfs.Trash(m, m.Option(nfs.PATH)) }},
 	}

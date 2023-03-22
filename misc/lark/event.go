@@ -21,14 +21,14 @@ func init() {
 		EVENT: {Name: "event", Help: "事件", Actions: ice.Actions{
 			P2P_CHAT_CREATE: {Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(OPEN_CHAT_ID) != "" {
-					m.Cmdy(SEND, m.Option(APP_ID), m.Option(OPEN_CHAT_ID), m.Conf(APP, kit.Keym(nfs.TEMPLATE, m.Option(mdb.TYPE))))
+					m.Cmdy(SEND, m.Option(APP_ID), m.Option(OPEN_CHAT_ID), mdb.Conf(m, APP, kit.Keym(nfs.TEMPLATE, m.Option(mdb.TYPE))))
 				}
 			}},
 			MESSAGE_READ: {Hand: func(m *ice.Message, arg ...string) {}},
 			CHAT_DISBAND: {Hand: func(m *ice.Message, arg ...string) {}},
 			ADD_BOT: {Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(OPEN_CHAT_ID) != "" {
-					m.Cmdy(SEND, m.Option(APP_ID), m.Option(OPEN_CHAT_ID), m.Conf(APP, kit.Keym(nfs.TEMPLATE, m.Option(mdb.TYPE))))
+					m.Cmdy(SEND, m.Option(APP_ID), m.Option(OPEN_CHAT_ID), mdb.Conf(m, APP, kit.Keym(nfs.TEMPLATE, m.Option(mdb.TYPE))))
 				}
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) { m.Cmdy(MSG, m.Option(MSG_TYPE)) }},

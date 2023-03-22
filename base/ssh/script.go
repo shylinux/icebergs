@@ -127,7 +127,9 @@ func (f *Frame) scan(m *ice.Message, h, line string) *Frame {
 		if len(bio.Text()) == 0 && h == STDIO {
 			continue
 		}
-		f.count++
+		if f.count++; len(bio.Text()) == 0 {
+			continue
+		}
 		if strings.HasSuffix(bio.Text(), "\\") {
 			line += bio.Text()[:len(bio.Text())-1]
 			ps = f.ps2

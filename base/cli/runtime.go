@@ -124,9 +124,7 @@ const (
 	MAKE_DOMAIN = "make.domain"
 )
 
-var ENV_LIST = []string{
-	TERM, SHELL, CTX_SHY, CTX_COM, CTX_DEV, CTX_OPS, CTX_ARG, CTX_PID, CTX_USER, CTX_SHARE, CTX_RIVER, CTX_DAEMON,
-}
+var ENV_LIST = []string{TERM, SHELL, CTX_SHY, CTX_COM, CTX_DEV, CTX_OPS, CTX_ARG, CTX_PID, CTX_USER, CTX_SHARE, CTX_RIVER, CTX_DAEMON}
 
 const (
 	HOSTNAME = "hostname"
@@ -147,16 +145,16 @@ const RUNTIME = "runtime"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		RUNTIME: {Name: "runtime info=bootinfo,ifconfig,hostinfo,hostname,userinfo,procinfo,diskinfo,api,cli,cmd,env,path,chain auto upgrade", Help: "运行环境", Actions: ice.MergeActions(ice.Actions{
+		RUNTIME: {Name: "runtime info=bootinfo,ifconfig,hostname,hostinfo,userinfo,procinfo,diskinfo,api,cli,cmd,env,path,chain auto", Help: "运行环境", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { _runtime_init(m) }},
 			IFCONFIG:     {Hand: func(m *ice.Message, arg ...string) { m.Cmdy("tcp.host") }},
-			HOSTINFO:     {Hand: func(m *ice.Message, arg ...string) { _runtime_hostinfo(m) }},
 			HOSTNAME: {Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) > 0 {
-					ice.Info.Hostname = m.Conf(RUNTIME, kit.Keys(BOOT, HOSTNAME), m.Conf(RUNTIME, kit.Keys(NODE, mdb.NAME), arg[0]))
+					ice.Info.Hostname = mdb.Conf(m, RUNTIME, kit.Keys(BOOT, HOSTNAME), mdb.Conf(m, RUNTIME, kit.Keys(NODE, mdb.NAME), arg[0]))
 				}
 				m.Echo(ice.Info.Hostname)
 			}},
+			HOSTINFO: {Hand: func(m *ice.Message, arg ...string) { _runtime_hostinfo(m) }},
 			USERINFO: {Hand: func(m *ice.Message, arg ...string) { m.Split(m.Cmdx(SYSTEM, "who"), "user term time") }},
 			PROCINFO: {Hand: func(m *ice.Message, arg ...string) {
 				msg := m.Cmd("", HOSTINFO)
@@ -165,12 +163,17 @@ func init() {
 			}},
 			PROCKILL: {Help: "结束进程", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(gdb.SIGNAL, gdb.STOP, m.Option("PID")).ProcessRefresh() }},
 			MAXPROCS: {Hand: func(m *ice.Message, arg ...string) {
-				if len(arg) > 0 {
-					runtime.GOMAXPROCS(kit.Int(m.Conf(RUNTIME, kit.Keys(HOST, MAXPROCS), arg[0])))
-				}
+				kit.If(len(arg) > 0, func() { runtime.GOMAXPROCS(kit.Int(mdb.Conf(m, RUNTIME, kit.Keys(HOST, MAXPROCS), arg[0]))) })
 				m.Echo("%d", runtime.GOMAXPROCS(0))
 			}},
 			DISKINFO: {Hand: func(m *ice.Message, arg ...string) { _runtime_diskinfo(m) }},
+			MAKE_DOMAIN: {Hand: func(m *ice.Message, arg ...string) {
+				if os.Getenv(CTX_DEV) == "" || os.Getenv(CTX_POD) == "" {
+					m.Echo(mdb.Conf(m, RUNTIME, MAKE_DOMAIN))
+				} else {
+					m.Echo(kit.MergePOD(os.Getenv(CTX_DEV), os.Getenv(CTX_POD)))
+				}
+			}},
 			API: {Hand: func(m *ice.Message, arg ...string) {
 				kit.For(ice.Info.Route, func(k, v string) { m.Push(nfs.PATH, k).Push(nfs.FILE, v) })
 				m.StatusTimeCount().Sort(nfs.PATH)
@@ -190,38 +193,19 @@ func init() {
 				})
 				m.StatusTimeCount().Sort(mdb.NAME)
 			}},
-			MAKE_DOMAIN: {Hand: func(m *ice.Message, arg ...string) {
-				if os.Getenv(CTX_DEV) == "" || os.Getenv(CTX_POD) == "" {
-					m.Echo(m.Conf(RUNTIME, MAKE_DOMAIN))
-				} else {
-					m.Echo(kit.MergePOD(os.Getenv(CTX_DEV), os.Getenv(CTX_POD)))
-				}
-			}},
 			nfs.PATH: {Hand: func(m *ice.Message, arg ...string) {
-				for _, p := range _path_split(os.Getenv(PATH)) {
-					m.Push(nfs.PATH, p)
-				}
+				kit.For(_path_split(os.Getenv(PATH)), func(p string) { m.Push(nfs.PATH, p) })
 			}},
 			"chain": {Hand: func(m *ice.Message, arg ...string) { m.Echo(m.FormatChain()) }},
-			"upgrade": {Hand: func(m *ice.Message, arg ...string) {
-				file := kit.Keys("ice", runtime.GOOS, runtime.GOARCH)
-				_file := file
-				if runtime.GOOS == WINDOWS {
-					_file = file + "." + m.Time() + ".exe"
-				}
-				m.Cmd("web.spide", "dev", "save", _file, "GET", ice.Info.Make.Domain+"/publish/"+file)
-			}},
 		}, ctx.ConfAction("")), Hand: func(m *ice.Message, arg ...string) {
-			if len(arg) > 0 && arg[0] == BOOTINFO {
-				arg = arg[1:]
-			}
+			kit.If(len(arg) > 0 && arg[0] == BOOTINFO, func() { arg = arg[1:] })
 			m.Cmdy(ctx.CONFIG, RUNTIME, arg)
 			ctx.DisplayStoryJSON(m)
 		}},
 	})
 }
 func NodeInfo(m *ice.Message, arg ...string) {
-	m.Conf(RUNTIME, kit.Keys(NODE, mdb.TIME), m.Time())
+	mdb.Conf(m, RUNTIME, kit.Keys(NODE, mdb.TIME), m.Time())
 	ice.Info.NodeName = mdb.Conf(m, RUNTIME, kit.Keys(NODE, mdb.NAME), kit.Select(ice.Info.NodeName, arg, 0))
 	ice.Info.NodeType = mdb.Conf(m, RUNTIME, kit.Keys(NODE, mdb.TYPE), kit.Select(ice.Info.NodeType, arg, 1))
 }

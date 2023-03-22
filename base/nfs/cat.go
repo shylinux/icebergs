@@ -69,14 +69,13 @@ func _cat_list(m *ice.Message, file string) {
 		for {
 			if n, e := f.Read(buf[size:]); !m.Warn(e, ice.ErrNotValid, file) {
 				m.Logs(LOAD, FILE, file, SIZE, n)
-				if size += n; size < len(buf) {
-					buf = buf[:size]
-					break
+				if size += n; size >= len(buf) {
+					buf = append(buf, make([]byte, ice.MOD_BUFS)...)
+					continue
 				}
-				buf = append(buf, make([]byte, ice.MOD_BUFS)...)
-			} else {
-				break
 			}
+			buf = buf[:size]
+			break
 		}
 		m.Echo(string(buf)).StatusTime(FILE, file, SIZE, size)
 	default:
@@ -136,11 +135,9 @@ const CAT = "cat"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		CAT: {Name: "cat path auto", Help: "文件", Actions: ice.MergeActions(ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { aaa.White(m, ice.SRC_MAIN_JS, ice.SRC_MAIN_GO, ice.SRC_MAIN_SHY) }},
-		}, ice.Actions{ice.CTX_INIT: mdb.AutoConfig(SOURCE, kit.DictList(
+		CAT: {Name: "cat path auto", Help: "文件", Actions: ice.MergeActions(ice.Actions{ice.CTX_INIT: mdb.AutoConfig(SOURCE, kit.DictList(
 			HTML, CSS, JS, GO, SH, SHY, CSV, JSON, PY, MD, TXT, XML, YML, ZML, IML,
-			"license", "makefile", "configure", "conf",
+			ice.LICENSE, ice.MAKEFILE, "configure", "conf",
 		))}), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 || strings.HasSuffix(arg[0], ice.PS) {
 				m.Cmdy(DIR, arg)

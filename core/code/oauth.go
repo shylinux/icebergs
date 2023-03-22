@@ -42,7 +42,7 @@ func init() {
 				mdb.HashCreate(m, m.OptionSimple(CODE))
 			}},
 			ACCESS_TOKEN: {Name: "access_token", Help: "令牌", Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashModify(m, m.OptionSimple(mdb.HASH), kit.Simple(web.SpidePost(_oauth_header(m), kit.MergeURL2(LOGIN_OAUTH, ACCESS_TOKEN), m.ConfigSimple(CLIENT_ID, CLIENT_SECRET), m.OptionSimple(CODE))))
+				mdb.HashModify(m, m.OptionSimple(mdb.HASH), kit.Simple(web.SpidePost(_oauth_header(m), kit.MergeURL2(LOGIN_OAUTH, ACCESS_TOKEN), ctx.ConfigSimple(m, CLIENT_ID, CLIENT_SECRET), m.OptionSimple(CODE))))
 			}},
 			"user": {Name: "user", Help: "用户", Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashModify(m, m.OptionSimple(mdb.HASH), kit.Simple(web.SpideGet(_oauth_header(m), API_GITHUB+"user")))
@@ -66,7 +66,7 @@ func init() {
 		}, mdb.HashAction(mdb.FIELD, "time,hash,code,access_token,scope,token_type")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...).PushAction("public", "user", ACCESS_TOKEN, mdb.REMOVE); len(arg) == 0 {
 				if m.Action(mdb.CREATE); m.Length() == 0 {
-					m.Echo(kit.MergeURL2(LOGIN_OAUTH, "authorize", m.ConfigSimple(REDIRECT_URI, CLIENT_ID), SCOPE, "read:user read:public_key write:public_key repo"))
+					m.Echo(kit.MergeURL2(LOGIN_OAUTH, "authorize", ctx.ConfigSimple(m, REDIRECT_URI, CLIENT_ID), SCOPE, "read:user read:public_key write:public_key repo"))
 				}
 			}
 		}},

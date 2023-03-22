@@ -225,24 +225,20 @@ func (m *Message) FormatChain() string {
 		ms = append(ms, msg)
 	}
 	show := func(msg *Message, meta string) string {
-		if len(msg.meta[meta]) > 0 {
-			return kit.Format("%s:%d %v", meta, len(msg.meta[meta]), msg.meta[meta])
+		if len(msg.meta[meta]) == 0 || len(msg.meta[meta]) == 1 && msg.meta[meta][0] == "" {
+			return ""
 		}
-		return ""
+		return kit.Format("%s:%d %v", meta, len(msg.meta[meta]), msg.meta[meta])
 	}
 	meta := []string{}
 	for i := len(ms) - 1; i >= 0; i-- {
 		msg := ms[i]
-		meta = append(meta, kit.Join([]string{
-			msg.FormatPrefix(),
-			show(msg, MSG_DETAIL),
-			show(msg, MSG_OPTION),
-			show(msg, MSG_APPEND),
-			show(msg, MSG_RESULT),
-			msg._cmd.GetFileLine(),
-		}, " "))
+		meta = append(meta, kit.Join([]string{msg.FormatPrefix(), show(msg, MSG_DETAIL), show(msg, MSG_OPTION), show(msg, MSG_APPEND), show(msg, MSG_RESULT), msg._cmd.GetFileLine()}, SP))
 		for _, k := range msg.meta[MSG_OPTION] {
 			if v, ok := msg.meta[k]; ok {
+				if len(v) == 0 || len(v) == 1 && v[0] == "" {
+					continue
+				}
 				meta = append(meta, kit.Format("\t%s: %d %v", k, len(v), v))
 			}
 		}

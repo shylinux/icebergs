@@ -22,7 +22,7 @@ func _title_menu(m *ice.Message, kind, text string, arg ...string) *ice.Message 
 	if kind == NAVMENU {
 		m.Option(mdb.DATA, _title_parse(m, path.Dir(m.Option(ice.MSG_SCRIPT)), text))
 	}
-	return _option(m, kind, "", text, arg...).RenderTemplate(m.Config(kind), &Message{m})
+	return _option(m, kind, "", text, arg...).RenderTemplate(mdb.Config(m, kind), &Message{m})
 }
 func _title_show(m *ice.Message, kind, text string, arg ...string) *ice.Message {
 	switch title, _ := m.Optionv(TITLE).(map[string]int); kind {

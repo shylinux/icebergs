@@ -62,5 +62,5 @@ func WordAction(template string, arg ...ice.Any) ice.Actions {
 	return ice.Actions{ice.CTX_INIT: mdb.AutoConfig(append([]ice.Any{nfs.TEMPLATE, template}, arg...)...)}
 }
 func WordAlias(m *ice.Message, cmd string, cmds ...string) {
-	m.Conf(WORD, kit.Keym(mdb.ALIAS, cmd), cmds)
+	mdb.Conf(m, WORD, kit.Keym(mdb.ALIAS, cmd), cmds)
 }

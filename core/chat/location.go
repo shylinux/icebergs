@@ -32,7 +32,7 @@ func init() {
 	}
 	get := func(m *ice.Message, api string, arg ...ice.Any) string {
 		return kit.Format(cache(m, kit.Join(kit.Simple(api, arg)), func() string {
-			return m.Cmdx(http.MethodGet, "https://apis.map.qq.com/ws/"+api, mdb.KEY, m.Config(aaa.TOKEN), arg)
+			return m.Cmdx(http.MethodGet, "https://apis.map.qq.com/ws/"+api, mdb.KEY, mdb.Config(m, aaa.TOKEN), arg)
 		}))
 	}
 
@@ -73,7 +73,7 @@ func init() {
 			}},
 		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,latitude,longitude,extra"), ctx.CmdAction(), FavorAction()), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, kit.Slice(arg, 0, 1)...)
-			ctx.DisplayLocal(m, "", m.ConfigSimple(aaa.TOKEN))
+			ctx.DisplayLocal(m, "", ctx.ConfigSimple(m, aaa.TOKEN))
 			m.Option(LOCATION, get(m, "location/v1/ip", aaa.IP, m.Option(ice.MSG_USERIP)))
 		}},
 	})

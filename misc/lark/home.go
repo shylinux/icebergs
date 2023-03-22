@@ -16,7 +16,7 @@ func init() {
 			name := kit.Select(m.Option(ice.MSG_USERNAME), m.Option(ice.MSG_USERNICK))
 			kit.If(len(name) > 10, func() { name = name[:10] })
 			name += "的" + kit.Select("应用列表", arg, 2)
-			text, link, list := kit.Select("", arg, 3), kit.MergeURL2(m.Conf(web.SHARE, kit.Keym(web.DOMAIN)), "/chat/lark/sso"), []string{}
+			text, link, list := kit.Select("", arg, 3), kit.MergeURL2(mdb.Conf(m, web.SHARE, kit.Keym(web.DOMAIN)), "/chat/lark/sso"), []string{}
 			if len(arg) == 0 {
 				m.Cmd("web.chat./river", func(val ice.Maps) {
 					m.Cmd("web.chat./river", val[mdb.HASH], chat.STORM, func(value ice.Maps) {

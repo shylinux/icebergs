@@ -70,12 +70,12 @@ func _config_make(m *ice.Message, key string, arg ...string) {
 		if strings.HasPrefix(arg[1], ice.AT) {
 			arg[1] = msg.Cmdx(nfs.CAT, arg[1][1:])
 		}
-		msg.Confv(key, arg[0], kit.Parse(nil, "", arg[1:]...))
+		mdb.Confv(msg, key, arg[0], kit.Parse(nil, "", arg[1:]...))
 	}
 	if len(arg) > 0 {
-		m.Echo(kit.Formats(msg.Confv(key, arg[0])))
+		m.Echo(kit.Formats(mdb.Confv(msg, key, arg[0])))
 	} else {
-		m.Echo(kit.Formats(msg.Confv(key)))
+		m.Echo(kit.Formats(mdb.Confv(msg, key)))
 	}
 }
 func _config_list(m *ice.Message) {
@@ -96,28 +96,27 @@ const CONFIG = "config"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		CONFIG: {Name: "config key auto remove", Help: "配置", Actions: ice.Actions{
-			SAVE: {Hand: func(m *ice.Message, arg ...string) { _config_save(m, arg[0], arg[1:]...) }},
-			LOAD: {Hand: func(m *ice.Message, arg ...string) { _config_load(m, arg[0], arg[1:]...) }},
+		CONFIG: {Name: "config key auto export import trash", Help: "配置", Actions: ice.Actions{
+			SAVE:       {Hand: func(m *ice.Message, arg ...string) { _config_save(m, arg[0], arg[1:]...) }},
+			LOAD:       {Hand: func(m *ice.Message, arg ...string) { _config_load(m, arg[0], arg[1:]...) }},
+			mdb.EXPORT: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(mdb.EXPORT, arg[0], "", mdb.HASH) }},
+			mdb.IMPORT: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(mdb.IMPORT, arg[0], "", mdb.HASH) }},
+			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(mdb.EXPORT, arg[0], "", mdb.HASH, path.Join(ice.VAR_TRASH, kit.Keys(arg[0])))
+				nfs.Trash(m, path.Join(ice.VAR_DATA, arg[0]))
+				m.Go(func() { m.Cmd(ice.EXIT, 1) })
+			}},
 			mdb.LIST: {Hand: func(m *ice.Message, arg ...string) {
 				list := []ice.Any{}
-				for _, v := range arg[2:] {
-					list = append(list, v)
-				}
-				m.Confv(arg[0], arg[1], list)
-			}},
-			mdb.REMOVE: {Name: "remove key sub", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(mdb.EXPORT, m.Option(mdb.KEY), m.Option(mdb.SUB), mdb.HASH, path.Join(ice.VAR_TRASH, kit.Keys(m.Option(mdb.KEY), m.Option(mdb.SUB))))
-				nfs.Trash(m, path.Join(ice.VAR_DATA, m.Option(mdb.KEY)))
-				m.Go(func() { m.Cmd(ice.EXIT, 1) })
+				kit.For(arg[2:], func(v string) { list = append(list, v) })
+				mdb.Confv(m, arg[0], arg[1], list)
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				_config_list(m)
 			} else {
 				_config_make(m, arg[0], arg[1:]...)
-				DisplayStoryJSON(m)
-				m.Action(mdb.REMOVE)
+				// DisplayStoryJSON(m)
 			}
 		}},
 	})
@@ -148,17 +147,21 @@ func Load(m *ice.Message, arg ...string) *ice.Message {
 	}
 	return m.Cmd(CONFIG, LOAD, m.Prefix(nfs.JSON), arg)
 }
-func ConfAction(args ...ice.Any) ice.Actions {
-	return ice.Actions{ice.CTX_INIT: mdb.AutoConfig(args...)}
+func ConfAction(arg ...ice.Any) ice.Actions {
+	return ice.Actions{ice.CTX_INIT: mdb.AutoConfig(arg...)}
 }
-func ConfigAuto(m *ice.Message, arg ...string) {
-	if cs := m.Target().Configs; cs[m.CommandKey()] == nil {
-		cs[m.CommandKey()] = &ice.Config{Value: kit.Data()}
-		ice.Info.Load(m, m.CommandKey())
-	}
+func ConfigSimple(m *ice.Message, key ...string) (res []string) {
+	kit.For(kit.Split(kit.Join(key)), func(k string) { res = append(res, k, mdb.Config(m, k)) })
+	return
 }
 func ConfigFromOption(m *ice.Message, arg ...string) {
 	for _, k := range arg {
-		m.Config(k, kit.Select(m.Config(k), m.Option(k)))
+		mdb.Config(m, k, kit.Select(mdb.Config(m, k), m.Option(k)))
 	}
+}
+func OptionFromConfig(m *ice.Message, arg ...string) string {
+	for _, key := range arg {
+		m.Option(key, mdb.Config(m, key))
+	}
+	return m.Option(arg[0])
 }

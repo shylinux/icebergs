@@ -67,10 +67,7 @@ func init() {
 					defer logs.Println(ice.EXIT)
 					break
 				}
-				if logs.Println(); m.Sleep("1s").Config("log.save") == ice.TRUE {
-					back := kit.Format("var/log.%s", logs.Now().Format("20060102_150405"))
-					m.Cmd(SYSTEM, "cp", "-r", "var/log", back, ice.Maps{CMD_OUTPUT: ""})
-				}
+				logs.Println()
 			}
 		}},
 	})

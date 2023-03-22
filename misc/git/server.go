@@ -23,7 +23,7 @@ import (
 )
 
 func _server_login(m *ice.Message) error {
-	if tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) && m.Conf("web.serve", kit.Keym(tcp.LOCALHOST)) == ice.TRUE {
+	if tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) && ice.Info.Localhost {
 		return nil
 	}
 	ls := strings.SplitN(m.R.Header.Get(web.Authorization), ice.SP, 2)

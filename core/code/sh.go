@@ -14,7 +14,7 @@ import (
 )
 
 func _sh_cmds(m *ice.Message, p string) (string, string) {
-	cmds, text := kit.Select(SH, m.Config(ssh.SHELL)), kit.Format(strings.TrimSpace(nfs.Template(m, "cmd.sh")), web.UserHost(m), m.Option(ice.MSG_USERPOD), p)
+	cmds, text := kit.Select(SH, mdb.Config(m, ssh.SHELL)), kit.Format(strings.TrimSpace(nfs.Template(m, "cmd.sh")), web.UserHost(m), m.Option(ice.MSG_USERPOD), p)
 	if head := kit.Select("", strings.Split(m.Cmdx(nfs.CAT, p), ice.NL), 0); strings.HasPrefix(head, "#!") {
 		cmds = strings.TrimSpace(strings.TrimPrefix(head, "#!"))
 	}

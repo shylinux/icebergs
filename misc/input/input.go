@@ -10,6 +10,7 @@ import (
 
 	"shylinux.com/x/ice"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
@@ -45,9 +46,9 @@ func (s input) Load(m *ice.Message, arg ...string) {
 	if f, e := nfs.OpenFile(m, m.Option(nfs.FILE)); !m.Warn(e) {
 		defer f.Close()
 		lib := kit.Select(path.Base(m.Option(nfs.FILE)), m.Option(mdb.ZONE))
-		m.Assert(nfs.RemoveAll(m, path.Join(m.Config(mdb.STORE), lib)))
+		m.Assert(nfs.RemoveAll(m, path.Join(mdb.Config(m, mdb.STORE), lib)))
 		s.Zone.Remove(m, mdb.ZONE, lib)
-		s.Zone.Create(m, kit.Simple(mdb.ZONE, lib, m.ConfigSimple(mdb.LIMIT, mdb.LEAST, mdb.STORE, mdb.FSIZE))...)
+		s.Zone.Create(m, kit.Simple(mdb.ZONE, lib, ctx.ConfigSimple(m.Message, mdb.LIMIT, mdb.LEAST, mdb.STORE, mdb.FSIZE))...)
 		prefix := kit.Keys(mdb.HASH, m.Result())
 		for bio := bufio.NewScanner(f); bio.Scan(); {
 			if strings.HasPrefix(bio.Text(), "# ") {
@@ -59,8 +60,8 @@ func (s input) Load(m *ice.Message, arg ...string) {
 			}
 			mdb.Grow(m.Message, m.PrefixKey(), prefix, kit.Dict(TEXT, line[0], CODE, line[1], WEIGHT, kit.Select("999999", line, 2)))
 		}
-		m.Conf(m.PrefixKey(), kit.Keys(prefix, kit.Keym(mdb.LIMIT)), 0)
-		m.Conf(m.PrefixKey(), kit.Keys(prefix, kit.Keym(mdb.LEAST)), 0)
+		mdb.Conf(m, m.PrefixKey(), kit.Keys(prefix, kit.Keym(mdb.LIMIT)), 0)
+		mdb.Conf(m, m.PrefixKey(), kit.Keys(prefix, kit.Keym(mdb.LEAST)), 0)
 		m.Echo("%s: %d", lib, mdb.Grow(m.Message, m.PrefixKey(), prefix, kit.Dict(TEXT, "成功", CODE, "z", WEIGHT, "0")))
 	}
 }
@@ -92,7 +93,7 @@ func (s input) List(m *ice.Message, arg ...string) {
 	case WORD:
 		arg[1] = "^" + arg[1] + ice.FS
 	}
-	res := m.Cmdx(cli.SYSTEM, "grep", "-rn", arg[1], m.Config(mdb.STORE))
+	res := m.Cmdx(cli.SYSTEM, "grep", "-rn", arg[1], mdb.Config(m, mdb.STORE))
 	bio := csv.NewReader(bytes.NewBufferString(strings.Replace(res, ice.DF, ice.FS, -1)))
 	for i := 0; i < kit.Int(10); i++ {
 		if line, e := bio.Read(); e != nil {

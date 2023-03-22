@@ -180,17 +180,17 @@ func init() {
 			} else if len(arg) > 0 {
 				m.Cmdy(WINDOW, arg[0])
 			} else {
-				m.Split(_tmux_cmd(m, LIST_SESSION, "-F", m.Config(FORMAT)).Result(), m.Config(FIELDS), ice.FS, ice.NL)
+				m.Split(_tmux_cmd(m, LIST_SESSION, "-F", mdb.Config(m, FORMAT)).Result(), mdb.Config(m, FIELDS), ice.FS, ice.NL)
 			}
 			m.Tables(func(value ice.Maps) {
 				kit.If(value["tag"] == "1", func() { m.PushButton("") }, func() { m.PushButton(code.XTERM, mdb.SELECT, mdb.REMOVE) })
 			}).StatusTimeCount()
 		}},
 		WINDOW: {Hand: func(m *ice.Message, arg ...string) {
-			m.Split(m.Cmdx(cli.SYSTEM, TMUX, LIST_WINDOWS, "-t", kit.Select("", arg, 0), "-F", m.Config(FORMAT)), m.Config(FIELDS), ice.FS, ice.NL)
+			m.Split(m.Cmdx(cli.SYSTEM, TMUX, LIST_WINDOWS, "-t", kit.Select("", arg, 0), "-F", mdb.Config(m, FORMAT)), mdb.Config(m, FIELDS), ice.FS, ice.NL)
 		}},
 		PANE: {Hand: func(m *ice.Message, arg ...string) {
-			m.Split(_tmux_cmds(m, LIST_PANES, "-t", kit.Select("", arg, 0), "-F", m.Config(FORMAT)), m.Config(FIELDS), ice.FS, ice.NL)
+			m.Split(_tmux_cmds(m, LIST_PANES, "-t", kit.Select("", arg, 0), "-F", mdb.Config(m, FORMAT)), mdb.Config(m, FIELDS), ice.FS, ice.NL)
 		}},
 		VIEW: {Hand: func(m *ice.Message, arg ...string) {
 			m.Echo(_tmux_cmds(m, CAPTURE_PANE, "-p", "-t", kit.Select("", arg, 0)))

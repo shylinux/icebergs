@@ -67,18 +67,18 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	return true
 }
 func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.ResponseWriter, r *http.Request) {
-	_log := func(level string, arg ...ice.Any) *ice.Message { return m.Logs(level, arg...) }
+	_log := func(level string, arg ...ice.Any) *ice.Message { return m.Logs(strings.Title(level), arg...) }
 	if u, e := url.Parse(r.Header.Get(Referer)); e == nil {
-		add := func(k, v string) { _log("Path", k, m.Option(k, v)) }
+		add := func(k, v string) { _log(nfs.PATH, k, m.Option(k, v)) }
 		switch arg := strings.Split(strings.TrimPrefix(u.Path, ice.PS), ice.PS); arg[0] {
 		case CHAT:
 			kit.For(arg[1:], func(k, v string) { add(k, v) })
 		case SHARE:
 			add(arg[0], arg[1])
 		}
-		kit.For(u.Query(), func(k string, v []string) { _log("Refer", k, v).Optionv(k, v) })
+		kit.For(u.Query(), func(k string, v []string) { _log(ctx.ARGS, k, v).Optionv(k, v) })
 	}
-	m.Options(ice.MSG_USERUA, r.Header.Get(UserAgent), ice.MSG_HEIGHT, "480", ice.MSG_WIDTH, "320")
+	m.Options(ice.MSG_USERUA, r.Header.Get(UserAgent))
 	for k, v := range kit.ParseQuery(r.URL.RawQuery) {
 		kit.If(m.IsCliUA(), func() { v = kit.Simple(v, func(v string) (string, error) { return url.QueryUnescape(v) }) })
 		m.Optionv(k, v)
@@ -96,6 +96,7 @@ func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.Response
 		})
 	}
 	kit.For(r.Cookies(), func(k, v string) { m.Optionv(k, v) })
+	m.OptionDefault(ice.MSG_HEIGHT, "480", ice.MSG_WIDTH, "320")
 	m.Options(ice.MSG_USERWEB, _serve_domain(m), ice.MSG_USERPOD, m.Option(ice.POD))
 	m.Options(ice.MSG_SESSID, kit.Select(m.Option(ice.MSG_SESSID), m.Option(CookieName(m.Option(ice.MSG_USERWEB)))))
 	m.Options(ice.MSG_USERIP, r.Header.Get(ice.MSG_USERIP), ice.MSG_USERADDR, kit.Select(r.RemoteAddr, r.Header.Get(ice.MSG_USERADDR)))
@@ -184,7 +185,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{"/exit": {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(ice.EXIT) }},
 		SERVE: {Name: "serve name auto start", Help: "服务器", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				ice.Info.Localhost = m.Config(tcp.LOCALHOST) == ice.TRUE
+				ice.Info.Localhost = mdb.Config(m, tcp.LOCALHOST) == ice.TRUE
 				cli.NodeInfo(m, ice.Info.Pathname, WORKER)
 			}},
 			cli.START: {Name: "start dev proto host port=9020 nodename username usernick", Hand: func(m *ice.Message, arg ...string) {

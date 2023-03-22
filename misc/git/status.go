@@ -82,7 +82,7 @@ func _status_tags(m *ice.Message) {
 }
 func _status_each(m *ice.Message, title string, cmds ...string) {
 	web.GoToast(m, kit.Select(strings.Join(cmds, ice.SP), title), func(toast func(string, int, int)) {
-		list, count, total := []string{}, 0, len(m.Confm(REPOS, mdb.HASH))
+		list, count, total := []string{}, 0, m.Cmd(REPOS).Length()
 		ReposList(m).Tables(func(value ice.Maps) {
 			toast(value[REPOS], count, total)
 			if msg := m.Cmd(cmds, kit.Dict(cli.CMD_DIR, value[nfs.PATH])); !cli.IsSuccess(msg) {

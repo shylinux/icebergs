@@ -17,9 +17,7 @@ func _list_inputs(m *ice.Message, prefix, chain string, field, value string) {
 	list := map[string]int{}
 	defer func() {
 		delete(list, "")
-		for k, i := range list {
-			m.Push(field, k).Push(COUNT, i)
-		}
+		kit.For(list, func(k string, i int) { m.Push(field, k).Push(COUNT, i) })
 		m.SortIntR(COUNT)
 	}()
 	defer RLock(m, prefix, chain)()
@@ -57,9 +55,7 @@ func _list_export(m *ice.Message, prefix, chain, file string) {
 	count, head := 0, kit.Split(ListField(m))
 	Grows(m, prefix, chain, "", "", func(index int, value ice.Map) {
 		if value = kit.GetMeta(value); index == 0 {
-			if len(head) == 0 || head[0] == ice.FIELDS_DETAIL {
-				head = kit.SortedKey(value)
-			}
+			kit.If(len(head) == 0 || head[0] == ice.FIELDS_DETAIL, func() { head = kit.SortedKey(value) })
 			w.Write(head)
 		}
 		w.Write(kit.Simple(head, func(k string) string { return kit.Format(value[k]) }))
@@ -118,18 +114,18 @@ func PageListAction(arg ...ice.Any) ice.Actions {
 	return ice.MergeActions(ice.Actions{
 		SELECT: {Name: "select id auto insert page", Hand: func(m *ice.Message, arg ...string) { PageListSelect(m, arg...) }},
 		NEXT: {Hand: func(m *ice.Message, arg ...string) {
-			NextPage(m, kit.Select(m.Config(COUNT), arg, 0), kit.Slice(arg, 1)...)
+			NextPage(m, kit.Select(Config(m, COUNT), arg, 0), kit.Slice(arg, 1)...)
 		}},
 		PREV: {Hand: func(m *ice.Message, arg ...string) {
-			PrevPageLimit(m, kit.Select(m.Config(COUNT), arg, 0), kit.Slice(arg, 1)...)
+			PrevPageLimit(m, kit.Select(Config(m, COUNT), arg, 0), kit.Slice(arg, 1)...)
 		}},
 	}, ListAction(arg...))
 }
-func ListField(m *ice.Message) string { return kit.Select(LIST_FIELD, m.Config(FIELD)) }
+func ListField(m *ice.Message) string { return kit.Select(LIST_FIELD, Config(m, FIELD)) }
 func ListSelect(m *ice.Message, arg ...string) *ice.Message {
 	m.Fields(len(kit.Slice(arg, 0, 1)), ListField(m))
 	if m.Cmdy(SELECT, m.PrefixKey(), "", LIST, ID, arg); !m.FieldsIsDetail() {
-		return m.StatusTimeCountTotal(m.Config(COUNT))
+		return m.StatusTimeCountTotal(Config(m, COUNT))
 	}
 	return m.StatusTime()
 }

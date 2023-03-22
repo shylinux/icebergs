@@ -25,7 +25,7 @@ func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 	args := kit.SimpleKV("type,name,host,port", msg.Append(tcp.PROTOCOL), dev, msg.Append(tcp.HOST), msg.Append(tcp.PORT))
 	prints := false
 	m.Go(func() {
-		redial := kit.Dict(m.Configv(REDIAL))
+		redial := kit.Dict(mdb.Configv(m, REDIAL))
 		a, b, c := kit.Int(redial["a"]), kit.Int(redial["b"]), kit.Int(redial["c"])
 		for i := 1; i < c; i++ {
 			next := time.Duration(rand.Intn(a*(i+1))+b*i) * time.Millisecond

@@ -45,7 +45,7 @@ func init() {
 			}
 			from, days, adds, dels, rest, commit := "", 0, 0, 0, 0, 0
 			ReposList(m).TableGo(func(value ice.Maps, lock *task.Lock) {
-				if m.Config(kit.Keys("skip", value[REPOS])) == ice.TRUE {
+				if mdb.Config(m, kit.Keys("skip", value[REPOS])) == ice.TRUE {
 					return
 				}
 				msg := m.Cmd("_sum", value[nfs.PATH], mdb.TOTAL, "10000")

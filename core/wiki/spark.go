@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/ssh"
 	kit "shylinux.com/x/toolkits"
@@ -19,7 +20,7 @@ func _spark_show(m *ice.Message, name, text string, arg ...string) *ice.Message 
 	case "inner", FIELD:
 		return m.Echo(text)
 	}
-	prompt := kit.Select(name+"> ", m.Config(kit.Keys(ssh.PROMPT, name)))
+	prompt := kit.Select(name+"> ", mdb.Config(m, kit.Keys(ssh.PROMPT, name)))
 	for _, l := range kit.SplitLine(text) {
 		m.Echo(Format("div", Format("label", prompt), Format("span", l)))
 	}
@@ -95,7 +96,7 @@ func init() {
 				m.Cmdy(SPARK, "md", arg)
 			} else {
 				if arg[0] == "shell" && arg[1] == "inner" {
-					 arg = arg[1:]
+					arg = arg[1:]
 				}
 				arg = _name(m, arg)
 				_spark_show(m, arg[0], strings.TrimSpace(arg[1]), arg[2:]...)

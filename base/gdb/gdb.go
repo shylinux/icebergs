@@ -5,6 +5,7 @@ import (
 	"time"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/mdb"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -19,11 +20,11 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 	enable := mdb.Conf(m, TIMER, kit.Keym("enable")) == ice.TRUE
 	for {
 		select {
-		case &lt;-time.Tick(t):
+		case <-time.Tick(t):
 			if enable {
 				m.Cmd(TIMER, HAPPEN)
 			}
-		case s, ok := &lt;-f.s:
+		case s, ok := <-f.s:
 			if !ok {
 				return true
 			}

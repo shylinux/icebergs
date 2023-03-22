@@ -22,26 +22,10 @@ func (m *Message) PrefixKey(arg ...Any) string {
 	return kit.Keys(m.Prefix(m.CommandKey()), kit.Keys(arg...))
 }
 func (m *Message) Prefix(arg ...string) string {
-	return m.Target().PrefixKey(arg...)
+	return m.Target().Prefix(arg...)
 }
 func (m *Message) PrefixPath(arg ...Any) string {
 	return strings.TrimPrefix(path.Join(strings.ReplaceAll(m.PrefixRawKey(arg...), PT, PS)), "web") + PS
-}
-
-func (m *Message) Config(key string, arg ...Any) string {
-	return kit.Format(m.Configv(key, arg...))
-}
-func (m *Message) Configv(key string, arg ...Any) Any {
-	if len(arg) > 0 {
-		m.Confv(m.PrefixKey(), kit.Keym(key), arg[0])
-	}
-	return m.Confv(m.PrefixKey(), kit.Keym(key))
-}
-func (m *Message) ConfigSimple(key ...string) (res []string) {
-	for _, k := range kit.Split(kit.Join(key)) {
-		res = append(res, k, m.Config(k))
-	}
-	return
 }
 
 func loadImportant(m *Message) {
@@ -61,9 +45,7 @@ func SaveImportant(m *Message, arg ...string) {
 		return
 	}
 	for i, v := range arg {
-		if v == "" || strings.Contains(v, SP) {
-			arg[i] = "\"" + v + "\""
-		}
+		kit.If(v == "" || strings.Contains(v, SP), func() { arg[i] = "\"" + v + "\"" })
 	}
 	m.Cmd("nfs.push", VAR_DATA_IMPORTANT, kit.Join(arg, SP), NL)
 }

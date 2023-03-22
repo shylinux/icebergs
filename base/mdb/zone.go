@@ -10,22 +10,26 @@ import (
 	"shylinux.com/x/toolkits/miss"
 )
 
+func _zone_meta(m *ice.Message, prefix, chain, key string) string {
+	defer RLock(m, prefix, chain)()
+	return m.Conf(prefix, kit.Keys(chain, kit.Keym(key)))
+}
 func _zone_fields(m *ice.Message) []string {
 	return kit.Split(kit.Select(ZONE_FIELD, m.OptionFields()))
 }
 func _zone_inputs(m *ice.Message, prefix, chain, zone string, field, value string) {
-	if field == _mdb_getmeta(m, prefix, chain, SHORT) {
+	if field == _zone_meta(m, prefix, chain, SHORT) {
 		_hash_inputs(m, prefix, chain, field, value)
 		return
 	}
-	defer RLock(m, prefix, chain)()
 	h := _hash_select_field(m, prefix, chain, zone, HASH)
+	defer RLock(m, prefix, chain)()
 	_list_inputs(m, prefix, kit.Keys(chain, HASH, h), field, value)
 }
 func _zone_insert(m *ice.Message, prefix, chain, zone string, arg ...string) {
 	h := _hash_select_field(m, prefix, chain, zone, HASH)
 	if h == "" {
-		h = _hash_insert(m, prefix, chain, kit.Select(ZONE, _mdb_getmeta(m, prefix, chain, SHORT)), zone)
+		h = _hash_insert(m, prefix, chain, kit.Select(ZONE, _zone_meta(m, prefix, chain, SHORT)), zone)
 	}
 	m.Assert(h != "")
 	defer Lock(m, prefix, chain)()
@@ -147,8 +151,12 @@ func ZoneAction(arg ...ice.Any) ice.Actions {
 func PageZoneAction(arg ...ice.Any) ice.Actions {
 	return ice.MergeActions(ice.Actions{
 		SELECT: {Name: "select zone id auto insert page", Hand: func(m *ice.Message, arg ...string) { PageZoneSelect(m, arg...) }},
-		NEXT:   {Hand: func(m *ice.Message, arg ...string) { NextPage(m, arg[0], arg[1:]...) }},
-		PREV:   {Hand: func(m *ice.Message, arg ...string) { PrevPageLimit(m, arg[0], arg[1:]...) }},
+		PREV: {Hand: func(m *ice.Message, arg ...string) {
+			PrevPageLimit(m, arg[0], arg[1:]...)
+		}},
+		NEXT: {Hand: func(m *ice.Message, arg ...string) {
+			NextPage(m, arg[0], arg[1:]...)
+		}},
 	}, ZoneAction(arg...))
 }
 func ZoneKey(m *ice.Message) string {
@@ -197,15 +205,12 @@ func ZoneSelect(m *ice.Message, arg ...string) *ice.Message {
 	if m.Cmdy(SELECT, m.PrefixKey(), "", ZONE, arg, logs.FileLineMeta(-1)); len(arg) == 0 {
 		m.PushAction(Config(m, ACTION), REMOVE).StatusTimeCount().Sort(ZoneShort(m))
 	} else if len(arg) == 1 {
-		// m.StatusTimeCountTotal(_mdb_getmeta(m, m.PrefixKey(), kit.Keys(HASH, HashSelectField(m, arg[0], HASH)), COUNT))
-		m.StatusTimeCount()
+		m.StatusTimeCountTotal(_zone_meta(m, m.PrefixKey(), kit.Keys(HASH, HashSelectField(m, arg[0], HASH)), COUNT))
 	}
 	return m
 }
 func ZoneExport(m *ice.Message, arg ...Any) {
-	if m.OptionFields() == "" {
-		m.OptionFields(Config(m, SHORT), ZoneField(m))
-	}
+	kit.If(m.OptionFields() == "", func() { m.OptionFields(Config(m, SHORT), ZoneField(m)) })
 	m.Cmdy(EXPORT, m.PrefixKey(), "", ZONE, arg)
 }
 func ZoneImport(m *ice.Message, arg ...Any) {

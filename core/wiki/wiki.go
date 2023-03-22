@@ -46,7 +46,7 @@ func _wiki_list(m *ice.Message, arg ...string) bool {
 		if m.Option(nfs.DIR_DEEP) != ice.TRUE {
 			m.Cmdy(nfs.DIR, kit.Slice(arg, 0, 1), kit.Dict(nfs.DIR_TYPE, nfs.DIR))
 		}
-		m.Cmdy(nfs.DIR, kit.Slice(arg, 0, 1), kit.Dict(nfs.DIR_TYPE, nfs.CAT, nfs.DIR_REG, m.Config(lex.REGEXP)))
+		m.Cmdy(nfs.DIR, kit.Slice(arg, 0, 1), kit.Dict(nfs.DIR_TYPE, nfs.CAT, nfs.DIR_REG, mdb.Config(m, lex.REGEXP)))
 		m.StatusTimeCount()
 		m.SortTimeR(mdb.TIME)
 		return true
@@ -64,7 +64,7 @@ func _wiki_upload(m *ice.Message, dir string) {
 	m.Cmdy(web.CACHE, web.WATCH, m.Option(ice.MSG_UPLOAD), _wiki_path(m, dir, m.Option(mdb.NAME)))
 }
 func _wiki_template(m *ice.Message, name, text string, arg ...string) *ice.Message {
-	return _option(m, m.CommandKey(), name, strings.TrimSpace(text), arg...).RenderTemplate(m.Config(nfs.TEMPLATE), &Message{m})
+	return _option(m, m.CommandKey(), name, strings.TrimSpace(text), arg...).RenderTemplate(mdb.Config(m, nfs.TEMPLATE), &Message{m})
 }
 
 const WIKI = "wiki"
@@ -88,8 +88,8 @@ func WikiAction(dir string, ext ...string) ice.Actions {
 		mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 			switch arg[0] {
 			case nfs.PATH:
-				m.Option(nfs.DIR_REG, m.Config(lex.REGEXP))
-				m.Cmdy(nfs.DIR, path.Join(m.Config(nfs.PATH), kit.Select("", arg, 1)))
+				m.Option(nfs.DIR_REG, mdb.Config(m, lex.REGEXP))
+				m.Cmdy(nfs.DIR, path.Join(mdb.Config(m, nfs.PATH), kit.Select("", arg, 1)))
 			case ctx.INDEX:
 				m.Cmdy(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND, ice.OptionFields(ctx.INDEX))
 			}

@@ -7,15 +7,16 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
+	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
 
 func _port_right(m *ice.Message, arg ...string) string {
-	current, end := kit.Int(kit.Select(m.Config(CURRENT), arg, 0)), kit.Int(m.Config(END))
+	current, end := kit.Int(kit.Select(mdb.Config(m, CURRENT), arg, 0)), kit.Int(mdb.Config(m, END))
 	if current >= end {
-		current = kit.Int(m.Config(BEGIN))
+		current = kit.Int(mdb.Config(m, BEGIN))
 	}
 	for i := current; i < end; i++ {
 		if p := path.Join(ice.USR_LOCAL_DAEMON, kit.Format(i)); nfs.ExistsFile(m, p) {
@@ -26,7 +27,7 @@ func _port_right(m *ice.Message, arg ...string) string {
 		} else {
 			nfs.MkdirAll(m, p)
 			m.Logs(mdb.SELECT, PORT, i)
-			return m.Config(CURRENT, i)
+			return mdb.Config(m, CURRENT, i)
 		}
 	}
 	return ""
@@ -43,7 +44,7 @@ const PORT = "port"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		PORT: {Name: "port port path auto", Help: "端口", Actions: ice.MergeActions(ice.Actions{
-			CURRENT:   {Hand: func(m *ice.Message, arg ...string) { m.Echo(m.Config(CURRENT)) }},
+			CURRENT:   {Hand: func(m *ice.Message, arg ...string) { m.Echo(mdb.Config(m, CURRENT)) }},
 			aaa.RIGHT: {Hand: func(m *ice.Message, arg ...string) { m.Echo(_port_right(m, arg...)) }},
 			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
 				m.Assert(m.Option(PORT) != "")
@@ -54,7 +55,7 @@ func init() {
 				m.Cmdy(nfs.DIR, arg[1:], kit.Dict(nfs.DIR_ROOT, path.Join(ice.USR_LOCAL_DAEMON, arg[0])))
 				return
 			}
-			current := kit.Int(m.Config(BEGIN))
+			current := kit.Int(mdb.Config(m, BEGIN))
 			m.Option(nfs.DIR_ROOT, ice.USR_LOCAL_DAEMON)
 			m.Cmd(nfs.DIR, nfs.PWD, func(value ice.Maps) {
 				bin := m.CmdAppend(nfs.DIR, path.Join(value[nfs.PATH], ice.BIN), nfs.PATH)
@@ -68,8 +69,8 @@ func init() {
 				m.Push(ice.BIN, strings.TrimPrefix(bin, value[nfs.PATH]))
 				current = kit.Max(current, port)
 			})
-			m.Config(CURRENT, current)
-			m.PushAction(nfs.TRASH).StatusTimeCount(m.ConfigSimple(BEGIN, CURRENT, END)).SortInt(PORT)
+			mdb.Config(m, CURRENT, current)
+			m.PushAction(nfs.TRASH).StatusTimeCount(ctx.ConfigSimple(m, BEGIN, CURRENT, END)).SortInt(PORT)
 		}},
 	})
 }

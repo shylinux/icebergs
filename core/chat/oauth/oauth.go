@@ -151,7 +151,7 @@ var Index = &ice.Context{Name: OAUTH, Help: "认证授权", Commands: ice.Comman
 
 		} else { // 授权
 			token := m.Cmdx(ACCESS, mdb.CREATE, aaa.USERNAME, m.Option(ice.MSG_USERNAME), msg.AppendSimple(SCOPE, REDIRECT_URI))
-			m.RenderJson(ACCESS_TOKEN, token, TOKEN_TYPE, web.Bearer, EXPIRES_IN, kit.Duration(m.Conf(ACCESS, kit.Keym(mdb.EXPIRE)))/time.Second)
+			m.RenderJson(ACCESS_TOKEN, token, TOKEN_TYPE, web.Bearer, EXPIRES_IN, kit.Duration(mdb.Conf(m, ACCESS, kit.Keym(mdb.EXPIRE)))/time.Second)
 			m.Cmdx(TOKEN, mdb.MODIFY, mdb.HASH, m.Option(CODE), USED, ice.TRUE)
 		}
 	}},

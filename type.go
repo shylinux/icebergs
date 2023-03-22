@@ -18,12 +18,12 @@ type List = []Any
 type Map = map[string]Any
 type Maps = map[string]string
 type Handler func(m *Message, arg ...string)
+type Messages = map[string]*Message
+type Contexts = map[string]*Context
 type Commands = map[string]*Command
 type Actions = map[string]*Action
 type Configs = map[string]*Config
 type Caches = map[string]*Cache
-type Contexts = map[string]*Context
-type Messages = map[string]*Message
 
 type Cache struct {
 	Name  string
@@ -87,7 +87,7 @@ func (c *Context) Cmd(m *Message, key string, arg ...string) *Message {
 func (c *Context) Server() Server {
 	return c.server
 }
-func (c *Context) PrefixKey(arg ...string) string {
+func (c *Context) Prefix(arg ...string) string {
 	return kit.Keys(c.Cap(CTX_FOLLOW), arg)
 }
 func (c *Command) GetFileLine() string {
@@ -522,9 +522,6 @@ func (m *Message) Cmdx(arg ...Any) string {
 func (m *Message) Cmdy(arg ...Any) *Message {
 	return m.Copy(m._command(arg...))
 }
-func (m *Message) Confi(key string, sub string) int {
-	return kit.Int(m.Conf(key, sub))
-}
 func (m *Message) Confv(arg ...Any) (val Any) {
 	if m.Spawn().Warn(Info.Important && m.Option("_lock") == "") {
 		m.Warn(true, "what unsafe lock", m.PrefixKey(), m.FormatStack(1, 100))
@@ -555,14 +552,6 @@ func (m *Message) Confv(arg ...Any) (val Any) {
 		m.Search(key, func(p *Context, s *Context, key string, conf *Config) { run(conf) })
 	}
 	return
-}
-func (m *Message) Confm(key string, sub Any, cbs ...Any) Map {
-	val := m.Confv(key, sub)
-	if len(cbs) > 0 {
-		kit.Fetch(val, cbs[0])
-	}
-	value, _ := val.(Map)
-	return value
 }
 func (m *Message) Conf(arg ...Any) string {
 	return kit.Format(m.Confv(arg...))

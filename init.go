@@ -27,8 +27,6 @@ func (s *Frame) Begin(m *Message, arg ...string) Server {
 func (s *Frame) Start(m *Message, arg ...string) bool {
 	m.Cap(CTX_STREAM, strings.Split(m.Time(), SP)[1])
 	m.Cmd(kit.Keys(MDB, CTX_INIT))
-	m.Cmd(kit.Keys(AAA, CTX_INIT))
-	m.Cmd(kit.Keys(CLI, CTX_INIT))
 	m.Cmd(INIT, arg)
 	for _, k := range kit.Split(kit.Select("ctx,log,gdb,ssh", os.Getenv(CTX_DAEMON))) {
 		m.Start(k)
@@ -70,7 +68,6 @@ var Index = &Context{Name: ICE, Help: "冰山模块", Configs: Configs{HELP: {Va
 		m.Cmd(CTX_INIT)
 		m.Cmd(SOURCE, ETC_INIT_SHY)
 	}},
-	HELP: {Hand: func(m *Message, arg ...string) { m.Echo(m.Config(INDEX)) }},
 	QUIT: {Hand: func(m *Message, arg ...string) { os.Exit(0) }},
 	EXIT: {Hand: func(m *Message, arg ...string) {
 		m.root.Option(EXIT, kit.Select("0", arg, 0))

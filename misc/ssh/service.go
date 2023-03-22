@@ -124,11 +124,11 @@ func _ssh_handle(m *ice.Message, channel ssh.Channel, pty, tty *os.File, list []
 	h := m.Cmdx(mdb.INSERT, m.Prefix(CHANNEL), "", mdb.HASH, mdb.STATUS, tcp.OPEN, TTY, tty.Name(), m.OptionSimple(aaa.USERNAME, tcp.HOSTPORT), kit.Dict(mdb.TARGET, pty))
 	p := _ssh_watch(m, h, pty, channel)
 	m.Go(func() { io.Copy(channel, pty) })
-	channel.Write([]byte(m.Config(WELCOME)))
+	channel.Write([]byte(mdb.Config(m, WELCOME)))
 	m.Options(cli.CMD_INPUT, tty, cli.CMD_OUTPUT, tty)
 	m.Cmd(cli.DAEMON, kit.Select("sh", kit.Env(cli.SHELL)), func() {
 		defer m.Cmd(mdb.MODIFY, m.Prefix(CHANNEL), "", mdb.HASH, mdb.HASH, h, mdb.STATUS, tcp.CLOSE)
-		channel.Write([]byte(m.Config(GOODBYE)))
+		channel.Write([]byte(mdb.Config(m, GOODBYE)))
 		channel.Close()
 		p.Close()
 	})
@@ -197,7 +197,7 @@ func init() {
 			mdb.SHORT, tcp.PORT, mdb.FIELD, "time,port,status,private,authkey,count", mdb.FIELDS, "time,id,type,name,text",
 			WELCOME, "welcome to contexts world\r\n", GOODBYE, "goodbye of contexts world\r\n",
 		)), Hand: func(m *ice.Message, arg ...string) {
-			m.Fields(len(arg), m.Config(mdb.FIELD), m.Config(mdb.FIELDS))
+			m.Fields(len(arg), mdb.Config(m, mdb.FIELD), mdb.Config(m, mdb.FIELDS))
 			if mdb.ZoneSelect(m, arg...); len(arg) == 0 {
 				m.PushAction(aaa.INVITE, mdb.INSERT, ctx.LOAD, ctx.SAVE, mdb.REMOVE)
 			}

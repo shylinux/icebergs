@@ -184,7 +184,6 @@ func init() {
 		switch sub {
 		case TEMPLATE, COMPLETE, NAVIGATE:
 			return func(m *ice.Message, arg ...string) {
-				m.Option(mdb.SHORT, mdb.TYPE)
 				m.Cmd(sub, mdb.CREATE, key, m.PrefixKey())
 			}, nil
 		}

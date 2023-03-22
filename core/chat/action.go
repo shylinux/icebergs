@@ -79,7 +79,7 @@ func init() {
 				return
 			}
 			if len(arg) == 2 {
-				m.OptionFromConfig(MENUS)
+				ctx.OptionFromConfig(m, MENUS)
 				_action_list(m, arg[0], arg[1])
 			} else {
 				_action_exec(m, arg[0], arg[1], arg[2], arg[3:]...)

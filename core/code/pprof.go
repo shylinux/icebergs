@@ -43,7 +43,7 @@ func init() {
 					return
 				}
 				msg := m.Cmd(web.SPIDE, ice.DEV, web.SPIDE_CACHE, http.MethodGet, m.Option(SERVICE), m.OptionSimple(SECONDS))
-				cmd := kit.Simple(m.Configv(PPROF), "-text", m.Option(BINNARY), msg.Append(nfs.FILE))
+				cmd := kit.Simple(mdb.Configv(m, PPROF), "-text", m.Option(BINNARY), msg.Append(nfs.FILE))
 				m.Option(mdb.TEXT, strings.Join(kit.Slice(strings.Split(m.Cmdx(cli.SYSTEM, cmd), ice.NL), 0, 20), ice.NL))
 				mdb.ZoneInsert(m, m.OptionSimple("zone,text"), msg.AppendSimple(nfs.FILE))
 				m.Echo(m.Option(mdb.TEXT)).ProcessInner()
@@ -51,7 +51,7 @@ func init() {
 			web.SERVE: {Help: "展示", Hand: func(m *ice.Message, arg ...string) {
 				u := web.OptionUserWeb(m)
 				p := u.Hostname() + ice.DF + m.Cmdx(tcp.PORT, aaa.RIGHT)
-				m.Cmd(cli.DAEMON, m.Configv(PPROF), "-http="+p, m.Option(BINNARY), m.Option(nfs.FILE))
+				m.Cmd(cli.DAEMON, mdb.Configv(m, PPROF), "-http="+p, m.Option(BINNARY), m.Option(nfs.FILE))
 				m.Sleep("3s").ProcessOpen(kit.Format("http://%s/ui/top", p))
 			}},
 		}, mdb.ZoneAction(mdb.FIELDS, "time,zone,count,binnary,service,seconds", mdb.FIELD, "time,id,text,file", PPROF, kit.List(GO, "tool", PPROF))), Hand: func(m *ice.Message, arg ...string) {

@@ -37,7 +37,7 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 				if file == "" {
 					continue
 				}
-				view := m.Confm(VIEW, m.Conf(SHOW, kit.Keys(l.l, VIEW)))
+				view := mdb.Confm(m, VIEW, m.Conf(SHOW, kit.Keys(l.l, VIEW)))
 				bio := m.Confv(FILE, kit.Keys(file, FILE)).(*bufio.Writer)
 				if bio == nil {
 					continue
@@ -105,16 +105,16 @@ var Index = &ice.Context{Name: LOG, Help: "日志模块", Configs: ice.Configs{
 	SHOW: {Name: SHOW, Help: "日志分流", Value: kit.Dict()},
 }, Commands: ice.Commands{
 	ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-		m.Confm(FILE, nil, func(key string, value ice.Map) {
-			kit.Fetch(value[mdb.LIST], func(index int, k string) { m.Conf(SHOW, kit.Keys(k, FILE), key) })
+		mdb.Confm(m, FILE, nil, func(key string, value ice.Map) {
+			kit.For(value[mdb.LIST], func(index int, k string) { m.Conf(SHOW, kit.Keys(k, FILE), key) })
 			if f, p, e := logs.CreateFile(kit.Format(value[nfs.PATH])); e == nil {
 				m.Cap(ice.CTX_STREAM, path.Base(p))
 				value[FILE] = bufio.NewWriter(f)
 				m.Logs(nfs.SAVE, nfs.FILE, p)
 			}
 		})
-		m.Confm(VIEW, nil, func(key string, value ice.Map) {
-			kit.Fetch(value[mdb.LIST], func(index int, k string) { m.Conf(SHOW, kit.Keys(k, VIEW), key) })
+		mdb.Confm(m, VIEW, nil, func(key string, value ice.Map) {
+			kit.For(value[mdb.LIST], func(index int, k string) { m.Conf(SHOW, kit.Keys(k, VIEW), key) })
 		})
 	}},
 	ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) {}},

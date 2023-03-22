@@ -15,7 +15,7 @@ func init() {
 			mdb.SHORT, mdb.TEXT, mdb.FIELD, "time,type,name,text", mdb.LINK, "https://open.weixin.qq.com/qr/code",
 		), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, arg...).Tables(func(value ice.Maps) {
-				m.PushQRCode(mdb.SCAN, kit.MergeURL(m.Config(mdb.LINK), aaa.USERNAME, value[mdb.TEXT]))
+				m.PushQRCode(mdb.SCAN, kit.MergeURL(mdb.Config(m, mdb.LINK), aaa.USERNAME, value[mdb.TEXT]))
 			})
 		}},
 	})

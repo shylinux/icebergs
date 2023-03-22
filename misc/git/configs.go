@@ -40,7 +40,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		CONFIGS: {Name: "configs name value auto create init", Help: "配置键", Actions: ice.MergeActions(ice.Actions{
 			ice.INIT: {Help: "初始化", Hand: func(m *ice.Message, arg ...string) {
-				kit.Fetch(m.Configv(ice.INIT), func(p string, v ice.Any) {
+				kit.Fetch(mdb.Configv(m, ice.INIT), func(p string, v ice.Any) {
 					kit.Fetch(v, func(k string, v string) { _configs_set(m, kit.Keys(p, k), v) })
 				})
 			}},

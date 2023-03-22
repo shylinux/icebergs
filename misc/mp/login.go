@@ -33,9 +33,9 @@ const LOGIN = "login"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		web.PP(LOGIN): {Actions: ice.MergeActions(ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { m.Cmd(web.SPIDE, mdb.CREATE, MP, m.Config(tcp.SERVER)) }},
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { m.Cmd(web.SPIDE, mdb.CREATE, MP, mdb.Config(m, tcp.SERVER)) }},
 			aaa.SESS: {Name: "sess code", Help: "会话", Hand: func(m *ice.Message, arg ...string) {
-				msg := m.Cmd(web.SPIDE, MP, http.MethodGet, "/sns/jscode2session?grant_type=authorization_code", "js_code", m.Option(cli.CODE), APPID, m.Config(APPID), "secret", m.Config(APPMM))
+				msg := m.Cmd(web.SPIDE, MP, http.MethodGet, "/sns/jscode2session?grant_type=authorization_code", "js_code", m.Option(cli.CODE), APPID, mdb.Config(m, APPID), "secret", mdb.Config(m, APPMM))
 				m.Option(ice.MSG_USERZONE, MP)
 				m.Echo(aaa.SessCreate(msg, msg.Append(OPENID)))
 			}},
@@ -54,20 +54,20 @@ func init() {
 				ctx.ConfigFromOption(m, APPID, APPMM)
 			}},
 			TOKENS: {Help: "令牌", Hand: func(m *ice.Message, arg ...string) {
-				if now := time.Now().Unix(); m.Config(TOKENS) == "" || now > kit.Int64(m.Config(EXPIRES)) {
-					msg := m.Cmd(web.SPIDE, MP, http.MethodGet, "/cgi-bin/token?grant_type=client_credential", APPID, m.Config(APPID), "secret", m.Config(APPMM))
+				if now := time.Now().Unix(); mdb.Config(m, TOKENS) == "" || now > kit.Int64(mdb.Config(m, EXPIRES)) {
+					msg := m.Cmd(web.SPIDE, MP, http.MethodGet, "/cgi-bin/token?grant_type=client_credential", APPID, mdb.Config(m, APPID), "secret", mdb.Config(m, APPMM))
 					if m.Warn(msg.Append(ERRCODE) != "", msg.Append(ERRCODE), msg.Append(ERRMSG)) {
 						return
 					}
-					m.Config(EXPIRES, now+kit.Int64(msg.Append("expires_in")))
-					m.Config(TOKENS, msg.Append("access_token"))
+					mdb.Config(m, EXPIRES, now+kit.Int64(msg.Append("expires_in")))
+					mdb.Config(m, TOKENS, msg.Append("access_token"))
 				}
-				m.Echo(m.Config(TOKENS)).Status(EXPIRES, time.Unix(kit.Int64(m.Config(EXPIRES)), 0).Format(ice.MOD_TIME))
+				m.Echo(mdb.Config(m, TOKENS)).Status(EXPIRES, time.Unix(kit.Int64(mdb.Config(m, EXPIRES)), 0).Format(ice.MOD_TIME))
 			}},
 			QRCODE: {Name: "qrcode path scene", Help: "扫码", Hand: func(m *ice.Message, arg ...string) {
 				msg := m.Cmd(web.SPIDE, MP, http.MethodPost, "/wxa/getwxacodeunlimit?access_token="+m.Cmdx(LOGIN, TOKENS), m.OptionSimple("path,scene"))
 				m.Echo(kit.Format(`<img src="data:image/png;base64,%s" title='%s'>`, base64.StdEncoding.EncodeToString([]byte(msg.Result())), "some")).ProcessInner()
 			}},
-		}, Hand: func(m *ice.Message, arg ...string) { m.Echo(m.Config(APPID)) }},
+		}, Hand: func(m *ice.Message, arg ...string) { m.Echo(mdb.Config(m, APPID)) }},
 	})
 }

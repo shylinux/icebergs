@@ -23,6 +23,5 @@ func RenderAction(arg ...ice.Any) ice.Actions {
 				})
 			})
 		}},
-		ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { Conf(m, m.PrefixKey(), HASH, "") }},
-	})
+	}, ClearOnExitHashAction())
 }

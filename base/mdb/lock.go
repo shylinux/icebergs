@@ -52,6 +52,9 @@ func Confv(m configMessage, arg ...Any) Any {
 	}
 	return m.Confv(arg...)
 }
+func Conf(m configMessage, arg ...Any) string {
+	return kit.Format(Confv(m, arg...))
+}
 func Confm(m configMessage, key string, sub Any, cbs ...Any) Map {
 	val := m.Confv(key, sub)
 	if len(cbs) > 0 {
@@ -59,9 +62,6 @@ func Confm(m configMessage, key string, sub Any, cbs ...Any) Map {
 	}
 	value, _ := val.(Map)
 	return value
-}
-func Conf(m configMessage, arg ...Any) string {
-	return kit.Format(Confv(m, arg...))
 }
 
 var cache = sync.Map{}

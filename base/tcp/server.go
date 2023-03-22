@@ -66,6 +66,6 @@ func init() {
 			LISTEN: {Name: "listen type name port=9030 host=", Hand: func(m *ice.Message, arg ...string) {
 				_server_listen(m, arg...)
 			}},
-		}, mdb.StatusHashAction(mdb.FIELD, "time,hash,status,type,name,host,port,error,nconn"), mdb.ClearHashOnExitAction())},
+		}, mdb.StatusHashAction(mdb.FIELD, "time,hash,status,type,name,host,port,error,nconn"), mdb.ClearOnExitHashAction())},
 	})
 }

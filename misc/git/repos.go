@@ -251,7 +251,7 @@ func init() {
 				}
 				ctx.ProcessField(m, "", arg, arg...)
 			}},
-		}, mdb.HashAction(mdb.SHORT, REPOS, mdb.FIELD, "time,repos,branch,commit,origin"), mdb.ClearHashOnExitAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.SHORT, REPOS, mdb.FIELD, "time,repos,branch,commit,origin"), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 || arg[0] == "" {
 				mdb.HashSelect(m, arg...).Action(mdb.CREATE)
 			} else if dir := _git_dir(_repos_path(arg[0])); len(arg) == 1 || arg[1] == "" {

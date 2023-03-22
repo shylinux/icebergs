@@ -136,86 +136,66 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: ice.Commands
 	ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {}},
 	ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) {}},
 	INPUTS: {Name: "inputs key sub type field value", Hand: func(m *ice.Message, arg ...string) {
-		switch arg[2] {
-		case HASH:
-			_hash_inputs(m, arg[0], arg[1], kit.Select(NAME, arg, 3), kit.Select("", arg, 4))
-		case ZONE:
-			_zone_inputs(m, arg[0], arg[1], arg[3], kit.Select(NAME, arg, 4), kit.Select("", arg, 5))
-		case LIST:
-			_list_inputs(m, arg[0], arg[1], kit.Select(NAME, arg, 3), kit.Select("", arg, 4))
-		}
+		kit.Switch(arg[2],
+			HASH, func() { _hash_inputs(m, arg[0], arg[1], kit.Select(NAME, arg, 3), kit.Select("", arg, 4)) },
+			ZONE, func() { _zone_inputs(m, arg[0], arg[1], arg[3], kit.Select(NAME, arg, 4), kit.Select("", arg, 5)) },
+			LIST, func() { _list_inputs(m, arg[0], arg[1], kit.Select(NAME, arg, 3), kit.Select("", arg, 4)) },
+		)
 	}},
 	INSERT: {Name: "insert key sub type arg...", Hand: func(m *ice.Message, arg ...string) {
-		switch arg[2] {
-		case HASH:
-			_hash_insert(m, arg[0], arg[1], arg[3:]...)
-		case ZONE:
-			_zone_insert(m, arg[0], arg[1], arg[3], arg[4:]...)
-		case LIST:
-			_list_insert(m, arg[0], arg[1], arg[3:]...)
-		}
+		kit.Switch(arg[2],
+			HASH, func() { _hash_insert(m, arg[0], arg[1], arg[3:]...) },
+			ZONE, func() { _zone_insert(m, arg[0], arg[1], arg[3], arg[4:]...) },
+			LIST, func() { _list_insert(m, arg[0], arg[1], arg[3:]...) },
+		)
 	}},
 	DELETE: {Name: "delete key sub type field value", Hand: func(m *ice.Message, arg ...string) {
-		switch arg[2] {
-		case HASH:
-			_hash_delete(m, arg[0], arg[1], arg[3], arg[4])
-		case ZONE:
-			// _list_delete(m, arg[0], _domain_chain(m, kit.Keys(arg[1], kit.KeyHash(arg[3]))), arg[4], arg[5])
-		case LIST:
-			// _list_delete(m, arg[0], arg[1], arg[3], arg[4])
-		}
+		kit.Switch(arg[2],
+			HASH, func() { _hash_delete(m, arg[0], arg[1], arg[3], arg[4]) },
+			// ZONE, func() { _list_delete(m, arg[0], _domain_chain(m, kit.Keys(arg[1], kit.KeyHash(arg[3]))), arg[4], arg[5]) },
+			// LIST, func() { _list_delete(m, arg[0], arg[1], arg[3], arg[4]) },
+		)
 	}},
 	MODIFY: {Name: "modify key sub type field value arg...", Hand: func(m *ice.Message, arg ...string) {
-		switch arg[2] {
-		case HASH:
-			_hash_modify(m, arg[0], arg[1], arg[3], arg[4], arg[5:]...)
-		case ZONE:
-			_zone_modify(m, arg[0], arg[1], arg[3], arg[4], arg[5:]...)
-		case LIST:
-			_list_modify(m, arg[0], arg[1], arg[3], arg[4], arg[5:]...)
-		}
+		kit.Switch(arg[2],
+			HASH, func() { _hash_modify(m, arg[0], arg[1], arg[3], arg[4], arg[5:]...) },
+			ZONE, func() { _zone_modify(m, arg[0], arg[1], arg[3], arg[4], arg[5:]...) },
+			LIST, func() { _list_modify(m, arg[0], arg[1], arg[3], arg[4], arg[5:]...) },
+		)
 	}},
 	SELECT: {Name: "select key sub type field value", Hand: func(m *ice.Message, arg ...string) {
-		switch arg[2] {
-		case HASH:
-			_hash_select(m, arg[0], arg[1], kit.Select("", arg, 3), kit.Select(FOREACH, arg, 4))
-		case ZONE:
-			_zone_select(m, arg[0], arg[1], kit.Select("", arg, 3), kit.Select("", arg, 4))
-		case LIST:
-			_list_select(m, arg[0], arg[1], kit.Select("", arg, 3), kit.Select("", arg, 4))
-		}
+		kit.Switch(arg[2],
+			HASH, func() { _hash_select(m, arg[0], arg[1], kit.Select("", arg, 3), kit.Select(FOREACH, arg, 4)) },
+			ZONE, func() { _zone_select(m, arg[0], arg[1], kit.Select("", arg, 3), kit.Select("", arg, 4)) },
+			LIST, func() { _list_select(m, arg[0], arg[1], kit.Select("", arg, 3), kit.Select("", arg, 4)) },
+		)
 	}},
 	PRUNES: {Name: "prunes key sub type [field value]...", Hand: func(m *ice.Message, arg ...string) {
-		switch arg[2] {
-		case HASH:
-			_hash_prunes(m, arg[0], arg[1], arg[3:]...)
-			m.Tables(func(value Maps) { _hash_delete(m, arg[0], arg[1], HASH, value[HASH]) })
-		case ZONE:
-			// _list_prunes(m, arg[0], _domain_chain(m, kit.Keys(arg[1], kit.KeyHash(arg[3]))), arg[4:]...)
-		case LIST:
-			// _list_prunes(m, arg[0], arg[1], arg[3:]...)
-		}
+		kit.Switch(arg[2],
+			HASH, func() {
+				_hash_prunes(m, arg[0], arg[1], arg[3:]...)
+				m.Tables(func(value Maps) { _hash_delete(m, arg[0], arg[1], HASH, value[HASH]) })
+			},
+			// ZONE, func() { _list_prunes(m, arg[0], _domain_chain(m, kit.Keys(arg[1], kit.KeyHash(arg[3]))), arg[4:]...) },
+			// LIST, func() { _list_prunes(m, arg[0], arg[1], arg[3:]...) },
+		)
 	}},
 	EXPORT: {Name: "export key sub type file", Hand: func(m *ice.Message, arg ...string) {
 		m.OptionDefault(CACHE_LIMIT, "-1")
-		switch file := _mdb_export_file(m, arg...); arg[2] {
-		case HASH:
-			_hash_export(m, arg[0], arg[1], file)
-		case ZONE:
-			_zone_export(m, arg[0], arg[1], file)
-		case LIST:
-			_list_export(m, arg[0], arg[1], file)
-		}
+		file := _mdb_export_file(m, arg...)
+		kit.Switch(arg[2],
+			HASH, func() { _hash_export(m, arg[0], arg[1], file) },
+			ZONE, func() { _zone_export(m, arg[0], arg[1], file) },
+			LIST, func() { _list_export(m, arg[0], arg[1], file) },
+		)
 	}},
 	IMPORT: {Name: "import key sub type file", Hand: func(m *ice.Message, arg ...string) {
-		switch file := _mdb_export_file(m, arg...); arg[2] {
-		case HASH:
-			_hash_import(m, arg[0], arg[1], file)
-		case ZONE:
-			_zone_import(m, arg[0], arg[1], file)
-		case LIST:
-			_list_import(m, arg[0], arg[1], file)
-		}
+		file := _mdb_export_file(m, arg...)
+		kit.Switch(arg[2],
+			HASH, func() { _hash_import(m, arg[0], arg[1], file) },
+			ZONE, func() { _zone_import(m, arg[0], arg[1], file) },
+			LIST, func() { _list_import(m, arg[0], arg[1], file) },
+		)
 	}},
 }}
 

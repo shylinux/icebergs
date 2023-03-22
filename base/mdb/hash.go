@@ -70,20 +70,14 @@ func _hash_select(m *ice.Message, prefix, chain, field, value string) {
 }
 func _hash_select_field(m *ice.Message, prefix, chain string, key string, field string) (value string) {
 	defer RLock(m, prefix, chain)()
-	Richs(m, prefix, chain, key, func(key string, val Map) {
-		if field == HASH {
-			value = key
-		} else {
-			value = kit.Format(val[field])
-		}
-	})
+	Richs(m, prefix, chain, key, func(key string, val Map) { value = kit.Select(kit.Format(val[field]), key, field == HASH) })
 	return
 }
 func _hash_prunes(m *ice.Message, prefix, chain string, arg ...string) {
 	fields := _hash_fields(m)
 	defer RLock(m, prefix, chain)()
 	Richs(m, prefix, chain, FOREACH, func(key string, value Map) {
-		switch value = kit.GetMeta(value); cb := m.OptionCB(PRUNES).(type) {
+		switch value = kit.GetMeta(value); cb := m.OptionCB("").(type) {
 		case func(string, Map) bool:
 			kit.If(cb(key, value), func() { m.Push(key, value, fields) })
 		default:
@@ -150,7 +144,7 @@ func StatusHashAction(arg ...Any) ice.Actions {
 		}},
 	}, HashAction(arg...))
 }
-func ClearHashOnExitAction() ice.Actions {
+func ClearOnExitHashAction() ice.Actions {
 	return ice.MergeActions(ice.Actions{ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { Conf(m, m.PrefixKey(), HASH, "") }}})
 }
 
@@ -199,12 +193,7 @@ func HashSelect(m *ice.Message, arg ...string) *ice.Message {
 }
 func HashPrunes(m *ice.Message, cb func(Map) bool) *ice.Message {
 	expire := kit.Select(m.Time("-"+kit.Select(DAYS, Config(m, EXPIRE))), m.Option("before"))
-	m.OptionCB(PRUNES, func(key string, value Map) bool {
-		if kit.Format(value[TIME]) > expire {
-			return false
-		}
-		return cb == nil || cb(value)
-	})
+	m.OptionCB(PRUNES, func(key string, value Map) bool { return kit.Format(value[TIME]) < expire && (cb == nil || cb(value)) })
 	return m.Cmdy(PRUNES, m.PrefixKey(), "", HASH, ice.OptionFields(HashField(m))).StatusTimeCount()
 }
 func HashExport(m *ice.Message, arg ...Any) *ice.Message {
@@ -245,13 +234,7 @@ func HashSelectDetails(m *ice.Message, key string, cb func(Map) bool) Map {
 	return val
 }
 func HashSelectField(m *ice.Message, key string, field string) (value string) {
-	HashSelectDetail(m, key, func(key string, val Map) {
-		if field == HASH {
-			value = key
-		} else {
-			value = kit.Format(kit.Value(val, field))
-		}
-	})
+	HashSelectDetail(m, key, func(key string, val Map) { value = kit.Select(kit.Format(kit.Value(val, field)), key, field == HASH) })
 	return
 }
 func HashSelectTarget(m *ice.Message, key string, create Any) (target Any) {
@@ -270,10 +253,10 @@ func HashSelectTarget(m *ice.Message, key string, create Any) (target Any) {
 			return
 		}
 		switch create := create.(type) {
-		case func(Map) Any:
-			target = create(value)
 		case func(Maps) Any:
 			target = create(ToMaps(value))
+		case func(Map) Any:
+			target = create(value)
 		case func() Any:
 			target = create()
 		default:
@@ -317,9 +300,6 @@ func Rich(m *ice.Message, prefix string, chain Any, data Any) string {
 	if cache == nil {
 		cache = kit.Data()
 		m.Confv(prefix, chain, cache)
-	}
-	if m.Option(SHORT) != "" {
-		kit.Value(cache, kit.Keym(SHORT), m.Option(SHORT))
 	}
 	return miss.Rich(path.Join(prefix, kit.Keys(chain)), cache, data)
 }

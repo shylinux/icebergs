@@ -101,6 +101,6 @@ func init() {
 			tcp.SEND: {Hand: func(m *ice.Message, arg ...string) {
 				_broad_send(m, "", "", "255.255.255.255", "9020", arg...)
 			}},
-		}, mdb.HashAction(mdb.SHORT, "host,port", mdb.FIELD, "time,hash,type,name,host,port", mdb.ACTION, OPEN), mdb.ClearHashOnExitAction())},
+		}, mdb.HashAction(mdb.SHORT, "host,port", mdb.FIELD, "time,hash,type,name,host,port", mdb.ACTION, OPEN), mdb.ClearOnExitHashAction())},
 	})
 }

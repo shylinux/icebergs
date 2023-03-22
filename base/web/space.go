@@ -223,7 +223,7 @@ func init() {
 			ice.PS: {Hand: func(m *ice.Message, arg ...string) { _space_fork(m) }},
 		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,type,name,text", ctx.ACTION, OPEN,
 			REDIAL, kit.Dict("a", 3000, "b", 1000, "c", 1000),
-		), mdb.ClearHashOnExitAction(), SpaceAction(), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {
+		), mdb.ClearOnExitHashAction(), SpaceAction(), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 {
 				mdb.HashSelect(m, arg...).Sort("type,name,text")
 				m.Tables(func(values ice.Maps) {

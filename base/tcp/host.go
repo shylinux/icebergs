@@ -90,7 +90,7 @@ func init() {
 			GATEWAY: {Hand: func(m *ice.Message, arg ...string) {
 				m.Push(aaa.IP, kit.Keys(kit.Slice(strings.Split(m.Cmd("").Append(aaa.IP), ice.PT), 0, 3), "1"))
 			}},
-		}, mdb.HashAction(mdb.SHORT, mdb.TEXT), mdb.ClearHashOnExitAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.SHORT, mdb.TEXT), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			_host_list(m, kit.Select("", arg, 0))
 		}},
 	})

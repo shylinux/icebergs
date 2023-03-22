@@ -151,12 +151,8 @@ func ZoneAction(arg ...ice.Any) ice.Actions {
 func PageZoneAction(arg ...ice.Any) ice.Actions {
 	return ice.MergeActions(ice.Actions{
 		SELECT: {Name: "select zone id auto insert page", Hand: func(m *ice.Message, arg ...string) { PageZoneSelect(m, arg...) }},
-		PREV: {Hand: func(m *ice.Message, arg ...string) {
-			PrevPageLimit(m, arg[0], arg[1:]...)
-		}},
-		NEXT: {Hand: func(m *ice.Message, arg ...string) {
-			NextPage(m, arg[0], arg[1:]...)
-		}},
+		PREV:   {Hand: func(m *ice.Message, arg ...string) { PrevPageLimit(m, arg[0], arg[1:]...) }},
+		NEXT:   {Hand: func(m *ice.Message, arg ...string) { NextPage(m, arg[0], arg[1:]...) }},
 	}, ZoneAction(arg...))
 }
 func ZoneKey(m *ice.Message) string {
@@ -172,9 +168,7 @@ func ZoneField(m *ice.Message) string { return kit.Select(ZONE_FIELD, Config(m, 
 func ZoneInputs(m *ice.Message, arg ...Any) {
 	m.Cmdy(INPUTS, m.PrefixKey(), "", ZONE, m.Option(ZoneKey(m)), arg)
 }
-func ZoneCreate(m *ice.Message, arg ...Any) {
-	m.Cmdy(INSERT, m.PrefixKey(), "", HASH, arg)
-}
+func ZoneCreate(m *ice.Message, arg ...Any) { m.Cmdy(INSERT, m.PrefixKey(), "", HASH, arg) }
 func ZoneRemove(m *ice.Message, arg ...Any) {
 	if args := kit.Simple(arg...); len(args) == 0 {
 		arg = append(arg, m.OptionSimple(ZoneKey(m)))

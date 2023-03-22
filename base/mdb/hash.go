@@ -167,7 +167,7 @@ func StatusHashAction(arg ...Any) ice.Actions {
 	}, HashAction(arg...))
 }
 func ClearHashOnExitAction() ice.Actions {
-	return ice.MergeActions(ice.Actions{ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { m.Conf("", HASH, "") }}})
+	return ice.MergeActions(ice.Actions{ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { Conf(m, m.PrefixKey(), HASH, "") }}})
 }
 
 func HashKey(m *ice.Message) string {
@@ -235,7 +235,7 @@ func HashSelects(m *ice.Message, arg ...string) *ice.Message {
 	return HashSelect(m, arg...)
 }
 func HashSelectValue(m *ice.Message, cb Any) *ice.Message {
-	m.OptionFields(m.Config(FIELD))
+	m.OptionFields(Config(m, FIELD))
 	defer RLock(m, m.PrefixKey(), "")()
 	Richs(m, m.PrefixKey(), nil, FOREACH, func(key string, value Map) { _mdb_select(m, cb, key, value, nil, nil) })
 	return m

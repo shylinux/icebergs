@@ -527,7 +527,7 @@ func (m *Message) Confi(key string, sub string) int {
 }
 func (m *Message) Confv(arg ...Any) (val Any) {
 	if m.Spawn().Warn(Info.Important && m.Option("_lock") == "") {
-		m.Debug("what lock %s %s", m.PrefixKey(), m.FormatStack(1, 100))
+		m.Warn(true, "what unsafe lock", m.PrefixKey(), m.FormatStack(1, 100))
 	}
 	run := func(conf *Config) {
 		if len(arg) == 1 {

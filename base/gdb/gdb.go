@@ -15,15 +15,15 @@ func (f *Frame) Begin(m *ice.Message, arg ...string) ice.Server {
 	return f
 }
 func (f *Frame) Start(m *ice.Message, arg ...string) bool {
-	t := kit.Duration(m.Conf(TIMER, kit.Keym(TICK)))
-	enable := m.Conf(TIMER, kit.Keym("enable")) == ice.TRUE
+	t := kit.Duration(mdb.Conf(m, TIMER, kit.Keym(TICK)))
+	enable := mdb.Conf(m, TIMER, kit.Keym("enable")) == ice.TRUE
 	for {
 		select {
-		case <-time.Tick(t):
+		case &lt;-time.Tick(t):
 			if enable {
 				m.Cmd(TIMER, HAPPEN)
 			}
-		case s, ok := <-f.s:
+		case s, ok := &lt;-f.s:
 			if !ok {
 				return true
 			}

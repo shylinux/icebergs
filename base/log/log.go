@@ -26,13 +26,13 @@ func (f *Frame) Begin(m *ice.Message, arg ...string) ice.Server {
 	return f
 }
 func (f *Frame) Start(m *ice.Message, arg ...string) bool {
+	m.Option("_lock", m.PrefixKey())
 	for {
 		select {
 		case l, ok := <-f.p:
 			if !ok {
 				return true
 			}
-			continue
 			for _, file := range []string{m.Conf(SHOW, kit.Keys(l.l, FILE)), BENCH} {
 				if file == "" {
 					continue

@@ -117,7 +117,7 @@ func init() {
 						return
 					}
 					m.Go(func() {
-						m.Sleep("1s")
+						m.Sleep300ms()
 						_tmux_cmd(m, SEND_KEYS, "-t", kit.Keys(name, "2"), "ish_miss_log", ENTER)
 						_tmux_cmd(m, SEND_KEYS, "-t", kit.Keys(name, "1"), "vi etc/miss.sh", ENTER)
 					})

@@ -11,7 +11,12 @@ import (
 )
 
 func _role_keys(key ...string) string {
-	return strings.TrimPrefix(strings.TrimSuffix(strings.Replace(path.Join(strings.Replace(kit.Keys(key), ice.PT, ice.PS, -1)), ice.PS, ice.PT, -1), ice.PT), ice.PT)
+	if _key := kit.Slice(strings.Split(key[0], ice.PT), -1)[0]; _key != "" {
+		if c, ok := ice.Info.Index[_key].(*ice.Context); ok && kit.Keys(c.Prefix(), _key) == key[0] {
+			key[0] = _key
+		}
+	}
+	return strings.TrimPrefix(strings.TrimPrefix(strings.TrimSuffix(strings.Replace(path.Join(strings.Replace(kit.Keys(key), ice.PT, ice.PS, -1)), ice.PS, ice.PT, -1), ice.PT), ice.PT), "web.")
 }
 func _role_set(m *ice.Message, role, zone, key string, status bool) {
 	m.Logs(mdb.INSERT, mdb.KEY, ROLE, ROLE, role, zone, key)
@@ -22,33 +27,21 @@ func _role_black(m *ice.Message, role, key string) { _role_set(m, role, BLACK, k
 func _role_check(value ice.Map, key []string, ok bool) bool {
 	white, black := value[WHITE].(ice.Map), value[BLACK].(ice.Map)
 	for i := 0; i < len(key); i++ {
-		if v, o := white[kit.Join(key[:i+1], ice.PT)]; o && v == true {
-			ok = true
-		}
-		if v, o := black[kit.Join(key[:i+1], ice.PT)]; o && v == true {
-			ok = false
-		}
+		kit.If(white[kit.Join(key[:i+1], ice.PT)], func() { ok = true })
+		kit.If(black[kit.Join(key[:i+1], ice.PT)], func() { ok = false })
 	}
 	return ok
 }
 func _role_right(m *ice.Message, role string, key ...string) (ok bool) {
-	if role == ROOT {
-		return true
-	}
-	mdb.HashSelectDetail(m, kit.Select(VOID, role), func(value ice.Map) {
-		ok = _role_check(value, key, role == TECH)
-	})
-	return
+	return role == ROOT || len(mdb.HashSelectDetails(m, kit.Select(VOID, role), func(value ice.Map) bool { return _role_check(value, key, role == TECH) })) > 0
 }
 func _role_list(m *ice.Message, role string) *ice.Message {
 	mdb.HashSelectDetail(m, kit.Select(VOID, role), func(value ice.Map) {
 		kit.For(value[WHITE], func(k string, v ice.Any) {
-			m.Push(ROLE, kit.Value(value, mdb.NAME))
-			m.Push(mdb.ZONE, WHITE).Push(mdb.KEY, k).Push(mdb.STATUS, v)
+			m.Push(ROLE, kit.Value(value, mdb.NAME)).Push(mdb.ZONE, WHITE).Push(mdb.KEY, k).Push(mdb.STATUS, v)
 		})
 		kit.For(value[BLACK], func(k string, v ice.Any) {
-			m.Push(ROLE, kit.Value(value, mdb.NAME))
-			m.Push(mdb.ZONE, BLACK).Push(mdb.KEY, k).Push(mdb.STATUS, v)
+			m.Push(ROLE, kit.Value(value, mdb.NAME)).Push(mdb.ZONE, BLACK).Push(mdb.KEY, k).Push(mdb.STATUS, v)
 		})
 	})
 	return m.Sort(mdb.KEY).StatusTimeCount()
@@ -69,7 +62,6 @@ const ROLE = "role"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		ROLE: {Name: "role role auto insert", Help: "角色", Actions: ice.MergeActions(ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { m.Cmd("", mdb.CREATE, TECH, VOID) }},
 			mdb.CREATE: {Hand: func(m *ice.Message, arg ...string) {
 				kit.For(arg, func(role string) {
 					mdb.Rich(m, ROLE, nil, kit.Dict(mdb.NAME, role, BLACK, kit.Dict(), WHITE, kit.Dict()))
@@ -91,18 +83,15 @@ func init() {
 		}},
 	})
 }
-
 func RoleAction(key ...string) ice.Actions {
 	return ice.Actions{ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+		cmd := m.PrefixKey()
 		if c, ok := ice.Info.Index[m.CommandKey()].(*ice.Context); ok && c == m.Target() {
-			m.Cmd(ROLE, WHITE, VOID, m.CommandKey())
-			m.Cmd(ROLE, BLACK, VOID, m.CommandKey(), ice.ACTION)
+			cmd = m.CommandKey()
 		}
-		m.Cmd(ROLE, WHITE, VOID, m.PrefixKey())
-		m.Cmd(ROLE, BLACK, VOID, m.PrefixKey(), ice.ACTION)
-		m.Cmd(ROLE, WHITE, VOID, strings.TrimPrefix(m.PrefixKey(), "web."))
-		m.Cmd(ROLE, BLACK, VOID, strings.TrimPrefix(m.PrefixKey(), "web."), ice.ACTION)
-		kit.For(key, func(key string) { m.Cmd(ROLE, WHITE, VOID, m.PrefixKey(), ice.ACTION, key) })
+		m.Cmd(ROLE, WHITE, VOID, cmd)
+		m.Cmd(ROLE, BLACK, VOID, cmd, ice.ACTION)
+		kit.For(key, func(key string) { m.Cmd(ROLE, WHITE, VOID, cmd, ice.ACTION, key) })
 	}}}
 }
 func WhiteAction(key ...string) ice.Actions {
@@ -111,15 +100,6 @@ func WhiteAction(key ...string) ice.Actions {
 		m.Cmd(ROLE, BLACK, VOID, m.CommandKey(), ice.ACTION)
 		kit.For(key, func(key string) { m.Cmd(ROLE, WHITE, VOID, m.CommandKey(), ice.ACTION, key) })
 	}}}
-}
-func BlackAction(key ...string) ice.Actions {
-	return ice.Actions{ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-		m.Cmd(ROLE, WHITE, VOID, m.CommandKey())
-		kit.For(key, func(key string) { m.Cmd(ROLE, BLACK, VOID, m.CommandKey(), ice.ACTION, key) })
-	}}}
-}
-func RoleRight(m *ice.Message, role string, key ...string) bool {
-	return m.Cmdx(ROLE, RIGHT, role, key) == ice.OK
 }
 func Right(m *ice.Message, key ...ice.Any) bool {
 	return m.Option(ice.MSG_USERROLE) == ROOT || !m.Warn(m.Cmdx(ROLE, RIGHT, m.Option(ice.MSG_USERROLE), key, logs.FileLineMeta(-1)) != ice.OK,

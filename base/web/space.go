@@ -33,9 +33,9 @@ func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 				if conn, _, e := websocket.NewClient(c, uri, nil, kit.Int(redial["r"]), kit.Int(redial["w"])); !m.Warn(e, tcp.DIAL, dev, SPACE, uri.String()) {
 					defer mdb.HashCreateDeferRemove(m, kit.SimpleKV("", MASTER, dev, msg.Append(tcp.HOSTNAME)), kit.Dict(mdb.TARGET, conn))()
 					if !prints && ice.Info.Colors {
-						go func() {
-							m.Sleep("300ms").Cmd(ssh.PRINTF, kit.Dict(nfs.CONTENT, "\r"+ice.Render(m, ice.RENDER_QRCODE, m.CmdAppend(SPACE, dev, cli.PWD, mdb.LINK)))).Cmd(ssh.PROMPT, kit.Dict(ice.LOG_DISABLE, ice.TRUE))
-						}()
+						m.Go(func() {
+							m.Sleep300ms().Cmd(ssh.PRINTF, kit.Dict(nfs.CONTENT, "\r"+ice.Render(m, ice.RENDER_QRCODE, m.CmdAppend(SPACE, dev, cli.PWD, mdb.LINK)))).Cmd(ssh.PROMPT, kit.Dict(ice.LOG_DISABLE, ice.TRUE))
+						})
 						prints = true
 					}
 					_space_handle(m.Spawn(), true, dev, conn)
@@ -57,8 +57,8 @@ func _space_fork(m *ice.Message) {
 			case WORKER:
 				defer gdb.EventDeferEvent(m, DREAM_OPEN, args)(DREAM_CLOSE, args)
 			case CHROME:
-				m.Go(func() { m.Sleep30ms().Cmd(SPACE, name, cli.PWD, name) })
-			case aaa.LOGIN:
+				m.Cmd(SPACE, name, cli.PWD, name)
+			case LOGIN:
 				gdb.EventDeferEvent(m, SPACE_LOGIN, args)
 			}
 			_space_handle(m, false, name, conn)
@@ -66,10 +66,10 @@ func _space_fork(m *ice.Message) {
 	}
 }
 func _space_handle(m *ice.Message, safe bool, name string, conn *websocket.Conn) {
+	defer m.Cost(SPACE, name)
 	for {
 		_, b, e := conn.ReadMessage()
 		if e != nil {
-			m.Cost(SPACE, name, e)
 			break
 		}
 		msg := m.Spawn(b)
@@ -89,7 +89,7 @@ func _space_handle(m *ice.Message, safe bool, name string, conn *websocket.Conn)
 		}) {
 		} else if res := getSend(m, next); !m.Warn(res == nil || len(target) != 1, ice.ErrNotFound, next) {
 			res.Cost(kit.Format("[%v]->%v %v %v", next, res.Optionv(ice.MSG_TARGET), res.Detailv(), msg.FormatSize()))
-			back(res, msg.Sleep("10ms")) // 接收响应
+			back(res, msg.Sleep30ms()) // 接收响应
 		}
 	}
 }
@@ -189,7 +189,6 @@ func init() {
 							m.PushSearch(mdb.TEXT, m.Cmd(SPIDE, values[mdb.NAME], ice.Maps{ice.MSG_FIELDS: ""}).Append(CLIENT_ORIGIN), values)
 						case SERVER:
 							m.PushSearch(mdb.TEXT, kit.Format(tcp.PublishLocalhost(m, strings.Split(MergePod(m, values[mdb.NAME]), ice.QS)[0])), values)
-						case aaa.LOGIN:
 						}
 					})
 				} else if arg[0] == mdb.FOREACH && arg[1] == ssh.SHELL {
@@ -208,7 +207,7 @@ func init() {
 				}
 				aaa.SessAuth(m, kit.Dict(aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.USERROLE, m.Option(ice.MSG_USERROLE)))
 			}},
-			aaa.LOGIN: {Hand: func(m *ice.Message, arg ...string) {
+			LOGIN: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(SPACE, kit.Select(m.Option(mdb.NAME), arg, 0), ice.MSG_SESSID, aaa.SessCreate(m, m.Option(ice.MSG_USERNAME)))
 			}},
 			DOMAIN: {Hand: func(m *ice.Message, arg ...string) { m.Echo(_space_domain(m)) }},
@@ -228,8 +227,8 @@ func init() {
 				mdb.HashSelect(m, arg...).Sort("type,name,text")
 				m.Tables(func(values ice.Maps) {
 					switch values[mdb.TYPE] {
-					case aaa.LOGIN:
-						m.PushButton(aaa.LOGIN, mdb.REMOVE)
+					case LOGIN:
+						m.PushButton(LOGIN, mdb.REMOVE)
 					default:
 						m.PushButton(cli.OPEN, mdb.REMOVE)
 					}

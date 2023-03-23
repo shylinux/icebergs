@@ -13,7 +13,7 @@ import (
 
 type Frame struct{}
 
-func (s *Frame) Begin(m *Message, arg ...string) Server {
+func (s *Frame) Begin(m *Message, arg ...string) {
 	list := map[*Context]*Message{m.target: m}
 	m.Travel(func(p *Context, s *Context) {
 		s.root = m.target
@@ -22,19 +22,14 @@ func (s *Frame) Begin(m *Message, arg ...string) Server {
 			s.Begin(list[s], arg...)
 		}
 	})
-	return s
 }
-func (s *Frame) Start(m *Message, arg ...string) bool {
-	m.Cap(CTX_STREAM, strings.Split(m.Time(), SP)[1])
+func (s *Frame) Start(m *Message, arg ...string) {
 	m.Cmd(kit.Keys(MDB, CTX_INIT))
 	m.Cmd(INIT, arg)
-	for _, k := range kit.Split(kit.Select("ctx,log,gdb,ssh", os.Getenv(CTX_DAEMON))) {
-		m.Start(k)
-	}
 	m.Cmd(arg)
-	return true
+	kit.For(kit.Split(kit.Select("log,gdb,ssh", os.Getenv(CTX_DAEMON))), func(k string) { m.Sleep("10ms").Start(k) })
 }
-func (s *Frame) Close(m *Message, arg ...string) bool {
+func (s *Frame) Close(m *Message, arg ...string) {
 	list := map[*Context]*Message{m.target: m}
 	m.Travel(func(p *Context, s *Context) {
 		if msg, ok := list[p]; ok && msg != nil {
@@ -43,25 +38,24 @@ func (s *Frame) Close(m *Message, arg ...string) bool {
 		}
 	})
 	conf.Close()
-	go func() { os.Exit(kit.Int(Pulse.Sleep("30ms").Option(EXIT))) }()
-	return true
+	go func() { os.Exit(kit.Int(Pulse.Sleep30ms().Option(EXIT))) }()
 }
-func (s *Frame) Spawn(m *Message, c *Context, arg ...string) Server { return &Frame{} }
 
 const (
 	INIT = "init"
-	HELP = "help"
-	EXIT = "exit"
 	QUIT = "quit"
+	EXIT = "exit"
 )
 
-var Index = &Context{Name: ICE, Help: "冰山模块", Configs: Configs{HELP: {Value: kit.Data(INDEX, Info.Help)}}, Commands: Commands{
+var Index = &Context{Name: ICE, Help: "冰山模块", Commands: Commands{
 	CTX_INIT: {Hand: func(m *Message, arg ...string) {
 		m.Travel(func(p *Context, c *Context) {
-			if p != nil {
-				c._command(m.Spawn(c), c.Commands[CTX_INIT], CTX_INIT, arg...)
-			}
+			kit.If(p != nil, func() { m.Go(func() { c._command(m.Spawn(c), c.Commands[CTX_INIT], CTX_INIT, arg...) }) })
 		})
+		loadImportant(m)
+		loadImportant(m)
+		loadImportant(m)
+		loadImportant(m)
 		loadImportant(m)
 	}},
 	INIT: {Hand: func(m *Message, arg ...string) {
@@ -77,26 +71,23 @@ var Index = &Context{Name: ICE, Help: "冰山模块", Configs: Configs{HELP: {Va
 	CTX_EXIT: {Hand: func(m *Message, arg ...string) {
 		defer m.Target().Close(m.Spawn(), arg...)
 		m.Travel(func(p *Context, c *Context) {
-			if p != nil {
-				c._command(m.Spawn(c), c.Commands[CTX_EXIT], CTX_EXIT, arg...)
-			}
+			kit.If(p != nil, func() { c._command(m.Spawn(c), c.Commands[CTX_EXIT], CTX_EXIT, arg...) })
 		})
 		removeImportant(m)
 	}},
 }, server: &Frame{}}
-var Pulse = &Message{time: time.Now(), code: 0, meta: map[string][]string{}, data: Map{}, source: Index, target: Index, Hand: true}
+var Pulse = &Message{time: time.Now(), code: 0, Hand: true, meta: map[string][]string{}, data: Map{}, source: Index, target: Index}
 
 func init() { Index.root, Pulse.root = Index, Pulse }
 
 func Run(arg ...string) string {
-	if len(arg) == 0 && len(os.Args) > 1 {
-		arg = kit.Simple(os.Args[1:], kit.Split(kit.Env(CTX_ARG)))
-	}
+	kit.If(len(arg) == 0 && len(os.Args) > 1, func() { arg = kit.Simple(os.Args[1:], kit.Split(kit.Env(CTX_ARG))) })
 	if len(arg) == 0 {
 		if runtime.GOOS == "windows" {
 			arg = append(arg, SERVE, START, DEV, DEV)
 		} else {
-			// 	arg = append(arg, "forever", START, DEV, DEV)
+			arg = append(arg, "pwd")
+			// arg = append(arg, "forever", START, DEV, DEV)
 		}
 	}
 	Pulse.meta[MSG_DETAIL] = arg
@@ -105,32 +96,20 @@ func Run(arg ...string) string {
 			Pulse.Option(ls[0], ls[1])
 		}
 	})
+	kit.If(Pulse._cmd == nil, func() { Pulse._cmd = &Command{RawHand: logs.FileLines(3)} })
 	time.Local = time.FixedZone("Beijing", 28800)
-	if Pulse.time = time.Now(); Pulse._cmd == nil {
-		Pulse._cmd = &Command{RawHand: logs.FileLines(3)}
-	}
+	Pulse.time = time.Now()
 	switch Index.Merge(Index).Begin(Pulse, arg...); kit.Select("", arg, 0) {
 	case SERVE, SPACE:
-		if os.Getenv("ctx_log") == "" {
-			// os.Stderr.Close()
-		}
-		if Index.Start(Pulse, arg...) {
-			conf.Wait()
-			os.Exit(kit.Int(Pulse.Option(EXIT)))
-		}
+		Index.Start(Pulse, arg...)
+		conf.Wait()
+		os.Exit(kit.Int(Pulse.Option(EXIT)))
 	default:
-		if logs.Disable(true); len(arg) == 0 {
-			arg = append(arg, HELP)
-		}
-		if Pulse.Cmdy(INIT).Cmdy(arg); Pulse.IsErrNotFound() {
-			Pulse.SetAppend().SetResult().Cmdy(SYSTEM, arg)
-		}
-		if strings.TrimSpace(Pulse.Result()) == "" && Pulse.Length() > 0 {
-			Pulse.Table()
-		}
-		if Pulse.Result() != "" && !strings.HasSuffix(Pulse.Result(), NL) {
-			Pulse.Echo(NL)
-		}
+		logs.Disable(true)
+		Pulse.Cmdy(INIT).Cmdy(arg)
+		kit.If(Pulse.IsErrNotFound(), func() { Pulse.SetAppend().SetResult().Cmdy(SYSTEM, arg) })
+		kit.If(strings.TrimSpace(Pulse.Result()) == "" && Pulse.Length() > 0, func() { Pulse.Table() })
+		kit.If(Pulse.Result() != "" && !strings.HasSuffix(Pulse.Result(), NL), func() { Pulse.Echo(NL) })
 	}
 	return Pulse.Result()
 }

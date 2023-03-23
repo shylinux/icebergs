@@ -216,13 +216,13 @@ func init() {
 			PULL: {Help: "下载", Hand: func(m *ice.Message, arg ...string) {
 				_status_each(m, "", cli.SYSTEM, GIT, PULL)
 				_status_each(m, "", cli.SYSTEM, GIT, PULL, "--tags")
-				m.Sleep("3s")
+				m.Sleep3s()
 			}},
 			PUSH: {Help: "上传", Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(REPOS) == "" {
 					_status_each(m, "", cli.SYSTEM, GIT, PUSH)
 					_status_each(m, "", cli.SYSTEM, GIT, PUSH, "--tags")
-					m.Sleep("3s")
+					m.Sleep3s()
 					return
 				}
 				m.Option(cli.CMD_DIR, _repos_path(m.Option(REPOS)))

@@ -137,7 +137,7 @@ func init() {
 			cli.STOP: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(SPACE, mdb.MODIFY, m.OptionSimple(mdb.NAME), mdb.STATUS, cli.STOP)
 				m.Go(func() { m.Cmd(SPACE, m.Option(mdb.NAME), ice.EXIT) })
-				m.Sleep("1s")
+				m.Sleep300ms()
 			}},
 			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
 				nfs.Trash(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME)))

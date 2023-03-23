@@ -59,7 +59,7 @@ func _xterm_get(m *ice.Message, h string) _xterm {
 					if _xterm_echo(m, h, string(buf[:n])); len(text) > 0 {
 						if cmd := text[0]; text[0] != "" {
 							m.Go(func() {
-								m.Sleep("10ms")
+								m.Sleep30ms()
 								tty.Write([]byte(cmd + ice.NL))
 							})
 						}

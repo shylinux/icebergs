@@ -23,11 +23,10 @@ type Frame struct {
 	send ice.Messages
 }
 
-func (f *Frame) Begin(m *ice.Message, arg ...string) ice.Server {
+func (f *Frame) Begin(m *ice.Message, arg ...string) {
 	f.send = ice.Messages{}
-	return f
 }
-func (f *Frame) Start(m *ice.Message, arg ...string) bool {
+func (f *Frame) Start(m *ice.Message, arg ...string) {
 	f.Message, f.Server = m, &http.Server{Handler: f}
 	list := map[*ice.Context]string{}
 	m.Travel(func(p *ice.Context, c *ice.Context) {
@@ -56,24 +55,18 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 			}(key, cmd)
 		}
 	})
-	gdb.EventDeferEvent(m, SERVE_START, arg)
 	switch cb := m.OptionCB("").(type) {
 	case func(http.Handler):
 		cb(f)
 	default:
 		m.Cmd(tcp.SERVER, tcp.LISTEN, mdb.TYPE, WEB, m.OptionSimple(mdb.NAME, tcp.HOST, tcp.PORT), func(l net.Listener) {
 			defer mdb.HashCreateDeferRemove(m, m.OptionSimple(mdb.NAME, tcp.PROTO), arg, cli.STATUS, tcp.START)()
+			gdb.EventDeferEvent(m, SERVE_START, arg)
 			m.Warn(f.Server.Serve(l))
 		})
 	}
-	return true
 }
-func (f *Frame) Close(m *ice.Message, arg ...string) bool {
-	return true
-}
-func (f *Frame) Spawn(m *ice.Message, c *ice.Context, arg ...string) ice.Server {
-	return &Frame{}
-}
+func (f *Frame) Close(m *ice.Message, arg ...string) {}
 func (f *Frame) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if _serve_main(f.Message, w, r) {
 		f.ServeMux.ServeHTTP(w, r)

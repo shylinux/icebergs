@@ -1,7 +1,6 @@
 package gdb
 
 import (
-	"fmt"
 	"os"
 	"os/signal"
 	"runtime"
@@ -11,13 +10,11 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	kit "shylinux.com/x/toolkits"
 	"shylinux.com/x/toolkits/file"
-	"shylinux.com/x/toolkits/logs"
 )
 
 func _signal_listen(m *ice.Message, s int, arg ...string) {
 	if f, ok := m.Target().Server().(*Frame); ok {
-		signal.Notify(f.s, syscall.Signal(s))
-		mdb.HashCreate(m, SIGNAL, s, arg)
+		f.listen(m, s, arg...)
 	}
 }
 func _signal_action(m *ice.Message, arg ...string) {
@@ -58,14 +55,6 @@ func init() {
 				}
 				_signal_listen(m, 2, mdb.NAME, "重启", ice.CMD, "exit 1")
 				_signal_listen(m, 3, mdb.NAME, "退出", ice.CMD, "exit 0")
-				if ice.Info.PidPath == "" {
-					return
-				}
-				if f, p, e := logs.CreateFile(ice.Info.PidPath); e == nil {
-					defer f.Close()
-					fmt.Fprint(f, os.Getpid())
-					m.Logs("save", PID, p)
-				}
 			}},
 			LISTEN: {Name: "listen signal name cmd", Help: "监听", Hand: func(m *ice.Message, arg ...string) {
 				_signal_listen(m, kit.Int(m.Option(SIGNAL)), arg...)

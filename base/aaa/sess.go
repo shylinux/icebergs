@@ -2,20 +2,17 @@ package aaa
 
 import (
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
 	kit "shylinux.com/x/toolkits"
 	"shylinux.com/x/toolkits/logs"
 )
 
-func _sess_create(m *ice.Message, username string, arg ...string) (h string) {
+func _sess_create(m *ice.Message, username string, arg ...string) {
 	if msg := m.Cmd(USER, username); msg.Length() > 0 {
-		h = mdb.HashCreate(m, msg.AppendSimple(USERNICK, USERNAME, USERROLE), arg)
+		mdb.HashCreate(m, msg.AppendSimple(USERNICK, USERNAME, USERROLE), arg)
 	} else {
-		h = mdb.HashCreate(m, m.OptionSimple(USERNICK, USERNAME, USERROLE), arg)
+		mdb.HashCreate(m, m.OptionSimple(USERNICK, USERNAME, USERROLE), arg)
 	}
-	gdb.Event(m, SESS_CREATE, SESS, h, USERNAME, username)
-	return
 }
 func _sess_check(m *ice.Message, sessid string) {
 	if val := mdb.HashSelectDetails(m, sessid, func(value ice.Map) bool { return !m.WarnTimeNotValid(value[mdb.TIME], sessid) }); len(val) > 0 {
@@ -29,13 +26,8 @@ const (
 )
 const (
 	CHECK  = "check"
-	GRANT  = "grant"
 	LOGIN  = "login"
 	LOGOUT = "logout"
-	SESSID = "sessid"
-)
-const (
-	SESS_CREATE = "sess.create"
 )
 const SESS = "sess"
 
@@ -45,10 +37,8 @@ func init() {
 			mdb.CREATE: {Name: "create username*", Hand: func(m *ice.Message, arg ...string) {
 				_sess_create(m, m.Option(USERNAME), UA, m.Option(ice.MSG_USERUA), IP, m.Option(ice.MSG_USERIP))
 			}},
-			CHECK: {Name: "check sessid*", Hand: func(m *ice.Message, arg ...string) {
-				_sess_check(m, m.Option(SESSID))
-			}},
-		}, mdb.HashAction(mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,username,usernick,userrole,ua,ip", mdb.EXPIRE, mdb.MONTH, mdb.ImportantDataAction()))},
+			CHECK: {Name: "check sessid*", Hand: func(m *ice.Message, arg ...string) { _sess_check(m, m.Option(ice.MSG_SESSID)) }},
+		}, mdb.HashAction(mdb.EXPIRE, mdb.MONTH, mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,usernick,username,userrole,ua,ip"), mdb.ImportantDataAction())},
 	})
 }
 
@@ -68,8 +58,5 @@ func SessAuth(m *ice.Message, value ice.Any, arg ...string) *ice.Message {
 	)
 }
 func SessLogout(m *ice.Message, arg ...string) {
-	if m.Option(ice.MSG_SESSID) == "" {
-		return
-	}
-	m.Cmd(SESS, mdb.REMOVE, kit.Dict(mdb.HASH, m.Option(ice.MSG_SESSID)))
+	kit.If(m.Option(ice.MSG_SESSID) != "", func() { m.Cmd(SESS, mdb.REMOVE, mdb.HASH, m.Option(ice.MSG_SESSID)) })
 }

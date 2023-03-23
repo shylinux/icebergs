@@ -2,6 +2,7 @@ package log
 
 import (
 	"bufio"
+	"fmt"
 	"path"
 
 	ice "shylinux.com/x/icebergs"
@@ -12,7 +13,6 @@ import (
 )
 
 type Log struct {
-	m *ice.Message
 	p string
 	l string
 	s string
@@ -20,56 +20,47 @@ type Log struct {
 
 type Frame struct{ p chan *Log }
 
-func (f *Frame) Begin(m *ice.Message, arg ...string) ice.Server {
+func (f *Frame) Begin(m *ice.Message, arg ...string) {
 	f.p = make(chan *Log, ice.MOD_BUFS)
-	ice.Info.Log = func(m *ice.Message, p, l, s string) { f.p <- &Log{m: m, p: p, l: l, s: s} }
-	return f
+	ice.Info.Log = func(m *ice.Message, p, l, s string) { f.p <- &Log{p: p, l: l, s: s} }
 }
-func (f *Frame) Start(m *ice.Message, arg ...string) bool {
+func (f *Frame) Start(m *ice.Message, arg ...string) {
 	m.Option("_lock", m.PrefixKey())
+	mdb.Confm(m, FILE, nil, func(key string, value ice.Map) {
+		if f, p, e := logs.CreateFile(kit.Format(value[nfs.PATH])); e == nil {
+			value[FILE] = bufio.NewWriter(f)
+			m.Logs(nfs.SAVE, nfs.FILE, p)
+		}
+	})
 	for {
 		select {
 		case l, ok := <-f.p:
 			if !ok {
-				return true
+				return
 			}
-			for _, file := range []string{m.Conf(SHOW, kit.Keys(l.l, FILE)), BENCH} {
+			kit.For([]string{m.Conf(SHOW, kit.Keys(l.l, FILE)), BENCH}, func(file string) {
 				if file == "" {
-					continue
+					return
 				}
-				view := mdb.Confm(m, VIEW, m.Conf(SHOW, kit.Keys(l.l, VIEW)))
 				bio := m.Confv(FILE, kit.Keys(file, FILE)).(*bufio.Writer)
 				if bio == nil {
-					continue
+					return
 				}
-				bio.WriteString(l.p)
-				bio.WriteString(ice.SP)
-				if ice.Info.Colors == true {
-					if p, ok := view[PREFIX].(string); ok {
-						bio.WriteString(p)
-					}
-				}
-				bio.WriteString(l.l)
-				bio.WriteString(ice.SP)
-				bio.WriteString(l.s)
-				if ice.Info.Colors == true {
-					if p, ok := view[SUFFIX].(string); ok {
-						bio.WriteString(p)
-					}
-				}
-				bio.WriteString(ice.NL)
-				bio.Flush()
-			}
+				defer bio.Flush()
+				defer fmt.Fprintln(bio)
+				fmt.Fprint(bio, l.p, ice.SP)
+				view := mdb.Confm(m, VIEW, m.Conf(SHOW, kit.Keys(l.l, VIEW)))
+				kit.If(ice.Info.Colors, func() { bio.WriteString(kit.Format(view[PREFIX])) })
+				defer kit.If(ice.Info.Colors, func() { bio.WriteString(kit.Format(view[SUFFIX])) })
+				fmt.Fprint(bio, l.l, ice.SP, l.s)
+			})
 		}
 	}
-	return true
 }
-func (f *Frame) Close(m *ice.Message, arg ...string) bool {
+func (f *Frame) Close(m *ice.Message, arg ...string) {
 	ice.Info.Log = nil
 	close(f.p)
-	return true
 }
-func (f *Frame) Spawn(m *ice.Message, c *ice.Context, arg ...string) ice.Server { return &Frame{} }
 
 const (
 	PREFIX = "prefix"
@@ -107,11 +98,6 @@ var Index = &ice.Context{Name: LOG, Help: "日志模块", Configs: ice.Configs{
 	ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 		mdb.Confm(m, FILE, nil, func(key string, value ice.Map) {
 			kit.For(value[mdb.LIST], func(index int, k string) { m.Conf(SHOW, kit.Keys(k, FILE), key) })
-			if f, p, e := logs.CreateFile(kit.Format(value[nfs.PATH])); e == nil {
-				m.Cap(ice.CTX_STREAM, path.Base(p))
-				value[FILE] = bufio.NewWriter(f)
-				m.Logs(nfs.SAVE, nfs.FILE, p)
-			}
 		})
 		mdb.Confm(m, VIEW, nil, func(key string, value ice.Map) {
 			kit.For(value[mdb.LIST], func(index int, k string) { m.Conf(SHOW, kit.Keys(k, VIEW), key) })

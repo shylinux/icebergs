@@ -66,65 +66,31 @@ type Context struct {
 	id int32
 }
 type Server interface {
-	Begin(m *Message, arg ...string) Server
-	Start(m *Message, arg ...string) bool
-	Close(m *Message, arg ...string) bool
-	Spawn(m *Message, c *Context, arg ...string) Server
+	Begin(m *Message, arg ...string)
+	Start(m *Message, arg ...string)
+	Close(m *Message, arg ...string)
 }
 
-func (c *Context) ID() int32 {
-	return atomic.AddInt32(&c.id, 1)
-}
 func (c *Context) Cap(key string, arg ...Any) string {
-	if len(arg) > 0 {
-		c.Caches[key].Value = kit.Format(arg[0])
-	}
+	kit.If(len(arg) > 0, func() { c.Caches[key].Value = kit.Format(arg[0]) })
 	return c.Caches[key].Value
 }
 func (c *Context) Cmd(m *Message, key string, arg ...string) *Message {
 	return c._command(m, c.Commands[key], key, arg...)
 }
-func (c *Context) Server() Server {
-	return c.server
-}
 func (c *Context) Prefix(arg ...string) string {
 	return kit.Keys(c.Cap(CTX_FOLLOW), arg)
 }
-func (c *Command) GetFileLine() string {
-	return kit.Join(kit.Slice(kit.Split(c.GetFileLines(), PS), -3), PS)
-}
-func (c *Command) GetFileLines() string {
-	if c == nil {
-		return ""
-	} else if c.RawHand != nil {
-		switch h := c.RawHand.(type) {
-		case string:
-			return h
-		default:
-			return logs.FileLines(c.RawHand)
+func (c *Context) Server() Server { return c.server }
+func (c *Context) ID() int32      { return atomic.AddInt32(&c.id, 1) }
+func (c *Context) Register(s *Context, x Server, cmd ...string) *Context {
+	kit.For(cmd, func(cmd string) {
+		if s, ok := Info.Index[cmd].(*Context); ok {
+			panic(kit.Format("%s %s registed by %v", ErrWarn, cmd, s.Name))
 		}
-	} else if c.Hand != nil {
-		return logs.FileLines(c.Hand)
-	} else {
-		return ""
-	}
-}
-
-func (c *Context) Register(s *Context, x Server, n ...string) *Context {
-	for _, n := range n {
-		if s, ok := Info.Index[n]; ok {
-			last := ""
-			switch s := s.(type) {
-			case *Context:
-				last = s.Name
-			}
-			panic(kit.Format("%s %s %v", ErrWarn, n, last))
-		}
-		Info.Index[n] = s
-	}
-	if c.Contexts == nil {
-		c.Contexts = Contexts{}
-	}
+		Info.Index[cmd] = s
+	})
+	kit.If(c.Contexts == nil, func() { c.Contexts = Contexts{} })
 	c.Contexts[s.Name] = s
 	s.root = c.root
 	s.context = c
@@ -134,8 +100,7 @@ func (c *Context) Register(s *Context, x Server, n ...string) *Context {
 func (c *Context) MergeCommands(Commands Commands) *Context {
 	for key, cmd := range Commands {
 		if cmd.Hand == nil && cmd.RawHand == nil {
-			cmd.RawHand = logs.FileLines(2)
-			if cmd.Actions != nil {
+			if cmd.RawHand = logs.FileLines(2); cmd.Actions != nil {
 				if action, ok := cmd.Actions[SELECT]; ok {
 					cmd.Name = kit.Select(strings.Replace(action.Name, SELECT, key, 1), cmd.Name)
 					cmd.Help = kit.Select(action.Help, cmd.Help)
@@ -144,65 +109,49 @@ func (c *Context) MergeCommands(Commands Commands) *Context {
 		}
 	}
 	configs := Configs{}
-	for k, _ := range Commands {
+	for k := range Commands {
 		configs[k] = &Config{Value: kit.Data()}
 	}
 	return c.Merge(&Context{Commands: Commands, Configs: configs})
 }
 func (c *Context) Merge(s *Context) *Context {
-	if c.Commands == nil {
-		c.Commands = Commands{}
-	}
-	if c.Commands[CTX_INIT] == nil {
-		c.Commands[CTX_INIT] = &Command{Hand: func(m *Message, arg ...string) { Info.Load(m) }}
-	}
-	if c.Commands[CTX_EXIT] == nil {
-		c.Commands[CTX_EXIT] = &Command{Hand: func(m *Message, arg ...string) { Info.Save(m) }}
-	}
-	merge := func(pre *Command, init bool, key string, cmd *Command, cb ...Handler) {
+	kit.If(c.Commands == nil, func() { c.Commands = Commands{} })
+	kit.If(c.Commands[CTX_INIT] == nil, func() { c.Commands[CTX_INIT] = &Command{Hand: func(m *Message, arg ...string) { Info.Load(m) }} })
+	kit.If(c.Commands[CTX_EXIT] == nil, func() { c.Commands[CTX_EXIT] = &Command{Hand: func(m *Message, arg ...string) { Info.Save(m) }} })
+	merge := func(pre *Command, init bool, key string, cmd *Command, cb Handler) {
+		if cb == nil {
+			return
+		}
 		last := pre.Hand
 		pre.Hand = func(m *Message, arg ...string) {
-			if init {
-				last(m, arg...)
-			}
+			kit.If(init, func() { last(m, arg...) })
+			defer kit.If(!init, func() { last(m, arg...) })
 			_key, _cmd := m._key, m._cmd
+			defer func() { m._key, m._cmd = _key, _cmd }()
 			m._key, m._cmd = key, cmd
-			for _, cb := range cb {
-				if cb != nil {
-					cb(m, arg...)
-				}
-			}
-			m._key, m._cmd = _key, _cmd
-			if !init {
-				last(m, arg...)
-			}
+			cb(m, arg...)
 		}
 	}
 	for key, cmd := range s.Commands {
 		if pre, ok := c.Commands[key]; ok && s != c {
-			switch hand := cmd.Hand; key {
+			switch key {
 			case CTX_INIT:
-				merge(pre, true, key, cmd, hand)
+				merge(pre, true, key, cmd, cmd.Hand)
 				continue
 			case CTX_EXIT:
-				merge(pre, false, key, cmd, hand)
+				merge(pre, false, key, cmd, cmd.Hand)
 				continue
 			}
 		}
-		if c.Commands[key] = cmd; cmd.List == nil {
-			cmd.List = SplitCmd(cmd.Name, cmd.Actions)
-		}
-		if cmd.Meta == nil {
-			cmd.Meta = kit.Dict()
-		}
+		c.Commands[key] = cmd
+		kit.If(cmd.Meta == nil, func() { cmd.Meta = kit.Dict() })
+		kit.If(cmd.List == nil, func() { cmd.List = SplitCmd(cmd.Name, cmd.Actions) })
 		for sub, action := range cmd.Actions {
 			if pre, ok := c.Commands[sub]; ok && s == c {
-				switch h := action.Hand; sub {
-				case CTX_INIT:
-					merge(pre, true, key, cmd, h)
-				case CTX_EXIT:
-					merge(pre, false, key, cmd, h)
-				}
+				kit.Switch(sub,
+					CTX_INIT, func() { merge(pre, true, key, cmd, action.Hand) },
+					CTX_EXIT, func() { merge(pre, false, key, cmd, action.Hand) },
+				)
 			}
 			if s == c {
 				for _, h := range Info.merges {
@@ -219,69 +168,36 @@ func (c *Context) Merge(s *Context) *Context {
 			if action.Hand == nil {
 				continue
 			}
-			if action.List == nil {
-				action.List = SplitCmd(action.Name, nil)
-			}
-			if len(action.List) > 0 {
-				cmd.Meta[sub] = action.List
-			}
+			kit.If(action.List == nil, func() { action.List = SplitCmd(action.Name, nil) })
+			kit.If(len(action.List) > 0, func() { cmd.Meta[sub] = action.List })
 		}
 	}
-	if c.Configs == nil {
-		c.Configs = Configs{}
-	}
+	kit.If(c.Configs == nil, func() { c.Configs = Configs{} })
 	for k, v := range s.Configs {
 		c.Configs[k] = v
 	}
 	return c
 }
 func (c *Context) Begin(m *Message, arg ...string) *Context {
-	follow := c.Name
-	if c.context != nil && c.context != Index {
-		follow = kit.Keys(c.context.Cap(CTX_FOLLOW), c.Name)
-	}
-	if c.Caches == nil {
-		c.Caches = Caches{}
-	}
-	c.Caches[CTX_FOLLOW] = &Cache{Name: CTX_FOLLOW, Value: follow}
-	c.Caches[CTX_STATUS] = &Cache{Name: CTX_STATUS, Value: CTX_BEGIN}
+	kit.If(c.Caches == nil, func() { c.Caches = Caches{} })
 	c.Caches[CTX_STREAM] = &Cache{Name: CTX_STREAM, Value: ""}
-	if c.Merge(c); c.server != nil {
-		c.server.Begin(m, arg...)
-	}
-	return c
+	c.Caches[CTX_STATUS] = &Cache{Name: CTX_STATUS, Value: CTX_BEGIN}
+	c.Caches[CTX_FOLLOW] = &Cache{Name: CTX_FOLLOW, Value: c.Name}
+	kit.If(c.context != nil && c.context != Index, func() { c.Cap(CTX_FOLLOW, kit.Keys(c.context.Cap(CTX_FOLLOW), c.Name)) })
+	kit.If(c.server != nil, func() { c.server.Begin(m, arg...) })
+	return c.Merge(c)
 }
 func (c *Context) Start(m *Message, arg ...string) bool {
-	wait := make(chan bool, 1)
-	defer func() { <-wait }()
-	m.Go(func() {
-		wait <- true
-
-		m.Log(CTX_START, c.Cap(CTX_FOLLOW))
-		c.Cap(CTX_STATUS, CTX_START)
-		if c.server != nil {
-			c.server.Start(m, arg...)
-		}
+	m.Log(c.Cap(CTX_STATUS, CTX_START), c.Cap(CTX_FOLLOW))
+	kit.If(c.server != nil, func() {
+		m.Go(func() { c.server.Start(m, arg...) }, m.Prefix())
 	})
 	return true
 }
 func (c *Context) Close(m *Message, arg ...string) bool {
-	m.Log(CTX_CLOSE, c.Cap(CTX_FOLLOW))
-	c.Cap(CTX_STATUS, CTX_CLOSE)
-	if c.server != nil {
-		return c.server.Close(m, arg...)
-	}
+	m.Log(c.Cap(CTX_STATUS, CTX_CLOSE), c.Cap(CTX_FOLLOW))
+	kit.If(c.server != nil, func() { c.server.Close(m, arg...) })
 	return true
-}
-func (c *Context) Spawn(m *Message, name string, help string, arg ...string) *Context {
-	s := &Context{Name: name, Help: help}
-	if c.server != nil {
-		c.Register(s, c.server.Spawn(m, s, arg...))
-	} else {
-		c.Register(s, nil)
-	}
-	m.target = s
-	return s
 }
 
 type Message struct {
@@ -309,42 +225,42 @@ type Message struct {
 	I io.Reader
 }
 
-func (m *Message) Time(args ...Any) string {
+func (m *Message) Time(arg ...Any) string {
 	t := m.time
-	if len(args) > 0 {
-		switch arg := args[0].(type) {
+	if len(arg) > 0 {
+		switch arg := arg[0].(type) {
 		case string:
 			if d, e := time.ParseDuration(arg); e == nil {
-				t, args = t.Add(d), args[1:]
+				t, arg = t.Add(d), arg[1:]
 			}
 		}
 	}
 	f := MOD_TIME
-	if len(args) > 0 {
-		switch arg := args[0].(type) {
+	if len(arg) > 0 {
+		switch p := arg[0].(type) {
 		case string:
-			if f = arg; len(args) > 1 {
-				f = fmt.Sprintf(f, args[1:]...)
+			if f = p; len(arg) > 1 {
+				f = fmt.Sprintf(f, arg[1:]...)
 			}
 		}
 	}
 	return t.Format(f)
 }
-func (m *Message) Target() *Context {
-	return m.target
+func (m *Message) Target() *Context  { return m.target }
+func (m *Message) Source() *Context  { return m.source }
+func (m *Message) Message() *Message { return m.message }
+func (m *Message) Commands(key string) *Command {
+	return m.Target().Commands[key]
 }
-func (m *Message) Source() *Context {
-	return m.source
-}
-func (m *Message) Message() *Message {
-	return m.message
+func (m *Message) Actions(key string) *Action {
+	return m._cmd.Actions[key]
 }
 func (m *Message) Spawn(arg ...Any) *Message {
 	msg := &Message{
 		time: time.Now(), code: int(m.target.root.ID()),
 		meta: map[string][]string{}, data: Map{},
-		message: m, root: m.root,
-		source: m.target, target: m.target, _cmd: m._cmd, _key: m._key, _sub: m._sub, _target: logs.FileLine(2),
+		message: m, root: m.root, _target: logs.FileLine(2),
+		source: m.target, target: m.target, _cmd: m._cmd, _key: m._key, _sub: m._sub,
 		W: m.W, R: m.R, O: m.O, I: m.I,
 	}
 	for _, val := range arg {
@@ -354,23 +270,19 @@ func (m *Message) Spawn(arg ...Any) *Message {
 		case Option:
 			msg.Option(val.Name, val.Value)
 		case Maps:
-			for k, v := range val {
-				msg.Option(k, v)
-			}
+			kit.For(val, func(k, v string) { msg.Option(k, v) })
 		case Map:
-			for k, v := range val {
-				msg.Option(k, v)
-			}
-		case http.ResponseWriter:
-			msg.W = val
-		case *http.Request:
-			msg.R = val
+			kit.For(val, func(k string, v Any) { msg.Option(k, v) })
 		case *Context:
 			msg.target = val
 		case *Command:
 			msg._cmd = val
 		case string:
 			msg._key = val
+		case http.ResponseWriter:
+			msg.W = val
+		case *http.Request:
+			msg.R = val
 		}
 	}
 	return msg
@@ -379,31 +291,23 @@ func (m *Message) Start(key string, arg ...string) *Message {
 	return m.Search(key+PT, func(p *Context, s *Context) { s.Start(m.Spawn(s), arg...) })
 }
 func (m *Message) Travel(cb Any) *Message {
+	target := m.target
+	defer func() { m.target = target }()
 	list := []*Context{m.root.target}
 	for i := 0; i < len(list); i++ {
 		switch cb := cb.(type) {
 		case func(*Context, *Context):
 			cb(list[i].context, list[i])
 		case func(*Context, *Context, string, *Command):
-			target := m.target
-			for _, k := range kit.SortedKey(list[i].Commands) {
-				m.target = list[i]
-				cb(list[i].context, list[i], k, list[i].Commands[k])
-			}
-			m.target = target
+			m.target = list[i]
+			kit.For(kit.SortedKey(list[i].Commands), func(k string) { cb(list[i].context, list[i], k, list[i].Commands[k]) })
 		case func(*Context, *Context, string, *Config):
-			target := m.target
-			for _, k := range kit.SortedKey(list[i].Configs) {
-				m.target = list[i]
-				cb(list[i].context, list[i], k, list[i].Configs[k])
-			}
-			m.target = target
+			m.target = list[i]
+			kit.For(kit.SortedKey(list[i].Configs), func(k string) { cb(list[i].context, list[i], k, list[i].Configs[k]) })
 		default:
 			m.ErrorNotImplement(cb)
 		}
-		for _, k := range kit.SortedKey(list[i].Contexts) {
-			list = append(list, list[i].Contexts[k])
-		}
+		kit.For(kit.SortedKey(list[i].Contexts), func(k string) { list = append(list, list[i].Contexts[k]) })
 	}
 	return m
 }
@@ -493,35 +397,13 @@ func (m *Message) Search(key string, cb Any) *Message {
 	return m
 }
 
-func (m *Message) Commands(key string) *Command {
-	return m.Target().Commands[key]
-}
-func (m *Message) Actions(key string) *Action {
-	return m._cmd.Actions[key]
-}
-func (m *Message) CmdAppend(arg ...Any) string {
-	args := kit.Simple(arg...)
-	field := kit.Slice(args, -1)[0]
-	return m._command(kit.Slice(args, 0, -1), OptionFields(field)).Append(field)
-}
-func (m *Message) CmdMap(arg ...string) map[string]map[string]string {
-	field, list := kit.Slice(arg, -1)[0], map[string]map[string]string{}
-	m._command(kit.Slice(arg, 0, -1)).Tables(func(value Maps) { list[value[field]] = value })
-	return list
-}
-func (m *Message) Cmd(arg ...Any) *Message {
-	return m._command(arg...)
-}
-func (m *Message) Cmds(arg ...Any) *Message {
-	return m.Go(func() { m._command(arg...) })
-}
+func (m *Message) Cmd(arg ...Any) *Message  { return m._command(arg...) }
+func (m *Message) Cmds(arg ...Any) *Message { return m.Go(func() { m._command(arg...) }) }
 func (m *Message) Cmdx(arg ...Any) string {
 	res := kit.Select("", m._command(arg...).meta[MSG_RESULT], 0)
 	return kit.Select("", res, res != ErrWarn)
 }
-func (m *Message) Cmdy(arg ...Any) *Message {
-	return m.Copy(m._command(arg...))
-}
+func (m *Message) Cmdy(arg ...Any) *Message { return m.Copy(m._command(arg...)) }
 func (m *Message) Confv(arg ...Any) (val Any) {
 	if m.Spawn().Warn(Info.Important && m.Option("_lock") == "") {
 		m.Warn(true, "what unsafe lock", m.PrefixKey(), m.FormatStack(1, 100))
@@ -530,8 +412,7 @@ func (m *Message) Confv(arg ...Any) (val Any) {
 		if len(arg) == 1 {
 			val = conf.Value
 			return
-		}
-		if len(arg) > 2 {
+		} else if len(arg) > 2 {
 			if arg[1] == nil || arg[1] == "" {
 				conf.Value = arg[2]
 			} else {
@@ -541,9 +422,7 @@ func (m *Message) Confv(arg ...Any) (val Any) {
 		val = kit.Value(conf.Value, arg[1])
 	}
 	key := kit.Format(arg[0])
-	if key == "" {
-		key = m._key
-	}
+	kit.If(key == "", func() { key = m._key })
 	if conf, ok := m.target.Configs[key]; ok {
 		run(conf)
 	} else if conf, ok := m.source.Configs[key]; ok {
@@ -553,13 +432,9 @@ func (m *Message) Confv(arg ...Any) (val Any) {
 	}
 	return
 }
-func (m *Message) Conf(arg ...Any) string {
-	return kit.Format(m.Confv(arg...))
-}
+func (m *Message) Conf(arg ...Any) string { return kit.Format(m.Confv(arg...)) }
 func (m *Message) Capi(key string, val ...Any) int {
-	if len(val) > 0 {
-		m.Cap(key, kit.Int(m.Cap(key))+kit.Int(val[0]))
-	}
+	kit.If(len(val) > 0, func() { m.Cap(key, kit.Int(m.Cap(key))+kit.Int(val[0])) })
 	return kit.Int(m.Cap(key))
 }
 func (m *Message) Capv(arg ...Any) Any {
@@ -571,15 +446,11 @@ func (m *Message) Capv(arg ...Any) Any {
 	for _, s := range []*Context{m.target} {
 		for c := s; c != nil; c = c.context {
 			if caps, ok := c.Caches[key]; ok {
-				if len(arg) > 0 {
-					caps.Value = kit.Format(arg[0])
-				}
+				kit.If(len(arg) > 0, func() { caps.Value = kit.Format(arg[0]) })
 				return caps.Value
 			}
 		}
 	}
 	return nil
 }
-func (m *Message) Cap(arg ...Any) string {
-	return kit.Format(m.Capv(arg...))
-}
+func (m *Message) Cap(arg ...Any) string { return kit.Format(m.Capv(arg...)) }

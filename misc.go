@@ -351,8 +351,8 @@ func MergeActions(arg ...Any) Actions {
 					last := h.Hand
 					hand := v.Hand
 					h.Hand = func(m *Message, arg ...string) {
-						hand(m, arg...)
 						last(m, arg...)
+						hand(m, arg...)
 					}
 				} else if h.Name = kit.Select(v.Name, h.Name); h.Hand == nil {
 					h.Hand = v.Hand
@@ -473,4 +473,14 @@ func MergeHand(hand ...Handler) Handler {
 			}
 		}
 	}
+}
+func (m *Message) CmdMap(arg ...string) map[string]map[string]string {
+	field, list := kit.Slice(arg, -1)[0], map[string]map[string]string{}
+	m._command(kit.Slice(arg, 0, -1)).Tables(func(value Maps) { list[value[field]] = value })
+	return list
+}
+func (m *Message) CmdAppend(arg ...Any) string {
+	args := kit.Simple(arg...)
+	field := kit.Slice(args, -1)[0]
+	return m._command(kit.Slice(args, 0, -1), OptionFields(field)).Append(field)
 }

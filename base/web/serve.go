@@ -17,7 +17,6 @@ import (
 	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
-	"shylinux.com/x/icebergs/base/ssh"
 	"shylinux.com/x/icebergs/base/tcp"
 	kit "shylinux.com/x/toolkits"
 )
@@ -26,13 +25,12 @@ func _serve_address(m *ice.Message) string {
 	return kit.Format("http://localhost:%s", m.Option(tcp.PORT))
 }
 func _serve_start(m *ice.Message) {
-	defer kit.For(kit.Split(m.Option(ice.DEV)), func(v string) { m.Cmd(SPACE, tcp.DIAL, ice.DEV, v, mdb.NAME, ice.Info.NodeName) })
+	defer kit.For(kit.Split(m.Option(ice.DEV)), func(v string) { m.Sleep("10ms").Cmd(SPACE, tcp.DIAL, ice.DEV, v, mdb.NAME, ice.Info.NodeName) })
 	kit.If(m.Option(aaa.USERNAME), func() { aaa.UserRoot(m, m.Option(aaa.USERNICK), m.Option(aaa.USERNAME)) })
 	kit.If(m.Option(tcp.PORT) == tcp.RANDOM, func() { m.Option(tcp.PORT, m.Cmdx(tcp.PORT, aaa.RIGHT)) })
-	kit.If(runtime.GOOS == cli.WINDOWS, func() { m.Cmd(SPIDE, ice.OPS, _serve_address(m)+"/exit").Sleep("300ms") })
+	kit.If(runtime.GOOS == cli.WINDOWS, func() { m.Cmd(SPIDE, ice.OPS, _serve_address(m)+"/exit").Sleep300ms() })
 	cli.NodeInfo(m, kit.Select(ice.Info.Hostname, m.Option(tcp.NODENAME)), SERVER)
 	m.Target().Start(m, m.OptionSimple(tcp.HOST, tcp.PORT)...)
-	m.Sleep("300ms")
 }
 func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	const (
@@ -192,27 +190,21 @@ func init() {
 				_serve_start(m)
 			}},
 			SERVE_START: {Hand: func(m *ice.Message, arg ...string) {
-				if m.Go(func() { m.Cmd(BROAD, SERVE, m.OptionSimple(tcp.PORT)) }); m.Option(ice.DEV) == "" {
-					m.Cmd(ssh.PRINTF, kit.Dict(nfs.CONTENT, ice.NL+ice.Render(m, ice.RENDER_QRCODE, tcp.PublishLocalhost(m, _serve_address(m))))).Cmd(ssh.PROMPT, kit.Dict(ice.LOG_DISABLE, ice.TRUE))
-				}
-				go func() {
+				m.Go(func() {
 					opened := false
 					for i := 0; i < 3 && !opened; i++ {
 						m.Sleep("1s").Cmd(SPACE, kit.Dict(ice.LOG_DISABLE, ice.TRUE), func(values ice.Maps) {
 							kit.If(values[mdb.TYPE] == CHROME, func() { opened = true })
 						})
 					}
-					if opened {
-						return
-					}
-					cli.Opens(m, _serve_address(m))
-				}()
+					kit.If(!opened, func() { cli.Opens(m, _serve_address(m)) })
+				})
 			}},
 			DOMAIN: {Hand: func(m *ice.Message, arg ...string) {
 				kit.If(len(arg) > 0, func() { ice.Info.Domain, ice.Info.Localhost = arg[0], false })
 				m.Echo(ice.Info.Domain)
 			}},
-		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,status,name,proto,host,port", tcp.LOCALHOST, ice.TRUE), mdb.ClearOnExitHashAction(), ServeAction())},
+		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,status,name,proto,host,port", tcp.LOCALHOST, ice.TRUE), mdb.ClearOnExitHashAction())},
 		PP(ice.INTSHELL): {Name: "/intshell/", Help: "命令行", Actions: aaa.WhiteAction(), Hand: func(m *ice.Message, arg ...string) {
 			RenderIndex(m, arg...)
 		}},
@@ -255,15 +247,6 @@ func init() {
 				m.Cmd(cli.SYSTEM, "npm", "install", arg[0], kit.Dict(cli.CMD_DIR, ice.USR))
 			}
 			m.RenderDownload(p)
-		}},
-		PP(ice.HELP): {Name: "/help/", Help: "帮助", Actions: ice.MergeActions(ctx.CmdAction(), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {
-			if len(arg) == 0 {
-				arg = append(arg, "tutor.shy")
-			}
-			if len(arg) > 0 && arg[0] != ctx.ACTION {
-				arg[0] = path.Join(ice.SRC_HELP, arg[0])
-			}
-			m.Cmdy("web.chat./cmd/", arg)
 		}},
 	})
 	ice.AddMerges(func(c *ice.Context, key string, cmd *ice.Command, sub string, action *ice.Action) (ice.Handler, ice.Handler) {

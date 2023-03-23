@@ -126,6 +126,19 @@ func (m *Message) IsCliUA() bool {
 func (m *Message) IsMobileUA() bool {
 	return strings.Contains(m.Option(MSG_USERUA), "Mobile")
 }
+func (m *Message) MergePodCmd(pod, cmd string, arg ...Any) string {
+	ls := []string{"chat"}
+	kit.If(kit.Keys(m.Option(MSG_USERPOD), pod), func(p string) { ls = append(ls, POD, p) })
+	if cmd == "" {
+		if _, ok := Info.Index[m.CommandKey()]; ok {
+			cmd = m.CommandKey()
+		} else {
+			cmd = m.PrefixKey()
+		}
+	}
+	ls = append(ls, CMD, cmd)
+	return kit.MergeURL2(strings.Split(kit.Select(Info.Domain, m.Option(MSG_USERWEB)), QS)[0], PS+kit.Join(ls, PS), arg...)
+}
 func (m *Message) PushSearch(arg ...Any) {
 	data := kit.Dict(arg...)
 	for i := 0; i < len(arg); i += 2 {

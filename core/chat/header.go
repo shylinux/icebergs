@@ -34,7 +34,11 @@ func _header_share(m *ice.Message, arg ...string) {
 	m.Push(mdb.NAME, m.Option(mdb.LINK)).PushQRCode(mdb.TEXT, m.Option(mdb.LINK))
 }
 func _header_check(m *ice.Message, arg ...string) bool {
-	if m.Option(web.SHARE) != "" {
+	if m.Option(ice.CMD) == aaa.OFFER && m.Option(mdb.HASH) != "" {
+		m.Cmd(aaa.OFFER, m.Option(mdb.HASH), func(value ice.Maps) {
+			aaa.SessAuth(m, kit.Dict(aaa.USERNAME, value[aaa.EMAIL], aaa.USERROLE, aaa.VOID))
+		})
+	} else if m.Option(web.SHARE) != "" {
 		m.Cmd(web.SHARE, m.Option(web.SHARE), ice.OptionFields(""), func(value ice.Maps) {
 			if web.IsNotValidShare(m, value[mdb.TIME]) {
 				return
@@ -65,6 +69,7 @@ const HEADER = "header"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		web.P(HEADER): {Name: "/header", Help: "标题栏", Actions: ice.MergeActions(ice.Actions{
+			ice.CTX_INIT:   {Hand: func(m *ice.Message, arg ...string) { aaa.White(m, HEADER) }},
 			mdb.INPUTS:     {Hand: func(m *ice.Message, arg ...string) {}},
 			aaa.LOGOUT:     {Hand: aaa.SessLogout},
 			aaa.PASSWORD:   {Hand: _header_users},
@@ -74,14 +79,12 @@ func init() {
 			aaa.AVATAR:     {Hand: _header_users},
 			web.SHARE:      {Hand: _header_share},
 			"webpack":      {Hand: ctx.CmdHandler("webpack", "build")},
-		}, ctx.ConfAction(SSO, ""), aaa.BlackAction("webpack")), Hand: func(m *ice.Message, arg ...string) {
+		}, ctx.ConfAction(SSO, "")), Hand: func(m *ice.Message, arg ...string) {
 			if gdb.Event(m, HEADER_AGENT); !_header_check(m, arg...) {
 				return
 			}
 			msg := m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME))
-			for _, k := range []string{aaa.USERNICK, aaa.LANGUAGE} {
-				m.Option(k, msg.Append(k))
-			}
+			kit.For([]string{aaa.USERNICK, aaa.LANGUAGE}, func(k string) { m.Option(k, msg.Append(k)) })
 			for _, k := range []string{aaa.BACKGROUND, aaa.AVATAR} {
 				if strings.HasPrefix(msg.Append(k), ice.PS) || strings.HasPrefix(msg.Append(k), ice.HTTP) {
 					m.Option(k, msg.Append(k))

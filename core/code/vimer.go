@@ -154,7 +154,7 @@ func init() {
 					if isWebview() {
 						m.Go(func() { m.Cmd(cli.SYSTEM, "./bin/ice.bin", cli.FOREVER, cli.DELAY, "300ms", cli.SYSTEM, cli.OPEN, app) })
 					}
-					m.Go(func() { m.Sleep("10ms").Cmd(UPGRADE, cli.RESTART) })
+					m.Go(func() { m.Sleep30ms().Cmd(UPGRADE, cli.RESTART) })
 				} else {
 					_vimer_make(m, nfs.PWD, msg)
 				}

@@ -23,9 +23,6 @@ func init() {
 					}
 				}
 			}},
-			ice.HELP: {Hand: func(m *ice.Message, arg ...string) {
-				ctx.ProcessField(m, web.WIKI_WORD, func() string { return kit.ExtChange(ctx.GetCmdFile(m, arg[0]), nfs.SHY) }, arg...)
-			}},
 			nfs.SCRIPT: {Hand: func(m *ice.Message, arg ...string) {
 				ctx.ProcessField(m, web.CODE_VIMER, func() []string {
 					return nfs.SplitPath(m, kit.ExtChange(nfs.Relative(m, ctx.GetCmdFile(m, arg[0])), nfs.JS))

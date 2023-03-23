@@ -76,8 +76,9 @@ func (m *Message) TableGo(cb Any) *Message {
 	})
 	return m
 }
-func (m *Message) Go(cb Any) *Message {
-	task.Put(logs.FileLine(cb), func(task *task.Task) error {
+func (m *Message) Go(cb Any, arg ...Any) *Message {
+	kit.If(len(arg) == 0, func() { arg = append(arg, logs.FileLine(cb)) })
+	task.Put(arg[0], func(task *task.Task) error {
 		m.TryCatch(m, true, func(m *Message) {
 			switch cb := cb.(type) {
 			case func(*Message):

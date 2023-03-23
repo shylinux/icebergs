@@ -14,6 +14,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		TEMPLATE: {Name: "template river storm index auto 删除配置 查看配置", Help: "模板", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				return
 				if gdb.Watch(m, RIVER_CREATE); m.Cmd("").Length() == 0 {
 					kit.For(_river_template, func(river string, value ice.Any) {
 						m.Cmd("", mdb.CREATE, RIVER, river)

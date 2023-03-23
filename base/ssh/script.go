@@ -33,21 +33,11 @@ type Frame struct {
 }
 
 func (f *Frame) prompt(m *ice.Message, list ...string) *Frame {
-	if f.source != STDIO {
+	if f.source != STDIO || m.Target().Cap(ice.CTX_STATUS) == ice.CTX_CLOSE {
 		return f
 	}
-	if m.Target().Cap(ice.CTX_STATUS) == ice.CTX_CLOSE {
-		return f
-	}
-	if len(list) == 0 {
-		list = append(list, f.ps1...)
-	}
-	if ice.Info.Colors {
-		fmt.Fprintf(f.stdout, "\r\033[2K")
-	} else {
-		fmt.Fprintf(f.stdout, "\r")
-	}
-
+	kit.If(len(list) == 0, func() { list = append(list, f.ps1...) })
+	fmt.Fprintf(f.stdout, kit.Select("\r", "\r\033[2K", ice.Info.Colors))
 	for _, v := range list {
 		switch v {
 		case mdb.COUNT:
@@ -59,9 +49,7 @@ func (f *Frame) prompt(m *ice.Message, list ...string) *Frame {
 		case TARGET:
 			fmt.Fprintf(f.stdout, f.target.Name)
 		default:
-			if ice.Info.Colors || v[0] != '\033' {
-				fmt.Fprintf(f.stdout, v)
-			}
+			kit.If(ice.Info.Colors || v[0] != '\033', func() { fmt.Fprintf(f.stdout, v) })
 		}
 	}
 	return f
@@ -122,6 +110,9 @@ func (f *Frame) scan(m *ice.Message, h, line string) *Frame {
 	f.ps2 = kit.Simple(mdb.Confv(m, PROMPT, kit.Keym(PS2)))
 	// m.Options(MESSAGE, m, ice.LOG_DISABLE, ice.TRUE)
 	m.I, m.O = f.stdin, f.stdout
+	if msg := m.Cmd("serve"); msg.Append("status") == "start" {
+		m.Cmd(PRINTF, kit.Dict(nfs.CONTENT, ice.NL+ice.Render(m, ice.RENDER_QRCODE, tcp.PublishLocalhost(m, kit.Format("http://localhost:%s", msg.Append(tcp.PORT))))))
+	}
 	ps, bio := f.ps1, bufio.NewScanner(f.stdin)
 	for f.prompt(m, ps...); f.stdin != nil && bio.Scan(); f.prompt(m, ps...) {
 		if len(bio.Text()) == 0 && h == STDIO {
@@ -152,16 +143,15 @@ func (f *Frame) scan(m *ice.Message, h, line string) *Frame {
 	return f
 }
 
-func (f *Frame) Begin(m *ice.Message, arg ...string) ice.Server {
+func (f *Frame) Begin(m *ice.Message, arg ...string) {
 	switch strings.Split(os.Getenv(cli.TERM), "-")[0] {
 	case "xterm", "screen":
 		ice.Info.Colors = true
 	default:
 		ice.Info.Colors = false
 	}
-	return f
 }
-func (f *Frame) Start(m *ice.Message, arg ...string) bool {
+func (f *Frame) Start(m *ice.Message, arg ...string) {
 	m.Optionv(FRAME, f)
 	switch f.source = kit.Select(STDIO, arg, 0); f.source {
 	case STDIO:
@@ -185,7 +175,7 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 		m.Option(ice.MSG_SCRIPT, f.source)
 		f.target = m.Source()
 		if msg := m.Cmd(nfs.CAT, f.source); msg.IsErr() {
-			return true
+			return
 		} else {
 			buf := bytes.NewBuffer(make([]byte, 0, ice.MOD_BUFS))
 			f.stdin, f.stdout = bytes.NewBufferString(msg.Result()), buf
@@ -193,14 +183,12 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 		}
 		f.scan(m, "", "")
 	}
-	return true
 }
-func (f *Frame) Close(m *ice.Message, arg ...string) bool {
+func (f *Frame) Close(m *ice.Message, arg ...string) {
 	if stdin, ok := f.stdin.(io.Closer); ok {
 		stdin.Close()
 	}
 	f.stdin = nil
-	return true
 }
 func (f *Frame) Spawn(m *ice.Message, c *ice.Context, arg ...string) ice.Server {
 	return &Frame{}

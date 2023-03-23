@@ -1,21 +1,35 @@
 package gdb
 
 import (
+	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/mdb"
 	kit "shylinux.com/x/toolkits"
+	"shylinux.com/x/toolkits/logs"
 )
 
 type Frame struct{ s chan os.Signal }
 
-func (f *Frame) Begin(m *ice.Message, arg ...string) ice.Server {
-	f.s = make(chan os.Signal, 3)
-	return f
+func (f *Frame) listen(m *ice.Message, s int, arg ...string) {
+	signal.Notify(f.s, syscall.Signal(s))
+	mdb.HashCreate(m, SIGNAL, s, arg)
 }
-func (f *Frame) Start(m *ice.Message, arg ...string) bool {
+func (f *Frame) Begin(m *ice.Message, arg ...string) {
+	f.s = make(chan os.Signal, 10)
+}
+func (f *Frame) Start(m *ice.Message, arg ...string) {
+	kit.If(ice.Info.PidPath, func(p string) {
+		if f, p, e := logs.CreateFile(p); e == nil {
+			defer f.Close()
+			fmt.Fprint(f, os.Getpid())
+			m.Logs("save", PID, p)
+		}
+	})
 	t := kit.Duration(mdb.Conf(m, TIMER, kit.Keym(TICK)))
 	enable := mdb.Conf(m, TIMER, kit.Keym("enable")) == ice.TRUE
 	for {
@@ -26,20 +40,13 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 			}
 		case s, ok := <-f.s:
 			if !ok {
-				return true
+				return
 			}
 			m.Cmd(SIGNAL, HAPPEN, SIGNAL, s)
 		}
 	}
-	return true
 }
-func (f *Frame) Close(m *ice.Message, arg ...string) bool {
-	close(f.s)
-	return true
-}
-func (f *Frame) Spawn(m *ice.Message, c *ice.Context, arg ...string) ice.Server {
-	return &Frame{}
-}
+func (f *Frame) Close(m *ice.Message, arg ...string) { close(f.s) }
 
 const GDB = "gdb"
 

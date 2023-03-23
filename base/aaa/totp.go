@@ -23,12 +23,8 @@ func _totp_gen(per int64) string {
 }
 func _totp_get(key string, per int64, num int) string {
 	buf, now := []byte{}, kit.Int64(time.Now().Unix()/per)
-	for i := 0; i < 8; i++ {
-		buf = append(buf, byte((uint64(now) >> uint64(((7 - i) * 8)))))
-	}
-	if l := len(key) % 8; l != 0 {
-		key += strings.Repeat(ice.EQ, 8-l)
-	}
+	kit.For(8, func(i int) { buf = append(buf, byte((uint64(now) >> uint64(((7 - i) * 8))))) })
+	kit.If(len(key)%8, func(l int) { key += strings.Repeat(ice.EQ, 8-l) })
 	s, _ := base32.StdEncoding.DecodeString(strings.ToUpper(key))
 	hm := hmac.New(sha1.New, s)
 	hm.Write(buf)

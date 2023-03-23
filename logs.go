@@ -272,3 +272,22 @@ func (m *Message) FormatStack(s, n int) string {
 	}
 	return kit.Join(list, NL)
 }
+func (c *Command) GetFileLine() string {
+	return kit.Join(kit.Slice(kit.Split(c.GetFileLines(), PS), -3), PS)
+}
+func (c *Command) GetFileLines() string {
+	if c == nil {
+		return ""
+	} else if c.RawHand != nil {
+		switch h := c.RawHand.(type) {
+		case string:
+			return h
+		default:
+			return logs.FileLines(c.RawHand)
+		}
+	} else if c.Hand != nil {
+		return logs.FileLines(c.Hand)
+	} else {
+		return ""
+	}
+}

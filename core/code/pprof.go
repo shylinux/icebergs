@@ -52,7 +52,7 @@ func init() {
 				u := web.OptionUserWeb(m)
 				p := u.Hostname() + ice.DF + m.Cmdx(tcp.PORT, aaa.RIGHT)
 				m.Cmd(cli.DAEMON, mdb.Configv(m, PPROF), "-http="+p, m.Option(BINNARY), m.Option(nfs.FILE))
-				m.Sleep("3s").ProcessOpen(kit.Format("http://%s/ui/top", p))
+				m.Sleep3s().ProcessOpen(kit.Format("http://%s/ui/top", p))
 			}},
 		}, mdb.ZoneAction(mdb.FIELDS, "time,zone,count,binnary,service,seconds", mdb.FIELD, "time,id,text,file", PPROF, kit.List(GO, "tool", PPROF))), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.ZoneSelect(m, arg...); len(arg) == 0 {

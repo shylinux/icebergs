@@ -29,16 +29,13 @@ func _broad_send(m *ice.Message, host, port string, remote_host, remote_port str
 	}
 }
 func _broad_serve(m *ice.Message, port string) {
-	if s, e := net.ListenUDP("udp4", _broad_addr(m, "0.0.0.0", port)); m.Assert(e) {
-		defer s.Close()
-		m.Go(func() {
-			m.Sleep("10ms").Cmd(tcp.HOST, func(values ice.Maps) {
-				_broad_send(m, values[aaa.IP], port, "255.255.255.255", "9020", mdb.TYPE, ice.Info.NodeType, mdb.NAME, ice.Info.NodeName)
-			})
-		})
+	m.Cmd(tcp.HOST, func(values ice.Maps) {
+		_broad_send(m, values[aaa.IP], port, "255.255.255.255", "9020", mdb.TYPE, ice.Info.NodeType, mdb.NAME, ice.Info.NodeName)
+	})
+	m.Cmd(tcp.SERVER, tcp.LISTEN, mdb.TYPE, "udp4", m.OptionSimple(mdb.NAME, tcp.HOST, tcp.PORT), func(l *net.UDPConn) {
 		buf := make([]byte, ice.MOD_BUFS)
 		for {
-			n, from, e := s.ReadFromUDP(buf[:])
+			n, from, e := l.ReadFromUDP(buf[:])
 			if e != nil {
 				break
 			}
@@ -51,12 +48,12 @@ func _broad_serve(m *ice.Message, port string) {
 			if remote := _broad_addr(m, msg.Option(tcp.HOST), msg.Option(tcp.PORT)); remote != nil {
 				m.Cmd(BROAD, func(value ice.Maps) {
 					m.Logs(tcp.SEND, BROAD, kit.Format(value), nfs.TO, kit.Format(remote))
-					s.WriteToUDP([]byte(m.Spawn(value, kit.Dict(mdb.ZONE, "echo")).FormatMeta()), remote)
+					l.WriteToUDP([]byte(m.Spawn(value, kit.Dict(mdb.ZONE, "echo")).FormatMeta()), remote)
 				})
 				_broad_save(m, msg)
 			}
 		}
-	}
+	})
 }
 func _broad_save(m, msg *ice.Message) {
 	save := false
@@ -100,6 +97,9 @@ func init() {
 			}},
 			tcp.SEND: {Hand: func(m *ice.Message, arg ...string) {
 				_broad_send(m, "", "", "255.255.255.255", "9020", arg...)
+			}},
+			SERVE_START: {Hand: func(m *ice.Message, arg ...string) {
+				m.Go(func() { m.Cmd(BROAD, SERVE, m.OptionSimple(tcp.PORT)) })
 			}},
 		}, mdb.HashAction(mdb.SHORT, "host,port", mdb.FIELD, "time,hash,type,name,host,port", mdb.ACTION, OPEN), mdb.ClearOnExitHashAction())},
 	})

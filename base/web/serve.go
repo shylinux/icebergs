@@ -17,6 +17,7 @@ import (
 	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/ssh"
 	"shylinux.com/x/icebergs/base/tcp"
 	kit "shylinux.com/x/toolkits"
 )
@@ -191,13 +192,14 @@ func init() {
 			}},
 			SERVE_START: {Hand: func(m *ice.Message, arg ...string) {
 				m.Go(func() {
+					msg := m.Spawn(kit.Dict(ice.LOG_DISABLE, ice.TRUE)).Sleep("10ms")
+					msg.Cmd(ssh.PRINTF, kit.Dict(nfs.CONTENT, ice.NL+ice.Render(msg, ice.RENDER_QRCODE, tcp.PublishLocalhost(msg, kit.Format("http://localhost:%s", msg.Option(tcp.PORT))))))
+					msg.Cmd(ssh.PROMPT)
 					opened := false
 					for i := 0; i < 3 && !opened; i++ {
-						m.Sleep("1s").Cmd(SPACE, kit.Dict(ice.LOG_DISABLE, ice.TRUE), func(values ice.Maps) {
-							kit.If(values[mdb.TYPE] == CHROME, func() { opened = true })
-						})
+						msg.Sleep("1s").Cmd(SPACE, func(values ice.Maps) { kit.If(values[mdb.TYPE] == CHROME, func() { opened = true }) })
 					}
-					kit.If(!opened, func() { cli.Opens(m, _serve_address(m)) })
+					kit.If(!opened, func() { cli.Opens(msg, _serve_address(msg)) })
 				})
 			}},
 			DOMAIN: {Hand: func(m *ice.Message, arg ...string) {

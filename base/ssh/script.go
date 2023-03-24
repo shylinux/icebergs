@@ -107,9 +107,6 @@ func (f *Frame) scan(m *ice.Message, h, line string) *Frame {
 	f.ps2 = kit.Simple(mdb.Confv(m, PROMPT, kit.Keym(PS2)))
 	// m.Options(MESSAGE, m, ice.LOG_DISABLE, ice.TRUE)
 	m.I, m.O = f.stdin, f.stdout
-	if msg := m.Cmd("serve"); msg.Append("status") == "start" {
-		m.Cmd(PRINTF, kit.Dict(nfs.CONTENT, ice.NL+ice.Render(m, ice.RENDER_QRCODE, tcp.PublishLocalhost(m, kit.Format("http://localhost:%s", msg.Append(tcp.PORT))))))
-	}
 	ps, bio := f.ps1, bufio.NewScanner(f.stdin)
 	for f.prompt(m, ps...); f.stdin != nil && bio.Scan(); f.prompt(m, ps...) {
 		if len(bio.Text()) == 0 && h == STDIO {

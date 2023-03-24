@@ -26,7 +26,7 @@ func (s *Frame) Begin(m *Message, arg ...string) {
 func (s *Frame) Start(m *Message, arg ...string) {
 	m.Cmd(INIT, arg)
 	kit.For(kit.Split(kit.Select(kit.Join([]string{LOG, GDB, SSH}), os.Getenv(CTX_DAEMON))), func(k string) { m.Sleep("10ms").Start(k) })
-	m.Cmd(arg)
+	m.Sleep("10ms").Cmd(arg)
 }
 func (s *Frame) Close(m *Message, arg ...string) {
 	list := map[*Context]*Message{m.target: m}

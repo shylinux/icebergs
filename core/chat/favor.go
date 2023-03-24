@@ -37,7 +37,7 @@ func init() {
 		FAVOR: {Name: "favor hash auto create getClipboardData getLocation scanQRCode record1 record2 upload", Help: "收藏夹", Actions: ice.MergeActions(ice.Actions{
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == mdb.FOREACH {
-					m.Cmd("", ice.OptionFields("")).Tables(func(value ice.Maps) {
+					m.Cmd("", ice.OptionFields("")).Table(func(value ice.Maps) {
 						if arg[1] == "" || arg[1] == value[mdb.TYPE] || strings.Contains(value[mdb.TEXT], arg[1]) {
 							m.PushSearch(value)
 						}
@@ -120,7 +120,7 @@ func init() {
 				m.PushScript(nfs.SCRIPT, text)
 				m.PushQRCode(cli.QRCODE, text)
 			}
-			m.Tables(func(value ice.Maps) {
+			m.Table(func(value ice.Maps) {
 				if msg := gdb.Event(m.Spawn(), FAVOR_TABLES, mdb.TYPE, value[mdb.TYPE]); msg.Append(ctx.ACTION) != "" {
 					m.PushButton(msg.Append(ctx.ACTION))
 					return

@@ -83,7 +83,7 @@ func _status_tags(m *ice.Message) {
 func _status_each(m *ice.Message, title string, cmds ...string) {
 	web.GoToast(m, kit.Select(strings.Join(cmds, ice.SP), title), func(toast func(string, int, int)) {
 		list, count, total := []string{}, 0, m.Cmd(REPOS).Length()
-		ReposList(m).Tables(func(value ice.Maps) {
+		ReposList(m).Table(func(value ice.Maps) {
 			toast(value[REPOS], count, total)
 			if msg := m.Cmd(cmds, kit.Dict(cli.CMD_DIR, value[nfs.PATH])); !cli.IsSuccess(msg) {
 				web.Toast3s(m, msg.Append(cli.CMD_ERR)+msg.Append(cli.CMD_OUT), "error: "+value[REPOS]).Sleep3s()
@@ -115,7 +115,7 @@ func _status_stat(m *ice.Message, files, adds, dels int) (int, int, int) {
 func _status_list(m *ice.Message) (files, adds, dels int, last time.Time) {
 	onlychange := m.Option(ice.MSG_MODE) == mdb.ZONE || m.Option("view") == "change"
 	defer m.Option(cli.CMD_DIR, "")
-	ReposList(m).Tables(func(value ice.Maps) {
+	ReposList(m).Table(func(value ice.Maps) {
 		m.Option(cli.CMD_DIR, value[nfs.PATH])
 		files, adds, dels = _status_stat(m, files, adds, dels)
 		if repos, e := gogit.OpenRepository(_git_dir(value[nfs.PATH])); e == nil {
@@ -329,7 +329,6 @@ func init() {
 			if _configs_get(m, USER_EMAIL) == "" {
 				m.Echo("please config user.email").Action(CONFIGS)
 			} else if len(arg) == 0 {
-				defer web.ToastProcess(m)()
 				files, adds, dels, last := _status_list(m)
 				m.StatusTimeCount("files", files, "adds", adds, "dels", dels, "last", last.Format(ice.MOD_TIME), "origin", _git_cmds(m, "remote", "get-url", "origin"))
 				m.Action(PULL, PUSH, "insteadof", "oauth")

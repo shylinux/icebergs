@@ -25,7 +25,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		TAIL: {Name: "tail name id auto page create", Help: "日志流", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashSelect(m.Spawn(ice.OptionFields("name,file"))).Tables(func(value ice.Maps) {
+				mdb.HashSelect(m.Spawn(ice.OptionFields("name,file"))).Table(func(value ice.Maps) {
 					m.Cmd("", mdb.CREATE, kit.SimpleKV("name,file", value))
 				})
 			}},

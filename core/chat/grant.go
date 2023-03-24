@@ -17,9 +17,9 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		GRANT: {Name: "grant space auto", Help: "授权", Actions: ice.MergeActions(ice.Actions{
 			web.SPACE_LOGIN: {Hand: func(m *ice.Message, arg ...string) {
-				m.Go(func(msg *ice.Message) {
+				m.Go(func() {
 					link := tcp.PublishLocalhost(m, web.MergePodCmd(m, "", "", web.SPACE, m.Option(mdb.NAME)))
-					msg.Sleep300ms(web.SPACE, m.Option(mdb.NAME), cli.PWD, m.Option(mdb.NAME), link, msg.Cmdx(cli.QRCODE, link))
+					m.Sleep300ms(web.SPACE, m.Option(mdb.NAME), cli.PWD, m.Option(mdb.NAME), link, m.Cmdx(cli.QRCODE, link))
 				})
 			}},
 			CONFIRM: {Help: "授权", Hand: func(m *ice.Message, arg ...string) {

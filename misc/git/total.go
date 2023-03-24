@@ -39,7 +39,7 @@ func init() {
 			}},
 		}, ctx.ConfAction("skip", kit.DictList("wubi-dict", "word-dict", "websocket", "go-qrcode", "go-sql-mysql", "echarts"))), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 {
-				ReposList(m).Tables(func(value ice.Maps) {
+				ReposList(m).Table(func(value ice.Maps) {
 					kit.If(value[REPOS] == arg[0], func() { m.Cmdy("_sum", value[nfs.PATH], arg[1:]) })
 				})
 				m.StatusTimeCount(m.AppendSimple(FROM))
@@ -52,7 +52,7 @@ func init() {
 				}
 				msg := m.Cmd("_sum", value[nfs.PATH], mdb.TOTAL, "10000")
 				defer lock.Lock()()
-				msg.Tables(func(value ice.Maps) {
+				msg.Table(func(value ice.Maps) {
 					if kit.Int(value[DAYS]) > days {
 						from, days = value[FROM], kit.Int(value[DAYS])
 					}
@@ -128,9 +128,9 @@ func init() {
 func TableGo(m *ice.Message, cb ice.Any) *ice.Message {
 	wg, lock := sync.WaitGroup{}, &task.Lock{}
 	defer wg.Wait()
-	m.Tables(func(value ice.Maps) {
+	m.Table(func(value ice.Maps) {
 		wg.Add(1)
-		task.Put(logs.FileLine(cb), func(*task.Task) error {
+		task.Put(logs.FileLine(cb), func(*task.Task) {
 			defer wg.Done()
 			switch cb := cb.(type) {
 			case func(ice.Maps, *task.Lock):
@@ -140,7 +140,6 @@ func TableGo(m *ice.Message, cb ice.Any) *ice.Message {
 			default:
 				m.ErrorNotImplement(cb)
 			}
-			return nil
 		})
 	})
 	return m

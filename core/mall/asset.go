@@ -99,7 +99,7 @@ func init() {
 				m.PushAction(CHECK)
 				m.SortIntR(AMOUNT)
 
-				m.Tables(func(value ice.Maps) {
+				m.Table(func(value ice.Maps) {
 					amount += kit.Int(value[AMOUNT])
 					count += kit.Int(value[COUNT])
 				})
@@ -107,7 +107,7 @@ func init() {
 			} else {
 				m.PushAction(mdb.PLUGIN)
 
-				m.Tables(func(value ice.Maps) {
+				m.Table(func(value ice.Maps) {
 					amount += kit.Int(value[AMOUNT])
 					count++
 				})

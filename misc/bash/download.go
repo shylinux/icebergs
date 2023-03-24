@@ -19,7 +19,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		web.P(web.DOWNLOAD): {Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 || arg[0] == "" {
-				m.Cmdy(FAVOR, _DOWNLOAD).Table()
+				m.Cmdy(FAVOR, _DOWNLOAD).TableEcho()
 			} else {
 				m.Cmdy(web.CACHE, m.Cmd(FAVOR, _DOWNLOAD, arg[0]).Append(mdb.TEXT))
 				m.Render(kit.Select(ice.RENDER_DOWNLOAD, ice.RENDER_RESULT, m.Append(nfs.FILE) == ""), m.Append(mdb.TEXT))

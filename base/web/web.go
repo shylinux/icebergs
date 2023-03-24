@@ -51,7 +51,7 @@ func (f *Frame) Start(m *ice.Message, arg ...string) {
 				f.HandleFunc(key, func(w http.ResponseWriter, r *http.Request) {
 					m.TryCatch(m.Spawn(key, cmd, c, w, r), true, func(msg *ice.Message) { _serve_handle(key, cmd, msg, w, r) })
 				})
-				ice.Info.Route[path.Join(list[c], key)] = ctx.FileURI(cmd.GetFileLines())
+				ice.Info.Route[path.Join(list[c], key)] = ctx.FileURI(cmd.FileLine())
 			}(key, cmd)
 		}
 	})

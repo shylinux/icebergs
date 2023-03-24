@@ -127,7 +127,7 @@ func Complete(m *ice.Message, detail bool, arg ...string) (res []string) {
 						})
 					} else {
 						m.Options(arg[3:])
-						m.Cmdy(arg[0], mdb.INPUTS, kit.Select("", arg, -1)).Tables(func(value ice.Maps) {
+						m.Cmdy(arg[0], mdb.INPUTS, kit.Select("", arg, -1)).Table(func(value ice.Maps) {
 							v := value[m.Appendv(ice.MSG_APPEND)[0]]
 							kit.If(strings.Contains(v, ice.SP), func() { echo("\"" + v + "\"") }, func() { echo(v) })
 						})

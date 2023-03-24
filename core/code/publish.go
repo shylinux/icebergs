@@ -17,7 +17,7 @@ import (
 )
 
 func _publish_bin_list(m *ice.Message) *ice.Message {
-	defer m.SortTimeR(mdb.TIME)
+	defer m.SortStrR(mdb.TIME)
 	m.Option(cli.CMD_DIR, ice.USR_PUBLISH)
 	for _, ls := range strings.Split(cli.SystemCmds(m, "ls |xargs file |grep executable"), ice.NL) {
 		if file := strings.TrimSpace(strings.Split(ls, ice.DF)[0]); file != "" {
@@ -30,7 +30,7 @@ func _publish_bin_list(m *ice.Message) *ice.Message {
 	return m
 }
 func _publish_list(m *ice.Message, arg ...string) *ice.Message {
-	defer m.SortTimeR(mdb.TIME)
+	defer m.SortStrR(mdb.TIME)
 	m.Option(nfs.DIR_REG, kit.Select("", arg, 0))
 	return nfs.DirDeepAll(m, ice.USR_PUBLISH, nfs.PWD, nil, nfs.DIR_WEB_FIELDS)
 }

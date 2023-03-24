@@ -20,7 +20,7 @@ func init() {
 		}, mdb.HashAction(mdb.SHORT, MONTH, mdb.FIELD, "month,company,amount,income,tax")), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, arg...)
 			amount, income, tax := 0, 0, 0
-			m.Tables(func(value ice.Maps) {
+			m.Table(func(value ice.Maps) {
 				amount += kit.Int(value[AMOUNT])
 				income += kit.Int(value[INCOME])
 				tax += kit.Int(value[TAX])

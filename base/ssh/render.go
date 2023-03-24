@@ -19,7 +19,7 @@ func Render(msg *ice.Message, cmd string, arg ...ice.Any) (res string) {
 		return res
 	default:
 		if res = msg.Result(); res == "" {
-			res = msg.Table().Result()
+			res = msg.TableEcho().Result()
 		}
 	}
 	if fmt.Fprint(msg.O, res); !strings.HasSuffix(res, ice.NL) {

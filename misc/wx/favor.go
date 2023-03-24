@@ -14,7 +14,7 @@ func init() {
 		FAVOR: {Name: "favor text:text auto create", Help: "收藏", Actions: mdb.HashAction(
 			mdb.SHORT, mdb.TEXT, mdb.FIELD, "time,type,name,text", mdb.LINK, "https://open.weixin.qq.com/qr/code",
 		), Hand: func(m *ice.Message, arg ...string) {
-			mdb.HashSelect(m, arg...).Tables(func(value ice.Maps) {
+			mdb.HashSelect(m, arg...).Table(func(value ice.Maps) {
 				m.PushQRCode(mdb.SCAN, kit.MergeURL(mdb.Config(m, mdb.LINK), aaa.USERNAME, value[mdb.TEXT]))
 			})
 		}},

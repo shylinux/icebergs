@@ -131,7 +131,7 @@ func init() {
 	psh.Index.MergeCommands(ice.Commands{
 		CONNECT: {Name: "connect name auto", Help: "连接", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashSelect(m).Tables(func(value ice.Maps) {
+				mdb.HashSelect(m).Table(func(value ice.Maps) {
 					if value[mdb.STATUS] == tcp.OPEN {
 						m.Cmd("", tcp.DIAL, mdb.NAME, value[mdb.NAME], value)
 					}
@@ -147,7 +147,8 @@ func init() {
 						mdb.HashCreate(m.Spawn(), m.OptionSimple(mdb.NAME, tcp.HOST, tcp.PORT, aaa.USERNAME), mdb.STATUS, tcp.OPEN, kit.Dict(mdb.TARGET, client))
 						m.Cmd("", SESSION, m.OptionSimple(mdb.NAME))
 					}, arg...)
-				}).Sleep300ms()
+				})
+				m.Sleep300ms()
 			}},
 			SESSION: {Help: "会话", Hand: func(m *ice.Message, arg ...string) {
 				if c, e := _ssh_session(m, mdb.HashSelectTarget(m, m.Option(mdb.NAME), nil).(*ssh.Client)); !m.Warn(e, ice.ErrNotValid) {
@@ -165,7 +166,7 @@ func init() {
 				}
 			}},
 		}, mdb.StatusHashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,status,username,host,port")), Hand: func(m *ice.Message, arg ...string) {
-			if mdb.HashSelect(m, arg...).Tables(func(value ice.Maps) {
+			if mdb.HashSelect(m, arg...).Table(func(value ice.Maps) {
 				m.PushButton(kit.Select("", "command,session", value[mdb.STATUS] == tcp.OPEN), mdb.REMOVE)
 			}); len(arg) == 0 {
 				m.Action(tcp.DIAL)

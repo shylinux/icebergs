@@ -18,7 +18,7 @@ func _signal_listen(m *ice.Message, s int, arg ...string) {
 	}
 }
 func _signal_action(m *ice.Message, arg ...string) {
-	mdb.HashSelect(m.Spawn(), arg...).Tables(func(value ice.Maps) { m.Cmdy(kit.Split(value[ice.CMD])) })
+	mdb.HashSelect(m.Spawn(), arg...).Table(func(value ice.Maps) { m.Cmdy(kit.Split(value[ice.CMD])) })
 }
 func _signal_process(m *ice.Message, p string, s os.Signal) {
 	if p == "" {

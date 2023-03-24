@@ -23,7 +23,7 @@ func init() {
 					return
 				}
 			}
-			if m.Cmdy(cmds); m.Result() != "" && m.Result(1) != ice.ErrNotFound {
+			if m.Cmdy(cmds); m.Result() != "" && !m.IsErrNotFound() {
 				m.Cmd(SEND, m.Option(APP_ID), m.Option(OPEN_CHAT_ID), m.Result())
 				return
 			} else if m.Length() == 0 {

@@ -16,10 +16,10 @@ func _wx_action(m *ice.Message) (count int) {
 <CreateTime>%s</CreateTime>
 <MsgType><![CDATA[%s]]></MsgType>
 `, m.Option("ToUserName"), m.Option("FromUserName"), m.Option("CreateTime"), "news")
-	m.Tables(func(value ice.Maps) { count++ })
+	m.Table(func(value ice.Maps) { count++ })
 	m.Echo(`<ArticleCount>%d</ArticleCount>`, count).Echo(`<Articles>`)
 	share := m.Cmdx(web.SHARE, mdb.CREATE, mdb.TYPE, web.LOGIN)
-	m.Tables(func(value ice.Maps) {
+	m.Table(func(value ice.Maps) {
 		m.Echo(`<item>
 <Title><![CDATA[%s]]></Title>
 <Description><![CDATA[%s]]></Description>

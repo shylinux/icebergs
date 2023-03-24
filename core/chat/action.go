@@ -31,7 +31,7 @@ func _action_auth(m *ice.Message, share string) *ice.Message {
 		msg.Append(mdb.TYPE, "")
 		return msg
 	}
-	m.Tables(func(value ice.Maps) {
+	m.Table(func(value ice.Maps) {
 		aaa.SessAuth(m, kit.Dict(value), RIVER, m.Option(ice.MSG_RIVER, msg.Append(RIVER)), STORM, m.Option(ice.MSG_STORM, msg.Append(STORM)))
 	})
 	if m.Warn(!_river_right(m, msg.Append(web.RIVER)), ice.ErrNotRight) {

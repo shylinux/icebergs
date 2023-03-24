@@ -93,7 +93,7 @@ func PushStream(m *ice.Message, cmds ...ice.Any) *ice.Message {
 }
 func PushPodCmd(m *ice.Message, cmd string, arg ...string) {
 	if m.Length() > 0 && len(m.Appendv(ice.POD)) == 0 {
-		m.Tables(func(value ice.Maps) { m.Push(ice.POD, m.Option(ice.MSG_USERPOD)) })
+		m.Table(func(value ice.Maps) { m.Push(ice.POD, m.Option(ice.MSG_USERPOD)) })
 	}
 
 	m.Cmd(SPACE, ice.OptionFields(mdb.TYPE, mdb.NAME), func(value ice.Maps) {

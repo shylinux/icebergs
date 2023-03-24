@@ -52,7 +52,7 @@ func init() {
 				mdb.HashCreate(m, m.OptionSimple(mdb.NAME, NUMBER, PERIOD, SECRET))
 			}},
 		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,number,period,secret", mdb.LINK, "otpauth://totp/%s?secret=%s")), Hand: func(m *ice.Message, arg ...string) {
-			mdb.HashSelect(m.Spawn(), arg...).Tables(func(value ice.Maps) {
+			mdb.HashSelect(m.Spawn(), arg...).Table(func(value ice.Maps) {
 				kit.If(len(arg) > 0, func() { m.OptionFields(ice.FIELDS_DETAIL) })
 				m.Push(mdb.TIME, m.Time()).Push(mdb.NAME, value[mdb.NAME])
 				period := kit.Int64(value[PERIOD])

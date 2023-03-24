@@ -23,7 +23,7 @@ func (s style) Inputs(m *ice.Message, arg ...string) {
 	s.daemon.Inputs(m, arg...)
 }
 func (s style) Command(m *ice.Message, arg ...string) {
-	s.Zone.List(m, m.Option(web.DOMAIN)).Tables(func(value ice.Maps) {
+	s.Zone.List(m, m.Option(web.DOMAIN)).Table(func(value ice.Maps) {
 		s.send(m, "1", m.Option(TID), m.CommandKey(), value[SELECTOR], value[PROPERTY])
 	})
 }

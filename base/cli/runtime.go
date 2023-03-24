@@ -32,10 +32,6 @@ func _runtime_init(m *ice.Message) {
 		switch m.Conf(RUNTIME, kit.Keys(CONF, k), kit.Env(k)); k {
 		case CTX_PID:
 			ice.Info.PidPath = kit.Env(k)
-		case CTX_SHARE:
-			ice.Info.CtxShare = kit.Env(k)
-		case CTX_RIVER:
-			ice.Info.CtxRiver = kit.Env(k)
 		}
 	}
 	m.Conf(RUNTIME, kit.Keys(BOOT, HOSTNAME), kit.Env("HOSTNAME"))

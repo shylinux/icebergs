@@ -153,7 +153,7 @@ func init() {
 				_repos_init(m, path.Join(ice.USR_LOCAL_REPOS, m.Option(mdb.NAME)))
 			}},
 			mdb.IMPORT: {Hand: func(m *ice.Message, arg ...string) {
-				ReposList(m).Tables(func(value ice.Maps) {
+				ReposList(m).Table(func(value ice.Maps) {
 					m.Option(cli.CMD_DIR, value[nfs.PATH])
 					remote := _git_url(m, value[REPOS])
 					_git_cmd(m, PUSH, remote, MASTER)
@@ -190,7 +190,7 @@ func init() {
 				m.Option(ice.MSG_USERROLE, aaa.TECH)
 				m.Cmdy(nfs.DIR, nfs.PWD, "time,name,size,action", kit.Dict(nfs.DIR_TYPE, nfs.TYPE_DIR), func(value ice.Maps) {
 					m.PushScript("git clone " + _git_url(m, value[mdb.NAME]))
-				}).Cut("time,name,size,script,action").RenameAppend(mdb.NAME, nfs.REPOS).SortTimeR(mdb.TIME)
+				}).Cut("time,name,size,script,action").RenameAppend(mdb.NAME, nfs.REPOS).SortStrR(mdb.TIME)
 				m.Echo(strings.ReplaceAll(m.Cmdx("web.code.publish", ice.CONTEXTS), "app username", "dev username"))
 				m.Echo(m.Cmdx(TOKEN, m.Option(ice.MSG_USERNAME)))
 			} else if dir := path.Join(m.Option(nfs.DIR_ROOT), arg[0]); len(arg) == 1 {

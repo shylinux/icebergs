@@ -76,7 +76,7 @@ func init() {
 			}},
 		}, mdb.ZoneAction(mdb.FIELD, "time,id,tags,type,name,value"), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.ZoneSelect(m, arg...); len(arg) == 0 {
-				m.Cmd(nfs.DIR, nfs.PWD, ice.OptionFields(), kit.Dict(nfs.DIR_ROOT, "src/website/theme/")).RenameAppend(nfs.PATH, mdb.ZONE, nfs.SIZE, mdb.COUNT).Tables(func(values ice.Maps) {
+				m.Cmd(nfs.DIR, nfs.PWD, ice.OptionFields(), kit.Dict(nfs.DIR_ROOT, "src/website/theme/")).RenameAppend(nfs.PATH, mdb.ZONE, nfs.SIZE, mdb.COUNT).Table(func(values ice.Maps) {
 					m.Push("", values)
 				})
 				m.PushAction("choose", "form", mdb.REMOVE)
@@ -84,7 +84,7 @@ func init() {
 				if p := "src/website/theme/" + arg[0]; nfs.ExistsFile(m, p) {
 					m.Cmdy(nfs.CAT, p)
 				} else {
-					m.Tables(func(value ice.Maps) {
+					m.Table(func(value ice.Maps) {
 						m.Echo("body.%s %s { %s:%s }\n", arg[0], value["tag"], value[mdb.NAME], value[mdb.VALUE])
 					})
 				}

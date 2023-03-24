@@ -210,7 +210,7 @@ func init() {
 				}
 			}},
 		}, mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path,type,name,text"), ctx.CmdAction(), web.ApiAction(), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {
-			mdb.HashSelect(m, arg...).Tables(func(value ice.Maps) { m.PushAnchor(web.MergePodWebSite(m, "", value[nfs.PATH])) })
+			mdb.HashSelect(m, arg...).Table(func(value ice.Maps) { m.PushAnchor(web.MergePodWebSite(m, "", value[nfs.PATH])) })
 		}},
 	})
 }

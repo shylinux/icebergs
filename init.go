@@ -24,10 +24,9 @@ func (s *Frame) Begin(m *Message, arg ...string) {
 	})
 }
 func (s *Frame) Start(m *Message, arg ...string) {
-	m.Cmd(kit.Keys(MDB, CTX_INIT))
 	m.Cmd(INIT, arg)
+	kit.For(kit.Split(kit.Select(kit.Join([]string{LOG, GDB, SSH}), os.Getenv(CTX_DAEMON))), func(k string) { m.Sleep("10ms").Start(k) })
 	m.Cmd(arg)
-	kit.For(kit.Split(kit.Select("log,gdb,ssh", os.Getenv(CTX_DAEMON))), func(k string) { m.Sleep("10ms").Start(k) })
 }
 func (s *Frame) Close(m *Message, arg ...string) {
 	list := map[*Context]*Message{m.target: m}
@@ -55,6 +54,7 @@ var Index = &Context{Name: ICE, Help: "冰山模块", Commands: Commands{
 		loadImportant(m)
 	}},
 	INIT: {Hand: func(m *Message, arg ...string) {
+		m.Cmd(kit.Keys(MDB, CTX_INIT))
 		m.Cmd(CTX_INIT)
 		m.Cmd(SOURCE, ETC_INIT_SHY)
 	}},
@@ -72,7 +72,7 @@ var Index = &Context{Name: ICE, Help: "冰山模块", Commands: Commands{
 		removeImportant(m)
 	}},
 }, server: &Frame{}}
-var Pulse = &Message{time: time.Now(), code: 0, Hand: true, meta: map[string][]string{}, data: Map{}, source: Index, target: Index}
+var Pulse = &Message{time: time.Now(), meta: map[string][]string{}, data: Map{}, source: Index, target: Index}
 
 func init() { Index.root, Pulse.root = Index, Pulse }
 
@@ -101,10 +101,9 @@ func Run(arg ...string) string {
 		conf.Wait()
 		os.Exit(kit.Int(Pulse.Option(EXIT)))
 	default:
-		logs.Disable(true)
 		Pulse.Cmdy(INIT).Cmdy(arg)
 		kit.If(Pulse.IsErrNotFound(), func() { Pulse.SetAppend().SetResult().Cmdy(SYSTEM, arg) })
-		kit.If(strings.TrimSpace(Pulse.Result()) == "" && Pulse.Length() > 0, func() { Pulse.Table() })
+		kit.If(strings.TrimSpace(Pulse.Result()) == "" && Pulse.Length() > 0, func() { Pulse.TableEcho() })
 		kit.If(Pulse.Result() != "" && !strings.HasSuffix(Pulse.Result(), NL), func() { Pulse.Echo(NL) })
 	}
 	return Pulse.Result()

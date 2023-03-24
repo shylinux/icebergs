@@ -33,7 +33,7 @@ func init() {
 				WordAlias(m, SEQUENCE, CHART, SEQUENCE)
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(git.REPOS, ice.OptionFields(nfs.PATH)).Tables(func(value ice.Maps) {
+				m.Cmd(git.REPOS, ice.OptionFields(nfs.PATH)).Table(func(value ice.Maps) {
 					if m.Option(nfs.DIR_DEEP, ice.TRUE); kit.Path(value[nfs.PATH]) == kit.Path("") {
 						_wiki_list(m, "src/")
 					} else {

@@ -19,7 +19,7 @@ func (s spide) List(m *ice.Message, arg ...string) {
 		s.daemon.List(m, arg...)
 		return
 	}
-	s.send(m, arg[:2], "spide").Tables(func(value ice.Maps) {
+	s.send(m, arg[:2], "spide").Table(func(value ice.Maps) {
 		switch value[mdb.TYPE] {
 		case wiki.AUDIO:
 			m.PushAudios(mdb.SHOW, value[mdb.LINK])

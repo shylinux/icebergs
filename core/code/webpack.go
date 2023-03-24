@@ -19,7 +19,7 @@ import (
 func _volcanos(m *ice.Message, p ...string) string { return ice.USR_VOLCANOS + path.Join(p...) }
 func _publish(m *ice.Message, p ...string) string  { return ice.USR_PUBLISH + path.Join(p...) }
 func _require(m *ice.Message, p string) string {
-	return path.Join(ice.PS, strings.TrimPrefix(strings.Replace(p, ice.USR_NODE_MODULES, web.REQUIRE_MODULES, 1), ice.USR_VOLCANOS))
+	return path.Join(ice.PS, strings.TrimPrefix(strings.Replace(p, ice.USR_MODULES, web.REQUIRE_MODULES, 1), ice.USR_VOLCANOS))
 }
 func _webpack_css(m *ice.Message, css, js io.Writer, p string) {
 	fmt.Fprintln(css, kit.Format("/* %s */", _require(m, p)))
@@ -67,13 +67,13 @@ func _webpack_cache(m *ice.Message, dir string, write bool) {
 	for _, k := range []string{ice.FRAME_JS} {
 		_webpack_js(m, js, _volcanos(m, k))
 	}
-	mdb.HashSelects(m).Sort(nfs.PATH).Tables(func(value ice.Maps) {
+	mdb.HashSelects(m).Sort(nfs.PATH).Table(func(value ice.Maps) {
 		defer fmt.Fprintln(js, "")
 		if p := value[nfs.PATH]; kit.Ext(p) == nfs.CSS {
-			_webpack_css(m, css, js, path.Join(ice.USR_NODE_MODULES, p))
+			_webpack_css(m, css, js, path.Join(ice.USR_MODULES, p))
 		} else {
 			p = kit.Select(path.Join(p, LIB, kit.Keys(p, JS)), p, kit.Ext(p) == nfs.JS)
-			_webpack_node(m, js, path.Join(ice.USR_NODE_MODULES, p))
+			_webpack_node(m, js, path.Join(ice.USR_MODULES, p))
 		}
 	})
 }
@@ -85,7 +85,7 @@ func _webpack_build(m *ice.Message, name string) {
 	if f, p, e := nfs.CreateFile(m, kit.Keys(name, HTML)); m.Assert(e) {
 		defer f.Close()
 		defer m.Echo(p)
-		fmt.Fprintf(f, nfs.Template(m, ice.INDEX_HTML), m.Cmdx(nfs.CAT, USR_PUBLISH_CAN_CSS), m.Cmdx(nfs.CAT, USR_PUBLISH_CAN_JS), kit.JoinKV(ice.EQ, ice.NL,
+		fmt.Fprintf(f, nfs.Template(m, "index.html"), m.Cmdx(nfs.CAT, USR_PUBLISH_CAN_CSS), m.Cmdx(nfs.CAT, USR_PUBLISH_CAN_JS), kit.JoinKV(ice.EQ, ice.NL,
 			`Volcanos.meta.args`, kit.Formats(kit.Dict(m.OptionSimple(kit.Split(m.Option(ctx.ARGS))...))),
 			`Volcanos.meta.pack`, kit.Formats(kit.UnMarshal(kit.Select("{}", m.Option(nfs.CONTENT)))),
 			`Volcanos.meta.webpack`, ice.TRUE,

@@ -103,14 +103,19 @@ func (m *Message) RenderVoid(arg ...Any) *Message {
 	return m.Render(RENDER_VOID, arg...)
 }
 
+func (m *Message) IsCliUA() bool {
+	return m.Option(MSG_USERUA) == "" || !strings.HasPrefix(m.Option(MSG_USERUA), "Mozilla")
+}
+func (m *Message) IsMobileUA() bool {
+	return strings.Contains(m.Option(MSG_USERUA), "Mobile")
+}
 func (m *Message) PushSearch(arg ...Any) {
 	data := kit.Dict(arg...)
-	for i := 0; i < len(arg); i += 2 {
-		switch k := arg[i].(type) {
-		case string:
-			kit.If(i+1 < len(arg), func() { data[k] = arg[i+1] })
+	kit.For(arg, func(k, v Any) {
+		if k, ok := k.(string); ok {
+			data[k] = v
 		}
-	}
+	})
 	for _, k := range kit.Split(m.OptionFields()) {
 		switch k {
 		case TIME:
@@ -130,7 +135,7 @@ func (m *Message) PushAction(arg ...Any) *Message {
 	if len(m.meta[MSG_APPEND]) == 0 {
 		return m
 	}
-	return m.Set(MSG_APPEND, ACTION).Tables(func(value Maps) { m.PushButton(arg...) })
+	return m.Set(MSG_APPEND, ACTION).Table(func(value Maps) { m.PushButton(arg...) })
 }
 func (m *Message) PushButton(arg ...Any) *Message {
 	if !m.IsCliUA() {
@@ -169,8 +174,9 @@ func (m *Message) PushIFrame(key, src string) {
 func (m *Message) PushScript(arg ...string) {
 	kit.If(!m.IsCliUA(), func() { m.Push(SCRIPT, Render(m, RENDER_SCRIPT, arg)) })
 }
-func (m *Message) PushDownload(key string, arg ...string) {
+func (m *Message) PushDownload(key string, arg ...string) *Message {
 	kit.If(!m.IsCliUA(), func() { m.Push(key, Render(m, RENDER_DOWNLOAD, arg)) })
+	return m
 }
 
 func (m *Message) EchoButton(arg ...Any) *Message    { return m.Echo(Render(m, RENDER_BUTTON, arg...)) }

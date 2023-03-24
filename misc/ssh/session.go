@@ -62,11 +62,11 @@ func init() {
 		}, mdb.PageZoneAction(mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,count,status,connect", mdb.FIELDS, "time,id,type,text")), Hand: func(m *ice.Message, arg ...string) {
 			m.Fields(len(kit.Slice(arg, 0, 2)), mdb.Config(m, mdb.FIELD), mdb.Config(m, mdb.FIELDS))
 			if mdb.PageZoneSelect(m, arg...); len(arg) == 0 {
-				m.Tables(func(value ice.Maps) {
+				m.Table(func(value ice.Maps) {
 					m.PushButton(kit.Select("", ctx.COMMAND, value[mdb.STATUS] == tcp.OPEN), mdb.REMOVE)
 				})
 			} else {
-				m.Tables(func(value ice.Maps) { m.PushButton(kit.Select("", mdb.REPEAT, value[mdb.TYPE] == CMD)) }).Action(ctx.COMMAND, mdb.PAGE)
+				m.Table(func(value ice.Maps) { m.PushButton(kit.Select("", mdb.REPEAT, value[mdb.TYPE] == CMD)) }).Action(ctx.COMMAND, mdb.PAGE)
 			}
 		}},
 	})

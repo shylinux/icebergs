@@ -147,7 +147,7 @@ func _install_service(m *ice.Message, arg ...string) {
 			}
 		}
 	})
-	m.Set(tcp.PORT).Tables(func(value ice.Maps) { m.Push(tcp.PORT, path.Base(value[nfs.DIR])) }).StatusTimeCount()
+	m.Set(tcp.PORT).Table(func(value ice.Maps) { m.Push(tcp.PORT, path.Base(value[nfs.DIR])) }).StatusTimeCount()
 }
 
 const (

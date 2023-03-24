@@ -205,12 +205,6 @@ func init() {
 				m.Echo(ice.Info.Domain)
 			}},
 		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,status,name,proto,host,port", tcp.LOCALHOST, ice.TRUE), mdb.ClearOnExitHashAction())},
-		PP(ice.INTSHELL): {Name: "/intshell/", Help: "命令行", Actions: aaa.WhiteAction(), Hand: func(m *ice.Message, arg ...string) {
-			RenderIndex(m, arg...)
-		}},
-		PP(ice.VOLCANOS): {Name: "/volcanos/", Help: "浏览器", Actions: aaa.WhiteAction(), Hand: func(m *ice.Message, arg ...string) {
-			RenderIndex(m, arg...)
-		}},
 		PP(ice.PUBLISH): {Name: "/publish/", Help: "定制化", Actions: aaa.WhiteAction(), Hand: func(m *ice.Message, arg ...string) {
 			_share_local(m, ice.USR_PUBLISH, path.Join(arg...))
 		}},
@@ -242,14 +236,14 @@ func init() {
 			_share_local(m, ice.USR, path.Join(arg...))
 		}},
 		PP(REQUIRE_MODULES): {Name: "/require/modules/", Help: "依赖库", Hand: func(m *ice.Message, arg ...string) {
-			p := path.Join(ice.USR_NODE_MODULES, path.Join(arg...))
+			p := path.Join(ice.USR_MODULES, path.Join(arg...))
 			if !nfs.ExistsFile(m, p) {
 				m.Cmd(cli.SYSTEM, "npm", "install", arg[0], kit.Dict(cli.CMD_DIR, ice.USR))
 			}
 			m.RenderDownload(p)
 		}},
 	})
-	ice.AddMerges(func(c *ice.Context, key string, cmd *ice.Command, sub string, action *ice.Action) (ice.Handler, ice.Handler) {
+	ice.AddMerges(func(c *ice.Context, key string, cmd *ice.Command, sub string, action *ice.Action) {
 		if strings.HasPrefix(sub, ice.PS) {
 			if sub = kit.Select(PP(key, sub), PP(key), sub == ice.PS); action.Hand == nil {
 				action.Hand = func(m *ice.Message, arg ...string) { m.Cmdy(key, arg) }
@@ -263,7 +257,6 @@ func init() {
 			}
 			c.Commands[sub] = &ice.Command{Name: sub, Help: cmd.Help, Actions: actions, Hand: action.Hand}
 		}
-		return nil, nil
 	})
 }
 func ServeAction() ice.Actions { return gdb.EventsAction(SERVE_START, SERVE_LOGIN, SERVE_CHECK) }

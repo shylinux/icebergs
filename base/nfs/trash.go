@@ -47,7 +47,7 @@ func init() {
 				mdb.HashRemove(m, m.OptionSimple(mdb.HASH))
 			}},
 			mdb.PRUNES: {Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashPrunes(m, nil).Tables(func(value ice.Maps) { Remove(m, value[FILE]) })
+				mdb.HashPrunes(m, nil).Table(func(value ice.Maps) { Remove(m, value[FILE]) })
 			}},
 		}, mdb.HashAction(mdb.SHORT, FROM, mdb.FIELD, "time,hash,from,file", mdb.ACTION, mdb.REVERT))},
 	})

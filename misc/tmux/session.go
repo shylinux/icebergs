@@ -182,7 +182,7 @@ func init() {
 			} else {
 				m.Split(_tmux_cmd(m, LIST_SESSION, "-F", mdb.Config(m, FORMAT)).Result(), mdb.Config(m, FIELDS), ice.FS, ice.NL)
 			}
-			m.Tables(func(value ice.Maps) {
+			m.Table(func(value ice.Maps) {
 				kit.If(value["tag"] == "1", func() { m.PushButton("") }, func() { m.PushButton(code.XTERM, mdb.SELECT, mdb.REMOVE) })
 			}).StatusTimeCount()
 		}},

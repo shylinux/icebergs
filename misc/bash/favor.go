@@ -42,6 +42,6 @@ func init() {
 					}
 				})
 			}},
-		}, Hand: func(m *ice.Message, arg ...string) { m.Cmdy(FAVOR).Table() }},
+		}, Hand: func(m *ice.Message, arg ...string) { m.Cmdy(FAVOR).TableEcho() }},
 	})
 }

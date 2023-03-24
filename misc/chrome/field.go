@@ -32,7 +32,7 @@ func (s field) Command(m *ice.Message, arg ...string) {
 	})
 }
 func (s field) Run(m *ice.Message, arg ...string) {
-	s.Zone.List(m.Spawn(), m.Option(web.DOMAIN), arg[0]).Tables(func(value ice.Maps) {
+	s.Zone.List(m.Spawn(), m.Option(web.DOMAIN), arg[0]).Table(func(value ice.Maps) {
 		m.Cmdy(value[mdb.INDEX], arg[1:])
 	})
 }

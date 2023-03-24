@@ -59,7 +59,7 @@ func init() {
 				m.PushAction(cli.START, mdb.REMOVE).Action(mdb.CREATE)
 				m.EchoAnchor(web.MergeLink(m, "/debug/pprof/"))
 			} else {
-				m.Tables(func(value ice.Maps) { m.PushDownload(mdb.LINK, "pprof.pd.gz", value[nfs.FILE]).PushButton(web.SERVE) })
+				m.Table(func(value ice.Maps) { m.PushDownload(mdb.LINK, "pprof.pd.gz", value[nfs.FILE]).PushButton(web.SERVE) })
 			}
 		}},
 	})

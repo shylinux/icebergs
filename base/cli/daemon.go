@@ -120,7 +120,7 @@ func init() {
 			STOP: {Hand: func(m *ice.Message, arg ...string) {
 				m.OptionFields(mdb.HashField(m))
 				h, pid := m.Option(mdb.HASH), m.Option(PID)
-				mdb.HashSelect(m, m.Option(mdb.HASH)).Tables(func(value ice.Maps) {
+				mdb.HashSelect(m, m.Option(mdb.HASH)).Table(func(value ice.Maps) {
 					if h == "" && value[PID] != pid {
 						return
 					}
@@ -130,7 +130,7 @@ func init() {
 			}},
 		}, mdb.StatusHashAction(mdb.FIELD, "time,hash,status,pid,cmd,dir,env")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 || !strings.Contains(arg[0], ice.PS) {
-				if mdb.HashSelect(m, kit.Slice(arg, 0, 1)...).Tables(func(value ice.Maps) {
+				if mdb.HashSelect(m, kit.Slice(arg, 0, 1)...).Table(func(value ice.Maps) {
 					switch value[STATUS] {
 					case START:
 						m.PushButton(RESTART, STOP)

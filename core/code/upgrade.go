@@ -27,7 +27,7 @@ func init() {
 		UPGRADE: {Name: "upgrade item=target,binary,source,compile run restart", Help: "升级", Actions: ice.MergeActions(ice.Actions{
 			cli.RESTART: {Hand: func(m *ice.Message, arg ...string) { m.Go(func() { m.Sleep300ms(ice.EXIT, 1) }) }},
 		}), Hand: func(m *ice.Message, arg ...string) {
-			mdb.ZoneSelect(m.Spawn(), kit.Select(nfs.TARGET, arg, 0)).Tables(func(value ice.Maps) {
+			mdb.ZoneSelect(m.Spawn(), kit.Select(nfs.TARGET, arg, 0)).Table(func(value ice.Maps) {
 				if value[nfs.FILE] == ice.ICE_BIN {
 					value[nfs.FILE] = kit.Keys(ice.ICE, runtime.GOOS, runtime.GOARCH)
 					defer nfs.Rename(m, value[nfs.FILE], ice.BIN_ICE_BIN)

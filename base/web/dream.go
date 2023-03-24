@@ -18,7 +18,7 @@ import (
 
 func _dream_list(m *ice.Message) *ice.Message {
 	list := m.CmdMap(SPACE, mdb.NAME)
-	m.Cmdy(nfs.DIR, ice.USR_LOCAL_WORK, "time,size,name").Tables(func(value ice.Maps) {
+	m.Cmdy(nfs.DIR, ice.USR_LOCAL_WORK, "time,size,name").Table(func(value ice.Maps) {
 		if space, ok := list[value[mdb.NAME]]; ok {
 			msg := gdb.Event(m.Spawn(value, space), DREAM_TABLES).Copy(m.Spawn().PushButton(cli.STOP))
 			m.Push(mdb.TYPE, space[mdb.TYPE])

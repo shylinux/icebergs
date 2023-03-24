@@ -27,7 +27,7 @@ func _tags_input(m *ice.Message, arg ...string) {
 	}
 	switch name := kit.Select("", kit.Slice(kit.Split(arg[1], "\t \n."), -1), 0); name {
 	case "can", "sup", "sub":
-		mdb.ZoneSelect(m).Tables(func(value ice.Maps) {
+		mdb.ZoneSelect(m).Table(func(value ice.Maps) {
 			if strings.Contains(value[mdb.ZONE], arg[0]) || arg[0] == ice.PT {
 				m.EchoLine(value[mdb.ZONE])
 			}
@@ -77,12 +77,12 @@ func init() {
 					Qrcode(m, args[1])
 				case wiki.FIELD:
 					m.Search(kit.Select(args[1], args, 2), func(key string, cmd *ice.Command) {
-						ls := kit.Split(cmd.GetFileLines(), ice.DF)
+						ls := kit.Split(cmd.FileLine(), ice.DF)
 						m.Echo("vi +%s %s", ls[1], ls[0])
 					})
 				default:
 					m.Search(args[0], func(key string, cmd *ice.Command) {
-						ls := kit.Split(cmd.GetFileLines(), ice.DF)
+						ls := kit.Split(cmd.FileLine(), ice.DF)
 						m.Echo("vi +%s %s", ls[1], ls[0])
 					})
 				}
@@ -99,7 +99,7 @@ func init() {
 			case "msg", "res":
 				m.Echo("usr/volcanos/lib/misc.js")
 			default:
-				if mdb.ZoneSelectAll(m, m.Option(mdb.ZONE)).Tables(func(value ice.Maps) {
+				if mdb.ZoneSelectAll(m, m.Option(mdb.ZONE)).Table(func(value ice.Maps) {
 					kit.If(value[mdb.NAME] == m.Option(mdb.NAME), func() { m.Echo(path.Join(value[nfs.PATH], value[nfs.FILE])) })
 				}); m.Result() == "" {
 					m.Echo("usr/volcanos/proto.js")

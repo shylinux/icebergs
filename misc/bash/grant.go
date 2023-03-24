@@ -20,7 +20,7 @@ func init() {
 			if m.Cmdy(SESS, arg); len(arg) > 0 && m.Append(GRANT) == "" {
 				m.Echo("请授权 %s@%s 访问 %s", m.Append(aaa.USERNAME), m.Append(tcp.HOSTNAME), web.UserHost(m))
 			}
-			m.Tables(func(value ice.Maps) { m.PushButton(kit.Select(mdb.REVERT, mdb.MODIFY, value[GRANT] == "")) })
+			m.Table(func(value ice.Maps) { m.PushButton(kit.Select(mdb.REVERT, mdb.MODIFY, value[GRANT] == "")) })
 		}},
 	})
 }

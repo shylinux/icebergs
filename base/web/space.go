@@ -21,7 +21,7 @@ import (
 
 func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 	msg := m.Cmd(SPIDE, tcp.CLIENT, dev, PP(SPACE))
-	uri := kit.ParseURL(strings.Replace(kit.MergeURL(msg.Append(DOMAIN), mdb.TYPE, ice.Info.NodeType, mdb.NAME, name, SHARE, ice.Info.CtxShare, RIVER, ice.Info.CtxRiver, arg), ice.HTTP, "ws", 1))
+	uri := kit.ParseURL(strings.Replace(kit.MergeURL(msg.Append(DOMAIN), mdb.TYPE, ice.Info.NodeType, mdb.NAME, name, arg), ice.HTTP, "ws", 1))
 	args := kit.SimpleKV("type,name,host,port", msg.Append(tcp.PROTOCOL), dev, msg.Append(tcp.HOST), msg.Append(tcp.PORT))
 	prints := false
 	m.Go(func() {
@@ -74,7 +74,7 @@ func _space_handle(m *ice.Message, safe bool, name string, conn *websocket.Conn)
 		}
 		msg := m.Spawn(b)
 		source, target := kit.Simple(msg.Optionv(ice.MSG_SOURCE), name), kit.Simple(msg.Optionv(ice.MSG_TARGET))
-		msg.Log("recv", "%v->%v %v %v", source, target, msg.Detailv(), msg.DumpMeta(nil))
+		msg.Log("recv", "%v->%v %v %v", source, target, msg.Detailv(), msg.FormatsMeta(nil))
 		if next := msg.Option(ice.MSG_TARGET); next == "" || len(target) == 0 {
 			if msg.Optionv(ice.MSG_HANDLE, ice.TRUE); safe { // 下行命令
 				gdb.Event(msg, SPACE_LOGIN)
@@ -122,7 +122,7 @@ func _space_echo(m *ice.Message, source, target []string, conn *websocket.Conn) 
 	if m.Options(ice.MSG_SOURCE, source, ice.MSG_TARGET, target[1:]); m.Warn(conn.WriteMessage(1, []byte(m.FormatMeta()))) {
 		mdb.HashRemove(m, mdb.NAME, target[0])
 	} else {
-		m.Log("send", "%v->%v %v %v", source, target, m.Detailv(), m.DumpMeta(nil))
+		m.Log("send", "%v->%v %v %v", source, target, m.Detailv(), m.FormatsMeta(nil))
 	}
 }
 func _space_send(m *ice.Message, space string, arg ...string) {
@@ -225,7 +225,7 @@ func init() {
 		), mdb.ClearOnExitHashAction(), SpaceAction(), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 {
 				mdb.HashSelect(m, arg...).Sort("type,name,text")
-				m.Tables(func(values ice.Maps) {
+				m.Table(func(values ice.Maps) {
 					switch values[mdb.TYPE] {
 					case LOGIN:
 						m.PushButton(LOGIN, mdb.REMOVE)

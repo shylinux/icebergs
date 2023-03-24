@@ -57,7 +57,7 @@ type Context struct {
 	Configs  Configs
 	Commands Commands
 
-	Contexts Contexts
+	contexts Contexts
 	context  *Context
 	root     *Context
 	server   Server
@@ -89,8 +89,8 @@ func (c *Context) Register(s *Context, x Server, cmd ...string) *Context {
 		}
 		Info.Index[cmd] = s
 	})
-	kit.If(c.Contexts == nil, func() { c.Contexts = Contexts{} })
-	c.Contexts[s.Name] = s
+	kit.If(c.contexts == nil, func() { c.contexts = Contexts{} })
+	c.contexts[s.Name] = s
 	s.root = c.root
 	s.context = c
 	s.server = x
@@ -154,9 +154,12 @@ func (c *Context) Merge(s *Context) *Context {
 			}
 			if s == c {
 				for _, h := range Info.merges {
-					init, exit := h(c, key, cmd, sub, action)
-					merge(c.Commands[CTX_INIT], true, key, cmd, init)
-					merge(c.Commands[CTX_EXIT], false, key, cmd, exit)
+					switch h := h.(type) {
+					case func(c *Context, key string, cmd *Command, sub string, action *Action) Handler:
+						merge(c.Commands[CTX_INIT], true, key, cmd, h(c, key, cmd, sub, action))
+					case func(c *Context, key string, cmd *Command, sub string, action *Action):
+						h(c, key, cmd, sub, action)
+					}
 				}
 			}
 			if help := kit.Split(action.Help, " :："); len(help) > 0 {
@@ -196,13 +199,12 @@ func (c *Context) Close(m *Message, arg ...string) {
 type Message struct {
 	time time.Time
 	code int
-	Hand bool
 
-	meta map[string][]string
 	data Map
+	meta map[string][]string
 
-	message *Message
 	root    *Message
+	message *Message
 
 	_source string
 	_target string
@@ -227,21 +229,21 @@ func (m *Message) Time(arg ...string) string {
 	}
 	return t.Format(kit.Select(MOD_TIME, arg, 0))
 }
-func (m *Message) Target() *Context  { return m.target }
-func (m *Message) Source() *Context  { return m.source }
 func (m *Message) Message() *Message { return m.message }
-func (m *Message) Commands(key string) *Command {
-	return m.Target().Commands[key]
-}
-func (m *Message) Actions(key string) *Action {
-	return m._cmd.Actions[key]
+func (m *Message) Source() *Context  { return m.source }
+func (m *Message) Target() *Context  { return m.target }
+func (m *Message) _fileline() string {
+	switch m.target.Name {
+	case MDB, AAA, GDB:
+		return m._source
+	default:
+		return m._target
+	}
 }
 func (m *Message) Spawn(arg ...Any) *Message {
-	msg := &Message{
-		time: time.Now(), code: int(m.target.root.ID()),
-		meta: map[string][]string{}, data: Map{},
-		message: m, root: m.root, _target: logs.FileLine(2),
-		source: m.target, target: m.target, _cmd: m._cmd, _key: m._key, _sub: m._sub,
+	msg := &Message{time: time.Now(), code: int(m.target.root.ID()),
+		meta: map[string][]string{}, data: Map{}, message: m, root: m.root,
+		_source: logs.FileLine(2), source: m.target, target: m.target, _cmd: m._cmd, _key: m._key, _sub: m._sub,
 		W: m.W, R: m.R, O: m.O, I: m.I,
 	}
 	for _, val := range arg {
@@ -288,7 +290,7 @@ func (m *Message) Travel(cb Any) *Message {
 		default:
 			m.ErrorNotImplement(cb)
 		}
-		kit.For(kit.SortedKey(list[i].Contexts), func(k string) { list = append(list, list[i].Contexts[k]) })
+		kit.For(kit.SortedKey(list[i].contexts), func(k string) { list = append(list, list[i].contexts[k]) })
 	}
 	return m
 }
@@ -310,7 +312,7 @@ func (m *Message) Search(key string, cb Any) *Message {
 				continue
 			}
 			for _, k := range ls[:len(ls)-1] {
-				if p = p.Contexts[k]; p == nil {
+				if p = p.contexts[k]; p == nil {
 					break
 				}
 			}
@@ -357,13 +359,43 @@ func (m *Message) Search(key string, cb Any) *Message {
 	}
 	return m
 }
+func (m *Message) Design(action Any, help string, input ...Any) {
+	list := kit.List()
+	for _, input := range input {
+		switch input := input.(type) {
+		case string:
+			list = append(list, SplitCmd("action "+input, nil)...)
+		case Map:
+			if kit.Format(input[TYPE]) != "" && kit.Format(input[NAME]) != "" {
+				list = append(list, input)
+				continue
+			}
+			kit.For(kit.KeyValue(nil, "", input), func(k string, v Any) {
+				list = append(list, kit.Dict(NAME, k, TYPE, TEXT, VALUE, v))
+			})
+		default:
+			m.ErrorNotImplement(input)
+		}
+	}
+	k := kit.Format(action)
+	if a, ok := m._cmd.Actions[k]; ok {
+		m._cmd.Meta[k], a.List = list, list
+		kit.Value(m._cmd.Meta, kit.Keys("_trans", k), help)
+	}
+}
+func (m *Message) Actions(key string) *Action {
+	return m._cmd.Actions[key]
+}
+func (m *Message) Commands(key string) *Command {
+	return m.Target().Commands[key]
+}
 
-func (m *Message) Cmd(arg ...Any) *Message { return m._command(arg...) }
+func (m *Message) Cmd(arg ...Any) *Message  { return m._command(arg...) }
+func (m *Message) Cmdy(arg ...Any) *Message { return m.Copy(m._command(arg...)) }
 func (m *Message) Cmdx(arg ...Any) string {
 	res := kit.Select("", m._command(arg...).meta[MSG_RESULT], 0)
 	return kit.Select("", res, res != ErrWarn)
 }
-func (m *Message) Cmdy(arg ...Any) *Message { return m.Copy(m._command(arg...)) }
 func (m *Message) Confv(arg ...Any) (val Any) {
 	run := func(conf *Config) {
 		if len(arg) == 1 {

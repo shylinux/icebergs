@@ -25,7 +25,7 @@ func init() {
 			if m.Cmdy(arg); m.IsErrNotFound() {
 				m.SetResult().Cmdy(cli.SYSTEM, arg)
 			}
-			kit.If(m.Result() == "", func() { m.Table() })
+			kit.If(m.Result() == "", func() { m.TableEcho() })
 			_wx_reply(m, m.CommandKey())
 		}},
 	})

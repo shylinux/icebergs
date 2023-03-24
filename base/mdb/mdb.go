@@ -174,7 +174,7 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: ice.Commands
 		kit.Switch(arg[2],
 			HASH, func() {
 				_hash_prunes(m, arg[0], arg[1], arg[3:]...)
-				m.Tables(func(value Maps) { _hash_delete(m, arg[0], arg[1], HASH, value[HASH]) })
+				m.Table(func(value Maps) { _hash_delete(m, arg[0], arg[1], HASH, value[HASH]) })
 			},
 			// ZONE, func() { _list_prunes(m, arg[0], _domain_chain(m, kit.Keys(arg[1], kit.KeyHash(arg[3]))), arg[4:]...) },
 			// LIST, func() { _list_prunes(m, arg[0], arg[1], arg[3:]...) },

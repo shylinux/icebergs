@@ -12,7 +12,7 @@ func (m *Message) setDetail(key string, arg ...string) *Message {
 		if m.meta[KEY][i] == key {
 			if len(arg) > 0 {
 				m.meta[VALUE][i] = arg[0]
-				break
+				return m
 			}
 			for ; i < len(m.meta[KEY])-1; i++ {
 				m.meta[KEY][i] = m.meta[KEY][i+1]
@@ -20,8 +20,12 @@ func (m *Message) setDetail(key string, arg ...string) *Message {
 			}
 			m.meta[KEY] = kit.Slice(m.meta[KEY], 0, -1)
 			m.meta[VALUE] = kit.Slice(m.meta[VALUE], 0, -1)
-			break
+			return m
 		}
+	}
+	if len(arg) > 0 {
+		m.meta[KEY] = append(m.meta[KEY], key)
+		m.meta[VALUE] = append(m.meta[VALUE], arg[0])
 	}
 	return m
 }
@@ -43,9 +47,7 @@ func (m *Message) Set(key string, arg ...string) *Message {
 				m.meta[arg[0]] = arg[1:]
 			}
 		} else {
-			for _, k := range m.meta[key] {
-				delete(m.meta, k)
-			}
+			kit.For(m.meta[key], func(k string) { delete(m.meta, k) })
 			delete(m.meta, key)
 		}
 		return m
@@ -53,9 +55,7 @@ func (m *Message) Set(key string, arg ...string) *Message {
 		if m.FieldsIsDetail() {
 			return m.setDetail(key, arg...)
 		}
-		for _, k := range kit.Split(key) {
-			delete(m.meta, k)
-		}
+		kit.For(kit.Split(key), func(k string) { delete(m.meta, k) })
 	}
 	if len(arg) == 0 {
 		return m
@@ -90,29 +90,19 @@ func (m *Message) CutTo(key, to string) *Message {
 }
 func (m *Message) Push(key string, value Any, arg ...Any) *Message {
 	head := kit.Simple()
-	if len(head) == 0 && len(arg) > 0 {
-		head = kit.Simple(arg[0])
-	}
-	if len(head) == 0 {
-		head = kit.Simple(m.meta[MSG_APPEND])
-	}
-	if len(head) == 0 && !m.FieldsIsDetail() {
-		head = kit.Split(m.OptionFields())
-	}
+	kit.If(len(head) == 0 && len(arg) > 0, func() { head = kit.Simple(arg[0]) })
+	kit.If(len(head) == 0, func() { head = kit.Simple(m.meta[MSG_APPEND]) })
+	kit.If(len(head) == 0 && !m.FieldsIsDetail(), func() { head = kit.Split(m.OptionFields()) })
 	switch value := value.(type) {
 	case Map:
-		if len(head) == 0 {
-			head = kit.SortedKey(kit.KeyValue(nil, "", value))
-		}
+		kit.If(len(head) == 0, func() { head = kit.SortedKey(kit.KeyValue(nil, "", value)) })
 		var val Map
-		if len(arg) > 1 {
-			val, _ = arg[1].(Map)
-		}
-		for _, k := range head {
+		kit.If(len(arg) > 1, func() { val, _ = arg[1].(Map) })
+		kit.For(head, func(k string) {
 			var v Any
 			switch k {
 			case "_target":
-				continue
+				return
 			case KEY, HASH:
 				if key != "" && key != FIELDS_DETAIL {
 					v = key
@@ -141,33 +131,25 @@ func (m *Message) Push(key string, value Any, arg ...Any) *Message {
 			}
 			switch v := kit.Format(v); key {
 			case FIELDS_DETAIL:
-				m.Add(MSG_APPEND, KEY, strings.TrimPrefix(k, EXTRA+PT))
-				m.Add(MSG_APPEND, VALUE, v)
+				m.Add(MSG_APPEND, KEY, strings.TrimPrefix(k, EXTRA+PT)).Add(MSG_APPEND, VALUE, v)
 			default:
 				m.Add(MSG_APPEND, k, v)
 			}
-		}
+		})
 	case Maps:
-		if len(head) == 0 {
-			head = kit.SortedKey(value)
-		}
-		for _, k := range head {
-			m.Push(k, value[k])
-		}
+		kit.If(len(head) == 0, func() { head = kit.SortedKey(value) })
+		kit.For(head, func(k string) { m.Push(k, value[k]) })
 	default:
-		for _, v := range kit.Simple(value, arg) {
+		kit.For(kit.Simple(value, arg), func(v string) {
 			if m.FieldsIsDetail() {
-				m.Add(MSG_APPEND, KEY, key)
-				m.Add(MSG_APPEND, VALUE, kit.Format(value))
+				m.Add(MSG_APPEND, KEY, key).Add(MSG_APPEND, VALUE, kit.Format(value))
 			} else {
-				if m.ActionKey() == "inputs" {
-					if kit.IndexOf(m.meta[key], v) > -1 {
-						continue
-					}
+				if m.ActionKey() == INPUTS && kit.IndexOf(m.meta[key], v) > -1 {
+					return
 				}
 				m.Add(MSG_APPEND, key, v)
 			}
-		}
+		})
 	}
 	return m
 }
@@ -185,14 +167,12 @@ func (m *Message) Copy(msg *Message, arg ...string) *Message {
 		return m
 	}
 	if len(arg) > 0 {
-		for _, k := range arg[1:] {
-			m.Add(arg[0], kit.Simple(k, msg.meta[k])...)
-		}
+		kit.For(arg[1:], func(k string) { m.Add(arg[0], kit.Simple(k, msg.meta[k])...) })
 		return m
 	}
 	for _, k := range msg.meta[MSG_OPTION] {
 		switch k {
-		case MSG_CMDS, MSG_FIELDS, MSG_SESSID, "event":
+		case MSG_CMDS, MSG_FIELDS, MSG_SESSID, EVENT:
 			continue
 		}
 		if strings.HasSuffix(k, ".cb") {
@@ -208,70 +188,50 @@ func (m *Message) Copy(msg *Message, arg ...string) *Message {
 		}
 		m.Add(MSG_OPTION, kit.Simple(k, msg.meta[k])...)
 	}
-	for _, k := range msg.meta[MSG_APPEND] {
-		m.Add(MSG_APPEND, kit.Simple(k, msg.meta[k])...)
-	}
+	kit.For(msg.meta[MSG_APPEND], func(k string) { m.Add(MSG_APPEND, kit.Simple(k, msg.meta[k])...) })
 	return m.Add(MSG_RESULT, msg.meta[MSG_RESULT]...)
 }
 func (m *Message) Length() (max int) {
-	for _, k := range m.meta[MSG_APPEND] {
-		if l := len(m.meta[k]); l > max {
-			max = l
-		}
-	}
+	kit.For(m.meta[MSG_APPEND], func(k string) { max = kit.Max(len(m.meta[k]), max) })
 	return max
 }
-func (m *Message) TablesLimit(count int, cbs ...func(value Maps)) *Message {
-	return m.Table(func(index int, value Maps, head []string) {
-		if index < count {
-			for _, cb := range cbs {
-				if cb != nil {
-					cb(value)
-				}
-			}
-		}
-	})
+func (m *Message) TablesLimit(count int, cb func(value Maps)) *Message {
+	return m.Table(func(index int, value Maps) { kit.If(index < count, func() { cb(value) }) })
 }
-func (m *Message) Tables(cbs ...func(value Maps)) *Message {
-	return m.Table(func(index int, value Maps, head []string) {
-		for _, cb := range cbs {
-			if cb != nil {
-				cb(value)
-			}
-		}
-	})
-}
-func (m *Message) Table(cbs ...func(index int, value Maps, head []string)) *Message {
-	if len(cbs) > 0 && cbs[0] != nil {
-		n := m.Length()
-		if n == 0 {
-			return m
-		}
-		if m.FieldsIsDetail() {
-			value := Maps{}
-			for i, k := range m.meta[KEY] {
-				value[k] = kit.Select("", m.meta[VALUE], i)
-			}
-			for _, cb := range cbs {
-				cb(0, value, m.meta[KEY])
-			}
-			return m
-		}
-		for i := 0; i < n; i++ {
-			value := Maps{}
-			for _, k := range m.meta[MSG_APPEND] {
-				value[k] = kit.Select("", m.meta[k], i)
-			}
-			for _, cb := range cbs {
-				cb(i, value, m.meta[MSG_APPEND])
-			}
-		}
+func (m *Message) Table(cb Any) *Message {
+	n := m.Length()
+	if n == 0 {
 		return m
 	}
+	cbs := func(index int, value Maps, head []string) {
+		switch cb := cb.(type) {
+		case func(index int, value Maps, head []string):
+			cb(index, value, head)
+		case func(index int, value Maps):
+			cb(index, value)
+		case func(value Maps):
+			cb(value)
+		default:
+			m.ErrorNotImplement(cb)
+		}
+	}
+	if m.FieldsIsDetail() {
+		value := Maps{}
+		kit.For(m.meta[KEY], func(i int, k string) { value[k] = kit.Select("", m.meta[VALUE], i) })
+		cbs(0, value, m.meta[KEY])
+		return m
+	}
+	for i := 0; i < n; i++ {
+		value := Maps{}
+		kit.For(m.meta[MSG_APPEND], func(k string) { value[k] = kit.Select("", m.meta[k], i) })
+		cbs(i, value, m.meta[MSG_APPEND])
+	}
+	return m
+}
+func (m *Message) TableEcho() *Message {
 	const (
 		TABLE_ROW_SEP = "table.row_sep"
 		TABLE_COL_SEP = "table.col_sep"
-		TABLE_COMPACT = "table.compact"
 		TABLE_SPACE   = "table.space"
 		TABLE_ALIGN   = "table.align"
 	)
@@ -285,35 +245,27 @@ func (m *Message) Table(cbs ...func(index int, value Maps, head []string)) *Mess
 		}
 		m.Echo(rows)
 	}
-	compact := m.Option(TABLE_COMPACT) == TRUE
 	space := kit.Select(SP, m.Option(TABLE_SPACE))
 	align := kit.Select("left", m.Option(TABLE_ALIGN))
 	_align := func(value string, width int) string {
-		if compact {
-			return value + space
-		}
-		n := width - kit.Width(value, len(space))
-		switch align {
+		switch n := width - kit.Width(value, len(space)); align {
 		case "left":
 			return value + strings.Repeat(space, n)
 		case "right":
 			return strings.Repeat(space, n) + value
 		case "center":
 			return strings.Repeat(space, n/2) + value + strings.Repeat(space, n-n/2)
+		default:
+			return value + space
 		}
-		return value + space
 	}
 	length, width := 0, map[string]int{}
 	for _, k := range m.meta[MSG_APPEND] {
-		if len(m.meta[k]) > length {
-			length = len(m.meta[k])
-		}
+		kit.If(len(m.meta[k]) > length, func() { length = len(m.meta[k]) })
 		width[k] = kit.Width(k, len(space))
-		for _, v := range m.meta[k] {
-			if kit.Width(v, len(space)) > width[k] {
-				width[k] = kit.Width(v, len(space))
-			}
-		}
+		kit.For(m.meta[k], func(v string) {
+			kit.If(kit.Width(v, len(space)) > width[k], func() { width[k] = kit.Width(v, len(space)) })
+		})
 	}
 	show(kit.Simple(m.meta[MSG_APPEND], func(k string) string { return _align(k, width[k]) }))
 	for i := 0; i < length; i++ {
@@ -323,13 +275,10 @@ func (m *Message) Table(cbs ...func(index int, value Maps, head []string)) *Mess
 }
 
 const (
-	INT = "int"
-	STR = "str"
-	// TIME = "time"
-
-	TIME_R = "time_r"
-	STR_R  = "str_r"
-	INT_R  = "int_r"
+	STR   = "str"
+	STR_R = "str_r"
+	INT_R = "int_r"
+	INT   = "int"
 )
 
 func (m *Message) Sort(key string, arg ...string) *Message {
@@ -350,34 +299,23 @@ func (m *Message) Sort(key string, arg ...string) *Message {
 		cmps = append(cmps, cmp)
 	}
 	list := []Maps{}
-	m.Tables(func(value Maps) { list = append(list, value) })
+	m.Table(func(value Maps) { list = append(list, value) })
 	gt := func(i, j int) bool {
 		for s, k := range keys {
-			a, b := list[i][k], list[j][k]
-			if a == b {
-				continue
-			}
-			switch cmp := cmps[s]; cmp {
-			case INT, INT_R:
-				if kit.Int(a) > kit.Int(b) {
-					return cmp == INT
-				}
-				if kit.Int(a) < kit.Int(b) {
-					return cmp == INT_R
-				}
-			case STR, STR_R:
-				if a > b {
-					return cmp == STR
-				}
-				if a < b {
-					return cmp == STR_R
-				}
-			case TIME, TIME_R:
-				if kit.Time(a) > kit.Time(b) {
-					return cmp == TIME
-				}
-				if kit.Time(a) < kit.Time(b) {
-					return cmp == TIME_R
+			if a, b := list[i][k], list[j][k]; a != b {
+				switch cmp := cmps[s]; cmp {
+				case STR, STR_R:
+					if a > b {
+						return cmp == STR
+					} else if a < b {
+						return cmp == STR_R
+					}
+				case INT, INT_R:
+					if kit.Int(a) > kit.Int(b) {
+						return cmp == INT
+					} else if kit.Int(a) < kit.Int(b) {
+						return cmp == INT_R
+					}
 				}
 			}
 		}
@@ -386,67 +324,44 @@ func (m *Message) Sort(key string, arg ...string) *Message {
 	for i := 0; i < len(list)-1; i++ {
 		min := i
 		for j := i + 1; j < len(list); j++ {
-			if gt(min, j) {
-				min = j
-			}
+			kit.If(gt(min, j), func() { min = j })
 		}
 		for j := min; j > i; j-- {
 			list[j], list[j-1] = list[j-1], list[j]
 		}
 	}
-	for _, k := range m.meta[MSG_APPEND] {
-		delete(m.meta, k)
-	}
+	kit.For(m.meta[MSG_APPEND], func(k string) { delete(m.meta, k) })
 	for _, v := range list {
-		for _, k := range m.meta[MSG_APPEND] {
-			m.Add(MSG_APPEND, k, v[k])
-		}
+		kit.For(m.meta[MSG_APPEND], func(k string) { m.Add(MSG_APPEND, k, v[k]) })
 	}
 	return m
 }
-func (m *Message) SortInt(key string) *Message   { return m.Sort(key, INT) }
-func (m *Message) SortStr(key string) *Message   { return m.Sort(key, STR) }
-func (m *Message) SortTime(key string) *Message  { return m.Sort(key, TIME) }
-func (m *Message) SortTimeR(key string) *Message { return m.Sort(key, TIME_R) }
-func (m *Message) SortStrR(key string) *Message  { return m.Sort(key, STR_R) }
-func (m *Message) SortIntR(key string) *Message  { return m.Sort(key, INT_R) }
+func (m *Message) SortStr(key string) *Message  { return m.Sort(key, STR) }
+func (m *Message) SortStrR(key string) *Message { return m.Sort(key, STR_R) }
+func (m *Message) SortIntR(key string) *Message { return m.Sort(key, INT_R) }
+func (m *Message) SortInt(key string) *Message  { return m.Sort(key, INT) }
 
 func (m *Message) Detail(arg ...Any) string {
 	return kit.Select("", m.meta[MSG_DETAIL], 0)
 }
 func (m *Message) Detailv(arg ...Any) []string {
-	if len(arg) > 0 {
-		m.meta[MSG_DETAIL] = kit.Simple(arg...)
-	}
+	kit.If(len(arg) > 0, func() { m.meta[MSG_DETAIL] = kit.Simple(arg...) })
 	return m.meta[MSG_DETAIL]
 }
 func (m *Message) Options(arg ...Any) *Message {
 	for i := 0; i < len(arg); i += 2 {
-		switch val := arg[i].(type) {
-		case Maps:
-			for k, v := range val {
-				m.Optionv(k, v)
-			}
+		if key, ok := arg[i].(string); ok {
+			kit.If(i+1 < len(arg), func() { m.Optionv(key, arg[i+1]) })
+		} else {
+			kit.For(arg[i], func(k, v string) { m.Optionv(k, v) })
 			i--
-			continue
-		case []string:
-			for i := 0; i < len(val)-1; i += 2 {
-				m.Optionv(val[i], val[i+1])
-			}
-			i--
-			continue
-		}
-		if i+1 < len(arg) {
-			m.Optionv(kit.Format(arg[i]), arg[i+1])
 		}
 	}
 	return m
 }
 func (m *Message) Optionv(key string, arg ...Any) Any {
 	if len(arg) > 0 {
-		if kit.IndexOf(m.meta[MSG_OPTION], key) == -1 {
-			m.meta[MSG_OPTION] = append(m.meta[MSG_OPTION], key)
-		}
+		kit.If(kit.IndexOf(m.meta[MSG_OPTION], key) == -1, func() { m.meta[MSG_OPTION] = append(m.meta[MSG_OPTION], key) })
 		switch delete(m.data, key); v := arg[0].(type) {
 		case nil:
 			delete(m.meta, key)
@@ -481,28 +396,21 @@ func (m *Message) Appendv(key string, arg ...Any) []string {
 	if m.FieldsIsDetail() {
 		for i, k := range m.meta[KEY] {
 			if k == key || k == kit.Keys(EXTRA, key) {
-				if len(arg) > 0 {
-					m.meta[VALUE][i] = kit.Format(arg[0])
-				}
+				kit.If(len(arg) > 0, func() { m.meta[VALUE][i] = kit.Format(arg[0]) })
 				return []string{kit.Select("", m.meta[VALUE], i)}
 			}
 		}
 		if len(arg) > 0 {
-			m.Add(MSG_APPEND, KEY, key)
-			m.Add(MSG_APPEND, VALUE, kit.Format(arg[0]))
+			m.Add(MSG_APPEND, KEY, key).Add(MSG_APPEND, VALUE, kit.Format(arg[0]))
 			return []string{kit.Format(arg[0])}
 		}
 		return nil
 	}
 	if key == MSG_APPEND {
-		if len(arg) > 0 {
-			m.meta[MSG_APPEND] = kit.Simple(arg)
-		}
+		kit.If(len(arg) > 0, func() { m.meta[key] = kit.Simple(arg) })
 		return m.meta[key]
 	}
-	if len(arg) > 0 {
-		m.meta[key] = kit.Simple(arg...)
-	}
+	kit.If(len(arg) > 0, func() { m.meta[key] = kit.Simple(arg...) })
 	if v, ok := m.meta[key]; ok {
 		return v
 	}
@@ -512,20 +420,10 @@ func (m *Message) Appendv(key string, arg ...Any) []string {
 	return nil
 }
 func (m *Message) Resultv(arg ...Any) []string {
-	if len(arg) > 0 {
-		m.meta[MSG_RESULT] = kit.Simple(arg...)
-	}
+	kit.If(len(arg) > 0, func() { m.meta[MSG_RESULT] = kit.Simple(arg...) })
 	return m.meta[MSG_RESULT]
 }
-func (m *Message) Result(arg ...Any) string {
-	if len(arg) > 0 {
-		switch v := arg[0].(type) {
-		case int:
-			return kit.Select("", m.meta[MSG_RESULT], v)
-		}
-	}
-	return strings.Join(m.Resultv(arg...), "")
-}
+func (m *Message) Result(arg ...Any) string { return strings.Join(m.Resultv(arg...), "") }
 func (m *Message) Results(arg ...Any) string {
-	return kit.Select("", strings.TrimSpace(m.Result()), !m.IsErr())
+	return kit.Select("", strings.TrimSpace(m.Result(arg...)), !m.IsErr())
 }

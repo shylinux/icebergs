@@ -55,7 +55,7 @@ func _config_load(m *ice.Message, name string, arg ...string) {
 		data, msg := ice.Map{}, m.Spawn(m.Source())
 		json.NewDecoder(f).Decode(&data)
 		for k, v := range data {
-			msg.Search(k, func(p *ice.Context, s *ice.Context, key string) {
+			msg.Search(k, func(p *ice.Context, s *ice.Context, key string, conf *ice.Config) {
 				if s.Configs[key] == nil {
 					s.Configs[key] = &ice.Config{}
 				}

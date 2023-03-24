@@ -79,7 +79,7 @@ func init() {
 							kit.IfNoKey(list, kit.Select(k, k+ice.DF, k != "")+p, func(p string) { m.Push(nfs.PATH, p) })
 						}
 						mdb.HashSelect(m.Spawn()).TablesLimit(10, func(value ice.Maps) { push("", value[nfs.PATH]) })
-						m.Cmd(mdb.SEARCH, mdb.FOREACH, "", ice.OptionFields("type,name,text")).Sort("type,name,text").Tables(func(value ice.Maps) {
+						m.Cmd(mdb.SEARCH, mdb.FOREACH, "", ice.OptionFields("type,name,text")).Sort("type,name,text").Table(func(value ice.Maps) {
 							switch value[mdb.TYPE] {
 							case nfs.FILE:
 								push("", value[mdb.TEXT])
@@ -102,8 +102,8 @@ func init() {
 						for _, p := range kit.Split(kit.Select(m.Option(nfs.PATH), m.Option("paths"))) {
 							nfs.DirDeepAll(m.Spawn(), nfs.PWD, p, func(value ice.Maps) { push("", value[nfs.PATH]) }, nfs.PATH)
 						}
-						m.Cmd(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND, ice.OptionFields(ctx.INDEX)).Tables(func(value ice.Maps) { push(ctx.INDEX, value[ctx.INDEX]) })
-						m.Cmd(mdb.SEARCH, cli.SYSTEM, cli.OPENS, ice.OptionFields("type,name,text")).Sort("type,name,text").Tables(func(value ice.Maps) { push(cli.OPENS, value[nfs.NAME]) })
+						m.Cmd(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND, ice.OptionFields(ctx.INDEX)).Table(func(value ice.Maps) { push(ctx.INDEX, value[ctx.INDEX]) })
+						m.Cmd(mdb.SEARCH, cli.SYSTEM, cli.OPENS, ice.OptionFields("type,name,text")).Sort("type,name,text").Table(func(value ice.Maps) { push(cli.OPENS, value[nfs.NAME]) })
 					default:
 						m.Cmdy(INNER, mdb.INPUTS, arg)
 					}
@@ -180,14 +180,12 @@ func init() {
 	Index.MergeCommands(ice.Commands{TEMPLATE: {Name: "template type name text auto", Help: "模板", Actions: mdb.RenderAction()}})
 	Index.MergeCommands(ice.Commands{COMPLETE: {Name: "complete type name text auto", Help: "补全", Actions: mdb.RenderAction()}})
 	Index.MergeCommands(ice.Commands{NAVIGATE: {Name: "navigate type name text auto", Help: "跳转", Actions: mdb.RenderAction()}})
-	ice.AddMerges(func(c *ice.Context, key string, cmd *ice.Command, sub string, action *ice.Action) (ice.Handler, ice.Handler) {
+	ice.AddMerges(func(c *ice.Context, key string, cmd *ice.Command, sub string, action *ice.Action) ice.Handler {
 		switch sub {
 		case TEMPLATE, COMPLETE, NAVIGATE:
-			return func(m *ice.Message, arg ...string) {
-				m.Cmd(sub, mdb.CREATE, key, m.PrefixKey())
-			}, nil
+			return func(m *ice.Message, arg ...string) { m.Cmd(sub, mdb.CREATE, key, m.PrefixKey()) }
 		}
-		return nil, nil
+		return nil
 	})
 }
 func Complete(m *ice.Message, text string, data ice.Map) {

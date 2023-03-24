@@ -111,7 +111,7 @@ func init() {
 				if m.Option(ice.MSG_USERNAME) == "" && m.Option(SHARE) != "" {
 					switch msg := m.Cmd(SHARE, m.Option(SHARE)); msg.Append(mdb.TYPE) {
 					case STORM, FIELD:
-						msg.Tables(func(value ice.Maps) { aaa.SessAuth(m, value) })
+						msg.Table(func(value ice.Maps) { aaa.SessAuth(m, value) })
 					}
 				}
 			}},

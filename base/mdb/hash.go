@@ -63,7 +63,7 @@ func _hash_modify(m *ice.Message, prefix, chain string, field, value string, arg
 }
 func _hash_select(m *ice.Message, prefix, chain, field, value string) {
 	kit.If(field == HASH && value == RANDOM, func() { value = RANDOMS })
-	defer m.SortTimeR(TIME)
+	defer m.SortStrR(TIME)
 	fields := _hash_fields(m)
 	defer RLock(m, prefix, chain)()
 	Richs(m, prefix, chain, value, func(key string, value Map) { _mdb_select(m, m.OptionCB(""), key, value, fields, nil) })

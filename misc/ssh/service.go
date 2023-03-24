@@ -55,10 +55,10 @@ func _ssh_config(m *ice.Message, h string) *ssh.ServerConfig {
 		},
 		PasswordCallback: func(conn ssh.ConnMetadata, password []byte) (*ssh.Permissions, error) {
 			meta, err := _ssh_meta(conn), errors.New(ice.ErrNotRight)
-			if aaa.UserLogin(m, meta[aaa.USERNAME], string(password)) {
-				m.Auth(kit.SimpleKV(kit.Fields(aaa.USERNAME, tcp.HOSTPORT, tcp.HOSTNAME), meta))
-				err = nil
-			}
+			// if aaa.UserLogin(m, meta[aaa.USERNAME], string(password)) {
+			// 	m.Auth(kit.SimpleKV(kit.Fields(aaa.USERNAME, tcp.HOSTPORT, tcp.HOSTNAME), meta))
+			// 	err = nil
+			// }
 			return &ssh.Permissions{Extensions: meta}, err
 		},
 	}
@@ -146,7 +146,7 @@ func init() {
 	psh.Index.MergeCommands(ice.Commands{
 		SERVICE: {Name: "service port id auto listen prunes", Help: "服务", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashSelect(m).Tables(func(value ice.Maps) {
+				mdb.HashSelect(m).Table(func(value ice.Maps) {
 					if value[mdb.STATUS] == tcp.OPEN {
 						m.Cmd(SERVICE, tcp.LISTEN, tcp.PORT, value[tcp.PORT], value)
 					}

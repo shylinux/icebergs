@@ -43,7 +43,7 @@ func _cache_save(m *ice.Message, mime, name, text string, arg ...string) {
 	m.Push(mdb.TYPE, mime).Push(mdb.NAME, name).Push(mdb.TEXT, text).Push(nfs.FILE, file).Push(nfs.SIZE, size)
 }
 func _cache_watch(m *ice.Message, key, path string) {
-	mdb.HashSelect(m.Spawn(), key).Tables(func(value ice.Maps) {
+	mdb.HashSelect(m.Spawn(), key).Table(func(value ice.Maps) {
 		if value[nfs.FILE] == "" {
 			m.Cmdy(nfs.SAVE, path, value[mdb.TEXT])
 		} else {
@@ -155,7 +155,7 @@ func init() {
 			}
 		}},
 	})
-	ice.AddMerges(func(c *ice.Context, key string, cmd *ice.Command, sub string, action *ice.Action) (ice.Handler, ice.Handler) {
+	ice.AddMerges(func(c *ice.Context, key string, cmd *ice.Command, sub string, action *ice.Action) {
 		switch sub {
 		case UPLOAD:
 			if c.Name == WEB && key == CACHE {
@@ -165,13 +165,12 @@ func init() {
 			action.Hand = ice.MergeHand(func(m *ice.Message, arg ...string) {
 				up := Upload(m)
 				m.Assert(len(up) > 1)
-				m.Cmd(CACHE, m.Option(ice.MSG_UPLOAD)).Tables(func(value ice.Maps) { m.Options(value) })
+				m.Cmd(CACHE, m.Option(ice.MSG_UPLOAD)).Table(func(value ice.Maps) { m.Options(value) })
 				if m.Options(mdb.HASH, up[0], mdb.NAME, up[1]); watch {
 					m.Cmdy(CACHE, WATCH, m.Option(mdb.HASH), path.Join(m.Option(nfs.PATH), m.Option(mdb.NAME)))
 				}
 			}, action.Hand)
 		}
-		return nil, nil
 	})
 	ctx.Upload = Upload
 }

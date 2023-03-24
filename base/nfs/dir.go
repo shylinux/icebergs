@@ -183,7 +183,7 @@ func init() {
 				if arg[0] == mdb.FOREACH && arg[1] == "" && m.Cmdx("host", "islocal", m.Option(ice.MSG_USERIP)) == ice.OK {
 					for _, p := range []string{"Desktop", "Documents", "Downloads", "Pictures"} {
 						p := kit.HomePath(p)
-						m.Cmd(DIR, PWD, mdb.NAME, mdb.TIME, kit.Dict(DIR_ROOT, p)).SortTimeR(mdb.TIME).TablesLimit(5, func(value ice.Maps) {
+						m.Cmd(DIR, PWD, mdb.NAME, mdb.TIME, kit.Dict(DIR_ROOT, p)).SortStrR(mdb.TIME).TablesLimit(5, func(value ice.Maps) {
 							name := value[mdb.NAME]
 							if len(kit.TrimExt(name)) > 30 {
 								name = name[:10] + ".." + name[len(name)-10:]
@@ -237,7 +237,7 @@ func Dir(m *ice.Message, sort string) *ice.Message {
 func DirDeepAll(m *ice.Message, root, dir string, cb func(ice.Maps), arg ...string) *ice.Message {
 	m.Options(DIR_TYPE, CAT, DIR_ROOT, root, DIR_DEEP, ice.TRUE)
 	defer m.Options(DIR_TYPE, "", DIR_ROOT, "", DIR_DEEP, "")
-	if msg := m.Cmd(DIR, dir, arg).Tables(cb); cb == nil {
+	if msg := m.Cmd(DIR, dir, arg).Table(cb); cb == nil {
 		return m.Copy(msg)
 	} else {
 		return msg

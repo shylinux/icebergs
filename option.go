@@ -1,6 +1,7 @@
 package ice
 
 import (
+	"strings"
 	"time"
 
 	kit "shylinux.com/x/toolkits"
@@ -16,13 +17,14 @@ func (m *Message) OptionFields(arg ...string) string {
 	kit.If(len(arg) > 0, func() { m.Option(MSG_FIELDS, kit.Join(arg)) })
 	return kit.Join(kit.Simple(m.Optionv(MSG_FIELDS)))
 }
-
 func (m *Message) OptionDefault(arg ...string) string {
 	kit.For(arg, func(k, v string) { kit.If(m.Option(k) == "" && v != "", func() { m.Option(k, v) }) })
 	return m.Option(arg[0])
 }
 func (m *Message) OptionSimple(key ...string) (res []string) {
-	kit.If(len(key) == 0, func() { key = kit.Filters(kit.Split(kit.Select("type,name,text", m.Config(FIELD))), TIME, HASH) })
+	kit.If(len(key) == 0, func() {
+		key = kit.Filters(kit.Split(kit.Select("type,name,text", m.Conf(m.PrefixKey(), kit.Keym(FIELD)))), TIME, HASH)
+	})
 	kit.For(kit.Filters(kit.Split(kit.Join(key)), ""), func(k string) { kit.If(m.Option(k), func(v string) { res = append(res, k, v) }) })
 	return
 }
@@ -35,6 +37,19 @@ func (m *Message) OptionCB(key string, cb ...Any) Any {
 	return m.Optionv(kit.Keycb(kit.Select(m.CommandKey(), key)))
 }
 
+func (m *Message) MergePodCmd(pod, cmd string, arg ...Any) string {
+	ls := []string{"chat"}
+	kit.If(kit.Keys(m.Option(MSG_USERPOD), pod), func(p string) { ls = append(ls, POD, p) })
+	if cmd == "" {
+		if _, ok := Info.Index[m.CommandKey()]; ok {
+			cmd = m.CommandKey()
+		} else {
+			cmd = m.PrefixKey()
+		}
+	}
+	ls = append(ls, CMD, cmd)
+	return kit.MergeURL2(strings.Split(kit.Select(Info.Domain, m.Option(MSG_USERWEB)), QS)[0], PS+kit.Join(ls, PS), arg...)
+}
 func (m *Message) FieldsIsDetail() bool {
 	return len(m.meta[MSG_APPEND]) == 2 && m.meta[MSG_APPEND][0] == KEY && m.meta[MSG_APPEND][1] == VALUE || m.OptionFields() == FIELDS_DETAIL
 }
@@ -46,14 +61,8 @@ func (m *Message) Action(arg ...Any) *Message {
 	return m.Options(MSG_ACTION, kit.Format(arg))
 }
 func (m *Message) Status(arg ...Any) *Message {
-	list, args := kit.List(), kit.Simple(arg)
-	for i := 0; i < len(args)-1; i += 2 {
-		switch args[i+1] {
-		case "", "0":
-			continue
-		}
-		list = append(list, kit.Dict(NAME, args[i], VALUE, args[i+1]))
-	}
+	list := kit.List()
+	kit.For(kit.Simple(arg), func(k, v string) { list = append(list, kit.Dict(NAME, k, VALUE, v)) })
 	return m.Options(MSG_STATUS, kit.Format(list))
 }
 func (m *Message) StatusTime(arg ...Any) *Message {
@@ -67,8 +76,7 @@ func (m *Message) StatusTimeCountTotal(arg ...Any) *Message {
 }
 
 func (m *Message) Process(cmd string, arg ...Any) {
-	m.Option(MSG_PROCESS, cmd)
-	m.Option(PROCESS_ARG, arg...)
+	m.Options(MSG_PROCESS, cmd).Option(PROCESS_ARG, arg...)
 }
 func (m *Message) ProcessLocation(arg ...Any) {
 	m.Process(PROCESS_LOCATION, arg...)
@@ -95,10 +103,9 @@ func (m *Message) ProcessDisplay(arg ...Any) {
 	m.Process(PROCESS_DISPLAY)
 	m.Option(MSG_DISPLAY, arg...)
 }
-func (m *Message) ProcessField(arg ...Any) *Message {
+func (m *Message) ProcessField(arg ...Any) {
 	m.Process(PROCESS_FIELD)
 	m.Option(FIELD_PREFIX, arg...)
-	return m
 }
 func (m *Message) ProcessInner()           { m.Process(PROCESS_INNER) }
 func (m *Message) ProcessAgain()           { m.Process(PROCESS_AGAIN) }

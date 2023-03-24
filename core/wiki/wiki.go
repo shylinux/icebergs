@@ -48,7 +48,7 @@ func _wiki_list(m *ice.Message, arg ...string) bool {
 		}
 		m.Cmdy(nfs.DIR, kit.Slice(arg, 0, 1), kit.Dict(nfs.DIR_TYPE, nfs.CAT, nfs.DIR_REG, mdb.Config(m, lex.REGEXP)))
 		m.StatusTimeCount()
-		m.SortTimeR(mdb.TIME)
+		m.SortStrR(mdb.TIME)
 		return true
 	}
 	ctx.DisplayLocal(m, path.Join(kit.PathName(2), kit.Keys(kit.FileName(2), ice.JS)))

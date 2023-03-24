@@ -15,7 +15,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		web.P(SSO): {Hand: func(m *ice.Message, arg ...string) {
 			if m.Option(ice.MSG_USERNAME) != "" {
-				web.RenderIndex(m)
+				web.RenderMain(m)
 				return
 			}
 			appid := m.Cmd(APP).Append(APPID)

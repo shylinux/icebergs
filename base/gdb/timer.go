@@ -9,7 +9,7 @@ import (
 )
 
 func _timer_action(m *ice.Message, now time.Time, arg ...string) {
-	mdb.HashSelects(m).Tables(func(value ice.Maps) {
+	mdb.HashSelects(m).Table(func(value ice.Maps) {
 		if value[mdb.COUNT] == "0" {
 			return
 		}

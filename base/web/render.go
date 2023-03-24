@@ -55,7 +55,7 @@ func Render(m *ice.Message, cmd string, args ...ice.Any) bool {
 			m.W.Write([]byte(kit.Format(arg[0], args[1:]...)))
 		} else {
 			if m.Result() == "" && m.Length() > 0 {
-				m.Table()
+				m.TableEcho()
 			}
 			m.W.Write([]byte(m.Result()))
 		}
@@ -67,7 +67,7 @@ func Render(m *ice.Message, cmd string, args ...ice.Any) bool {
 			m.Echo(kit.Format(cmd, args...))
 		}
 		RenderType(m.W, nfs.JSON, "")
-		m.DumpMeta(m.W)
+		m.FormatsMeta(m.W)
 	}
 	m.Render(ice.RENDER_VOID)
 	return true
@@ -115,12 +115,6 @@ func RenderTemplate(m *ice.Message, file string, arg ...ice.Any) *ice.Message {
 }
 func RenderRefresh(m *ice.Message, arg ...string) { // url text delay
 	RenderTemplate(m, "refresh.html", kit.Select("3", arg, 2), kit.Select(m.Option(ice.MSG_USERWEB), arg, 0), kit.Select("loading...", arg, 1))
-}
-func RenderIndex(m *ice.Message, file ...string) *ice.Message {
-	if m.IsCliUA() {
-		return m.RenderDownload(path.Join(ice.USR_INTSHELL, kit.Select(ice.INDEX_SH, path.Join(file...))))
-	}
-	return m.RenderDownload(path.Join(ice.USR_VOLCANOS, kit.Select("page/"+ice.INDEX_HTML, path.Join(file...))))
 }
 func RenderMain(m *ice.Message) *ice.Message {
 	if m.IsCliUA() {

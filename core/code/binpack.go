@@ -71,11 +71,11 @@ func _binpack_all(m *ice.Message) {
 		}
 		for _, k := range kit.SortedKey(list) {
 			v := kit.Select(k, list[k])
-			m.Cmd(nfs.DIR, nfs.PWD, nfs.PATH, kit.Dict(nfs.DIR_ROOT, v, nfs.DIR_REG, kit.ExtReg(SH, SHY, PY, JS, CSS, HTML))).Tables(func(value ice.Maps) {
+			m.Cmd(nfs.DIR, nfs.PWD, nfs.PATH, kit.Dict(nfs.DIR_ROOT, v, nfs.DIR_REG, kit.ExtReg(SH, SHY, PY, JS, CSS, HTML))).Table(func(value ice.Maps) {
 				_binpack_file(m, w, kit.Path(v, value[nfs.PATH]), path.Join(k, value[nfs.PATH]))
 			})
 		}
-		mdb.HashSelects(m).Sort(nfs.PATH).Tables(func(value ice.Maps) {
+		mdb.HashSelects(m).Sort(nfs.PATH).Table(func(value ice.Maps) {
 			if strings.HasSuffix(value[nfs.PATH], ice.PS) {
 				_binpack_dir(m, w, value[nfs.PATH])
 			} else {

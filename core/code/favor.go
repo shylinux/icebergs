@@ -24,7 +24,7 @@ func init() {
 			}},
 		}, mdb.PageZoneAction(mdb.FIELD, "time,id,type,name,text,path,file,line")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.PageZoneSelect(m, arg...); len(arg) > 0 && arg[0] != "" {
-				m.Tables(func(value ice.Maps) { m.PushButton(kit.Select(INNER, XTERM, value[nfs.FILE] == "")) }).Option(ctx.STYLE, arg[0])
+				m.Table(func(value ice.Maps) { m.PushButton(kit.Select(INNER, XTERM, value[nfs.FILE] == "")) }).Option(ctx.STYLE, arg[0])
 			}
 		}},
 	})

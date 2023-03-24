@@ -5,8 +5,8 @@ const (
 	SP = " "
 	DF = ":"
 	EQ = "="
-	QS = "?"
 	AT = "@"
+	QS = "?"
 	PS = "/"
 	PT = "."
 	FS = ","
@@ -15,9 +15,9 @@ const (
 	OK      = "ok"
 	TRUE    = "true"
 	FALSE   = "false"
-	PROCESS = "process"
-	FAILURE = "failure"
 	SUCCESS = "success"
+	FAILURE = "failure"
+	PROCESS = "process"
 
 	HTTP = "http"
 	AUTO = "auto"
@@ -51,18 +51,17 @@ const ( // MOD
 	MOD_TIME = "2006-01-02 15:04:05"
 )
 const ( // REPOS
-	INTSHELL = "intshell"
 	CONTEXTS = "contexts"
+	INTSHELL = "intshell"
 	ICEBERGS = "icebergs"
 	TOOLKITS = "toolkits"
 	VOLCANOS = "volcanos"
 	LEARNING = "learning"
 
 	INSTALL = "install"
+	REQUIRE = "require"
 	PUBLISH = "publish"
 	RELEASE = "release"
-	REQUIRE = "require"
-	DISPLAY = "display"
 )
 const ( // DIR
 	SRC = "src"
@@ -73,11 +72,11 @@ const ( // DIR
 
 	JSON = "json"
 	CSV  = "csv"
-	SVG  = "svg"
-	GO   = "go"
 	SH   = "sh"
+	GO   = "go"
 	JS   = "js"
 	CSS  = "css"
+	SVG  = "svg"
 	HTML = "html"
 
 	LIB    = "lib"
@@ -86,48 +85,41 @@ const ( // DIR
 	PLUGIN = "plugin"
 	STORY  = "story"
 
-	INDEX_HTML = "index.html"
-	INDEX_CSS  = "index.css"
-	PROTO_JS   = "proto.js"
-	FRAME_JS   = "frame.js"
-	INDEX_JS   = "index.js"
-	INDEX_SH   = "index.sh"
-	ICE_BIN    = "ice.bin"
+	INDEX_CSS = "index.css"
+	PROTO_JS  = "proto.js"
+	FRAME_JS  = "frame.js"
+	INDEX_SH  = "index.sh"
 
 	FAVICON_ICO  = "/favicon.ico"
 	PLUGIN_INPUT = "/plugin/input/"
 	PLUGIN_LOCAL = "/plugin/local/"
 	PLUGIN_STORY = "/plugin/story/"
+
 	ISH_PLUGED   = ".ish/pluged/"
-	CAN_PLUGIN   = "can._plugin"
-	MODULES      = "modules"
-
-	USR_NODE_MODULES = "usr/node_modules/"
-
-	USR_LEARNING = "usr/learning/"
-	USR_VOLCANOS = "usr/volcanos/"
-	USR_INTSHELL = "usr/intshell/"
-	USR_TOOLKITS = "usr/toolkits/"
-	USR_ICEBERGS = "usr/icebergs/"
-	USR_RELEASE  = "usr/release/"
+	USR_MODULES  = "usr/node_modules/"
 	USR_INSTALL  = "usr/install/"
 	USR_REQUIRE  = "usr/require/"
 	USR_PUBLISH  = "usr/publish/"
+	USR_RELEASE  = "usr/release/"
+	USR_INTSHELL = "usr/intshell/"
+	USR_ICEBERGS = "usr/icebergs/"
+	USR_TOOLKITS = "usr/toolkits/"
+	USR_VOLCANOS = "usr/volcanos/"
+	USR_LEARNING = "usr/learning/"
 
-	USR_LOCAL        = "usr/local/"
-	USR_LOCAL_GO     = "usr/local/go/"
-	USR_LOCAL_GO_BIN = "usr/local/go/bin/"
-	USR_LOCAL_BIN    = "usr/local/bin/"
-	USR_LOCAL_LIB    = "usr/local/lib/"
-	USR_LOCAL_WORK   = "usr/local/work/"
-	USR_LOCAL_REPOS  = "usr/local/repos/"
-	USR_LOCAL_IMAGE  = "usr/local/image/"
-	USR_LOCAL_EXPORT = "usr/local/export/"
-	USR_LOCAL_DAEMON = "usr/local/daemon/"
-	VAR_LOG_BOOT_LOG = "var/log/boot.log"
-	VAR_LOG_ICE_PID  = "var/log/ice.pid"
-
+	USR_LOCAL          = "usr/local/"
+	USR_LOCAL_GO       = "usr/local/go/"
+	USR_LOCAL_GO_BIN   = "usr/local/go/bin/"
+	USR_LOCAL_BIN      = "usr/local/bin/"
+	USR_LOCAL_LIB      = "usr/local/lib/"
+	USR_LOCAL_WORK     = "usr/local/work/"
+	USR_LOCAL_REPOS    = "usr/local/repos/"
+	USR_LOCAL_IMAGE    = "usr/local/image/"
+	USR_LOCAL_EXPORT   = "usr/local/export/"
+	USR_LOCAL_DAEMON   = "usr/local/daemon/"
 	VAR_DATA_IMPORTANT = "var/data/.important"
+	VAR_LOG_BOOT_LOG   = "var/log/boot.log"
+	VAR_LOG_ICE_PID    = "var/log/ice.pid"
 
 	VAR_LOG        = "var/log/"
 	VAR_TMP        = "var/tmp/"
@@ -158,22 +150,24 @@ const ( // DIR
 	LICENSE        = "LICENSE"
 	GO_MOD         = "go.mod"
 	GO_SUM         = "go.sum"
+	ICE_BIN        = "ice.bin"
+	CAN_PLUGIN     = "can._plugin"
 )
 const ( // MSG
+	MSG_CMDS   = "cmds"
+	MSG_FIELDS = "fields"
+	MSG_SESSID = "sessid"
+
 	MSG_DETAIL = "detail"
 	MSG_OPTION = "option"
 	MSG_APPEND = "append"
 	MSG_RESULT = "result"
 
-	MSG_CMDS   = "cmds"
-	MSG_FIELDS = "fields"
-	MSG_SESSID = "sessid"
-
 	MSG_OPTS   = "_option"
+	MSG_UPLOAD = "_upload"
 	MSG_SOURCE = "_source"
 	MSG_TARGET = "_target"
 	MSG_HANDLE = "_handle"
-	MSG_UPLOAD = "_upload"
 	MSG_ACTION = "_action"
 	MSG_STATUS = "_status"
 
@@ -191,14 +185,14 @@ const ( // MSG
 	MSG_USERUA   = "user.ua"
 	MSG_USERWEB  = "user.web"
 	MSG_USERPOD  = "user.pod"
+	MSG_USERHOST = "user.host"
 	MSG_USERADDR = "user.addr"
 	MSG_USERDATA = "user.data"
-	MSG_USERROLE = "user.role"
-	MSG_USERNAME = "user.name"
 	MSG_USERNICK = "user.nick"
+	MSG_USERNAME = "user.name"
+	MSG_USERROLE = "user.role"
 	MSG_USERZONE = "user.zone"
 	MSG_LANGUAGE = "user.lang"
-	MSG_USERHOST = "user.host"
 
 	MSG_MODE    = "sess.mode"
 	MSG_TITLE   = "sess.title"
@@ -210,8 +204,6 @@ const ( // MSG
 	MSG_DAEMON  = "sess.daemon"
 	MSG_FILES   = "file.system"
 	LOG_DISABLE = "log.disable"
-
-	FIELDS_DETAIL = "detail"
 )
 const ( // RENDER
 	RENDER_BUTTON = "_button"
@@ -223,10 +215,10 @@ const ( // RENDER
 	RENDER_IFRAME = "_iframe"
 	RENDER_SCRIPT = "_script"
 
-	RENDER_TEMPLATE = "_template"
 	RENDER_STATUS   = "_status"
 	RENDER_REDIRECT = "_redirect"
 	RENDER_DOWNLOAD = "_download"
+	RENDER_TEMPLATE = "_template"
 	RENDER_RESULT   = "_result"
 	RENDER_JSON     = "_json"
 	RENDER_VOID     = "_void"
@@ -240,24 +232,24 @@ const ( // PROCESS
 	PROCESS_REFRESH  = "_refresh"
 	PROCESS_REWRITE  = "_rewrite"
 	PROCESS_DISPLAY  = "_display"
-	PROCESS_FIELD    = "_field"
-	PROCESS_FLOAT    = "_float"
-	PROCESS_INNER    = "_inner"
-	PROCESS_AGAIN    = "_again"
 
-	PROCESS_HOLD = "_hold"
-	PROCESS_BACK = "_back"
-	PROCESS_RICH = "_rich"
-	PROCESS_GROW = "_grow"
-	PROCESS_OPEN = "_open"
+	PROCESS_FIELD = "_field"
+	PROCESS_FLOAT = "_float"
+	PROCESS_INNER = "_inner"
+	PROCESS_AGAIN = "_again"
+	PROCESS_HOLD  = "_hold"
+	PROCESS_BACK  = "_back"
+	PROCESS_RICH  = "_rich"
+	PROCESS_GROW  = "_grow"
+	PROCESS_OPEN  = "_open"
 
-	PROCESS_ARG  = "_arg"
-	FIELD_PREFIX = "_prefix"
+	PROCESS_ARG   = "_arg"
+	FIELD_PREFIX  = "_prefix"
+	FIELDS_DETAIL = "detail"
 )
 const ( // CTX
 	CTX_ARG    = "ctx_arg"
 	CTX_DAEMON = "ctx_daemon"
-
 	CTX_FOLLOW = "follow"
 
 	CTX_BEGIN = "begin"
@@ -282,8 +274,8 @@ const ( // Err
 
 	ErrNotLogin = "not login: "
 	ErrNotRight = "not right: "
-	ErrNotFound = "not found: "
 	ErrNotValid = "not valid: "
+	ErrNotFound = "not found: "
 	ErrNotStart = "not start: "
 
 	ErrNotImplement = "not implement: "
@@ -296,12 +288,13 @@ const ( // ctx
 )
 const ( // mdb
 	SEARCH = "search"
+	INPUTS = "inputs"
 	SELECT = "select"
 
 	KEY   = "key"
+	FIELD = "field"
 	VALUE = "value"
 	EXTRA = "extra"
-	FIELD = "field"
 	META  = "meta"
 	HASH  = "hash"
 	TIME  = "time"
@@ -314,11 +307,11 @@ const ( // web
 	SERVE = "serve"
 	SPACE = "space"
 
-	THEME = "theme"
 	TITLE = "title"
+	THEME = "theme"
 )
 const ( // gdb
-	DEBUG = "debug"
+	EVENT = "event"
 )
 const ( // nfs
 	SOURCE = "source"
@@ -327,6 +320,9 @@ const ( // nfs
 const ( // cli
 	SYSTEM = "system"
 	START  = "start"
+)
+const ( // log
+	DEBUG = "debug"
 )
 const ( // ice
 	CTX = "ctx"

@@ -25,7 +25,7 @@ type server struct {
 func (s server) Search(m *ice.Message, arg ...string) {
 	if arg[0] == mdb.FOREACH && arg[1] == "" {
 		s.Code.List(m.Spawn(kit.Dict(ice.MSG_FIELDS, "time,port,status,pid,cmd,dir")), "")
-		m.Tables(func(value ice.Maps) {
+		m.Table(func(value ice.Maps) {
 			m.PushSearch(mdb.TYPE, value[cli.STATUS], mdb.NAME, value[nfs.PATH], mdb.TEXT, value[mdb.LINK])
 		})
 	}
@@ -42,7 +42,7 @@ password: %s
 }
 func (s server) List(m *ice.Message, arg ...string) {
 	if s.Code.List(m, "", arg...); len(arg) == 0 {
-		m.Tables(func(value ice.Maps) {
+		m.Table(func(value ice.Maps) {
 			switch value[cli.STATUS] {
 			case cli.START:
 				m.PushButton(s.Open, s.Stop)

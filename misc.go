@@ -484,3 +484,25 @@ func (m *Message) CmdAppend(arg ...Any) string {
 	field := kit.Slice(args, -1)[0]
 	return m._command(kit.Slice(args, 0, -1), OptionFields(field)).Append(field)
 }
+func (m *Message) IsCliUA() bool {
+	if m.Option(MSG_USERUA) == "" || !strings.HasPrefix(m.Option(MSG_USERUA), "Mozilla") {
+		return true
+	}
+	return false
+}
+func (m *Message) IsMobileUA() bool {
+	return strings.Contains(m.Option(MSG_USERUA), "Mobile")
+}
+func (m *Message) MergePodCmd(pod, cmd string, arg ...Any) string {
+	ls := []string{"chat"}
+	kit.If(kit.Keys(m.Option(MSG_USERPOD), pod), func(p string) { ls = append(ls, POD, p) })
+	if cmd == "" {
+		if _, ok := Info.Index[m.CommandKey()]; ok {
+			cmd = m.CommandKey()
+		} else {
+			cmd = m.PrefixKey()
+		}
+	}
+	ls = append(ls, CMD, cmd)
+	return kit.MergeURL2(strings.Split(kit.Select(Info.Domain, m.Option(MSG_USERWEB)), QS)[0], PS+kit.Join(ls, PS), arg...)
+}

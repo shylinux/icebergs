@@ -10,7 +10,7 @@ import (
 
 type configMessage interface {
 	Option(key string, arg ...Any) string
-	PrefixKey(...Any) string
+	PrefixKey() string
 	Confv(...Any) Any
 }
 

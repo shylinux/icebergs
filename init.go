@@ -50,12 +50,8 @@ const (
 var Index = &Context{Name: ICE, Help: "冰山模块", Commands: Commands{
 	CTX_INIT: {Hand: func(m *Message, arg ...string) {
 		m.Travel(func(p *Context, c *Context) {
-			kit.If(p != nil, func() { m.Go(func() { c._command(m.Spawn(c), c.Commands[CTX_INIT], CTX_INIT, arg...) }) })
+			kit.If(p != nil, func() { c._command(m.Spawn(c), c.Commands[CTX_INIT], CTX_INIT, arg...) })
 		})
-		loadImportant(m)
-		loadImportant(m)
-		loadImportant(m)
-		loadImportant(m)
 		loadImportant(m)
 	}},
 	INIT: {Hand: func(m *Message, arg ...string) {

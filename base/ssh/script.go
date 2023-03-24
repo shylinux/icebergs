@@ -33,7 +33,7 @@ type Frame struct {
 }
 
 func (f *Frame) prompt(m *ice.Message, list ...string) *Frame {
-	if f.source != STDIO || m.Target().Cap(ice.CTX_STATUS) == ice.CTX_CLOSE {
+	if f.source != STDIO {
 		return f
 	}
 	kit.If(len(list) == 0, func() { list = append(list, f.ps1...) })
@@ -56,9 +56,6 @@ func (f *Frame) prompt(m *ice.Message, list ...string) *Frame {
 }
 func (f *Frame) printf(m *ice.Message, str string, arg ...ice.Any) *Frame {
 	if f.source != STDIO {
-		return f
-	}
-	if m.Target().Cap(ice.CTX_STATUS) == ice.CTX_CLOSE {
 		return f
 	}
 	fmt.Fprint(f.stdout, kit.Format(str, arg...))
@@ -155,7 +152,7 @@ func (f *Frame) Start(m *ice.Message, arg ...string) {
 	m.Optionv(FRAME, f)
 	switch f.source = kit.Select(STDIO, arg, 0); f.source {
 	case STDIO:
-		if m.Cap(ice.CTX_STREAM, f.source); f.target == nil {
+		if f.target == nil {
 			f.target = m.Target()
 		}
 		r, w, _ := os.Pipe()

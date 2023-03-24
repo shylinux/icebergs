@@ -2,7 +2,6 @@ package ice
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -180,24 +179,18 @@ func (c *Context) Merge(s *Context) *Context {
 }
 func (c *Context) Begin(m *Message, arg ...string) *Context {
 	kit.If(c.Caches == nil, func() { c.Caches = Caches{} })
-	c.Caches[CTX_STREAM] = &Cache{Name: CTX_STREAM, Value: ""}
-	c.Caches[CTX_STATUS] = &Cache{Name: CTX_STATUS, Value: CTX_BEGIN}
 	c.Caches[CTX_FOLLOW] = &Cache{Name: CTX_FOLLOW, Value: c.Name}
 	kit.If(c.context != nil && c.context != Index, func() { c.Cap(CTX_FOLLOW, kit.Keys(c.context.Cap(CTX_FOLLOW), c.Name)) })
 	kit.If(c.server != nil, func() { c.server.Begin(m, arg...) })
 	return c.Merge(c)
 }
-func (c *Context) Start(m *Message, arg ...string) bool {
-	m.Log(c.Cap(CTX_STATUS, CTX_START), c.Cap(CTX_FOLLOW))
-	kit.If(c.server != nil, func() {
-		m.Go(func() { c.server.Start(m, arg...) }, m.Prefix())
-	})
-	return true
+func (c *Context) Start(m *Message, arg ...string) {
+	m.Log(CTX_START, c.Cap(CTX_FOLLOW))
+	kit.If(c.server != nil, func() { m.Go(func() { c.server.Start(m, arg...) }, m.Prefix()) })
 }
-func (c *Context) Close(m *Message, arg ...string) bool {
-	m.Log(c.Cap(CTX_STATUS, CTX_CLOSE), c.Cap(CTX_FOLLOW))
+func (c *Context) Close(m *Message, arg ...string) {
+	m.Log(CTX_CLOSE, c.Cap(CTX_FOLLOW))
 	kit.If(c.server != nil, func() { c.server.Close(m, arg...) })
-	return true
 }
 
 type Message struct {
@@ -225,26 +218,14 @@ type Message struct {
 	I io.Reader
 }
 
-func (m *Message) Time(arg ...Any) string {
+func (m *Message) Time(arg ...string) string {
 	t := m.time
 	if len(arg) > 0 {
-		switch arg := arg[0].(type) {
-		case string:
-			if d, e := time.ParseDuration(arg); e == nil {
-				t, arg = t.Add(d), arg[1:]
-			}
+		if d, e := time.ParseDuration(arg[0]); e == nil {
+			t, arg = t.Add(d), arg[1:]
 		}
 	}
-	f := MOD_TIME
-	if len(arg) > 0 {
-		switch p := arg[0].(type) {
-		case string:
-			if f = p; len(arg) > 1 {
-				f = fmt.Sprintf(f, arg[1:]...)
-			}
-		}
-	}
-	return t.Format(f)
+	return t.Format(kit.Select(MOD_TIME, arg, 0))
 }
 func (m *Message) Target() *Context  { return m.target }
 func (m *Message) Source() *Context  { return m.source }
@@ -348,22 +329,10 @@ func (m *Message) Search(key string, cb Any) *Message {
 	}
 	switch cb := cb.(type) {
 	case func(key string, cmd *Command):
-		if key == "" {
-			for k, v := range p.Commands {
-				cb(k, v)
-			}
-			break
-		}
 		if cmd, ok := p.Commands[key]; ok {
 			cb(key, cmd)
 		}
 	case func(p *Context, s *Context, key string, cmd *Command):
-		if key == "" {
-			for k, v := range p.Commands {
-				cb(p.context, p, k, v)
-			}
-			break
-		}
 		for _, p := range []*Context{p, m.target, m.source} {
 			for s := p; s != nil; s = s.context {
 				if cmd, ok := s.Commands[key]; ok {
@@ -373,12 +342,6 @@ func (m *Message) Search(key string, cb Any) *Message {
 			}
 		}
 	case func(p *Context, s *Context, key string, conf *Config):
-		if key == "" {
-			for k, v := range p.Configs {
-				cb(p.context, p, k, v)
-			}
-			break
-		}
 		for _, p := range []*Context{p, m.target, m.source} {
 			for s := p; s != nil; s = s.context {
 				if cmd, ok := s.Configs[key]; ok {
@@ -387,8 +350,6 @@ func (m *Message) Search(key string, cb Any) *Message {
 				}
 			}
 		}
-	case func(p *Context, s *Context, key string):
-		cb(p.context, p, key)
 	case func(p *Context, s *Context):
 		cb(p.context, p)
 	default:
@@ -397,17 +358,13 @@ func (m *Message) Search(key string, cb Any) *Message {
 	return m
 }
 
-func (m *Message) Cmd(arg ...Any) *Message  { return m._command(arg...) }
-func (m *Message) Cmds(arg ...Any) *Message { return m.Go(func() { m._command(arg...) }) }
+func (m *Message) Cmd(arg ...Any) *Message { return m._command(arg...) }
 func (m *Message) Cmdx(arg ...Any) string {
 	res := kit.Select("", m._command(arg...).meta[MSG_RESULT], 0)
 	return kit.Select("", res, res != ErrWarn)
 }
 func (m *Message) Cmdy(arg ...Any) *Message { return m.Copy(m._command(arg...)) }
 func (m *Message) Confv(arg ...Any) (val Any) {
-	if m.Spawn().Warn(Info.Important && m.Option("_lock") == "") {
-		m.Warn(true, "what unsafe lock", m.PrefixKey(), m.FormatStack(1, 100))
-	}
 	run := func(conf *Config) {
 		if len(arg) == 1 {
 			val = conf.Value
@@ -433,24 +390,3 @@ func (m *Message) Confv(arg ...Any) (val Any) {
 	return
 }
 func (m *Message) Conf(arg ...Any) string { return kit.Format(m.Confv(arg...)) }
-func (m *Message) Capi(key string, val ...Any) int {
-	kit.If(len(val) > 0, func() { m.Cap(key, kit.Int(m.Cap(key))+kit.Int(val[0])) })
-	return kit.Int(m.Cap(key))
-}
-func (m *Message) Capv(arg ...Any) Any {
-	key := ""
-	switch val := arg[0].(type) {
-	case string:
-		key, arg = val, arg[1:]
-	}
-	for _, s := range []*Context{m.target} {
-		for c := s; c != nil; c = c.context {
-			if caps, ok := c.Caches[key]; ok {
-				kit.If(len(arg) > 0, func() { caps.Value = kit.Format(arg[0]) })
-				return caps.Value
-			}
-		}
-	}
-	return nil
-}
-func (m *Message) Cap(arg ...Any) string { return kit.Format(m.Capv(arg...)) }

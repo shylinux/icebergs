@@ -3,6 +3,7 @@ package git
 import (
 	"path"
 	"strings"
+	"sync"
 	"time"
 
 	ice "shylinux.com/x/icebergs"
@@ -11,6 +12,7 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
+	"shylinux.com/x/toolkits/logs"
 	"shylinux.com/x/toolkits/task"
 )
 
@@ -44,7 +46,7 @@ func init() {
 				return
 			}
 			from, days, adds, dels, rest, commit := "", 0, 0, 0, 0, 0
-			ReposList(m).TableGo(func(value ice.Maps, lock *task.Lock) {
+			TableGo(ReposList(m), func(value ice.Maps, lock *task.Lock) {
 				if mdb.Config(m, kit.Keys("skip", value[REPOS])) == ice.TRUE {
 					return
 				}
@@ -122,4 +124,24 @@ func init() {
 			}
 		}},
 	})
+}
+func TableGo(m *ice.Message, cb ice.Any) *ice.Message {
+	wg, lock := sync.WaitGroup{}, &task.Lock{}
+	defer wg.Wait()
+	m.Tables(func(value ice.Maps) {
+		wg.Add(1)
+		task.Put(logs.FileLine(cb), func(*task.Task) error {
+			defer wg.Done()
+			switch cb := cb.(type) {
+			case func(ice.Maps, *task.Lock):
+				cb(value, lock)
+			case func(ice.Maps):
+				cb(value)
+			default:
+				m.ErrorNotImplement(cb)
+			}
+			return nil
+		})
+	})
+	return m
 }

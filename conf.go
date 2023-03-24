@@ -259,8 +259,6 @@ const ( // CTX
 	CTX_DAEMON = "ctx_daemon"
 
 	CTX_FOLLOW = "follow"
-	CTX_STATUS = "status"
-	CTX_STREAM = "stream"
 
 	CTX_BEGIN = "begin"
 	CTX_START = "start"

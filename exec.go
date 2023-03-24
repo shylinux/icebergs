@@ -3,7 +3,6 @@ package ice
 import (
 	"errors"
 	"io"
-	"sync"
 	"time"
 
 	kit "shylinux.com/x/toolkits"
@@ -27,9 +26,7 @@ func (m *Message) TryCatch(msg *Message, catch bool, cb ...func(msg *Message)) *
 			}
 		}
 	}()
-	if len(cb) > 0 {
-		cb[0](msg)
-	}
+	kit.If(len(cb) > 0, func() { cb[0](msg) })
 	return m
 }
 func (m *Message) Assert(expr Any) bool {
@@ -56,26 +53,6 @@ func (m *Message) Sleep(d Any, arg ...Any) *Message {
 func (m *Message) Sleep300ms(arg ...Any) *Message { return m.Sleep("300ms", arg...) }
 func (m *Message) Sleep30ms(arg ...Any) *Message  { return m.Sleep("30ms", arg...) }
 func (m *Message) Sleep3s(arg ...Any) *Message    { return m.Sleep("3s", arg...) }
-func (m *Message) TableGo(cb Any) *Message {
-	wg, lock := sync.WaitGroup{}, &task.Lock{}
-	defer wg.Wait()
-	m.Tables(func(value Maps) {
-		wg.Add(1)
-		task.Put(logs.FileLine(cb), func(*task.Task) error {
-			defer wg.Done()
-			switch cb := cb.(type) {
-			case func(Maps, *task.Lock):
-				cb(value, lock)
-			case func(Maps):
-				cb(value)
-			default:
-				m.ErrorNotImplement(cb)
-			}
-			return nil
-		})
-	})
-	return m
-}
 func (m *Message) Go(cb Any, arg ...Any) *Message {
 	kit.If(len(arg) == 0, func() { arg = append(arg, logs.FileLine(cb)) })
 	task.Put(arg[0], func(task *task.Task) error {

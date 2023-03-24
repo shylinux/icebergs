@@ -123,7 +123,7 @@ func _status_list(m *ice.Message) (files, adds, dels int, last time.Time) {
 				last = ci.Author.When
 			}
 		}
-		tags := kit.Format(mdb.Cache(m, m.PrefixKey(value[REPOS], TAGS), func() ice.Any { return _git_cmds(m, "describe", "--tags") }))
+		tags := _git_cmds(m, "describe", "--tags")
 		kit.SplitKV(ice.SP, ice.NL, _git_cmds(m, STATUS, "-sb"), func(text string, ls []string) {
 			switch kit.Ext(ls[1]) {
 			case "swp", "swo", ice.BIN, ice.VAR:
@@ -238,7 +238,6 @@ func init() {
 			}}, OPT: {Help: "优化"}, PRO: {Help: "升级"},
 			COMMIT: {Name: "commit action=opt,add,pro comment=some", Help: "提交", Hand: func(m *ice.Message, arg ...string) {
 				_repos_cmd(m, m.Option(REPOS), COMMIT, "-am", m.Option(ctx.ACTION)+ice.SP+m.Option(COMMENT))
-				mdb.Cache(m, m.PrefixKey(m.Option(REPOS), TAGS), nil)
 				m.ProcessBack()
 			}},
 			PIE: {Help: "饼图", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(TOTAL, PIE) }},
@@ -248,7 +247,6 @@ func init() {
 				}
 				_repos_cmd(m, m.Option(REPOS), TAG, m.Option(VERSION))
 				_repos_cmd(m, m.Option(REPOS), PUSH, "--tags")
-				mdb.Cache(m, m.PrefixKey(m.Option(REPOS), TAGS), nil)
 				ctx.ProcessRefresh(m)
 			}},
 			TAGS: {Help: "标签", Hand: func(m *ice.Message, arg ...string) { _status_tags(m) }},

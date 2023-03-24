@@ -14,8 +14,6 @@ func _context_list(m *ice.Message, sub *ice.Context, name string) {
 			return
 		}
 		m.Push(mdb.NAME, s.Cap(ice.CTX_FOLLOW))
-		m.Push(mdb.STATUS, s.Cap(ice.CTX_STATUS))
-		m.Push(mdb.STREAM, s.Cap(ice.CTX_STREAM))
 		m.Push(mdb.HELP, s.Help)
 	})
 }
@@ -28,7 +26,7 @@ func init() {
 			if len(arg) == 0 {
 				arg = append(arg, m.Source().Cap(ice.CTX_FOLLOW))
 			}
-			m.Search(arg[0]+ice.PT, func(p *ice.Context, s *ice.Context, key string) {
+			m.Search(arg[0]+ice.PT, func(p *ice.Context, s *ice.Context) {
 				msg := m.Spawn(s)
 				defer m.Copy(msg)
 				switch kit.Select(CONTEXT, arg, 1) {

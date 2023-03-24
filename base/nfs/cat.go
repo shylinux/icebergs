@@ -164,8 +164,8 @@ func OptionLoad(m *ice.Message, file string) *ice.Message {
 }
 
 type templateMessage interface {
-	PrefixKey(arg ...ice.Any) string
 	Cmdx(arg ...ice.Any) string
+	PrefixKey() string
 }
 
 func Template(m templateMessage, file string, arg ...ice.Any) string {

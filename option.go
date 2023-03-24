@@ -13,77 +13,37 @@ type Option struct {
 
 func OptionFields(arg ...string) Option { return Option{MSG_FIELDS, kit.Join(arg)} }
 func (m *Message) OptionFields(arg ...string) string {
-	if len(arg) > 0 {
-		m.Option(MSG_FIELDS, kit.Join(arg))
-	}
+	kit.If(len(arg) > 0, func() { m.Option(MSG_FIELDS, kit.Join(arg)) })
 	return kit.Join(kit.Simple(m.Optionv(MSG_FIELDS)))
 }
 
 func (m *Message) OptionDefault(arg ...string) string {
-	for i := 0; i < len(arg); i += 2 {
-		if m.Option(arg[i]) == "" && arg[i+1] != "" {
-			m.Option(arg[i], arg[i+1])
-		}
-	}
+	kit.For(arg, func(k, v string) { kit.If(m.Option(k) == "" && v != "", func() { m.Option(k, v) }) })
 	return m.Option(arg[0])
 }
 func (m *Message) OptionSimple(key ...string) (res []string) {
-	if len(key) == 0 {
-		for _, k := range kit.Split(kit.Select("type,name,text", m.Conf(m.PrefixKey(), kit.Keym(FIELD)))) {
-			switch k {
-			case TIME, HASH:
-				continue
-			}
-			if k == "" || m.Option(k) == "" {
-				continue
-			}
-			res = append(res, k, m.Option(k))
-		}
-		return
-	}
-	for _, k := range kit.Split(kit.Join(key)) {
-		if k == "" || m.Option(k) == "" {
-			continue
-		}
-		res = append(res, k, m.Option(k))
-	}
+	kit.If(len(key) == 0, func() { key = kit.Filters(kit.Split(kit.Select("type,name,text", m.Config(FIELD))), TIME, HASH) })
+	kit.For(kit.Filters(kit.Split(kit.Join(key)), ""), func(k string) { kit.If(m.Option(k), func(v string) { res = append(res, k, v) }) })
 	return
 }
 func (m *Message) OptionSplit(key ...string) (res []string) {
-	for _, k := range kit.Split(kit.Join(key)) {
-		res = append(res, m.Option(k))
-	}
+	kit.For(kit.Split(kit.Join(key)), func(k string) { res = append(res, m.Option(k)) })
 	return res
 }
 func (m *Message) OptionCB(key string, cb ...Any) Any {
-	if len(cb) > 0 {
-		return m.Optionv(kit.Keycb(kit.Select(m.CommandKey(), key)), cb...)
-	}
+	kit.If(len(cb) > 0, func() { m.Optionv(kit.Keycb(kit.Select(m.CommandKey(), key)), cb...) })
 	return m.Optionv(kit.Keycb(kit.Select(m.CommandKey(), key)))
 }
 
 func (m *Message) FieldsIsDetail() bool {
-	if len(m.meta[MSG_APPEND]) == 2 && m.meta[MSG_APPEND][0] == KEY && m.meta[MSG_APPEND][1] == VALUE {
-		return true
-	}
-	if m.OptionFields() == FIELDS_DETAIL {
-		return true
-	}
-	return false
+	return len(m.meta[MSG_APPEND]) == 2 && m.meta[MSG_APPEND][0] == KEY && m.meta[MSG_APPEND][1] == VALUE || m.OptionFields() == FIELDS_DETAIL
 }
 func (m *Message) Fields(length int, fields ...string) string {
-	return m.Option(MSG_FIELDS, kit.Select(kit.Select(FIELDS_DETAIL, fields, length), m.Option(MSG_FIELDS)))
+	return m.OptionDefault(MSG_FIELDS, kit.Select(FIELDS_DETAIL, fields, length))
 }
 func (m *Message) Action(arg ...Any) *Message {
-	for i, v := range arg {
-		switch v.(type) {
-		case string:
-		default:
-			arg[i] = kit.Format(v)
-		}
-	}
-	m.Option(MSG_ACTION, kit.Format(arg))
-	return m
+	kit.For(arg, func(i int, v Any) { arg[i] = kit.Format(v) })
+	return m.Options(MSG_ACTION, kit.Format(arg))
 }
 func (m *Message) Status(arg ...Any) *Message {
 	list, args := kit.List(), kit.Simple(arg)
@@ -94,8 +54,7 @@ func (m *Message) Status(arg ...Any) *Message {
 		}
 		list = append(list, kit.Dict(NAME, args[i], VALUE, args[i+1]))
 	}
-	m.Option(MSG_STATUS, kit.Format(list))
-	return m
+	return m.Options(MSG_STATUS, kit.Format(list))
 }
 func (m *Message) StatusTime(arg ...Any) *Message {
 	return m.Status(TIME, m.Time(), arg, kit.MDB_COST, m.FormatCost())

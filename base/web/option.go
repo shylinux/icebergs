@@ -112,7 +112,7 @@ func PushPodCmd(m *ice.Message, cmd string, arg ...string) {
 
 type Message interface {
 	Option(key string, arg ...ice.Any) string
-	PrefixKey(arg ...ice.Any) string
+	PrefixKey() string
 }
 
 func OptionAgentIs(m Message, arg ...string) bool {

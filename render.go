@@ -7,15 +7,13 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func AddRender(key string, render func(*Message, ...Any) string) {
-	Info.render[key] = render
-}
+func AddRender(key string, render func(*Message, ...Any) string) { Info.render[key] = render }
 func RenderAction(key ...string) Actions {
 	return Actions{CTX_INIT: {Hand: func(m *Message, arg ...string) {
 		cmd := m.CommandKey()
-		for _, key := range key {
+		kit.For(key, func(key string) {
 			AddRender(key, func(m *Message, arg ...Any) string { return m.Cmd(cmd, key, arg).Result() })
-		}
+		})
 	}}}
 }
 func Render(m *Message, cmd string, args ...Any) string {
@@ -28,25 +26,15 @@ func Render(m *Message, cmd string, args ...Any) string {
 		for _, k := range args {
 			switch k := k.(type) {
 			case []string:
-				for _, k := range k {
-					list = append(list, Render(m, RENDER_BUTTON, k))
-				}
+				kit.For(k, func(k string) { list = append(list, Render(m, RENDER_BUTTON, k)) })
 			case string:
 				if strings.HasPrefix(k, "<input") {
 					list = append(list, k)
 					break
 				}
-				for _, k := range kit.Split(k) {
-					list = append(list, kit.Format(`<input type="button" name="%s" value="%s">`,
-						// k, kit.Select(k, kit.Value(m._cmd.Meta, kit.Keys("_trans", k)), m.Option(MSG_LANGUAGE) != "en")))
-						k, k))
-				}
+				kit.For(kit.Split(k), func(k string) { list = append(list, kit.Format(`<input type="button" name="%s" value="%s">`, k, k)) })
 			case Map:
-				for k := range k {
-					list = append(list, kit.Format(`<input type="button" name="%s" value="%s">`,
-						k, k))
-					// k, kit.Select(k, v, m.Option(MSG_LANGUAGE) != "en")))
-				}
+				kit.For(k, func(k string) { list = append(list, kit.Format(`<input type="button" name="%s" value="%s">`, k, k)) })
 			default:
 				list = append(list, Render(m, RENDER_BUTTON, kit.Format(k)))
 			}
@@ -66,16 +54,14 @@ func Render(m *Message, cmd string, args ...Any) string {
 		if len(arg) == 1 {
 			return kit.Format(`<%s>%s</%s>`, cmd, arg[0], cmd)
 		}
-		return kit.Format(`<%s style="%s">%s</%s>`, cmd, kit.JoinKV(":", ";", arg[1:]...), arg[0], cmd)
+		return kit.Format(`<%s style="%s">%s</%s>`, cmd, kit.JoinKV(DF, ";", arg[1:]...), arg[0], cmd)
 	}
 }
 
 func (m *Message) Render(cmd string, arg ...Any) *Message {
 	switch cmd {
 	case RENDER_TEMPLATE:
-		if len(arg) == 1 {
-			arg = append(arg, m)
-		}
+		kit.If(len(arg) == 1, func() { arg = append(arg, m) })
 		if res, err := kit.Render(arg[0].(string), arg[1]); m.Assert(err) {
 			m.Echo(string(res))
 		}
@@ -117,36 +103,12 @@ func (m *Message) RenderVoid(arg ...Any) *Message {
 	return m.Render(RENDER_VOID, arg...)
 }
 
-func (m *Message) IsCliUA() bool {
-	if m.Option(MSG_USERUA) == "" || !strings.HasPrefix(m.Option(MSG_USERUA), "Mozilla") {
-		return true
-	}
-	return false
-}
-func (m *Message) IsMobileUA() bool {
-	return strings.Contains(m.Option(MSG_USERUA), "Mobile")
-}
-func (m *Message) MergePodCmd(pod, cmd string, arg ...Any) string {
-	ls := []string{"chat"}
-	kit.If(kit.Keys(m.Option(MSG_USERPOD), pod), func(p string) { ls = append(ls, POD, p) })
-	if cmd == "" {
-		if _, ok := Info.Index[m.CommandKey()]; ok {
-			cmd = m.CommandKey()
-		} else {
-			cmd = m.PrefixKey()
-		}
-	}
-	ls = append(ls, CMD, cmd)
-	return kit.MergeURL2(strings.Split(kit.Select(Info.Domain, m.Option(MSG_USERWEB)), QS)[0], PS+kit.Join(ls, PS), arg...)
-}
 func (m *Message) PushSearch(arg ...Any) {
 	data := kit.Dict(arg...)
 	for i := 0; i < len(arg); i += 2 {
 		switch k := arg[i].(type) {
 		case string:
-			if i+1 < len(arg) {
-				data[k] = arg[i+1]
-			}
+			kit.If(i+1 < len(arg), func() { data[k] = arg[i+1] })
 		}
 	}
 	for _, k := range kit.Split(m.OptionFields()) {
@@ -170,7 +132,6 @@ func (m *Message) PushAction(arg ...Any) *Message {
 	}
 	return m.Set(MSG_APPEND, ACTION).Tables(func(value Maps) { m.PushButton(arg...) })
 }
-
 func (m *Message) PushButton(arg ...Any) *Message {
 	if !m.IsCliUA() {
 		if m.FieldsIsDetail() {
@@ -188,68 +149,37 @@ func (m *Message) PushButton(arg ...Any) *Message {
 	return m
 }
 func (m *Message) PushAnchor(arg ...string) {
-	if !m.IsCliUA() {
-		m.Push(LINK, Render(m, RENDER_ANCHOR, arg))
-	}
+	kit.If(!m.IsCliUA(), func() { m.Push(LINK, Render(m, RENDER_ANCHOR, arg)) })
 }
 func (m *Message) PushQRCode(key, src string) {
-	if !m.IsCliUA() {
-		m.Push(key, Render(m, RENDER_QRCODE, src))
-	}
+	kit.If(!m.IsCliUA(), func() { m.Push(key, Render(m, RENDER_QRCODE, src)) })
 }
 func (m *Message) PushImages(key, src string) {
-	if !m.IsCliUA() {
-		m.Push(key, Render(m, RENDER_IMAGES, src))
-	}
+	kit.If(!m.IsCliUA(), func() { m.Push(key, Render(m, RENDER_IMAGES, src)) })
 }
 func (m *Message) PushVideos(key, src string) {
-	if !m.IsCliUA() {
-		m.Push(key, Render(m, RENDER_VIDEOS, src))
-	}
+	kit.If(!m.IsCliUA(), func() { m.Push(key, Render(m, RENDER_VIDEOS, src)) })
 }
 func (m *Message) PushAudios(key, src string) {
-	if !m.IsCliUA() {
-		m.Push(key, Render(m, RENDER_AUDIOS, src))
-	}
+	kit.If(!m.IsCliUA(), func() { m.Push(key, Render(m, RENDER_AUDIOS, src)) })
 }
 func (m *Message) PushIFrame(key, src string) {
-	if !m.IsCliUA() {
-		m.Push(key, Render(m, RENDER_IFRAME, src))
-	}
+	kit.If(!m.IsCliUA(), func() { m.Push(key, Render(m, RENDER_IFRAME, src)) })
 }
 func (m *Message) PushScript(arg ...string) {
-	if !m.IsCliUA() {
-		m.Push(SCRIPT, Render(m, RENDER_SCRIPT, arg))
-	}
+	kit.If(!m.IsCliUA(), func() { m.Push(SCRIPT, Render(m, RENDER_SCRIPT, arg)) })
 }
-func (m *Message) PushDownload(key string, arg ...string) *Message {
-	if !m.IsCliUA() {
-		m.Push(key, Render(m, RENDER_DOWNLOAD, arg))
-	}
-	return m
+func (m *Message) PushDownload(key string, arg ...string) {
+	kit.If(!m.IsCliUA(), func() { m.Push(key, Render(m, RENDER_DOWNLOAD, arg)) })
 }
 
-func (m *Message) EchoButton(arg ...Any) *Message {
-	return m.Echo(Render(m, RENDER_BUTTON, arg...))
-}
-func (m *Message) EchoAnchor(arg ...string) *Message {
-	return m.Echo(Render(m, RENDER_ANCHOR, arg))
-}
-func (m *Message) EchoQRCode(src string) *Message {
-	return m.Echo(Render(m, RENDER_QRCODE, src))
-}
-func (m *Message) EchoImages(src string) *Message {
-	return m.Echo(Render(m, RENDER_IMAGES, src))
-}
-func (m *Message) EchoVideos(src string) *Message {
-	return m.Echo(Render(m, RENDER_VIDEOS, src))
-}
-func (m *Message) EchoIFrame(src string) *Message {
-	return m.Echo(Render(m, RENDER_IFRAME, src))
-}
-func (m *Message) EchoScript(arg ...string) *Message {
-	return m.Echo(Render(m, RENDER_SCRIPT, arg))
-}
+func (m *Message) EchoButton(arg ...Any) *Message    { return m.Echo(Render(m, RENDER_BUTTON, arg...)) }
+func (m *Message) EchoAnchor(arg ...string) *Message { return m.Echo(Render(m, RENDER_ANCHOR, arg)) }
+func (m *Message) EchoQRCode(src string) *Message    { return m.Echo(Render(m, RENDER_QRCODE, src)) }
+func (m *Message) EchoImages(src string) *Message    { return m.Echo(Render(m, RENDER_IMAGES, src)) }
+func (m *Message) EchoVideos(src string) *Message    { return m.Echo(Render(m, RENDER_VIDEOS, src)) }
+func (m *Message) EchoIFrame(src string) *Message    { return m.Echo(Render(m, RENDER_IFRAME, src)) }
+func (m *Message) EchoScript(arg ...string) *Message { return m.Echo(Render(m, RENDER_SCRIPT, arg)) }
 func (m *Message) EchoDownload(arg ...string) *Message {
 	return m.Echo(Render(m, RENDER_DOWNLOAD, arg))
 }

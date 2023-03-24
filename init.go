@@ -101,6 +101,7 @@ func Run(arg ...string) string {
 		conf.Wait()
 		os.Exit(kit.Int(Pulse.Option(EXIT)))
 	default:
+		logs.Disable(true)
 		Pulse.Cmdy(INIT).Cmdy(arg)
 		kit.If(Pulse.IsErrNotFound(), func() { Pulse.SetAppend().SetResult().Cmdy(SYSTEM, arg) })
 		kit.If(strings.TrimSpace(Pulse.Result()) == "" && Pulse.Length() > 0, func() { Pulse.TableEcho() })

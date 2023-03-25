@@ -5,6 +5,7 @@ import (
 	"io"
 	"reflect"
 	"strings"
+	"sync"
 	"time"
 
 	kit "shylinux.com/x/toolkits"
@@ -57,8 +58,24 @@ func (m *Message) Go(cb func(), arg ...Any) {
 	kit.If(len(arg) == 0, func() { arg = append(arg, logs.FileLine(cb)) })
 	task.Put(arg[0], func(task *task.Task) { m.TryCatch(m, true, func(m *Message) { cb() }) })
 }
+func (m *Message) Wait(cb ...Handler) (wait func(), done Handler) {
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	t := time.AfterFunc(kit.Duration("30s"), func() { wg.Done() })
+	return func() { wg.Wait() }, func(msg *Message, arg ...string) {
+		defer wg.Done()
+		defer t.Stop()
+		kit.If(len(cb) > 0 && cb[0] != nil, func() { cb[0](msg, arg...) }, func() { m.Copy(msg) })
+	}
+}
 
-func (m *Message) Cmd(arg ...Any) *Message  { return m._command(arg...) }
+func (m *Message) Cmd(arg ...Any) *Message { return m._command(arg...) }
+func (m *Message) Cmdv(arg ...Any) string {
+	args := kit.Simple(arg...)
+	field := kit.Slice(args, -1)[0]
+	return m._command(kit.Slice(args, 0, -1), OptionFields(field)).Append(field)
+}
+func (m *Message) Cmds(arg ...Any) *Message { return m.Cmd(append(arg, OptionFields(""))...) }
 func (m *Message) Cmdy(arg ...Any) *Message { return m.Copy(m._command(arg...)) }
 func (m *Message) Cmdx(arg ...Any) string {
 	res := kit.Select("", m._command(arg...).meta[MSG_RESULT], 0)

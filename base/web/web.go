@@ -12,20 +12,15 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/tcp"
 	kit "shylinux.com/x/toolkits"
-	"shylinux.com/x/toolkits/task"
 )
 
 type Frame struct {
 	*ice.Message
 	*http.Server
 	*http.ServeMux
-	lock task.Lock
-	send ice.Messages
 }
 
-func (f *Frame) Begin(m *ice.Message, arg ...string) {
-	f.send = ice.Messages{}
-}
+func (f *Frame) Begin(m *ice.Message, arg ...string) {}
 func (f *Frame) Start(m *ice.Message, arg ...string) {
 	f.Message, f.Server = m, &http.Server{Handler: f}
 	list := map[*ice.Context]string{}
@@ -71,17 +66,6 @@ func (f *Frame) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if _serve_main(f.Message, w, r) {
 		f.ServeMux.ServeHTTP(w, r)
 	}
-}
-func (f *Frame) addSend(key string, msg *ice.Message) string {
-	defer f.lock.Lock()()
-	f.send[key] = msg
-	return key
-}
-func (f *Frame) getSend(key string) *ice.Message {
-	defer f.lock.RLock()()
-	msg, _ := f.send[key]
-	delete(f.send, key)
-	return msg
 }
 
 const WEB = "web"

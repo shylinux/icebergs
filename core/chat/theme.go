@@ -76,8 +76,8 @@ func init() {
 			}},
 		}, mdb.ZoneAction(mdb.FIELD, "time,id,tags,type,name,value"), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.ZoneSelect(m, arg...); len(arg) == 0 {
-				m.Cmd(nfs.DIR, nfs.PWD, ice.OptionFields(), kit.Dict(nfs.DIR_ROOT, "src/website/theme/")).RenameAppend(nfs.PATH, mdb.ZONE, nfs.SIZE, mdb.COUNT).Table(func(values ice.Maps) {
-					m.Push("", values)
+				m.Cmd(nfs.DIR, nfs.PWD, ice.OptionFields(), kit.Dict(nfs.DIR_ROOT, "src/website/theme/")).RenameAppend(nfs.PATH, mdb.ZONE, nfs.SIZE, mdb.COUNT).Table(func(value ice.Maps) {
+					m.Push("", value)
 				})
 				m.PushAction("choose", "form", mdb.REMOVE)
 			} else {

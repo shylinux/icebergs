@@ -186,8 +186,8 @@ func init() {
 					case nfs.FROM:
 						m.Push(arg[0], kit.MergeURL2(ice.Info.Make.Remote, ice.PS))
 					case nfs.TO:
-						m.Cmd(web.BROAD, func(values ice.Maps) {
-							m.Push(arg[0], kit.Format("http://%s:%s/", values[tcp.HOST], values[tcp.PORT]))
+						m.Cmd(web.BROAD, func(value ice.Maps) {
+							m.Push(arg[0], kit.Format("http://%s:%s/", value[tcp.HOST], value[tcp.PORT]))
 						})
 					}
 					return
@@ -267,9 +267,9 @@ func init() {
 				}
 			}},
 			"insteadof": {Name: "insteadof from* to", Help: "代理", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(CONFIGS, func(values ice.Maps) {
-					if values[mdb.VALUE] == m.Option(nfs.FROM) {
-						_configs_set(m, "--unset", values[mdb.NAME])
+				m.Cmd(CONFIGS, func(value ice.Maps) {
+					if value[mdb.VALUE] == m.Option(nfs.FROM) {
+						_configs_set(m, "--unset", value[mdb.NAME])
 					}
 				})
 				if m.Option(nfs.TO) != "" {

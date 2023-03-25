@@ -29,8 +29,8 @@ func _broad_send(m *ice.Message, host, port string, remote_host, remote_port str
 	}
 }
 func _broad_serve(m *ice.Message, port string) {
-	m.Cmd(tcp.HOST, func(values ice.Maps) {
-		_broad_send(m, values[aaa.IP], port, "255.255.255.255", "9020", mdb.TYPE, ice.Info.NodeType, mdb.NAME, ice.Info.NodeName)
+	m.Cmd(tcp.HOST, func(value ice.Maps) {
+		_broad_send(m, value[aaa.IP], port, "255.255.255.255", "9020", mdb.TYPE, ice.Info.NodeType, mdb.NAME, ice.Info.NodeName)
 	})
 	m.Cmd(tcp.SERVER, tcp.LISTEN, mdb.TYPE, "udp4", m.OptionSimple(mdb.NAME, tcp.HOST, tcp.PORT), func(l *net.UDPConn) {
 		buf := make([]byte, ice.MOD_BUFS)
@@ -57,8 +57,8 @@ func _broad_serve(m *ice.Message, port string) {
 }
 func _broad_save(m, msg *ice.Message) {
 	save := false
-	m.Cmd(tcp.HOST, func(values ice.Maps) {
-		if strings.Split(msg.Option(tcp.HOST), ice.PT)[0] == strings.Split(values[aaa.IP], ice.PT)[0] {
+	m.Cmd(tcp.HOST, func(value ice.Maps) {
+		if strings.Split(msg.Option(tcp.HOST), ice.PT)[0] == strings.Split(value[aaa.IP], ice.PT)[0] {
 			save = true
 		}
 	})

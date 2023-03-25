@@ -285,7 +285,7 @@ func (m *Message) Sort(key string, arg ...string) *Message {
 	if m.FieldsIsDetail() {
 		return m
 	}
-	keys, cmps := kit.Split(key), kit.Simple()
+	keys, cmps := kit.Split(kit.Select(key, "type,name,text")), kit.Simple()
 	for i, k := range keys {
 		cmp := kit.Select("", arg, i)
 		if cmp == "" {

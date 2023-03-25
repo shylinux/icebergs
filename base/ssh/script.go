@@ -103,7 +103,7 @@ func (f *Frame) parse(m *ice.Message, h, line string) string {
 	return ""
 }
 func (f *Frame) scan(m *ice.Message, h, line string) *Frame {
-	kit.If(f.source == STDIO, func() { m.Options(MESSAGE, m, ice.LOG_DISABLE, ice.TRUE) })
+	// kit.If(f.source == STDIO, func() { m.Options(MESSAGE, m, ice.LOG_DISABLE, ice.TRUE) })
 	f.ps1 = kit.Simple(mdb.Confv(m, PROMPT, kit.Keym(PS1)))
 	f.ps2 = kit.Simple(mdb.Confv(m, PROMPT, kit.Keym(PS2)))
 	m.I, m.O = f.stdin, f.stdout
@@ -252,4 +252,8 @@ func init() {
 			}
 		}},
 	})
+}
+
+func PrintQRCode(m *ice.Message, url string) {
+	m.Spawn(ice.OptionSilent()).Cmd(PRINTF, kit.Dict(nfs.CONTENT, ice.NL+ice.Render(m, ice.RENDER_QRCODE, url))).Cmd(PROMPT)
 }

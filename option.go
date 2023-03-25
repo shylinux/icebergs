@@ -13,6 +13,7 @@ type Option struct {
 }
 
 func OptionFields(arg ...string) Option { return Option{MSG_FIELDS, kit.Join(arg)} }
+func OptionSilent(arg ...string) Option { return Option{LOG_DISABLE, TRUE} }
 func (m *Message) OptionFields(arg ...string) string {
 	kit.If(len(arg) > 0, func() { m.Option(MSG_FIELDS, kit.Join(arg)) })
 	return kit.Join(kit.Simple(m.Optionv(MSG_FIELDS)))

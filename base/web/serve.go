@@ -114,6 +114,7 @@ func _serve_domain(m *ice.Message) string {
 	)
 }
 func _serve_auth(m *ice.Message, key string, cmds []string, w http.ResponseWriter, r *http.Request) ([]string, bool) {
+	defer func() { m.Options(ice.MSG_CMDS, "", ice.MSG_SESSID, "") }()
 	if r.URL.Path == PP(SPACE) {
 		return cmds, true
 	}
@@ -169,13 +170,12 @@ func init() {
 			}},
 			SERVE_START: {Hand: func(m *ice.Message, arg ...string) {
 				m.Go(func() {
-					msg := m.Spawn(kit.Dict(ice.LOG_DISABLE, ice.TRUE)).Sleep("10ms")
-					msg.Cmd(ssh.PRINTF, kit.Dict(nfs.CONTENT, ice.NL+ice.Render(msg, ice.RENDER_QRCODE, tcp.PublishLocalhost(msg, kit.Format("http://localhost:%s", msg.Option(tcp.PORT)))))).Cmd(ssh.PROMPT)
+					ssh.PrintQRCode(m, tcp.PublishLocalhost(m, _serve_address(m)))
 					opened := false
 					for i := 0; i < 3 && !opened; i++ {
-						msg.Sleep("1s").Cmd(SPACE, func(value ice.Maps) { kit.If(value[mdb.TYPE] == CHROME, func() { opened = true }) })
+						m.Sleep("1s").Cmd(SPACE, func(value ice.Maps) { kit.If(value[mdb.TYPE] == CHROME, func() { opened = true }) })
 					}
-					kit.If(!opened, func() { cli.Opens(msg, _serve_address(msg)) })
+					kit.If(!opened, func() { cli.Opens(m, _serve_address(m)) })
 				})
 			}},
 		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,status,name,proto,host,port", tcp.LOCALHOST, ice.TRUE), mdb.ClearOnExitHashAction())},

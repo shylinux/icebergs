@@ -168,7 +168,6 @@ const ( // MSG
 	MSG_UPLOAD = "_upload"
 	MSG_SOURCE = "_source"
 	MSG_TARGET = "_target"
-	MSG_HANDLE = "_handle"
 	MSG_ACTION = "_action"
 	MSG_STATUS = "_status"
 

@@ -203,3 +203,4 @@ func NodeInfo(m *ice.Message, arg ...string) {
 	ice.Info.NodeName = mdb.Conf(m, RUNTIME, kit.Keys(NODE, mdb.NAME), kit.Select(ice.Info.NodeName, arg, 0))
 	ice.Info.NodeType = mdb.Conf(m, RUNTIME, kit.Keys(NODE, mdb.TYPE), kit.Select(ice.Info.NodeType, arg, 1))
 }
+func IsWindows() bool { return runtime.GOOS == WINDOWS }

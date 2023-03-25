@@ -95,8 +95,8 @@ func (m *Message) Push(key string, value Any, arg ...Any) *Message {
 	kit.If(len(head) == 0 && !m.FieldsIsDetail(), func() { head = kit.Split(m.OptionFields()) })
 	switch value := value.(type) {
 	case Map:
-		kit.If(len(head) == 0, func() { head = kit.SortedKey(kit.KeyValue(nil, "", value)) })
 		var val Map
+		kit.If(len(head) == 0, func() { head = kit.SortedKey(kit.KeyValue(nil, "", value)) })
 		kit.If(len(arg) > 1, func() { val, _ = arg[1].(Map) })
 		kit.For(head, func(k string) {
 			var v Any
@@ -341,9 +341,7 @@ func (m *Message) SortStrR(key string) *Message { return m.Sort(key, STR_R) }
 func (m *Message) SortIntR(key string) *Message { return m.Sort(key, INT_R) }
 func (m *Message) SortInt(key string) *Message  { return m.Sort(key, INT) }
 
-func (m *Message) Detail(arg ...Any) string {
-	return kit.Select("", m.meta[MSG_DETAIL], 0)
-}
+func (m *Message) Detail(arg ...Any) string { return kit.Select("", m.meta[MSG_DETAIL], 0) }
 func (m *Message) Detailv(arg ...Any) []string {
 	kit.If(len(arg) > 0, func() { m.meta[MSG_DETAIL] = kit.Simple(arg...) })
 	return m.meta[MSG_DETAIL]

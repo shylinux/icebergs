@@ -10,7 +10,7 @@ import (
 
 type configMessage interface {
 	Option(key string, arg ...Any) string
-	PrefixKey() string
+	PrefixKey(...string) string
 	Confv(...Any) Any
 }
 
@@ -19,7 +19,6 @@ var _locks = map[string]*task.Lock{}
 
 func getLock(m configMessage, arg ...string) *task.Lock {
 	key := kit.Select(m.PrefixKey(), kit.Keys(arg))
-	m.Option("_lock", key)
 	defer _lock.Lock()()
 	l, ok := _locks[key]
 	if !ok {
@@ -67,7 +66,7 @@ func Confm(m configMessage, key string, sub Any, cbs ...Any) Map {
 var cache = sync.Map{}
 
 func Cache(m *ice.Message, key string, add func() Any) Any {
-	if add == nil {
+	if key = m.PrefixKey(key); add == nil {
 		cache.Delete(key)
 		return nil
 	}

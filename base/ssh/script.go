@@ -103,9 +103,9 @@ func (f *Frame) parse(m *ice.Message, h, line string) string {
 	return ""
 }
 func (f *Frame) scan(m *ice.Message, h, line string) *Frame {
+	kit.If(f.source == STDIO, func() { m.Options(MESSAGE, m, ice.LOG_DISABLE, ice.TRUE) })
 	f.ps1 = kit.Simple(mdb.Confv(m, PROMPT, kit.Keym(PS1)))
 	f.ps2 = kit.Simple(mdb.Confv(m, PROMPT, kit.Keym(PS2)))
-	m.Options(MESSAGE, m, ice.LOG_DISABLE, ice.TRUE)
 	m.I, m.O = f.stdin, f.stdout
 	ps, bio := f.ps1, bufio.NewScanner(f.stdin)
 	for f.prompt(m, ps...); f.stdin != nil && bio.Scan(); f.prompt(m, ps...) {

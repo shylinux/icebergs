@@ -255,7 +255,7 @@ func (m *Message) Spawn(arg ...Any) *Message {
 		case Maps:
 			kit.For(val, func(k, v string) { msg.Option(k, v) })
 		case Map:
-			kit.For(val, func(k string, v Any) { msg.Option(k, v) })
+			kit.For(kit.KeyValue(nil, "", val), func(k string, v Any) { msg.Option(k, v) })
 		case *Context:
 			msg.target = val
 		case *Command:
@@ -389,36 +389,3 @@ func (m *Message) Actions(key string) *Action {
 func (m *Message) Commands(key string) *Command {
 	return m.Target().Commands[key]
 }
-
-func (m *Message) Cmd(arg ...Any) *Message  { return m._command(arg...) }
-func (m *Message) Cmdy(arg ...Any) *Message { return m.Copy(m._command(arg...)) }
-func (m *Message) Cmdx(arg ...Any) string {
-	res := kit.Select("", m._command(arg...).meta[MSG_RESULT], 0)
-	return kit.Select("", res, res != ErrWarn)
-}
-func (m *Message) Confv(arg ...Any) (val Any) {
-	run := func(conf *Config) {
-		if len(arg) == 1 {
-			val = conf.Value
-			return
-		} else if len(arg) > 2 {
-			if arg[1] == nil || arg[1] == "" {
-				conf.Value = arg[2]
-			} else {
-				kit.Value(conf.Value, arg[1:]...)
-			}
-		}
-		val = kit.Value(conf.Value, arg[1])
-	}
-	key := kit.Format(arg[0])
-	kit.If(key == "", func() { key = m._key })
-	if conf, ok := m.target.Configs[key]; ok {
-		run(conf)
-	} else if conf, ok := m.source.Configs[key]; ok {
-		run(conf)
-	} else {
-		m.Search(key, func(p *Context, s *Context, key string, conf *Config) { run(conf) })
-	}
-	return
-}
-func (m *Message) Conf(arg ...Any) string { return kit.Format(m.Confv(arg...)) }

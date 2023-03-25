@@ -21,7 +21,7 @@ import (
 
 func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 	msg := m.Cmd(SPIDE, tcp.CLIENT, dev, PP(SPACE))
-	uri := kit.ParseURL(strings.Replace(kit.MergeURL(msg.Append(DOMAIN), mdb.TYPE, ice.Info.NodeType, mdb.NAME, name, arg), ice.HTTP, "ws", 1))
+	uri := kit.ParseURL(strings.Replace(kit.MergeURL(msg.Append(DOMAIN), mdb.TYPE, ice.Info.NodeType, mdb.NAME, name, arg), HTTP, "ws", 1))
 	args := kit.SimpleKV("type,name,host,port", msg.Append(tcp.PROTOCOL), dev, msg.Append(tcp.HOST), msg.Append(tcp.PORT))
 	prints := false
 	m.Go(func() {
@@ -47,6 +47,7 @@ func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 }
 func _space_fork(m *ice.Message) {
 	if conn, e := websocket.Upgrade(m.W, m.R, nil, ice.MOD_BUFS, ice.MOD_BUFS); m.Assert(e) {
+		m.Options(ice.MSG_USERADDR, kit.Select(m.R.RemoteAddr, m.R.Header.Get(ice.MSG_USERADDR)))
 		text := kit.Select(m.Option(ice.MSG_USERADDR), m.Option(mdb.TEXT))
 		name := strings.ToLower(kit.ReplaceAll(kit.Select(m.Option(ice.MSG_USERADDR), m.Option(mdb.NAME)), ice.PT, "_", ice.DF, "_"))
 		args := kit.Simple(mdb.TYPE, kit.Select(WORKER, m.Option(mdb.TYPE)), mdb.NAME, name, mdb.TEXT, text, m.OptionSimple(SHARE, RIVER, ice.MSG_USERUA, cli.DAEMON))
@@ -175,7 +176,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		SPACE: {Name: "space name cmds auto", Help: "空间站", Actions: ice.MergeActions(ice.Actions{
 			tcp.DIAL: {Name: "dial dev=ops name", Hand: func(m *ice.Message, arg ...string) {
-				if strings.HasPrefix(m.Option(ice.DEV), ice.HTTP) {
+				if strings.HasPrefix(m.Option(ice.DEV), HTTP) {
 					m.Cmd(SPIDE, mdb.CREATE, ice.DEV, m.Option(ice.DEV))
 					m.Option(ice.DEV, ice.DEV)
 				}

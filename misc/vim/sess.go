@@ -2,7 +2,6 @@ package vim
 
 import (
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/web"
 )
 
 const (
@@ -18,5 +17,5 @@ const (
 const SESS = "sess"
 
 func init() {
-	Index.MergeCommands(ice.Commands{web.WEB_LOGIN: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy("web.code.bash._login", arg) }}})
+	Index.MergeCommands(ice.Commands{"_login": {Hand: func(m *ice.Message, arg ...string) { m.Cmdy("web.code.bash._login", arg) }}})
 }

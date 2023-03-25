@@ -5,16 +5,12 @@ import (
 	"net/url"
 	"path"
 	"regexp"
-	"runtime"
 	"strings"
-	"sync"
-	"time"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
-	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/ssh"
@@ -29,7 +25,7 @@ func _serve_start(m *ice.Message) {
 	defer kit.For(kit.Split(m.Option(ice.DEV)), func(v string) { m.Sleep("10ms").Cmd(SPACE, tcp.DIAL, ice.DEV, v, mdb.NAME, ice.Info.NodeName) })
 	kit.If(m.Option(aaa.USERNAME), func() { aaa.UserRoot(m, m.Option(aaa.USERNICK), m.Option(aaa.USERNAME)) })
 	kit.If(m.Option(tcp.PORT) == tcp.RANDOM, func() { m.Option(tcp.PORT, m.Cmdx(tcp.PORT, aaa.RIGHT)) })
-	kit.If(runtime.GOOS == cli.WINDOWS, func() { m.Cmd(SPIDE, ice.OPS, _serve_address(m)+"/exit").Sleep300ms() })
+	kit.If(cli.IsWindows(), func() { m.Cmd(SPIDE, ice.OPS, _serve_address(m)+"/exit").Sleep300ms() })
 	cli.NodeInfo(m, kit.Select(ice.Info.Hostname, m.Option(tcp.NODENAME)), SERVER)
 	m.Target().Start(m, m.OptionSimple(tcp.HOST, tcp.PORT)...)
 }
@@ -77,34 +73,23 @@ func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.Response
 		}
 		kit.For(u.Query(), func(k string, v []string) { _log(ctx.ARGS, k, v).Optionv(k, v) })
 	}
-	m.Options(ice.MSG_USERUA, r.Header.Get(UserAgent))
-	for k, v := range kit.ParseQuery(r.URL.RawQuery) {
-		kit.If(m.IsCliUA(), func() { v = kit.Simple(v, func(v string) (string, error) { return url.QueryUnescape(v) }) })
-		m.Optionv(k, v)
-	}
+	kit.For(kit.ParseQuery(r.URL.RawQuery), func(k string, v []string) { m.Optionv(k, v) })
 	switch r.Header.Get(ContentType) {
-	case ContentJSON:
-		data := kit.UnMarshal(r.Body)
-		_log("Body", mdb.VALUE, kit.Format(data)).Optionv(ice.MSG_USERDATA, data)
-		kit.For(data, func(k string, v ice.Any) { m.Optionv(k, v) })
+	case ApplicationJSON:
+		kit.For(kit.UnMarshal(r.Body), func(k string, v ice.Any) { m.Optionv(k, v) })
 	default:
 		r.ParseMultipartForm(kit.Int64(kit.Select("4096", r.Header.Get(ContentLength))))
-		kit.For(r.PostForm, func(k string, v []string) {
-			kit.If(m.IsCliUA(), func() { v = kit.Simple(v, func(v string) (string, error) { return url.QueryUnescape(v) }) })
-			_log("Form", k, kit.Join(v, ice.SP)).Optionv(k, v)
-		})
+		kit.For(r.PostForm, func(k string, v []string) { _log(FORM, k, kit.Join(v, ice.SP)).Optionv(k, v) })
 	}
 	kit.For(r.Cookies(), func(k, v string) { m.Optionv(k, v) })
 	m.OptionDefault(ice.MSG_HEIGHT, "480", ice.MSG_WIDTH, "320")
 	m.Options(ice.MSG_USERWEB, _serve_domain(m), ice.MSG_USERPOD, m.Option(ice.POD))
+	m.Options(ice.MSG_USERUA, r.Header.Get(UserAgent), ice.MSG_USERIP, r.Header.Get(ice.MSG_USERIP))
 	m.Options(ice.MSG_SESSID, kit.Select(m.Option(ice.MSG_SESSID), m.Option(CookieName(m.Option(ice.MSG_USERWEB)))))
-	m.Options(ice.MSG_USERIP, r.Header.Get(ice.MSG_USERIP), ice.MSG_USERADDR, kit.Select(r.RemoteAddr, r.Header.Get(ice.MSG_USERADDR)))
-	if m.Optionv(ice.MSG_CMDS) == nil {
-		if p := strings.TrimPrefix(r.URL.Path, key); p != "" {
-			m.Optionv(ice.MSG_CMDS, strings.Split(p, ice.PS))
-		}
-	}
-	if cmds, ok := _serve_login(m, key, kit.Simple(m.Optionv(ice.MSG_CMDS)), w, r); ok {
+	kit.If(m.Optionv(ice.MSG_CMDS) == nil, func() {
+		kit.If(strings.TrimPrefix(r.URL.Path, key), func(p string) { m.Optionv(ice.MSG_CMDS, strings.Split(p, ice.PS)) })
+	})
+	if cmds, ok := _serve_auth(m, key, kit.Simple(m.Optionv(ice.MSG_CMDS)), w, r); ok {
 		defer func() { m.Cost(kit.Format("%s: %s %v", r.Method, m.PrefixPath()+path.Join(cmds...), m.FormatSize())) }()
 		m.Option(ice.MSG_OPTS, kit.Simple(m.Optionv(ice.MSG_OPTION), func(k string) bool { return !strings.HasPrefix(k, ice.MSG_SESSID) }))
 		if m.Detailv(m.PrefixKey(), cmds); len(cmds) > 1 && cmds[0] == ctx.ACTION {
@@ -122,61 +107,49 @@ func _serve_domain(m *ice.Message) string {
 		func() string { return ice.Info.Domain },
 		func() string {
 			if b, e := regexp.MatchString("^[0-9.]+$", m.R.Host); b && e == nil {
-				return kit.Format("%s://%s:%s", kit.Select("https", ice.HTTP, m.R.TLS == nil), m.R.Host, m.Option(tcp.PORT))
+				return kit.Format("%s://%s:%s", kit.Select(HTTPS, HTTP, m.R.TLS == nil), m.R.Host, m.Option(tcp.PORT))
 			}
-			return kit.Format("%s://%s", kit.Select("https", ice.HTTP, m.R.TLS == nil), m.R.Host)
+			return kit.Format("%s://%s", kit.Select(HTTPS, HTTP, m.R.TLS == nil), m.R.Host)
 		},
 	)
 }
-
-var localhost = sync.Map{}
-
-func _serve_login(m *ice.Message, key string, cmds []string, w http.ResponseWriter, r *http.Request) ([]string, bool) {
+func _serve_auth(m *ice.Message, key string, cmds []string, w http.ResponseWriter, r *http.Request) ([]string, bool) {
 	if r.URL.Path == PP(SPACE) {
 		return cmds, true
 	}
-	if aaa.SessCheck(m, m.Option(ice.MSG_SESSID)); m.Option(ice.MSG_USERNAME) == "" {
-		last, ok := localhost.Load(m.Option(ice.MSG_USERIP))
-		if ls := kit.Simple(last); ok && len(ls) > 0 && kit.Time(m.Time())-kit.Time(ls[0]) < int64(time.Hour) {
-			m.Auth(
-				aaa.USERNICK, m.Option(ice.MSG_USERNICK, ls[1]),
-				aaa.USERNAME, m.Option(ice.MSG_USERNAME, ls[2]),
-				aaa.USERROLE, m.Option(ice.MSG_USERROLE, ls[3]),
-				"last", ls[0],
-			)
-		} else if ice.Info.Localhost && tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) {
-			aaa.UserRoot(m)
-		} else {
-			gdb.Event(m, SERVE_LOGIN)
-		}
-		if ice.Info.Localhost {
-			localhost.Store(m.Option(ice.MSG_USERIP), kit.Simple(m.Time(), m.OptionSplit(ice.MSG_USERNICK, ice.MSG_USERNAME, ice.MSG_USERROLE)))
+	if aaa.SessCheck(m, m.Option(ice.MSG_SESSID)); m.Option(SHARE) != "" {
+		switch msg := m.Cmd(SHARE, m.Option(SHARE)); msg.Append(mdb.TYPE) {
+		case FIELD, STORM:
+			msg.Table(func(value ice.Maps) { aaa.SessAuth(m, value) })
 		}
 	}
-	if _, ok := m.Target().Commands[WEB_LOGIN]; ok {
-		return cmds, !m.Target().Cmd(m, WEB_LOGIN, kit.Simple(key, cmds)...).IsErr()
-	} else if gdb.Event(m, SERVE_CHECK, key, cmds); m.IsErr() {
-		return cmds, false
-	} else if m.IsOk() {
-		return cmds, m.SetResult() != nil
-	} else {
-		return cmds, aaa.Right(m, key, cmds)
+	if m.Option(ice.MSG_USERNAME) == "" && ice.Info.Localhost {
+		ls := kit.Simple(mdb.Cache(m, m.Option(ice.MSG_USERIP), func() ice.Any {
+			if tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) {
+				aaa.UserRoot(m)
+				return kit.Simple(m.Time(), m.OptionSplit(ice.MSG_USERNICK, ice.MSG_USERNAME, ice.MSG_USERROLE))
+			}
+			return nil
+		}))
+		if len(ls) > 0 {
+			m.Auth(aaa.USERNICK, m.Option(ice.MSG_USERNICK, ls[1]), aaa.USERNAME, m.Option(ice.MSG_USERNAME, ls[2]), aaa.USERROLE, m.Option(ice.MSG_USERROLE, ls[3]), CACHE, ls[0])
+		}
 	}
+	return cmds, aaa.Right(m, key, cmds)
 }
 
 const (
 	SERVE_START = "serve.start"
-	SERVE_LOGIN = "serve.login"
-	SERVE_CHECK = "serve.check"
 
-	REQUIRE_SRC     = "require/src/"
-	REQUIRE_USR     = "require/usr/"
-	REQUIRE_MODULES = "require/modules/"
+	HTTP   = "http"
+	HTTPS  = "https"
+	DOMAIN = "domain"
+	INDEX  = "index"
+	FORM   = "form"
+	BODY   = "body"
+	SSO    = "sso"
 
-	WEB_LOGIN = "_login"
-	DOMAIN    = "domain"
-	INDEX     = "index"
-	SSO       = "sso"
+	ApplicationJSON = "Application/json"
 )
 const SERVE = "serve"
 
@@ -187,78 +160,31 @@ func init() {
 				ice.Info.Localhost = mdb.Config(m, tcp.LOCALHOST) == ice.TRUE
 				cli.NodeInfo(m, ice.Info.Pathname, WORKER)
 			}},
+			DOMAIN: {Hand: func(m *ice.Message, arg ...string) {
+				kit.If(len(arg) > 0, func() { ice.Info.Domain, ice.Info.Localhost = arg[0], false })
+				m.Echo(ice.Info.Domain)
+			}},
 			cli.START: {Name: "start dev proto host port=9020 nodename username usernick", Hand: func(m *ice.Message, arg ...string) {
 				_serve_start(m)
 			}},
 			SERVE_START: {Hand: func(m *ice.Message, arg ...string) {
 				m.Go(func() {
 					msg := m.Spawn(kit.Dict(ice.LOG_DISABLE, ice.TRUE)).Sleep("10ms")
-					msg.Cmd(ssh.PRINTF, kit.Dict(nfs.CONTENT, ice.NL+ice.Render(msg, ice.RENDER_QRCODE, tcp.PublishLocalhost(msg, kit.Format("http://localhost:%s", msg.Option(tcp.PORT))))))
-					msg.Cmd(ssh.PROMPT)
+					msg.Cmd(ssh.PRINTF, kit.Dict(nfs.CONTENT, ice.NL+ice.Render(msg, ice.RENDER_QRCODE, tcp.PublishLocalhost(msg, kit.Format("http://localhost:%s", msg.Option(tcp.PORT)))))).Cmd(ssh.PROMPT)
 					opened := false
 					for i := 0; i < 3 && !opened; i++ {
-						msg.Sleep("1s").Cmd(SPACE, func(values ice.Maps) { kit.If(values[mdb.TYPE] == CHROME, func() { opened = true }) })
+						msg.Sleep("1s").Cmd(SPACE, func(value ice.Maps) { kit.If(value[mdb.TYPE] == CHROME, func() { opened = true }) })
 					}
 					kit.If(!opened, func() { cli.Opens(msg, _serve_address(msg)) })
 				})
 			}},
-			DOMAIN: {Hand: func(m *ice.Message, arg ...string) {
-				kit.If(len(arg) > 0, func() { ice.Info.Domain, ice.Info.Localhost = arg[0], false })
-				m.Echo(ice.Info.Domain)
-			}},
 		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,status,name,proto,host,port", tcp.LOCALHOST, ice.TRUE), mdb.ClearOnExitHashAction())},
-		PP(ice.PUBLISH): {Name: "/publish/", Help: "定制化", Actions: aaa.WhiteAction(), Hand: func(m *ice.Message, arg ...string) {
-			_share_local(m, ice.USR_PUBLISH, path.Join(arg...))
-		}},
-		PP(ice.REQUIRE): {Name: "/require/shylinux.com/x/volcanos/proto.js", Help: "代码库", Hand: func(m *ice.Message, arg ...string) {
-			if len(arg) < 4 {
-				m.RenderStatusBadRequest()
-				return
-			} else if path.Join(arg[:3]...) == ice.Info.Make.Module && nfs.ExistsFile(m, path.Join(arg[3:]...)) {
-				m.RenderDownload(path.Join(arg[3:]...))
-				return
-			}
-			p := path.Join(kit.Select(ice.USR_REQUIRE, m.Cmdx(cli.SYSTEM, "go", "env", "GOMODCACHE")), path.Join(arg...))
-			if !nfs.ExistsFile(m, p) {
-				if p = path.Join(ice.USR_REQUIRE, path.Join(arg...)); !nfs.ExistsFile(m, p) {
-					ls := strings.SplitN(path.Join(arg[:3]...), ice.AT, 2)
-					if v := kit.Select(ice.Info.Gomod[ls[0]], ls, 1); v == "" {
-						m.Cmd(cli.SYSTEM, "git", "clone", "https://"+ls[0], path.Join(ice.USR_REQUIRE, path.Join(arg[:3]...)))
-					} else {
-						m.Cmd(cli.SYSTEM, "git", "clone", "-b", v, "https://"+ls[0], path.Join(ice.USR_REQUIRE, path.Join(arg[:3]...)))
-					}
-				}
-			}
-			m.RenderDownload(p)
-		}},
-		PP(REQUIRE_SRC): {Name: "/require/src/", Help: "源代码", Actions: ice.MergeActions(ctx.CmdAction(), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
-			_share_local(m, ice.SRC, path.Join(arg...))
-		}},
-		PP(REQUIRE_USR): {Name: "/require/usr/", Help: "代码库", Hand: func(m *ice.Message, arg ...string) {
-			_share_local(m, ice.USR, path.Join(arg...))
-		}},
-		PP(REQUIRE_MODULES): {Name: "/require/modules/", Help: "依赖库", Hand: func(m *ice.Message, arg ...string) {
-			p := path.Join(ice.USR_MODULES, path.Join(arg...))
-			if !nfs.ExistsFile(m, p) {
-				m.Cmd(cli.SYSTEM, "npm", "install", arg[0], kit.Dict(cli.CMD_DIR, ice.USR))
-			}
-			m.RenderDownload(p)
-		}},
 	})
-	ice.AddMerges(func(c *ice.Context, key string, cmd *ice.Command, sub string, action *ice.Action) {
+	ice.AddMergeAction(func(c *ice.Context, key string, cmd *ice.Command, sub string, action *ice.Action) {
 		if strings.HasPrefix(sub, ice.PS) {
-			if sub = kit.Select(PP(key, sub), PP(key), sub == ice.PS); action.Hand == nil {
-				action.Hand = func(m *ice.Message, arg ...string) { m.Cmdy(key, arg) }
-			}
-			actions := ice.Actions{}
-			for k, v := range cmd.Actions {
-				switch k {
-				case ctx.COMMAND, ice.RUN:
-					actions[k] = v
-				}
-			}
-			c.Commands[sub] = &ice.Command{Name: sub, Help: cmd.Help, Actions: actions, Hand: action.Hand}
+			kit.If(action.Hand == nil, func() { action.Hand = cmd.Hand })
+			sub = kit.Select(P(key, sub), PP(key, sub), strings.HasSuffix(sub, ice.PS))
+			c.Commands[sub] = &ice.Command{Name: kit.Select(cmd.Name, action.Name), Actions: ctx.CmdAction(), Hand: action.Hand}
 		}
 	})
 }
-func ServeAction() ice.Actions { return gdb.EventsAction(SERVE_START, SERVE_LOGIN, SERVE_CHECK) }

@@ -12,14 +12,13 @@ import (
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
-	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
 
 func _volcanos(m *ice.Message, p ...string) string { return ice.USR_VOLCANOS + path.Join(p...) }
 func _publish(m *ice.Message, p ...string) string  { return ice.USR_PUBLISH + path.Join(p...) }
 func _require(m *ice.Message, p string) string {
-	return path.Join(ice.PS, strings.TrimPrefix(strings.Replace(p, ice.USR_MODULES, web.REQUIRE_MODULES, 1), ice.USR_VOLCANOS))
+	return path.Join(ice.PS, strings.TrimPrefix(strings.Replace(p, ice.USR_MODULES, "/require/modules/", 1), ice.USR_VOLCANOS))
 }
 func _webpack_css(m *ice.Message, css, js io.Writer, p string) {
 	fmt.Fprintln(css, kit.Format("/* %s */", _require(m, p)))

@@ -19,7 +19,7 @@ import (
 )
 
 func _share_link(m *ice.Message, p string) string {
-	return tcp.PublishLocalhost(m, MergeLink(m, kit.Select("", SHARE_LOCAL, !strings.HasPrefix(p, ice.PS) && !strings.HasPrefix(p, ice.HTTP))+p))
+	return tcp.PublishLocalhost(m, MergeLink(m, kit.Select("", SHARE_LOCAL, !strings.HasPrefix(p, ice.PS) && !strings.HasPrefix(p, HTTP))+p))
 }
 func _share_cache(m *ice.Message, arg ...string) {
 	if pod := m.Option(ice.POD); ctx.PodCmd(m, CACHE, arg[0]) {
@@ -27,7 +27,7 @@ func _share_cache(m *ice.Message, arg ...string) {
 			m.RenderResult(m.Append(mdb.TEXT))
 		} else {
 			m.Option(ice.POD, pod)
-			_share_local(m, m.Append(nfs.FILE))
+			ShareLocalFile(m, m.Append(nfs.FILE))
 		}
 	} else {
 		if m.Cmdy(CACHE, arg[0]); m.Append(nfs.FILE) == "" {
@@ -35,37 +35,6 @@ func _share_cache(m *ice.Message, arg ...string) {
 		} else {
 			m.RenderDownload(m.Append(nfs.FILE), m.Append(mdb.TYPE), m.Append(mdb.NAME))
 		}
-	}
-}
-func _share_local(m *ice.Message, arg ...string) {
-	p := path.Join(arg...)
-	switch ls := strings.Split(p, ice.PS); ls[0] {
-	case ice.ETC, ice.VAR:
-		if m.Warn(m.Option(ice.MSG_USERROLE) == aaa.VOID, ice.ErrNotRight, p) {
-			return
-		}
-	default:
-		if m.Option(ice.POD) == "" && !aaa.Right(m, ls) {
-			return
-		}
-	}
-	if m.Option(ice.POD) == "" {
-		m.RenderDownload(p)
-		return
-	}
-	pp := path.Join(ice.VAR_PROXY, m.Option(ice.POD), p)
-	cache, size := time.Now().Add(-time.Hour*24), int64(0)
-	if s, e := file.StatFile(pp); e == nil {
-		cache, size = s.ModTime(), s.Size()
-	}
-	if p == ice.BIN_ICE_BIN {
-		m.Option(ice.MSG_USERROLE, aaa.TECH)
-	}
-	m.Cmd(SPACE, m.Option(ice.POD), SPIDE, ice.DEV, SPIDE_RAW, MergeLink(m, SHARE_PROXY), SPIDE_PART, m.OptionSimple(ice.POD), nfs.PATH, p, nfs.SIZE, size, CACHE, cache.Format(ice.MOD_TIME), UPLOAD, "@"+p)
-	if file.ExistsFile(pp) {
-		m.RenderDownload(pp)
-	} else {
-		m.RenderDownload(p)
 	}
 }
 func _share_proxy(m *ice.Message) {
@@ -107,14 +76,6 @@ func init() {
 			LOGIN: {Hand: func(m *ice.Message, arg ...string) {
 				m.EchoQRCode(m.Cmd(SHARE, mdb.CREATE, mdb.TYPE, LOGIN).Option(mdb.LINK)).ProcessInner()
 			}},
-			SERVE_LOGIN: {Hand: func(m *ice.Message, arg ...string) {
-				if m.Option(ice.MSG_USERNAME) == "" && m.Option(SHARE) != "" {
-					switch msg := m.Cmd(SHARE, m.Option(SHARE)); msg.Append(mdb.TYPE) {
-					case STORM, FIELD:
-						msg.Table(func(value ice.Maps) { aaa.SessAuth(m, value) })
-					}
-				}
-			}},
 			ice.PS: {Hand: func(m *ice.Message, arg ...string) {
 				if m.Warn(len(arg) == 0 || arg[0] == "", ice.ErrNotValid, SHARE) {
 					return
@@ -132,7 +93,7 @@ func init() {
 					RenderMain(m)
 				}
 			}},
-		}, mdb.HashAction(mdb.FIELD, "time,hash,username,usernick,userrole,river,storm,type,name,text", mdb.EXPIRE, mdb.DAYS), ServeAction(), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.FIELD, "time,hash,username,usernick,userrole,river,storm,type,name,text", mdb.EXPIRE, mdb.DAYS), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {
 			if ctx.PodCmd(m, SHARE, arg) {
 				return
 			}
@@ -144,7 +105,7 @@ func init() {
 			}
 		}},
 		SHARE_CACHE: {Hand: func(m *ice.Message, arg ...string) { _share_cache(m, arg...) }},
-		SHARE_LOCAL: {Hand: func(m *ice.Message, arg ...string) { _share_local(m, arg...) }},
+		SHARE_LOCAL: {Hand: func(m *ice.Message, arg ...string) { ShareLocalFile(m, arg...) }},
 		SHARE_LOCAL_AVATAR: {Hand: func(m *ice.Message, arg ...string) {
 			m.RenderDownload(strings.TrimPrefix(m.CmdAppend(aaa.USER, m.Option(ice.MSG_USERNAME), aaa.AVATAR), SHARE_LOCAL))
 		}},
@@ -157,4 +118,35 @@ func init() {
 }
 func IsNotValidShare(m *ice.Message, time string) bool {
 	return m.Warn(time < m.Time(), ice.ErrNotValid, m.Option(SHARE), time, m.Time(), logs.FileLineMeta(2))
+}
+func ShareLocalFile(m *ice.Message, arg ...string) {
+	p := path.Join(arg...)
+	switch ls := strings.Split(p, ice.PS); ls[0] {
+	case ice.ETC, ice.VAR:
+		if m.Warn(m.Option(ice.MSG_USERROLE) == aaa.VOID, ice.ErrNotRight, p) {
+			return
+		}
+	default:
+		if m.Option(ice.POD) == "" && !aaa.Right(m, ls) {
+			return
+		}
+	}
+	if m.Option(ice.POD) == "" {
+		m.RenderDownload(p)
+		return
+	}
+	pp := path.Join(ice.VAR_PROXY, m.Option(ice.POD), p)
+	cache, size := time.Now().Add(-time.Hour*24), int64(0)
+	if s, e := file.StatFile(pp); e == nil {
+		cache, size = s.ModTime(), s.Size()
+	}
+	if p == ice.BIN_ICE_BIN {
+		m.Option(ice.MSG_USERROLE, aaa.TECH)
+	}
+	m.Cmd(SPACE, m.Option(ice.POD), SPIDE, ice.DEV, SPIDE_RAW, MergeLink(m, SHARE_PROXY), SPIDE_PART, m.OptionSimple(ice.POD), nfs.PATH, p, nfs.SIZE, size, CACHE, cache.Format(ice.MOD_TIME), UPLOAD, "@"+p)
+	if file.ExistsFile(pp) {
+		m.RenderDownload(pp)
+	} else {
+		m.RenderDownload(p)
+	}
 }

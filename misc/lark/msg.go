@@ -60,7 +60,7 @@ const MSG = "msg"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		web.WEB_LOGIN: {Hand: func(m *ice.Message, arg ...string) {
+		"_login": {Hand: func(m *ice.Message, arg ...string) {
 			m.Option(ice.MSG_USERZONE, LARK)
 		}},
 		"/msg": {Name: "/msg", Help: "聊天消息", Hand: func(m *ice.Message, arg ...string) {
@@ -83,7 +83,7 @@ func init() {
 		}},
 		MSG: {Name: "msg", Help: "聊天消息", Actions: ice.Actions{
 			"location": {Hand: func(m *ice.Message, arg ...string) {}},
-			"image": {Hand: func(m *ice.Message, arg ...string) {}},
+			"image":    {Hand: func(m *ice.Message, arg ...string) {}},
 			"card": {Hand: func(m *ice.Message, arg ...string) {
 				kit.For(kit.Value(m.Optionv(ice.MSG_USERDATA), "action.value"), func(k string, v string) { m.Option(k, v) })
 				m.Cmdy(TALK, kit.Parse(nil, "", kit.Split(m.Option(ice.CMD))...))

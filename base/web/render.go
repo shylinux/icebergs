@@ -38,7 +38,7 @@ func Render(m *ice.Message, cmd string, args ...ice.Any) bool {
 	case ice.RENDER_REDIRECT: // url [arg...]
 		http.Redirect(m.W, m.R, kit.MergeURL(arg[0], arg[1:]), http.StatusTemporaryRedirect)
 	case ice.RENDER_DOWNLOAD: // file [type [name]]
-		if strings.HasPrefix(arg[0], ice.HTTP) {
+		if strings.HasPrefix(arg[0], HTTP) {
 			RenderRedirect(m, arg[0])
 			break
 		}

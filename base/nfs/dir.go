@@ -237,9 +237,9 @@ func Dir(m *ice.Message, sort string) *ice.Message {
 func DirDeepAll(m *ice.Message, root, dir string, cb func(ice.Maps), arg ...string) *ice.Message {
 	m.Options(DIR_TYPE, CAT, DIR_ROOT, root, DIR_DEEP, ice.TRUE)
 	defer m.Options(DIR_TYPE, "", DIR_ROOT, "", DIR_DEEP, "")
-	if msg := m.Cmd(DIR, dir, arg).Table(cb); cb == nil {
+	if msg := m.Cmd(DIR, dir, arg); cb == nil {
 		return m.Copy(msg)
 	} else {
-		return msg
+		return msg.Table(cb)
 	}
 }

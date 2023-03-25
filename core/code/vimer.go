@@ -48,6 +48,14 @@ func _vimer_make(m *ice.Message, dir string, msg *ice.Message) {
 const VIMER = "vimer"
 
 func init() {
+	web.Index.MergeCommands(ice.Commands{
+		web.PP(ice.REQUIRE, ice.SRC): {Name: "/require/src/", Help: "源代码", Actions: ice.MergeActions(ctx.CmdAction(), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
+			web.ShareLocalFile(m, ice.SRC, path.Join(arg...))
+		}},
+		web.PP(ice.REQUIRE, ice.USR): {Name: "/require/usr/", Help: "代码库", Hand: func(m *ice.Message, arg ...string) {
+			web.ShareLocalFile(m, ice.USR, path.Join(arg...))
+		}},
+	})
 	Index.MergeCommands(ice.Commands{
 		VIMER: {Name: "vimer path=src/@key file=main.go line=1 list", Help: "编辑器", Meta: kit.Dict(ctx.STYLE, INNER), Actions: ice.MergeActions(ice.Actions{
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
@@ -180,7 +188,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{TEMPLATE: {Name: "template type name text auto", Help: "模板", Actions: mdb.RenderAction()}})
 	Index.MergeCommands(ice.Commands{COMPLETE: {Name: "complete type name text auto", Help: "补全", Actions: mdb.RenderAction()}})
 	Index.MergeCommands(ice.Commands{NAVIGATE: {Name: "navigate type name text auto", Help: "跳转", Actions: mdb.RenderAction()}})
-	ice.AddMerges(func(c *ice.Context, key string, cmd *ice.Command, sub string, action *ice.Action) ice.Handler {
+	ice.AddMergeAction(func(c *ice.Context, key string, cmd *ice.Command, sub string, action *ice.Action) ice.Handler {
 		switch sub {
 		case TEMPLATE, COMPLETE, NAVIGATE:
 			return func(m *ice.Message, arg ...string) { m.Cmd(sub, mdb.CREATE, key, m.PrefixKey()) }

@@ -19,10 +19,11 @@ const (
 	FAILURE = "failure"
 	PROCESS = "process"
 
-	HTTP = "http"
-	AUTO = "auto"
-	LIST = "list"
-	BACK = "back"
+	HTTPS = "https"
+	HTTP  = "http"
+	AUTO  = "auto"
+	LIST  = "list"
+	BACK  = "back"
 
 	BASE = "base"
 	CORE = "core"

@@ -58,6 +58,12 @@ func (m *Message) Go(cb func(), arg ...Any) {
 	task.Put(arg[0], func(task *task.Task) { m.TryCatch(m, true, func(m *Message) { cb() }) })
 }
 
+func (m *Message) Cmd(arg ...Any) *Message  { return m._command(arg...) }
+func (m *Message) Cmdy(arg ...Any) *Message { return m.Copy(m._command(arg...)) }
+func (m *Message) Cmdx(arg ...Any) string {
+	res := kit.Select("", m._command(arg...).meta[MSG_RESULT], 0)
+	return kit.Select("", res, res != ErrWarn)
+}
 func (m *Message) CmdHand(cmd *Command, key string, arg ...string) *Message {
 	if m._cmd, m._key = cmd, key; cmd == nil {
 		return m

@@ -75,42 +75,25 @@ func (m *Message) StatusTimeCountTotal(arg ...Any) *Message {
 	return m.Status(TIME, m.Time(), kit.MDB_COUNT, kit.Split(m.FormatSize())[0], kit.MDB_TOTAL, arg, kit.MDB_COST, m.FormatCost())
 }
 
-func (m *Message) Process(cmd string, arg ...Any) {
-	m.Options(MSG_PROCESS, cmd).Option(PROCESS_ARG, arg...)
+func (m *Message) Process(cmd string, arg ...Any) *Message {
+	return m.Options(MSG_PROCESS, cmd, PROCESS_ARG, kit.Simple(arg...))
 }
-func (m *Message) ProcessLocation(arg ...Any) {
-	m.Process(PROCESS_LOCATION, arg...)
-}
+func (m *Message) ProcessLocation(arg ...Any) { m.Process(PROCESS_LOCATION, arg...) }
 func (m *Message) ProcessReplace(url string, arg ...Any) {
 	m.Process(PROCESS_REPLACE, kit.MergeURL(url, arg...))
 }
-func (m *Message) ProcessHistory(arg ...Any) {
-	m.Process(PROCESS_HISTORY, arg...)
-}
-func (m *Message) ProcessConfirm(arg ...Any) {
-	m.Process(PROCESS_CONFIRM, arg...)
-}
+func (m *Message) ProcessHistory(arg ...Any) { m.Process(PROCESS_HISTORY, arg...) }
+func (m *Message) ProcessConfirm(arg ...Any) { m.Process(PROCESS_CONFIRM, arg...) }
 func (m *Message) ProcessRefresh(arg ...string) {
-	m.Process(PROCESS_REFRESH)
-	if d, e := time.ParseDuration(kit.Select("30ms", arg, 0)); e == nil {
-		m.Option(PROCESS_ARG, int(d/time.Millisecond))
-	}
+	m.Process(PROCESS_REFRESH).Option(PROCESS_ARG, int(kit.Duration(kit.Select("30ms", arg, 0))/time.Millisecond))
 }
-func (m *Message) ProcessRewrite(arg ...Any) {
-	m.Process(PROCESS_REWRITE, arg...)
-}
-func (m *Message) ProcessDisplay(arg ...Any) {
-	m.Process(PROCESS_DISPLAY)
-	m.Option(MSG_DISPLAY, arg...)
-}
-func (m *Message) ProcessField(arg ...Any) {
-	m.Process(PROCESS_FIELD)
-	m.Option(FIELD_PREFIX, arg...)
-}
-func (m *Message) ProcessInner()           { m.Process(PROCESS_INNER) }
-func (m *Message) ProcessAgain()           { m.Process(PROCESS_AGAIN) }
-func (m *Message) ProcessHold(text ...Any) { m.Process(PROCESS_HOLD, text...) }
-func (m *Message) ProcessBack()            { m.Process(PROCESS_BACK) }
-func (m *Message) ProcessRich(arg ...Any)  { m.Process(PROCESS_RICH, arg...) }
-func (m *Message) ProcessGrow(arg ...Any)  { m.Process(PROCESS_GROW, arg...) }
-func (m *Message) ProcessOpen(url string)  { m.Process(PROCESS_OPEN, url) }
+func (m *Message) ProcessRewrite(arg ...Any) { m.Process(PROCESS_REWRITE, arg...) }
+func (m *Message) ProcessDisplay(arg ...Any) { m.Process(PROCESS_DISPLAY).Option(MSG_DISPLAY, arg...) }
+func (m *Message) ProcessField(arg ...Any)   { m.Process(PROCESS_FIELD).Option(FIELD_PREFIX, arg...) }
+func (m *Message) ProcessInner()             { m.Process(PROCESS_INNER) }
+func (m *Message) ProcessAgain()             { m.Process(PROCESS_AGAIN) }
+func (m *Message) ProcessHold(text ...Any)   { m.Process(PROCESS_HOLD, text...) }
+func (m *Message) ProcessBack()              { m.Process(PROCESS_BACK) }
+func (m *Message) ProcessRich(arg ...Any)    { m.Process(PROCESS_RICH, arg...) }
+func (m *Message) ProcessGrow(arg ...Any)    { m.Process(PROCESS_GROW, arg...) }
+func (m *Message) ProcessOpen(url string)    { m.Process(PROCESS_OPEN, url) }

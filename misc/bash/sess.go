@@ -22,7 +22,7 @@ const SESS = "sess"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		web.WEB_LOGIN: {Hand: func(m *ice.Message, arg ...string) {
+		"_login": {Hand: func(m *ice.Message, arg ...string) {
 			if f, _, e := m.R.FormFile(SUB); e == nil {
 				defer f.Close()
 				if b, e := ioutil.ReadAll(f); e == nil {

@@ -112,7 +112,7 @@ func PushPodCmd(m *ice.Message, cmd string, arg ...string) {
 
 type Message interface {
 	Option(key string, arg ...ice.Any) string
-	PrefixKey() string
+	PrefixKey(...string) string
 }
 
 func OptionAgentIs(m Message, arg ...string) bool {
@@ -128,7 +128,7 @@ func OptionUserWeb(m Message) *url.URL {
 }
 func MergeURL2(m Message, url string, arg ...ice.Any) string {
 	if m.Option(ice.MSG_USERWEB) == "" {
-		return kit.MergeURL2(ice.HTTP+"://"+ice.Pulse.Cmd(tcp.HOST).Append(aaa.IP)+":"+ice.Pulse.Cmd(SERVE).Append(tcp.PORT), url, arg...)
+		return kit.MergeURL2(HTTP+"://"+ice.Pulse.Cmd(tcp.HOST).Append(aaa.IP)+":"+ice.Pulse.Cmd(SERVE).Append(tcp.PORT), url, arg...)
 	}
 	return kit.MergeURL2(m.Option(ice.MSG_USERWEB), url, arg...)
 }

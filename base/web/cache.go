@@ -131,7 +131,7 @@ func init() {
 			}},
 			ice.RENDER_DOWNLOAD: {Hand: func(m *ice.Message, arg ...string) {
 				p := kit.Select(arg[0], arg, 1)
-				p = kit.Select("", SHARE_LOCAL, !strings.HasPrefix(p, ice.PS) && !strings.HasPrefix(p, ice.HTTP)) + p
+				p = kit.Select("", SHARE_LOCAL, !strings.HasPrefix(p, ice.PS) && !strings.HasPrefix(p, HTTP)) + p
 				args := []string{ice.POD, m.Option(ice.MSG_USERPOD), "filename", kit.Select("", arg[0], len(arg) > 1)}
 				m.Echo(fmt.Sprintf(`<a href="%s" download="%s">%s</a>`, MergeURL2(m, p, args), path.Base(arg[0]), arg[0]))
 			}},
@@ -155,7 +155,7 @@ func init() {
 			}
 		}},
 	})
-	ice.AddMerges(func(c *ice.Context, key string, cmd *ice.Command, sub string, action *ice.Action) {
+	ice.AddMergeAction(func(c *ice.Context, key string, cmd *ice.Command, sub string, action *ice.Action) {
 		switch sub {
 		case UPLOAD:
 			if c.Name == WEB && key == CACHE {

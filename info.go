@@ -57,7 +57,7 @@ var Info = struct {
 	Log:    func(m *Message, p, l, s string) {},
 }
 
-func AddMerges(h ...Any) { Info.merges = append(Info.merges, h...) }
+func AddMergeAction(h ...Any) { Info.merges = append(Info.merges, h...) }
 
 func MergeHand(hand ...Handler) Handler {
 	if len(hand) == 0 {

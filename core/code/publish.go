@@ -65,6 +65,11 @@ func _publish_contexts(m *ice.Message, arg ...string) {
 const PUBLISH = "publish"
 
 func init() {
+	web.Index.MergeCommands(ice.Commands{
+		web.PP(ice.PUBLISH): {Name: "/publish/", Help: "定制化", Actions: aaa.WhiteAction(), Hand: func(m *ice.Message, arg ...string) {
+			web.ShareLocalFile(m, ice.USR_PUBLISH, path.Join(arg...))
+		}},
+	})
 	Index.MergeCommands(ice.Commands{
 		PUBLISH: {Name: "publish path auto create volcanos icebergs intshell", Help: "发布", Actions: ice.MergeActions(ice.Actions{
 			ice.VOLCANOS: {Help: "火山架", Hand: func(m *ice.Message, arg ...string) {

@@ -125,7 +125,7 @@ func _space_echo(m *ice.Message, source, target []string, c *websocket.Conn) {
 }
 func _space_send(m *ice.Message, name string, arg ...string) {
 	wait, done := m.Wait(func(msg *ice.Message, arg ...string) {
-		m.Copy(msg).Cost(kit.Format("%v->%v %v %v", m.Optionv(ice.MSG_SOURCE), m.Optionv(ice.MSG_TARGET), m.Detailv(), m.FormatSize()))
+		m.Cost(kit.Format("%v->[%v] %v %v", m.Optionv(ice.MSG_SOURCE), name, m.Detailv(), msg.FormatSize())).Copy(msg)
 	})
 	h := mdb.HashCreate(m.Spawn(), mdb.TYPE, "send", mdb.NAME, kit.Keys(name, m.Target().ID()), mdb.TEXT, kit.Join(arg, ice.SP), kit.Dict(mdb.TARGET, done))
 	defer mdb.HashRemove(m, mdb.HASH, h)
@@ -174,7 +174,7 @@ func init() {
 						case MASTER:
 							m.PushSearch(mdb.TEXT, m.Cmdv(SPIDE, value[mdb.NAME], CLIENT_ORIGIN), value)
 						case SERVER:
-							m.PushSearch(mdb.TEXT, tcp.PublishLocalhost(m, strings.Split(MergePod(m, value[mdb.NAME]), ice.QS)[0]), value)
+							m.PushSearch(mdb.TEXT, MergePods(m, value[mdb.NAME]), value)
 						}
 					})
 				} else if arg[0] == mdb.FOREACH && arg[1] == ssh.SHELL {

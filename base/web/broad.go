@@ -75,7 +75,7 @@ func init() {
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == mdb.FOREACH && arg[1] == "" {
 					host, domain := m.Cmd(tcp.HOST).Append(aaa.IP), OptionUserWeb(m).Hostname()
-					m.Cmd("", ice.OptionFields(""), func(value ice.Maps) {
+					m.Cmds("", func(value ice.Maps) {
 						if value[tcp.HOST] == host {
 							value[tcp.HOST] = domain
 						}

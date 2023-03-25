@@ -38,10 +38,8 @@ func _dream_show(m *ice.Message, name string) {
 	if m.Warn(name == "", ice.ErrNotValid, mdb.NAME) {
 		return
 	}
-	if !strings.Contains(name, "-") || !strings.HasPrefix(name, "20") {
-		name = m.Time("20060102-") + name
-	}
-	defer m.ProcessOpen(MergePod(m, m.Option(mdb.NAME, name)))
+	kit.If(!strings.Contains(name, "-") || !strings.HasPrefix(name, "20"), func() { name = m.Time("20060102-") + name })
+	defer m.ProcessOpen(MergePods(m, m.Option(mdb.NAME, name)))
 	p := path.Join(ice.USR_LOCAL_WORK, name)
 	if pid := m.Cmdx(nfs.CAT, path.Join(p, ice.Info.PidPath), kit.Dict(ice.MSG_USERROLE, aaa.TECH)); pid != "" && nfs.ExistsFile(m, "/proc/"+pid) {
 		m.Info("already exists %v", pid)
@@ -52,15 +50,15 @@ func _dream_show(m *ice.Message, name string) {
 	}
 	_dream_template(m, p)
 	defer ToastProcess(m)()
-	defer m.Sleep3s()
+	defer m.Sleep300ms()
 	m.Options(cli.CMD_DIR, kit.Path(p), cli.CMD_ENV, kit.Simple(
-		cli.CTX_OPS, "http://localhost:"+m.CmdAppend(SERVE, tcp.PORT), cli.CTX_LOG, ice.VAR_LOG_BOOT_LOG, cli.CTX_PID, ice.VAR_LOG_ICE_PID,
+		cli.CTX_OPS, "http://localhost:"+m.Cmdv(SERVE, tcp.PORT), cli.CTX_LOG, ice.VAR_LOG_BOOT_LOG, cli.CTX_PID, ice.VAR_LOG_ICE_PID,
 		cli.PATH, cli.BinPath(p, ""), cli.USER, ice.Info.Username, kit.EnvSimple(cli.HOME, cli.TERM, cli.SHELL), mdb.Configv(m, cli.ENV),
 	), cli.CMD_OUTPUT, path.Join(p, ice.VAR_LOG_BOOT_LOG))
 	defer m.Options(cli.CMD_DIR, "", cli.CMD_ENV, "", cli.CMD_OUTPUT, "")
 	gdb.Event(m, DREAM_CREATE, m.OptionSimple(mdb.NAME, mdb.TYPE))
 	m.Cmd(cli.DAEMON, kit.Select(kit.Path(os.Args[0]), cli.SystemFind(m, ice.ICE_BIN, nfs.PWD+path.Join(p, ice.BIN), nfs.PWD+ice.BIN)),
-		SPACE, tcp.DIAL, ice.DEV, ice.OPS, mdb.TYPE, WORKER, m.OptionSimple(mdb.NAME, RIVER), cli.DAEMON, ice.OPS)
+		SPACE, tcp.DIAL, ice.DEV, ice.OPS, mdb.TYPE, WORKER, m.OptionSimple(mdb.NAME), cli.DAEMON, ice.OPS)
 }
 func _dream_template(m *ice.Message, p string) {
 	if m.Option(nfs.REPOS) != "" {
@@ -71,21 +69,20 @@ func _dream_template(m *ice.Message, p string) {
 	if m.Option(nfs.TEMPLATE) == "" {
 		return
 	}
-	for _, file := range []string{
-		ice.ETC_MISS_SH, ice.MAKEFILE, ice.GO_MOD, ice.GO_SUM,
-		ice.SRC_MAIN_GO, ice.SRC_MAIN_SHY, ice.SRC_MAIN_JS,
-		ice.README_MD,
-	} {
+	kit.For([]string{ice.ETC_MISS_SH,
+		ice.LICENSE, ice.MAKEFILE, ice.README_MD, ice.GO_MOD, ice.GO_SUM,
+		ice.SRC_MAIN_GO, ice.SRC_MAIN_SH, ice.SRC_MAIN_SHY, ice.SRC_MAIN_JS,
+	}, func(file string) {
 		if nfs.ExistsFile(m, path.Join(p, file)) {
-			continue
+			return
 		}
 		switch m.Cmdy(nfs.COPY, path.Join(p, file), path.Join(ice.USR_LOCAL_WORK, m.Option(nfs.TEMPLATE), file)); file {
 		case ice.GO_MOD:
 			kit.Rewrite(path.Join(p, file), func(line string) string {
-				return kit.Select(line, "module "+m.Option(mdb.NAME), strings.HasPrefix(line, "module"))
+				return kit.Select(line, nfs.MODULE+ice.SP+m.Option(mdb.NAME), strings.HasPrefix(line, nfs.MODULE))
 			})
 		}
-	}
+	})
 }
 
 const (
@@ -104,9 +101,7 @@ func init() {
 		DREAM: {Name: "dream name path auto create", Help: "梦想家", Actions: ice.MergeActions(ice.Actions{
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == mdb.FOREACH && arg[1] == "" {
-					m.Cmd("", ice.OptionFields(), func(value ice.Maps) {
-						m.PushSearch(mdb.TEXT, MergePods(m, value[mdb.NAME]), value)
-					})
+					m.Cmds("", func(value ice.Maps) { m.PushSearch(mdb.TEXT, MergePods(m, value[mdb.NAME]), value) })
 				}
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
@@ -117,8 +112,7 @@ func init() {
 					if msg := m.Cmd(SPIDE, ice.OPS, SPIDE_MSG, UserHost(m)+"/x/list"); !msg.IsErr() {
 						m.Copy(msg)
 					}
-					for _, dev := range []string{ice.OPS, ice.DEV} {
-						// for _, dev := range []string{ice.OPS, ice.DEV, ice.SHY} {
+					for _, dev := range []string{ice.OPS, ice.DEV, ice.SHY} {
 						if msg := m.Cmd(SPIDE, dev, SPIDE_MSG, "/x/list"); !msg.IsErr() {
 							m.Copy(msg)
 						}
@@ -137,16 +131,14 @@ func init() {
 			cli.STOP: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(SPACE, mdb.MODIFY, m.OptionSimple(mdb.NAME), mdb.STATUS, cli.STOP)
 				m.Go(func() { m.Cmd(SPACE, m.Option(mdb.NAME), ice.EXIT) })
-				m.Sleep300ms()
+				m.Sleep30ms()
 			}},
 			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
 				nfs.Trash(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME)))
 			}},
 			DREAM_CLOSE: {Hand: func(m *ice.Message, arg ...string) {
-				if m.Option(cli.DAEMON) == ice.OPS {
-					if m.CmdAppend(SPACE, m.Option(mdb.NAME), mdb.STATUS) != cli.STOP {
-						m.Go(func() { m.Sleep3s(DREAM, cli.START, m.OptionSimple(mdb.NAME)) })
-					}
+				if m.Option(cli.DAEMON) == ice.OPS && m.Cmdv(SPACE, m.Option(mdb.NAME), mdb.STATUS) != cli.STOP {
+					m.Go(func() { m.Sleep30ms(DREAM, cli.START, m.OptionSimple(mdb.NAME)) })
 				}
 			}},
 			DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
@@ -155,7 +147,7 @@ func init() {
 					m.PushButton(OPEN)
 				}
 			}},
-			OPEN: {Hand: func(m *ice.Message, arg ...string) { ctx.ProcessOpen(m, MergePod(m, m.Option(mdb.NAME), arg)) }},
+			OPEN: {Hand: func(m *ice.Message, arg ...string) { ctx.ProcessOpen(m, MergePods(m, m.Option(mdb.NAME), arg)) }},
 		}, ctx.CmdAction(), DreamAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				_dream_list(m)

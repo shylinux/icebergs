@@ -2,69 +2,35 @@ package web
 
 import (
 	"net"
-	"strings"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
 	kit "shylinux.com/x/toolkits"
-	"shylinux.com/x/toolkits/logs"
 )
 
-func _broad_addr(m *ice.Message, host, port string) *net.UDPAddr {
-	if addr, e := net.ResolveUDPAddr("udp4", kit.Format("%s:%s", host, port)); !m.Warn(e, ice.ErrNotValid, host, port, logs.FileLineMeta(2)) {
-		return addr
-	}
-	return nil
-}
-func _broad_send(m *ice.Message, host, port string, remote_host, remote_port string, arg ...string) {
-	if s, e := net.DialUDP("udp4", nil, _broad_addr(m, remote_host, remote_port)); !m.Warn(e, ice.ErrNotValid) {
-		defer s.Close()
-		msg := m.Spawn(kit.Dict(tcp.HOST, host, tcp.PORT, port), kit.Dict(arg))
-		m.Logs(tcp.SEND, BROAD, msg.FormatMeta(), nfs.TO, remote_host+ice.DF+remote_port)
-		s.Write([]byte(msg.FormatMeta()))
-	}
-}
-func _broad_serve(m *ice.Message, port string) {
-	m.Cmd(tcp.HOST, func(value ice.Maps) {
-		_broad_send(m, value[aaa.IP], port, "255.255.255.255", "9020", mdb.TYPE, ice.Info.NodeType, mdb.NAME, ice.Info.NodeName)
+func _broad_send(m *ice.Message, remote_host, remote_port string, host, port string, arg ...string) {
+	m.Cmd(tcp.CLIENT, tcp.DIAL, mdb.TYPE, tcp.UDP4, tcp.HOST, remote_host, tcp.PORT, kit.Select("9020", remote_port), func(s *net.UDPConn) {
+		msg := m.Spawn(kit.Dict(tcp.HOST, host, tcp.PORT, port, arg))
+		msg.Logs(tcp.SEND, BROAD, msg.FormatsMeta(nil), nfs.TO, remote_host+ice.DF+remote_port).FormatsMeta(s)
 	})
-	m.Cmd(tcp.SERVER, tcp.LISTEN, mdb.TYPE, "udp4", m.OptionSimple(mdb.NAME, tcp.HOST, tcp.PORT), func(l *net.UDPConn) {
-		buf := make([]byte, ice.MOD_BUFS)
-		for {
-			n, from, e := l.ReadFromUDP(buf[:])
-			if e != nil {
-				break
-			}
-			m.Logs(tcp.RECV, BROAD, string(buf[:n]), nfs.FROM, from)
-			msg := m.Spawn(buf[:n])
-			if msg.Option(mdb.ZONE) == "echo" {
-				_broad_save(m, msg)
-				continue
-			}
-			if remote := _broad_addr(m, msg.Option(tcp.HOST), msg.Option(tcp.PORT)); remote != nil {
-				m.Cmd(BROAD, func(value ice.Maps) {
-					m.Logs(tcp.SEND, BROAD, kit.Format(value), nfs.TO, kit.Format(remote))
-					l.WriteToUDP([]byte(m.Spawn(value, kit.Dict(mdb.ZONE, "echo")).FormatMeta()), remote)
-				})
-				_broad_save(m, msg)
-			}
+}
+func _broad_serve(m *ice.Message) {
+	m.GoSleep("10ms", tcp.HOST, func(value ice.Maps) {
+		_broad_send(m, "", "", value[aaa.IP], m.Option(tcp.PORT), gdb.EVENT, tcp.LISTEN, mdb.NAME, ice.Info.NodeName, mdb.TYPE, ice.Info.NodeType)
+	})
+	m.Cmd(tcp.SERVER, tcp.LISTEN, mdb.TYPE, tcp.UDP4, m.OptionSimple(mdb.NAME, tcp.HOST, tcp.PORT), func(from *net.UDPAddr, buf []byte) {
+		msg := m.Spawn(buf).Logs(tcp.RECV, BROAD, string(buf), nfs.FROM, from)
+		if mdb.HashCreate(m, msg.OptionSimple(kit.Simple(msg.Optionv(ice.MSG_OPTION))...)); msg.Option(gdb.EVENT) == tcp.LISTEN {
+			m.Cmds("", func(value ice.Maps) {
+				_broad_send(m, msg.Option(tcp.HOST), msg.Option(tcp.PORT), value[tcp.HOST], value[tcp.PORT], mdb.TYPE, value[mdb.TYPE], mdb.NAME, value[mdb.NAME])
+			})
 		}
 	})
-}
-func _broad_save(m, msg *ice.Message) {
-	save := false
-	m.Cmd(tcp.HOST, func(value ice.Maps) {
-		if strings.Split(msg.Option(tcp.HOST), ice.PT)[0] == strings.Split(value[aaa.IP], ice.PT)[0] {
-			save = true
-		}
-	})
-	if save {
-		mdb.HashCreate(m, msg.OptionSimple(kit.Simple(msg.Optionv(ice.MSG_OPTION))...))
-	}
 }
 
 const BROAD = "broad"
@@ -76,10 +42,7 @@ func init() {
 				if arg[0] == mdb.FOREACH && arg[1] == "" {
 					host, domain := m.Cmd(tcp.HOST).Append(aaa.IP), OptionUserWeb(m).Hostname()
 					m.Cmds("", func(value ice.Maps) {
-						if value[tcp.HOST] == host {
-							value[tcp.HOST] = domain
-						}
-						switch value[mdb.TYPE] {
+						switch kit.If(value[tcp.HOST] == host, func() { value[tcp.HOST] = domain }); value[mdb.TYPE] {
 						case "sshd":
 							m.PushSearch(mdb.NAME, ice.Render(m, ice.RENDER_SCRIPT, kit.Format("ssh -p %s %s@%s", value[tcp.PORT], m.Option(ice.MSG_USERNAME), value[tcp.HOST])),
 								mdb.TEXT, kit.Format("http://%s:%s", value[tcp.HOST], value[tcp.PORT]), value)
@@ -89,18 +52,12 @@ func init() {
 					})
 				}
 			}},
-			SERVE: {Name: "serve port=9020", Hand: func(m *ice.Message, arg ...string) {
-				_broad_serve(m, m.Option(tcp.PORT))
-			}},
+			SERVE_START: {Hand: func(m *ice.Message, arg ...string) { m.Go(func() { m.Cmd("", SERVE, m.OptionSimple(tcp.PORT)) }) }},
+			SERVE:       {Name: "serve port=9020", Hand: func(m *ice.Message, arg ...string) { _broad_serve(m) }},
 			OPEN: {Hand: func(m *ice.Message, arg ...string) {
 				ctx.ProcessOpen(m, kit.Format("http://%s:%s", m.Option(tcp.HOST), m.Option(tcp.PORT)))
 			}},
-			tcp.SEND: {Hand: func(m *ice.Message, arg ...string) {
-				_broad_send(m, "", "", "255.255.255.255", "9020", arg...)
-			}},
-			SERVE_START: {Hand: func(m *ice.Message, arg ...string) {
-				m.Go(func() { m.Cmd(BROAD, SERVE, m.OptionSimple(tcp.PORT)) })
-			}},
+			tcp.SEND: {Hand: func(m *ice.Message, arg ...string) { _broad_send(m, "", "", "", "", arg...) }},
 		}, mdb.HashAction(mdb.SHORT, "host,port", mdb.FIELD, "time,hash,type,name,host,port", mdb.ACTION, OPEN), mdb.ClearOnExitHashAction())},
 	})
 }

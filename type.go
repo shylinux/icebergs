@@ -249,7 +249,7 @@ func (m *Message) Spawn(arg ...Any) *Message {
 	for _, val := range arg {
 		switch val := val.(type) {
 		case []byte:
-			json.Unmarshal(val, &msg.meta)
+			m.Warn(json.Unmarshal(val, &msg.meta))
 		case Option:
 			msg.Option(val.Name, val.Value)
 		case Maps:

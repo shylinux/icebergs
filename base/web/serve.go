@@ -171,6 +171,7 @@ func init() {
 			SERVE_START: {Hand: func(m *ice.Message, arg ...string) {
 				m.Go(func() {
 					ssh.PrintQRCode(m, tcp.PublishLocalhost(m, _serve_address(m)))
+					return
 					opened := false
 					for i := 0; i < 3 && !opened; i++ {
 						m.Sleep("1s").Cmd(SPACE, func(value ice.Maps) { kit.If(value[mdb.TYPE] == CHROME, func() { opened = true }) })

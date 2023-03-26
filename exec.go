@@ -54,6 +54,7 @@ func (m *Message) Sleep(d Any, arg ...Any) *Message {
 func (m *Message) Sleep300ms(arg ...Any) *Message { return m.Sleep("300ms", arg...) }
 func (m *Message) Sleep30ms(arg ...Any) *Message  { return m.Sleep("30ms", arg...) }
 func (m *Message) Sleep3s(arg ...Any) *Message    { return m.Sleep("3s", arg...) }
+func (m *Message) GoSleep(t string, arg ...Any)   { m.Go(func() { m.Sleep(t).Cmd(arg...) }) }
 func (m *Message) Go(cb func(), arg ...Any) {
 	kit.If(len(arg) == 0, func() { arg = append(arg, logs.FileLine(cb)) })
 	task.Put(arg[0], func(task *task.Task) { m.TryCatch(m, true, func(m *Message) { cb() }) })

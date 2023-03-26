@@ -6,22 +6,15 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/mdb"
 	kit "shylinux.com/x/toolkits"
-	"shylinux.com/x/toolkits/logs"
 )
 
-func _broad_addr(m *ice.Message, host, port string) *net.UDPAddr {
-	if addr, e := net.ResolveUDPAddr("udp4", kit.Format("%s:%s", host, port)); !m.Warn(e, ice.ErrNotValid, host, port, logs.FileLineMeta(2)) {
-		return addr
-	}
-	return nil
-}
+type Stat struct{ nc, nr, nw int }
 
 type Listener struct {
+	net.Listener
 	m *ice.Message
 	h string
 	s *Stat
-
-	net.Listener
 }
 
 func (l Listener) Accept() (net.Conn, error) {
@@ -34,23 +27,9 @@ func (l Listener) Close() error {
 	return l.Listener.Close()
 }
 
-func _server_udp(m *ice.Message, arg ...string) {
-	l, e := net.ListenUDP("udp4", _broad_addr(m, "0.0.0.0", m.Option(PORT)))
-	defer l.Close()
-	mdb.HashCreate(m, arg, kit.Dict(mdb.TARGET, l), STATUS, kit.Select(ERROR, OPEN, e == nil), ERROR, kit.Format(e))
-	switch cb := m.OptionCB("").(type) {
-	case func(*net.UDPConn):
-		m.Assert(e)
-		cb(l)
-	}
-}
 func _server_listen(m *ice.Message, arg ...string) {
-	if m.Option("type") == "udp4" {
-		_server_udp(m, arg...)
-		return
-	}
-	l, e := net.Listen(TCP, m.Option(HOST)+":"+m.Option(PORT))
-	l = &Listener{m: m, h: mdb.HashCreate(m, arg, kit.Dict(mdb.TARGET, l), STATUS, kit.Select(ERROR, OPEN, e == nil), ERROR, kit.Format(e)), s: &Stat{}, Listener: l}
+	l, e := net.Listen(TCP, m.Option(HOST)+ice.DF+m.Option(PORT))
+	l = &Listener{Listener: l, m: m, h: mdb.HashCreate(m, arg, kit.Dict(mdb.TARGET, l), STATUS, kit.Select(ERROR, OPEN, e == nil), ERROR, kit.Format(e)), s: &Stat{}}
 	if e == nil {
 		defer l.Close()
 	}
@@ -60,7 +39,7 @@ func _server_listen(m *ice.Message, arg ...string) {
 		cb(l)
 	case func(net.Conn):
 		for {
-			if c, e := l.Accept(); e == nil {
+			if c, e := l.Accept(); !m.Warn(e) {
 				cb(c)
 			} else {
 				break
@@ -78,6 +57,15 @@ const (
 	NODENAME = "nodename"
 )
 const (
+	PROTO  = "proto"
+	STATUS = "status"
+	ERROR  = "error"
+	START  = "start"
+	OPEN   = "open"
+	CLOSE  = "close"
+	STOP   = "stop"
+)
+const (
 	LISTEN = "listen"
 )
 const SERVER = "server"
@@ -85,7 +73,14 @@ const SERVER = "server"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		SERVER: {Name: "server hash auto prunes", Help: "服务器", Actions: ice.MergeActions(ice.Actions{
-			LISTEN: {Name: "listen type name port=9030 host=", Hand: func(m *ice.Message, arg ...string) { _server_listen(m, arg...) }},
-		}, mdb.StatusHashAction(mdb.FIELD, "time,hash,status,type,name,host,port,error,nconn"), mdb.ClearOnExitHashAction())},
+			LISTEN: {Name: "listen type name port=9030 host=", Hand: func(m *ice.Message, arg ...string) {
+				switch m.Option(mdb.TYPE) {
+				case UDP4:
+					_server_udp(m, arg...)
+				default:
+					_server_listen(m, arg...)
+				}
+			}},
+		}, mdb.StatusHashAction(mdb.FIELD, "time,hash,status,type,name,host,port,error"), mdb.ClearOnExitHashAction())},
 	})
 }

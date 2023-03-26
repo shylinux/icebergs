@@ -86,17 +86,17 @@ func _space_handle(m *ice.Message, safe bool, name string, c *websocket.Conn) {
 		} else {
 			m.Warn(!mdb.HashSelectDetail(m, next, func(value ice.Map) {
 				switch c := value[mdb.TARGET].(type) {
-				case (*websocket.Conn):
-					_space_echo(msg, source, target, c) // 转发报文
-				case ice.Handler:
-					c(msg) // 接收响应
+				case (*websocket.Conn): // 转发报文
+					_space_echo(msg, source, target, c)
+				case ice.Handler: // 接收响应
+					c(msg)
 				}
 			}), ice.ErrNotFound, next)
 		}
 	}
 }
 func _space_domain(m *ice.Message) (link string) {
-	m.Options(ice.MSG_OPTION, ice.MSG_USERNAME, ice.MSG_OPTS, ice.MSG_USERNAME)
+	// m.Options(ice.MSG_OPTION, ice.MSG_USERNAME, ice.MSG_OPTS, ice.MSG_USERNAME)
 	return kit.GetValid(
 		func() string { return ice.Info.Domain },
 		func() string {
@@ -197,7 +197,7 @@ func init() {
 			ice.PS: {Hand: func(m *ice.Message, arg ...string) { _space_fork(m) }},
 		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,type,name,text", ctx.ACTION, OPEN,
 			REDIAL, kit.Dict("a", 3000, "b", 1000, "c", 1000),
-		), mdb.ClearOnExitHashAction(), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {
+		), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 {
 				mdb.HashSelect(m, arg...).Sort("").Table(func(value ice.Maps) {
 					m.PushButton(kit.Select(OPEN, LOGIN, value[mdb.TYPE] == LOGIN), mdb.REMOVE)

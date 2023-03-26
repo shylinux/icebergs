@@ -161,7 +161,7 @@ func (m *Message) FormatCost() string { return kit.FmtDuration(time.Since(m.time
 func (m *Message) FormatMeta() string { return kit.Format(m.meta) }
 func (m *Message) FormatsMeta(w io.Writer, arg ...string) (res string) {
 	if w == nil {
-		buf := bytes.NewBuffer(make([]byte, MOD_BUFS))
+		buf := bytes.NewBuffer(make([]byte, 0, MOD_BUFS))
 		defer func() { res = buf.String() }()
 		w = buf
 	}

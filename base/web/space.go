@@ -39,7 +39,7 @@ func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 					_space_handle(m.Spawn(), true, dev, c)
 					i = 0
 				}
-			}).Cost("order", i, "sleep", next, tcp.DIAL, dev, "uri", uri.String()).Sleep(next)
+			}).Cost(mdb.COUNT, i, mdb.NEXT, next, tcp.DIAL, dev, LINK, uri.String()).Sleep(next)
 		}
 	}, kit.Join(kit.Simple(SPACE, name), ice.SP))
 }
@@ -106,7 +106,7 @@ func _space_domain(m *ice.Message) (link string) {
 			return ""
 		},
 		func() string { return tcp.PublishLocalhost(m, m.Option(ice.MSG_USERWEB)) },
-		func() string { return kit.Format("http://%s:%s", m.Cmdv(tcp.HOST, aaa.IP), m.Cmdv(SERVE, tcp.PORT)) })
+		func() string { return Domain(m.Cmdv(tcp.HOST, aaa.IP), m.Cmdv(SERVE, tcp.PORT)) })
 }
 func _space_exec(m *ice.Message, source, target []string, c *websocket.Conn) {
 	switch kit.Select(cli.PWD, m.Detailv(), 0) {
@@ -146,9 +146,10 @@ const (
 	MASTER = "master"
 	SERVER = "server"
 	WORKER = "worker"
+
+	REDIAL = "redial"
 )
 const (
-	REDIAL      = "redial"
 	SPACE_LOGIN = "space.login"
 )
 const SPACE = "space"
@@ -191,7 +192,7 @@ func init() {
 				case MASTER:
 					ctx.ProcessOpen(m, m.Cmdv(SPIDE, m.Option(mdb.NAME), CLIENT_ORIGIN))
 				default:
-					ctx.ProcessOpen(m, strings.Split(MergePod(m, m.Option(mdb.NAME), arg), ice.QS)[0])
+					ctx.ProcessOpen(m, MergePods(m, m.Option(mdb.NAME), arg))
 				}
 			}},
 			ice.PS: {Hand: func(m *ice.Message, arg ...string) { _space_fork(m) }},
@@ -199,9 +200,7 @@ func init() {
 			REDIAL, kit.Dict("a", 3000, "b", 1000, "c", 1000),
 		), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 {
-				mdb.HashSelect(m, arg...).Sort("").Table(func(value ice.Maps) {
-					m.PushButton(kit.Select(OPEN, LOGIN, value[mdb.TYPE] == LOGIN), mdb.REMOVE)
-				})
+				mdb.HashSelect(m, arg...).Sort("").Table(func(value ice.Maps) { m.PushButton(kit.Select(OPEN, LOGIN, value[mdb.TYPE] == LOGIN), mdb.REMOVE) })
 			} else {
 				_space_send(m, arg[0], kit.Simple(kit.Split(arg[1]), arg[2:])...)
 			}

@@ -18,14 +18,12 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _serve_address(m *ice.Message) string {
-	return kit.Format("http://localhost:%s", m.Option(tcp.PORT))
-}
+func _serve_address(m *ice.Message) string { return Domain(tcp.LOCALHOST, m.Option(tcp.PORT)) }
 func _serve_start(m *ice.Message) {
 	defer kit.For(kit.Split(m.Option(ice.DEV)), func(v string) { m.Sleep("10ms").Cmd(SPACE, tcp.DIAL, ice.DEV, v, mdb.NAME, ice.Info.NodeName) })
 	kit.If(m.Option(aaa.USERNAME), func() { aaa.UserRoot(m, m.Option(aaa.USERNICK), m.Option(aaa.USERNAME)) })
 	kit.If(m.Option(tcp.PORT) == tcp.RANDOM, func() { m.Option(tcp.PORT, m.Cmdx(tcp.PORT, aaa.RIGHT)) })
-	kit.If(cli.IsWindows(), func() { m.Cmd(SPIDE, ice.OPS, _serve_address(m)+"/exit").Sleep300ms() })
+	kit.If(cli.IsWindows(), func() { m.Cmd(SPIDE, ice.OPS, _serve_address(m)+"/exit").Sleep30ms() })
 	cli.NodeInfo(m, kit.Select(ice.Info.Hostname, m.Option(tcp.NODENAME)), SERVER)
 	m.Target().Start(m, m.OptionSimple(tcp.HOST, tcp.PORT)...)
 }
@@ -89,6 +87,7 @@ func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.Response
 	kit.If(m.Optionv(ice.MSG_CMDS) == nil, func() {
 		kit.If(strings.TrimPrefix(r.URL.Path, key), func(p string) { m.Optionv(ice.MSG_CMDS, strings.Split(p, ice.PS)) })
 	})
+	defer func() { Render(m, m.Option(ice.MSG_OUTPUT), kit.List(m.Optionv(ice.MSG_ARGS))...) }()
 	if cmds, ok := _serve_auth(m, key, kit.Simple(m.Optionv(ice.MSG_CMDS)), w, r); ok {
 		defer func() { m.Cost(kit.Format("%s: %s %v", r.Method, m.PrefixPath()+path.Join(cmds...), m.FormatSize())) }()
 		m.Option(ice.MSG_OPTS, kit.Simple(m.Optionv(ice.MSG_OPTION), func(k string) bool { return !strings.HasPrefix(k, ice.MSG_SESSID) }))
@@ -98,7 +97,6 @@ func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.Response
 			m.CmdHand(cmd, key, cmds...)
 		}
 	}
-	Render(m, m.Option(ice.MSG_OUTPUT), kit.List(m.Optionv(ice.MSG_ARGS))...)
 }
 func _serve_domain(m *ice.Message) string {
 	return kit.GetValid(

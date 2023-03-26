@@ -52,3 +52,4 @@ func UDPAddr(m *ice.Message, host, port string) *net.UDPAddr {
 	}
 	return nil
 }
+func HostPort(host, port string) string { return host + ice.DF + port }

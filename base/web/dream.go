@@ -48,27 +48,19 @@ func _dream_show(m *ice.Message, name string) {
 		m.Info("already exists %v", name)
 		return
 	}
-	_dream_template(m, p)
 	defer ToastProcess(m)()
 	defer m.Sleep300ms()
 	m.Options(cli.CMD_DIR, kit.Path(p), cli.CMD_ENV, kit.Simple(
-		cli.CTX_OPS, "http://localhost:"+m.Cmdv(SERVE, tcp.PORT), cli.CTX_LOG, ice.VAR_LOG_BOOT_LOG, cli.CTX_PID, ice.VAR_LOG_ICE_PID,
+		cli.CTX_OPS, Domain(tcp.LOCALHOST, m.Cmdv(SERVE, tcp.PORT)), cli.CTX_LOG, ice.VAR_LOG_BOOT_LOG, cli.CTX_PID, ice.VAR_LOG_ICE_PID,
 		cli.PATH, cli.BinPath(p, ""), cli.USER, ice.Info.Username, kit.EnvSimple(cli.HOME, cli.TERM, cli.SHELL), mdb.Configv(m, cli.ENV),
 	), cli.CMD_OUTPUT, path.Join(p, ice.VAR_LOG_BOOT_LOG))
 	defer m.Options(cli.CMD_DIR, "", cli.CMD_ENV, "", cli.CMD_OUTPUT, "")
 	gdb.Event(m, DREAM_CREATE, m.OptionSimple(mdb.NAME, mdb.TYPE))
+	kit.If(m.Option(nfs.TEMPLATE), func() { _dream_template(m, p) })
 	m.Cmd(cli.DAEMON, kit.Select(kit.Path(os.Args[0]), cli.SystemFind(m, ice.ICE_BIN, nfs.PWD+path.Join(p, ice.BIN), nfs.PWD+ice.BIN)),
 		SPACE, tcp.DIAL, ice.DEV, ice.OPS, mdb.TYPE, WORKER, m.OptionSimple(mdb.NAME), cli.DAEMON, ice.OPS)
 }
 func _dream_template(m *ice.Message, p string) {
-	if m.Option(nfs.REPOS) != "" {
-		m.Cmd(cli.SYSTEM, "git", "clone", m.Option(nfs.REPOS), p)
-	} else {
-		nfs.MkdirAll(m, p)
-	}
-	if m.Option(nfs.TEMPLATE) == "" {
-		return
-	}
 	kit.For([]string{ice.ETC_MISS_SH,
 		ice.LICENSE, ice.MAKEFILE, ice.README_MD, ice.GO_MOD, ice.GO_SUM,
 		ice.SRC_MAIN_GO, ice.SRC_MAIN_SH, ice.SRC_MAIN_SHY, ice.SRC_MAIN_JS,
@@ -112,11 +104,11 @@ func init() {
 					if msg := m.Cmd(SPIDE, ice.OPS, SPIDE_MSG, UserHost(m)+"/x/list"); !msg.IsErr() {
 						m.Copy(msg)
 					}
-					for _, dev := range []string{ice.OPS, ice.DEV, ice.SHY} {
+					kit.For([]string{ice.OPS, ice.DEV, ice.SHY}, func(dev string) {
 						if msg := m.Cmd(SPIDE, dev, SPIDE_MSG, "/x/list"); !msg.IsErr() {
 							m.Copy(msg)
 						}
-					}
+					})
 				default:
 					gdb.Event(m, "", arg)
 				}
@@ -142,10 +134,7 @@ func init() {
 				}
 			}},
 			DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
-				switch m.Option(mdb.TYPE) {
-				case SERVER, WORKER:
-					m.PushButton(OPEN)
-				}
+				kit.Switch(m.Option(mdb.TYPE), []string{SERVER, WORKER}, func() { m.PushButton(OPEN) })
 			}},
 			OPEN: {Hand: func(m *ice.Message, arg ...string) { ctx.ProcessOpen(m, MergePods(m, m.Option(mdb.NAME), arg)) }},
 		}, ctx.CmdAction(), DreamAction()), Hand: func(m *ice.Message, arg ...string) {

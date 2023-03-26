@@ -50,7 +50,7 @@ func _share_proxy(m *ice.Message) {
 }
 
 const (
-	THEME = "tospic"
+	THEME = "theme"
 	LOGIN = "login"
 	RIVER = "river"
 	STORM = "storm"
@@ -70,7 +70,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		SHARE: {Name: "share hash auto login prunes", Help: "共享链", Actions: ice.MergeActions(ice.Actions{
 			mdb.CREATE: {Name: "create type name text", Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashCreate(m, arg, aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.USERROLE, m.Option(ice.MSG_USERROLE))
+				mdb.HashCreate(m, arg, aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERROLE, m.Option(ice.MSG_USERROLE))
 				m.Option(mdb.LINK, _share_link(m, P(SHARE, m.Result())))
 			}},
 			LOGIN: {Hand: func(m *ice.Message, arg ...string) {
@@ -83,7 +83,7 @@ func init() {
 				msg := m.Cmd(SHARE, m.Option(SHARE, arg[0]))
 				if IsNotValidShare(m, msg.Append(mdb.TIME)) {
 					m.RenderResult(kit.Format("共享超时, 请联系 %s(%s), 重新分享 %s %s",
-						msg.Append(aaa.USERNAME), msg.Append(aaa.USERNICK), msg.Append(mdb.TYPE), msg.Append(mdb.NAME)))
+						msg.Append(aaa.USERNICK), msg.Append(aaa.USERNAME), msg.Append(mdb.TYPE), msg.Append(mdb.NAME)))
 					return
 				}
 				switch msg.Append(mdb.TYPE) {
@@ -93,7 +93,7 @@ func init() {
 					RenderMain(m)
 				}
 			}},
-		}, mdb.HashAction(mdb.FIELD, "time,hash,username,usernick,userrole,river,storm,type,name,text", mdb.EXPIRE, mdb.DAYS), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,river,storm,usernick,username,userrole", mdb.EXPIRE, mdb.DAYS), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {
 			if ctx.PodCmd(m, SHARE, arg) {
 				return
 			}
@@ -113,7 +113,7 @@ func init() {
 			m.RenderDownload(strings.TrimPrefix(m.Cmdv(aaa.USER, m.Option(ice.MSG_USERNAME), aaa.BACKGROUND), SHARE_LOCAL))
 		}},
 		SHARE_PROXY: {Hand: func(m *ice.Message, arg ...string) { _share_proxy(m) }},
-		SHARE_TOAST: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(SPACE, arg[0], kit.UnMarshal(m.Option("arg"))) }},
+		SHARE_TOAST: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(SPACE, arg[0], kit.UnMarshal(m.Option(ice.ARG))) }},
 	})
 }
 func IsNotValidShare(m *ice.Message, time string) bool {
@@ -140,13 +140,8 @@ func ShareLocalFile(m *ice.Message, arg ...string) {
 	if s, e := file.StatFile(pp); e == nil {
 		cache, size = s.ModTime(), s.Size()
 	}
-	if p == ice.BIN_ICE_BIN {
-		m.Option(ice.MSG_USERROLE, aaa.TECH)
-	}
-	m.Cmd(SPACE, m.Option(ice.POD), SPIDE, ice.DEV, SPIDE_RAW, MergeLink(m, SHARE_PROXY), SPIDE_PART, m.OptionSimple(ice.POD), nfs.PATH, p, nfs.SIZE, size, CACHE, cache.Format(ice.MOD_TIME), UPLOAD, "@"+p)
-	if file.ExistsFile(pp) {
-		m.RenderDownload(pp)
-	} else {
-		m.RenderDownload(p)
-	}
+	kit.If(p == ice.BIN_ICE_BIN, func() { m.Option(ice.MSG_USERROLE, aaa.TECH) })
+	m.Cmd(SPACE, m.Option(ice.POD), SPIDE, ice.DEV, SPIDE_RAW, MergeLink(m, SHARE_PROXY),
+		SPIDE_PART, m.OptionSimple(ice.POD), nfs.PATH, p, nfs.SIZE, size, CACHE, cache.Format(ice.MOD_TIME), UPLOAD, ice.AT+p)
+	m.RenderDownload(kit.Select(p, pp, file.ExistsFile(pp)))
 }

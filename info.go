@@ -46,6 +46,8 @@ var Info = struct {
 	Save   func(m *Message, key ...string) *Message
 	Log    func(m *Message, p, l, s string)
 }{
+	Localhost: true,
+
 	File:  Maps{},
 	Gomod: Maps{},
 	Route: Maps{},

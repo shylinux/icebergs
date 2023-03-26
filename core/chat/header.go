@@ -52,8 +52,8 @@ func _header_check(m *ice.Message, arg ...string) bool {
 	if m.Option(ice.MSG_USERNAME) != "" {
 		return true
 	}
-	if ctx.OptionFromConfig(m, web.SSO) == "" && ctx.OptionFromConfig(m, web.LOGIN) == "" {
-		m.Option(web.SSO, GetSSO(m))
+	if ctx.OptionFromConfig(m, SSO) == "" && ctx.OptionFromConfig(m, web.LOGIN) == "" {
+		m.Option(SSO, GetSSO(m))
 	}
 	return false
 }

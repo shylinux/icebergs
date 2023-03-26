@@ -114,10 +114,10 @@ func _serve_domain(m *ice.Message) string {
 	)
 }
 func _serve_auth(m *ice.Message, key string, cmds []string, w http.ResponseWriter, r *http.Request) ([]string, bool) {
-	defer func() { m.Options(ice.MSG_CMDS, "", ice.MSG_SESSID, "") }()
 	if r.URL.Path == PP(SPACE) {
 		return cmds, true
 	}
+	defer func() { m.Options(ice.MSG_CMDS, "", ice.MSG_SESSID, "") }()
 	if aaa.SessCheck(m, m.Option(ice.MSG_SESSID)); m.Option(SHARE) != "" {
 		switch msg := m.Cmd(SHARE, m.Option(SHARE)); msg.Append(mdb.TYPE) {
 		case FIELD, STORM:
@@ -145,10 +145,8 @@ const (
 	HTTP   = "http"
 	HTTPS  = "https"
 	DOMAIN = "domain"
-	INDEX  = "index"
 	FORM   = "form"
 	BODY   = "body"
-	SSO    = "sso"
 
 	ApplicationJSON = "Application/json"
 )
@@ -157,10 +155,7 @@ const SERVE = "serve"
 func init() {
 	Index.MergeCommands(ice.Commands{"/exit": {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(ice.EXIT) }},
 		SERVE: {Name: "serve name auto start", Help: "服务器", Actions: ice.MergeActions(ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				ice.Info.Localhost = mdb.Config(m, tcp.LOCALHOST) == ice.TRUE
-				cli.NodeInfo(m, ice.Info.Pathname, WORKER)
-			}},
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { cli.NodeInfo(m, ice.Info.Pathname, WORKER) }},
 			DOMAIN: {Hand: func(m *ice.Message, arg ...string) {
 				kit.If(len(arg) > 0, func() { ice.Info.Domain, ice.Info.Localhost = arg[0], false })
 				m.Echo(ice.Info.Domain)
@@ -179,7 +174,7 @@ func init() {
 					kit.If(!opened, func() { cli.Opens(m, _serve_address(m)) })
 				})
 			}},
-		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,status,name,proto,host,port", tcp.LOCALHOST, ice.TRUE), mdb.ClearOnExitHashAction())},
+		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,status,name,proto,host,port"), mdb.ClearOnExitHashAction())},
 	})
 	ice.AddMergeAction(func(c *ice.Context, key string, cmd *ice.Command, sub string, action *ice.Action) {
 		if strings.HasPrefix(sub, ice.PS) {

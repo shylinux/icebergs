@@ -71,7 +71,7 @@ func _space_handle(m *ice.Message, safe bool, name string, c *websocket.Conn) {
 		}
 		msg := m.Spawn(b)
 		source, target := kit.Simple(msg.Optionv(ice.MSG_SOURCE), name), kit.Simple(msg.Optionv(ice.MSG_TARGET))
-		msg.Log("recv", "%v->%v %v %v", source, target, msg.Detailv(), msg.FormatsMeta(nil))
+		msg.Log(tcp.RECV, "%v->%v %v %v", source, target, msg.Detailv(), msg.FormatsMeta(nil))
 		if next := msg.Option(ice.MSG_TARGET); next == "" || len(target) == 0 {
 			if safe { // 下行命令
 				msg.Option(ice.MSG_USERROLE, aaa.UserRole(msg, msg.Option(ice.MSG_USERNAME)))
@@ -120,14 +120,14 @@ func _space_exec(m *ice.Message, source, target []string, c *websocket.Conn) {
 }
 func _space_echo(m *ice.Message, source, target []string, c *websocket.Conn) {
 	if m.Options(ice.MSG_SOURCE, source, ice.MSG_TARGET, target[1:]); !m.Warn(c.WriteMessage(1, []byte(m.FormatMeta()))) {
-		m.Log("send", "%v->%v %v %v", source, target, m.Detailv(), m.FormatsMeta(nil))
+		m.Log(tcp.SEND, "%v->%v %v %v", source, target, m.Detailv(), m.FormatsMeta(nil))
 	}
 }
 func _space_send(m *ice.Message, name string, arg ...string) {
 	wait, done := m.Wait(func(msg *ice.Message, arg ...string) {
 		m.Cost(kit.Format("%v->[%v] %v %v", m.Optionv(ice.MSG_SOURCE), name, m.Detailv(), msg.FormatSize())).Copy(msg)
 	})
-	h := mdb.HashCreate(m.Spawn(), mdb.TYPE, "send", mdb.NAME, kit.Keys(name, m.Target().ID()), mdb.TEXT, kit.Join(arg, ice.SP), kit.Dict(mdb.TARGET, done))
+	h := mdb.HashCreate(m.Spawn(), mdb.TYPE, tcp.SEND, mdb.NAME, kit.Keys(name, m.Target().ID()), mdb.TEXT, kit.Join(arg, ice.SP), kit.Dict(mdb.TARGET, done))
 	defer mdb.HashRemove(m, mdb.HASH, h)
 	if target := kit.Split(name, ice.PT, ice.PT); mdb.HashSelectDetail(m, target[0], func(value ice.Map) {
 		if c, ok := value[mdb.TARGET].(*websocket.Conn); !m.Warn(!ok, ice.ErrNotValid, mdb.TARGET) {

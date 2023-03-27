@@ -16,13 +16,12 @@ type displayMessage interface {
 	Action(arg ...ice.Any) *ice.Message
 }
 
+func isLocalFile(p string) bool {
+	return !strings.HasPrefix(p, ice.PS) && !strings.HasPrefix(p, ice.HTTP)
+}
 func Display(m displayMessage, file string, arg ...ice.Any) displayMessage {
-	if file == "" {
-		file = kit.Keys(kit.FileName(2), nfs.JS)
-	}
-	if !strings.HasPrefix(file, ice.PS) && !strings.HasPrefix(file, ice.HTTP) {
-		file = path.Join(ice.PS, path.Join(path.Dir(FileURI(logs.FileLines(2))), file))
-	}
+	kit.If(file == "", func() { file = kit.Keys(kit.FileName(5), nfs.JS) })
+	kit.If(isLocalFile(file), func() { file = path.Join(ice.PS, path.Join(path.Dir(FileURI(logs.FileLines(2))), file)) })
 	return DisplayBase(m, file, arg...)
 }
 func DisplayTable(m displayMessage, arg ...ice.Any) displayMessage {
@@ -32,12 +31,8 @@ func DisplayTableCard(m displayMessage, arg ...ice.Any) displayMessage {
 	return DisplayTable(m, "style", "card")
 }
 func DisplayStory(m displayMessage, file string, arg ...ice.Any) displayMessage {
-	if file == "" {
-		file = kit.ExtChange(kit.FileName(2), nfs.JS)
-	}
-	if !strings.HasPrefix(file, ice.PS) && !strings.HasPrefix(file, ice.HTTP) {
-		file = path.Join(ice.PLUGIN_STORY, file)
-	}
+	kit.If(file == "", func() { file = kit.Keys(kit.FileName(5), nfs.JS) })
+	kit.If(isLocalFile(file), func() { file = path.Join(ice.PLUGIN_STORY, file) })
 	return DisplayBase(m, file, arg...)
 }
 func DisplayStoryJSON(m displayMessage, arg ...ice.Any) displayMessage {
@@ -47,16 +42,12 @@ func DisplayStorySpide(m displayMessage, arg ...ice.Any) displayMessage {
 	return DisplayStory(m, "spide", arg...)
 }
 func DisplayLocal(m displayMessage, file string, arg ...ice.Any) displayMessage {
-	if file == "" {
-		file = path.Join(kit.PathName(2), kit.Keys(kit.FileName(2), ice.JS))
-	}
-	if !strings.HasPrefix(file, ice.PS) && !strings.HasPrefix(file, ice.HTTP) {
-		file = path.Join(ice.PLUGIN_LOCAL, file)
-	}
+	kit.If(file == "", func() { file = path.Join(kit.PathName(5), kit.Keys(kit.FileName(5), nfs.JS)) })
+	kit.If(isLocalFile(file), func() { file = path.Join(ice.PLUGIN_LOCAL, file) })
 	return DisplayBase(m, file, arg...)
 }
 func DisplayBase(m displayMessage, file string, arg ...ice.Any) displayMessage {
-	m.Option(ice.MSG_DISPLAY, kit.MergeURL(kit.Select(kit.ExtChange(file, nfs.JS), file, strings.Contains(file, "?")), arg...))
+	m.Option(ice.MSG_DISPLAY, kit.MergeURL(kit.Select(kit.ExtChange(file, nfs.JS), file, strings.Contains(file, ice.QS)), arg...))
 	return m
 }
 func Toolkit(m *ice.Message, arg ...string) {

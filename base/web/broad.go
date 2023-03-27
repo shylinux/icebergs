@@ -11,6 +11,7 @@ import (
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
 	kit "shylinux.com/x/toolkits"
+	"shylinux.com/x/toolkits/logs"
 )
 
 func _broad_send(m *ice.Message, to_host, to_port string, host, port string, arg ...string) {
@@ -23,7 +24,7 @@ func _broad_serve(m *ice.Message) {
 	m.GoSleep("10ms", tcp.HOST, func(value ice.Maps) {
 		_broad_send(m, "", "", value[aaa.IP], m.Option(tcp.PORT), gdb.EVENT, tcp.LISTEN, mdb.NAME, ice.Info.NodeName, mdb.TYPE, ice.Info.NodeType)
 	})
-	m.Cmd(tcp.SERVER, tcp.LISTEN, mdb.TYPE, tcp.UDP4, m.OptionSimple(mdb.NAME, tcp.HOST, tcp.PORT), func(from *net.UDPAddr, buf []byte) {
+	m.Cmd(tcp.SERVER, tcp.LISTEN, mdb.TYPE, tcp.UDP4, mdb.NAME, logs.FileLine(1), m.OptionSimple(tcp.HOST, tcp.PORT), func(from *net.UDPAddr, buf []byte) {
 		msg := m.Spawn(buf).Logs(tcp.RECV, BROAD, string(buf), nfs.FROM, from)
 		if mdb.HashCreate(m, msg.OptionSimple(kit.Simple(msg.Optionv(ice.MSG_OPTION))...)); msg.Option(gdb.EVENT) == tcp.LISTEN {
 			m.Cmds("", func(value ice.Maps) {
@@ -51,8 +52,10 @@ func init() {
 					})
 				}
 			}},
-			SERVE_START: {Hand: func(m *ice.Message, arg ...string) { m.Go(func() { m.Cmd("", SERVE, m.OptionSimple(tcp.PORT)) }) }},
-			SERVE:       {Name: "serve port=9020", Hand: func(m *ice.Message, arg ...string) { _broad_serve(m) }},
+			SERVE_START: {Hand: func(m *ice.Message, arg ...string) {
+				gdb.Go(m, _broad_serve)
+			}},
+			SERVE: {Name: "serve port=9020 host", Hand: func(m *ice.Message, arg ...string) { gdb.Go(m, _broad_serve) }},
 			OPEN: {Hand: func(m *ice.Message, arg ...string) {
 				ctx.ProcessOpen(m, Domain(m.Option(tcp.HOST), m.Option(tcp.PORT)))
 			}},

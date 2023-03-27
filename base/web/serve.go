@@ -25,7 +25,8 @@ func _serve_start(m *ice.Message) {
 	kit.If(m.Option(tcp.PORT) == tcp.RANDOM, func() { m.Option(tcp.PORT, m.Cmdx(tcp.PORT, aaa.RIGHT)) })
 	kit.If(cli.IsWindows(), func() { m.Cmd(SPIDE, ice.OPS, _serve_address(m)+"/exit").Sleep30ms() })
 	cli.NodeInfo(m, kit.Select(ice.Info.Hostname, m.Option(tcp.NODENAME)), SERVER)
-	m.Target().Start(m, m.OptionSimple(tcp.HOST, tcp.PORT)...)
+	m.Start("", m.OptionSimple(tcp.HOST, tcp.PORT)...)
+	// m.Target().Start(m, m.OptionSimple(tcp.HOST, tcp.PORT)...)
 }
 func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	const (

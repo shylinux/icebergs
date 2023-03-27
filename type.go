@@ -182,17 +182,17 @@ func (c *Context) Merge(s *Context) *Context {
 }
 func (c *Context) Begin(m *Message, arg ...string) *Context {
 	kit.If(c.Caches == nil, func() { c.Caches = Caches{} })
-	c.Caches[CTX_FOLLOW] = &Cache{Name: CTX_FOLLOW, Value: c.Name}
-	kit.If(c.context != nil && c.context != Index, func() { c.Cap(CTX_FOLLOW, kit.Keys(c.context.Cap(CTX_FOLLOW), c.Name)) })
+	c.Caches[CTX_FOLLOW] = &Cache{Value: c.Name}
+	kit.If(c.context != nil && c.context != Index, func() { c.Cap(CTX_FOLLOW, c.context.Prefix(c.Name)) })
 	kit.If(c.server != nil, func() { c.server.Begin(m, arg...) })
 	return c.Merge(c)
 }
 func (c *Context) Start(m *Message, arg ...string) {
-	m.Log(CTX_START, c.Cap(CTX_FOLLOW))
-	kit.If(c.server != nil, func() { m.Go(func() { c.server.Start(m, arg...) }, m.Prefix()) })
+	m.Log(CTX_START, c.Prefix())
+	kit.If(c.server != nil, func() { c.server.Start(m, arg...) })
 }
 func (c *Context) Close(m *Message, arg ...string) {
-	m.Log(CTX_CLOSE, c.Cap(CTX_FOLLOW))
+	m.Log(CTX_CLOSE, c.Prefix())
 	kit.If(c.server != nil, func() { c.server.Close(m, arg...) })
 }
 
@@ -271,7 +271,9 @@ func (m *Message) Spawn(arg ...Any) *Message {
 	return msg
 }
 func (m *Message) Start(key string, arg ...string) *Message {
-	return m.Search(key+PT, func(p *Context, s *Context) { s.Start(m.Spawn(s), arg...) })
+	return m.Search(key+PT, func(p *Context, s *Context) {
+		m.Cmd(ROUTINE, CREATE, kit.Select(m.Prefix(), key), func() { s.Start(m.Spawn(s), arg...) })
+	})
 }
 func (m *Message) Travel(cb Any) *Message {
 	target := m.target

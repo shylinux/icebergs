@@ -97,7 +97,7 @@ func Run(arg ...string) string {
 	Pulse.time = time.Now()
 	switch Index.Merge(Index).Begin(Pulse, arg...); kit.Select("", arg, 0) {
 	case SERVE, SPACE:
-		Index.Start(Pulse, arg...)
+		Pulse.Go(func() { Index.Start(Pulse, arg...) })
 		conf.Wait()
 		os.Exit(kit.Int(Pulse.Option(EXIT)))
 	default:

@@ -26,7 +26,7 @@ func _space_qrcode(m *ice.Message, dev string) {
 func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 	u := kit.ParseURL(kit.MergeURL2(strings.Replace(m.Cmdv(SPIDE, dev, CLIENT_ORIGIN), HTTP, "ws", 1), PP(SPACE), mdb.TYPE, ice.Info.NodeType, mdb.NAME, name, arg))
 	args := kit.SimpleKV("type,name,host,port", u.Scheme, dev, u.Hostname(), u.Port())
-	m.Go(func() {
+	gdb.Go(m, func() {
 		once := sync.Once{}
 		redial := kit.Dict(mdb.Configv(m, REDIAL))
 		a, b, c := kit.Int(redial["a"]), kit.Int(redial["b"]), kit.Int(redial["c"])
@@ -48,7 +48,7 @@ func _space_fork(m *ice.Message) {
 	name := kit.ReplaceAll(kit.Select(addr, m.Option(mdb.NAME)), "[", "_", "]", "_", ice.DF, "_", ice.PT, "_")
 	args := kit.Simple(mdb.TYPE, kit.Select(WORKER, m.Option(mdb.TYPE)), mdb.NAME, name, mdb.TEXT, kit.Select(addr, m.Option(mdb.TEXT)), m.OptionSimple(cli.DAEMON, ice.MSG_USERUA))
 	if c, e := websocket.Upgrade(m.W, m.R); !m.Warn(e) {
-		m.Go(func() {
+		gdb.Go(m, func() {
 			defer mdb.HashCreateDeferRemove(m, args, kit.Dict(mdb.TARGET, c))()
 			switch m.Option(mdb.TYPE) {
 			case WORKER:

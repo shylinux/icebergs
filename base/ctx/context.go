@@ -10,11 +10,10 @@ import (
 
 func _context_list(m *ice.Message, sub *ice.Context, name string) {
 	m.Travel(func(p *ice.Context, s *ice.Context) {
-		if name != "" && name != ice.ICE && !strings.HasPrefix(s.Cap(ice.CTX_FOLLOW), name+ice.PT) {
+		if name != "" && name != ice.ICE && !strings.HasPrefix(s.Prefix(), name+ice.PT) {
 			return
 		}
-		m.Push(mdb.NAME, s.Cap(ice.CTX_FOLLOW))
-		m.Push(mdb.HELP, s.Help)
+		m.Push(mdb.NAME, s.Prefix()).Push(mdb.HELP, s.Help)
 	})
 }
 
@@ -23,9 +22,7 @@ const CONTEXT = "context"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		CONTEXT: {Name: "context name=web action=context,command,config key auto", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
-			if len(arg) == 0 {
-				arg = append(arg, m.Source().Cap(ice.CTX_FOLLOW))
-			}
+			kit.If(len(arg) == 0, func() { arg = append(arg, m.Source().Prefix()) })
 			m.Search(arg[0]+ice.PT, func(p *ice.Context, s *ice.Context) {
 				msg := m.Spawn(s)
 				defer m.Copy(msg)
@@ -40,18 +37,4 @@ func init() {
 			})
 		}},
 	})
-}
-func Inputs(m *ice.Message, field string) bool {
-	switch strings.TrimPrefix(field, "extra.") {
-	case ice.POD:
-		m.Cmdy(ice.SPACE)
-	case ice.CTX:
-		m.Cmdy(CONTEXT)
-	case ice.CMD:
-		m.Cmdy(CONTEXT, kit.Select(m.Option(ice.CTX), m.Option(kit.Keys(mdb.EXTRA, ice.CTX))), COMMAND)
-	case ice.ARG:
-	default:
-		return false
-	}
-	return true
 }

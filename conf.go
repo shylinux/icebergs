@@ -289,6 +289,7 @@ const ( // ctx
 const ( // mdb
 	SEARCH = "search"
 	INPUTS = "inputs"
+	CREATE = "create"
 	SELECT = "select"
 
 	KEY   = "key"
@@ -311,7 +312,8 @@ const ( // web
 	THEME = "theme"
 )
 const ( // gdb
-	EVENT = "event"
+	EVENT   = "event"
+	ROUTINE = "routine"
 )
 const ( // nfs
 	SOURCE = "source"

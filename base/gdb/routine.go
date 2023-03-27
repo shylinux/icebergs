@@ -12,10 +12,10 @@ const ROUTINE = "routine"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		ROUTINE: {Name: "routine hash auto prunes", Help: "协程池", Actions: ice.MergeActions(ice.Actions{
-			mdb.CREATE: {Name: "create name", Hand: func(m *ice.Message, arg ...string) {
+			mdb.CREATE: {Name: "create name cmd", Hand: func(m *ice.Message, arg ...string) {
 				m.Go(func() {
 					cb := m.OptionCB("")
-					h := mdb.HashCreate(m, m.OptionSimple(mdb.NAME), mdb.STATUS, START, ice.CMD, logs.FileLines(cb))
+					h := mdb.HashCreate(m, m.OptionSimple(mdb.NAME, ice.CMD), mdb.STATUS, START)
 					defer func() {
 						if e := recover(); e == nil {
 							mdb.HashModify(m, mdb.HASH, h, mdb.STATUS, STOP)
@@ -24,17 +24,22 @@ func init() {
 						}
 					}()
 					switch cb := cb.(type) {
-					case []string:
-						m.Cmd(kit.Split(kit.Join(cb)))
 					case string:
 						m.Cmd(kit.Split(cb))
+					case []string:
+						m.Cmd(kit.Split(kit.Join(cb)))
+					case func(*ice.Message):
+						cb(m.Spawn(m.Source()))
 					case func():
 						cb()
 					default:
 						m.ErrorNotImplement(cb)
 					}
-				})
+				}, m.Option(mdb.NAME))
 			}},
-		}, mdb.StatusHashAction(mdb.FIELD, "time,hash,status,name,cmd"))},
+		}, mdb.StatusHashAction(mdb.FIELD, "time,hash,status,name,cmd"), mdb.ClearOnExitHashAction())},
 	})
+}
+func Go(m *ice.Message, cb ice.Any, arg ...string) {
+	m.Cmd(ROUTINE, mdb.CREATE, kit.Select(m.PrefixKey(), arg, 0), logs.FileLine(cb), cb)
 }

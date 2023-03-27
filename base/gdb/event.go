@@ -29,32 +29,22 @@ func init() {
 					m.Cmdy(kit.Split(value[ice.CMD]), arg[1], arg[2:], ice.OptionFields(""))
 				})
 			}},
-		}, mdb.ZoneAction(mdb.SHORT, EVENT, mdb.FIELD, "time,id,cmd"))},
+		}, mdb.ZoneAction(mdb.SHORT, EVENT, mdb.FIELD, "time,id,cmd"), mdb.ClearOnExitHashAction())},
 	})
 }
 func EventAction(arg ...string) ice.Actions {
-	return ice.Actions{
-		ice.CTX_INIT: {Hand: func(m *ice.Message, _ ...string) {
-			for _, v := range arg {
-				Watch(m, v)
-			}
-		}},
-	}
+	return ice.Actions{ice.CTX_INIT: {Hand: func(m *ice.Message, _ ...string) { kit.For(arg, func(k string) { Watch(m, k) }) }}}
 }
 func EventsAction(arg ...string) ice.Actions {
 	list := kit.DictList(arg...)
 	return ice.Actions{ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 		for sub := range m.Target().Commands[m.CommandKey()].Actions {
-			if list[sub] == ice.TRUE {
-				Watch(m, sub)
-			}
+			kit.If(list[sub] == ice.TRUE, func() { Watch(m, sub) })
 		}
 	}}}
 }
 func Watch(m *ice.Message, key string, arg ...string) *ice.Message {
-	if len(arg) == 0 {
-		arg = append(arg, m.PrefixKey())
-	}
+	kit.If(len(arg) == 0, func() { arg = append(arg, m.PrefixKey()) })
 	return m.Cmd(EVENT, LISTEN, EVENT, key, ice.CMD, kit.Join(arg, ice.SP))
 }
 func Event(m *ice.Message, key string, arg ...ice.Any) *ice.Message {

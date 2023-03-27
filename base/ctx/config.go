@@ -56,9 +56,7 @@ func _config_load(m *ice.Message, name string, arg ...string) {
 		json.NewDecoder(f).Decode(&data)
 		for k, v := range data {
 			msg.Search(k, func(p *ice.Context, s *ice.Context, key string, conf *ice.Config) {
-				if s.Configs[key] == nil {
-					s.Configs[key] = &ice.Config{}
-				}
+				kit.If(s.Configs[key] == nil, func() { s.Configs[key] = &ice.Config{} })
 				s.Configs[key].Value = v
 			})
 		}
@@ -67,9 +65,7 @@ func _config_load(m *ice.Message, name string, arg ...string) {
 func _config_make(m *ice.Message, key string, arg ...string) {
 	msg := m.Spawn(m.Source())
 	if len(arg) > 1 {
-		if strings.HasPrefix(arg[1], ice.AT) {
-			arg[1] = msg.Cmdx(nfs.CAT, arg[1][1:])
-		}
+		kit.If(strings.HasPrefix(arg[1], ice.AT), func() { arg[1] = msg.Cmdx(nfs.CAT, arg[1][1:]) })
 		mdb.Confv(msg, key, arg[0], kit.Parse(nil, "", arg[1:]...))
 	}
 	if len(arg) > 0 {
@@ -116,7 +112,6 @@ func init() {
 				_config_list(m)
 			} else {
 				_config_make(m, arg[0], arg[1:]...)
-				// DisplayStoryJSON(m)
 			}
 		}},
 	})
@@ -126,42 +121,24 @@ func init() {
 	ice.Info.Load = Load
 }
 func Save(m *ice.Message, arg ...string) *ice.Message {
-	if len(arg) == 0 {
-		for k := range m.Target().Configs {
-			arg = append(arg, k)
-		}
-	}
-	for i, k := range arg {
-		arg[i] = m.Prefix(k)
-	}
+	kit.If(len(arg) == 0, func() { arg = kit.SortedKey(m.Target().Configs) })
+	kit.For(arg, func(i int, k string) { arg[i] = m.Prefix(k) })
 	return m.Cmd(CONFIG, SAVE, m.Prefix(nfs.JSON), arg)
 }
 func Load(m *ice.Message, arg ...string) *ice.Message {
-	if len(arg) == 0 {
-		for k := range m.Target().Configs {
-			arg = append(arg, k)
-		}
-	}
-	for i, k := range arg {
-		arg[i] = m.Prefix(k)
-	}
+	kit.If(len(arg) == 0, func() { arg = kit.SortedKey(m.Target().Configs) })
+	kit.For(arg, func(i int, k string) { arg[i] = m.Prefix(k) })
 	return m.Cmd(CONFIG, LOAD, m.Prefix(nfs.JSON), arg)
 }
-func ConfAction(arg ...ice.Any) ice.Actions {
-	return ice.Actions{ice.CTX_INIT: mdb.AutoConfig(arg...)}
-}
+func ConfAction(arg ...ice.Any) ice.Actions { return ice.Actions{ice.CTX_INIT: mdb.AutoConfig(arg...)} }
 func ConfigSimple(m *ice.Message, key ...string) (res []string) {
 	kit.For(kit.Split(kit.Join(key)), func(k string) { res = append(res, k, mdb.Config(m, k)) })
 	return
 }
 func ConfigFromOption(m *ice.Message, arg ...string) {
-	for _, k := range arg {
-		mdb.Config(m, k, kit.Select(mdb.Config(m, k), m.Option(k)))
-	}
+	kit.For(arg, func(k string) { mdb.Config(m, k, kit.Select(mdb.Config(m, k), m.Option(k))) })
 }
 func OptionFromConfig(m *ice.Message, arg ...string) string {
-	for _, key := range arg {
-		m.Option(key, mdb.Config(m, key))
-	}
+	kit.For(arg, func(k string) { m.Option(k, mdb.Config(m, k)) })
 	return m.Option(arg[0])
 }

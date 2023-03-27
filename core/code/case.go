@@ -44,7 +44,7 @@ func init() {
 				m.Echo(ice.OK)
 			}},
 			ice.RUN: {Hand: func(m *ice.Message, arg ...string) {
-				m.Option(web.SPIDE_HEADER, web.ContentType, web.ContentJSON, web.UserAgent, "Mozilla/5.0")
+				m.Option(web.SPIDE_HEADER, web.ContentType, web.ApplicationJSON, web.UserAgent, "Mozilla/5.0")
 				m.Cmdy(web.SPIDE, m.Option(ice.DEV), web.SPIDE_RAW, m.Option(ice.CMD), m.Option(cli.API), web.SPIDE_DATA, m.Option(ice.ARG)).ProcessInner()
 				m.StatusTime(nfs.SCRIPT, `curl "`+kit.MergeURL2(m.Cmd(web.SPIDE, m.Option(ice.DEV)).Append(web.CLIENT_ORIGIN), m.Option(cli.API))+`" -H "Content-Type: application/json"`+` -d '`+m.Option(ice.ARG)+`'`)
 			}},

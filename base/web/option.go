@@ -2,7 +2,6 @@ package web
 
 import (
 	"net/url"
-	"path"
 	"strings"
 	"time"
 
@@ -10,48 +9,77 @@ import (
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
-	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/tcp"
 	kit "shylinux.com/x/toolkits"
 	"shylinux.com/x/toolkits/file"
 )
 
+type Message interface {
+	Option(key string, arg ...ice.Any) string
+	PrefixKey(...string) string
+}
+
+func UserWeb(m Message) *url.URL { return kit.ParseURL(m.Option(ice.MSG_USERWEB)) }
+func UserHost(m *ice.Message) string {
+	if u := UserWeb(m); strings.Contains(u.Host, tcp.LOCALHOST) {
+		return m.Option(ice.MSG_USERHOST, tcp.PublishLocalhost(m, u.Scheme+"://"+u.Host))
+	} else {
+		return m.Option(ice.MSG_USERHOST, u.Scheme+"://"+u.Host)
+	}
+}
+func AgentIs(m Message, arg ...string) bool {
+	for _, k := range arg {
+		if strings.HasPrefix(strings.ToLower(m.Option(ice.MSG_USERUA)), k) {
+			return true
+		}
+	}
+	return false
+}
+func MergeURL2(m Message, url string, arg ...ice.Any) string {
+	if m.Option(ice.MSG_USERWEB) == "" {
+		return kit.MergeURL2(Domain(ice.Pulse.Cmdv(tcp.HOST, aaa.IP), ice.Pulse.Cmdv(SERVE, tcp.PORT)), url, arg...)
+	}
+	return kit.MergeURL2(m.Option(ice.MSG_USERWEB), url, arg...)
+}
+func MergeLink(m Message, url string, arg ...ice.Any) string {
+	return kit.MergeURL(strings.Split(MergeURL2(m, url), ice.QS)[0], arg...)
+}
+func ProcessPodCmd(m *ice.Message, pod, cmd string, arg ...ice.Any) {
+	m.ProcessOpen(m.MergePodCmd(pod, cmd, arg...))
+}
+func ProcessIframe(m *ice.Message, name, link string, arg ...string) {
+	ctx.ProcessField(m, CHAT_IFRAME, func() []string {
+		return []string{m.Cmdx(CHAT_IFRAME, mdb.CREATE, mdb.TYPE, LINK, mdb.NAME, name, LINK, link)}
+	}, arg...)
+}
+func PushPodCmd(m *ice.Message, cmd string, arg ...string) {
+	kit.If(m.Length() > 0 && len(m.Appendv(ice.POD)) == 0, func() { m.Table(func(value ice.Maps) { m.Push(ice.POD, m.Option(ice.MSG_USERPOD)) }) })
+	m.Cmds(SPACE, func(value ice.Maps) {
+		kit.Switch(value[mdb.TYPE], []string{SERVER, WORKER}, func() {
+			m.Cmd(SPACE, value[mdb.NAME], kit.Select(m.PrefixKey(), cmd), arg).Table(func(index int, val ice.Maps, head []string) {
+				val[ice.POD] = kit.Keys(value[mdb.NAME], val[ice.POD])
+				m.Push("", val, head)
+			})
+		})
+	})
+}
 func PushNotice(m *ice.Message, arg ...ice.Any) {
 	if m.Option(ice.MSG_DAEMON) == "" {
 		return
-	}
-	if m.Option(ice.MSG_USERPOD) == "" {
-		msg := m.Spawn()
-		msg.Optionv(ice.MSG_OPTS, msg.Optionv(ice.MSG_OPTION, []string{}))
-		msg.Cmd(SPACE, m.Option(ice.MSG_DAEMON), arg)
+	} else if m.Option(ice.MSG_USERPOD) == "" {
+		m.Cmd(SPACE, m.Option(ice.MSG_DAEMON), arg, ice.Maps{ice.MSG_OPTION: "", ice.MSG_OPTS: ""})
 	} else {
-		m.Cmd(Prefix(SPIDE), ice.OPS, MergeURL2(m, SHARE_TOAST+m.Option(ice.MSG_DAEMON)), ice.ARG, kit.Format(arg))
+		m.Cmd(Prefix(SPIDE), ice.OPS, MergeURL2(m, P(SHARE, TOAST, m.Option(ice.MSG_DAEMON))), ice.ARG, kit.Format(arg))
 	}
 }
-func PushNoticeGrow(m *ice.Message, arg ...ice.Any) {
-	PushNotice(m, kit.List("grow", arg)...)
-}
-func PushNoticeToast(m *ice.Message, arg ...ice.Any) {
-	PushNotice(m, kit.List("toast", arg)...)
-}
-func PushNoticeRefresh(m *ice.Message, arg ...ice.Any) {
-	PushNotice(m, kit.List("refresh")...)
+func PushNoticeGrow(m *ice.Message, arg ...ice.Any)  { PushNotice(m, kit.List("grow", arg)...) }
+func PushNoticeToast(m *ice.Message, arg ...ice.Any) { PushNotice(m, kit.List("toast", arg)...) }
+func PushStream(m *ice.Message) *ice.Message {
+	m.ProcessHold()
+	return m.Options(cli.CMD_OUTPUT, file.NewWriteCloser(func(buf []byte) { PushNoticeGrow(m, string(buf)) }, func() { PushNoticeToast(m, "done") }))
 }
 
-func ToastProcess(m *ice.Message, arg ...ice.Any) func() {
-	if len(arg) == 0 {
-		arg = kit.List("", "-1")
-	}
-	if len(arg) == 1 {
-		arg = append(arg, "-1")
-	}
-	Toast(m, ice.PROCESS, arg...)
-	return func() { Toast(m, ice.SUCCESS) }
-}
-func ToastRestart(m *ice.Message, arg ...ice.Any) { Toast(m, gdb.RESTART, arg...) }
-func ToastFailure(m *ice.Message, arg ...ice.Any) { Toast(m, ice.FAILURE, arg...) }
-func ToastSuccess(m *ice.Message, arg ...ice.Any) { Toast(m, ice.SUCCESS, arg...) }
 func Toast(m *ice.Message, text string, arg ...ice.Any) { // [title [duration [progress]]]
 	if len(arg) > 1 {
 		switch val := arg[1].(type) {
@@ -63,115 +91,20 @@ func Toast(m *ice.Message, text string, arg ...ice.Any) { // [title [duration [p
 	}
 	PushNoticeToast(m, text, arg)
 }
-func Toast3s(m *ice.Message, text string, arg ...ice.Any) *ice.Message {
-	Toast(m, text, kit.List(kit.Select("", arg, 0), kit.Select("3s", arg, 1))...)
-	return m
-}
-func Toast30s(m *ice.Message, text string, arg ...ice.Any) {
-	Toast(m, text, kit.List(kit.Select("", arg, 0), kit.Select("30s", arg, 1))...)
+func ToastFailure(m *ice.Message, arg ...ice.Any) { Toast(m, ice.FAILURE, arg...) }
+func ToastSuccess(m *ice.Message, arg ...ice.Any) { Toast(m, ice.SUCCESS, arg...) }
+func ToastProcess(m *ice.Message, arg ...ice.Any) func() {
+	kit.If(len(arg) == 0, func() { arg = kit.List("", "-1") })
+	kit.If(len(arg) == 1, func() { arg = append(arg, "-1") })
+	Toast(m, ice.PROCESS, arg...)
+	return func() { Toast(m, ice.SUCCESS) }
 }
 func GoToast(m *ice.Message, title string, cb func(toast func(string, int, int))) {
 	cb(func(name string, count, total int) {
-		if total == 0 {
-			total = 1
-		}
+		kit.If(total == 0, func() { total = 1 })
 		Toast(m,
 			kit.Format("%s %s/%s", name, strings.TrimSuffix(kit.FmtSize(int64(count)), "B"), strings.TrimSuffix(kit.FmtSize(int64(total)), "B")),
-			kit.Format("%s %d%%", title, count*100/total),
-			kit.Select("3000", "30000", count < total),
-			count*100/total,
+			kit.Format("%s %d%%", title, count*100/total), kit.Select("3000", "30000", count < total), count*100/total,
 		)
 	})
-}
-func PushStream(m *ice.Message, cmds ...ice.Any) *ice.Message {
-	m.Option(cli.CMD_OUTPUT, file.NewWriteCloser(func(buf []byte) (int, error) {
-		PushNoticeGrow(m, string(buf))
-		return len(buf), nil
-	}, func() error { PushNoticeToast(m, "done"); return nil }))
-	m.ProcessHold()
-	return m.Cmd(cmds...)
-}
-func PushPodCmd(m *ice.Message, cmd string, arg ...string) {
-	if m.Length() > 0 && len(m.Appendv(ice.POD)) == 0 {
-		m.Table(func(value ice.Maps) { m.Push(ice.POD, m.Option(ice.MSG_USERPOD)) })
-	}
-
-	m.Cmd(SPACE, ice.OptionFields(mdb.TYPE, mdb.NAME), func(value ice.Maps) {
-		switch value[mdb.TYPE] {
-		case SERVER, WORKER:
-			if value[mdb.NAME] == ice.Info.Hostname {
-				break
-			}
-			m.Cmd(SPACE, value[mdb.NAME], kit.Select(m.PrefixKey(), cmd), arg).Table(func(index int, val ice.Maps, head []string) {
-				val[ice.POD] = kit.Keys(value[mdb.NAME], val[ice.POD])
-				m.Push("", val, head)
-			})
-		}
-	})
-}
-
-type Message interface {
-	Option(key string, arg ...ice.Any) string
-	PrefixKey(...string) string
-}
-
-func OptionAgentIs(m Message, arg ...string) bool {
-	for _, k := range arg {
-		if strings.HasPrefix(strings.ToLower(m.Option(ice.MSG_USERUA)), k) {
-			return true
-		}
-	}
-	return false
-}
-func OptionUserWeb(m Message) *url.URL {
-	return kit.ParseURL(m.Option(ice.MSG_USERWEB))
-}
-func MergeURL2(m Message, url string, arg ...ice.Any) string {
-	if m.Option(ice.MSG_USERWEB) == "" {
-		return kit.MergeURL2(HTTP+"://"+ice.Pulse.Cmd(tcp.HOST).Append(aaa.IP)+":"+ice.Pulse.Cmd(SERVE).Append(tcp.PORT), url, arg...)
-	}
-	return kit.MergeURL2(m.Option(ice.MSG_USERWEB), url, arg...)
-}
-func MergeLink(m Message, url string, arg ...ice.Any) string {
-	return strings.Split(MergeURL2(m, url, arg...), ice.QS)[0]
-}
-func MergePod(m Message, pod string, arg ...ice.Any) string {
-	return kit.MergePOD(kit.Select(ice.Info.Domain, m.Option(ice.MSG_USERWEB)), pod, arg...)
-}
-func MergePods(m Message, pod string, arg ...ice.Any) string {
-	return kit.MergeURL(strings.Split(MergePod(m, pod), ice.QS)[0], arg...)
-}
-func MergePodCmds(m Message, pod, cmd string, arg ...ice.Any) string {
-	return kit.MergeURL(strings.Split(MergePodCmd(m, pod, cmd), ice.QS)[0], arg...)
-}
-func MergePodCmd(m Message, pod, cmd string, arg ...ice.Any) string {
-	p := "/chat"
-	p += path.Join("/pod/", kit.Keys(m.Option(ice.MSG_USERPOD), pod))
-	p = kit.Select(p, "/chat", p == "/chat/pod")
-	p += path.Join("/cmd/", kit.Select(m.PrefixKey(), cmd))
-	return kit.MergeURL2(kit.Select(ice.Info.Domain, m.Option(ice.MSG_USERWEB)), p, arg...)
-}
-func MergePodWebSite(m Message, pod, web string, arg ...ice.Any) string {
-	p := "/chat"
-	p += "/pod/" + kit.Keys(m.Option(ice.MSG_USERPOD), pod)
-	p = kit.Select(p, "/chat/", p == "/chat/pod/")
-	p += "/website/" + kit.Select("index.iml", web)
-	return kit.MergeURL2(kit.Select(ice.Info.Domain, m.Option(ice.MSG_USERWEB)), p, arg...)
-}
-func ProcessWebsite(m *ice.Message, pod, cmd string, arg ...ice.Any) {
-	m.ProcessOpen(MergePodCmd(m, pod, cmd, arg...))
-}
-func ProcessIframe(m *ice.Message, name, link string, arg ...string) {
-	if len(arg) == 0 || arg[0] != ice.RUN {
-		arg = []string{m.Cmdx("web.chat.iframe", mdb.CREATE, mdb.TYPE, LINK, mdb.NAME, name, LINK, link)}
-	}
-	ctx.ProcessField(m, "web.chat.iframe", arg, arg...)
-}
-
-func UserHost(m *ice.Message) string {
-	if u := OptionUserWeb(m); strings.Contains(u.Host, tcp.LOCALHOST) {
-		return m.Option(ice.MSG_USERHOST, tcp.PublishLocalhost(m, u.Scheme+"://"+u.Host))
-	} else {
-		return m.Option(ice.MSG_USERHOST, u.Scheme+"://"+u.Host)
-	}
 }

@@ -64,7 +64,7 @@ func init() {
 					m.PushSearch(mdb.TYPE, nfs.FILE, mdb.NAME, "main", mdb.TEXT, ice.SRC_MAIN_SH)
 					m.PushSearch(mdb.TYPE, nfs.FILE, mdb.NAME, "main", mdb.TEXT, ice.SRC_MAIN_JS)
 					m.PushSearch(mdb.TYPE, web.LINK, mdb.NAME, "admin", mdb.TEXT, kit.MergeURL(web.UserHost(m)+ice.PS, log.DEBUG, ice.TRUE))
-					m.PushSearch(mdb.TYPE, web.LINK, mdb.NAME, m.CommandKey(), mdb.TEXT, web.MergePodCmds(m, "", "", log.DEBUG, ice.TRUE))
+					m.PushSearch(mdb.TYPE, web.LINK, mdb.NAME, m.CommandKey(), mdb.TEXT, m.MergePodCmd("", "", log.DEBUG, ice.TRUE))
 				}
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {

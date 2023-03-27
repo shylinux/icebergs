@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	kit "shylinux.com/x/toolkits"
@@ -292,15 +291,15 @@ func (mat *Matrix) show(m *ice.Message) {
 			}
 			key, value := kit.Format("%v", mat.name(mat.hand, j)), []string{}
 			if node := mat.mat[i][j]; node != nil {
-				if node.star > 0 {
-					value = append(value, cli.ColorYellow(m, mat.name(mat.hand, node.star)))
-				}
-				if node.next > 0 {
-					value = append(value, cli.ColorGreen(m, node.next))
-				}
-				if node.hash > 0 {
-					value = append(value, cli.ColorRed(m, mat.name(mat.hand, node.hash)))
-				}
+				// if node.star > 0 {
+				// 	value = append(value, cli.ColorYellow(m, mat.name(mat.hand, node.star)))
+				// }
+				// if node.next > 0 {
+				// 	value = append(value, cli.ColorGreen(m, node.next))
+				// }
+				// if node.hash > 0 {
+				// 	value = append(value, cli.ColorRed(m, mat.name(mat.hand, node.hash)))
+				// }
 			}
 			m.Push(key, strings.Join(value, ","))
 		}

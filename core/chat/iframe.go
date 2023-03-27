@@ -23,7 +23,7 @@ func init() {
 					}
 					switch arg[0] {
 					case mdb.NAME:
-						m.Push(arg[0], web.OptionUserWeb(m).Host)
+						m.Push(arg[0], web.UserWeb(m).Host)
 					case mdb.TEXT:
 						m.Push(arg[0], m.Option(ice.MSG_USERWEB))
 					}

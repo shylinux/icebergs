@@ -1,7 +1,6 @@
 package web
 
 import (
-	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -19,11 +18,11 @@ import (
 
 func _cache_name(m *ice.Message, h string) string { return path.Join(ice.VAR_FILE, h[:2], h) }
 func _cache_mime(m *ice.Message, mime, name string) string {
-	if mime == "application/octet-stream" {
+	if mime == ApplicationOctet {
 		if kit.ExtIsImage(name) {
-			mime = "image/" + kit.Ext(name)
+			mime = IMAGE + ice.PS + kit.Ext(name)
 		} else if kit.ExtIsVideo(name) {
-			mime = "video/" + kit.Ext(name)
+			mime = VIDEO + ice.PS + kit.Ext(name)
 		}
 	} else if mime == "" {
 		return kit.Ext(name)
@@ -64,7 +63,7 @@ func _cache_upload(m *ice.Message, r *http.Request) (mime, name, file, size stri
 			defer f.Close()
 			b.Seek(0, os.SEEK_SET)
 			if n, e := io.Copy(f, b); !m.Warn(e, ice.ErrNotValid, UPLOAD) {
-				m.Logs(nfs.LOAD, nfs.FILE, p, nfs.SIZE, kit.FmtSize(int64(n)))
+				m.Logs(nfs.SAVE, nfs.FILE, p, nfs.SIZE, kit.FmtSize(int64(n)))
 				return h.Header.Get(ContentType), h.Filename, p, kit.Format(n)
 			}
 		}
@@ -72,24 +71,21 @@ func _cache_upload(m *ice.Message, r *http.Request) (mime, name, file, size stri
 	return "", "", "", "0"
 }
 func _cache_download(m *ice.Message, r *http.Response, file string, cb ice.Any) string {
-	if f, p, e := nfs.CreateFile(m, file); m.Assert(e) {
-		// if f, p, e := miss.CreateFile(file); !m.Warn(e, ice.ErrNotValid, DOWNLOAD) {
+	if f, p, e := miss.CreateFile(file); !m.Warn(e, ice.ErrNotValid, DOWNLOAD) {
 		defer f.Close()
 		last, base := 0, 10
-		nfs.CopyFile(m, f, r.Body, base*ice.MOD_BUFS, kit.Int(kit.Select("100", r.Header.Get(ContentLength))), func(count, total, step int) {
-			if step/base != last {
-				m.Logs(nfs.SAVE, nfs.FILE, p, mdb.COUNT, count, mdb.TOTAL, total, mdb.VALUE, step)
-				switch cb := cb.(type) {
-				case func(int, int, int):
-					if cb != nil {
-						cb(count, total, step)
-					}
-				case nil:
-				default:
-					m.ErrorNotImplement(cb)
-				}
+		nfs.CopyFile(m, f, r.Body, base*ice.MOD_BUFS, kit.Int(kit.Select("100", r.Header.Get(ContentLength))), func(count, total, value int) {
+			if value/base == last {
+				return
 			}
-			last = step / base
+			last = value / base
+			switch m.Logs(nfs.SAVE, nfs.FILE, p, mdb.COUNT, count, mdb.TOTAL, total, mdb.VALUE, value); cb := cb.(type) {
+			case func(int, int, int):
+				kit.If(cb != nil, func() { cb(count, total, value) })
+			case nil:
+			default:
+				m.ErrorNotImplement(cb)
+			}
 		})
 		return p
 	}
@@ -102,13 +98,15 @@ const (
 	WRITE    = "write"
 	UPLOAD   = "upload"
 	DOWNLOAD = "download"
-	DISPLAY  = "display"
+
+	IMAGE = "image"
+	VIDEO = "video"
 )
 const CACHE = "cache"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		CACHE: {Name: "cache hash auto write catch upload", Help: "缓存池", Actions: ice.MergeActions(ice.Actions{
+		CACHE: {Name: "cache hash auto write catch upload download", Help: "缓存池", Actions: ice.MergeActions(ice.Actions{
 			WATCH: {Name: "watch hash* path*", Help: "释放", Hand: func(m *ice.Message, arg ...string) {
 				_cache_watch(m, m.Option(mdb.HASH), m.Option(nfs.PATH))
 			}},
@@ -124,16 +122,13 @@ func init() {
 				_cache_save(m, mime, name, "", file, size)
 			}},
 			DOWNLOAD: {Name: "download type name*", Hand: func(m *ice.Message, arg ...string) {
-				if r, ok := m.Optionv(RESPONSE).(*http.Response); !m.Warn(!ok, ice.ErrNotValid, RESPONSE) {
-					file, size := _cache_catch(m, _cache_download(m, r, path.Join(ice.VAR_TMP, kit.Hashs(mdb.UNIQ)), m.OptionCB("")))
+				if res, ok := m.Optionv(RESPONSE).(*http.Response); !m.Warn(!ok, ice.ErrNotValid, RESPONSE) {
+					file, size := _cache_catch(m, _cache_download(m, res, path.Join(ice.VAR_TMP, kit.Hashs(mdb.UNIQ)), m.OptionCB("")))
 					_cache_save(m, m.Option(mdb.TYPE), m.Option(mdb.NAME), "", file, size)
 				}
 			}},
 			ice.RENDER_DOWNLOAD: {Hand: func(m *ice.Message, arg ...string) {
-				p := kit.Select(arg[0], arg, 1)
-				p = kit.Select("", SHARE_LOCAL, !strings.HasPrefix(p, ice.PS) && !strings.HasPrefix(p, HTTP)) + p
-				args := []string{ice.POD, m.Option(ice.MSG_USERPOD), "filename", kit.Select("", arg[0], len(arg) > 1)}
-				m.Echo(fmt.Sprintf(`<a href="%s" download="%s">%s</a>`, MergeURL2(m, p, args), path.Base(arg[0]), arg[0]))
+				m.Echo(_share_link(m, kit.Select(arg[0], arg, 1), ice.POD, m.Option(ice.MSG_USERPOD), "filename", kit.Select("", arg[0], len(arg) > 1)))
 			}},
 			ice.PS: {Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashSelectDetail(m, arg[0], func(value ice.Map) {
@@ -145,13 +140,13 @@ func init() {
 				})
 			}},
 		}, mdb.HashAction(mdb.SHORT, mdb.TEXT, mdb.FIELD, "time,hash,size,type,name,text,file", ctx.ACTION, WATCH), ice.RenderAction(ice.RENDER_DOWNLOAD)), Hand: func(m *ice.Message, arg ...string) {
-			if mdb.HashSelect(m, arg...); len(arg) == 0 || m.R.Method == http.MethodGet {
+			if mdb.HashSelect(m, arg...); len(arg) == 0 || m.R != nil && m.R.Method == http.MethodGet {
 				return
 			}
 			if m.Append(nfs.FILE) == "" {
 				m.PushScript(mdb.TEXT, m.Append(mdb.TEXT))
 			} else {
-				PushDisplay(m, m.Append(mdb.TYPE), m.Append(mdb.NAME), MergeURL2(m, SHARE_CACHE+arg[0]))
+				PushDisplay(m, m.Append(mdb.TYPE), m.Append(mdb.NAME), MergeURL2(m, P(SHARE, CACHE, arg[0])))
 			}
 		}},
 	})
@@ -167,24 +162,17 @@ func init() {
 				m.Assert(len(up) > 1)
 				m.Cmd(CACHE, m.Option(ice.MSG_UPLOAD)).Table(func(value ice.Maps) { m.Options(value) })
 				if m.Options(mdb.HASH, up[0], mdb.NAME, up[1]); watch {
-					m.Cmdy(CACHE, WATCH, m.Option(mdb.HASH), path.Join(m.Option(nfs.PATH), m.Option(mdb.NAME)))
+					m.Cmdy(CACHE, WATCH, m.Option(mdb.HASH), path.Join(m.Option(nfs.PATH), up[1]))
 				}
 			}, action.Hand)
 		}
 	})
 	ctx.Upload = Upload
 }
-func RenderCache(m *ice.Message, h string) {
-	if msg := m.Cmd(CACHE, h); msg.Append(nfs.FILE) == "" {
-		m.RenderResult(msg.Append(mdb.TEXT))
-	} else {
-		m.RenderDownload(msg.Append(mdb.FILE), msg.Append(mdb.TYPE), msg.Append(mdb.NAME))
-	}
-}
 func Upload(m *ice.Message) []string {
 	if up := kit.Simple(m.Optionv(ice.MSG_UPLOAD)); len(up) == 1 {
 		if m.Cmdy(CACHE, UPLOAD).Optionv(ice.MSG_UPLOAD, kit.Simple(m.Append(mdb.HASH), m.Append(mdb.NAME), m.Append(nfs.SIZE))); m.Option(ice.MSG_USERPOD) != "" {
-			m.Cmd(SPACE, m.Option(ice.MSG_USERPOD), SPIDE, ice.DEV, SPIDE_CACHE, http.MethodGet, tcp.PublishLocalhost(m, MergeURL2(m, path.Join(SHARE_CACHE, m.Append(mdb.HASH)))))
+			m.Cmd(SPACE, m.Option(ice.MSG_USERPOD), SPIDE, ice.DEV, SPIDE_CACHE, http.MethodGet, tcp.PublishLocalhost(m, MergeURL2(m, PP(SHARE, CACHE, m.Append(mdb.HASH)))))
 		}
 		return kit.Simple(m.Optionv(ice.MSG_UPLOAD))
 	} else {
@@ -192,14 +180,21 @@ func Upload(m *ice.Message) []string {
 	}
 }
 func Download(m *ice.Message, link string, cb func(count, total, value int)) *ice.Message {
-	return m.Cmdy("web.spide", ice.DEV, SPIDE_CACHE, http.MethodGet, link, cb)
+	return m.Cmdy(Prefix(SPIDE), ice.DEV, SPIDE_CACHE, http.MethodGet, link, cb)
 }
 func PushDisplay(m *ice.Message, mime, name, link string) {
-	if strings.HasPrefix(mime, "image/") || kit.ExtIsImage(name) {
+	if strings.HasPrefix(mime, IMAGE+ice.PS) || kit.ExtIsImage(name) {
 		m.PushImages(nfs.FILE, link)
-	} else if strings.HasPrefix(mime, "video/") || kit.ExtIsImage(name) {
+	} else if strings.HasPrefix(mime, VIDEO+ice.PS) || kit.ExtIsImage(name) {
 		m.PushVideos(nfs.FILE, link)
 	} else {
 		m.PushDownload(nfs.FILE, name, link)
+	}
+}
+func RenderCache(m *ice.Message, h string) {
+	if msg := m.Cmd(CACHE, h); msg.Append(nfs.FILE) == "" {
+		m.RenderResult(msg.Append(mdb.TEXT))
+	} else {
+		m.RenderDownload(msg.Append(mdb.FILE), msg.Append(mdb.TYPE), msg.Append(mdb.NAME))
 	}
 }

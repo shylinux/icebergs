@@ -18,7 +18,7 @@ import (
 )
 
 func _path_split(ps string) []string {
-	ps = strings.ReplaceAll(ps, "\\", ice.PS)
+	ps = kit.ReplaceAll(ps, "\\", ice.PS)
 	return kit.Split(ps, ice.NL+kit.Select(ice.DF, ";", strings.Contains(ps, ";")), ice.NL)
 }
 func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
@@ -69,8 +69,7 @@ func _system_out(m *ice.Message, out string) io.Writer {
 	} else if m.Option(out) == "" {
 		return nil
 	} else if f, p, e := file.CreateFile(m.Option(out)); m.Assert(e) {
-		m.Logs(nfs.SAVE, out, p)
-		m.Optionv(out, f)
+		m.Logs(nfs.SAVE, out, p).Optionv(out, f)
 		return f
 	}
 	return nil
@@ -116,14 +115,12 @@ func _system_find(m Message, bin string, dir ...string) string {
 	if strings.HasPrefix(bin, nfs.PWD) {
 		return bin
 	}
-	if len(dir) == 0 {
-		dir = append(dir, _path_split(kit.Env(PATH))...)
-	}
+	kit.If(len(dir) == 0, func() { dir = append(dir, _path_split(kit.Env(PATH))...) })
 	for _, p := range dir {
 		if nfs.ExistsFile(m, path.Join(p, bin)) {
 			return kit.Path(p, bin)
 		}
-		if nfs.ExistsFile(m, path.Join(p, bin)+".exe") {
+		if IsWindows() && nfs.ExistsFile(m, path.Join(p, bin)+".exe") {
 			return kit.Path(p, bin) + ".exe"
 		}
 	}
@@ -145,11 +142,11 @@ const (
 	CMD_OUT = "cmd_out"
 
 	MAN   = "man"
-	GREP  = "grep"
-	OPENS = "opens"
-	REST  = "rest"
 	FIND  = "find"
+	GREP  = "grep"
 	EXEC  = "exec"
+	REST  = "rest"
+	OPENS = "opens"
 )
 
 const SYSTEM = "system"
@@ -214,11 +211,10 @@ func SystemFind(m Message, bin string, dir ...string) string {
 	if text := kit.ReadFile(ice.ETC_PATH); len(text) > 0 {
 		dir = append(dir, strings.Split(text, ice.NL)...)
 	}
-	dir = append(dir, _path_split(kit.Env(PATH))...)
-	return _system_find(m, bin, dir...)
+	return _system_find(m, bin, append(dir, _path_split(kit.Env(PATH))...)...)
 }
-func IsSuccess(m Message) bool                        { return m.Append(CODE) == "" || m.Append(CODE) == "0" }
 func SystemExec(m *ice.Message, arg ...string) string { return strings.TrimSpace(m.Cmdx(SYSTEM, arg)) }
 func SystemCmds(m *ice.Message, cmds string, args ...ice.Any) string {
 	return strings.TrimRight(m.Cmdx(SYSTEM, "sh", "-c", kit.Format(cmds, args...), ice.Option{CMD_OUTPUT, ""}), ice.NL)
 }
+func IsSuccess(m Message) bool { return m.Append(CODE) == "" || m.Append(CODE) == "0" }

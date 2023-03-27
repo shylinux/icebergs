@@ -4,7 +4,6 @@ import (
 	"io"
 	"os/exec"
 	"runtime"
-	"strings"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/ctx"
@@ -24,8 +23,8 @@ func _daemon_exec(m *ice.Message, cmd *exec.Cmd) {
 	if w := _system_out(m, CMD_ERRPUT); w != nil {
 		cmd.Stderr = w
 	}
-	h := mdb.HashCreate(m.Spawn(), ice.CMD, kit.Join(cmd.Args, ice.SP),
-		STATUS, START, DIR, cmd.Dir, ENV, kit.Select("", cmd.Env),
+	h := mdb.HashCreate(m.Spawn(), STATUS, START,
+		ice.CMD, kit.Join(cmd.Args, ice.SP), DIR, cmd.Dir, ENV, kit.Select("", cmd.Env),
 		m.OptionSimple(CMD_INPUT, CMD_OUTPUT, CMD_ERRPUT, mdb.CACHE_CLEAR_ON_EXIT),
 	)
 	if e := cmd.Start(); m.Warn(e, ice.ErrNotStart, cmd.Args) {
@@ -36,21 +35,14 @@ func _daemon_exec(m *ice.Message, cmd *exec.Cmd) {
 	m.Echo("%d", cmd.Process.Pid)
 	m.Go(func() {
 		if e := cmd.Wait(); !m.Warn(e, ice.ErrNotStart, cmd.Args) && cmd.ProcessState != nil && cmd.ProcessState.Success() {
-			m.Cost(CODE, "0", ctx.ARGS, cmd.Args)
 			mdb.HashModify(m, mdb.HASH, h, STATUS, STOP)
+			m.Cost(CODE, "0", ctx.ARGS, cmd.Args)
 		} else {
-			mdb.HashSelectUpdate(m, h, func(value ice.Map) {
-				if value[STATUS] == START {
-					value[STATUS], value[ERROR] = ERROR, e
-				}
-			})
+			mdb.HashSelectUpdate(m, h, func(value ice.Map) { kit.If(value[STATUS] == START, func() { value[STATUS], value[ERROR] = ERROR, e }) })
 		}
-		status := mdb.HashSelectField(m, h, STATUS)
-		switch m.Sleep300ms(); cb := m.OptionCB("").(type) {
+		switch status := mdb.HashSelectField(m.Sleep300ms(), h, STATUS); cb := m.OptionCB("").(type) {
 		case func(string) bool:
-			if !cb(status) {
-				m.Cmdy(DAEMON, cmd.Path, cmd.Args)
-			}
+			kit.If(!cb(status), func() { m.Cmdy(DAEMON, cmd.Path, cmd.Args) })
 		case func(string):
 			cb(status)
 		case func():
@@ -107,20 +99,15 @@ const DAEMON = "daemon"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		DAEMON: {Name: "daemon hash auto", Help: "守护进程", Actions: ice.MergeActions(ice.Actions{
-			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashPrunesValue(m, mdb.CACHE_CLEAR_ON_EXIT, ice.TRUE)
-			}},
+			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { mdb.HashPrunesValue(m, mdb.CACHE_CLEAR_ON_EXIT, ice.TRUE) }},
 			START: {Name: "start cmd* dir env", Hand: func(m *ice.Message, arg ...string) {
 				m.Options(CMD_DIR, m.Option(DIR), CMD_ENV, kit.Split(m.Option(ENV), " ="))
 				_daemon_exec(m, _system_cmd(m, kit.Split(m.Option(ice.CMD))...))
 			}},
-			RESTART: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy("", STOP).Sleep3s().Cmdy("", START)
-			}},
+			RESTART: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy("", STOP).Sleep3s().Cmdy("", START) }},
 			STOP: {Hand: func(m *ice.Message, arg ...string) {
-				m.OptionFields(mdb.HashField(m))
 				h, pid := m.Option(mdb.HASH), m.Option(PID)
-				mdb.HashSelect(m, m.Option(mdb.HASH)).Table(func(value ice.Maps) {
+				mdb.HashSelects(m, h).Table(func(value ice.Maps) {
 					if h == "" && value[PID] != pid {
 						return
 					}
@@ -129,23 +116,18 @@ func init() {
 				})
 			}},
 		}, mdb.StatusHashAction(mdb.FIELD, "time,hash,status,pid,cmd,dir,env")), Hand: func(m *ice.Message, arg ...string) {
-			if len(arg) == 0 || !strings.Contains(arg[0], ice.PS) {
-				if mdb.HashSelect(m, kit.Slice(arg, 0, 1)...).Table(func(value ice.Maps) {
-					switch value[STATUS] {
-					case START:
-						m.PushButton(RESTART, STOP)
-					default:
-						m.PushButton(START, mdb.REMOVE)
-					}
-				}); len(arg) == 0 || m.Length() > 0 {
-					if len(arg) == 0 {
-						m.Action(START, mdb.PRUNES)
-					}
-					return
+			mdb.HashSelect(m, arg...).Table(func(value ice.Maps) {
+				switch value[STATUS] {
+				case START:
+					m.PushButton(RESTART, STOP)
+				default:
+					m.PushButton(START, mdb.REMOVE)
 				}
-			}
-			if _daemon_exec(m, _system_cmd(m, kit.Simple(kit.Split(arg[0]), arg[1:])...)); IsSuccess(m) && m.Append(CMD_ERR) == "" {
-				m.SetAppend()
+			})
+			kit.If(len(arg) == 0, func() { m.Action(START, mdb.PRUNES) })
+			if len(arg) > 0 && m.Length() == 0 {
+				_daemon_exec(m, _system_cmd(m, kit.Simple(kit.Split(arg[0]), arg[1:])...))
+				kit.If(IsSuccess(m) && m.Append(CMD_ERR) == "", func() { m.SetAppend() })
 			}
 		}},
 	})

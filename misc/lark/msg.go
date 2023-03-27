@@ -13,12 +13,12 @@ import (
 )
 
 func _lark_get(m *ice.Message, appid string, arg ...ice.Any) (*ice.Message, ice.Any) {
-	m.Option(web.SPIDE_HEADER, "Authorization", "Bearer "+m.Cmdx(APP, TOKEN, appid), web.ContentType, web.ContentJSON)
+	m.Option(web.SPIDE_HEADER, "Authorization", "Bearer "+m.Cmdx(APP, TOKEN, appid), web.ContentType, web.ApplicationJSON)
 	msg := m.Cmd(web.SPIDE, LARK, http.MethodGet, arg)
 	return msg, msg.Optionv(web.SPIDE_RES)
 }
 func _lark_post(m *ice.Message, appid string, arg ...ice.Any) *ice.Message {
-	m.Option(web.SPIDE_HEADER, "Authorization", "Bearer "+m.Cmdx(APP, TOKEN, appid), web.ContentType, web.ContentJSON)
+	m.Option(web.SPIDE_HEADER, "Authorization", "Bearer "+m.Cmdx(APP, TOKEN, appid), web.ContentType, web.ApplicationJSON)
 	return m.Cmd(web.SPIDE, LARK, arg)
 }
 func _lark_parse(m *ice.Message) {

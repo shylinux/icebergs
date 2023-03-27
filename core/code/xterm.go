@@ -2,12 +2,9 @@ package code
 
 import (
 	"encoding/base64"
-	"os"
-	"os/exec"
 	"path"
 	"strings"
 
-	pty "shylinux.com/x/creackpty"
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
@@ -16,51 +13,33 @@ import (
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/ssh"
 	"shylinux.com/x/icebergs/base/web"
+	"shylinux.com/x/icebergs/misc/xterm"
 	kit "shylinux.com/x/toolkits"
 )
 
-type _xterm struct {
-	*exec.Cmd
-	*os.File
-}
-
-func (s _xterm) Setsize(rows, cols string) error {
-	return pty.Setsize(s.File, &pty.Winsize{Rows: uint16(kit.Int(rows)), Cols: uint16(kit.Int(cols))})
-}
-func (s _xterm) Writeln(data string, arg ...ice.Any) {
-	s.Write(kit.Format(data, arg...) + ice.NL)
-}
-func (s _xterm) Write(data string) (int, error) {
-	return s.File.Write([]byte(data))
-}
-func (s _xterm) Close() error {
-	return s.Cmd.Process.Kill()
-}
-func _xterm_get(m *ice.Message, h string) _xterm {
+func _xterm_get(m *ice.Message, h string) xterm.XTerm {
 	h = kit.Select(m.Option(mdb.HASH), h)
 	m.Assert(h != "")
 	mdb.HashModify(m, mdb.TIME, m.Time(), web.VIEW, m.Option(ice.MSG_DAEMON))
 	return mdb.HashSelectTarget(m, h, func(value ice.Maps) ice.Any {
 		text := strings.Split(value[mdb.TEXT], ice.NL)
 		ls := kit.Split(strings.Split(kit.Select(nfs.SH, value[mdb.TYPE]), " # ")[0])
-		cmd := exec.Command(cli.SystemFind(m, ls[0]), ls[1:]...)
-		cmd.Dir = nfs.MkdirAll(m, kit.Path(value[nfs.PATH]))
-		cmd.Env = append(cmd.Env, os.Environ()...)
-		cmd.Env = append(cmd.Env, "TERM=xterm")
-		tty, err := pty.Start(cmd)
-		m.Assert(err)
+		term, e := xterm.Command(m, value[nfs.PATH], cli.SystemFind(m, ls[0]), ls[1:]...)
+		if m.Warn(e) {
+			return
+		}
 		m.Go(func() {
-			defer tty.Close()
+			defer term.Close()
 			defer mdb.HashRemove(m, mdb.HASH, h)
-			m.Log(cli.START, strings.Join(cmd.Args, ice.SP))
+			m.Log("start", strings.Join(term.Args, ice.SP))
 			buf := make([]byte, ice.MOD_BUFS)
 			for {
-				if n, e := tty.Read(buf); !m.Warn(e) && e == nil {
+				if n, e := term.Read(buf); !m.Warn(e) && e == nil {
 					if _xterm_echo(m, h, string(buf[:n])); len(text) > 0 {
 						if cmd := text[0]; text[0] != "" {
 							m.Go(func() {
 								m.Sleep30ms()
-								tty.Write([]byte(cmd + ice.NL))
+								term.Write(cmd + ice.NL)
 							})
 						}
 						text = text[1:]
@@ -71,8 +50,8 @@ func _xterm_get(m *ice.Message, h string) _xterm {
 				}
 			}
 		})
-		return _xterm{cmd, tty}
-	}).(_xterm)
+		return term
+	}).(xterm.XTerm)
 }
 func _xterm_echo(m *ice.Message, h string, str string) {
 	m.Options(ice.MSG_DAEMON, mdb.HashSelectField(m, h, web.VIEW))
@@ -90,7 +69,7 @@ func init() {
 		XTERM: {Name: "xterm hash auto", Help: "命令行", Actions: ice.MergeActions(ice.Actions{
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == mdb.FOREACH && arg[1] == "" {
-					m.PushSearch(mdb.TYPE, web.LINK, mdb.NAME, m.CommandKey(), mdb.TEXT, web.MergePodCmds(m, "", "", log.DEBUG, ice.TRUE))
+					m.PushSearch(mdb.TYPE, web.LINK, mdb.NAME, m.CommandKey(), mdb.TEXT, m.MergePodCmd("", "", log.DEBUG, ice.TRUE))
 				}
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
@@ -126,7 +105,7 @@ func init() {
 				}
 			}},
 			web.OUTPUT: {Help: "全屏", Hand: func(m *ice.Message, arg ...string) {
-				web.ProcessWebsite(m, "", "", m.OptionSimple(mdb.HASH), ctx.STYLE, web.OUTPUT)
+				web.ProcessPodCmd(m, "", "", m.OptionSimple(mdb.HASH), ctx.STYLE, web.OUTPUT)
 			}},
 			web.DREAM_CREATE: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd("", mdb.CREATE, mdb.TYPE, BASH, m.OptionSimple(mdb.NAME), nfs.PATH, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME)))

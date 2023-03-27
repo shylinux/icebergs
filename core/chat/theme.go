@@ -5,7 +5,6 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
-	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
@@ -95,7 +94,7 @@ func init() {
 				m.RenderDownload(p)
 				return
 			}
-			m.Cmdy("", kit.TrimExt(kit.Select(cli.BLACK, arg, 0), nfs.CSS)).RenderResult().W.Header()[web.ContentType] = kit.Simple(web.ContentCSS)
+			m.Cmdy("", kit.TrimExt(kit.Select(web.BLACK, arg, 0), nfs.CSS)).RenderResult().W.Header()[web.ContentType] = kit.Simple(web.ContentCSS)
 		}},
 	})
 }

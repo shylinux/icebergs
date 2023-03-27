@@ -141,7 +141,8 @@ func renderVersion(m *ice.Message) string {
 }
 
 const (
-	WEBSITE = "website"
+	BLACK   = "black"
+	DISPLAY = "display"
 	RESIZE  = "resize"
 	LAYOUT  = "layout"
 	OUTPUT  = "output"
@@ -149,9 +150,10 @@ const (
 	VIEW    = "view"
 	CHAT    = "chat"
 
-	CODE_VIMER = "web.code.vimer"
-	CODE_INNER = "web.code.inner"
-	CODE_XTERM = "web.code.xterm"
-	CHAT_FAVOR = "web.chat.favor"
-	WIKI_WORD  = "web.wiki.word"
+	CODE_VIMER  = "web.code.vimer"
+	CODE_INNER  = "web.code.inner"
+	CODE_XTERM  = "web.code.xterm"
+	CHAT_FAVOR  = "web.chat.favor"
+	CHAT_IFRAME = "web.chat.iframe"
+	WIKI_WORD   = "web.wiki.word"
 )

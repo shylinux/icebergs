@@ -16,16 +16,16 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/ssh"
 	"shylinux.com/x/icebergs/base/tcp"
+	"shylinux.com/x/icebergs/misc/websocket"
 	kit "shylinux.com/x/toolkits"
-	"shylinux.com/x/websocket"
 )
 
 func _space_qrcode(m *ice.Message, dev string) {
 	ssh.PrintQRCode(m, m.Cmdv(SPACE, dev, cli.PWD, mdb.LINK))
 }
 func _space_dial(m *ice.Message, dev, name string, arg ...string) {
-	uri := kit.ParseURL(kit.MergeURL2(strings.Replace(m.Cmdv(SPIDE, dev, CLIENT_ORIGIN), HTTP, "ws", 1), PP(SPACE), mdb.TYPE, ice.Info.NodeType, mdb.NAME, name, arg))
-	args := kit.SimpleKV("type,name,host,port", uri.Scheme, dev, uri.Hostname(), uri.Port())
+	u := kit.ParseURL(kit.MergeURL2(strings.Replace(m.Cmdv(SPIDE, dev, CLIENT_ORIGIN), HTTP, "ws", 1), PP(SPACE), mdb.TYPE, ice.Info.NodeType, mdb.NAME, name, arg))
+	args := kit.SimpleKV("type,name,host,port", u.Scheme, dev, u.Hostname(), u.Port())
 	m.Go(func() {
 		once := sync.Once{}
 		redial := kit.Dict(mdb.Configv(m, REDIAL))
@@ -33,13 +33,13 @@ func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 		for i := 1; i < c; i++ {
 			next := time.Duration(rand.Intn(a*(i+1))+b*i) * time.Millisecond
 			m.Cmd(tcp.CLIENT, tcp.DIAL, args, func(c net.Conn) {
-				if c, _, e := websocket.NewClient(c, uri, nil, ice.MOD_BUFS, ice.MOD_BUFS); !m.Warn(e, tcp.DIAL, dev, SPACE, uri.String()) {
-					defer mdb.HashCreateDeferRemove(m, kit.SimpleKV("", MASTER, dev, uri.Hostname()), kit.Dict(mdb.TARGET, c))()
+				if c, e := websocket.NewClient(c, u); !m.Warn(e, tcp.DIAL, dev, SPACE, u.String()) {
+					defer mdb.HashCreateDeferRemove(m, kit.SimpleKV("", MASTER, dev, u.Hostname()), kit.Dict(mdb.TARGET, c))()
 					kit.If(ice.Info.Colors, func() { once.Do(func() { m.Go(func() { _space_qrcode(m, dev) }) }) })
 					_space_handle(m.Spawn(), true, dev, c)
 					i = 0
 				}
-			}).Cost(mdb.COUNT, i, mdb.NEXT, next, tcp.DIAL, dev, LINK, uri.String()).Sleep(next)
+			}).Cost(mdb.COUNT, i, mdb.NEXT, next, tcp.DIAL, dev, LINK, u.String()).Sleep(next)
 		}
 	}, kit.Join(kit.Simple(SPACE, name), ice.SP))
 }
@@ -47,7 +47,7 @@ func _space_fork(m *ice.Message) {
 	addr := kit.Select(m.R.RemoteAddr, m.R.Header.Get(ice.MSG_USERADDR))
 	name := kit.ReplaceAll(kit.Select(addr, m.Option(mdb.NAME)), "[", "_", "]", "_", ice.DF, "_", ice.PT, "_")
 	args := kit.Simple(mdb.TYPE, kit.Select(WORKER, m.Option(mdb.TYPE)), mdb.NAME, name, mdb.TEXT, kit.Select(addr, m.Option(mdb.TEXT)), m.OptionSimple(cli.DAEMON, ice.MSG_USERUA))
-	if c, e := websocket.Upgrade(m.W, m.R, nil, ice.MOD_BUFS, ice.MOD_BUFS); !m.Warn(e) {
+	if c, e := websocket.Upgrade(m.W, m.R); !m.Warn(e) {
 		m.Go(func() {
 			defer mdb.HashCreateDeferRemove(m, args, kit.Dict(mdb.TARGET, c))()
 			switch m.Option(mdb.TYPE) {
@@ -164,6 +164,7 @@ func init() {
 				}
 				_space_dial(m, m.Option(ice.DEV), kit.Select(ice.Info.NodeName, m.Option(mdb.NAME)), arg...)
 			}},
+			cli.START: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy("", tcp.DIAL, arg) }},
 			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) {
 				defer mdb.HashModifyDeferRemove(m, m.OptionSimple(mdb.NAME), mdb.STATUS, cli.STOP)()
 				m.Cmd("", m.Option(mdb.NAME), ice.EXIT)
@@ -175,7 +176,7 @@ func init() {
 						case MASTER:
 							m.PushSearch(mdb.TEXT, m.Cmdv(SPIDE, value[mdb.NAME], CLIENT_ORIGIN), value)
 						case SERVER:
-							m.PushSearch(mdb.TEXT, MergePods(m, value[mdb.NAME]), value)
+							m.PushSearch(mdb.TEXT, m.MergePod(value[mdb.NAME]), value)
 						}
 					})
 				} else if arg[0] == mdb.FOREACH && arg[1] == ssh.SHELL {
@@ -192,13 +193,11 @@ func init() {
 				case MASTER:
 					ctx.ProcessOpen(m, m.Cmdv(SPIDE, m.Option(mdb.NAME), CLIENT_ORIGIN))
 				default:
-					ctx.ProcessOpen(m, MergePods(m, m.Option(mdb.NAME), arg))
+					ctx.ProcessOpen(m, m.MergePod(m.Option(mdb.NAME), arg))
 				}
 			}},
 			ice.PS: {Hand: func(m *ice.Message, arg ...string) { _space_fork(m) }},
-		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,type,name,text", ctx.ACTION, OPEN,
-			REDIAL, kit.Dict("a", 3000, "b", 1000, "c", 1000),
-		), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,type,name,text", ctx.ACTION, OPEN, REDIAL, kit.Dict("a", 3000, "b", 1000, "c", 1000)), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 {
 				mdb.HashSelect(m, arg...).Sort("").Table(func(value ice.Maps) { m.PushButton(kit.Select(OPEN, LOGIN, value[mdb.TYPE] == LOGIN), mdb.REMOVE) })
 			} else {

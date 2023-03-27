@@ -39,7 +39,7 @@ func _dream_show(m *ice.Message, name string) {
 		return
 	}
 	kit.If(!strings.Contains(name, "-") || !strings.HasPrefix(name, "20"), func() { name = m.Time("20060102-") + name })
-	defer m.ProcessOpen(MergePods(m, m.Option(mdb.NAME, name)))
+	defer m.ProcessOpen(m.MergePod(m.Option(mdb.NAME, name)))
 	p := path.Join(ice.USR_LOCAL_WORK, name)
 	if pid := m.Cmdx(nfs.CAT, path.Join(p, ice.Info.PidPath), kit.Dict(ice.MSG_USERROLE, aaa.TECH)); pid != "" && nfs.ExistsFile(m, "/proc/"+pid) {
 		m.Info("already exists %v", pid)
@@ -93,7 +93,7 @@ func init() {
 		DREAM: {Name: "dream name path auto create", Help: "梦想家", Actions: ice.MergeActions(ice.Actions{
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == mdb.FOREACH && arg[1] == "" {
-					m.Cmds("", func(value ice.Maps) { m.PushSearch(mdb.TEXT, MergePods(m, value[mdb.NAME]), value) })
+					m.Cmds("", func(value ice.Maps) { m.PushSearch(mdb.TEXT, m.MergePod(value[mdb.NAME]), value) })
 				}
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
@@ -136,7 +136,7 @@ func init() {
 			DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				kit.Switch(m.Option(mdb.TYPE), []string{SERVER, WORKER}, func() { m.PushButton(OPEN) })
 			}},
-			OPEN: {Hand: func(m *ice.Message, arg ...string) { ctx.ProcessOpen(m, MergePods(m, m.Option(mdb.NAME), arg)) }},
+			OPEN: {Hand: func(m *ice.Message, arg ...string) { ctx.ProcessOpen(m, m.MergePod(m.Option(mdb.NAME), arg)) }},
 		}, ctx.CmdAction(), DreamAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				_dream_list(m)

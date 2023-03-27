@@ -5,7 +5,6 @@ import (
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/web"
-	kit "shylinux.com/x/toolkits"
 )
 
 const (
@@ -28,10 +27,10 @@ func init() {
 				m.PushAction("copy", mdb.MODIFY, mdb.REMOVE)
 				ctx.DisplayLocal(m, "")
 			} else {
-				for _, p := range kit.Split(m.Append("image")) {
-					m.EchoImages(web.MergeURL2(m, web.SHARE_CACHE+p))
-				}
-				m.PushAction("play", "stop", "copy", mdb.MODIFY, mdb.REMOVE)
+				// for _, p := range kit.Split(m.Append("image")) {
+				// 	m.EchoImages(web.MergeURL2(m, web.SHARE_CACHE+p))
+				// }
+				// m.PushAction("play", "stop", "copy", mdb.MODIFY, mdb.REMOVE)
 			}
 		}},
 	})

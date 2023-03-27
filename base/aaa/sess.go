@@ -50,6 +50,10 @@ func SessCheck(m *ice.Message, sessid string) bool {
 	return sessid != "" && m.Cmdy(SESS, CHECK, sessid, logs.FileLineMeta(-1)).Option(ice.MSG_USERNAME) != ""
 }
 func SessAuth(m *ice.Message, value ice.Any, arg ...string) *ice.Message {
+	switch val := value.(type) {
+	case []string:
+		value = kit.Dict(USERNICK, kit.Select("", val, 0), USERNAME, kit.Select("", val, 1), USERROLE, kit.Select("", val, 2))
+	}
 	return m.Auth(
 		USERNICK, m.Option(ice.MSG_USERNICK, kit.Value(value, USERNICK)),
 		USERNAME, m.Option(ice.MSG_USERNAME, kit.Value(value, USERNAME)),

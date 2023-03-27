@@ -65,10 +65,10 @@ func init() {
 					Qrcode(m, args[1])
 				case wiki.FIELD:
 					m.Option(ice.MSG_USERWEB, m.Cmdx(web.SPACE, web.DOMAIN))
-					Qrcode(m, web.MergePodCmd(m, "", kit.Select(args[1], args, 2)))
+					Qrcode(m, m.MergePodCmd("", kit.Select(args[1], args, 2)))
 				default:
 					m.Option(ice.MSG_USERWEB, m.Cmdx(web.SPACE, web.DOMAIN))
-					Qrcode(m, web.MergePodCmd(m, "", args[0]))
+					Qrcode(m, m.MergePodCmd("", args[0]))
 				}
 			}},
 			nfs.SOURCE: {Hand: func(m *ice.Message, arg ...string) {

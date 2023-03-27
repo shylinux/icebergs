@@ -17,10 +17,7 @@ import (
 
 func _runtime_init(m *ice.Message) {
 	count := kit.Int(m.Conf(RUNTIME, kit.Keys(BOOT, mdb.COUNT)))
-	kit.For(kit.UnMarshal(kit.Format(ice.Info.Make)), func(key string, value ice.Any) {
-		m.Conf(RUNTIME, kit.Keys(MAKE, strings.ToLower(key)), value)
-	})
-	aaa.UserRoot(ice.Pulse, "", ice.Info.Make.Username, aaa.TECH, ice.DEV)
+	kit.For(kit.UnMarshal(kit.Format(ice.Info.Make)), func(k string, v ice.Any) { m.Conf(RUNTIME, kit.Keys(MAKE, strings.ToLower(k)), v) })
 	m.Conf(RUNTIME, kit.Keys(HOST, GOARCH), runtime.GOARCH)
 	m.Conf(RUNTIME, kit.Keys(HOST, GOOS), runtime.GOOS)
 	m.Conf(RUNTIME, kit.Keys(HOST, OSID), release(m))
@@ -28,22 +25,16 @@ func _runtime_init(m *ice.Message) {
 	m.Conf(RUNTIME, kit.Keys(HOST, PWD), kit.Path(""))
 	m.Conf(RUNTIME, kit.Keys(HOST, HOME), kit.HomePath(""))
 	m.Conf(RUNTIME, kit.Keys(HOST, MAXPROCS), runtime.GOMAXPROCS(0))
-	for _, k := range ENV_LIST {
-		switch m.Conf(RUNTIME, kit.Keys(CONF, k), kit.Env(k)); k {
-		case CTX_PID:
-			ice.Info.PidPath = kit.Env(k)
-		}
-	}
+	kit.For(ENV_LIST, func(k string) {
+		m.Conf(RUNTIME, kit.Keys(CONF, k), kit.Env(k))
+		kit.If(k == CTX_PID, func() { ice.Info.PidPath = kit.Env(k) })
+	})
 	m.Conf(RUNTIME, kit.Keys(BOOT, HOSTNAME), kit.Env("HOSTNAME"))
 	if name, e := os.Hostname(); e == nil && name != "" {
 		m.Conf(RUNTIME, kit.Keys(BOOT, HOSTNAME), name)
 	}
 	m.Conf(RUNTIME, kit.Keys(BOOT, PATHNAME), path.Base(kit.Path("")))
-	m.Conf(RUNTIME, kit.Keys(BOOT, USERNAME), kit.Select(kit.UserName(), kit.Env(CTX_USER)))
-	ice.Info.Hostname = m.Conf(RUNTIME, kit.Keys(BOOT, HOSTNAME))
-	ice.Info.Pathname = m.Conf(RUNTIME, kit.Keys(BOOT, PATHNAME))
-	ice.Info.Username = m.Conf(RUNTIME, kit.Keys(BOOT, USERNAME))
-	aaa.UserRoot(ice.Pulse, "", ice.Info.Username, aaa.ROOT, ice.OPS)
+	m.Conf(RUNTIME, kit.Keys(BOOT, USERNAME), kit.UserName())
 	msg := m.Cmd(nfs.DIR, _system_find(m, os.Args[0]), "time,path,size,hash")
 	m.Conf(RUNTIME, kit.Keys(BOOT, ice.BIN), msg.Append(nfs.PATH))
 	m.Conf(RUNTIME, kit.Keys(BOOT, nfs.SIZE), msg.Append(nfs.SIZE))
@@ -52,6 +43,11 @@ func _runtime_init(m *ice.Message) {
 	m.Conf(RUNTIME, kit.Keys(BOOT, mdb.COUNT), count+1)
 	m.Conf(RUNTIME, mdb.META, "")
 	m.Conf(RUNTIME, mdb.HASH, "")
+	ice.Info.Hostname = m.Conf(RUNTIME, kit.Keys(BOOT, HOSTNAME))
+	ice.Info.Pathname = m.Conf(RUNTIME, kit.Keys(BOOT, PATHNAME))
+	ice.Info.Username = m.Conf(RUNTIME, kit.Keys(BOOT, USERNAME))
+	aaa.UserRoot(ice.Pulse, "", ice.Info.Username, aaa.ROOT, ice.OPS)
+	aaa.UserRoot(ice.Pulse, "", ice.Info.Make.Username, aaa.TECH, ice.DEV)
 }
 func _runtime_hostinfo(m *ice.Message) {
 	m.Push("nCPU", strings.Count(m.Cmdx(nfs.CAT, "/proc/cpuinfo"), "processor"))
@@ -94,8 +90,8 @@ const (
 )
 const (
 	PATH  = "PATH"
-	USER  = "USER"
 	HOME  = "HOME"
+	USER  = "USER"
 	TERM  = "TERM"
 	SHELL = "SHELL"
 )
@@ -104,21 +100,16 @@ const (
 	CTX_COM = "ctx_com"
 	CTX_DEV = "ctx_dev"
 	CTX_OPS = "ctx_ops"
-	CTX_POD = "ctx_pod"
 	CTX_ARG = "ctx_arg"
-	CTX_ENV = "ctx_env"
 	CTX_PID = "ctx_pid"
 	CTX_LOG = "ctx_log"
+	CTX_POD = "ctx_pod"
+	CTX_ENV = "ctx_env"
 
-	CTX_USER   = "ctx_user"
-	CTX_SHARE  = "ctx_share"
-	CTX_RIVER  = "ctx_river"
 	CTX_DAEMON = "ctx_daemon"
-
-	MAKE_DOMAIN = "make.domain"
 )
 
-var ENV_LIST = []string{TERM, SHELL, CTX_SHY, CTX_COM, CTX_DEV, CTX_OPS, CTX_ARG, CTX_PID, CTX_USER, CTX_SHARE, CTX_RIVER, CTX_DAEMON}
+var ENV_LIST = []string{TERM, SHELL, CTX_SHY, CTX_COM, CTX_DEV, CTX_OPS, CTX_ARG, CTX_PID, CTX_DAEMON}
 
 const (
 	HOSTNAME = "hostname"
@@ -127,11 +118,11 @@ const (
 )
 const (
 	IFCONFIG = "ifconfig"
+	DISKINFO = "diskinfo"
 	HOSTINFO = "hostinfo"
 	USERINFO = "userinfo"
 	PROCINFO = "procinfo"
 	PROCKILL = "prockill"
-	DISKINFO = "diskinfo"
 	BOOTINFO = "bootinfo"
 	MAXPROCS = "maxprocs"
 )
@@ -139,16 +130,17 @@ const RUNTIME = "runtime"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		RUNTIME: {Name: "runtime info=bootinfo,ifconfig,hostname,hostinfo,userinfo,procinfo,diskinfo,api,cli,cmd,env,path,chain auto", Help: "运行环境", Actions: ice.MergeActions(ice.Actions{
+		RUNTIME: {Name: "runtime info=bootinfo,ifconfig,diskinfo,hostinfo,userinfo,procinfo,bootinfo,api,cli,cmd,env,path,chain auto", Help: "运行环境", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { _runtime_init(m) }},
 			IFCONFIG:     {Hand: func(m *ice.Message, arg ...string) { m.Cmdy("tcp.host") }},
+			DISKINFO:     {Hand: func(m *ice.Message, arg ...string) { _runtime_diskinfo(m) }},
+			HOSTINFO:     {Hand: func(m *ice.Message, arg ...string) { _runtime_hostinfo(m) }},
 			HOSTNAME: {Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) > 0 {
-					ice.Info.Hostname = mdb.Conf(m, RUNTIME, kit.Keys(BOOT, HOSTNAME), mdb.Conf(m, RUNTIME, kit.Keys(NODE, mdb.NAME), arg[0]))
+					ice.Info.Hostname = mdb.Conf(m, RUNTIME, kit.Keys(NODE, mdb.NAME), mdb.Conf(m, RUNTIME, kit.Keys(BOOT, HOSTNAME), arg[0]))
 				}
 				m.Echo(ice.Info.Hostname)
 			}},
-			HOSTINFO: {Hand: func(m *ice.Message, arg ...string) { _runtime_hostinfo(m) }},
 			USERINFO: {Hand: func(m *ice.Message, arg ...string) { m.Split(m.Cmdx(SYSTEM, "who"), "user term time") }},
 			PROCINFO: {Hand: func(m *ice.Message, arg ...string) {
 				msg := m.Cmd("", HOSTINFO)
@@ -159,14 +151,6 @@ func init() {
 			MAXPROCS: {Hand: func(m *ice.Message, arg ...string) {
 				kit.If(len(arg) > 0, func() { runtime.GOMAXPROCS(kit.Int(mdb.Conf(m, RUNTIME, kit.Keys(HOST, MAXPROCS), arg[0]))) })
 				m.Echo("%d", runtime.GOMAXPROCS(0))
-			}},
-			DISKINFO: {Hand: func(m *ice.Message, arg ...string) { _runtime_diskinfo(m) }},
-			MAKE_DOMAIN: {Hand: func(m *ice.Message, arg ...string) {
-				if os.Getenv(CTX_DEV) == "" || os.Getenv(CTX_POD) == "" {
-					m.Echo(mdb.Conf(m, RUNTIME, MAKE_DOMAIN))
-				} else {
-					m.Echo(kit.MergePOD(os.Getenv(CTX_DEV), os.Getenv(CTX_POD)))
-				}
 			}},
 			API: {Hand: func(m *ice.Message, arg ...string) {
 				kit.For(ice.Info.Route, func(k, v string) { m.Push(nfs.PATH, k).Push(nfs.FILE, v) })

@@ -162,7 +162,6 @@ func init() {
 			web.DOWNLOAD: {Name: "download link* path", Hand: func(m *ice.Message, arg ...string) { _install_download(m) }},
 			cli.BUILD: {Name: "build link*", Hand: func(m *ice.Message, arg ...string) {
 				web.PushStream(m)
-				defer m.ProcessHold()
 				if err := _install_build(m, arg...); m.Warn(err != "", err) {
 					web.ToastFailure(m, cli.BUILD, err)
 				} else {

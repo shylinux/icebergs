@@ -40,7 +40,7 @@ func init() {
 		BROAD: {Name: "broad hash auto", Help: "广播", Actions: ice.MergeActions(ice.Actions{
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == mdb.FOREACH && arg[1] == "" {
-					host, domain := m.Cmdv(tcp.HOST, aaa.IP), OptionUserWeb(m).Hostname()
+					host, domain := m.Cmdv(tcp.HOST, aaa.IP), UserWeb(m).Hostname()
 					m.Cmds("", func(value ice.Maps) {
 						switch kit.If(value[tcp.HOST] == host, func() { value[tcp.HOST] = domain }); value[mdb.TYPE] {
 						case "sshd":
@@ -59,8 +59,4 @@ func init() {
 			tcp.SEND: {Hand: func(m *ice.Message, arg ...string) { _broad_send(m, "", "", "", "", arg...) }},
 		}, mdb.HashAction(mdb.SHORT, "host,port", mdb.FIELD, "time,hash,type,name,host,port", mdb.ACTION, OPEN), mdb.ClearOnExitHashAction())},
 	})
-}
-func Domain(host, port string) string { return kit.Format("http://%s:%s", host, port) }
-func Script(m *ice.Message, str string, arg ...ice.Any) string {
-	return ice.Render(m, ice.RENDER_SCRIPT, kit.Format(str, arg...))
 }

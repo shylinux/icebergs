@@ -13,10 +13,7 @@ import (
 func _host_list(m *ice.Message, name string) {
 	if ifs, e := net.Interfaces(); m.Assert(e) {
 		for _, v := range ifs {
-			if name != "" && !strings.Contains(v.Name, name) {
-				continue
-			}
-			if len(v.HardwareAddr.String()) == 0 {
+			if !strings.Contains(v.Name, name) || len(v.HardwareAddr.String()) == 0 {
 				continue
 			}
 			if ips, e := v.Addrs(); m.Assert(e) {

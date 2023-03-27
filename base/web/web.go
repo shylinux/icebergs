@@ -56,25 +56,22 @@ func (f *Frame) Start(m *ice.Message, arg ...string) {
 	default:
 		m.Cmd(tcp.SERVER, tcp.LISTEN, mdb.TYPE, HTTP, m.OptionSimple(mdb.NAME, tcp.HOST, tcp.PORT), func(l net.Listener) {
 			defer mdb.HashCreateDeferRemove(m, m.OptionSimple(mdb.NAME, tcp.PROTO), arg, cli.STATUS, tcp.START)()
-			gdb.EventDeferEvent(m, SERVE_START, arg)
+			gdb.Event(m, SERVE_START, arg)
 			m.Warn(f.Server.Serve(l))
 		})
 	}
 }
 func (f *Frame) Close(m *ice.Message, arg ...string) {}
 func (f *Frame) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if _serve_main(f.Message, w, r) {
-		f.ServeMux.ServeHTTP(w, r)
-	}
+	kit.If(_serve_main(f.Message, w, r), func() { f.ServeMux.ServeHTTP(w, r) })
 }
 
 const WEB = "web"
 
 var Index = &ice.Context{Name: WEB, Help: "网络模块"}
 
-func init() {
-	ice.Index.Register(Index, &Frame{}, BROAD, SERVE, SPACE, DREAM, SHARE, CACHE, SPIDE)
-}
+func init() { ice.Index.Register(Index, &Frame{}, BROAD, SERVE, SPACE, DREAM, CACHE, SPIDE, SHARE) }
+
 func ApiAction(arg ...string) ice.Actions { return ice.Actions{kit.Select(ice.PS, arg, 0): {}} }
 func Prefix(arg ...string) string         { return kit.Keys(WEB, arg) }
 

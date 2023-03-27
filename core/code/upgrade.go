@@ -48,7 +48,7 @@ func init() {
 			})
 			if web.ToastSuccess(m); m.Option(ice.EXIT) == ice.TRUE {
 				m.Cmd("", cli.RESTART)
-				web.ToastRestart(m)
+				web.Toast(m, cli.RESTART)
 			}
 		}},
 	}})

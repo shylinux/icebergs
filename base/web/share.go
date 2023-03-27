@@ -18,16 +18,15 @@ import (
 	"shylinux.com/x/toolkits/logs"
 )
 
-func _share_link(m *ice.Message, p string) string {
-	return tcp.PublishLocalhost(m, MergeLink(m, kit.Select("", SHARE_LOCAL, !strings.HasPrefix(p, ice.PS) && !strings.HasPrefix(p, HTTP))+p))
+func _share_link(m *ice.Message, p string, arg ...ice.Any) string {
+	return tcp.PublishLocalhost(m, MergeLink(m, kit.Select("", PP(SHARE, LOCAL), !strings.HasPrefix(p, ice.PS) && !strings.HasPrefix(p, HTTP))+p, arg...))
 }
 func _share_cache(m *ice.Message, arg ...string) {
 	if pod := m.Option(ice.POD); ctx.PodCmd(m, CACHE, arg[0]) {
 		if m.Append(nfs.FILE) == "" {
 			m.RenderResult(m.Append(mdb.TEXT))
 		} else {
-			m.Option(ice.POD, pod)
-			ShareLocalFile(m, m.Append(nfs.FILE))
+			ShareLocalFile(m.Options(ice.POD, pod), m.Append(nfs.FILE))
 		}
 	} else {
 		if m.Cmdy(CACHE, arg[0]); m.Append(nfs.FILE) == "" {
@@ -50,19 +49,16 @@ func _share_proxy(m *ice.Message) {
 }
 
 const (
-	THEME = "theme"
 	LOGIN = "login"
 	RIVER = "river"
 	STORM = "storm"
 	FIELD = "field"
 
-	SHARE_CACHE = "/share/cache/"
-	SHARE_LOCAL = "/share/local/"
-	SHARE_PROXY = "/share/proxy/"
-	SHARE_TOAST = "/share/toast/"
+	LOCAL = "local"
+	PROXY = "proxy"
+	TOAST = "toast"
 
-	SHARE_LOCAL_AVATAR     = "/share/local/avatar/"
-	SHARE_LOCAL_BACKGROUND = "/share/local/background/"
+	SHARE_LOCAL = "/share/local/"
 )
 const SHARE = "share"
 
@@ -82,8 +78,7 @@ func init() {
 				}
 				msg := m.Cmd(SHARE, m.Option(SHARE, arg[0]))
 				if IsNotValidShare(m, msg.Append(mdb.TIME)) {
-					m.RenderResult(kit.Format("共享超时, 请联系 %s(%s), 重新分享 %s %s",
-						msg.Append(aaa.USERNICK), msg.Append(aaa.USERNAME), msg.Append(mdb.TYPE), msg.Append(mdb.NAME)))
+					m.RenderResult(kit.Format("共享超时, 请联系 %s(%s), 重新分享 %s %s", msg.Append(aaa.USERNICK), msg.Append(aaa.USERNAME), msg.Append(mdb.TYPE), msg.Append(mdb.NAME)))
 					return
 				}
 				switch msg.Append(mdb.TYPE) {
@@ -104,16 +99,16 @@ func init() {
 				m.PushAnchor(link)
 			}
 		}},
-		SHARE_CACHE: {Hand: func(m *ice.Message, arg ...string) { _share_cache(m, arg...) }},
-		SHARE_LOCAL: {Hand: func(m *ice.Message, arg ...string) { ShareLocalFile(m, arg...) }},
-		SHARE_LOCAL_AVATAR: {Hand: func(m *ice.Message, arg ...string) {
-			m.RenderDownload(strings.TrimPrefix(m.Cmdv(aaa.USER, m.Option(ice.MSG_USERNAME), aaa.AVATAR), SHARE_LOCAL))
+		PP(SHARE, CACHE): {Hand: func(m *ice.Message, arg ...string) { _share_cache(m, arg...) }},
+		PP(SHARE, LOCAL): {Hand: func(m *ice.Message, arg ...string) { ShareLocalFile(m, arg...) }},
+		PP(SHARE, LOCAL, aaa.AVATAR): {Hand: func(m *ice.Message, arg ...string) {
+			m.RenderDownload(strings.TrimPrefix(m.Cmdv(aaa.USER, m.Option(ice.MSG_USERNAME), aaa.AVATAR), PP(SHARE, LOCAL)))
 		}},
-		SHARE_LOCAL_BACKGROUND: {Hand: func(m *ice.Message, arg ...string) {
-			m.RenderDownload(strings.TrimPrefix(m.Cmdv(aaa.USER, m.Option(ice.MSG_USERNAME), aaa.BACKGROUND), SHARE_LOCAL))
+		PP(SHARE, LOCAL, aaa.BACKGROUND): {Hand: func(m *ice.Message, arg ...string) {
+			m.RenderDownload(strings.TrimPrefix(m.Cmdv(aaa.USER, m.Option(ice.MSG_USERNAME), aaa.BACKGROUND), PP(SHARE, LOCAL)))
 		}},
-		SHARE_PROXY: {Hand: func(m *ice.Message, arg ...string) { _share_proxy(m) }},
-		SHARE_TOAST: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(SPACE, arg[0], kit.UnMarshal(m.Option(ice.ARG))) }},
+		PP(SHARE, PROXY): {Hand: func(m *ice.Message, arg ...string) { _share_proxy(m) }},
+		PP(SHARE, TOAST): {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(SPACE, arg[0], kit.UnMarshal(m.Option(ice.ARG))) }},
 	})
 }
 func IsNotValidShare(m *ice.Message, time string) bool {
@@ -141,7 +136,6 @@ func ShareLocalFile(m *ice.Message, arg ...string) {
 		cache, size = s.ModTime(), s.Size()
 	}
 	kit.If(p == ice.BIN_ICE_BIN, func() { m.Option(ice.MSG_USERROLE, aaa.TECH) })
-	m.Cmd(SPACE, m.Option(ice.POD), SPIDE, ice.DEV, SPIDE_RAW, MergeLink(m, SHARE_PROXY),
-		SPIDE_PART, m.OptionSimple(ice.POD), nfs.PATH, p, nfs.SIZE, size, CACHE, cache.Format(ice.MOD_TIME), UPLOAD, ice.AT+p)
+	m.Cmd(SPACE, m.Option(ice.POD), SPIDE, ice.DEV, SPIDE_RAW, MergeLink(m, PP(SHARE, PROXY)), SPIDE_PART, m.OptionSimple(ice.POD), nfs.PATH, p, nfs.SIZE, size, CACHE, cache.Format(ice.MOD_TIME), UPLOAD, ice.AT+p)
 	m.RenderDownload(kit.Select(p, pp, file.ExistsFile(pp)))
 }

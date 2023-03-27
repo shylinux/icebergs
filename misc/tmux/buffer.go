@@ -32,7 +32,7 @@ func init() {
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			if kit.If(len(arg) > 1 && arg[0] != "" && arg[1] != "", func() { _tmux_cmd(m, SET_BUFFER, "-b", arg[0], arg[1]) }); len(arg) > 0 && arg[0] != "" {
-				cli.PushText(m, _tmux_cmds(m, SHOW_BUFFER, "-b", arg[0]))
+				PushText(m, _tmux_cmds(m, SHOW_BUFFER, "-b", arg[0]))
 				return
 			}
 			for i, v := range kit.SplitLine(_tmux_cmd(m, LIST_BUFFER).Result()) {
@@ -47,7 +47,15 @@ func init() {
 		}},
 		TEXT: {Name: "text auto text:textarea", Help: "文本", Hand: func(m *ice.Message, arg ...string) {
 			kit.If(len(arg) > 0, func() { _tmux_cmd(m, SET_BUFFER, arg[0]) })
-			cli.PushText(m, _tmux_cmds(m, SHOW_BUFFER))
+			PushText(m, _tmux_cmds(m, SHOW_BUFFER))
 		}},
 	})
+}
+func PushText(m *ice.Message, text string) {
+	m.OptionFields(ice.MSG_DETAIL)
+	if m.PushScript(nfs.SCRIPT, text); strings.HasPrefix(text, ice.HTTP) {
+		m.PushQRCode(cli.QRCODE, text)
+		m.PushAnchor(text)
+	}
+	m.Echo(text)
 }

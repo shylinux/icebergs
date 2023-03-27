@@ -86,13 +86,14 @@ func _status_each(m *ice.Message, title string, cmds ...string) {
 		ReposList(m).Table(func(value ice.Maps) {
 			toast(value[REPOS], count, total)
 			if msg := m.Cmd(cmds, kit.Dict(cli.CMD_DIR, value[nfs.PATH])); !cli.IsSuccess(msg) {
-				web.Toast3s(m, msg.Append(cli.CMD_ERR)+msg.Append(cli.CMD_OUT), "error: "+value[REPOS]).Sleep3s()
+				web.Toast(m, msg.Append(cli.CMD_ERR)+msg.Append(cli.CMD_OUT), "error: "+value[REPOS], "", "3s")
+				m.Sleep3s()
 				list = append(list, value[REPOS])
 			}
 			count++
 		})
 		if len(list) > 0 {
-			web.Toast30s(m, strings.Join(list, ice.NL), ice.FAILURE)
+			web.Toast(m, strings.Join(list, ice.NL), ice.FAILURE, "30s")
 		} else {
 			toast(ice.SUCCESS, count, total)
 		}

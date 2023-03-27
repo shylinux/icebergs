@@ -143,10 +143,12 @@ const (
 	HTTP   = "http"
 	HTTPS  = "https"
 	DOMAIN = "domain"
+	ORIGIN = "origin"
 	FORM   = "form"
 	BODY   = "body"
 
-	ApplicationJSON = "Application/json"
+	ApplicationJSON  = "Application/json"
+	ApplicationOctet = "application/octet-stream"
 )
 const SERVE = "serve"
 
@@ -181,4 +183,10 @@ func init() {
 			c.Commands[sub] = &ice.Command{Name: kit.Select(cmd.Name, action.Name), Actions: ctx.CmdAction(), Hand: action.Hand}
 		}
 	})
+}
+func Domain(host, port string) string {
+	return kit.Format("%s://%s:%s", HTTP, host, port)
+}
+func Script(m *ice.Message, str string, arg ...ice.Any) string {
+	return ice.Render(m, ice.RENDER_SCRIPT, kit.Format(str, arg...))
 }

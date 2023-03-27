@@ -82,7 +82,7 @@ func _autogen_git(m *ice.Message, arg ...string) ice.Map {
 	)
 }
 func _autogen_mod(m *ice.Message, file string) (mod string) {
-	host := web.OptionUserWeb(m).Hostname()
+	host := web.UserWeb(m).Hostname()
 	if host == "" {
 		host = path.Base(kit.Path(""))
 	} else {

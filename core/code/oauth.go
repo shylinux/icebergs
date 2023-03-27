@@ -23,7 +23,7 @@ func init() {
 		API_GITHUB    = "https://api.github.com/"
 	)
 	_oauth_header := func(m *ice.Message, arg ...string) *ice.Message {
-		m.Option(web.SPIDE_HEADER, web.Accept, web.ContentJSON, web.Authorization, "token "+kit.Select(m.Option(ACCESS_TOKEN), arg, 0))
+		m.Option(web.SPIDE_HEADER, web.Accept, web.ApplicationJSON, web.Authorization, "token "+kit.Select(m.Option(ACCESS_TOKEN), arg, 0))
 		return m
 	}
 	Index.MergeCommands(ice.Commands{

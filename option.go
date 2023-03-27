@@ -38,6 +38,11 @@ func (m *Message) OptionCB(key string, cb ...Any) Any {
 	return m.Optionv(kit.Keycb(kit.Select(m.CommandKey(), key)))
 }
 
+func (m *Message) MergePod(pod string, arg ...Any) string {
+	ls := []string{"chat"}
+	kit.If(kit.Keys(m.Option(MSG_USERPOD), pod), func(p string) { ls = append(ls, POD, p) })
+	return kit.MergeURL2(strings.Split(kit.Select(Info.Domain, m.Option(MSG_USERWEB)), QS)[0], PS+kit.Join(ls, PS), arg...)
+}
 func (m *Message) MergePodCmd(pod, cmd string, arg ...Any) string {
 	ls := []string{"chat"}
 	kit.If(kit.Keys(m.Option(MSG_USERPOD), pod), func(p string) { ls = append(ls, POD, p) })

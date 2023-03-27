@@ -49,7 +49,7 @@ func init() {
 				m.Echo(m.Option(mdb.TEXT)).ProcessInner()
 			}},
 			web.SERVE: {Help: "展示", Hand: func(m *ice.Message, arg ...string) {
-				u := web.OptionUserWeb(m)
+				u := web.UserWeb(m)
 				p := u.Hostname() + ice.DF + m.Cmdx(tcp.PORT, aaa.RIGHT)
 				m.Cmd(cli.DAEMON, mdb.Configv(m, PPROF), "-http="+p, m.Option(BINNARY), m.Option(nfs.FILE))
 				m.Sleep3s().ProcessOpen(kit.Format("http://%s/ui/top", p))

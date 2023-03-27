@@ -188,7 +188,7 @@ func init() {
 				}
 			}},
 			aaa.INVITE: {Help: "邀请", Hand: func(m *ice.Message, arg ...string) {
-				m.Option(cli.HOSTNAME, tcp.PublishLocalhost(m, web.OptionUserWeb(m).Hostname()))
+				m.Option(cli.HOSTNAME, tcp.PublishLocalhost(m, web.UserWeb(m).Hostname()))
 				if buf, err := kit.Render(`ssh -p {{.Option "port"}} {{.Option "user.name"}}@{{.Option "hostname"}}`, m); err == nil {
 					m.EchoScript(string(buf))
 				}

@@ -15,10 +15,6 @@ import (
 
 func _cmd_file(m *ice.Message, arg ...string) bool {
 	switch p := path.Join(arg...); kit.Ext(p) {
-	case nfs.ZML:
-		web.RenderCmd(m, CAN_PARSE, m.Cmdx(nfs.CAT, p))
-	case nfs.IML:
-		m.RenderRedirect(web.MergePodWebSite(m, "", strings.TrimPrefix(p, SRC_WEBSITE)))
 	case nfs.SHY:
 		web.RenderCmd(m, "web.wiki.word", p)
 	case nfs.GO:

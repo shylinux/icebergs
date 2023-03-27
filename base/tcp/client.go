@@ -5,6 +5,7 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/mdb"
+	kit "shylinux.com/x/toolkits"
 )
 
 type Conn struct {
@@ -34,9 +35,7 @@ func _client_dial(m *ice.Message, arg ...string) {
 	}
 	switch cb := m.OptionCB("").(type) {
 	case func(net.Conn):
-		if !m.Warn(e) {
-			cb(c)
-		}
+		kit.If(!m.Warn(e), func() { cb(c) })
 	default:
 		m.ErrorNotImplement(cb)
 	}

@@ -26,7 +26,7 @@ func _xterm_get(m *ice.Message, h string) xterm.XTerm {
 		ls := kit.Split(strings.Split(kit.Select(nfs.SH, value[mdb.TYPE]), " # ")[0])
 		term, e := xterm.Command(m, value[nfs.PATH], cli.SystemFind(m, ls[0]), ls[1:]...)
 		if m.Warn(e) {
-			return
+			return nil
 		}
 		m.Go(func() {
 			defer term.Close()

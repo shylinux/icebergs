@@ -18,7 +18,7 @@ func init() {
 			mdb.INSERT: {Name: "insert zone*=demo type=shell name=1 text=pwd pwd=/home"},
 			cli.SYSTEM: {Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) > 0 && arg[0] == ice.RUN {
-					if msg := mdb.ZoneSelect(m.Spawn(), m.Option(mdb.ZONE), m.Option(mdb.ID)); nfs.ExistsFile(m, msg.Append(cli.PWD)) {
+					if msg := mdb.ZoneSelect(m.Spawn(), m.Option(mdb.ZONE), m.Option(mdb.ID)); nfs.Exists(m, msg.Append(cli.PWD)) {
 						m.Option(cli.CMD_DIR, msg.Append(cli.PWD))
 					}
 					ctx.ProcessField(m, "", nil, arg...)

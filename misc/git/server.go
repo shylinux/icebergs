@@ -125,12 +125,12 @@ func init() {
 			if err := _server_login(m); m.Warn(err, ice.ErrNotLogin) {
 				web.RenderHeader(m.W, "WWW-Authenticate", `Basic realm="git server"`)
 				return
-			} else if !nfs.ExistsFile(m, repos) {
+			} else if !nfs.Exists(m, repos) {
 				m.Logs(mdb.CREATE, REPOS, repos)
 				_repos_init(m, repos)
 			}
 		case "upload-pack":
-			if m.Warn(!nfs.ExistsFile(m, repos), ice.ErrNotFound, arg[0]) {
+			if m.Warn(!nfs.Exists(m, repos), ice.ErrNotFound, arg[0]) {
 				return
 			}
 		}

@@ -206,13 +206,13 @@ func init() {
 			if len(arg) < 4 {
 				m.RenderStatusBadRequest()
 				return
-			} else if path.Join(arg[:3]...) == ice.Info.Make.Module && nfs.ExistsFile(m, path.Join(arg[3:]...)) {
+			} else if path.Join(arg[:3]...) == ice.Info.Make.Module && nfs.Exists(m, path.Join(arg[3:]...)) {
 				m.RenderDownload(path.Join(arg[3:]...))
 				return
 			}
 			p := path.Join(kit.Select(ice.USR_REQUIRE, m.Cmdx(cli.SYSTEM, "go", "env", "GOMODCACHE")), path.Join(arg...))
-			if !nfs.ExistsFile(m, p) {
-				if p = path.Join(ice.USR_REQUIRE, path.Join(arg...)); !nfs.ExistsFile(m, p) {
+			if !nfs.Exists(m, p) {
+				if p = path.Join(ice.USR_REQUIRE, path.Join(arg...)); !nfs.Exists(m, p) {
 					ls := strings.SplitN(path.Join(arg[:3]...), ice.AT, 2)
 					if v := kit.Select(ice.Info.Gomod[ls[0]], ls, 1); v == "" {
 						m.Cmd(cli.SYSTEM, "git", "clone", "https://"+ls[0], path.Join(ice.USR_REQUIRE, path.Join(arg[:3]...)))

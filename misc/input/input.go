@@ -1,7 +1,6 @@
 package input
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/csv"
 	"fmt"
@@ -50,16 +49,16 @@ func (s input) Load(m *ice.Message, arg ...string) {
 		s.Zone.Remove(m, mdb.ZONE, lib)
 		s.Zone.Create(m, kit.Simple(mdb.ZONE, lib, ctx.ConfigSimple(m.Message, mdb.LIMIT, mdb.LEAST, mdb.STORE, mdb.FSIZE))...)
 		prefix := kit.Keys(mdb.HASH, m.Result())
-		for bio := bufio.NewScanner(f); bio.Scan(); {
-			if strings.HasPrefix(bio.Text(), "# ") {
-				continue
+		kit.For(f, func(s string) {
+			if strings.HasPrefix(s, "# ") {
+				return
 			}
-			line := kit.Split(bio.Text())
+			line := kit.Split(s)
 			if len(line) < 2 || (len(line) > 2 && line[2] == "0") {
-				continue
+				return
 			}
 			mdb.Grow(m.Message, m.PrefixKey(), prefix, kit.Dict(TEXT, line[0], CODE, line[1], WEIGHT, kit.Select("999999", line, 2)))
-		}
+		})
 		mdb.Conf(m, m.PrefixKey(), kit.Keys(prefix, kit.Keym(mdb.LIMIT)), 0)
 		mdb.Conf(m, m.PrefixKey(), kit.Keys(prefix, kit.Keym(mdb.LEAST)), 0)
 		m.Echo("%s: %d", lib, mdb.Grow(m.Message, m.PrefixKey(), prefix, kit.Dict(TEXT, "成功", CODE, "z", WEIGHT, "0")))

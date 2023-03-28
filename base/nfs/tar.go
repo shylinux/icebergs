@@ -4,7 +4,6 @@ import (
 	"archive/tar"
 	"compress/gzip"
 	"io"
-	"io/ioutil"
 	"os"
 	"path"
 	"strings"
@@ -14,49 +13,42 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _tar_list(m *ice.Message, p string, cb func(*tar.Header, *tar.Reader, int)) *ice.Message {
-	const (
-		GZ = "gz"
-	)
-	var r io.Reader
-	if f, e := os.Open(p); m.Warn(e, ice.ErrNotValid, p) {
-		return m
-	} else {
-		defer f.Close()
-		r = f
-	}
-	for {
-		switch kit.Ext(p) {
-		case GZ:
-			if f, e := gzip.NewReader(r); m.Warn(e, ice.ErrNotValid, p) {
-				return m
-			} else {
-				defer f.Close()
-				r = f
-			}
-			p = kit.TrimExt(p, GZ)
-		case TAR:
-			i := 0
-			for r := tar.NewReader(r); ; i++ {
-				h, e := r.Next()
-				if m.Warn(e) {
-					break
+func _tar_list(m *ice.Message, p string, cb func(*tar.Header, *tar.Reader, int)) {
+	Open(m, p, func(r io.Reader) {
+		for {
+			switch kit.Ext(p) {
+			case GZ:
+				if f, e := gzip.NewReader(r); m.Warn(e, ice.ErrNotValid, p) {
+					return
+				} else {
+					defer f.Close()
+					r, p = f, kit.TrimExt(p, GZ)
 				}
-				if h.Size == 0 {
-					i--
-					continue
+			case TAR:
+				i := 0
+				for r := tar.NewReader(r); ; i++ {
+					h, e := r.Next()
+					if m.Warn(e) {
+						break
+					}
+					if h.Size == 0 {
+						i--
+						continue
+					}
+					cb(h, r, i)
 				}
-				cb(h, r, i)
+				m.StatusTimeCount(mdb.TOTAL, i)
+				return
+			default:
+				return
 			}
-			m.StatusTimeCount(mdb.TOTAL, i)
-			return m
-		default:
-			return m
 		}
-	}
-	return m
+	})
 }
 
+const (
+	GZ = "gz"
+)
 const TAR = "tar"
 
 func init() {
@@ -65,7 +57,7 @@ func init() {
 			mdb.NEXT: {Hand: func(m *ice.Message, arg ...string) { mdb.PrevPage(m, arg[0], kit.Slice(arg, 1)...) }},
 			mdb.PREV: {Hand: func(m *ice.Message, arg ...string) { mdb.NextPageLimit(m, arg[0], kit.Slice(arg, 1)...) }},
 			mdb.EXPORT: {Hand: func(m *ice.Message, arg ...string) {
-				list, size := map[string]bool{}, int64(0)
+				list, size := kit.Dict(), 0
 				_tar_list(m, m.Option(PATH), func(h *tar.Header, r *tar.Reader, i int) {
 					if h.Name == m.Option(FILE) || m.Option(FILE) == "" {
 						p := path.Join(path.Dir(m.Option(PATH)), h.Name)
@@ -73,22 +65,12 @@ func init() {
 							MkdirAll(m, p)
 							return
 						}
-						if !list[path.Dir(p)] {
-							list[path.Dir(p)] = true
-							MkdirAll(m, path.Dir(p))
-						}
-						if f, p, e := CreateFile(m, p); !m.Warn(e) {
-							defer f.Close()
-							if m.Option(FILE) != "" {
-								defer m.Cmdy(DIR, p, "time,path,size")
-								defer m.Cmdy(CAT, p)
-							}
-							if n, e := io.Copy(f, r); !m.Warn(e) {
-								size += n
-								// m.Logs(mdb.EXPORT, LINE, i, SIZE, kit.FmtSize(size), FILE, p, SIZE, kit.FmtSize(n))
-								os.Chmod(p, os.FileMode(h.Mode))
-							}
-						}
+						kit.IfNoKey(list, path.Dir(p), func(p string) { MkdirAll(m, p) })
+						Create(m, p, func(w io.Writer) {
+							os.Chmod(p, os.FileMode(h.Mode))
+							Copy(m, w, r, func(n int) { size += n })
+							kit.If(m.Option(FILE), func() { m.Cmdy(DIR, p).Cmdy(CAT, p) })
+						})
 					}
 				})
 			}},
@@ -108,16 +90,10 @@ func init() {
 				if i >= (page-1)*size && i < page*size {
 					m.Push(mdb.TIME, h.ModTime.Format(ice.MOD_TIME)).Push(FILE, h.Name).Push(SIZE, kit.FmtSize(h.Size))
 				}
-			}).PushAction(mdb.EXPORT)
+			})
+			m.PushAction(mdb.EXPORT)
 		}},
 	})
-}
-func ReadAll(m *ice.Message, r io.Reader) []byte {
-	if buf, e := ioutil.ReadAll(r); m.Warn(e) {
-		return buf
-	} else {
-		return buf
-	}
 }
 func TarExport(m *ice.Message, path string, file ...string) {
 	m.Cmd(TAR, mdb.EXPORT, ice.Maps{PATH: path, FILE: kit.Select("", file, 0)})

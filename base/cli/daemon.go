@@ -52,7 +52,7 @@ func _daemon_exec(m *ice.Message, cmd *exec.Cmd) {
 			m.ErrorNotImplement(cb)
 		}
 		for _, p := range kit.Simple(CMD_INPUT, CMD_OUTPUT, CMD_ERRPUT) {
-			nfs.CloseFile(m, m.Optionv(p))
+			nfs.Close(m, m.Optionv(p))
 		}
 	})
 }

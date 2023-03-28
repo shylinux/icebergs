@@ -51,6 +51,7 @@ const (
 	STYLE   = "style"
 	DISPLAY = "display"
 	ACTION  = "action"
+	SHIP    = "ship"
 )
 const COMMAND = "command"
 
@@ -116,7 +117,7 @@ func FileURI(dir string) string {
 		} else if ice.Info.Make.Path != "" && strings.HasPrefix(dir, ice.Info.Make.Path+ice.PS) {
 			dir = strings.TrimPrefix(dir, ice.Info.Make.Path+ice.PS)
 		}
-	} else if nfs.ExistsFile(ice.Pulse, path.Join(ice.SRC, dir)) {
+	} else if nfs.Exists(ice.Pulse, path.Join(ice.SRC, dir)) {
 		dir = path.Join(ice.SRC, dir)
 	}
 	return path.Join(ice.PS, ice.REQUIRE, dir)
@@ -147,7 +148,7 @@ func GetFileCmd(dir string) string {
 }
 func GetCmdFile(m *ice.Message, cmds string) (file string) {
 	m.Search(cmds, func(key string, cmd *ice.Command) {
-		if file = strings.TrimPrefix(FileURI(kit.Split(cmd.FileLine(), ice.DF)[0]), "/require/"); !nfs.ExistsFile(m, file) {
+		if file = strings.TrimPrefix(FileURI(kit.Split(cmd.FileLine(), ice.DF)[0]), "/require/"); !nfs.Exists(m, file) {
 			file = path.Join(ice.ISH_PLUGED, file)
 		}
 	})

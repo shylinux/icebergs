@@ -1,9 +1,6 @@
 package log
 
 import (
-	"bufio"
-	"io"
-
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
@@ -13,8 +10,8 @@ import (
 
 func _tail_create(m *ice.Message, arg ...string) {
 	h := mdb.HashCreate(m, arg)
-	kit.For(kit.Split(m.Option(FILE)), func(file string) {
-		m.Options(cli.CMD_OUTPUT, Pipe(m, func(text string) { mdb.ZoneInsert(m, h, FILE, file, nfs.SIZE, len(text), mdb.TEXT, text) }), mdb.CACHE_CLEAR_ON_EXIT, ice.TRUE)
+	kit.For(kit.Split(m.Option(nfs.FILE)), func(file string) {
+		m.Options(cli.CMD_OUTPUT, nfs.Pipe(m, func(text string) { mdb.ZoneInsert(m, h, nfs.FILE, file, nfs.SIZE, len(text), mdb.TEXT, text) }), mdb.CACHE_CLEAR_ON_EXIT, ice.TRUE)
 		m.Cmd(cli.DAEMON, TAIL, "-n", "0", "-f", file)
 	})
 }
@@ -33,20 +30,11 @@ func init() {
 				switch arg[0] {
 				case mdb.NAME:
 					m.Push(arg[0], kit.Split(m.Option(FILE), ice.PS))
-				case FILE:
-					m.Cmdy(nfs.DIR, kit.Select(nfs.PWD, arg, 1), nfs.PATH).RenameAppend(nfs.PATH, FILE).ProcessAgain()
+				case nfs.FILE:
+					m.Cmdy(nfs.DIR, kit.Select(nfs.PWD, arg, 1), nfs.PATH).RenameAppend(nfs.PATH, nfs.FILE).ProcessAgain()
 				}
 			}},
 			mdb.CREATE: {Hand: func(m *ice.Message, arg ...string) { _tail_create(m, arg...) }},
 		}, mdb.PageZoneAction(mdb.SHORT, mdb.NAME, mdb.FIELDS, "time,name,file,count", mdb.FIELD, "time,id,file,size,text"))},
 	})
-}
-func Pipe(m *ice.Message, cb func(string)) io.WriteCloser {
-	r, w := io.Pipe()
-	m.Go(func() {
-		for bio := bufio.NewScanner(r); bio.Scan(); {
-			cb(bio.Text())
-		}
-	})
-	return w
 }

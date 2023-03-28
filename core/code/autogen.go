@@ -51,7 +51,7 @@ func _autogen_import(m *ice.Message, main string, ctx string, mod string) {
 	m.Cmd(cli.SYSTEM, "goimports", "-w", main)
 }
 func _autogen_version(m *ice.Message) string {
-	if mod := _autogen_mod(m, ice.GO_MOD); !nfs.ExistsFile(m, ".git") {
+	if mod := _autogen_mod(m, ice.GO_MOD); !nfs.Exists(m, ".git") {
 		m.Cmd(REPOS, mdb.CREATE, nfs.ORIGIN, "https://"+mod, mdb.NAME, path.Base(mod), nfs.PATH, nfs.PWD)
 	}
 	m.Cmd(nfs.DEFS, ".gitignore", nfs.Template(m, "gitignore"))
@@ -123,11 +123,11 @@ func init() {
 				m.Option(nfs.FILE, path.Join(m.Option(mdb.ZONE), kit.Keys(m.Option(mdb.NAME), GO)))
 				m.Option(mdb.TEXT, kit.Format("`name:\"list %s\" help:\"%s\"`", _autogen_list(m), m.Option(mdb.HELP)))
 				defer _autogen_version(m.Spawn())
-				if p := path.Join(ice.SRC, kit.ExtChange(m.Option(nfs.FILE), SHY)); !nfs.ExistsFile(m, p) {
+				if p := path.Join(ice.SRC, kit.ExtChange(m.Option(nfs.FILE), SHY)); !nfs.Exists(m, p) {
 					_autogen_source(m, kit.ExtChange(path.Join(ice.SRC, m.Option(cli.MAIN)), SHY), p)
 					_autogen_script(m, p)
 				}
-				if p := path.Join(ice.SRC, m.Option(nfs.FILE)); !nfs.ExistsFile(m, p) {
+				if p := path.Join(ice.SRC, m.Option(nfs.FILE)); !nfs.Exists(m, p) {
 					_autogen_import(m, path.Join(ice.SRC, m.Option(cli.MAIN)), m.Option(mdb.ZONE), _autogen_mod(m, ice.GO_MOD))
 					_autogen_module(m, p)
 				}
@@ -139,11 +139,11 @@ func init() {
 					USR_RELEASE_CONF_GO    = "usr/release/conf.go"
 					USR_RELEASE_BINPACK_GO = "usr/release/binpack.go"
 				)
-				if m.Cmd(BINPACK, mdb.CREATE); nfs.ExistsFile(m, ice.USR_RELEASE) && m.Option(ice.MSG_USERPOD) == "" {
-					nfs.Copy(m, func(buf []byte, offset int) []byte {
+				if m.Cmd(BINPACK, mdb.CREATE); nfs.Exists(m, ice.USR_RELEASE) && m.Option(ice.MSG_USERPOD) == "" {
+					nfs.CopyFile(m, USR_RELEASE_BINPACK_GO, ice.SRC_BINPACK_GO, func(buf []byte, offset int) []byte {
 						kit.If(offset == 0, func() { buf = bytes.Replace(buf, []byte("package main"), []byte("package ice"), 1) })
 						return buf
-					}, USR_RELEASE_BINPACK_GO, ice.SRC_BINPACK_GO)
+					})
 					m.Cmd(nfs.COPY, USR_RELEASE_CONF_GO, ice.USR_ICEBERGS+"conf.go")
 					m.Cmdy(nfs.DIR, USR_RELEASE_BINPACK_GO)
 					m.Cmdy(nfs.DIR, USR_RELEASE_CONF_GO)

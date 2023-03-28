@@ -15,11 +15,9 @@ import (
 
 func _port_right(m *ice.Message, arg ...string) string {
 	current, end := kit.Int(kit.Select(mdb.Config(m, CURRENT), arg, 0)), kit.Int(mdb.Config(m, END))
-	if current >= end {
-		current = kit.Int(mdb.Config(m, BEGIN))
-	}
+	kit.If(current >= end, func() { current = kit.Int(mdb.Config(m, BEGIN)) })
 	for i := current; i < end; i++ {
-		if p := path.Join(ice.USR_LOCAL_DAEMON, kit.Format(i)); nfs.ExistsFile(m, p) {
+		if p := path.Join(ice.USR_LOCAL_DAEMON, kit.Format(i)); nfs.Exists(m, p) {
 
 		} else if c, e := net.Dial(TCP, kit.Format(":%d", i)); e == nil {
 			m.Info("port exists %v", i)
@@ -56,21 +54,15 @@ func init() {
 				return
 			}
 			current := kit.Int(mdb.Config(m, BEGIN))
-			m.Option(nfs.DIR_ROOT, ice.USR_LOCAL_DAEMON)
-			m.Cmd(nfs.DIR, nfs.PWD, func(value ice.Maps) {
-				bin := m.CmdAppend(nfs.DIR, path.Join(value[nfs.PATH], ice.BIN), nfs.PATH)
-				if bin == "" {
-					bin = m.CmdAppend(nfs.DIR, path.Join(value[nfs.PATH], "sbin"), nfs.PATH)
-				}
+			m.Options(nfs.DIR_ROOT, ice.USR_LOCAL_DAEMON).Cmd(nfs.DIR, nfs.PWD, func(value ice.Maps) {
+				bin := m.Cmdv(nfs.DIR, path.Join(value[nfs.PATH], ice.BIN), nfs.PATH)
+				kit.If(bin == "", func() { bin = m.Cmdv(nfs.DIR, path.Join(value[nfs.PATH], "sbin"), nfs.PATH) })
 				port := kit.Int(path.Base(value[nfs.PATH]))
-				m.Push(mdb.TIME, value[mdb.TIME])
-				m.Push(PORT, port)
-				m.Push(nfs.SIZE, value[nfs.SIZE])
-				m.Push(ice.BIN, strings.TrimPrefix(bin, value[nfs.PATH]))
+				m.Push(mdb.TIME, value[mdb.TIME]).Push(PORT, port).Push(nfs.SIZE, value[nfs.SIZE]).Push(ice.BIN, strings.TrimPrefix(bin, value[nfs.PATH]))
 				current = kit.Max(current, port)
 			})
-			mdb.Config(m, CURRENT, current)
 			m.PushAction(nfs.TRASH).StatusTimeCount(ctx.ConfigSimple(m, BEGIN, CURRENT, END)).SortInt(PORT)
+			mdb.Config(m, CURRENT, current)
 		}},
 	})
 }

@@ -26,7 +26,7 @@ func init() {
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(FAVOR, mdb.INPUTS, arg) }},
 			cli.SYSTEM: {Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) > 0 && arg[0] == ice.RUN {
-					if msg := mdb.ListSelect(m.Spawn(), m.Option(mdb.ID)); nfs.ExistsFile(m, msg.Append(cli.PWD)) {
+					if msg := mdb.ListSelect(m.Spawn(), m.Option(mdb.ID)); nfs.Exists(m, msg.Append(cli.PWD)) {
 						m.Option(cli.CMD_DIR, msg.Append(cli.PWD))
 					}
 					ctx.ProcessField(m, "", nil, arg...)

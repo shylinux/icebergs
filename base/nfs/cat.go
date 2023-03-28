@@ -1,10 +1,11 @@
 package nfs
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/json"
 	"io"
+	"io/ioutil"
+	"os"
 	"path"
 	"strings"
 
@@ -14,70 +15,44 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _cat_find(m *ice.Message, file string) (io.ReadCloser, error) {
+func _cat_find(m *ice.Message, p string) (io.ReadCloser, error) {
 	if m.Option(CAT_CONTENT) != "" {
 		return NewReadCloser(bytes.NewBufferString(m.Option(CAT_CONTENT))), nil
 	}
-	return OpenFile(m, path.Join(m.Option(DIR_ROOT), file))
+	return OpenFile(m, path.Join(m.Option(DIR_ROOT), p))
 }
-func _cat_size(m *ice.Message, file string) (nline int) {
-	if f, e := OpenFile(m, file); !m.Warn(e) {
-		defer f.Close()
-		for bio := bufio.NewScanner(f); bio.Scan(); nline++ {
-			bio.Text()
-		}
-	}
-	return nline
+func _cat_hash(m *ice.Message, p string) (h string) {
+	Open(m, p, func(r io.Reader) { h = kit.Hashs(r) })
+	return
 }
-func _cat_hash(m *ice.Message, file string) string {
-	if f, e := OpenFile(m, file); !m.Warn(e) {
-		defer f.Close()
-		return kit.Hashs(f)
-	}
-	return ""
+func _cat_line(m *ice.Message, p string) (n int) {
+	Open(m, p, func(r io.Reader) { kit.For(r, func(s string) { n++ }) })
+	return
 }
-func _cat_list(m *ice.Message, file string) {
-	if m.Option(CAT_CONTENT) == "" && !aaa.Right(m, file) {
+func _cat_list(m *ice.Message, p string) {
+	if m.Option(CAT_CONTENT) == "" && !aaa.Right(m, p) {
 		return
 	}
-	f, e := _cat_find(m, file)
-	if m.Warn(e, ice.ErrNotFound, file) {
+	f, e := _cat_find(m, p)
+	if m.Warn(e, ice.ErrNotFound, p) {
 		return
 	}
 	defer f.Close()
 	switch cb := m.OptionCB("").(type) {
 	case func(string, int) string:
 		list := []string{}
-		for bio, i := bufio.NewScanner(f), 0; bio.Scan(); i++ {
-			list = append(list, cb(bio.Text(), i))
-		}
+		kit.For(f, func(s string, i int) { list = append(list, cb(s, i)) })
 		m.Echo(strings.Join(list, ice.NL) + ice.NL)
 	case func(string, int):
-		for bio, i := bufio.NewScanner(f), 0; bio.Scan(); i++ {
-			cb(bio.Text(), i)
-		}
+		kit.For(f, cb)
 	case func(string):
-		for bio := bufio.NewScanner(f); bio.Scan(); {
-			cb(bio.Text())
-		}
+		kit.For(f, cb)
 	case func([]string, string):
-		for bio := bufio.NewScanner(f); bio.Scan(); {
-			cb(kit.Split(bio.Text()), bio.Text())
-		}
+		kit.For(f, cb)
 	case nil:
-		buf, size := make([]byte, 10*ice.MOD_BUFS), 0
-		for {
-			if n, e := f.Read(buf[size:]); !m.Warn(e, ice.ErrNotValid, file) {
-				m.Logs(LOAD, FILE, file, SIZE, n)
-				if size += n; size >= len(buf) {
-					buf = append(buf, make([]byte, ice.MOD_BUFS)...)
-					continue
-				}
-			}
-			buf = buf[:size]
-			break
+		if b, e := ioutil.ReadAll(f); !m.Warn(e) {
+			m.Echo(string(b)).StatusTime(FILE, p, SIZE, len(b))
 		}
-		m.Echo(string(buf)).StatusTime(FILE, file, SIZE, size)
 	default:
 		m.ErrorNotImplement(cb)
 	}
@@ -85,26 +60,27 @@ func _cat_list(m *ice.Message, file string) {
 
 const (
 	CAT_CONTENT = "cat_content"
+	CONFIGURE   = "configure"
+	TEMPLATE    = "template"
+	STDIO       = "stdio"
 
-	STDIO  = "stdio"
+	TAGS   = "tags"
 	MODULE = "module"
 	SOURCE = "source"
-	SCRIPT = "script"
-	BINARY = "binary"
 	TARGET = "target"
-	TAGS   = "tags"
+	BINARY = "binary"
+	SCRIPT = "script"
 
-	TEMPLATE = "template"
-	VERSION  = "version"
-	MASTER   = "master"
-	BRANCH   = "branch"
-	REMOTE   = "remote"
-	ORIGIN   = "origin"
-	REPOS    = "repos"
+	REPOS   = "repos"
+	ORIGIN  = "origin"
+	REMOTE  = "remote"
+	BRANCH  = "branch"
+	MASTER  = "master"
+	VERSION = "version"
 )
 const (
-	SVG  = ice.SVG
 	HTML = ice.HTML
+	SVG  = ice.SVG
 	CSS  = ice.CSS
 	JS   = ice.JS
 	GO   = ice.GO
@@ -113,13 +89,12 @@ const (
 	CSV  = ice.CSV
 	JSON = ice.JSON
 
-	PY  = "py"
-	MD  = "md"
-	TXT = "txt"
-	XML = "xml"
-	YML = "yml"
-	ZML = "zml"
-	IML = "iml"
+	CONF = "conf"
+	XML  = "xml"
+	YML  = "yml"
+	TXT  = "txt"
+	MD   = "md"
+	PY   = "py"
 
 	PNG = "png"
 	JPG = "jpg"
@@ -136,41 +111,75 @@ const CAT = "cat"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		CAT: {Name: "cat path auto", Help: "文件", Actions: ice.MergeActions(ice.Actions{ice.CTX_INIT: mdb.AutoConfig(SOURCE, kit.DictList(
-			HTML, CSS, JS, GO, SH, SHY, CSV, JSON, PY, MD, TXT, XML, YML, ZML, IML,
-			ice.LICENSE, ice.MAKEFILE, "configure", "conf",
+			HTML, CSS, JS, GO, SH, PY, SHY, CSV, JSON, CONFIGURE, CONF, XML, YML, TXT, MD, ice.LICENSE, ice.MAKEFILE,
 		))}), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 || strings.HasSuffix(arg[0], ice.PS) {
 				m.Cmdy(DIR, arg)
-				return
+			} else {
+				_cat_list(m.Logs(FIND, m.OptionSimple(DIR_ROOT)), arg[0])
 			}
-			if m.Option(DIR_ROOT) != "" {
-				m.Logs(mdb.SELECT, m.OptionSimple(DIR_ROOT))
-			}
-			_cat_list(m, arg[0])
 		}},
 	})
+}
+
+type templateMessage interface {
+	PrefixKey(...string) string
+	Cmdx(...ice.Any) string
+}
+
+func Template(m templateMessage, p string, arg ...ice.Any) string {
+	return kit.Renders(kit.Format(TemplateText(m, p), arg...), m)
+}
+func TemplateText(m templateMessage, p string) string {
+	return m.Cmdx(CAT, path.Join(m.PrefixKey(), path.Base(p)), kit.Dict(DIR_ROOT, ice.SRC_TEMPLATE))
 }
 func IsSourceFile(m *ice.Message, ext string) bool {
 	return mdb.Conf(m, Prefix(CAT), kit.Keym(SOURCE, ext)) == ice.TRUE
 }
-func OptionLoad(m *ice.Message, file string) *ice.Message {
-	if f, e := OpenFile(m, file); e == nil {
-		defer f.Close()
+func OptionLoad(m *ice.Message, p string) *ice.Message {
+	Open(m, p, func(r io.Reader) {
 		var data ice.Any
-		m.Assert(json.NewDecoder(f).Decode(&data))
-		kit.For(data, func(key string, value ice.Any) { m.Option(key, kit.Simple(value)) })
-	}
+		m.Assert(json.NewDecoder(r).Decode(&data))
+		kit.For(data, func(k string, v ice.Any) { m.Optionv(k, v) })
+	})
 	return m
 }
-
-type templateMessage interface {
-	Cmdx(arg ...ice.Any) string
-	PrefixKey(...string) string
+func Open(m *ice.Message, p string, cb ice.Any) {
+	if strings.HasSuffix(p, PS) {
+		if ls, e := ReadDir(m, p); !m.Warn(e) {
+			switch cb := cb.(type) {
+			case func([]os.FileInfo):
+				cb(ls)
+			case func(os.FileInfo):
+				kit.For(ls, cb)
+			default:
+				m.ErrorNotImplement(cb)
+			}
+		}
+	} else if f, e := OpenFile(m, p); !m.Warn(e, ice.ErrNotFound, p) {
+		defer f.Close()
+		switch cb := cb.(type) {
+		case func(io.Reader, os.FileInfo):
+			s, _ := StatFile(m, p)
+			cb(f, s)
+		case func(io.Reader):
+			cb(f)
+		case func(string):
+			if b, e := ioutil.ReadAll(f); !m.Warn(e) {
+				cb(string(b))
+			}
+		default:
+			m.ErrorNotImplement(cb)
+		}
+	}
 }
-
-func Template(m templateMessage, file string, arg ...ice.Any) string {
-	return kit.Renders(kit.Format(TemplateText(m, file), arg...), m)
+func ReadAll(m *ice.Message, r io.Reader) []byte {
+	if b, e := ioutil.ReadAll(r); !m.Warn(e) {
+		return b
+	}
+	return nil
 }
-func TemplateText(m templateMessage, file string) string {
-	return m.Cmdx(CAT, path.Join(m.PrefixKey(), path.Base(file)), kit.Dict(DIR_ROOT, ice.SRC_TEMPLATE))
+func ReadFile(m *ice.Message, p string) (b []byte, e error) {
+	Open(m, p, func(r io.Reader) { b, e = ioutil.ReadAll(r) })
+	return
 }

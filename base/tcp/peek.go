@@ -37,7 +37,7 @@ func (s PeekConn) Peek(n int) (res []byte) {
 	return b[:_n]
 }
 func (s PeekConn) IsHTTP() bool {
-	if bytes.Equal(s.Peek(4), []byte("GET ")) {
+	if head := s.Peek(4); bytes.Equal(head, []byte("GET ")) {
 		return true
 	}
 	return false
@@ -45,10 +45,8 @@ func (s PeekConn) IsHTTP() bool {
 func (s PeekConn) Redirect(status int, location string) {
 	DF, NL := ": ", "\r\n"
 	s.Conn.Write([]byte(strings.Join([]string{
-		kit.Format("HTTP/1.1 %d %s", status, http.StatusText(status)), kit.JoinKV(DF, NL,
-			"Location", location, "Content-Length", "0",
-		)}, NL) + NL + NL))
+		kit.Format("HTTP/1.1 %d %s", status, http.StatusText(status)),
+		kit.JoinKV(DF, NL, "Location", location, "Content-Length", "0"),
+	}, NL) + NL + NL))
 }
-func NewPeekConn(c net.Conn) PeekConn {
-	return PeekConn{Conn: c, Buf: &Buf{}}
-}
+func NewPeekConn(c net.Conn) PeekConn { return PeekConn{Conn: c, Buf: &Buf{}} }

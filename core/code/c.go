@@ -27,7 +27,7 @@ func _c_exec(m *ice.Message, arg ...string) {
 	}
 }
 func _c_tags(m *ice.Message, cmd ...string) {
-	if !nfs.ExistsFile(m, path.Join(m.Option(nfs.PATH), nfs.TAGS)) {
+	if !nfs.Exists(m, path.Join(m.Option(nfs.PATH), nfs.TAGS)) {
 		m.Cmd(cli.SYSTEM, cmd, kit.Dict(cli.CMD_DIR, m.Option(nfs.PATH)))
 	}
 	_inner_tags(m, m.Option(nfs.PATH), m.Option(mdb.NAME))

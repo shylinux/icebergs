@@ -30,9 +30,7 @@ func (c *Conn) Close() error { return c.Conn.Close() }
 func _client_dial(m *ice.Message, arg ...string) {
 	c, e := net.Dial(TCP, m.Option(HOST)+ice.DF+m.Option(PORT))
 	c = &Conn{Conn: c, m: m, s: &Stat{}}
-	if e == nil {
-		defer c.Close()
-	}
+	defer kit.If(e == nil, func() { c.Close() })
 	switch cb := m.OptionCB("").(type) {
 	case func(net.Conn):
 		kit.If(!m.Warn(e), func() { cb(c) })

@@ -11,9 +11,7 @@ import (
 func Render(msg *ice.Message, cmd string, arg ...ice.Any) (res string) {
 	switch args := kit.Simple(arg...); cmd {
 	case ice.RENDER_RESULT:
-		if len(args) > 0 {
-			msg.Resultv(args)
-		}
+		kit.If(len(args) > 0, func() { msg.Resultv(args) })
 		res = msg.Result()
 	case ice.RENDER_VOID:
 		return res

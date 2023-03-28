@@ -41,7 +41,7 @@ func _dream_show(m *ice.Message, name string) {
 	kit.If(!strings.Contains(name, "-") || !strings.HasPrefix(name, "20"), func() { name = m.Time("20060102-") + name })
 	defer m.ProcessOpen(m.MergePod(m.Option(mdb.NAME, name)))
 	p := path.Join(ice.USR_LOCAL_WORK, name)
-	if pid := m.Cmdx(nfs.CAT, path.Join(p, ice.Info.PidPath), kit.Dict(ice.MSG_USERROLE, aaa.TECH)); pid != "" && nfs.ExistsFile(m, "/proc/"+pid) {
+	if pid := m.Cmdx(nfs.CAT, path.Join(p, ice.Info.PidPath), kit.Dict(ice.MSG_USERROLE, aaa.TECH)); pid != "" && nfs.Exists(m, "/proc/"+pid) {
 		m.Info("already exists %v", pid)
 		return
 	} else if m.Cmd(SPACE, name).Length() > 0 {
@@ -65,7 +65,7 @@ func _dream_template(m *ice.Message, p string) {
 		ice.LICENSE, ice.MAKEFILE, ice.README_MD, ice.GO_MOD, ice.GO_SUM,
 		ice.SRC_MAIN_GO, ice.SRC_MAIN_SH, ice.SRC_MAIN_SHY, ice.SRC_MAIN_JS,
 	}, func(file string) {
-		if nfs.ExistsFile(m, path.Join(p, file)) {
+		if nfs.Exists(m, path.Join(p, file)) {
 			return
 		}
 		switch m.Cmdy(nfs.COPY, path.Join(p, file), path.Join(ice.USR_LOCAL_WORK, m.Option(nfs.TEMPLATE), file)); file {

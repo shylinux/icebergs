@@ -15,6 +15,7 @@ func init() {
 			mdb.CREATE: {Name: "create name cmd", Hand: func(m *ice.Message, arg ...string) {
 				m.Go(func() {
 					cb := m.OptionCB("")
+					m.OptionDefault(ice.CMD, logs.FileLine(cb))
 					h := mdb.HashCreate(m, m.OptionSimple(mdb.NAME, ice.CMD), mdb.STATUS, START)
 					defer func() {
 						if e := recover(); e == nil {

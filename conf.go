@@ -1,5 +1,7 @@
 package ice
 
+import kit "shylinux.com/x/toolkits"
+
 const (
 	TB = "\t"
 	SP = " "
@@ -45,12 +47,6 @@ const (
 	RES = "res"
 	ERR = "err"
 )
-const ( // MOD
-	MOD_DIR  = 0750
-	MOD_FILE = 0640
-	MOD_BUFS = 4096
-	MOD_TIME = "2006-01-02 15:04:05"
-)
 const ( // REPOS
 	CONTEXTS = "contexts"
 	INTSHELL = "intshell"
@@ -64,6 +60,15 @@ const ( // REPOS
 	PUBLISH = "publish"
 	RELEASE = "release"
 )
+const ( // MOD
+	MOD_DIR   = 0750
+	MOD_FILE  = 0640
+	MOD_BUFS  = 4096
+	MOD_DATE  = kit.MOD_DATE
+	MOD_TIME  = kit.MOD_TIME
+	MOD_TIMES = kit.MOD_TIMES
+)
+
 const ( // DIR
 	SRC = "src"
 	ETC = "etc"

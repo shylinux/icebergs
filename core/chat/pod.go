@@ -25,7 +25,7 @@ func init() {
 			if len(arg) == 0 || kit.Select("", arg, 0) == "" {
 				web.RenderCmd(m, web.SPACE)
 			} else if len(arg) == 1 {
-				if m.Cmd(web.SPACE, arg[0]).Length() == 0 && nfs.ExistsFile(m, path.Join(ice.USR_LOCAL_WORK, arg[0])) {
+				if m.Cmd(web.SPACE, arg[0]).Length() == 0 && nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, arg[0])) {
 					m.Cmd(web.DREAM, cli.START, kit.Dict(mdb.NAME, arg[0]))
 				}
 				web.RenderMain(m)

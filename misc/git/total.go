@@ -68,7 +68,7 @@ func init() {
 		}},
 		"_sum": {Name: "_sum [path] [total] [count|date] args...", Help: "统计量", Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 {
-				if nfs.ExistsFile(m, _git_dir(arg[0])) || nfs.ExistsFile(m, path.Join(arg[0], REFS_HEADS)) {
+				if nfs.Exists(m, _git_dir(arg[0])) || nfs.Exists(m, path.Join(arg[0], REFS_HEADS)) {
 					m.Option(cli.CMD_DIR, arg[0])
 					arg = arg[1:]
 				}

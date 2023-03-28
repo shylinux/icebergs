@@ -1,6 +1,7 @@
 package nfs
 
 import (
+	"io"
 	"os"
 	"path"
 
@@ -19,15 +20,9 @@ func _trash_create(m *ice.Message, from string) {
 		return
 	}
 	p := path.Join(ice.VAR_TRASH, path.Base(from))
-	if !s.IsDir() {
-		if f, e := OpenFile(m, from); m.Assert(e) {
-			defer f.Close()
-			p = path.Join(ice.VAR_TRASH, kit.HashsPath(f))
-		}
-	}
-	if RemoveAll(m, p); !m.Warn(Rename(m, from, p)) {
-		mdb.HashCreate(m, FROM, from, FILE, p)
-	}
+	kit.If(!s.IsDir(), func() { Open(m, from, func(r io.Reader) { p = path.Join(ice.VAR_TRASH, kit.HashsPath(r)) }) })
+	RemoveAll(m, p)
+	kit.If(!m.Warn(Rename(m, from, p)), func() { mdb.HashCreate(m, FROM, from, FILE, p) })
 }
 
 const TRASH = "trash"

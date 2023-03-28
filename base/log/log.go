@@ -25,11 +25,10 @@ func (f *Frame) Begin(m *ice.Message, arg ...string) {
 	ice.Info.Log = func(m *ice.Message, p, l, s string) { f.p <- &Log{p: p, l: l, s: s} }
 }
 func (f *Frame) Start(m *ice.Message, arg ...string) {
-	m.Option("_lock", m.PrefixKey())
-	mdb.Confm(m, FILE, nil, func(key string, value ice.Map) {
-		if f, p, e := logs.CreateFile(kit.Format(value[nfs.PATH])); e == nil {
-			value[FILE] = bufio.NewWriter(f)
+	mdb.Confm(m, FILE, nil, func(k string, v ice.Map) {
+		if f, p, e := logs.CreateFile(kit.Format(v[nfs.PATH])); e == nil {
 			m.Logs(nfs.SAVE, nfs.FILE, p)
+			v[FILE] = bufio.NewWriter(f)
 		}
 	})
 	for {
@@ -96,6 +95,7 @@ var Index = &ice.Context{Name: LOG, Help: "日志模块", Configs: ice.Configs{
 	SHOW: {Name: SHOW, Help: "日志分流", Value: kit.Dict()},
 }, Commands: ice.Commands{
 	ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+		ice.Info.Load(m, TAIL)
 		mdb.Confm(m, FILE, nil, func(key string, value ice.Map) {
 			kit.For(value[mdb.LIST], func(index int, k string) { m.Conf(SHOW, kit.Keys(k, FILE), key) })
 		})
@@ -103,7 +103,7 @@ var Index = &ice.Context{Name: LOG, Help: "日志模块", Configs: ice.Configs{
 			kit.For(value[mdb.LIST], func(index int, k string) { m.Conf(SHOW, kit.Keys(k, VIEW), key) })
 		})
 	}},
-	ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) {}},
+	ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { ice.Info.Save(m, TAIL) }},
 }}
 
 func init() { ice.Index.Register(Index, &Frame{}, TAIL) }

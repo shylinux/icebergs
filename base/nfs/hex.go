@@ -21,10 +21,7 @@ func init() {
 			m.Cmdy(DIR, kit.Slice(arg, 0, 1))
 			return
 		}
-		if f, e := os.Open(arg[0]); !m.Warn(e, ice.ErrNotFound, arg[0]) {
-			defer f.Close()
-			s, _ := f.Stat()
-			var r io.Reader = f
+		Open(m, arg[0], func(r io.Reader, s os.FileInfo) {
 			switch arg[1] {
 			case "gzip":
 				if g, e := gzip.NewReader(r); !m.Warn(e) {
@@ -37,15 +34,12 @@ func init() {
 			}
 			buf := make([]byte, kit.Int(kit.Select("1024", arg, 2)))
 			n, _ := r.Read(buf)
-			for i := 0; i < n; i++ {
-				if i%8 == 0 {
-					m.Push("n", kit.Format("%04d", i))
-				}
-				if m.Push(kit.Format(i%8), hex.EncodeToString(buf[i:i+1])); i%8 == 7 {
-					m.Push("text", string(buf[i-7:i+1]))
-				}
-			}
+			kit.For(n, func(i int) {
+				kit.If(i%8 == 0, func() { m.Push(OFFSET, kit.Format("%04d", i)) })
+				m.Push(kit.Format(i%8), hex.EncodeToString(buf[i:i+1]))
+				kit.If(i%8 == 7, func() { m.Push(mdb.TEXT, string(buf[i-7:i+1])) })
+			})
 			m.Status(mdb.TIME, s.ModTime().Format(ice.MOD_TIME), FILE, arg[0], SIZE, kit.FmtSize(s.Size()))
-		}
+		})
 	}}})
 }

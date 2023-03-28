@@ -55,7 +55,7 @@ func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
 	}
 	cmd := exec.Command(kit.Select(arg[0], bin), arg[1:]...)
 	if cmd.Dir = kit.TrimPath(m.Option(CMD_DIR)); len(cmd.Dir) > 0 {
-		if m.Logs(EXEC, CMD_DIR, cmd.Dir); !nfs.ExistsFile(m, cmd.Dir) {
+		if m.Logs(EXEC, CMD_DIR, cmd.Dir); !nfs.Exists(m, cmd.Dir) {
 			file.MkdirAll(cmd.Dir, ice.MOD_DIR)
 		}
 	}
@@ -117,14 +117,14 @@ func _system_find(m Message, bin string, dir ...string) string {
 	}
 	kit.If(len(dir) == 0, func() { dir = append(dir, _path_split(kit.Env(PATH))...) })
 	for _, p := range dir {
-		if nfs.ExistsFile(m, path.Join(p, bin)) {
+		if nfs.Exists(m, path.Join(p, bin)) {
 			return kit.Path(p, bin)
 		}
-		if IsWindows() && nfs.ExistsFile(m, path.Join(p, bin)+".exe") {
+		if IsWindows() && nfs.Exists(m, path.Join(p, bin)+".exe") {
 			return kit.Path(p, bin) + ".exe"
 		}
 	}
-	if nfs.ExistsFile(m, bin) {
+	if nfs.Exists(m, bin) {
 		return kit.Path(bin)
 	}
 	return ""

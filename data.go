@@ -1,7 +1,6 @@
 package ice
 
 import (
-	"bufio"
 	"os"
 	"path"
 	"strings"
@@ -55,9 +54,9 @@ func SaveImportant(m *Message, arg ...string) {
 func loadImportant(m *Message) {
 	if f, e := os.Open(VAR_DATA_IMPORTANT); e == nil {
 		defer f.Close()
-		for bio := bufio.NewScanner(f); bio.Scan(); {
-			kit.If(bio.Text() != "" && !strings.HasPrefix(bio.Text(), "# "), func() { m.Cmd(kit.Split(bio.Text())) })
-		}
+		kit.For(f, func(s string) {
+			kit.If(s != "" && !strings.HasPrefix(s, "# "), func() { m.Cmd(kit.Split(s)) })
+		})
 	}
 	Info.Important = true
 }

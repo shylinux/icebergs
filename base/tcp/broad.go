@@ -11,9 +11,7 @@ import (
 
 func _server_udp(m *ice.Message, arg ...string) {
 	l, e := net.ListenUDP(UDP4, UDPAddr(m, "0.0.0.0", m.Option(PORT)))
-	if e == nil {
-		defer l.Close()
-	}
+	defer kit.If(e == nil, func() { l.Close() })
 	mdb.HashCreate(m, arg, kit.Dict(mdb.TARGET, l), STATUS, kit.Select(ERROR, OPEN, e == nil), ERROR, kit.Format(e))
 	switch cb := m.OptionCB("").(type) {
 	case func(*net.UDPAddr, []byte):
@@ -26,17 +24,18 @@ func _server_udp(m *ice.Message, arg ...string) {
 				break
 			}
 		}
+	default:
+		m.ErrorNotImplement(cb)
 	}
 }
 func _client_dial_udp4(m *ice.Message, arg ...string) {
 	c, e := net.DialUDP(UDP4, nil, UDPAddr(m, kit.Select("255.255.255.255", m.Option(HOST)), m.Option(PORT)))
-	if e == nil {
-		defer c.Close()
-	}
+	defer kit.If(e == nil, func() { c.Close() })
 	switch cb := m.OptionCB("").(type) {
 	case func(*net.UDPConn):
-		m.Assert(e)
-		cb(c)
+		kit.If(!m.Warn(e), func() { cb(c) })
+	default:
+		m.ErrorNotImplement(cb)
 	}
 }
 

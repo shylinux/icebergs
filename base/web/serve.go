@@ -26,7 +26,6 @@ func _serve_start(m *ice.Message) {
 	kit.If(cli.IsWindows(), func() { m.Cmd(SPIDE, ice.OPS, _serve_address(m)+"/exit").Sleep30ms() })
 	cli.NodeInfo(m, kit.Select(ice.Info.Hostname, m.Option(tcp.NODENAME)), SERVER)
 	m.Start("", m.OptionSimple(tcp.HOST, tcp.PORT)...)
-	// m.Target().Start(m, m.OptionSimple(tcp.HOST, tcp.PORT)...)
 }
 func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	const (
@@ -54,7 +53,7 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	if m.Logs(r.Header.Get(ice.MSG_USERIP), r.Method, r.URL.String()); r.Method == http.MethodGet {
 		if msg := m.Spawn(w, r).Options(ice.MSG_USERUA, r.UserAgent()); path.Join(r.URL.Path) == ice.PS {
 			return !Render(RenderMain(msg), msg.Option(ice.MSG_OUTPUT), kit.List(msg.Optionv(ice.MSG_ARGS))...)
-		} else if p := path.Join(kit.Select(ice.USR_VOLCANOS, ice.USR_INTSHELL, msg.IsCliUA()), r.URL.Path); nfs.ExistsFile(msg, p) {
+		} else if p := path.Join(kit.Select(ice.USR_VOLCANOS, ice.USR_INTSHELL, msg.IsCliUA()), r.URL.Path); nfs.Exists(msg, p) {
 			return !Render(msg, ice.RENDER_DOWNLOAD, p)
 		}
 	}
@@ -78,6 +77,7 @@ func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.Response
 		kit.For(kit.UnMarshal(r.Body), func(k string, v ice.Any) { m.Optionv(k, v) })
 	default:
 		r.ParseMultipartForm(kit.Int64(kit.Select("4096", r.Header.Get(ContentLength))))
+		kit.For(r.PostForm, func(k string, v []string) { _log(FORM, k, kit.Join(v, ice.SP)).Optionv(k, v) })
 		kit.For(r.PostForm, func(k string, v []string) { _log(FORM, k, kit.Join(v, ice.SP)).Optionv(k, v) })
 	}
 	kit.For(r.Cookies(), func(k, v string) { m.Optionv(k, v) })

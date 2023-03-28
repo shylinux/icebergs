@@ -169,8 +169,8 @@ func PrevPageLimit(m *ice.Message, total string, arg ...string) {
 }
 
 func OptionPages(m *ice.Message, arg ...string) (page int, size int) {
-	m.Option(CACHE_LIMIT, kit.Select(m.Option(CACHE_LIMIT), arg, 0))
-	m.Option(CACHE_OFFEND, kit.Select(m.Option(CACHE_OFFEND), arg, 1))
+	m.Option(CACHE_OFFEND, kit.Select(m.Option(CACHE_OFFEND), arg, 0))
+	m.Option(CACHE_LIMIT, kit.Select(m.Option(CACHE_LIMIT), arg, 1))
 	m.Option(CACHE_FILTER, kit.Select(m.Option(CACHE_FILTER), arg, 2))
 	m.Option(LIMIT, kit.Select(m.Option(LIMIT), arg, 0))
 	m.Option(OFFEND, kit.Select(m.Option(OFFEND), arg, 1))

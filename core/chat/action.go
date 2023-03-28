@@ -62,6 +62,9 @@ func _action_share(m *ice.Message, arg ...string) {
 	}
 }
 
+const (
+	THEME = "theme"
+)
 const ACTION = "action"
 
 func init() {

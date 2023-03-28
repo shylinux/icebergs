@@ -32,26 +32,26 @@ type Frame struct {
 	count int
 }
 
-func (f *Frame) prompt(m *ice.Message, list ...string) *Frame {
+func (f *Frame) prompt(m *ice.Message, arg ...string) *Frame {
 	if f.source != STDIO {
 		return f
 	}
-	kit.If(len(list) == 0, func() { list = append(list, f.ps1...) })
+	kit.If(len(arg) == 0, func() { arg = append(arg, f.ps1...) })
 	fmt.Fprintf(f.stdout, kit.Select("\r", "\r\033[2K", ice.Info.Colors))
-	for _, v := range list {
-		switch v {
+	kit.For(arg, func(k string) {
+		switch k {
 		case mdb.COUNT:
 			fmt.Fprintf(f.stdout, "%d", f.count)
 		case tcp.HOSTNAME:
 			fmt.Fprintf(f.stdout, "%s", kit.Slice(kit.Split(ice.Info.Hostname, " -/."), -1)[0])
 		case mdb.TIME:
-			fmt.Fprintf(f.stdout, time.Now().Format("15:04:05"))
+			fmt.Fprintf(f.stdout, kit.Slice(kit.Split(time.Now().Format(ice.MOD_TIME)), -1)[0])
 		case TARGET:
 			fmt.Fprintf(f.stdout, f.target.Name)
 		default:
-			kit.If(ice.Info.Colors || v[0] != '\033', func() { fmt.Fprintf(f.stdout, v) })
+			kit.If(ice.Info.Colors || k[0] != '\033', func() { fmt.Fprintf(f.stdout, k) })
 		}
-	}
+	})
 	return f
 }
 func (f *Frame) printf(m *ice.Message, str string, arg ...ice.Any) *Frame {
@@ -69,9 +69,7 @@ func (f *Frame) change(m *ice.Message, ls []string) []string {
 		if ls = ls[1:]; len(target) == 0 && len(ls) > 0 {
 			target, ls = ls[0], ls[1:]
 		}
-		if target == "~" {
-			target = ""
-		}
+		kit.If(target == "~", func() { target = "" })
 		m.Spawn(f.target).Search(target+ice.PT, func(p *ice.Context, s *ice.Context) { f.target = s })
 	}
 	return ls
@@ -85,7 +83,6 @@ func (f *Frame) alias(m *ice.Message, ls []string) []string {
 	return ls
 }
 func (f *Frame) parse(m *ice.Message, h, line string) string {
-	msg := m.Spawn(f.target)
 	ls := kit.Split(strings.TrimSpace(line))
 	for i, v := range ls {
 		if v == "#" {
@@ -93,9 +90,10 @@ func (f *Frame) parse(m *ice.Message, h, line string) string {
 			break
 		}
 	}
-	if ls = f.change(msg, f.alias(msg, ls)); len(ls) == 0 {
+	if ls = f.change(m, f.alias(m, ls)); len(ls) == 0 {
 		return ""
 	}
+	msg := m.Spawn(f.target)
 	if msg.Cmdy(ls); h == STDIO && msg.IsErrNotFound() {
 		msg.SetResult().Cmdy(cli.SYSTEM, ls)
 	}
@@ -149,9 +147,7 @@ func (f *Frame) Start(m *ice.Message, arg ...string) {
 	m.Optionv(FRAME, f)
 	switch f.source = kit.Select(STDIO, arg, 0); f.source {
 	case STDIO:
-		if f.target == nil {
-			f.target = m.Target()
-		}
+		kit.If(f.target == nil, func() { f.target = m.Target() })
 		r, w, _ := os.Pipe()
 		go func() { io.Copy(w, os.Stdin) }()
 		f.pipe, f.stdin, f.stdout = w, r, os.Stdout
@@ -161,7 +157,7 @@ func (f *Frame) Start(m *ice.Message, arg ...string) {
 		if m.Option(ice.MSG_SCRIPT) != "" {
 			ls := kit.Split(m.Option(ice.MSG_SCRIPT), ice.PS)
 			for i := len(ls) - 1; i > 0; i-- {
-				if p := path.Join(path.Join(ls[:i]...), f.source); nfs.ExistsFile(m, p) {
+				if p := path.Join(path.Join(ls[:i]...), f.source); nfs.Exists(m, p) {
 					f.source = p
 				}
 			}
@@ -179,22 +175,17 @@ func (f *Frame) Start(m *ice.Message, arg ...string) {
 	}
 }
 func (f *Frame) Close(m *ice.Message, arg ...string) {
-	if stdin, ok := f.stdin.(io.Closer); ok {
-		stdin.Close()
-	}
+	nfs.Close(m, f.stdin)
 	f.stdin = nil
 }
-func (f *Frame) Spawn(m *ice.Message, c *ice.Context, arg ...string) ice.Server {
-	return &Frame{}
-}
+func (f *Frame) Spawn(m *ice.Message, c *ice.Context, arg ...string) ice.Server { return &Frame{} }
 
 const (
-	MESSAGE = "message"
-	SHELL   = "shell"
-	FRAME   = "frame"
-	STDIO   = "stdio"
-	PS1     = "PS1"
-	PS2     = "PS2"
+	FRAME = "frame"
+	SHELL = "shell"
+	STDIO = "stdio"
+	PS1   = "PS1"
+	PS2   = "PS2"
 )
 const (
 	SOURCE = "source"
@@ -207,11 +198,6 @@ const (
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		SHELL: {Name: "shell", Help: "交互命令", Actions: mdb.HashAction(), Hand: func(m *ice.Message, arg ...string) {
-			if f, ok := m.Target().Server().(*Frame); ok {
-				f.Spawn(m, m.Target()).Start(m, arg...)
-			}
-		}},
 		SOURCE: {Name: "source file run", Help: "脚本解析", Actions: mdb.HashAction(), Hand: func(m *ice.Message, arg ...string) {
 			if f, ok := m.Target().Server().(*Frame); ok {
 				f.Spawn(m, m.Target()).Start(m, arg...)

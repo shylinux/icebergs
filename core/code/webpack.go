@@ -124,7 +124,7 @@ func init() {
 				mdb.HashCreate(m, m.OptionSimple(nfs.PATH))
 			}},
 			cli.BUILD: {Name: "build name*=hi", Hand: func(m *ice.Message, arg ...string) {
-				kit.If(!nfs.ExistsFile(m, USR_PUBLISH_CAN_JS), func() { m.Cmd("", mdb.CREATE) })
+				kit.If(!nfs.Exists(m, USR_PUBLISH_CAN_JS), func() { m.Cmd("", mdb.CREATE) })
 				_webpack_build(m, _publish(m, m.Option(mdb.NAME)))
 			}},
 			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {

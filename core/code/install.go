@@ -19,9 +19,9 @@ import (
 
 func _install_path(m *ice.Message, link string) string {
 	u := kit.ParseURL(kit.Select(m.Option(web.LINK), link))
-	if p := path.Join(ice.USR_INSTALL, kit.TrimExt(u.Path)); nfs.ExistsFile(m, p) {
+	if p := path.Join(ice.USR_INSTALL, kit.TrimExt(u.Path)); nfs.Exists(m, p) {
 		return p
-	} else if pp := path.Join(ice.USR_INSTALL, path.Base(u.Path)); nfs.ExistsFile(m, pp) {
+	} else if pp := path.Join(ice.USR_INSTALL, path.Base(u.Path)); nfs.Exists(m, pp) {
 		return path.Join(ice.USR_INSTALL, strings.Split(m.Cmd(nfs.TAR, pp, "", "1").Append(nfs.FILE), ice.PS)[0])
 	} else {
 		return p
@@ -31,7 +31,7 @@ func _install_download(m *ice.Message) {
 	link := m.Option(web.LINK)
 	name := path.Base(kit.ParseURL(link).Path)
 	file := path.Join(kit.Select(ice.USR_INSTALL, m.Option(nfs.PATH)), name)
-	if nfs.ExistsFile(m, file) {
+	if nfs.Exists(m, file) {
 		m.Cmdy(nfs.DIR, file)
 		return
 	}
@@ -78,14 +78,14 @@ func _install_order(m *ice.Message, arg ...string) {
 	p := _install_path(m, "")
 	if m.Option(nfs.PATH) == "" {
 		kit.For([]string{"", "sbin", "bin", "_install/bin"}, func(v string) {
-			kit.If(nfs.ExistsFile(m, path.Join(p, v)), func() { m.Option(nfs.PATH, v) })
+			kit.If(nfs.Exists(m, path.Join(p, v)), func() { m.Option(nfs.PATH, v) })
 		})
 	}
 	m.Cmdy(cli.SYSTEM, nfs.PUSH, path.Join(p, m.Option(nfs.PATH)))
 }
 func _install_spawn(m *ice.Message, arg ...string) {
 	if kit.Int(m.Option(tcp.PORT)) >= 10000 {
-		if p := path.Join(ice.USR_LOCAL_DAEMON, m.Option(tcp.PORT)); nfs.ExistsFile(m, p) {
+		if p := path.Join(ice.USR_LOCAL_DAEMON, m.Option(tcp.PORT)); nfs.Exists(m, p) {
 			m.Echo(p)
 			return
 		}
@@ -95,7 +95,7 @@ func _install_spawn(m *ice.Message, arg ...string) {
 	target, source := path.Join(ice.USR_LOCAL_DAEMON, m.Option(tcp.PORT)), _install_path(m, "")
 	nfs.MkdirAll(m, target)
 	defer m.Echo(target)
-	if m.Option(INSTALL) == "" && nfs.ExistsFile(m, kit.Path(source, _INSTALL)) {
+	if m.Option(INSTALL) == "" && nfs.Exists(m, kit.Path(source, _INSTALL)) {
 		m.Option(INSTALL, _INSTALL)
 	}
 	nfs.DirDeepAll(m.Spawn(), path.Join(source, m.Option(INSTALL)), "", func(value ice.Maps) {
@@ -177,7 +177,7 @@ func init() {
 			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) { _install_trash(m, arg...) }},
 			nfs.PATH:  {Hand: func(m *ice.Message, arg ...string) { m.Echo(_install_path(m, kit.Select("", arg, 0))) }},
 			nfs.SOURCE: {Name: "source link* path", Hand: func(m *ice.Message, arg ...string) {
-				if m.Option(nfs.DIR_ROOT, path.Join(_install_path(m, ""), _INSTALL)); !nfs.ExistsFile(m, m.Option(nfs.DIR_ROOT)) {
+				if m.Option(nfs.DIR_ROOT, path.Join(_install_path(m, ""), _INSTALL)); !nfs.Exists(m, m.Option(nfs.DIR_ROOT)) {
 					m.Option(nfs.DIR_ROOT, path.Join(_install_path(m, "")))
 				}
 				m.Cmdy(nfs.DIR, m.Option(nfs.PATH)).StatusTimeCount(nfs.PATH, m.Option(nfs.DIR_ROOT))

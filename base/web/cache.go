@@ -74,7 +74,7 @@ func _cache_download(m *ice.Message, r *http.Response, file string, cb ice.Any) 
 	if f, p, e := miss.CreateFile(file); !m.Warn(e, ice.ErrNotValid, DOWNLOAD) {
 		defer f.Close()
 		last, base := 0, 10
-		nfs.CopyFile(m, f, r.Body, base*ice.MOD_BUFS, kit.Int(kit.Select("100", r.Header.Get(ContentLength))), func(count, total, value int) {
+		nfs.CopyStream(m, f, r.Body, base*ice.MOD_BUFS, kit.Int(kit.Select("100", r.Header.Get(ContentLength))), func(count, total, value int) {
 			if value/base == last {
 				return
 			}

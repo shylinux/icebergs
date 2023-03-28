@@ -56,7 +56,7 @@ func init() {
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == mdb.FOREACH && arg[1] == "" {
-					ip := m.Cmdv("", GATEWAY, aaa.IP)
+					ip := m.Cmdv(HOST, GATEWAY, aaa.IP)
 					m.PushSearch(mdb.TYPE, GATEWAY, mdb.NAME, ip, mdb.TEXT, "http://"+ip)
 				}
 			}},
@@ -76,7 +76,7 @@ func init() {
 				m.Echo(arg[0])
 			}},
 			GATEWAY: {Hand: func(m *ice.Message, arg ...string) {
-				m.Push(aaa.IP, kit.Keys(kit.Slice(strings.Split(m.Cmdv("", aaa.IP), ice.PT), 0, 3), "1"))
+				m.Push(aaa.IP, kit.Keys(kit.Slice(strings.Split(m.Cmdv(HOST, aaa.IP), ice.PT), 0, 3), "1"))
 			}},
 		}, mdb.HashAction(mdb.SHORT, mdb.TEXT), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			_host_list(m, kit.Select("", arg, 0))

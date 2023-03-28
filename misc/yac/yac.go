@@ -6,4 +6,4 @@ const YAC = "yac"
 
 var Index = &ice.Context{Name: YAC, Help: "语法模块"}
 
-func init() { ice.Index.Register(Index, nil, STACK) }
+func init() { ice.Index.Register(Index, nil) }

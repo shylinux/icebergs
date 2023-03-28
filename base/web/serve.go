@@ -78,7 +78,6 @@ func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.Response
 	default:
 		r.ParseMultipartForm(kit.Int64(kit.Select("4096", r.Header.Get(ContentLength))))
 		kit.For(r.PostForm, func(k string, v []string) { _log(FORM, k, kit.Join(v, ice.SP)).Optionv(k, v) })
-		kit.For(r.PostForm, func(k string, v []string) { _log(FORM, k, kit.Join(v, ice.SP)).Optionv(k, v) })
 	}
 	kit.For(r.Cookies(), func(k, v string) { m.Optionv(k, v) })
 	m.OptionDefault(ice.MSG_HEIGHT, "480", ice.MSG_WIDTH, "320")

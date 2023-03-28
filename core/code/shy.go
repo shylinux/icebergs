@@ -9,6 +9,7 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
+	"shylinux.com/x/icebergs/base/yac"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -21,7 +22,7 @@ func init() {
 				ctx.ProcessCommand(m, web.WIKI_WORD, kit.Simple(path.Join(arg[2], arg[1])))
 			}},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
-				ctx.ProcessCommand(m, web.WIKI_WORD, kit.Simple(path.Join(arg[2], arg[1])))
+				ctx.ProcessCommand(m, yac.STACK, kit.Simple(arg[1]))
 			}},
 			TEMPLATE: {Hand: func(m *ice.Message, arg ...string) {
 				m.Echo(nfs.Template(m, "demo.shy"), path.Base(path.Dir(path.Join(arg[2], arg[1]))))

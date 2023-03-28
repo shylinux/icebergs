@@ -13,6 +13,7 @@ func _timer_action(m *ice.Message, now time.Time, arg ...string) {
 		if value[mdb.COUNT] == "0" || value[mdb.TIME] > now.Format(ice.MOD_TIME) {
 			return
 		}
+		m.Option(ice.LOG_DISABLE, ice.FALSE)
 		m.Cmd(ROUTINE, mdb.CREATE, mdb.NAME, value[mdb.NAME], kit.Keycb(ROUTINE), value[ice.CMD])
 		mdb.HashModify(m, mdb.HASH, value[mdb.HASH], mdb.COUNT, kit.Int(value[mdb.COUNT])-1, mdb.TIME, m.Time(value[INTERVAL]))
 	})

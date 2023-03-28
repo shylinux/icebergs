@@ -28,6 +28,7 @@ func (f *Frame) Start(m *ice.Message, arg ...string) {
 	for {
 		select {
 		case <-time.Tick(t):
+			m.Option(ice.LOG_DISABLE, ice.TRUE)
 			m.Cmd(TIMER, HAPPEN)
 		case s, ok := <-f.s:
 			if !ok {

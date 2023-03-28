@@ -437,75 +437,7 @@ func init() {
 				})
 				m.ProcessInner()
 			}},
-			"location": {Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessLocation("https://baidu.com")
-			}},
-			"replace": {Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessReplace("https://baidu.com")
-			}},
-			"history": {Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessHistory()
-			}},
-			"confirms": {Hand: func(m *ice.Message, arg ...string) {
-				m.Option("hi", "hello")
-				m.ProcessConfirm("hello world")
-			}},
-			"refresh": {Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessRefresh("3s")
-			}},
-			"rewrite": {Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessRewrite("hash", "1", "npage", "2")
-			}},
-			"display": {Hand: func(m *ice.Message, arg ...string) {
-				m.Push("value", 1)
-				m.Push("value", 2)
-				m.ProcessDisplay("/plugin/story/pie.js")
-			}},
-			// "field": {Hand: func(m *ice.Message, arg ...string) {
-			// 	m.ProcessCommand("cli.system", []string{"pwd"}, arg...)
-			// }},
-			"inner": {Hand: func(m *ice.Message, arg ...string) {
-				m.Push("value", 1)
-				m.Push("value", 2)
-				m.Push("good", 2)
-				m.Push("good", 2)
-				m.ProcessInner()
-			}},
-			"hold": {Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessHold()
-			}},
-			"back": {Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessBack()
-			}},
-			"rich": {Hand: func(m *ice.Message, arg ...string) {
-				m.Push("hi", "hello")
-				m.Push("he", "world")
-				m.Push("value", "good")
-				m.ProcessRich("hello world\n")
-			}},
-			"grow": {Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessGrow("hello world\n")
-			}},
-			"open": {Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessOpen("https://baidu.com")
-			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
-			m.Action(
-				"location", "replace", "history",
-				"confirms", "refresh", "rewrite", "display", "field", "inner",
-				"hold", "back", "rich", "grow", "open",
-				"openLocation", "getLocation", "getClipboardData",
-			)
-			m.Push("hi", "hello")
-			m.Push("he", "world")
-			m.Push("value", "good")
-			m.Echo("hello world")
-			m.StatusTimeCount()
-			m.EchoButton("clear")
-			m.PushButton("close")
-			m.EchoButton("upload")
-			m.EchoButton("actions")
-			return
 			if m.Action(mdb.CREATE); len(arg) == 0 { // 矩阵列表
 				m.Fields(len(arg), "time,hash,npage,nhash")
 				m.Cmdy(mdb.SELECT, m.PrefixKey(), "", mdb.HASH)

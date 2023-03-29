@@ -77,7 +77,7 @@ func (s *Stack) parse(m *ice.Message, p string) *Stack {
 				if text = s.list[s.line]; text == "" || strings.HasPrefix(text, "#") {
 					continue
 				}
-				for s.rest = kit.Split(text, "\t ", "<!=>+-*/;"); len(s.rest) > 0; {
+				for s.rest = kit.Split(text, "\t ", OPS); len(s.rest) > 0; {
 					ls, rest := _parse_rest(BEGIN, s.rest...)
 					if ls[0] == END {
 						if f := s.peekf(); f.pop == nil {
@@ -136,12 +136,13 @@ func _parse_rest(split string, arg ...string) ([]string, []string) {
 }
 
 const (
-	PWD     = "pwd"
+	OPS     = "<!=>+-*/;"
 	EXPR    = "expr"
 	BEGIN   = "{"
 	END     = "}"
 	DISABLE = -1
 
+	PWD    = "pwd"
 	CMD    = "cmd"
 	LET    = "let"
 	IF     = "if"
@@ -157,7 +158,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		CMD: {Name: "cmd", Hand: func(m *ice.Message, arg ...string) {
 			s := _parse_stack(m)
-			kit.If(s.runable(), func() { m.Cmdy(arg).Echo(ice.NL) })
+			kit.If(s.runable(), func() { m.Cmdy(arg) })
 		}},
 		LET: {Name: "let a = 1", Hand: func(m *ice.Message, arg ...string) {
 			s := _parse_stack(m)

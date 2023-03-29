@@ -13,6 +13,7 @@ import (
 type Func struct {
 	line int
 	arg  []string
+	res  []string
 }
 type Frame struct {
 	key    string
@@ -66,7 +67,7 @@ func (s *Stack) value(key string, arg ...ice.Any) ice.Any {
 	kit.If(len(arg) > 0, func() { f.value[key] = arg[0] })
 	return f.value[key]
 }
-func (s *Stack) runable() bool { return s.peekf().status > -1 }
+func (s *Stack) runable() bool { return s.peekf().status > DISABLE }
 func (s *Stack) parse(m *ice.Message, p string) *Stack {
 	nfs.Open(m, p, func(r io.Reader) {
 		s.key, s.peekf().key = p, p
@@ -78,6 +79,15 @@ func (s *Stack) parse(m *ice.Message, p string) *Stack {
 				}
 				for s.rest = kit.Split(text, "\t ", "<!=>+-*/;"); len(s.rest) > 0; {
 					ls, rest := _parse_rest(BEGIN, s.rest...)
+					if ls[0] == END {
+						if f := s.peekf(); f.pop == nil {
+							s.last = s.popf()
+						} else {
+							f.pop()
+						}
+						s.rest = ls[1:]
+						continue
+					}
 					kit.If(len(rest) == 0, func() { ls, rest = _parse_rest(END, ls...) })
 					switch s.rest = []string{}; v := s.value(ls[0]).(type) {
 					case *Func:
@@ -104,16 +114,14 @@ func (s *Stack) show() (res []string) {
 	res = append(res, "")
 	for i, f := range s.frame {
 		res = append(res, kit.Format("frame: %v line: %v %v %v", i, f.line, f.key, f.status))
-		kit.For(f.value, func(k string, v ice.Any) { res = append(res, kit.Format("frame: %v %v: %v", i, k, v)) })
+		kit.For(f.value, func(k string, v ice.Any) { res = append(res, kit.Format("       %v %v: %v", i, k, v)) })
 	}
 	return
 }
 func NewStack() *Stack { return &Stack{} }
 
-func _parse_stack(m *ice.Message) *Stack { return m.Optionv(STACK).(*Stack) }
-func _parse_frame(m *ice.Message) (*Stack, *Frame) {
-	return _parse_stack(m), _parse_stack(m).peekf()
-}
+func _parse_stack(m *ice.Message) *Stack           { return m.Optionv(STACK).(*Stack) }
+func _parse_frame(m *ice.Message) (*Stack, *Frame) { return _parse_stack(m), _parse_stack(m).peekf() }
 func _parse_rest(split string, arg ...string) ([]string, []string) {
 	if i := kit.IndexOf(arg, split); i == -1 {
 		return arg, nil
@@ -177,14 +185,6 @@ func init() {
 			f := s.peekf()
 			f.status = DISABLE
 		}},
-		END: {Name: END, Hand: func(m *ice.Message, arg ...string) {
-			s := _parse_stack(m)
-			if f := s.peekf(); f.pop == nil {
-				s.last = s.popf()
-			} else {
-				f.pop()
-			}
-		}},
 		PWD: {Name: "pwd", Hand: func(m *ice.Message, arg ...string) {
 			s := _parse_stack(m)
 			kit.If(s.runable(), func() {
@@ -198,9 +198,9 @@ func init() {
 				return
 			}
 			m.SetResult()
-			m.Echo(ice.NL).Echo("output:" + ice.NL)
+			m.Echo(ice.NL).Echo("output: %s\n", arg[0])
 			s := NewStack().parse(m, path.Join(nfs.SRC, path.Join(arg...)))
-			m.Echo(ice.NL).Echo("script:" + ice.NL)
+			m.Echo(ice.NL).Echo("script: %s\n", arg[0])
 			m.Echo(strings.Join(s.show(), ice.NL))
 		}},
 		EXPR: {Name: "expr a = 1", Hand: func(m *ice.Message, arg ...string) {

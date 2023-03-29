@@ -93,7 +93,9 @@ func init() {
 				case ctx.INDEX:
 					m.Cmdy(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND, ice.OptionFields(ctx.INDEX))
 				case ctx.ARGS:
-					kit.If(m.Option(ctx.INDEX) != "", func() { m.Cmdy(m.Option(ctx.INDEX)) })
+					kit.If(m.Option(ctx.INDEX) != "", func() {
+						m.Cmdy(m.Option(ctx.INDEX)).Search(m.Option(ctx.INDEX), func(key string, cmd *ice.Command) { m.Cut(kit.Format(kit.Value(cmd.List, "0.name"))) })
+					})
 				case nfs.PATH:
 					m.Cmdy(nfs.DIR, p, nfs.DIR_CLI_FIELDS)
 					kit.If(strings.HasPrefix(p, bind[0]), func() { m.Cmdy(nfs.DIR, strings.Replace(p, bind[0], bind[1], 1), nfs.DIR_CLI_FIELDS) })

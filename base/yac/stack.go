@@ -169,11 +169,31 @@ func init() {
 			f := s.pushf(m.CommandKey())
 			kit.If(s.runable() && m.Cmdx(EXPR, arg) == ice.FALSE, func() { f.status = DISABLE })
 		}},
-		FOR: {Name: "for a > 1", Hand: func(m *ice.Message, arg ...string) {
+		FOR: {Name: "for a = 1; a < 10; a++ {", Hand: func(m *ice.Message, arg ...string) {
+			init, next := []string{}, []string{}
+			switch strings.Count(strings.Join(arg, ""), ";") {
+			case 2:
+				init, arg = _parse_rest(";", arg...)
+				arg, next = _parse_rest(";", arg...)
+			case 1:
+				arg, next = _parse_rest(";", arg...)
+			}
 			s := _parse_stack(m)
+			m.Debug("what %#v", s.last)
+			m.Debug("what %+v", s.last)
+			m.Debug("what %v", s.last)
+			kit.If(s.last != nil && s.last.line == s.line, func() { init = init[:0] })
+			kit.If(len(init) > 0, func() { m.Cmd(EXPR, init) })
 			f, line := s.pushf(m.CommandKey()), s.line
-			f.pop = func() { kit.If(s.runable(), func() { s.line, _ = line-1, s.popf() }, func() { s.popf() }) }
-			kit.If(s.runable() && m.Cmdx(EXPR, arg) == ice.FALSE, func() { f.status = DISABLE })
+			f.pop = func() {
+				kit.If(s.runable(), func() {
+					s.line, s.last = line-1, s.popf()
+					kit.If(len(next) > 0, func() { m.Cmd(EXPR, next) })
+				}, func() {
+					s.popf()
+				})
+			}
+			kit.If(s.runable() && len(arg) > 0 && m.Cmdx(EXPR, arg) == ice.FALSE, func() { f.status = DISABLE })
 		}},
 		FUNC: {Name: "func show", Hand: func(m *ice.Message, arg ...string) {
 			s := _parse_stack(m)
@@ -207,9 +227,11 @@ func init() {
 		EXPR: {Name: "expr a = 1", Hand: func(m *ice.Message, arg ...string) {
 			s := _parse_stack(m)
 			level := map[string]int{
-				"*": 30, "/": 30,
+				"++": 40,
+				"*":  30, "/": 30,
 				"+": 20, "-": 20,
 				"<": 10, ">": 10, "<=": 10, ">=": 10, "==": 10, "!=": 10,
+				"=": 1,
 			}
 			list := kit.List()
 			get := func(p int) ice.Any {
@@ -229,6 +251,12 @@ func init() {
 			push := func(v ice.Any) { list = append(list, v) }
 			pop := func(n int) { list = list[:len(list)-n] }
 			ops := func() {
+				switch gets(-2) {
+				case "=":
+					s.value(kit.Format(get(-3)), gets(-1))
+					pop(2)
+					return
+				}
 				bin := func(v ice.Any) {
 					pop(3)
 					push(kit.Format(v))
@@ -257,6 +285,17 @@ func init() {
 				}
 			}
 			kit.For(arg, func(k string) {
+				if op := k + kit.Format(get(-1)); level[op] > 0 {
+					if op == "++" {
+						v := kit.Int(s.value(kit.Format(get(-2)))) + 1
+						s.value(kit.Format(get(-2)), v)
+						pop(1)
+						return
+					}
+					pop(1)
+					push(op)
+					return
+				}
 				if level[k] > 0 {
 					for level[k] <= getl(-2) {
 						ops()
@@ -267,8 +306,8 @@ func init() {
 			for len(list) > 1 {
 				ops()
 			}
-			m.Echo(kit.Format(list[0]))
-			m.Debug("expr %s", m.Result())
+			kit.If(len(list) > 0, func() { m.Echo(kit.Format(list[0])) })
+			m.Debug("expr %s %v", m.Result(), s.value(m.Result()))
 		}},
 	})
 }

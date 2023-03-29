@@ -12,6 +12,7 @@ import (
 
 type Func struct {
 	line int
+	arg  []string
 }
 type Frame struct {
 	key    string
@@ -21,6 +22,7 @@ type Frame struct {
 	pop    func()
 }
 type Stack struct {
+	key   string
 	frame []*Frame
 	last  *Frame
 	rest  []string
@@ -28,43 +30,59 @@ type Stack struct {
 	line  int
 }
 
-func (s *Stack) peekf(m *ice.Message) *Frame { return s.frame[len(s.frame)-1] }
-func (s *Stack) pushf(m *ice.Message, key string) *Frame {
-	f := &Frame{key: key, value: kit.Dict(), status: s.peekf(m).status, line: s.line}
+func (s *Stack) peekf() *Frame {
+	kit.If(len(s.frame) == 0, func() { s.pushf("") })
+	return s.frame[len(s.frame)-1]
+}
+func (s *Stack) pushf(key string) *Frame {
+	f := &Frame{key: key, value: kit.Dict(), line: s.line}
+	kit.If(len(s.frame) > 0, func() { f.status = s.peekf().status })
 	s.frame = append(s.frame, f)
 	return f
 }
-func (s *Stack) popf(m *ice.Message) *Frame {
-	f := s.frame[len(s.frame)-1]
+func (s *Stack) popf() *Frame {
+	f := s.peekf()
 	kit.If(len(s.frame) > 1, func() { s.frame = s.frame[:len(s.frame)-1] })
 	return f
 }
-func (s *Stack) value(m *ice.Message, key string, arg ...ice.Any) ice.Any {
+func (s *Stack) stack(cb ice.Any) {
+	for i := len(s.frame) - 1; i >= 0; i-- {
+		switch cb := cb.(type) {
+		case func(*Frame, int):
+			cb(s.frame[i], i)
+		case func(*Frame):
+			cb(s.frame[i])
+		}
+	}
+}
+func (s *Stack) value(key string, arg ...ice.Any) ice.Any {
 	for i := len(s.frame) - 1; i >= 0; i-- {
 		if f := s.frame[i]; f.value[key] != nil {
 			kit.If(len(arg) > 0, func() { f.value[key] = arg[0] })
 			return f.value[key]
 		}
 	}
-	f := s.frame[len(s.frame)-1]
+	f := s.peekf()
 	kit.If(len(arg) > 0, func() { f.value[key] = arg[0] })
 	return f.value[key]
 }
+func (s *Stack) runable() bool { return s.peekf().status > -1 }
 func (s *Stack) parse(m *ice.Message, p string) *Stack {
 	nfs.Open(m, p, func(r io.Reader) {
-		s.peekf(m).key = p
+		s.key, s.peekf().key = p, p
 		kit.For(r, func(text string) {
 			s.list = append(s.list, text)
 			for s.line = len(s.list) - 1; s.line < len(s.list); s.line++ {
 				if text = s.list[s.line]; text == "" || strings.HasPrefix(text, "#") {
 					continue
 				}
-				for s.rest = kit.Split(text, "\t ", "<=>+-*/;"); len(s.rest) > 0; {
-					ls := s.rest
-					switch s.rest = []string{}; v := s.value(m, ls[0]).(type) {
+				for s.rest = kit.Split(text, "\t ", "<!=>+-*/;"); len(s.rest) > 0; {
+					ls, rest := _parse_rest(BEGIN, s.rest...)
+					kit.If(len(rest) == 0, func() { ls, rest = _parse_rest(END, ls...) })
+					switch s.rest = []string{}; v := s.value(ls[0]).(type) {
 					case *Func:
-						f, line := s.pushf(m, ls[0]), s.line
-						f.pop, s.line = func() { s.rest, s.line, _ = nil, line+1, s.popf(m) }, v.line
+						f, line := s.pushf(ls[0]), s.line
+						f.pop, s.line = func() { s.rest, s.line, _ = nil, line+1, s.popf() }, v.line
 					default:
 						if _, ok := m.Target().Commands[ls[0]]; ok {
 							m.Options(STACK, s).Cmdy(ls)
@@ -72,13 +90,14 @@ func (s *Stack) parse(m *ice.Message, p string) *Stack {
 							m.Options(STACK, s).Cmdy(CMD, ls)
 						}
 					}
+					s.rest = append(s.rest, rest...)
 				}
 			}
 		})
 	})
 	return s
 }
-func (s *Stack) show(m *ice.Message) (res []string) {
+func (s *Stack) show() (res []string) {
 	for i, l := range s.list {
 		res = append(res, kit.Format("%2d: ", i)+l)
 	}
@@ -89,96 +108,103 @@ func (s *Stack) show(m *ice.Message) (res []string) {
 	}
 	return
 }
-func _parse_split(m *ice.Message, split string, arg ...string) ([]string, []string) {
+func NewStack() *Stack { return &Stack{} }
+
+func _parse_stack(m *ice.Message) *Stack { return m.Optionv(STACK).(*Stack) }
+func _parse_frame(m *ice.Message) (*Stack, *Frame) {
+	return _parse_stack(m), _parse_stack(m).peekf()
+}
+func _parse_rest(split string, arg ...string) ([]string, []string) {
 	if i := kit.IndexOf(arg, split); i == -1 {
 		return arg, nil
+	} else if split == END {
+		if i == 0 {
+			return arg, nil
+		}
+		return arg[:i], arg[i:]
 	} else {
 		return arg[:i], arg[i+1:]
 	}
 }
-func NewStack(m *ice.Message) *Stack { return &Stack{frame: []*Frame{&Frame{value: kit.Dict()}}} }
 
 const (
-	PARSE  = "parse"
+	PWD     = "pwd"
+	EXPR    = "expr"
+	BEGIN   = "{"
+	END     = "}"
+	DISABLE = -1
+
 	CMD    = "cmd"
 	LET    = "let"
 	IF     = "if"
 	FOR    = "for"
 	FUNC   = "func"
 	TYPE   = "type"
+	SOURCE = "source"
 	RETURN = "return"
-	EXPR   = "expr"
 )
 const STACK = "stack"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		STACK: {Name: "stack path auto parse", Actions: ice.Actions{
-			PARSE: {Hand: func(m *ice.Message, arg ...string) {}},
-		}, Hand: func(m *ice.Message, arg ...string) {
-			m.Options(nfs.DIR_ROOT, nfs.SRC).Cmdy(nfs.CAT, arg)
-			if len(m.Result()) == 0 {
-				return
-			}
-			m.Echo(ice.NL).Echo("output:" + ice.NL)
-			s := NewStack(m).parse(m, path.Join(nfs.SRC, path.Join(arg...)))
-			m.Echo(ice.NL).Echo("script:" + ice.NL)
-			m.Echo(strings.Join(s.show(m), ice.NL))
-		}},
 		CMD: {Name: "cmd", Hand: func(m *ice.Message, arg ...string) {
-			s := m.Optionv(STACK).(*Stack)
-			arg, s.rest = _parse_split(m, "}", arg...)
-			if f := s.peekf(m); f.status >= 0 {
-				m.Cmdy(arg)
-				m.Echo(ice.NL)
-			}
+			s := _parse_stack(m)
+			kit.If(s.runable(), func() { m.Cmdy(arg).Echo(ice.NL) })
 		}},
 		LET: {Name: "let a = 1", Hand: func(m *ice.Message, arg ...string) {
-			s := m.Optionv(STACK).(*Stack)
-			f := s.peekf(m)
-			kit.If(f.status > -1, func() { s.value(m, arg[0], m.Cmdx(EXPR, arg[2:])) })
+			s := _parse_stack(m)
+			kit.If(s.runable(), func() { s.value(arg[0], m.Cmdx(EXPR, arg[2:])) })
 		}},
 		IF: {Name: "if a > 1", Hand: func(m *ice.Message, arg ...string) {
-			s := m.Optionv(STACK).(*Stack)
-			f := s.pushf(m, m.CommandKey())
-			arg, s.rest = _parse_split(m, "{", arg...)
-			kit.If(f.status < 0 || m.Cmdx(EXPR, arg) == ice.FALSE, func() { f.status = -1 })
+			s := _parse_stack(m)
+			f := s.pushf(m.CommandKey())
+			kit.If(s.runable() && m.Cmdx(EXPR, arg) == ice.FALSE, func() { f.status = DISABLE })
 		}},
 		FOR: {Name: "for a > 1", Hand: func(m *ice.Message, arg ...string) {
-			s := m.Optionv(STACK).(*Stack)
-			arg, s.rest = _parse_split(m, "{", arg...)
-			f := s.pushf(m, m.CommandKey())
-			kit.If(f.status < 0 || m.Cmdx(EXPR, arg) == ice.FALSE, func() { f.status = -1 })
-			line := s.line
-			f.pop = func() {
-				kit.If(f.status > -1, func() { s.line = line - 1 })
-				s.popf(m)
-			}
+			s := _parse_stack(m)
+			f, line := s.pushf(m.CommandKey()), s.line
+			f.pop = func() { kit.If(s.runable(), func() { s.line, _ = line-1, s.popf() }, func() { s.popf() }) }
+			kit.If(s.runable() && m.Cmdx(EXPR, arg) == ice.FALSE, func() { f.status = DISABLE })
 		}},
 		FUNC: {Name: "func show", Hand: func(m *ice.Message, arg ...string) {
-			s := m.Optionv(STACK).(*Stack)
-			arg, s.rest = _parse_split(m, "{", arg...)
-			fun := &Func{line: s.line}
-			s.value(m, arg[0], fun)
-			f := s.pushf(m, m.CommandKey())
-			f.status = -1
+			s := _parse_stack(m)
+			s.value(arg[0], &Func{line: s.line, arg: arg[1:]})
+			f := s.pushf(m.CommandKey())
+			f.status = DISABLE
 		}},
 		RETURN: {Name: "return show", Hand: func(m *ice.Message, arg ...string) {
-			s := m.Optionv(STACK).(*Stack)
-			f := s.peekf(m)
-			f.status = -2
+			s := _parse_stack(m)
+			f := s.peekf()
+			f.status = DISABLE
 		}},
-		"}": {Name: "}", Hand: func(m *ice.Message, arg ...string) {
-			s := m.Optionv(STACK).(*Stack)
-			if f := s.peekf(m); f.pop == nil {
-				s.last = s.peekf(m)
-				s.popf(m)
+		END: {Name: END, Hand: func(m *ice.Message, arg ...string) {
+			s := _parse_stack(m)
+			if f := s.peekf(); f.pop == nil {
+				s.last = s.popf()
 			} else {
 				f.pop()
 			}
 		}},
+		PWD: {Name: "pwd", Hand: func(m *ice.Message, arg ...string) {
+			s := _parse_stack(m)
+			kit.If(s.runable(), func() {
+				res := []string{kit.Format(s.line)}
+				s.stack(func(f *Frame, i int) { kit.If(i > 0, func() { res = append(res, kit.Format("%v:%v", f.line, f.key)) }) })
+				m.Echo(strings.Join(res, " / ")).Echo(ice.NL)
+			})
+		}},
+		STACK: {Name: "stack path auto parse", Hand: func(m *ice.Message, arg ...string) {
+			if m.Options(nfs.DIR_ROOT, nfs.SRC).Cmdy(nfs.CAT, arg); len(m.Result()) == 0 {
+				return
+			}
+			m.SetResult()
+			m.Echo(ice.NL).Echo("output:" + ice.NL)
+			s := NewStack().parse(m, path.Join(nfs.SRC, path.Join(arg...)))
+			m.Echo(ice.NL).Echo("script:" + ice.NL)
+			m.Echo(strings.Join(s.show(), ice.NL))
+		}},
 		EXPR: {Name: "expr a = 1", Hand: func(m *ice.Message, arg ...string) {
-			s := m.Optionv(STACK).(*Stack)
+			s := _parse_stack(m)
 			level := map[string]int{
 				"*": 30, "/": 30,
 				"+": 20, "-": 20,
@@ -193,7 +219,7 @@ func init() {
 			}
 			gets := func(p int) string {
 				k := kit.Format(get(p))
-				if v := s.value(m, k); v != nil {
+				if v := s.value(k); v != nil {
 					return kit.Format(v)
 				}
 				return k

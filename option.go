@@ -47,11 +47,8 @@ func (m *Message) MergePodCmd(pod, cmd string, arg ...Any) string {
 	ls := []string{"chat"}
 	kit.If(kit.Keys(m.Option(MSG_USERPOD), pod), func(p string) { ls = append(ls, POD, p) })
 	if cmd == "" {
-		if _, ok := Info.Index[m.CommandKey()]; ok {
-			cmd = m.CommandKey()
-		} else {
-			cmd = m.PrefixKey()
-		}
+		_, ok := Info.Index[m.CommandKey()]
+		cmd = kit.Select(m.PrefixKey(), m.CommandKey(), ok)
 	}
 	ls = append(ls, CMD, cmd)
 	return kit.MergeURL2(strings.Split(kit.Select(Info.Domain, m.Option(MSG_USERWEB)), QS)[0], PS+kit.Join(ls, PS), arg...)

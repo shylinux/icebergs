@@ -52,7 +52,7 @@ func init() {
 				return
 			}
 			if m.Cmdy(ctx.COMMAND, arg[0]); m.Length() > 0 {
-				web.RenderCmd(m, arg[0], arg[1:])
+				web.RenderCmd(m, m.Append(ctx.INDEX), arg[1:])
 			}
 		}},
 	})

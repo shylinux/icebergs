@@ -10,6 +10,143 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
+var level = map[string]int{
+	"++": 100,
+	"*":  30, "/": 30,
+	"+": 20, "-": 20,
+	"<": 10, ">": 10, "<=": 10, ">=": 10, "==": 10, "!=": 10,
+	"(": 2, ")": 2,
+	"=": 1,
+}
+
+type Expr struct {
+	list ice.List
+
+	s *Stack
+}
+
+func (s *Expr) push(v ice.Any) { s.list = append(s.list, v) }
+func (s *Expr) pop(n int)      { s.list = s.list[:len(s.list)-n] }
+func (s *Expr) get(p int) (v ice.Any) {
+	kit.If(p+len(s.list) >= 0, func() { v = s.list[p+len(s.list)] })
+	return
+}
+func (s *Expr) gets(p int) string { return kit.Format(s.get(p)) }
+func (s *Expr) getl(p int) int    { return level[kit.Format(s.get(p))] }
+func (s *Expr) getv(p int) (v ice.Any) {
+	k := s.get(p)
+	if v = s.s.value(kit.Format(k)); v != nil {
+		return v
+	} else {
+		return k
+	}
+}
+func (s *Expr) setv(k string, v ice.Any) {
+	kit.If(s.s.runable(), func() { s.s.value(k, v) })
+}
+func (s *Expr) ops() {
+	switch s.gets(-2) {
+	case "=":
+		s.setv(s.gets(-3), s.getv(-1))
+		s.pop(2)
+		return
+	}
+	bin := func(v ice.Any) {
+		s.pop(3)
+		s.push(v)
+	}
+	switch a, b := kit.Int(s.getv(-3)), kit.Int(s.getv(-1)); s.gets(-2) {
+	case "==":
+		bin(a == b)
+	case "!=":
+		bin(a != b)
+	case "<=":
+		bin(a <= b)
+	case ">=":
+		bin(a >= b)
+	case ">":
+		bin(a > b)
+	case "<":
+		bin(a < b)
+	case "+":
+		bin(a + b)
+	case "-":
+		bin(a - b)
+	case "*":
+		bin(a * b)
+	case "/":
+		bin(a / b)
+	}
+}
+func (s *Expr) Cals(arg ...string) (ice.Any, int) {
+	ice.Pulse.Debug("what %d %v", s.s.line, arg)
+	for i := 0; i < len(arg); i++ {
+		k := arg[i]
+		switch k {
+		case OPEN:
+			if s.getl(-1) == 0 {
+				list := kit.List(s.gets(-1))
+				for {
+					v, n := NewExpr(s.s).Cals(arg[i+1:]...)
+					list = append(list, v)
+					if i += 1 + n; arg[i] == CLOSE {
+						i++
+						break
+					} else if arg[i] == FIELD {
+
+					} else {
+						i--
+					}
+				}
+				s.pop(1)
+				s.push(ice.Pulse.Cmdx(list...))
+				continue
+			}
+		case CLOSE:
+			if len(s.list) > 1 {
+				break
+			}
+			fallthrough
+		case BEGIN, SPLIT, FIELD:
+			s.s.rest = arg[i:]
+			return s.End(arg[:i]...), i
+		}
+		if op := s.gets(-1) + k; level[op] > 0 {
+			if op == "++" {
+				s.setv(s.gets(-2), kit.Int(s.s.value(s.gets(-2)))+1)
+				s.pop(1)
+			} else {
+				s.pop(1)
+				s.push(op)
+			}
+		} else {
+			if level[k] > 0 {
+				for level[k] <= s.getl(-2) {
+					s.ops()
+				}
+			} else if len(s.list) > 0 && s.getl(-1) == 0 {
+				return s.End(arg[:i]...), i
+			}
+			s.push(k)
+		}
+	}
+	return s.End(arg...), len(arg)
+}
+func (s *Expr) End(arg ...string) ice.Any {
+	ice.Pulse.Debug("what %v", s.list)
+	for len(s.list) > 1 {
+		s.ops()
+	}
+	if s.s.runable() {
+		if len(s.list) > 0 {
+			return s.list[0]
+		}
+		return nil
+	}
+	return arg
+}
+func NewExpr(s *Stack) *Expr { return &Expr{kit.List(), s} }
+
 type Func struct {
 	line int
 	arg  []string
@@ -24,11 +161,13 @@ type Frame struct {
 }
 type Stack struct {
 	key   string
-	frame []*Frame
 	last  *Frame
+	frame []*Frame
 	rest  []string
 	list  []string
 	line  int
+
+	input chan string
 }
 
 func (s *Stack) peekf() *Frame {
@@ -56,55 +195,84 @@ func (s *Stack) stack(cb ice.Any) {
 		}
 	}
 }
+
+var n = 0
+
 func (s *Stack) value(key string, arg ...ice.Any) ice.Any {
+
+	f := s.peekf()
 	for i := len(s.frame) - 1; i >= 0; i-- {
-		if f := s.frame[i]; f.value[key] != nil {
-			kit.If(len(arg) > 0, func() { f.value[key] = arg[0] })
-			return f.value[key]
+		if _f := s.frame[i]; _f.value[key] != nil {
+			f = _f
 		}
 	}
-	f := s.peekf()
-	kit.If(len(arg) > 0, func() { f.value[key] = arg[0] })
+	n++
+	if n > 1000 {
+		panic(n)
+	}
+	kit.If(len(arg) > 0, func() {
+		f.value[key] = arg[0]
+		ice.Pulse.Debug("set value %v %v %v", f.key, key, arg[0])
+	}, func() {
+		ice.Pulse.Debug("get value %v %v", f.key, key)
+	})
 	return f.value[key]
 }
 func (s *Stack) runable() bool { return s.peekf().status > DISABLE }
+func (s *Stack) read() (text string, ok bool) {
+	for {
+		if text, ok = <-s.input; !ok {
+			return
+		}
+		if s.list = append(s.list, text); text == "" || strings.HasPrefix(text, "#") {
+			continue
+		}
+		return
+	}
+}
 func (s *Stack) parse(m *ice.Message, p string) *Stack {
-	nfs.Open(m, p, func(r io.Reader) {
-		s.key, s.peekf().key = p, p
-		kit.For(r, func(text string) {
-			s.list = append(s.list, text)
-			for s.line = len(s.list) - 1; s.line < len(s.list); s.line++ {
-				if text = s.list[s.line]; text == "" || strings.HasPrefix(text, "#") {
-					continue
-				}
-				for s.rest = kit.Split(text, "\t ", OPS); len(s.rest) > 0; {
-					ls, rest := _parse_rest(BEGIN, s.rest...)
-					if ls[0] == END {
-						if f := s.peekf(); f.pop == nil {
-							s.last = s.popf()
-						} else {
-							f.pop()
-						}
-						s.rest = ls[1:]
-						continue
-					}
-					kit.If(len(rest) == 0, func() { ls, rest = _parse_rest(END, ls...) })
-					switch s.rest = []string{}; v := s.value(ls[0]).(type) {
-					case *Func:
-						f, line := s.pushf(ls[0]), s.line
-						f.pop, s.line = func() { s.rest, s.line, _ = nil, line+1, s.popf() }, v.line
-					default:
-						if _, ok := m.Target().Commands[ls[0]]; ok {
-							m.Options(STACK, s).Cmdy(ls)
-						} else {
-							m.Options(STACK, s).Cmdy(CMD, ls)
-						}
-					}
-					s.rest = append(s.rest, rest...)
-				}
-			}
+	s.input = make(chan string)
+	m.Options(STACK, s).Go(func() {
+		nfs.Open(m, p, func(r io.Reader) {
+			defer close(s.input)
+			kit.For(r, func(text string) { s.input <- text })
 		})
 	})
+	s.key, s.peekf().key = p, p
+	for {
+		if _, ok := s.read(); !ok {
+			break
+		}
+		for s.line = len(s.list) - 1; s.line < len(s.list); s.line++ {
+			for s.rest = kit.Split(s.list[s.line], "\t ", OPS); len(s.rest) > 0; {
+				if s.rest[0] == END {
+					rest := s.rest[1:]
+					kit.If(s.peekf().pop != nil, func() { s.peekf().pop() })
+					s.last, s.rest = s.popf(), rest
+					continue
+				}
+				ls, rest := _parse_rest("", s.rest...)
+				if len(ls) == 0 {
+					s.rest = rest
+					continue
+				}
+				switch s.rest = []string{}; v := s.value(ls[0]).(type) {
+				case *Func:
+					f, line := s.pushf(ls[0]), s.line
+					f.pop, s.line = func() { s.rest, s.line = rest, line+1 }, v.line
+					continue
+				default:
+					if _, ok := m.Target().Commands[ls[0]]; ok {
+						m.Cmdy(ls)
+					} else if s.runable() {
+						m.Cmdy(CMD, ls)
+					}
+				}
+				s.rest = append(s.rest, rest...)
+			}
+
+		}
+	}
 	return s
 }
 func (s *Stack) show() (res []string) {
@@ -123,22 +291,28 @@ func NewStack() *Stack { return &Stack{} }
 func _parse_stack(m *ice.Message) *Stack           { return m.Optionv(STACK).(*Stack) }
 func _parse_frame(m *ice.Message) (*Stack, *Frame) { return _parse_stack(m), _parse_stack(m).peekf() }
 func _parse_rest(split string, arg ...string) ([]string, []string) {
-	if i := kit.IndexOf(arg, split); i == -1 {
-		return arg, nil
-	} else if split == END {
-		if i == 0 {
-			return arg, nil
+	for i, k := range arg {
+		if split != "" && split == k {
+			return arg[:i], arg[i+1:]
 		}
-		return arg[:i], arg[i:]
-	} else {
-		return arg[:i], arg[i+1:]
+		switch k {
+		case BEGIN:
+			return arg[:i+1], arg[i+1:]
+		case END:
+			return arg[:i], arg[i:]
+		}
 	}
+	return arg, nil
 }
 
 const (
-	OPS     = "<!=>+-*/;"
+	OPS     = "{()}<!=>+-*/;"
 	EXPR    = "expr"
 	BEGIN   = "{"
+	SPLIT   = ";"
+	FIELD   = ","
+	OPEN    = "("
+	CLOSE   = ")"
 	END     = "}"
 	DISABLE = -1
 
@@ -157,43 +331,48 @@ const STACK = "stack"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		CMD: {Name: "cmd", Hand: func(m *ice.Message, arg ...string) {
-			s := _parse_stack(m)
-			kit.If(s.runable(), func() { m.Cmdy(arg) })
+			m.Cmdy(arg)
 		}},
 		LET: {Name: "let a = 1", Hand: func(m *ice.Message, arg ...string) {
 			s := _parse_stack(m)
 			kit.If(s.runable(), func() { s.value(arg[0], m.Cmdx(EXPR, arg[2:])) })
 		}},
-		IF: {Name: "if a > 1", Hand: func(m *ice.Message, arg ...string) {
+		IF: {Name: "if a = 1; a > 1 {", Hand: func(m *ice.Message, arg ...string) {
 			s := _parse_stack(m)
 			f := s.pushf(m.CommandKey())
-			kit.If(s.runable() && m.Cmdx(EXPR, arg) == ice.FALSE, func() { f.status = DISABLE })
+			res := m.Cmdx(EXPR, arg)
+			kit.If(s.rest[0] == SPLIT, func() { res = m.Cmdx(EXPR, s.rest[1:]) })
+			kit.If(res == ice.FALSE, func() { f.status = DISABLE })
+			s.rest = s.rest[1:]
 		}},
 		FOR: {Name: "for a = 1; a < 10; a++ {", Hand: func(m *ice.Message, arg ...string) {
-			init, next := []string{}, []string{}
-			switch strings.Count(strings.Join(arg, ""), ";") {
-			case 2:
-				init, arg = _parse_rest(";", arg...)
-				arg, next = _parse_rest(";", arg...)
-			case 1:
-				arg, next = _parse_rest(";", arg...)
-			}
 			s := _parse_stack(m)
-			m.Debug("what %#v", s.last)
-			m.Debug("what %+v", s.last)
-			m.Debug("what %v", s.last)
-			kit.If(s.last != nil && s.last.line == s.line, func() { init = init[:0] })
-			kit.If(len(init) > 0, func() { m.Cmd(EXPR, init) })
-			f, line := s.pushf(m.CommandKey()), s.line
-			f.pop = func() {
-				kit.If(s.runable(), func() {
-					s.line, s.last = line-1, s.popf()
-					kit.If(len(next) > 0, func() { m.Cmd(EXPR, next) })
-				}, func() {
-					s.popf()
-				})
+			f := s.pushf(m.CommandKey())
+			list, status := [][]string{}, f.status
+			for f.status, s.rest = DISABLE, arg; s.rest[0] != BEGIN; {
+				if list = append(list, m.Cmd(EXPR, s.rest).Resultv()); s.rest[0] == SPLIT {
+					s.rest = s.rest[1:]
+				}
 			}
-			kit.If(s.runable() && len(arg) > 0 && m.Cmdx(EXPR, arg) == ice.FALSE, func() { f.status = DISABLE })
+			f.status, s.rest = status, s.rest[1:]
+			res := ice.TRUE
+			if len(list) == 1 {
+				res = m.Cmdx(EXPR, list[0])
+			} else if len(list) > 1 {
+				if s.last == nil || s.last.line != s.line {
+					res = m.Cmdx(EXPR, list[0])
+				} else {
+					kit.For(s.last.value, func(k string, v ice.Any) { f.value[k] = v })
+				}
+				res = m.Cmdx(EXPR, list[1])
+			}
+			kit.If(res == ice.FALSE, func() { f.status = DISABLE })
+			f.pop = func() {
+				if s.runable() {
+					kit.If(len(list) > 2, func() { m.Cmd(EXPR, list[2]) })
+					s.line = f.line - 1
+				}
+			}
 		}},
 		FUNC: {Name: "func show", Hand: func(m *ice.Message, arg ...string) {
 			s := _parse_stack(m)
@@ -203,6 +382,10 @@ func init() {
 		}},
 		RETURN: {Name: "return show", Hand: func(m *ice.Message, arg ...string) {
 			s := _parse_stack(m)
+			if len(s.frame) == 1 {
+				close(s.input)
+				s.line = len(s.list)
+			}
 			f := s.peekf()
 			f.status = DISABLE
 		}},
@@ -226,87 +409,13 @@ func init() {
 		}},
 		EXPR: {Name: "expr a = 1", Hand: func(m *ice.Message, arg ...string) {
 			s := _parse_stack(m)
-			level := map[string]int{
-				"++": 40,
-				"*":  30, "/": 30,
-				"+": 20, "-": 20,
-				"<": 10, ">": 10, "<=": 10, ">=": 10, "==": 10, "!=": 10,
-				"=": 1,
+			v, n := NewExpr(s).Cals(arg...)
+			s.rest = arg[n:]
+			if s.runable() {
+				m.Echo(kit.Format(v))
+			} else {
+				m.Resultv(v)
 			}
-			list := kit.List()
-			get := func(p int) ice.Any {
-				if p+len(list) >= 0 {
-					return list[p+len(list)]
-				}
-				return ""
-			}
-			gets := func(p int) string {
-				k := kit.Format(get(p))
-				if v := s.value(k); v != nil {
-					return kit.Format(v)
-				}
-				return k
-			}
-			getl := func(p int) int { return level[kit.Format(get(p))] }
-			push := func(v ice.Any) { list = append(list, v) }
-			pop := func(n int) { list = list[:len(list)-n] }
-			ops := func() {
-				switch gets(-2) {
-				case "=":
-					s.value(kit.Format(get(-3)), gets(-1))
-					pop(2)
-					return
-				}
-				bin := func(v ice.Any) {
-					pop(3)
-					push(kit.Format(v))
-				}
-				switch a, b := kit.Int(gets(-3)), kit.Int(gets(-1)); gets(-2) {
-				case "==":
-					bin(a == b)
-				case "!=":
-					bin(a != b)
-				case "<=":
-					bin(a <= b)
-				case ">=":
-					bin(a >= b)
-				case ">":
-					bin(a > b)
-				case "<":
-					bin(a < b)
-				case "+":
-					bin(a + b)
-				case "-":
-					bin(a - b)
-				case "*":
-					bin(a * b)
-				case "/":
-					bin(a / b)
-				}
-			}
-			kit.For(arg, func(k string) {
-				if op := k + kit.Format(get(-1)); level[op] > 0 {
-					if op == "++" {
-						v := kit.Int(s.value(kit.Format(get(-2)))) + 1
-						s.value(kit.Format(get(-2)), v)
-						pop(1)
-						return
-					}
-					pop(1)
-					push(op)
-					return
-				}
-				if level[k] > 0 {
-					for level[k] <= getl(-2) {
-						ops()
-					}
-				}
-				push(k)
-			})
-			for len(list) > 1 {
-				ops()
-			}
-			kit.If(len(list) > 0, func() { m.Echo(kit.Format(list[0])) })
 			m.Debug("expr %s %v", m.Result(), s.value(m.Result()))
 		}},
 	})

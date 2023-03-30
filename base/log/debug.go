@@ -15,8 +15,13 @@ const DEBUG = "debug"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		DEBUG: {Name: "debug level=error,bench,debug,error,watch offset filter auto doc", Help: "后台日志", Actions: ice.Actions{
+		DEBUG: {Name: "debug level=error,bench,debug,error,watch offset filter auto reset doc", Help: "后台日志", Actions: ice.Actions{
 			"doc": {Help: "文档", Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen("https://pkg.go.dev/std") }},
+			"reset": {Help: "文档", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(nfs.CAT, ice.VAR_LOG+arg[0]+".log", func(line string, index int) {
+					m.ProcessRewrite("offset", index+2)
+				})
+			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			offset, stats := kit.Int(kit.Select("0", arg, 1)), map[string]int{}
 			switch arg[0] {
@@ -26,6 +31,9 @@ func init() {
 						return
 					}
 					ls := strings.SplitN(line, ice.SP, 6)
+					if len(ls) < 6 {
+						return
+					}
 					m.Push(mdb.TIME, ls[0]+ice.SP+ls[1]).Push(mdb.ID, ls[2])
 					i := strings.LastIndex(ls[5], ice.SP)
 					if strings.HasPrefix(ls[5][i+1:], ice.BASE) || strings.HasPrefix(ls[5][i+1:], ice.CORE) || strings.HasPrefix(ls[5][i+1:], ice.MISC) {

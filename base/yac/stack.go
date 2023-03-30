@@ -10,10 +10,21 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
+const (
+	EXPR    = "expr"
+	OPS     = "(,){;}!=<>+-*/"
+	OPEN    = "("
+	FIELD   = ","
+	CLOSE   = ")"
+	BEGIN   = "{"
+	SPLIT   = ";"
+	END     = "}"
+	DISABLE = -1
+)
+
 var level = map[string]int{
 	"++": 100,
-	"*":  30, "/": 30,
-	"+": 20, "-": 20,
+	"+":  20, "-": 20, "*": 30, "/": 30,
 	"<": 10, ">": 10, "<=": 10, ">=": 10, "==": 10, "!=": 10,
 	"(": 2, ")": 2,
 	"=": 1,
@@ -306,16 +317,6 @@ func _parse_rest(split string, arg ...string) ([]string, []string) {
 }
 
 const (
-	OPS     = "{()}<!=>+-*/;"
-	EXPR    = "expr"
-	BEGIN   = "{"
-	SPLIT   = ";"
-	FIELD   = ","
-	OPEN    = "("
-	CLOSE   = ")"
-	END     = "}"
-	DISABLE = -1
-
 	PWD    = "pwd"
 	CMD    = "cmd"
 	LET    = "let"

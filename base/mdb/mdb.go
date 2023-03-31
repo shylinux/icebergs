@@ -120,6 +120,7 @@ const (
 	REVERT = "revert"
 	RANDOM = "random"
 	OFFEND = "offend"
+	OFFSET = "offset"
 
 	PAGE = "page"
 	NEXT = "next"

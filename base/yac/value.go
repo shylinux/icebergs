@@ -101,6 +101,10 @@ func (s String) Operate(op string, v Any) Any {
 }
 func (s Number) Operate(op string, v Any) Any {
 	switch a, b := kit.Int(s.value), kit.Int(v); op {
+	case "++":
+		return Number{kit.Format(a + 1)}
+	case "--":
+		return Number{kit.Format(a - 1)}
 	case "*":
 		return Number{kit.Format(a * b)}
 	case "/":
@@ -151,8 +155,6 @@ func (m Message) Call(cmd string, arg ...Any) Any {
 		return String{m.Option(str(args[0]), args[1:]...)}
 	case "Cmd":
 		return Message{m.Cmd(args...)}
-	case "Action":
-		m.Action(args...)
 	case "Cmdy":
 		m.Cmdy(args...)
 	case "Copy":
@@ -161,15 +163,34 @@ func (m Message) Call(cmd string, arg ...Any) Any {
 		m.Push(str(args[0]), args[1], args[2:]...)
 	case "Echo":
 		m.Echo(str(args[0]), args[1:]...)
-	case "Sleep":
-		m.Sleep(str(args[0]))
 	case "Table":
 		s := _parse_stack(m.Message)
 		var value Any
-		m.Table(func(v ice.Maps) { value = s.call(m.Message, v, nil, Dict{kit.Dict(v)}) })
+		m.Table(func(val ice.Maps) { value = s.call(m.Message, arg[0], nil, nil, Dict{kit.Dict(val)}) })
 		return value
+	case "Sleep":
+		m.Sleep(str(args[0]))
+	case "Action":
+		m.Action(args...)
 	default:
 		m.ErrorNotImplement(cmd)
 	}
 	return m
+}
+func (s *Stack) load(m *ice.Message) *Stack {
+	f := s.pushf(m.Options(STACK, s), "")
+	f.value["m"] = Message{m}
+	f.value["kit"] = func(key string, arg ...Any) Any {
+		kit.For(arg, func(i int, v Any) { arg[i] = trans(v) })
+		switch key {
+		case "Dict":
+			return Dict{kit.Dict(arg...)}
+		case "List":
+			return List{kit.List(arg...)}
+		default:
+			m.ErrorNotImplement(key)
+			return nil
+		}
+	}
+	return s
 }

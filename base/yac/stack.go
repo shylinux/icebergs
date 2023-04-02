@@ -53,6 +53,11 @@ func (s *Stack) pushf(m *ice.Message, key string) *Frame {
 }
 func (s *Stack) popf(m *ice.Message) *Frame {
 	f := s.peekf()
+	list := kit.List(f.value["_defer"])
+	delete(f.value, "_defer")
+	for i := len(list) - 1; i >= 0; i-- {
+		list[i].(func())()
+	}
 	kit.If(f.pop != nil, func() { f.pop() })
 	m.Debug("stack pop %d %v %s:%d", len(s.frame)-1, f.key, f.name, f.line)
 	kit.If(len(s.frame) > 0, func() { s.frame = s.frame[:len(s.frame)-1] })
@@ -68,7 +73,7 @@ func (s *Stack) stack(cb func(*Frame, int) bool) {
 }
 func (s *Stack) value(m *ice.Message, key string, arg ...Any) Any {
 	f, n := s.peekf(), len(s.frame)-1
-	if len(arg) < 2 || arg[1] == ASSIGN {
+	if len(arg) < 2 || arg[1] != DEFINE {
 		s.stack(func(_f *Frame, i int) bool {
 			if _f.value[key] != nil {
 				f, n = _f, i
@@ -83,7 +88,7 @@ func (s *Stack) value(m *ice.Message, key string, arg ...Any) Any {
 	})
 	return f.value[key]
 }
-func (s *Stack) runable() bool { return s.peekf().status > DISABLE }
+func (s *Stack) runable() bool { return s.peekf().status > STATUS_DISABLE }
 func (s *Stack) token() string { return kit.Select("", s.rest, s.skip) }
 func (s *Stack) read(m *ice.Message) (text string, ok bool) {
 	isvoid := func(text string) bool {
@@ -120,77 +125,102 @@ func (s *Stack) reads(m *ice.Message, cb func(k string) bool) {
 	}
 }
 func (s *Stack) run(m *ice.Message) {
+	begin := len(s.frame)
 	s.reads(m, func(k string) bool {
-		if s.n++; s.n > 100 {
-			return true
+		if s.n++; s.n > 300 {
+			panic(s.n)
 		}
-
 		if k == SPLIT {
 
 		} else if k == END {
-			s.last = s.popf(m)
+			if s.last = s.popf(m); len(s.frame) < begin {
+				return true
+			}
 		} else if _, ok := m.Target().Commands[k]; ok {
 			m.Cmdy(k, kit.Slice(s.rest, s.skip+1))
 		} else {
 			s.skip--
 			m.Cmd(EXPR, kit.Slice(s.rest, s.skip))
 		}
-		if len(s.frame) == 0 {
-			return true
-		}
 		return false
 	})
 }
-func (s *Stack) call(m *ice.Message, v Any, cb func(*Frame, Function), arg ...Any) Any {
-	switch v := v.(type) {
-	case Function:
-		f := s.pushf(m, CALL)
-		kit.For(v.res, func(k string) { f.value[k] = "" })
-		kit.For(v.arg, func(i int, k string) {
-			if i < len(arg) {
-				f.value[k] = arg[i]
-			} else {
-				f.value[k] = ""
+func (s *Stack) call(m *ice.Message, obj Any, key Any, cb func(*Frame, Function), arg ...Any) Any {
+	if _k, ok := key.(string); ok {
+		kit.For(kit.Split(_k, ice.PT), func(k string) {
+			switch v := obj.(type) {
+			case *Stack:
+				if v := v.value(m, _k); v != nil {
+					obj = v
+					break
+				}
+				obj, key = v.value(m, k), strings.TrimPrefix(_k, k+ice.PT)
 			}
 		})
-		f.value["_return"], f.value["_res"] = "", v.res
+	}
+	m.Debug("expr call %T %s %v", obj, key, kit.Format(arg))
+	switch obj := obj.(type) {
+	case Function:
+		f := s.pushf(m, CALL)
+		kit.For(obj.res, func(k string) { f.value[k] = "" })
+		kit.For(obj.arg, func(i int, k string) {
+			kit.If(i < len(arg), func() { f.value[k] = arg[i] }, func() { f.value[k] = "" })
+		})
 		value, pos := Value{list: kit.List()}, s.Position
-		f.pop, s.Position = func() {
-			if len(v.res) == 0 {
-				value.list = append(value.list, f.value["_return"])
+		f.value["_return"] = func(arg ...Any) {
+			if len(obj.res) > 0 {
+				kit.For(obj.res, func(i int, k string) {
+					kit.If(i < len(arg), func() { value.list = append(value.list, f.value[k]) }, func() { value.list = append(value.list, "") })
+				})
 			} else {
-				kit.For(v.res, func(k string) { value.list = append(value.list, f.value[k]) })
+				value.list = arg
+			}
+		}
+		f.pop, s.Position = func() {
+			if len(obj.res) > 0 && len(value.list) == 0 {
+				kit.For(obj.res, func(i int, k string) { value.list = append(value.list, f.value[k]) })
 			}
 			s.Position = pos
-		}, v.Position
-		cb(f, v)
+		}, obj.Position
+		kit.If(cb != nil, func() { cb(f, obj) })
 		s.run(m.Options(STACK, s))
 		return value
-	default:
+	case Caller:
+		return obj.Call(kit.Format(key), arg...)
+	case func(string, ...Any) Any:
+		return obj(kit.Format(key), arg...)
+	case func():
+		obj()
 		return nil
+	default:
+		args := kit.List(key)
+		for _, v := range arg {
+			switch v := v.(type) {
+			case Value:
+				args = append(args, v.list...)
+			default:
+				args = append(args, trans(v))
+			}
+		}
+		return Message{m.Cmd(args...)}
 	}
 }
-func (s *Stack) cals(m *ice.Message) Any { return NewExpr(m, s).cals(m) }
+func (s *Stack) cals(m *ice.Message) Any { return NewExpr(s).cals(m) }
 func (s *Stack) expr(m *ice.Message, pos ...Position) string {
 	kit.If(len(pos) > 0, func() { s.Position = pos[0] })
 	return m.Cmdx(EXPR, kit.Slice(s.rest, s.skip))
 }
-func (s *Stack) load(m *ice.Message) *Stack {
-	f := s.pushf(m.Options(STACK, s), "")
-	f.value["kit"] = func(key string, arg ...Any) Any {
-		kit.For(arg, func(i int, v Any) { arg[i] = trans(v) })
-		switch key {
-		case "Dict":
-			return Dict{kit.Dict(arg...)}
-		case "List":
-			return List{kit.List(arg...)}
-		default:
-			m.ErrorNotImplement(key)
-			return nil
-		}
-	}
-	f.value["m"] = Message{m}
-	return s
+func (s *Stack) funcs(m *ice.Message) string {
+	name := kit.Format("%s:%d:%d", s.name, s.line, s.skip)
+	s.rest[s.skip] = name
+	s.skip--
+	m.Cmd(FUNC, name)
+	f := s.peekf()
+	status := f.status
+	defer func() { f.status = status }()
+	f.status = STATUS_DISABLE
+	s.run(m)
+	return name
 }
 func (s *Stack) parse(m *ice.Message, name string, r io.Reader, cb func(*Frame)) *Stack {
 	s.Buffer = &Buffer{name: name, input: bufio.NewScanner(r)}
@@ -206,6 +236,10 @@ func _parse_frame(m *ice.Message) (*Stack, *Frame) {
 	return _parse_stack(m), _parse_stack(m).pushf(m, "")
 }
 
+const (
+	STATUS_NORMAL  = 0
+	STATUS_DISABLE = -1
+)
 const STACK = "stack"
 
 func init() {
@@ -246,7 +280,7 @@ func init() {
 						arg = arg[1:]
 					}
 					i := 0
-					s.call(m, s.value(m, action), func(f *Frame, v Function) {
+					s.call(m, s, action, func(f *Frame, v Function) {
 						kit.For(v.arg, func(k string) {
 							switch k {
 							case "m":
@@ -268,19 +302,9 @@ func init() {
 				return
 			}
 			nfs.Open(m, path.Join(nfs.SRC, path.Join(arg...)), func(r io.Reader, p string) {
-				s := NewStack().parse(m, p, r, nil)
-				if m.Option(ice.DEBUG) != ice.TRUE {
+				if NewStack().parse(m, p, r, nil); m.Option(ice.DEBUG) != ice.TRUE {
 					return
 				}
-				m.EchoLine("").EchoLine("script: %s", arg[0])
-				span := func(s, k, t string) string {
-					return strings.ReplaceAll(s, k, kit.Format("<span class='%s'>%s</span>", t, k))
-				}
-				kit.For(s.list, func(i int, s string) {
-					kit.For([]string{LET, IF, FOR, FUNC}, func(k string) { s = span(s, k, KEYWORD) })
-					kit.For([]string{PWD, INFO, SOURCE}, func(k string) { s = span(s, k, FUNCTION) })
-					m.EchoLine("%2d: %s", i, s)
-				})
 				m.EchoLine("").EchoLine("stack: %s", arg[0]).Cmdy(INFO)
 
 			})

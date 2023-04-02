@@ -140,6 +140,7 @@ func (s *Expr) end(m *ice.Message) Any {
 	return s.getv(m, 0)
 }
 func (s *Expr) cals(m *ice.Message) Any {
+	line := s.s.line
 	if s.s.skip == -1 {
 		m.Debug("expr calcs %v %s:%d", s.s.rest, s.s.name, s.s.line)
 	} else {
@@ -209,11 +210,36 @@ func (s *Expr) cals(m *ice.Message) Any {
 				s.push(Number{value: k})
 			}
 			if s.gets(-2) == "!" {
-				s.pops(2, s.opv(-1, "!"))
+				s.pops(2, s.opv(m, -1, "!", nil))
 			}
 		}
 		return false
 	})
+	if cmds := false; len(s.list) == 1 && s.s.skip < 2 {
+		m.Search(s.gets(0), func(key string, cmd *ice.Command) {
+			if cmds = true; s.s.line == line {
+				args := kit.List(s.gets(0))
+				for {
+					s := NewExpr(s.s)
+					s.cals(m)
+					if v := s.getv(m, 0); v != nil {
+						args = append(args, trans(v))
+					} else {
+						args = append(args, v)
+					}
+					if s.s.line != line {
+						break
+					}
+				}
+				m.Cmdy(args...)
+			} else {
+				m.Cmdy(s.gets(0))
+			}
+		})
+		if cmds {
+			return nil
+		}
+	}
 	return s.end(m)
 }
 func (s *Expr) call(m *ice.Message, obj Any, key string) Any {

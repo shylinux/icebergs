@@ -147,8 +147,10 @@ func (m *Message) IsErrNotFound() bool {
 	return m.IsErr(ErrNotFound)
 }
 func (m *Message) Debug(str string, arg ...Any) {
-	kit.Format(str == "", func() { str = m.FormatMeta() })
-	m.log(LOG_DEBUG, str, arg...)
+	if m.Option("debug") == TRUE {
+		kit.Format(str == "", func() { str = m.FormatMeta() })
+		m.log(LOG_DEBUG, str, arg...)
+	}
 }
 
 func (m *Message) FormatPrefix() string {

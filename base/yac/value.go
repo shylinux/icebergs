@@ -27,6 +27,8 @@ func (s Boolean) MarshalJSON() ([]byte, error) { return json.Marshal(s.value) }
 
 func wrap(v Any) Any {
 	switch v := v.(type) {
+	case bool:
+		return Boolean{v}
 	case string:
 		return String{v}
 	default:
@@ -180,7 +182,10 @@ func (m Message) Call(cmd string, arg ...Any) Any {
 func (s *Stack) load(m *ice.Message) *Stack {
 	f := s.pushf(m.Options(STACK, s), "")
 	f.value["m"] = Message{m}
-	f.value["kit"] = func(key string, arg ...Any) Any {
+	for k, v := range ice.Info.Stack {
+		f.value[k] = v
+	}
+	f.value["kit"] = func(m *ice.Message, key string, arg ...Any) Any {
 		kit.For(arg, func(i int, v Any) { arg[i] = trans(v) })
 		switch key {
 		case "Dict":

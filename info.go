@@ -39,6 +39,7 @@ var Info = struct {
 	Gomod Maps
 	Route Maps
 	Index Map
+	Stack map[string]func(m *Message, key string, arg ...Any) Any
 
 	merges []Any
 	render map[string]func(*Message, ...Any) string
@@ -52,6 +53,7 @@ var Info = struct {
 	Gomod: Maps{},
 	Route: Maps{},
 	Index: Map{},
+	Stack: map[string]func(m *Message, key string, arg ...Any) Any{},
 
 	render: map[string]func(*Message, ...Any) string{},
 	Load:   func(m *Message, key ...string) *Message { return m },

@@ -86,7 +86,15 @@ func (s *Stack) value(m *ice.Message, key string, arg ...Any) Any {
 		m.Debug("value set %d %v %#v", n, key, arg[0])
 		f.value[key] = arg[0]
 	})
-	return f.value[key]
+	if v, ok := f.value[key]; ok {
+		return v
+	}
+	if k := kit.Select(key, strings.Split(key, ice.PT), -1); strings.ToUpper(k) == k {
+		if c, ok := ice.Info.Index[strings.ToLower(k)].(*ice.Context); ok && (key == k || key == c.Prefix(k)) {
+			return strings.ToLower(key)
+		}
+	}
+	return nil
 }
 func (s *Stack) runable() bool { return s.peekf().status > STATUS_DISABLE }
 func (s *Stack) token() string { return kit.Select("", s.rest, s.skip) }
@@ -140,7 +148,7 @@ func (s *Stack) run(m *ice.Message) {
 			m.Cmdy(k, kit.Slice(s.rest, s.skip+1))
 		} else {
 			s.skip--
-			m.Cmd(EXPR, kit.Slice(s.rest, s.skip))
+			m.Cmdy(EXPR, kit.Slice(s.rest, s.skip))
 		}
 		return false
 	})
@@ -187,6 +195,9 @@ func (s *Stack) call(m *ice.Message, obj Any, key Any, cb func(*Frame, Function)
 		return value
 	case Caller:
 		return obj.Call(kit.Format(key), arg...)
+	case func(*ice.Message, string, ...Any) Any:
+		kit.For(arg, func(i int, v Any) { arg[i] = trans(arg[i]) })
+		return wrap(obj(m, kit.Format(key), arg...))
 	case func(string, ...Any) Any:
 		return obj(kit.Format(key), arg...)
 	case func():
@@ -271,29 +282,34 @@ func init() {
 				})
 			}},
 			ice.RUN: {Hand: func(m *ice.Message, arg ...string) {
-				nfs.Open(m, existsFile(m, arg[0]), func(r io.Reader, p string) {
-					s := NewStack().parse(m.Spawn(), p, r, nil)
-					action := mdb.LIST
-					if len(arg) > 2 && arg[1] == ice.ACTION && s.value(m, arg[2]) != nil {
-						action, arg = arg[2], arg[3:]
-					} else {
-						arg = arg[1:]
-					}
-					i := 0
-					s.call(m, s, action, func(f *Frame, v Function) {
-						kit.For(v.arg, func(k string) {
-							switch k {
-							case "m":
-								f.value[k] = Message{m}
-							case ice.ARG:
-								list := kit.List()
-								kit.For(arg, func(v string) { list = append(list, String{v}) })
-								f.value[k] = Value{list}
-							default:
-								f.value[k] = String{m.Option(k, kit.Select(m.Option(k), arg, i))}
-								i++
-							}
-						})
+				s := mdb.Cache(m, arg[0], func() (stack Any) {
+					nfs.Open(m, existsFile(m, arg[0]), func(r io.Reader, p string) {
+						stack = NewStack().parse(m.Spawn(), p, r, nil)
+					})
+					return
+				}).(*Stack)
+				kit.If(m.Option("debug") == ice.TRUE, func() { mdb.Cache(m, arg[0], nil) })
+				m.StatusTime()
+				action := mdb.LIST
+				if len(arg) > 2 && arg[1] == ice.ACTION && s.value(m, arg[2]) != nil {
+					action, arg = arg[2], arg[3:]
+				} else {
+					arg = arg[1:]
+				}
+				i := 0
+				s.call(m, s, action, func(f *Frame, v Function) {
+					kit.For(v.arg, func(k string) {
+						switch k {
+						case "m":
+							f.value[k] = Message{m}
+						case ice.ARG:
+							list := kit.List()
+							kit.For(arg, func(v string) { list = append(list, String{v}) })
+							f.value[k] = Value{list}
+						default:
+							f.value[k] = String{m.Option(k, kit.Select(m.Option(k), arg, i))}
+							i++
+						}
 					})
 				})
 			}},

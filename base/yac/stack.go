@@ -21,9 +21,9 @@ type Function struct {
 type Frame struct {
 	key    string
 	value  ice.Map
+	defers []func()
 	status int
 	Position
-	pop func()
 }
 type Stack struct {
 	last  *Frame
@@ -53,12 +53,9 @@ func (s *Stack) pushf(m *ice.Message, key string) *Frame {
 }
 func (s *Stack) popf(m *ice.Message) *Frame {
 	f := s.peekf()
-	list := kit.List(f.value["_defer"])
-	delete(f.value, "_defer")
-	for i := len(list) - 1; i >= 0; i-- {
-		list[i].(func())()
+	for i := len(f.defers) - 1; i >= 0; i-- {
+		f.defers[i]()
 	}
-	kit.If(f.pop != nil, func() { f.pop() })
 	m.Debug("stack pop %d %v %s:%d", len(s.frame)-1, f.key, f.name, f.line)
 	kit.If(len(s.frame) > 0, func() { s.frame = s.frame[:len(s.frame)-1] })
 	s.last = f
@@ -184,12 +181,12 @@ func (s *Stack) call(m *ice.Message, obj Any, key Any, cb func(*Frame, Function)
 				value.list = arg
 			}
 		}
-		f.pop, s.Position = func() {
+		f.defers, s.Position = append(f.defers, func() {
 			if len(obj.res) > 0 && len(value.list) == 0 {
 				kit.For(obj.res, func(i int, k string) { value.list = append(value.list, f.value[k]) })
 			}
 			s.Position = pos
-		}, obj.Position
+		}), obj.Position
 		kit.If(cb != nil, func() { cb(f, obj) })
 		s.run(m.Options(STACK, s))
 		return value
@@ -223,8 +220,7 @@ func (s *Stack) expr(m *ice.Message, pos ...Position) string {
 }
 func (s *Stack) funcs(m *ice.Message) string {
 	name := kit.Format("%s:%d:%d", s.name, s.line, s.skip)
-	s.rest[s.skip] = name
-	s.skip--
+	s.rest[s.skip], s.skip = name, s.skip-1
 	m.Cmd(FUNC, name)
 	f := s.peekf()
 	status := f.status
@@ -235,9 +231,7 @@ func (s *Stack) funcs(m *ice.Message) string {
 }
 func (s *Stack) parse(m *ice.Message, name string, r io.Reader, cb func(*Frame)) *Stack {
 	s.Buffer = &Buffer{name: name, input: bufio.NewScanner(r)}
-	s.load(m)
-	kit.If(cb != nil, func() { cb(s.peekf()) })
-	s.run(m)
+	s.load(m, cb).run(m)
 	return s
 }
 func NewStack() *Stack { return &Stack{} }
@@ -245,6 +239,25 @@ func NewStack() *Stack { return &Stack{} }
 func _parse_stack(m *ice.Message) *Stack { return m.Optionv(STACK).(*Stack) }
 func _parse_frame(m *ice.Message) (*Stack, *Frame) {
 	return _parse_stack(m), _parse_stack(m).pushf(m, "")
+}
+func _parse_cache(m *ice.Message, name string) *Stack {
+	key := kit.Keys(m.PrefixKey(), name)
+	s := mdb.Cache(m, key, func() (v Any) {
+		nfs.Open(m, existsFile(m, name), func(r io.Reader, p string) {
+			v = NewStack().parse(m.Spawn(), p, r, nil)
+		})
+		return
+	}).(*Stack)
+	kit.If(m.Option(ice.DEBUG) == ice.TRUE, func() { mdb.Cache(m, key, nil) })
+	return s
+}
+func _parse_res(m *ice.Message, v Any) []Any {
+	switch v := v.(type) {
+	case Value:
+		return v.list
+	default:
+		return []Any{v}
+	}
 }
 
 const (
@@ -257,47 +270,36 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		STACK: {Name: "stack path auto parse", Actions: ice.Actions{
 			ice.CMD: {Hand: func(m *ice.Message, arg ...string) {
-				nfs.Open(m, existsFile(m, arg[0]), func(r io.Reader, p string) {
-					meta := kit.Dict()
-					kit.For(NewStack().parse(m.Spawn(), p, r, nil).peekf().value, func(k string, v Any) {
-						switch v := v.(type) {
-						case Function:
-							list := kit.List()
-							kit.For(v.arg, func(k string) {
-								switch k {
-								case "m", ice.ARG:
-								default:
-									list = append(list, kit.Dict(mdb.NAME, k, mdb.TYPE, mdb.TEXT, mdb.VALUE, ""))
-								}
-							})
-							kit.If(k == mdb.LIST, func() { list = append(list, kit.Dict(mdb.NAME, mdb.LIST, mdb.TYPE, "button", mdb.ACTION, ice.AUTO)) })
-							meta[k] = list
-						}
-					})
-					m.Push(ice.INDEX, arg[0])
-					m.Push(mdb.NAME, arg[0])
-					m.Push(mdb.HELP, arg[0])
-					m.Push(mdb.LIST, kit.Format(meta[mdb.LIST]))
-					m.Push(mdb.META, kit.Format(meta))
+				s := _parse_cache(m, arg[0])
+				meta := kit.Dict()
+				kit.For(s.peekf().value, func(k string, v Any) {
+					switch v := v.(type) {
+					case Function:
+						list := kit.List()
+						kit.For(v.arg, func(k string) {
+							if !kit.IsIn(k, "m", ice.ARG) {
+								list = append(list, kit.Dict(mdb.NAME, k, mdb.TYPE, mdb.TEXT, mdb.VALUE, ""))
+							}
+						})
+						kit.If(k == mdb.LIST, func() { list = append(list, kit.Dict(mdb.NAME, mdb.LIST, mdb.TYPE, "button", mdb.ACTION, ice.AUTO)) })
+						meta[k] = list
+					}
 				})
+				m.Push(ice.INDEX, arg[0])
+				m.Push(mdb.NAME, arg[0])
+				m.Push(mdb.HELP, arg[0])
+				m.Push(mdb.LIST, kit.Format(meta[mdb.LIST]))
+				m.Push(mdb.META, kit.Format(meta))
 			}},
 			ice.RUN: {Hand: func(m *ice.Message, arg ...string) {
-				s := mdb.Cache(m, arg[0], func() (stack Any) {
-					nfs.Open(m, existsFile(m, arg[0]), func(r io.Reader, p string) {
-						stack = NewStack().parse(m.Spawn(), p, r, nil)
-					})
-					return
-				}).(*Stack)
-				kit.If(m.Option("debug") == ice.TRUE, func() { mdb.Cache(m, arg[0], nil) })
-				m.StatusTime()
-				action := mdb.LIST
+				s := _parse_cache(m, arg[0])
+				action, i := mdb.LIST, 0
 				if len(arg) > 2 && arg[1] == ice.ACTION && s.value(m, arg[2]) != nil {
 					action, arg = arg[2], arg[3:]
 				} else {
 					arg = arg[1:]
 				}
-				i := 0
-				s.call(m, s, action, func(f *Frame, v Function) {
+				s.call(m.StatusTime(), s, action, func(f *Frame, v Function) {
 					kit.For(v.arg, func(k string) {
 						switch k {
 						case "m":
@@ -307,8 +309,7 @@ func init() {
 							kit.For(arg, func(v string) { list = append(list, String{v}) })
 							f.value[k] = Value{list}
 						default:
-							f.value[k] = String{m.Option(k, kit.Select(m.Option(k), arg, i))}
-							i++
+							f.value[k], i = String{m.Option(k, kit.Select(m.Option(k), arg, i))}, i+1
 						}
 					})
 				})
@@ -318,11 +319,9 @@ func init() {
 				return
 			}
 			nfs.Open(m, path.Join(nfs.SRC, path.Join(arg...)), func(r io.Reader, p string) {
-				if NewStack().parse(m, p, r, nil); m.Option(ice.DEBUG) != ice.TRUE {
-					return
+				if NewStack().parse(m, p, r, nil); m.Option(ice.DEBUG) == ice.TRUE {
+					m.EchoLine("").EchoLine("stack: %s", arg[0]).Cmdy(INFO)
 				}
-				m.EchoLine("").EchoLine("stack: %s", arg[0]).Cmdy(INFO)
-
 			})
 		}},
 	})

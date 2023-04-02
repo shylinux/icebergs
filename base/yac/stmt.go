@@ -44,7 +44,7 @@ func init() {
 			if s.last.status == STATUS_DISABLE {
 				f.status = 0
 			} else {
-				f.status, f.pop = STATUS_DISABLE, func() { f.status = 0 }
+				f.status, f.defers = STATUS_DISABLE, append(f.defers, func() { f.status = 0 })
 			}
 			s.reads(m, func(k string) bool {
 				if k == IF {
@@ -76,13 +76,13 @@ func init() {
 				res = s.expr(m, list[1])
 			}
 			kit.If(res == ice.FALSE, func() { f.status = STATUS_DISABLE })
-			s.Position, f.pop = list[len(list)-1], func() {
+			s.Position, f.defers = list[len(list)-1], append(f.defers, func() {
 				if s.runable() {
 					kit.If(len(list) > 3, func() { s.expr(m, list[2]) })
 					s.Position = list[0]
 					s.Position.skip--
 				}
-			}
+			})
 		}},
 		BREAK: {Name: "break", Hand: func(m *ice.Message, arg ...string) {
 			s := _parse_stack(m)
@@ -179,17 +179,14 @@ func init() {
 					v = []Any{v}
 				}
 				s.stack(func(f *Frame, i int) bool {
-					if kit.IsIn(f.key, CALL, SOURCE, STACK) {
-						f.value["_defer"] = append(kit.List(f.value["_defer"]), func() {
-							s.call(m, s, k, nil, v.([]Any)...)
-						})
+					if f.key == CALL {
+						f.defers = append(f.defers, func() { s.call(m, s, k, nil, v.([]Any)...) })
 						return true
 					}
 					return false
 				})
 				return true
 			})
-
 		}},
 		RETURN: {Name: "return show", Hand: func(m *ice.Message, arg ...string) {
 			s := _parse_stack(m)
@@ -202,12 +199,7 @@ func init() {
 				case CALL:
 					switch cb := f.value["_return"].(type) {
 					case func(...Any):
-						switch v := v.(type) {
-						case Value:
-							cb(v.list...)
-						default:
-							cb(v)
-						}
+						cb(_parse_res(m, v)...)
 					}
 				case SOURCE:
 					s.input = nil
@@ -230,10 +222,8 @@ func init() {
 		}},
 		INFO: {Name: "info", Hand: func(m *ice.Message, arg ...string) {
 			_parse_stack(m).stack(func(f *Frame, i int) bool {
-				m.EchoLine("frame: %s %v:%v:%v", f.key, f.Position.name, f.Position.line, f.Position.skip)
-				kit.For(f.value, func(k string, v Any) {
-					m.EchoLine("	%s: %#v", k, v)
-				})
+				m.EchoLine("frame: %s %v:%v:%v", f.key, f.name, f.line, f.skip)
+				kit.For(f.value, func(k string, v Any) { m.EchoLine("  %s: %#v", k, v) })
 				return false
 			})
 		}},
@@ -242,7 +232,7 @@ func init() {
 			res := []string{kit.Format("%d:%d", s.line, s.skip)}
 			s.stack(func(f *Frame, i int) bool {
 				kit.If(i > 0, func() {
-					res = append(res, kit.Format("%s:%d:%d %s %v", f.name, f.line, f.skip, f.key, kit.Select(ice.FALSE, ice.TRUE, f.status > STATUS_DISABLE)))
+					res = append(res, kit.Format("%s %s %s:%d:%d", f.key, kit.Select(ice.FALSE, ice.TRUE, f.status > STATUS_DISABLE), f.name, f.line, f.skip))
 				})
 				return false
 			})

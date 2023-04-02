@@ -39,7 +39,6 @@ var level = map[string]int{
 type Expr struct {
 	list ice.List
 	s    *Stack
-	n    int
 }
 
 func (s *Expr) push(v Any) *Expr {
@@ -74,7 +73,11 @@ func (s *Expr) setv(m *ice.Message, p int, op string, v Any) Any {
 	case string:
 		return s.s.value(m, k, s.s.value(m, v), op)
 	case Value:
-		return s.s.value(m, k, v.list[0], op)
+		if len(v.list) > 0 {
+			return s.s.value(m, k, v.list[0], op)
+		} else {
+			return s.s.value(m, k)
+		}
 	default:
 		return s.s.value(m, k, v, op)
 	}
@@ -92,9 +95,6 @@ func (s *Expr) ops(m *ice.Message) {
 	if !s.s.runable() || s.getl(-2) < 10 {
 		return
 	}
-	if s.n++; s.n > 100 {
-		panic(s.n)
-	}
 	s.pops(3, s.opv(m, -3, s.gets(-2), s.getv(m, -1)))
 }
 func (s *Expr) end(m *ice.Message) Any {
@@ -104,36 +104,36 @@ func (s *Expr) end(m *ice.Message) Any {
 		return s.getv(m, 0)
 	}
 	m.Debug("expr ops %v", s.list)
-	for len(s.list) > 1 {
+	for i := 0; i < 100 && len(s.list) > 1; i++ {
 		switch s.ops(m); s.gets(-2) {
+		case DEFINE, ASSIGN:
+			switch v := s.getv(m, -1).(type) {
+			case Value:
+				list := kit.List()
+				for i := 0; i < len(s.list)-1; i += 2 {
+					kit.If(i/2 < len(v.list), func() { list = append(list, s.setv(m, i, s.gets(-2), v.list[i/2])) })
+				}
+				s.list = append(s.list[:0], Value{list})
+			default:
+				s.list = append(s.list[:0], s.setv(m, -3, s.gets(-2), s.getv(m, -1)))
+			}
 		case FIELD:
 			list := kit.List()
 			for i := len(s.list) - 2; i > 0; i -= 2 {
-				if s.gets(i) == ASSIGN || s.gets(i) == DEFINE {
+				if s.gets(i) == DEFINE || s.gets(i) == ASSIGN {
 					for j := 0; j < i; j += 2 {
 						list = append(list, s.setv(m, j, s.gets(i), s.getv(m, j+i+1)))
 					}
-					s.list = kit.List(Value{list: list})
+					s.list = append(s.list[:0], Value{list})
 					break
 				} else if i == 1 {
 					for i := 0; i < len(s.list); i += 2 {
 						list = append(list, s.getv(m, i))
 					}
-					s.list = kit.List(Value{list: list})
+					s.list = append(s.list[:0], Value{list})
 					break
 				}
 			}
-		case ASSIGN, DEFINE:
-			list := kit.List()
-			switch v := s.getv(m, -1).(type) {
-			case Value:
-				for i := 0; i < len(s.list)-1; i += 2 {
-					kit.If(i/2 < len(v.list), func() { list = append(list, s.setv(m, i, s.gets(-2), v.list[i/2])) })
-				}
-			default:
-				s.setv(m, -3, s.gets(-2), s.getv(m, -1))
-			}
-			s.list = kit.List(Value{list})
 		}
 	}
 	m.Debug("expr ops %v", s.list)
@@ -177,7 +177,12 @@ func (s *Expr) cals(m *ice.Message) Any {
 					s.s.skip--
 					s.pops(1, s.s.value(m, s.s.funcs(m)))
 				} else {
-					s.pops(1, s.call(m, s.s, s.gets(-1)))
+					switch k := s.get(-1).(type) {
+					case string:
+						s.pops(1, s.call(m, s.s, k))
+					default:
+						s.pops(1, s.call(m, k, ""))
+					}
 				}
 				return false
 			}
@@ -193,28 +198,36 @@ func (s *Expr) cals(m *ice.Message) Any {
 			}
 		}
 		if level[k] > 0 {
-			for level[k] >= 9 && level[k] <= s.getl(-2) && level[k] < 100 {
+			for 9 <= level[k] && level[k] <= s.getl(-2) && level[k] < 100 {
 				s.ops(m)
 			}
 			s.push(k)
 		} else {
-			if strings.HasPrefix(k, "\"") {
-				s.push(String{value: k[1 : len(k)-1]})
-			} else if k == ice.TRUE {
-				s.push(Boolean{value: true})
-			} else if k == ice.FALSE {
-				s.push(Boolean{value: false})
-			} else if keyword.MatchString(k) {
-				s.push(k)
-			} else {
-				s.push(Number{value: k})
-			}
-			if s.gets(-2) == "!" {
+			if s.push(s.trans(m, k)); s.gets(-2) == "!" {
 				s.pops(2, s.opv(m, -1, "!", nil))
 			}
 		}
 		return false
 	})
+	if s.cmds(m, line) {
+		return nil
+	}
+	return s.end(m)
+}
+func (s *Expr) trans(m *ice.Message, k string) Any {
+	if strings.HasPrefix(k, "\"") {
+		return String{value: k[1 : len(k)-1]}
+	} else if k == ice.TRUE {
+		return Boolean{value: true}
+	} else if k == ice.FALSE {
+		return Boolean{value: false}
+	} else if keyword.MatchString(k) {
+		return k
+	} else {
+		return Number{value: k}
+	}
+}
+func (s *Expr) cmds(m *ice.Message, line int) bool {
 	if cmds := false; len(s.list) == 1 && s.s.skip < 2 {
 		m.Search(s.gets(0), func(key string, cmd *ice.Command) {
 			if cmds = true; s.s.line == line {
@@ -237,10 +250,10 @@ func (s *Expr) cals(m *ice.Message) Any {
 			}
 		})
 		if cmds {
-			return nil
+			return true
 		}
 	}
-	return s.end(m)
+	return false
 }
 func (s *Expr) call(m *ice.Message, obj Any, key string) Any {
 	list := kit.List()
@@ -255,13 +268,13 @@ func (s *Expr) call(m *ice.Message, obj Any, key string) Any {
 	}
 	return s.s.call(m, obj, key, nil, list...)
 }
-func NewExpr(s *Stack) *Expr { return &Expr{kit.List(), s, 0} }
+func NewExpr(s *Stack) *Expr { return &Expr{kit.List(), s} }
 
 const EXPR = "expr"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		EXPR: {Name: "expr a = 1", Hand: func(m *ice.Message, arg ...string) {
+		EXPR: {Name: "expr a, b = 1, 2", Hand: func(m *ice.Message, arg ...string) {
 			s := _parse_stack(m)
 			arg = s.rest
 			if v := s.cals(m); !s.runable() {

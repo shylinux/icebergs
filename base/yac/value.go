@@ -27,10 +27,16 @@ func (s Boolean) MarshalJSON() ([]byte, error) { return json.Marshal(s.value) }
 
 func wrap(v Any) Any {
 	switch v := v.(type) {
-	case bool:
-		return Boolean{v}
+	case map[string]Any:
+		return Dict{v}
+	case []Any:
+		return List{v}
 	case string:
 		return String{v}
+	case int:
+		return Number{kit.Format(v)}
+	case bool:
+		return Boolean{v}
 	default:
 		return v
 	}
@@ -147,11 +153,9 @@ func (s Boolean) Operate(op string, v Any) Any {
 type Message struct{ *ice.Message }
 
 func (m Message) Call(cmd string, arg ...Any) Any {
-	str := func(v Any) string { return kit.Format(trans(v)) }
 	args := []Any{}
-	for _, v := range arg {
-		args = append(args, trans(v))
-	}
+	kit.For(arg, func(i int, v Any) { args = append(args, trans(v)) })
+	str := func(v Any) string { return kit.Format(trans(v)) }
 	switch cmd {
 	case "Option":
 		return String{m.Option(str(args[0]), args[1:]...)}
@@ -165,26 +169,20 @@ func (m Message) Call(cmd string, arg ...Any) Any {
 		m.Push(str(args[0]), args[1], args[2:]...)
 	case "Echo":
 		m.Echo(str(args[0]), args[1:]...)
-	case "Table":
-		s := _parse_stack(m.Message)
-		var value Any
-		m.Table(func(val ice.Maps) { value = s.call(m.Message, arg[0], nil, nil, Dict{kit.Dict(val)}) })
-		return value
-	case "Sleep":
-		m.Sleep(str(args[0]))
 	case "Action":
 		m.Action(args...)
+	case "Sleep":
+		m.Sleep(str(args[0]))
+	case "Table":
+		s := _parse_stack(m.Message)
+		m.Table(func(val ice.Maps) { s.call(m.Message, arg[0], nil, nil, Dict{kit.Dict(val)}) })
 	default:
 		m.ErrorNotImplement(cmd)
 	}
 	return m
 }
-func (s *Stack) load(m *ice.Message) *Stack {
+func (s *Stack) load(m *ice.Message, cb func(*Frame)) *Stack {
 	f := s.pushf(m.Options(STACK, s), "")
-	f.value["m"] = Message{m}
-	for k, v := range ice.Info.Stack {
-		f.value[k] = v
-	}
 	f.value["kit"] = func(m *ice.Message, key string, arg ...Any) Any {
 		kit.For(arg, func(i int, v Any) { arg[i] = trans(v) })
 		switch key {
@@ -197,5 +195,10 @@ func (s *Stack) load(m *ice.Message) *Stack {
 			return nil
 		}
 	}
+	for k, v := range ice.Info.Stack {
+		f.value[k] = v
+	}
+	f.value["m"] = Message{m}
+	kit.If(cb != nil, func() { cb(s.peekf()) })
 	return s
 }

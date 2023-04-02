@@ -20,7 +20,8 @@ func init() {
 		SHY: {Name: "shy path auto", Help: "笔记", Actions: ice.MergeActions(ice.Actions{
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
 				// ctx.ProcessCommand(m, web.WIKI_WORD, kit.Simple(path.Join(arg[2], arg[1])))
-				ctx.ProcessCommand(m, yac.STACK, kit.Simple(arg[1]))
+				// ctx.ProcessCommand(m, yac.STACK, kit.Simple(arg[1]))
+				ctx.ProcessCommand(m, kit.TrimExt(arg[1], SHY), kit.Simple())
 			}},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
 				ctx.ProcessCommand(m, yac.STACK, kit.Simple(arg[1]))

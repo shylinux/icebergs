@@ -162,6 +162,8 @@ func Open(m *ice.Message, p string, cb ice.Any) {
 		case func(io.Reader, os.FileInfo):
 			s, _ := StatFile(m, p)
 			cb(f, s)
+		case func(io.Reader, string):
+			cb(f, p)
 		case func(io.Reader):
 			cb(f)
 		case func(string):

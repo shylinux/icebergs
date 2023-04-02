@@ -156,10 +156,25 @@ func (m *Message) Push(key string, value Any, arg ...Any) *Message {
 func (m *Message) EchoLine(str string, arg ...Any) *Message {
 	return m.Echo(str, arg...).Echo(NL)
 }
+func PushNotice(m *Message, arg ...Any) bool {
+	if m.Option(MSG_DAEMON) == "" {
+		return false
+	} else if m.Option(MSG_USERPOD) == "" {
+		m.Cmd("web.space", m.Option(MSG_DAEMON), arg, Maps{MSG_OPTION: "", MSG_OPTS: ""})
+	} else {
+		// m.Cmd("web.spide", OPS, MergeURL2(m, "/share/toast/"+m.Option(MSG_DAEMON)), ARG, kit.Format(arg))
+	}
+	return true
+}
 func (m *Message) Echo(str string, arg ...Any) *Message {
 	if str == "" {
 		return m
 	}
+	// if m.Option("output.stream") == "grow" {
+	// 	if PushNotice(m, "grow", kit.Format(str, arg...)) {
+	// 		return m
+	// 	}
+	// }
 	return m.Add(MSG_RESULT, kit.Format(str, arg...))
 }
 func (m *Message) Copy(msg *Message, arg ...string) *Message {

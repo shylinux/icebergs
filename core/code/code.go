@@ -3,6 +3,7 @@ package code
 import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/web"
+	"shylinux.com/x/icebergs/base/yac"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -16,9 +17,10 @@ func init() {
 		VIMER, INNER, XTERM, PPROF, BENCH,
 		C, SH, SHY, PY, GO, JS, CSS, HTML,
 	)
-	ice.Info.Stack[CODE] = func(m *ice.Message, key string, arg ...ice.Any) ice.Any {
-		return nil
+}
+func init() {
+	ice.Info.Stack[Prefix(Index.Register)] = func(m *ice.Message, key string, arg ...ice.Any) ice.Any {
+		return Index.Register(yac.TransContext(m, Prefix(), arg...), &web.Frame{})
 	}
 }
-
-func Prefix(arg ...string) string { return web.Prefix(CODE, kit.Keys(arg)) }
+func Prefix(arg ...ice.Any) string { return web.Prefix(CODE, kit.Keys(arg...)) }

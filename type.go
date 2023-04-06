@@ -178,6 +178,7 @@ func (c *Context) Merge(s *Context) *Context {
 	for k, v := range s.Configs {
 		c.Configs[k] = v
 	}
+	kit.If(c.Caches == nil, func() { c.Caches = Caches{} })
 	return c
 }
 func (c *Context) Begin(m *Message, arg ...string) *Context {

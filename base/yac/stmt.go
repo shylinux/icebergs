@@ -149,7 +149,7 @@ func init() {
 			v := s.cals(m)
 			f.status = STATUS_DISABLE
 			if res, ok := v.(Operater); ok {
-				if res, ok := res.Operate("==", trans(s.value(m, "_switch"))).(Boolean); ok && res.value {
+				if res, ok := res.Operate("==", Trans(s.value(m, "_switch"))).(Boolean); ok && res.value {
 					f.status, f.value["_case"] = 0, "done"
 				}
 			}
@@ -182,13 +182,22 @@ func init() {
 				push()
 				return false
 			})
+			m.Debug("what %#v", list)
 			kit.If(len(list) < 2, func() { list = append(list, []Field{}) })
 			kit.If(len(list) < 3, func() { list = append(list, []Field{}) })
 			name, fun := list[0][len(list[0])-1].name, Function{obj: list[0], arg: list[1], res: list[2], Position: s.Position}
 			if len(list[0]) > 1 {
-				st := list[0][0].kind.(Struct)
-				st.method = append(st.method, fun)
-				st.index[name] = fun
+				if st, ok := list[0][0].kind.(Struct); ok {
+					st.method = append(st.method, fun)
+					st.index[name] = fun
+				}
+				if st, ok := list[0][0].kind.(string); ok {
+					if st, ok := s.value(m, st).(Struct); ok {
+						st.method = append(st.method, fun)
+						st.index[name] = fun
+					}
+				}
+
 			} else {
 				kit.If(name != INIT, func() { s.value(m, name, fun) })
 			}

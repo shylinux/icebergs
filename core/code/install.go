@@ -206,3 +206,6 @@ func InstallAction(args ...ice.Any) ice.Actions {
 		nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) { nfs.Trash(m, m.Option(nfs.PATH)) }},
 	}
 }
+func init() {
+	ice.Info.Stack[Prefix(InstallAction)] = func(m *ice.Message, key string, arg ...ice.Any) ice.Any { return InstallAction(arg...) }
+}

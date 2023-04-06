@@ -7,6 +7,7 @@ import (
 	"time"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -26,6 +27,7 @@ func (s String) MarshalJSON() ([]byte, error)  { return json.Marshal(s.value) }
 func (s Number) MarshalJSON() ([]byte, error)  { return json.Marshal(s.value) }
 func (s Boolean) MarshalJSON() ([]byte, error) { return json.Marshal(s.value) }
 
+func (s String) String() string { return s.value }
 func wrap(v Any) Any {
 	switch v := v.(type) {
 	case map[string]Any:
@@ -42,7 +44,7 @@ func wrap(v Any) Any {
 		return v
 	}
 }
-func trans(v Any) Any {
+func Trans(v Any) Any {
 	switch v := v.(type) {
 	case Dict:
 		return v.value
@@ -50,7 +52,7 @@ func trans(v Any) Any {
 		return v.value
 	case Value:
 		if len(v.list) > 0 {
-			return trans(v.list[0])
+			return Trans(v.list[0])
 		} else {
 			return nil
 		}
@@ -202,30 +204,52 @@ func (s *Stack) load(m *ice.Message, cb func(*Frame)) *Stack {
 			return nil
 		}
 	}
+	f.value["ice.Cmd"] = func(m *ice.Message, key string, arg ...Any) Any {
+		stack := m.Optionv(ice.YAC_STACK).(*Stack)
+		command := &ice.Command{Name: "list hash auto", Help: "示例", Actions: ice.Actions{}}
+		obj := arg[1].(Object)
+		for k, v := range obj.index.index {
+			switch v.(type) {
+			case Function:
+				if k == "List" {
+					command.Hand = stack.Handler(v)
+				} else {
+					command.Actions[k] = &ice.Action{Hand: stack.Handler(v)}
+				}
+			case Field:
+			}
+		}
+		command.List = ice.SplitCmd(command.Name, command.Actions)
+		last, list := ice.Index, kit.Split(kit.Format(arg[0]), ice.PT)
+		for i := 1; i < len(list); i++ {
+			has := false
+			if ice.Pulse.Search(strings.Join(list[:i], ice.PT)+ice.PT, func(p *ice.Context, s *ice.Context) { has, last = true, s }); !has {
+				context := &ice.Context{Name: list[i-1], Caches: ice.Caches{ice.CTX_FOLLOW: &ice.Cache{Value: strings.Join(list[:i], ice.PT)}}}
+				last = last.Register(context, &web.Frame{})
+			}
+			kit.If(i == len(list)-1, func() {
+				last.Merge(&ice.Context{Commands: ice.Commands{list[i]: command}})
+				last.Merge(last)
+			})
+		}
+		m.Debug("what %#v", command)
+		return nil
+	}
 	f.value["ice.MergeActions"] = func(m *ice.Message, key string, arg ...Any) Any {
-		s := _parse_stack(m)
 		_actions := ice.Actions{}
 		for _, v := range arg {
-			actions := ice.Actions{}
-			kit.For(v, func(k string, v Any) {
-				action := &ice.Action{}
-				kit.For(v, func(k string, v Any) {
-					switch k {
-					case "Name":
-						action.Name = kit.Format(trans(v))
-					case "Help":
-						action.Help = kit.Format(trans(v))
-					case "Hand":
-						action.Hand = func(m *ice.Message, arg ...string) { s.action(m, v, nil, arg...) }
-					}
-				})
-				actions[k] = action
-			})
-			ice.MergeActions(_actions, actions)
+			ice.MergeActions(_actions, TransActions(m, v))
 		}
-		return _actions
+		res := Dict{value: kit.Dict()}
+		for k, v := range _actions {
+			res.value[k] = Object{value: Dict{kit.Dict("Name", v.Name, "Help", v.Help, "Hand", v.Hand)}}
+		}
+		return res
 	}
 	for k, v := range ice.Info.Stack {
+		if strings.HasPrefix(k, "web.code.") {
+			k = strings.TrimPrefix(k, "web.")
+		}
 		f.value[k] = v
 	}
 	f.value["m"] = Message{m}
@@ -234,7 +258,7 @@ func (s *Stack) load(m *ice.Message, cb func(*Frame)) *Stack {
 }
 
 func (m Message) Call(cmd string, arg ...Any) Any {
-	str := func(v Any) string { return kit.Format(trans(v)) }
+	str := func(v Any) string { return kit.Format(Trans(v)) }
 	switch cmd {
 	case "Option":
 		return m.Option(str(arg[0]), arg[1:]...)
@@ -254,7 +278,7 @@ func (m Message) Call(cmd string, arg ...Any) Any {
 		if len(arg) > 0 {
 			m.ProcessDisplay(arg...)
 		} else {
-			m.ProcessDisplay(kit.Format("%s?_t=%d", trans(_parse_stack(m.Message).value(m.Message, "_script")), time.Now().Unix()))
+			m.ProcessDisplay(kit.Format("%s?_t=%d", Trans(_parse_stack(m.Message).value(m.Message, "_script")), time.Now().Unix()))
 		}
 	case "StatusTime":
 		m.StatusTime(arg...)
@@ -281,3 +305,69 @@ func (m Message) Call(cmd string, arg ...Any) Any {
 }
 
 type Message struct{ *ice.Message }
+
+func TransContext(m *ice.Message, key string, arg ...Any) *ice.Context {
+	s := &ice.Context{Caches: ice.Caches{ice.CTX_FOLLOW: &ice.Cache{}}}
+	kit.For(arg[0], func(k string, v ice.Any) {
+		switch k {
+		case "Name":
+			s.Name = kit.Format(Trans(v))
+		case "Help":
+			s.Help = kit.Format(Trans(v))
+		case "Commands":
+			s.Commands = TransCommands(m, v)
+		}
+	})
+	s.Merge(s).Cap(ice.CTX_FOLLOW, kit.Keys(key, s.Name))
+	return s
+}
+func TransCommands(m *ice.Message, arg ...Any) ice.Commands {
+	commands := ice.Commands{}
+	stack := m.Optionv(ice.YAC_STACK).(*Stack)
+	kit.For(arg[0], func(k string, v ice.Any) {
+		s := &ice.Command{}
+		kit.For(v, func(k string, v ice.Any) {
+			switch k {
+			case "Name":
+				s.Name = kit.Format(Trans(v))
+			case "Help":
+				s.Help = kit.Format(Trans(v))
+			case "Actions":
+				s.Actions = TransActions(m, v)
+			case "Hand":
+				s.Hand = func(m *ice.Message, arg ...string) {
+					msg := m.Spawn(Index).Spawn(m.Target())
+					stack.Action(msg, v, nil, arg...)
+					m.Copy(msg)
+				}
+			}
+		})
+		commands[k] = s
+	})
+	return commands
+}
+func TransActions(m *ice.Message, arg ...Any) ice.Actions {
+	switch v := arg[0].(type) {
+	case ice.Actions:
+		return v
+	}
+	actions := ice.Actions{}
+	stack := m.Optionv(ice.YAC_STACK).(*Stack)
+	kit.For(arg[0], func(k string, v ice.Any) {
+		s := &ice.Action{}
+		switch k {
+		case "Name":
+			s.Name = kit.Format(Trans(v))
+		case "Help":
+			s.Help = kit.Format(Trans(v))
+		case "Hand":
+			s.Hand = func(m *ice.Message, arg ...string) {
+				msg := m.Spawn(Index).Spawn(m.Target())
+				stack.Action(msg, v, nil, arg...)
+				m.Copy(msg)
+			}
+		}
+		actions[k] = s
+	})
+	return actions
+}

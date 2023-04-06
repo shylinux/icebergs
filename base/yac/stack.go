@@ -117,6 +117,7 @@ func (s *Stack) value(m *ice.Message, key string, arg ...Any) Any {
 	}
 	v = s
 	kit.For(keys, func(k string) {
+		m.Debug("what %#v %v", v, k)
 		switch _v := v.(type) {
 		case Operater:
 			v = _v.Operate(SUBS, k)
@@ -351,13 +352,14 @@ func (s *Stack) funcs(m *ice.Message) string {
 	return name
 }
 func (s *Stack) calls(m *ice.Message, obj Any, key Any, cb func(*Frame, Function), arg ...Any) Any {
+	m.Debug("stack %d call %T %s %#v", len(s.frame)-1, obj, key, arg)
 	if _k, ok := key.(string); ok && _k != "" {
 		kit.For(kit.Split(_k, ice.PT), func(k string) {
 			switch v := obj.(type) {
 			case Operater:
 				obj = v.Operate(SUBS, k)
 			case *Stack:
-				if _v := v.value(m, _k); _v != nil {
+				if _v := v.value(m, _k); _v != nil && _v != "" {
 					obj, key = _v, ""
 				} else {
 					obj, key = v.value(m, k), strings.TrimPrefix(_k, k+ice.PT)
@@ -395,26 +397,35 @@ func (s *Stack) calls(m *ice.Message, obj Any, key Any, cb func(*Frame, Function
 			s.Position = pos
 		})
 		kit.If(cb != nil, func() { cb(f, obj) })
-		s.run(m.Options(STACK, s))
+		s.run(m.Options(ice.YAC_STACK, s))
 		return value
 	case Caller:
 		m.Debug("stack %d call %T %s %#v", len(s.frame)-1, obj, key, arg)
-		kit.For(arg, func(i int, v Any) { arg[i] = trans(arg[i]) })
+		kit.For(arg, func(i int, v Any) { arg[i] = Trans(arg[i]) })
 		return wrap(obj.Call(kit.Format(key), arg...))
 	case func(*ice.Message, string, ...Any) Any:
-		m.Debug("stack %d call %T %s %#v", len(s.frame)-1, obj, key, arg)
-		kit.For(arg, func(i int, v Any) { arg[i] = trans(arg[i]) })
+		m.Debug("stack %d call %s %s %#v", len(s.frame)-1, kit.FileLine(obj, 3), key, arg)
+		kit.For(arg, func(i int, v Any) { arg[i] = Trans(arg[i]) })
 		return wrap(obj(m, kit.Format(key), arg...))
 	case func():
 		obj()
 		return nil
 	default:
+		if key == "" {
+			return nil
+		}
+		m.Debug("stack %d call %T %s %#v", len(s.frame)-1, obj, key, arg)
 		args := kit.List(key)
-		kit.For(arg, func(i int, v Any) { args = append(args, trans(v)) })
+		kit.For(arg, func(i int, v Any) { args = append(args, Trans(v)) })
 		return Message{m.Cmd(args...)}
 	}
 }
-func (s *Stack) action(m *ice.Message, obj Any, key Any, arg ...string) *ice.Message {
+func (s *Stack) Handler(obj Any) ice.Handler {
+	return func(m *ice.Message, arg ...string) {
+		m.Copy(s.Action(m.Spawn(Index).Spawn(m.Target()), obj, nil, arg...))
+	}
+}
+func (s *Stack) Action(m *ice.Message, obj Any, key Any, arg ...string) *ice.Message {
 	s.calls(m, obj, key, func(f *Frame, v Function) {
 		i := 0
 		for _, field := range v.arg {
@@ -443,20 +454,20 @@ func (s *Stack) parse(m *ice.Message, name string, r io.Reader) *Stack {
 }
 func NewStack(m *ice.Message, cb func(*Frame)) *Stack {
 	s := &Stack{}
-	s.pushf(m.Options(STACK, s), STACK)
+	s.pushf(m.Options(ice.YAC_STACK, s), STACK)
 	s.load(m, cb)
 	return s
 }
 
-func _parse_stack(m *ice.Message) *Stack { return m.Optionv(STACK).(*Stack) }
+func _parse_stack(m *ice.Message) *Stack { return m.Optionv(ice.YAC_STACK).(*Stack) }
 func _parse_frame(m *ice.Message) (*Stack, *Frame) {
 	return _parse_stack(m), _parse_stack(m).pushf(m, "")
 }
 func _parse_const(m *ice.Message, key string) string {
 	if k := kit.Select(key, strings.Split(key, ice.PT), -1); kit.IsUpper(k) {
-		if c, ok := ice.Info.Index[strings.ToLower(k)].(*ice.Context); ok && (key == k || key == c.Prefix(k)) {
-			return strings.ToLower(k)
-		}
+		// if c, ok := ice.Info.Index[strings.ToLower(k)].(*ice.Context); ok && (key == k || key == c.Prefix(k)) {
+		return strings.ToLower(k)
+		// }
 	}
 	return ""
 }
@@ -538,7 +549,7 @@ func StackHandler(m *ice.Message, arg ...string) {
 				kit.If(!kit.IsIn(field.name, "m", "msg", ice.ARG), func() { list = append(list, kit.Dict(mdb.NAME, field.name, mdb.TYPE, mdb.TEXT, mdb.VALUE, "")) })
 			}
 			kit.If(k == mdb.LIST, func() { list = append(list, kit.Dict(mdb.NAME, mdb.LIST, mdb.TYPE, "button", mdb.ACTION, ice.AUTO)) })
-			h := func(m *ice.Message, arg ...string) { m.Copy(s.action(m.Spawn(Index).Spawn(m.Target()), s, k, arg...)) }
+			h := func(m *ice.Message, arg ...string) { m.Copy(s.Action(m.Spawn(Index).Spawn(m.Target()), s, k, arg...)) }
 			if k == mdb.LIST {
 				cmd.Hand, cmd.List = h, list
 			} else {

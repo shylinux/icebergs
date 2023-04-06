@@ -74,7 +74,15 @@ var Index = &ice.Context{Name: WEB, Help: "网络模块"}
 func init() { ice.Index.Register(Index, &Frame{}, BROAD, SERVE, SPACE, DREAM, CACHE, SPIDE, SHARE) }
 
 func ApiAction(arg ...string) ice.Actions { return ice.Actions{kit.Select(ice.PS, arg, 0): {}} }
-func Prefix(arg ...string) string         { return kit.Keys(WEB, arg) }
+func Prefix(arg ...string) string {
+	for i, k := range arg {
+		switch k {
+		case "Register":
+			arg[i] = "Index.Register"
+		}
+	}
+	return kit.Keys(WEB, arg)
+}
 
 func P(arg ...string) string  { return path.Join(ice.PS, path.Join(arg...)) }
 func PP(arg ...string) string { return P(arg...) + ice.PS }

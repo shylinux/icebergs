@@ -95,7 +95,7 @@ func (s *Expr) opv(m *ice.Message, p int, op string, v Any) Any {
 		return s.getv(m, p)
 	}
 	if obj, ok := s.getv(m, p).(Operater); ok {
-		return obj.Operate(op, trans(v))
+		return obj.Operate(op, Trans(v))
 	}
 	return s.getv(m, p)
 }
@@ -166,10 +166,13 @@ func (s *Expr) ktv(m *ice.Message, ismap bool, t Any, p string) map[string]Any {
 		k := ""
 		kit.If(ismap, func() {
 			sub := s.sub(m)
-			if k = kit.Format(trans(sub.cals(m, DEFS, END))); k == "" {
+			if k = kit.Format(Trans(sub.cals(m, DEFS, END))); k == "" {
 				k = _parse_const(m, sub.gets(0))
 			}
-		}, func() { k, _ = s.next(m), s.next(m) })
+		}, func() {
+			k = s.next(m)
+			kit.If(s.token() != END, func() { s.next(m) })
+		})
 		kit.If(s.token() == DEFS, func() {
 			sub := s.sub(m)
 			if sub.p = p; ismap {
@@ -182,8 +185,9 @@ func (s *Expr) ktv(m *ice.Message, ismap bool, t Any, p string) map[string]Any {
 					}
 				}
 			}
-			m.Debug("field %d %#v %#v", sub.n, k, data[k])
+			m.Debug("field %d %#v %#v", sub.n, k, sub.t)
 			data[k] = sub.cals(m, FIELD, END)
+			m.Debug("field %d %#v %#v", sub.n, k, data[k])
 		})
 	}
 	return data
@@ -218,6 +222,7 @@ func (s *Expr) cals(m *ice.Message, arg ...string) Any {
 		if kit.IsIn(k, arg...) {
 			return true
 		}
+		m.Debug("what %v", k)
 		switch k {
 		case SPLIT:
 			return true
@@ -289,29 +294,40 @@ func (s *Expr) cals(m *ice.Message, arg ...string) Any {
 			s.push(name)
 			return false
 		case FUNC:
-			s.push(s.value(m, s.funcs(m)))
-			return false
+			if s.isop(-1) || len(s.list) == 0 {
+				s.push(s.value(m, s.funcs(m)))
+				return false
+			}
+			s.skip--
+			return true
+		case CLOSE:
+			if s.gets(-2) == OPEN {
+				s.pops(2, s.get(-1))
+				return false
+			}
+			return true
 		}
 		if len(s.list) > 0 && !s.isop(-1) {
 			switch k {
 			case SUBS:
 				switch v := s.sub(m).cals(m, SUPS); s.get(-1).(type) {
 				case string:
-					s.pops(1, kit.Keys(s.gets(-1), kit.Format(trans(v))))
+					m.Debug("what %v %v", s.gets(-1), Trans(v))
+					s.pops(1, kit.Keys(s.gets(-1), kit.Format(Trans(v))))
 				default:
+					m.Debug("what %v %v", s.get(-1), v)
 					s.pops(1, s.opv(m, -1, SUBS, v))
 				}
 				return false
 			case OPEN:
 				switch k := s.get(-1).(type) {
 				case string:
+					m.Debug("call %v", k)
 					s.pops(1, s.call(m, s.Stack, k))
 				default:
+					m.Debug("call %v", k)
 					s.pops(1, s.call(m, k, ""))
 				}
-				return false
-			case CLOSE:
-				kit.If(s.gets(-2) == OPEN, func() { s.pops(2, s.get(-1)) })
 				return false
 			case "++", "--":
 				s.pops(1, s.setv(m, -1, ASSIGN, s.opv(m, -1, k, nil)))
@@ -344,6 +360,7 @@ func (s *Expr) cals(m *ice.Message, arg ...string) Any {
 		}
 		return false
 	})
+	m.Debug("what %v", s.list)
 	if s.cmds(m, line) {
 		return nil
 	}
@@ -371,12 +388,12 @@ func (s *Expr) cmds(m *ice.Message, line int) (done bool) {
 				switch sub.cals(m); v := sub.get(0).(type) {
 				case string:
 					if _v := s.value(m, v); _v != nil {
-						args = append(args, kit.Format(trans(_v)))
+						args = append(args, kit.Format(Trans(_v)))
 					} else {
 						args = append(args, v)
 					}
 				default:
-					args = append(args, kit.Format(trans(v)))
+					args = append(args, kit.Format(Trans(v)))
 				}
 			}
 			m.Cmdy(args...)
@@ -385,7 +402,8 @@ func (s *Expr) cmds(m *ice.Message, line int) (done bool) {
 	return
 }
 func (s *Expr) call(m *ice.Message, obj Any, key string) Any {
-	if arg := _parse_res(m, s.sub(m).cals(m, CLOSE)); s.runable() {
+	v := s.sub(m).cals(m, CLOSE)
+	if arg := _parse_res(m, v); s.runable() {
 		return s.calls(m, obj, key, nil, arg...)
 	} else {
 		return nil
@@ -403,7 +421,7 @@ func init() {
 				return
 			} else if v != nil {
 				m.Debug("value %#v <- %v", v, arg)
-				switch v := trans(v).(type) {
+				switch v := Trans(v).(type) {
 				case Message:
 				case Value:
 					kit.If(len(v.list) > 0, func() { m.Echo(kit.Format(v.list[0])) })

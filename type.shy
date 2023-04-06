@@ -1,0 +1,76 @@
+type Any = interface{}
+type List = []Any
+type Map = map[string]Any
+type Maps = map[string]string
+type Handler func(m *Message, arg ...string)
+type Messages = map[string]*Message
+type Contexts = map[string]*Context
+type Commands = map[string]*Command
+type Actions = map[string]*Action
+type Configs = map[string]*Config
+type Caches = map[string]*Cache
+
+type Cache struct {
+	Name  string
+	Help  string
+	Value string
+}
+type Config struct {
+	Name  string
+	Help  string
+	Value Any
+}
+type Action struct {
+	Name string
+	Help string
+	Hand Handler
+	List List
+}
+type Command struct {
+	Name    string
+	Help    string
+	Actions Actions
+	Hand    Handler
+	RawHand Any
+	List    List
+	Meta    Map
+}
+type Context struct {
+	Name string
+	Help string
+
+	Caches   Caches
+	Configs  Configs
+	Commands Commands
+
+	contexts Contexts
+	context  *Context
+	root     *Context
+	server   Server
+
+	id int32
+}
+type Server interface {
+	Begin(m *Message, arg ...string)
+	Start(m *Message, arg ...string)
+	Close(m *Message, arg ...string)
+}
+
+type Message struct {
+	code int
+
+	data Map
+	meta map[string][]string
+
+	root    *Message
+	message *Message
+
+	_source string
+	_target string
+	source  *Context
+	target  *Context
+	_cmd    *Command
+	_key    string
+	_sub    string
+}
+

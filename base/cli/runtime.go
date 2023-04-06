@@ -130,7 +130,7 @@ const RUNTIME = "runtime"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		RUNTIME: {Name: "runtime info=bootinfo,ifconfig,diskinfo,hostinfo,userinfo,procinfo,bootinfo,api,cli,cmd,env,path,chain auto", Help: "运行环境", Actions: ice.MergeActions(ice.Actions{
+		RUNTIME: {Name: "runtime info=bootinfo,ifconfig,diskinfo,hostinfo,userinfo,procinfo,bootinfo,api,cli,cmd,mod,env,path,chain auto", Help: "运行环境", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { _runtime_init(m) }},
 			IFCONFIG:     {Hand: func(m *ice.Message, arg ...string) { m.Cmdy("tcp.host") }},
 			DISKINFO:     {Hand: func(m *ice.Message, arg ...string) { _runtime_diskinfo(m) }},
@@ -163,6 +163,12 @@ func init() {
 			CMD: {Hand: func(m *ice.Message, arg ...string) {
 				m.OptionFields(ctx.INDEX, mdb.NAME, mdb.HELP, nfs.FILE)
 				m.Cmdy(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND).StatusTimeCount()
+			}},
+			"mod": {Hand: func(m *ice.Message, arg ...string) {
+				kit.For(ice.Info.Gomod, func(k string, v ice.Any) {
+					m.Push("mod", k)
+					m.Push("url", v)
+				})
 			}},
 			ENV: {Hand: func(m *ice.Message, arg ...string) {
 				kit.For(os.Environ(), func(v string) {

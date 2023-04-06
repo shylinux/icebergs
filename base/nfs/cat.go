@@ -145,13 +145,19 @@ func OptionLoad(m *ice.Message, p string) *ice.Message {
 	return m
 }
 func Open(m *ice.Message, p string, cb ice.Any) {
-	if strings.HasSuffix(p, PS) {
+	if p == "" {
+		return
+	} else if strings.HasSuffix(p, PS) {
 		if ls, e := ReadDir(m, p); !m.Warn(e) {
 			switch cb := cb.(type) {
 			case func([]os.FileInfo):
 				cb(ls)
 			case func(os.FileInfo):
 				kit.For(ls, cb)
+			case func(io.Reader, string):
+				kit.For(ls, func(s os.FileInfo) {
+					kit.If(!s.IsDir(), func() { Open(m, path.Join(p, s.Name()), cb) })
+				})
 			default:
 				m.ErrorNotImplement(cb)
 			}

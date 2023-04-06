@@ -8,7 +8,6 @@ import (
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
-	"shylinux.com/x/icebergs/base/yac"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -32,9 +31,6 @@ func _command_list(m *ice.Message, name string) *ice.Message {
 		m.Push(mdb.META, kit.Format(cmd.Meta))
 		m.Push(mdb.LIST, kit.Format(cmd.List))
 	})
-	if m.Length() == 0 && yac.ExistsFile(m, name) {
-		m.Cmdy(yac.STACK, ice.CMD, name)
-	}
 	return m
 }
 func _command_search(m *ice.Message, kind, name, text string) {
@@ -95,13 +91,7 @@ func PodCmd(m *ice.Message, arg ...ice.Any) bool {
 	return false
 }
 func Run(m *ice.Message, arg ...string) {
-	kit.If(!PodCmd(m, arg) && aaa.Right(m, arg), func() {
-		if yac.ExistsFile(m, arg[0]) {
-			m.Cmdy(yac.STACK, ice.RUN, arg)
-		} else {
-			m.Cmdy(arg)
-		}
-	})
+	kit.If(!PodCmd(m, arg) && aaa.Right(m, arg), func() { m.Cmdy(arg) })
 }
 func CmdHandler(args ...ice.Any) ice.Handler {
 	return func(m *ice.Message, arg ...string) { m.Cmdy(args...) }

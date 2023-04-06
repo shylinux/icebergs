@@ -13,12 +13,14 @@ const (
 	IF       = "if"
 	ELSE     = "else"
 	FOR      = "for"
+	RANGE    = "range"
 	BREAK    = "break"
 	CONTINUE = "continue"
 	SWITCH   = "switch"
 	CASE     = "case"
 	DEFAULT  = "default"
 	FUNC     = "func"
+	INIT     = "init"
 	CALL     = "call"
 	DEFER    = "defer"
 	RETURN   = "return"
@@ -42,9 +44,9 @@ func init() {
 		ELSE: {Name: "else if a = 1; a > 1 {", Hand: func(m *ice.Message, arg ...string) {
 			s, f := _parse_frame(m)
 			if s.last.status == STATUS_DISABLE {
-				f.status = 0
+				f.status = STATUS_NORMAL
 			} else {
-				f.status, f.defers = STATUS_DISABLE, append(f.defers, func() { f.status = 0 })
+				f.status, f.defers = STATUS_DISABLE, append(f.defers, func() { f.status = STATUS_NORMAL })
 			}
 			s.reads(m, func(k string) bool {
 				if k == IF {
@@ -57,6 +59,27 @@ func init() {
 		}},
 		FOR: {Name: "for a = 1; a < 10; a++ {", Hand: func(m *ice.Message, arg ...string) {
 			s, f := _parse_frame(m)
+			if strings.Contains(s.list[s.line], RANGE) {
+				pos, key, list := s.Position, []string{}, []Any{}
+				kit.If(s.last != nil && s.last.line == s.line, func() { list, _ = s.last.value["_range"].([]Any) })
+				for { // for k, v := range value {
+					if k := s.cals0(m, FIELD, DEFS, ASSIGN); k == RANGE {
+						if obj, ok := s.cals(m).(Operater); ok {
+							if _list, ok := obj.Operate(RANGE, list).([]Any); ok {
+								kit.For(key, func(i int, k string) { f.value[k] = _list[i] })
+								f.value["_range"] = _list
+								break
+							}
+						}
+						f.status = STATUS_DISABLE
+						break
+					} else if k != "" {
+						key = append(key, k)
+					}
+				}
+				f.defers = append(f.defers, func() { kit.If(s.runable(), func() { s.pos(m, pos, -1) }) })
+				return
+			}
 			list, status := []Position{s.Position}, f.status
 			for f.status = STATUS_DISABLE; s.token() != BEGIN; list = append(list, s.Position) {
 				s.expr(m)
@@ -91,8 +114,7 @@ func init() {
 			}
 			s.stack(func(f *Frame, i int) bool {
 				f.status = STATUS_DISABLE
-				defer s.popf(m)
-				switch f.key {
+				switch s.popf(m); f.key {
 				case FOR, SWITCH:
 					return true
 				default:
@@ -106,8 +128,7 @@ func init() {
 				return
 			}
 			s.stack(func(f *Frame, i int) bool {
-				defer s.popf(m)
-				switch f.key {
+				switch s.popf(m); f.key {
 				case FOR:
 					return true
 				default:
@@ -124,7 +145,7 @@ func init() {
 		CASE: {Name: "case b:", Hand: func(m *ice.Message, arg ...string) {
 			s := _parse_stack(m)
 			f := s.peekf()
-			f.status = 0
+			f.status = STATUS_NORMAL
 			v := s.cals(m)
 			f.status = STATUS_DISABLE
 			if res, ok := v.(Operater); ok {
@@ -136,19 +157,21 @@ func init() {
 		DEFAULT: {Name: "default:", Hand: func(m *ice.Message, arg ...string) {
 			s := _parse_stack(m)
 			f := s.peekf()
-			if f.status = 0; f.value["_case"] == "done" {
+			if f.status = STATUS_NORMAL; f.value["_case"] == "done" {
 				f.status = STATUS_DISABLE
 			}
 			s.skip++
 		}},
 		FUNC: {Name: "func show(a, b) (c, d)", Hand: func(m *ice.Message, arg ...string) {
 			s := _parse_stack(m)
-			list, key, kind := [][]string{[]string{}}, "", ""
-			push := func() { kit.If(key, func() { list[len(list)-1], key, kind = append(list[len(list)-1], key), "", "" }) }
+			list, key, kind := [][]Field{[]Field{}}, "", ""
+			push := func() {
+				kit.If(key, func() { list[len(list)-1], key, kind = append(list[len(list)-1], Field{name: key, kind: kind}), "", "" })
+			}
 			s.reads(m, func(k string) bool {
 				switch k {
 				case OPEN:
-					defer kit.If(key != "" || len(list) > 1, func() { list = append(list, []string{}) })
+					defer kit.If(key != "" || len(list) > 1, func() { list = append(list, []Field{}) })
 				case FIELD, CLOSE:
 				case BEGIN:
 					return true
@@ -159,47 +182,50 @@ func init() {
 				push()
 				return false
 			})
-			kit.If(len(list) < 2, func() { list = append(list, []string{}) })
-			kit.If(len(list) < 3, func() { list = append(list, []string{}) })
-			s.value(m, kit.Select("", list[0], -1), Function{obj: list[0], arg: list[1], res: list[2], Position: s.Position})
-			s.pushf(m, "").status = STATUS_DISABLE
+			kit.If(len(list) < 2, func() { list = append(list, []Field{}) })
+			kit.If(len(list) < 3, func() { list = append(list, []Field{}) })
+			name, fun := list[0][len(list[0])-1].name, Function{obj: list[0], arg: list[1], res: list[2], Position: s.Position}
+			if len(list[0]) > 1 {
+				st := list[0][0].kind.(Struct)
+				st.method = append(st.method, fun)
+				st.index[name] = fun
+			} else {
+				kit.If(name != INIT, func() { s.value(m, name, fun) })
+			}
+			if f := s.pushf(m, ""); name == INIT {
+				f.key = CALL
+			} else {
+				f.status = STATUS_DISABLE
+			}
 		}},
 		DEFER: {Name: "defer func() {} ()", Hand: func(m *ice.Message, arg ...string) {
 			s := _parse_stack(m)
-			s.reads(m, func(k string) bool {
-				kit.If(k == FUNC, func() { k = s.funcs(m) })
-				s.skip++
-				v := s.cals(m)
-				if !s.runable() {
+			k := s.next(m)
+			kit.If(k == FUNC, func() { k = s.funcs(m) })
+			s.skip++
+			args := _parse_res(m, s.cals(m))
+			if !s.runable() {
+				return
+			}
+			s.stack(func(f *Frame, i int) bool {
+				if f.key == CALL {
+					f.defers = append(f.defers, func() { s.calls(m, s, k, nil, args...) })
 					return true
 				}
-				if vv, ok := v.(Value); ok {
-					v = vv.list
-				} else {
-					v = []Any{v}
-				}
-				s.stack(func(f *Frame, i int) bool {
-					if f.key == CALL {
-						f.defers = append(f.defers, func() { s.call(m, s, k, nil, v.([]Any)...) })
-						return true
-					}
-					return false
-				})
-				return true
+				return false
 			})
 		}},
 		RETURN: {Name: "return show", Hand: func(m *ice.Message, arg ...string) {
 			s := _parse_stack(m)
-			v := s.cals(m)
+			args := _parse_res(m, s.cals(m))
 			s.stack(func(f *Frame, i int) bool {
 				f.status = STATUS_DISABLE
 				switch f.key {
 				case FUNC:
-
 				case CALL:
 					switch cb := f.value["_return"].(type) {
 					case func(...Any):
-						cb(_parse_res(m, v)...)
+						cb(args...)
 					}
 				case SOURCE:
 					s.input = nil
@@ -215,17 +241,24 @@ func init() {
 			s := _parse_stack(m)
 			u := kit.ParseURL(s.expr(m))
 			nfs.Open(m, u.Path, func(r io.Reader, p string) {
-				f := s.parse(m, p, r, func(f *Frame) { kit.For(u.Query(), func(k string, v []string) { f.value[k] = v[0] }) }).popf(m)
-				s.Position = f.Position
+				s.parse(m, p, r)
 				s.skip = len(s.rest)
 			})
 		}},
 		INFO: {Name: "info", Hand: func(m *ice.Message, arg ...string) {
+			m.EchoLine("").EchoLine("stack: %s", arg[0])
 			_parse_stack(m).stack(func(f *Frame, i int) bool {
 				m.EchoLine("frame: %s %v:%v:%v", f.key, f.name, f.line, f.skip)
 				kit.For(f.value, func(k string, v Any) { m.EchoLine("  %s: %#v", k, v) })
 				return false
 			})
+			m.EchoLine("stmt: %s", arg[0])
+			for key, cmd := range m.Target().Commands {
+				if strings.HasPrefix(key, "_") || strings.HasPrefix(key, "/") {
+					continue
+				}
+				m.EchoLine("  %s: %#v", key, cmd.Name)
+			}
 		}},
 		PWD: {Name: "pwd", Hand: func(m *ice.Message, arg ...string) {
 			s := _parse_stack(m)

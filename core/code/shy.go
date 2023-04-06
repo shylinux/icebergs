@@ -21,7 +21,13 @@ func init() {
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
 				// ctx.ProcessCommand(m, web.WIKI_WORD, kit.Simple(path.Join(arg[2], arg[1])))
 				// ctx.ProcessCommand(m, yac.STACK, kit.Simple(arg[1]))
-				ctx.ProcessCommand(m, kit.TrimExt(arg[1], SHY), kit.Simple())
+				// if ls := kit.Split(arg[1], ice.PS); ls[0] == nfs.SCRIPT {
+				// 	m.Search(ls[1], func(key string, cmd *ice.Command) { yac.StackHandler(m) })
+				// 	ctx.ProcessCommand(m, ls[1], kit.Simple())
+				// } else {
+				// 	ctx.ProcessCommand(m, kit.TrimExt(arg[1], SHY), kit.Simple())
+				// }
+				ctx.ProcessCommand(m, yac.STACK, kit.Simple(arg[1]))
 			}},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
 				ctx.ProcessCommand(m, yac.STACK, kit.Simple(arg[1]))

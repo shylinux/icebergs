@@ -302,6 +302,8 @@ func (m *Message) Search(key string, cb Any) *Message {
 	if key == "" {
 		return m
 	}
+	_target, _key, _cmd := m.target, m._key, m._cmd
+	defer func() { m.target, m._key, m._cmd = _target, _key, _cmd }()
 	p := m.target.root
 	if key = strings.TrimPrefix(key, "ice."); key == PT {
 		p, key = m.target, ""
@@ -336,6 +338,7 @@ func (m *Message) Search(key string, cb Any) *Message {
 	switch cb := cb.(type) {
 	case func(key string, cmd *Command):
 		if cmd, ok := p.Commands[key]; ok {
+			m.target, m._key, m._cmd = p, key, cmd
 			cb(key, cmd)
 		}
 	case func(p *Context, s *Context, key string, cmd *Command):
@@ -391,5 +394,5 @@ func (m *Message) Actions(key string) *Action {
 	return m._cmd.Actions[key]
 }
 func (m *Message) Commands(key string) *Command {
-	return m.Target().Commands[key]
+	return m.Target().Commands[kit.Select(m._key, key)]
 }

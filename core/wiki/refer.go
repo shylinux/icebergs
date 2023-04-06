@@ -28,6 +28,10 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		REFER: {Name: "refer text", Help: "参考", Actions: WordAction(
 			`<ul {{.OptionTemplate}}>{{range $index, $value := .Optionv "list"}}<li>{{index $value 0}}: <a href="{{index $value 1}}" data-name="{{index $value 0}}" target="_blank">{{index $value 2}}</a></li>{{end}}</ul>`,
-		), Hand: func(m *ice.Message, arg ...string) { _refer_show(m, arg[0], arg[1:]...) }},
+		), Hand: func(m *ice.Message, arg ...string) {
+			if len(arg) > 1 {
+				_refer_show(m, arg[0], arg[1:]...)
+			}
+		}},
 	})
 }

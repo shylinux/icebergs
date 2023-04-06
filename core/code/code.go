@@ -16,6 +16,9 @@ func init() {
 		VIMER, INNER, XTERM, PPROF, BENCH,
 		C, SH, SHY, PY, GO, JS, CSS, HTML,
 	)
+	ice.Info.Stack[CODE] = func(m *ice.Message, key string, arg ...ice.Any) ice.Any {
+		return nil
+	}
 }
 
 func Prefix(arg ...string) string { return web.Prefix(CODE, kit.Keys(arg)) }

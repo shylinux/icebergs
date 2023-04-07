@@ -201,12 +201,15 @@ func Relative(m *ice.Message, p string) string {
 	return p
 }
 func SplitPath(m *ice.Message, p string) []string {
+	line := kit.Select("1", strings.Split(p, ice.DF), 1)
+	p = strings.TrimPrefix(p, kit.Path("")+ice.PS)
+	p = strings.Split(p, ice.DF)[0]
 	if ls := kit.Split(kit.Select(ice.SRC_MAIN_GO, p), ice.PS); len(ls) == 1 {
-		return []string{PWD, ls[0]}
+		return []string{PWD, ls[0], line}
 	} else if ls[0] == ice.USR {
-		return []string{strings.Join(ls[:2], ice.PS) + ice.PS, strings.Join(ls[2:], ice.PS)}
+		return []string{strings.Join(ls[:2], ice.PS) + ice.PS, strings.Join(ls[2:], ice.PS), line}
 	} else {
-		return []string{strings.Join(ls[:1], ice.PS) + ice.PS, strings.Join(ls[1:], ice.PS)}
+		return []string{strings.Join(ls[:1], ice.PS) + ice.PS, strings.Join(ls[1:], ice.PS), line}
 	}
 }
 func Dir(m *ice.Message, field string) *ice.Message {

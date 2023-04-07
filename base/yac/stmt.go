@@ -21,6 +21,7 @@ const (
 	DEFAULT  = "default"
 	FUNC     = "func"
 	INIT     = "init"
+	MAIN     = "main"
 	CALL     = "call"
 	DEFER    = "defer"
 	RETURN   = "return"
@@ -48,26 +49,23 @@ func init() {
 			} else {
 				f.status, f.defers = STATUS_DISABLE, append(f.defers, func() { f.status = STATUS_NORMAL })
 			}
-			s.reads(m, func(k string) bool {
-				if k == IF {
-					res := s.expr(m)
-					kit.If(s.token() == SPLIT, func() { res = s.expr(m) })
-					kit.If(res == ice.FALSE, func() { f.status = STATUS_DISABLE })
-				}
-				return true
-			})
+			if s.next(m) == IF {
+				res := s.expr(m)
+				kit.If(s.token() == SPLIT, func() { res = s.expr(m) })
+				kit.If(res == ice.FALSE, func() { f.status = STATUS_DISABLE })
+			}
 		}},
 		FOR: {Name: "for a = 1; a < 10; a++ {", Hand: func(m *ice.Message, arg ...string) {
 			s, f := _parse_frame(m)
 			if strings.Contains(s.list[s.line], RANGE) {
 				pos, key, list := s.Position, []string{}, []Any{}
 				kit.If(s.last != nil && s.last.line == s.line, func() { list, _ = s.last.value["_range"].([]Any) })
-				for { // for k, v := range value {
+				for {
 					if k := s.cals0(m, FIELD, DEFS, ASSIGN); k == RANGE {
 						if obj, ok := s.cals(m).(Operater); ok {
-							if _list, ok := obj.Operate(RANGE, list).([]Any); ok {
-								kit.For(key, func(i int, k string) { f.value[k] = _list[i] })
-								f.value["_range"] = _list
+							if list, ok := obj.Operate(RANGE, list).([]Any); ok {
+								kit.For(key, func(i int, k string) { f.value[k] = list[i] })
+								f.value["_range"] = list
 								break
 							}
 						}
@@ -102,8 +100,7 @@ func init() {
 			s.Position, f.defers = list[len(list)-1], append(f.defers, func() {
 				if s.runable() {
 					kit.If(len(list) > 3, func() { s.expr(m, list[2]) })
-					s.Position = list[0]
-					s.Position.skip--
+					s.pos(m, list[0], -1)
 				}
 			})
 		}},
@@ -148,9 +145,12 @@ func init() {
 			f.status = STATUS_NORMAL
 			v := s.cals(m)
 			f.status = STATUS_DISABLE
+			if f.value["_case"] == "done" {
+				return
+			}
 			if res, ok := v.(Operater); ok {
 				if res, ok := res.Operate("==", Trans(s.value(m, "_switch"))).(Boolean); ok && res.value {
-					f.status, f.value["_case"] = 0, "done"
+					f.status, f.value["_case"] = STATUS_NORMAL, "done"
 				}
 			}
 		}},
@@ -164,53 +164,32 @@ func init() {
 		}},
 		FUNC: {Name: "func show(a, b) (c, d)", Hand: func(m *ice.Message, arg ...string) {
 			s := _parse_stack(m)
-			list, key, kind := [][]Field{[]Field{}}, "", ""
-			push := func() {
-				kit.If(key, func() { list[len(list)-1], key, kind = append(list[len(list)-1], Field{name: key, kind: kind}), "", "" })
+			field, list := Field{}, []Field{}
+			if s.next(m) == OPEN {
+				for s.next(m) != CLOSE {
+					kit.If(field.name == "", func() { field.name = s.token() }, func() { field.types = s.token() })
+				}
+				s.next(m)
+				list = append(list, field)
 			}
-			s.reads(m, func(k string) bool {
-				switch k {
-				case OPEN:
-					defer kit.If(key != "" || len(list) > 1, func() { list = append(list, []Field{}) })
-				case FIELD, CLOSE:
-				case BEGIN:
-					return true
-				default:
-					kit.If(key, func() { kind = k }, func() { key = k })
-					return false
+			name := s.token()
+			list = append(list, Field{name: name})
+			s.rest[s.skip] = FUNC
+			v := s.funcs(m, name)
+			if v.obj = list; field.types != nil {
+				if t, ok := s.value(m, kit.Format(field.types)).(Struct); ok {
+					m.Debug("value %s set %s.%s %s", Format(s), field.types, name, Format(v))
+					t.index[name] = v
 				}
-				push()
-				return false
-			})
-			m.Debug("what %#v", list)
-			kit.If(len(list) < 2, func() { list = append(list, []Field{}) })
-			kit.If(len(list) < 3, func() { list = append(list, []Field{}) })
-			name, fun := list[0][len(list[0])-1].name, Function{obj: list[0], arg: list[1], res: list[2], Position: s.Position}
-			if len(list[0]) > 1 {
-				if st, ok := list[0][0].kind.(Struct); ok {
-					st.method = append(st.method, fun)
-					st.index[name] = fun
-				}
-				if st, ok := list[0][0].kind.(string); ok {
-					if st, ok := s.value(m, st).(Struct); ok {
-						st.method = append(st.method, fun)
-						st.index[name] = fun
-					}
-				}
-
-			} else {
-				kit.If(name != INIT, func() { s.value(m, name, fun) })
-			}
-			if f := s.pushf(m, ""); name == INIT {
-				f.key = CALL
-			} else {
-				f.status = STATUS_DISABLE
+			} else if name != INIT {
+				s.value(m, name, v)
 			}
 		}},
 		DEFER: {Name: "defer func() {} ()", Hand: func(m *ice.Message, arg ...string) {
 			s := _parse_stack(m)
-			k := s.next(m)
-			kit.If(k == FUNC, func() { k = s.funcs(m) })
+			obj, k := Any(nil), ""
+			obj, k = s, s.next(m)
+			kit.If(k == FUNC, func() { obj, k = s.funcs(m, ""), "" })
 			s.skip++
 			args := _parse_res(m, s.cals(m))
 			if !s.runable() {
@@ -218,7 +197,7 @@ func init() {
 			}
 			s.stack(func(f *Frame, i int) bool {
 				if f.key == CALL {
-					f.defers = append(f.defers, func() { s.calls(m, s, k, nil, args...) })
+					f.defers = append(f.defers, func() { s.calls(m, obj, k, nil, args...) })
 					return true
 				}
 				return false
@@ -258,16 +237,44 @@ func init() {
 			m.EchoLine("").EchoLine("stack: %s", arg[0])
 			_parse_stack(m).stack(func(f *Frame, i int) bool {
 				m.EchoLine("frame: %s %v:%v:%v", f.key, f.name, f.line, f.skip)
-				kit.For(f.value, func(k string, v Any) { m.EchoLine("  %s: %#v", k, v) })
+				show := func(p string) string {
+					ls := nfs.SplitPath(m, p)
+					return ice.Render(m, ice.RENDER_ANCHOR, p, m.MergePodCmd("", "web.code.vimer", nfs.PATH, ls[0], nfs.FILE, ls[1], nfs.LINE, ls[2]))
+				}
+				kit.For(f.value, func(k string, v Any) {
+					switch v := v.(type) {
+					case func(*ice.Message, string, ...Any) Any:
+						m.EchoLine("  %s: %v", k, show(kit.FileLine(v, 100)))
+					case Message:
+						m.EchoLine("  %s: %v", k, show(kit.FileLine(v.Call, 100)))
+					case Function:
+						m.EchoLine("  %s: %v", k, show(v.Position.name+":"+kit.Format(v.Position.line+1)))
+					case Struct:
+						m.EchoLine("  %s: struct", k)
+						kit.For(v.index, func(k string, v Any) {
+							switch v := v.(type) {
+							case Function:
+								m.EchoLine("  	%s: %v", k, show(v.Position.name+":"+kit.Format(v.Position.line+1)))
+							case Field:
+								m.EchoLine("  	%s: %v", k, v.Format())
+							}
+						})
+					case string:
+						m.EchoLine("  %s: %v", k, v)
+					default:
+						m.EchoLine("  %s: %v", k, Format(v))
+					}
+				})
 				return false
 			})
 			m.EchoLine("stmt: %s", arg[0])
-			for key, cmd := range m.Target().Commands {
-				if strings.HasPrefix(key, "_") || strings.HasPrefix(key, "/") {
-					continue
+			kit.For(kit.SortedKey(m.Target().Commands), func(key string) {
+				if strings.HasPrefix(key, "_") || strings.HasPrefix(key, ice.PS) {
+					return
 				}
+				cmd := m.Target().Commands[key]
 				m.EchoLine("  %s: %#v", key, cmd.Name)
-			}
+			})
 		}},
 		PWD: {Name: "pwd", Hand: func(m *ice.Message, arg ...string) {
 			s := _parse_stack(m)

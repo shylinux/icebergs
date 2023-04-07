@@ -179,6 +179,16 @@ func (m *Message) PushDownload(key string, arg ...string) *Message {
 	return m
 }
 
+func (m *Message) EchoFields(cmd string) *Message {
+	return m.Echo(`<fieldset class="story" data-index="%s">
+<legend></legend>
+<form class="option"></form>
+<div class="action"></div>
+<div class="output"></div>
+<div class="status"></div>
+</fieldset>
+`, cmd)
+}
 func (m *Message) EchoButton(arg ...Any) *Message    { return m.Echo(Render(m, RENDER_BUTTON, arg...)) }
 func (m *Message) EchoAnchor(arg ...string) *Message { return m.Echo(Render(m, RENDER_ANCHOR, arg)) }
 func (m *Message) EchoQRCode(src string) *Message    { return m.Echo(Render(m, RENDER_QRCODE, src)) }

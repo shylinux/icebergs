@@ -8,11 +8,15 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
 
+type Value struct {
+	list []Any
+}
 type Function struct {
 	obj []Field
 	arg []Field
@@ -20,16 +24,19 @@ type Function struct {
 	Position
 	object Object
 }
+
 type Frame struct {
 	key    string
+	name   string
 	value  ice.Map
 	defers []func()
 	status int
 	Position
 }
 type Stack struct {
-	last  *Frame
-	frame []*Frame
+	last    *Frame
+	frame   []*Frame
+	comment []string
 	Position
 }
 type Position struct {
@@ -45,11 +52,11 @@ type Buffer struct {
 }
 
 func (s *Stack) peekf() *Frame { return s.frame[len(s.frame)-1] }
-func (s *Stack) pushf(m *ice.Message, key string) *Frame {
-	f := &Frame{key: kit.Select(m.CommandKey(), key), value: kit.Dict(), Position: s.Position}
+func (s *Stack) pushf(m *ice.Message, arg ...string) *Frame {
+	f := &Frame{key: kit.Select(m.CommandKey(), arg, 0), name: kit.Select("", arg, 1), value: kit.Dict(), Position: s.Position}
 	kit.If(len(s.frame) > 0, func() { f.status = s.peekf().status })
-	m.Debug("stack %d push %s %s", len(s.frame), f.key, s.show())
 	s.frame = append(s.frame, f)
+	m.Debug("stack %s push %s", Format(s), kit.Select(s.show(), arg, 2))
 	return f
 }
 func (s *Stack) popf(m *ice.Message) *Frame {
@@ -57,7 +64,7 @@ func (s *Stack) popf(m *ice.Message) *Frame {
 	for i := len(f.defers) - 1; i >= 0; i-- {
 		f.defers[i]()
 	}
-	m.Debug("stack %d pop %s %s", len(s.frame)-1, f.key, s.show())
+	m.Debug("stack %s pop %s", Format(s), s.show())
 	kit.If(len(s.frame) > 0, func() { s.frame = s.frame[:len(s.frame)-1] })
 	s.last = f
 	return f
@@ -70,25 +77,28 @@ func (s *Stack) stack(cb func(*Frame, int) bool) {
 	}
 }
 func (s *Stack) value(m *ice.Message, key string, arg ...Any) Any {
+	keys := strings.Split(key, ice.PT)
 	f, n := s.peekf(), len(s.frame)-1
 	if len(arg) < 2 || arg[1] != DEFINE {
 		s.stack(func(_f *Frame, i int) bool {
-			if _f.value[key] != nil {
+			if _f.value[key] != nil || _f.value[keys[0]] != nil {
 				f, n = _f, i
 				return true
 			}
 			return false
 		})
 	}
-	keys := strings.Split(key, ice.PT)
-	kit.If(strings.Contains(key, ice.PS), func() { keys = []string{key} })
 	kit.If(len(arg) > 0, func() {
+		if f.value[key] != nil {
+			f.value[key] = arg[0]
+			return
+		}
 		var v Any = Dict{f.value}
 		for i := 0; i < len(keys); i++ {
 			switch k := keys[i]; _v := v.(type) {
 			case Operater:
 				if i == len(keys)-1 {
-					m.Debug("value %d:%s set %v %#v", n, f.key, key, arg[0])
+					m.Debug("value %d:%s set %s %s", n, f.key, key, Format(arg[0]))
 					_v.Operate(k, arg[0])
 				} else {
 					if v = _v.Operate(SUBS, k); v == nil {
@@ -104,53 +114,30 @@ func (s *Stack) value(m *ice.Message, key string, arg ...Any) Any {
 			}
 		}
 	})
-	v, ok := f.value[key]
-	if ok {
+	if v, ok := f.value[key]; ok {
 		return v
-	} else {
-		if s.stack(func(_f *Frame, i int) bool {
-			v, ok = _f.value[key]
-			return ok
-		}); ok {
-			return v
-		}
 	}
-	v = s
+	var v Any = Dict{f.value}
 	kit.For(keys, func(k string) {
-		m.Debug("what %#v %v", v, k)
 		switch _v := v.(type) {
 		case Operater:
 			v = _v.Operate(SUBS, k)
-		case *Stack:
-			v = nil
-			_v.stack(func(_f *Frame, i int) bool {
-				v, ok = _f.value[k]
-				return ok
-			})
 		default:
 			v = nil
 		}
 	})
 	if v != nil {
 		return v
+	} else if v = _parse_const(m, key); v != "" {
+		return v
 	}
-	return _parse_const(m, key)
+	return nil
 }
 func (s *Stack) runable() bool { return s.peekf().status > STATUS_DISABLE }
 func (s *Stack) token() string { return kit.Select("", s.rest, s.skip) }
-func (s *Stack) show() string {
-	if s.Buffer == nil {
-		return ""
-	} else if s.skip == -1 {
-		return kit.Format("%s:%d", s.name, s.line+1)
-	} else {
-		return kit.Format("%s:%d:%d", s.name, s.line+1, s.skip)
-	}
-}
+func (s *Stack) show() string  { return Format(s.Position) }
 func (s *Stack) read(m *ice.Message) (text string, ok bool) {
-	isvoid := func(text string) bool {
-		return strings.TrimSpace(text) == "" || strings.HasPrefix(strings.TrimSpace(text), "#")
-	}
+	isvoid := func(text string) bool { return strings.TrimSpace(text) == "" }
 	for s.line++; s.line < len(s.list); s.line++ {
 		if isvoid(s.list[s.line]) {
 			continue
@@ -169,9 +156,10 @@ func (s *Stack) read(m *ice.Message) (text string, ok bool) {
 }
 func (s *Stack) reads(m *ice.Message, cb func(k string) bool) {
 	block, last := []string{}, 0
+	comment := false
 	for {
 		if s.skip++; s.skip < len(s.rest) {
-			if k := s.rest[s.skip]; k == "`" {
+			if k, v := s.rest[s.skip], kit.Select("", s.rest, s.skip+1); k == "`" {
 				if len(block) > 0 {
 					kit.If(s.line != last, func() { block, last = append(block, ice.NL), s.line })
 					block = append(block, k)
@@ -180,18 +168,27 @@ func (s *Stack) reads(m *ice.Message, cb func(k string) bool) {
 				} else {
 					block = append(block, k)
 				}
-				continue
 			} else if len(block) > 0 {
 				kit.If(s.line != last, func() { block, last = append(block, ice.NL), s.line })
 				block = append(block, k)
-				continue
-			}
-			if s.rest[s.skip] == ice.PS && kit.Select("", s.rest, s.skip+1) == ice.PS {
+			} else if k == "*" && v == ice.PS {
+				comment = false
+				s.skip++
+			} else if comment {
+
+			} else if k == ice.PS && v == "*" {
+				comment = true
+				s.skip++
+			} else if k == ice.PS && v == ice.PS {
+				s.comment = append(s.comment, s.list[s.line])
 				s.skip = len(s.rest)
-				continue
-			}
-			if cb(s.rest[s.skip]) {
+			} else if s.skip == 0 && strings.HasPrefix(k, "#") {
+				s.comment = append(s.comment, s.list[s.line])
+				s.skip = len(s.rest)
+			} else if cb(s.rest[s.skip]) {
 				break
+			} else {
+				s.comment = s.comment[:0]
 			}
 		} else if text, ok := s.read(m); ok {
 			s.rest, s.skip = kit.Split(text, SPACE, BLOCK, QUOTE, TRANS, ice.TRUE), -1
@@ -235,9 +232,9 @@ func (s *Stack) run(m *ice.Message) {
 			m.Cmdy(k, kit.Slice(s.rest, s.skip+1))
 		} else {
 			if s.skip--; s.skip == -1 {
-				m.Cmd(EXPR, s.rest, ice.SP, s.show())
+				m.Cmd(EXPR, s.rest)
 			} else {
-				m.Cmd(EXPR, kit.Slice(s.rest, s.skip), ice.SP, s.show())
+				m.Cmd(EXPR, kit.Slice(s.rest, s.skip))
 			}
 		}
 		return false
@@ -259,7 +256,6 @@ func (s *Stack) cals0(m *ice.Message, arg ...string) string {
 func (s *Stack) types(m *ice.Message) Any {
 	for ; s.skip < len(s.rest); s.skip++ {
 		switch s.token() {
-		case "*":
 		case MAP:
 			s.skip += 2
 			key := s.types(m)
@@ -276,8 +272,10 @@ func (s *Stack) types(m *ice.Message) Any {
 				}
 				types := s.types(m)
 				kit.For(key, func(key string) {
-					field := Field{key, types}
-					t.field = append(t.field, field)
+					field := Field{types, map[string]string{}, key}
+					if strings.HasSuffix(s.list[s.line], "`") {
+						kit.For(kit.Split(kit.Select("", kit.Split(s.list[s.line]), -1), ": "), func(k, v string) { field.tags[k] = v })
+					}
 					t.index[key] = field
 				})
 				key, s.skip = key[:0], len(s.rest)
@@ -287,90 +285,70 @@ func (s *Stack) types(m *ice.Message) Any {
 			t := Interface{index: map[string]Function{}}
 			for s.next(m); s.next(m) != END; {
 				name := s.token()
-				field, list := Field{}, [][]Field{}
-				for s.skip++; s.skip < len(s.rest); s.skip++ {
-					switch s.token() {
-					case OPEN:
-						list = append(list, []Field{})
-					case "*":
-					case FIELD, CLOSE:
-						list[len(list)-1] = append(list[len(list)-1], field)
-						field = Field{}
-					default:
-						switch t := s.types(m).(type) {
-						case string:
-							kit.If(field.name == "", func() { field.name = t }, func() { field.kind = t })
-						default:
-							field.kind = s.types(m)
-						}
-					}
-				}
-				kit.If(len(list) == 1, func() { list = append(list, []Field{}) })
-				t.index[name] = Function{arg: list[0], res: list[1]}
-				s.skip = len(s.rest)
+				s.rest[s.skip] = FUNC
+				t.index[name] = s.types(m).(Function)
 			}
 			return t
 		case FUNC:
 			field, list := Field{}, [][]Field{}
-			for s.skip++; s.skip < len(s.rest); s.skip++ {
+			for s.skip++; s.skip < len(s.rest) && s.token() != BEGIN; s.skip++ {
 				switch s.token() {
 				case OPEN:
 					list = append(list, []Field{})
-				case "*":
 				case FIELD, CLOSE:
 					list[len(list)-1] = append(list[len(list)-1], field)
 					field = Field{}
+				case "*":
 				default:
 					switch t := s.types(m).(type) {
 					case string:
-						kit.If(field.name == "", func() { field.name = t }, func() { field.kind = t })
+						kit.If(field.name == "", func() { field.name = t }, func() { field.types = t })
 					default:
-						field.kind = s.types(m)
+						field.types = s.types(m)
 					}
 				}
 			}
 			kit.If(len(list) == 1, func() { list = append(list, []Field{}) })
 			return Function{arg: list[0], res: list[1]}
+		case "*":
 		default:
-			// if t := s.value(m, s.token()); t != nil && t != "" {
-			// 	return t
-			// }
 			return s.token()
 		}
 	}
-	return ""
+	return nil
 }
-func (s *Stack) funcs(m *ice.Message) string {
-	name := s.show()
-	s.rest[s.skip], s.skip = name, s.skip-1
-	m.Cmd(FUNC, name)
-	f := s.peekf()
-	status := f.status
-	defer func() { f.status = status }()
-	f.status = STATUS_DISABLE
-	s.run(m)
-	return name
-}
-func (s *Stack) calls(m *ice.Message, obj Any, key Any, cb func(*Frame, Function), arg ...Any) Any {
-	m.Debug("stack %d call %T %s %#v", len(s.frame)-1, obj, key, arg)
-	if _k, ok := key.(string); ok && _k != "" {
-		kit.For(kit.Split(_k, ice.PT), func(k string) {
-			switch v := obj.(type) {
-			case Operater:
-				obj = v.Operate(SUBS, k)
-			case *Stack:
-				if _v := v.value(m, _k); _v != nil && _v != "" {
-					obj, key = _v, ""
-				} else {
-					obj, key = v.value(m, k), strings.TrimPrefix(_k, k+ice.PT)
-				}
-			}
-		})
+func (s *Stack) funcs(m *ice.Message, name string) Function {
+	v := s.types(m).(Function)
+	if f := s.pushf(m, FUNC, name); name == INIT {
+		f.key = CALL
+	} else {
+		f.status = STATUS_DISABLE
 	}
+	v.Position = s.Position
+	s.run(m)
+	return v
+}
+func (s *Stack) calls(m *ice.Message, obj Any, key string, cb func(*Frame, Function), arg ...Any) Any {
+	m.Debug("calls %s %T %s(%s)", Format(s), obj, key, Format(arg...))
+	switch v := obj.(type) {
+	case *Stack:
+		if _v := v.value(m, key); _v != nil {
+			obj, key = _v, ""
+		}
+	}
+	kit.For(kit.Split(key, ice.PT), func(k string) {
+		switch v := obj.(type) {
+		case Operater:
+			obj, key = v.Operate(SUBS, k), strings.TrimPrefix(strings.TrimPrefix(key, k), ice.PT)
+		case *Stack:
+			obj, key = v.value(m, k), strings.TrimPrefix(strings.TrimPrefix(key, k), ice.PT)
+		}
+	})
 	switch obj := obj.(type) {
 	case Function:
-		m.Debug("stack %d call %T %s %#v", len(s.frame)-1, obj, kit.Select("", obj.obj, -1), arg)
-		f := s.pushf(m, CALL)
+		name := kit.Format("%s%s", kit.Select("", kit.Format("%s.", obj.obj[0].types), len(obj.obj) > 1), obj.obj[len(obj.obj)-1].name)
+		m.Debug("calls %s %s(%s) %s", Format(s), name, Format(arg...), Format(obj.Position))
+		f := s.pushf(m, CALL, name, Format(obj.Position))
 		for _, field := range obj.res {
 			f.value[field.name] = nil
 		}
@@ -397,15 +375,15 @@ func (s *Stack) calls(m *ice.Message, obj Any, key Any, cb func(*Frame, Function
 			s.Position = pos
 		})
 		kit.If(cb != nil, func() { cb(f, obj) })
-		s.run(m.Options(ice.YAC_STACK, s))
+		s.run(m)
 		return value
 	case Caller:
-		m.Debug("stack %d call %T %s %#v", len(s.frame)-1, obj, key, arg)
 		kit.For(arg, func(i int, v Any) { arg[i] = Trans(arg[i]) })
+		m.Debug("calls %s %s.%s(%s)", Format(s), Format(obj), key, Format(arg...))
 		return wrap(obj.Call(kit.Format(key), arg...))
 	case func(*ice.Message, string, ...Any) Any:
-		m.Debug("stack %d call %s %s %#v", len(s.frame)-1, kit.FileLine(obj, 3), key, arg)
 		kit.For(arg, func(i int, v Any) { arg[i] = Trans(arg[i]) })
+		m.Debug("calls %s %s %s %s", Format(s), Format(obj), key, Format(arg...))
 		return wrap(obj(m, kit.Format(key), arg...))
 	case func():
 		obj()
@@ -414,18 +392,13 @@ func (s *Stack) calls(m *ice.Message, obj Any, key Any, cb func(*Frame, Function
 		if key == "" {
 			return nil
 		}
-		m.Debug("stack %d call %T %s %#v", len(s.frame)-1, obj, key, arg)
 		args := kit.List(key)
 		kit.For(arg, func(i int, v Any) { args = append(args, Trans(v)) })
+		m.Debug("calls %s %s", Format(s), Format(args...))
 		return Message{m.Cmd(args...)}
 	}
 }
-func (s *Stack) Handler(obj Any) ice.Handler {
-	return func(m *ice.Message, arg ...string) {
-		m.Copy(s.Action(m.Spawn(Index).Spawn(m.Target()), obj, nil, arg...))
-	}
-}
-func (s *Stack) Action(m *ice.Message, obj Any, key Any, arg ...string) *ice.Message {
+func (s *Stack) Action(m *ice.Message, obj Any, key string, arg ...string) *ice.Message {
 	s.calls(m, obj, key, func(f *Frame, v Function) {
 		i := 0
 		for _, field := range v.arg {
@@ -443,18 +416,23 @@ func (s *Stack) Action(m *ice.Message, obj Any, key Any, arg ...string) *ice.Mes
 	})
 	return m
 }
+func (s *Stack) Handler(obj Any) ice.Handler {
+	return func(m *ice.Message, arg ...string) {
+		m.Copy(s.Action(m.Options(ice.YAC_STACK, s).Spawn(Index).Spawn(m.Target()), obj, "", arg...))
+	}
+}
 func (s *Stack) parse(m *ice.Message, name string, r io.Reader) *Stack {
 	pos := s.Position
 	defer func() { s.Position = pos }()
 	s.Position = Position{Buffer: &Buffer{name: name, input: bufio.NewScanner(r)}}
 	s.peekf().Position = s.Position
-	m.Debug("stack %d parse %s", len(s.frame)-1, s.show())
+	m.Debug("stack %s parse %s", Format(s), s.show())
 	s.run(m)
 	return s
 }
-func NewStack(m *ice.Message, cb func(*Frame)) *Stack {
+func NewStack(m *ice.Message, cb func(*Frame), arg ...string) *Stack {
 	s := &Stack{}
-	s.pushf(m.Options(ice.YAC_STACK, s), STACK)
+	s.pushf(m.Options(ice.YAC_STACK, s), kit.Simple(STACK, arg)...)
 	s.load(m, cb)
 	return s
 }
@@ -490,17 +468,17 @@ const STACK = "stack"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		STACK: {Name: "stack path auto parse", Actions: ice.Actions{
+		STACK: {Name: "stack path auto parse", Actions: ice.MergeActions(ice.Actions{
 			"start": {Hand: func(m *ice.Message, arg ...string) {}},
-			ice.CMD: {Hand: func(m *ice.Message, arg ...string) {}},
-			ice.RUN: {Hand: func(m *ice.Message, arg ...string) {}},
-		}, Hand: func(m *ice.Message, arg ...string) {
+		}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 || strings.HasSuffix(arg[0], ice.PS) {
 				m.Options(nfs.DIR_ROOT, nfs.SRC).Cmdy(nfs.CAT, arg)
 				return
 			}
 			nfs.Open(m, path.Join(nfs.SRC, strings.TrimPrefix(path.Join(arg...), nfs.SRC)), func(r io.Reader, p string) {
-				if NewStack(m, nil).parse(m, p, r); m.Option(ice.DEBUG) == ice.TRUE {
+				s := NewStack(m, nil, "", p).parse(m, p, r)
+				if m.StatusTime(mdb.LINK, s.value(m, "_link")); m.Option(ice.DEBUG) == ice.TRUE {
+					m.Option("__index", kit.Format(s.value(m, "_index")))
 					m.Cmdy(INFO, arg)
 				}
 			})
@@ -549,11 +527,10 @@ func StackHandler(m *ice.Message, arg ...string) {
 				kit.If(!kit.IsIn(field.name, "m", "msg", ice.ARG), func() { list = append(list, kit.Dict(mdb.NAME, field.name, mdb.TYPE, mdb.TEXT, mdb.VALUE, "")) })
 			}
 			kit.If(k == mdb.LIST, func() { list = append(list, kit.Dict(mdb.NAME, mdb.LIST, mdb.TYPE, "button", mdb.ACTION, ice.AUTO)) })
-			h := func(m *ice.Message, arg ...string) { m.Copy(s.Action(m.Spawn(Index).Spawn(m.Target()), s, k, arg...)) }
 			if k == mdb.LIST {
-				cmd.Hand, cmd.List = h, list
+				cmd.Hand, cmd.List = s.Handler(v), list
 			} else {
-				cmd.Actions[k], cmd.Meta[k] = &ice.Action{Hand: h}, list
+				cmd.Actions[k], cmd.Meta[k] = &ice.Action{Hand: s.Handler(v)}, list
 			}
 		}
 	})

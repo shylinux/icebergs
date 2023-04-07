@@ -30,7 +30,11 @@ func init() {
 				ctx.ProcessCommand(m, yac.STACK, kit.Simple(arg[1]))
 			}},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
-				ctx.ProcessCommand(m, yac.STACK, kit.Simple(arg[1]))
+				if msg := m.Cmd(yac.STACK, arg[1]); msg.Option("__index") != "" {
+					ctx.ProcessCommand(m, msg.Option("__index"), kit.Simple())
+				} else {
+					ctx.ProcessCommand(m, yac.STACK, kit.Simple(arg[1]))
+				}
 			}},
 			TEMPLATE: {Hand: func(m *ice.Message, arg ...string) {
 				m.Echo(nfs.Template(m, "demo.shy"), path.Base(path.Dir(path.Join(arg[2], arg[1]))))

@@ -26,16 +26,15 @@ const (
 	END    = "}"
 )
 
-var keyword = regexp.MustCompile(`[_a-zA-Z][_a-zA-Z0-9\.]*`)
-
 var level = map[string]int{
 	"//": 200, "/*": 200, "*/": 200,
-	"&": 100, // "*": 100, "!": 100,
+	"!": 100, "&": 100, // "*": 100,
 	"[": 100, "]": 100, "++": 100, "--": 100,
 	"*": 40, "/": 40, "+": 30, "-": 30,
 	"<": 20, ">": 20, ">=": 20, "<=": 20, "!=": 20, "==": 20, "&&": 10, "||": 10,
 	DEFS: 2, DEFINE: 2, ASSIGN: 2, FIELD: 2, OPEN: 1, CLOSE: 1,
 }
+var keyword = regexp.MustCompile(`^[_a-zA-Z.][_a-zA-Z0-9.]*$`)
 
 type Expr struct {
 	list ice.List
@@ -90,6 +89,15 @@ func (s *Expr) setv(m *ice.Message, p int, op string, v Any) Any {
 		return s.value(m, k, v, op)
 	}
 }
+func (s *Expr) isop(k Any) bool {
+	switch k := k.(type) {
+	case int:
+		return level[s.gets(k)] > 0
+	case string:
+		return level[k] > 0
+	}
+	return false
+}
 func (s *Expr) opv(m *ice.Message, p int, op string, v Any) Any {
 	if !s.runable() {
 		return s.getv(m, p)
@@ -103,7 +111,7 @@ func (s *Expr) ops(m *ice.Message) {
 	if !s.runable() || s.getl(-2) < 10 {
 		return
 	}
-	s.pops(3, s.opv(m, -3, s.gets(-2), s.getv(m, -1)))
+	s.pops(3, s.opv(m, -3, s.gets(-2), s.get(-1)))
 }
 func (s *Expr) end(m *ice.Message) Any {
 	if !s.runable() || len(s.list) == 0 {
@@ -122,14 +130,14 @@ func (s *Expr) end(m *ice.Message) Any {
 				}
 				s.list = append(s.list[:0], Value{list})
 			default:
-				s.list = append(s.list[:0], s.setv(m, -3, s.gets(-2), s.getv(m, -1)))
+				s.list = append(s.list[:0], s.setv(m, -3, s.gets(-2), s.get(-1)))
 			}
 		case FIELD:
 			list := kit.List()
 			for i := len(s.list) - 2; i > 0; i -= 2 {
 				if s.gets(i) == DEFINE || s.gets(i) == ASSIGN {
 					for j := 0; j < i; j += 2 {
-						list = append(list, s.setv(m, j, s.gets(i), s.getv(m, j+i+1)))
+						list = append(list, s.setv(m, j, s.gets(i), s.get(j+i+1)))
 					}
 					s.list = append(s.list[:0], Value{list})
 					break
@@ -145,49 +153,41 @@ func (s *Expr) end(m *ice.Message) Any {
 	}
 	return s.getv(m, 0)
 }
-func (s *Expr) isop(k Any) bool {
-	switch k := k.(type) {
-	case int:
-		return level[s.gets(k)] > 0
-	case string:
-		return level[k] > 0
-	}
-	return false
-}
-
 func (s *Expr) sub(m *ice.Message) *Expr {
 	sub := NewExpr(s.Stack)
 	sub.n = s.n + 1
 	return sub
 }
-func (s *Expr) ktv(m *ice.Message, ismap bool, t Any, p string) map[string]Any {
+func (s *Expr) ktv(m *ice.Message, t Any, p string) map[string]Any {
+	var kt, vt Any
+	switch t := t.(type) {
+	case Map:
+		kt, vt = s.types(m, t.key, p), s.types(m, t.value, p)
+	}
 	data := kit.Dict()
 	for s.token() != END {
 		k := ""
-		kit.If(ismap, func() {
+		kit.If(t == nil || kt != nil, func() {
 			sub := s.sub(m)
-			if k = kit.Format(Trans(sub.cals(m, DEFS, END))); k == "" {
-				k = _parse_const(m, sub.gets(0))
-			}
+			sub.t, sub.p = kt, p
+			k = kit.Format(Trans(sub.cals(m, DEFS, END)))
 		}, func() {
 			k = s.next(m)
 			kit.If(s.token() != END, func() { s.next(m) })
 		})
 		kit.If(s.token() == DEFS, func() {
 			sub := s.sub(m)
-			if sub.p = p; ismap {
-				sub.t = t
+			if sub.p = p; t == nil || kt != nil {
+				sub.t = vt
 			} else {
 				switch t := t.(type) {
 				case Struct:
-					if field, ok := t.index[k].(Field); ok {
-						sub.t = field.kind
-					}
+					sub.t = t.index[k].(Field)
 				}
 			}
-			m.Debug("field %d %#v %#v", sub.n, k, sub.t)
+			m.Debug("field %d %s %s", sub.n, k, Format(sub.t))
 			data[k] = sub.cals(m, FIELD, END)
-			m.Debug("field %d %#v %#v", sub.n, k, data[k])
+			m.Debug("field %d %s %s", sub.n, k, Format(data[k]))
 		})
 	}
 	return data
@@ -197,8 +197,9 @@ func (s *Expr) ntv(m *ice.Message, t Any, p string) []Any {
 	for !kit.IsIn(s.token(), SUPS, END) {
 		sub := s.sub(m)
 		sub.t, sub.p = t, p
+		m.Debug("field %d %d %s", sub.n, len(data), Format(sub.t))
 		if v := sub.cals(m, FIELD, SUPS, END); v != nil {
-			m.Debug("field %d %d %#v", sub.n, len(data), v)
+			m.Debug("field %d %d %s", sub.n, len(data), Format(v))
 			data = append(data, v)
 		}
 	}
@@ -222,7 +223,6 @@ func (s *Expr) cals(m *ice.Message, arg ...string) Any {
 		if kit.IsIn(k, arg...) {
 			return true
 		}
-		m.Debug("what %v", k)
 		switch k {
 		case SPLIT:
 			return true
@@ -231,28 +231,28 @@ func (s *Expr) cals(m *ice.Message, arg ...string) Any {
 			kit.If(strings.Contains(s.gets(-1), ice.PT), func() { p = kit.Split(s.gets(-1), ice.PT)[0] })
 			switch t := s.getv(m, -1).(type) {
 			case Map:
-				s.pops(1, Dict{s.ktv(m, true, s.value(m, kit.Keys(p, t.value)), p)})
+				s.pops(1, Dict{s.ktv(m, t, p)})
 				return false
 			case Slice:
 				s.pops(1, List{s.ntv(m, t, p)})
 				return false
 			case Struct:
-				s.pops(1, Object{Dict{s.ktv(m, false, t, p)}, t})
+				s.pops(1, Object{Dict{s.ktv(m, t, p)}, t})
 				return false
 			}
 			switch t := s.t.(type) {
 			case Map:
-				s.pops(0, Dict{s.ktv(m, true, s.value(m, kit.Keys(s.p, t.value)), s.p)})
+				s.pops(0, Dict{s.ktv(m, t.value, s.p)})
 				return false
 			case Slice:
 				s.pops(0, List{s.ntv(m, t, s.p)})
 				return false
 			case Struct:
-				s.pops(0, Object{Dict{s.ktv(m, false, t, s.p)}, t})
+				s.pops(0, Object{Dict{s.ktv(m, t, s.p)}, t})
 				return false
 			}
 			if kit.IsIn(s.gets(-1), DEFINE) || len(s.list) == 0 && len(arg) > 0 {
-				s.pops(0, Dict{s.ktv(m, true, nil, "")})
+				s.pops(0, Dict{s.ktv(m, s.t, s.p)})
 				return false
 			}
 			return true
@@ -260,42 +260,23 @@ func (s *Expr) cals(m *ice.Message, arg ...string) Any {
 			s.skip--
 			return true
 		case MAP:
-			s.next(m)
-			key := s.next(m)
-			s.next(m)
-			value := s.next(m)
-			v := Map{key: key, value: value}
-			name := kit.Format("map[%s]%s", v.key, v.value)
-			s.value(m, name, v)
-			s.push(name)
+			s.push(s.Stack.types(m))
 			return false
 		case SUBS:
-			if s.peek(m) == SUPS {
-				pos := s.Position
-				if s.next(m); !s.isop(s.peek(m)) {
-					v := Slice{value: s.next(m)}
-					name := kit.Format("[]%s", v.value)
-					s.value(m, name, v)
-					s.push(name)
-					return false
-				}
-				s.Position = pos
+			if s.peek(m) == SUPS && !kit.IsIn(kit.Select("", s.rest, s.skip+2), FIELD, SUPS, END, "") {
+				s.push(s.Stack.types(m))
+				return false
 			}
 			if kit.IsIn(s.gets(-1), DEFINE) || len(s.list) == 0 && len(arg) > 0 {
-				s.push(List{s.ntv(m, nil, "")})
+				s.push(List{s.ntv(m, s.t, s.p)})
 				return false
 			}
 		case STRUCT, INTERFACE:
-			s.skip--
-			name := s.show()
-			s.rest[s.skip] = name
-			s.skip--
-			m.Cmd(TYPE)
-			s.push(name)
+			s.push(s.Stack.types(m))
 			return false
 		case FUNC:
-			if s.isop(-1) || len(s.list) == 0 {
-				s.push(s.value(m, s.funcs(m)))
+			if s.skip > 0 {
+				s.push(s.funcs(m, ""))
 				return false
 			}
 			s.skip--
@@ -309,24 +290,42 @@ func (s *Expr) cals(m *ice.Message, arg ...string) Any {
 		}
 		if len(s.list) > 0 && !s.isop(-1) {
 			switch k {
+			case OPEN:
+				if strings.HasSuffix(s.gets(-1), ice.PT) {
+					if s.peek(m) == TYPE {
+						switch v := s.getv(m, -1).(type) {
+						case Object:
+							s.pops(1, v.index)
+						default:
+							s.pops(1, kit.Format("%T", v))
+						}
+					} else {
+						switch t := s.sub(m).cals(m, CLOSE).(type) {
+						case Struct:
+							if v, ok := s.get(-1).(Operater); ok {
+								s.pops(1, Value{list: []Any{v, v.Operate(INSTANCEOF, t)}})
+							}
+						case Interface:
+							if v, ok := s.get(-1).(Operater); ok {
+								s.pops(1, Value{list: []Any{v, v.Operate(IMPLEMENTS, t)}})
+							}
+						}
+					}
+					return false
+				}
+				switch k := s.get(-1).(type) {
+				case string:
+					s.pops(1, s.call(m, s.Stack, k))
+				default:
+					s.pops(1, s.call(m, k, ""))
+				}
+				return false
 			case SUBS:
 				switch v := s.sub(m).cals(m, SUPS); s.get(-1).(type) {
 				case string:
-					m.Debug("what %v %v", s.gets(-1), Trans(v))
 					s.pops(1, kit.Keys(s.gets(-1), kit.Format(Trans(v))))
 				default:
-					m.Debug("what %v %v", s.get(-1), v)
 					s.pops(1, s.opv(m, -1, SUBS, v))
-				}
-				return false
-			case OPEN:
-				switch k := s.get(-1).(type) {
-				case string:
-					m.Debug("call %v", k)
-					s.pops(1, s.call(m, s.Stack, k))
-				default:
-					m.Debug("call %v", k)
-					s.pops(1, s.call(m, k, ""))
 				}
 				return false
 			case "++", "--":
@@ -335,7 +334,7 @@ func (s *Expr) cals(m *ice.Message, arg ...string) Any {
 			}
 			if !s.isop(k) {
 				if strings.HasPrefix(k, ice.PT) {
-					if kit.Select("", s.rest, s.skip+1) == OPEN {
+					if s.peek(m) == OPEN {
 						s.skip++
 						s.pops(1, s.call(m, s.getv(m, -1), strings.TrimPrefix(k, ice.PT)))
 						return false
@@ -360,7 +359,6 @@ func (s *Expr) cals(m *ice.Message, arg ...string) Any {
 		}
 		return false
 	})
-	m.Debug("what %v", s.list)
 	if s.cmds(m, line) {
 		return nil
 	}
@@ -379,31 +377,31 @@ func (s *Expr) trans(m *ice.Message, k string) Any {
 		return Number{value: k}
 	}
 }
+func (s *Expr) types(m *ice.Message, t Any, p string) Any {
+	switch t := t.(type) {
+	case string:
+		if p == "" || kit.IsIn(t, STRING, INT) {
+			return t
+		}
+		return s.value(m, kit.Keys(p, t))
+	default:
+		return t
+	}
+}
 func (s *Expr) cmds(m *ice.Message, line int) (done bool) {
 	if len(s.list) == 1 && s.skip < 2 {
 		m.Search(s.gets(0), func(key string, cmd *ice.Command) {
 			args := kit.List(s.gets(0))
 			for done = true; s.line == line; {
-				sub := s.sub(m)
-				switch sub.cals(m); v := sub.get(0).(type) {
-				case string:
-					if _v := s.value(m, v); _v != nil {
-						args = append(args, kit.Format(Trans(_v)))
-					} else {
-						args = append(args, v)
-					}
-				default:
-					args = append(args, kit.Format(Trans(v)))
-				}
+				args = append(args, kit.Format(Trans(s.sub(m).cals(m))))
 			}
-			m.Cmdy(args...)
+			kit.If(s.runable(), func() { m.Cmdy(args...) })
 		})
 	}
 	return
 }
 func (s *Expr) call(m *ice.Message, obj Any, key string) Any {
-	v := s.sub(m).cals(m, CLOSE)
-	if arg := _parse_res(m, v); s.runable() {
+	if arg := _parse_res(m, s.sub(m).cals(m, CLOSE)); s.runable() {
 		return s.calls(m, obj, key, nil, arg...)
 	} else {
 		return nil
@@ -417,16 +415,16 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		EXPR: {Name: "expr a, b = 1, 2", Hand: func(m *ice.Message, arg ...string) {
 			s := _parse_stack(m)
-			if arg, v := s.rest, s.cals(m); !s.runable() {
+			if v := s.cals(m); !s.runable() {
 				return
 			} else if v != nil {
-				m.Debug("value %#v <- %v", v, arg)
+				m.Debug("value %s %s <- %v", Format(s), Format(v), arg)
 				switch v := Trans(v).(type) {
 				case Message:
 				case Value:
-					kit.If(len(v.list) > 0, func() { m.Echo(kit.Format(v.list[0])) })
+					kit.If(len(v.list) > 0, func() { m.Echo(kit.Format(Trans(v.list[0]))) })
 				default:
-					m.Echo(kit.Format(v))
+					m.Echo(kit.Format(Trans(v)))
 				}
 			} else if s.token() == BEGIN {
 				m.Echo(ice.TRUE)

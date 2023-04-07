@@ -28,8 +28,8 @@ func init() {
 					s, f := _parse_frame(m)
 					defer s.popf(m)
 					kit.For(u.Query(), func(k string, v []string) { f.value[k] = v[0] })
-					sub := s.parse(m, p, r)
-					kit.If(pre != "_", func() { kit.For(sub.peekf().value, func(k string, v Any) { s.frame[0].value[kit.Keys(pre, k)] = v }) })
+					s.parse(m, p, r)
+					kit.If(pre != "_", func() { kit.For(f.value, func(k string, v Any) { s.frame[0].value[kit.Keys(pre, k)] = v }) })
 				}
 			}
 			find := func(pre, url string) {

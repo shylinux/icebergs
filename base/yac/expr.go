@@ -10,9 +10,10 @@ import (
 
 const (
 	SPACE  = "\t "
-	QUOTE  = "\""
+	QUOTE  = "\"'`"
 	TRANS  = " "
 	BLOCK  = "[:](,){;}*/+-<>!=&|"
+	EXPAND = "..."
 	DEFINE = ":="
 	ASSIGN = "="
 	SUBS   = "["
@@ -111,7 +112,11 @@ func (s *Expr) ops(m *ice.Message) {
 	if !s.runable() || s.getl(-2) < 10 {
 		return
 	}
-	s.pops(3, s.opv(m, -3, s.gets(-2), s.get(-1)))
+	if s.getl(-3) > 0 {
+		s.pops(3, s.opv(m, -1, s.gets(-2), nil))
+	} else {
+		s.pops(3, s.opv(m, -3, s.gets(-2), s.get(-1)))
+	}
 }
 func (s *Expr) end(m *ice.Message) Any {
 	if !s.runable() || len(s.list) == 0 {
@@ -353,8 +358,17 @@ func (s *Expr) cals(m *ice.Message, arg ...string) Any {
 			}
 			s.push(k)
 		} else {
-			if s.push(s.trans(m, k)); s.getl(-2) > 0 && (s.getl(-3) > 0 || len(s.list) == 2) {
-				s.pops(2, s.opv(m, -1, s.gets(-2), nil))
+			if strings.HasSuffix(k, EXPAND) {
+				if v, ok := s.Stack.value(m, strings.TrimSuffix(k, EXPAND)).(Operater); ok {
+					if list, ok := v.Operate(EXPAND, nil).([]Any); ok && len(list) > 0 {
+						kit.For(list, func(v Any) {
+							s.list = append(s.list, v, FIELD)
+						})
+					}
+				}
+				kit.If(s.gets(-1) == FIELD, func() { s.pop(1) })
+			} else {
+				s.push(s.trans(m, k))
 			}
 		}
 		return false

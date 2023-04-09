@@ -146,7 +146,13 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: ice.Commands
 	INSERT: {Name: "insert key sub type arg...", Hand: func(m *ice.Message, arg ...string) {
 		kit.Switch(arg[2],
 			HASH, func() { _hash_insert(m, arg[0], arg[1], arg[3:]...) },
-			ZONE, func() { _zone_insert(m, arg[0], arg[1], arg[3], arg[4:]...) },
+			ZONE, func() {
+				if arg[3] == ZONE {
+					_zone_insert(m, arg[0], arg[1], arg[4], arg[5:]...)
+				} else {
+					_zone_insert(m, arg[0], arg[1], arg[3], arg[4:]...)
+				}
+			},
 			LIST, func() { _list_insert(m, arg[0], arg[1], arg[3:]...) },
 		)
 	}},
@@ -203,6 +209,13 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: ice.Commands
 func init() {
 	ice.Index.Register(Index, nil, INPUTS, INSERT, DELETE, MODIFY, SELECT, PRUNES, EXPORT, IMPORT, PLUGIN, RENDER, ENGINE, SEARCH)
 }
+func init() {
+	ice.Module(MDB,
+		HashInputs, HashCreate, HashRemove, func(m *ice.Message) { HashPrunes(m, nil) }, HashModify, HashSelect,
+		ZoneInputs, ZoneCreate, ZoneRemove, ZoneInsert, ZoneModify, ZoneSelect,
+	)
+}
+
 func AutoConfig(arg ...Any) *ice.Action {
 	return &ice.Action{Hand: func(m *ice.Message, args ...string) {
 		if cs := m.Target().Configs; len(arg) > 0 {

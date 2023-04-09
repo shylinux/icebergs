@@ -182,7 +182,7 @@ func init() {
 			}
 			m.Logs(FIND, DIR_ROOT, root, PATH, dir, DIR_TYPE, m.Option(DIR_TYPE))
 			fields := kit.Split(kit.Select(kit.Select(DIR_DEF_FIELDS, m.OptionFields()), kit.Join(kit.Slice(arg, 1))))
-			_dir_list(m, root, dir, 0, m.Option(DIR_DEEP) == ice.TRUE, kit.Select(TYPE_BOTH, m.Option(DIR_TYPE)), kit.Regexp(m.Option(DIR_REG)), fields).StatusTimeCount()
+			_dir_list(m, root, dir, 0, m.Option(DIR_DEEP) == ice.TRUE, kit.Select(TYPE_BOTH, m.Option(DIR_TYPE)), regexp.MustCompile(m.Option(DIR_REG)), fields).StatusTimeCount()
 		}},
 	})
 }

@@ -16,68 +16,145 @@ type Slice struct {
 }
 type Interface struct {
 	index map[string]Function
+	sups  []string
 	name  string
+	stack *Stack
 }
 type Struct struct {
 	index map[string]Any
+	sups  []string
 	name  string
+	stack *Stack
+	Position
 }
+type Fields []Field
 type Field struct {
 	types Any
-	tags  map[string]string
 	name  string
+	tags  map[string]string
 }
-
-func (s Field) MarshalJSON() ([]byte, error) {
-	return []byte(kit.Format("%q", s.Format())), nil
-}
-func (s Field) Format() string {
-	if len(s.tags) == 0 {
-		return kit.Format("%s", s.types)
-	}
-	res := []string{}
-	kit.For(s.tags, func(k, v string) { res = append(res, kit.Format("%s:\"%s\"", k, v)) })
-	return kit.Format("%s `%s`", s.types, strings.Join(res, ice.SP))
-}
-
 type Object struct {
 	value Operater
 	index Struct
 }
 
+func (s Fields) For(cb func(Field)) {
+	for _, v := range s {
+		cb(v)
+	}
+}
+func (s Field) MarshalJSON() ([]byte, error) {
+	return []byte(kit.Format("%q", s.Format())), nil
+}
+func (s Field) Format() string {
+	if types := ""; len(s.tags) == 0 {
+		switch t := s.types.(type) {
+		case string:
+			types = t
+		default:
+			types = Format(s.types)
+		}
+		return types
+	} else {
+		res := []string{}
+		kit.For(s.tags, func(k, v string) { res = append(res, kit.Format("%s:\"%s\"", k, v)) })
+		return kit.Format("%s `%s`", types, strings.Join(res, ice.SP))
+	}
+}
+func (s Function) Operate(op string, v Any) Any {
+	switch op {
+	case "==":
+		switch v := v.(type) {
+		case Function:
+			if len(s.arg) != len(v.arg) {
+				return false
+			}
+			if len(s.res) != len(v.res) {
+				return false
+			}
+			for i, field := range v.arg {
+				if s.arg[i].types == field.types {
+					continue
+				}
+				return false
+			}
+			for i, field := range v.res {
+				if s.res[i].types == field.types {
+					continue
+				}
+				return false
+			}
+			return true
+		default:
+			return ErrNotSupport(v)
+		}
+	default:
+		return ErrNotImplement(op)
+	}
+}
+
+func (s Struct) For(cb func(k string, v Any)) {
+	kit.For(s.index, cb)
+	kit.For(s.sups, func(sup string) {
+		if sup, ok := s.stack.value(ice.Pulse, sup).(Struct); ok {
+			sup.For(cb)
+		}
+	})
+}
+func (s Struct) Find(k string) Any {
+	if v, ok := s.index[k]; ok {
+		return v
+	}
+	for _, sup := range s.sups {
+		if sup, ok := s.stack.value(ice.Pulse, sup).(Struct); ok {
+			if v := sup.Find(k); v != nil {
+				return v
+			}
+		}
+	}
+	return ErrNotFound(k)
+}
+func (s Struct) Operate(op string, v Any) Any {
+	switch op {
+	case "==":
+		switch v := v.(type) {
+		case Struct:
+			return Boolean{s.name == v.name}
+		default:
+			return ErrNotSupport(v)
+		}
+	default:
+		return ErrNotImplement(op)
+	}
+}
 func (s Object) Operate(op string, v Any) Any {
 	switch op {
 	case "&", "*":
 		return s
 	case INSTANCEOF:
 		if t, ok := v.(Struct); ok {
-			return Value{list: []Any{s, s.index.name == t.name}}
+			return Value{list: []Any{s, Boolean{s.index.name == t.name}}}
 		}
-		return Value{list: []Any{s, false}}
+		return ErrNotSupport(v)
 	case IMPLEMENTS:
 		if t, ok := v.(Interface); ok {
 			for k, v := range t.index {
-				if _v, ok := s.index.index[k].(Function); ok {
-					for i, field := range v.arg {
-						if i < len(_v.arg) && _v.arg[i].types == field.types {
-							continue
-						}
-						return Value{list: []Any{s, false}}
-					}
-					for i, field := range v.res {
-						if i < len(_v.res) && _v.res[i].types == field.types {
-							continue
-						}
-						return Value{list: []Any{s, false}}
-					}
-				} else {
-					return Value{list: []Any{s, false}}
+				if v.Operate("==", s.index.Find(k)) == false {
+					return Value{list: []Any{s, Boolean{false}}}
 				}
 			}
+			return Value{list: []Any{s, Boolean{true}}}
 		}
-		return Value{list: []Any{s, true}}
+		return ErrNotSupport(v)
 	case SUBS:
-		switch v := s.index.index[kit.Format(v)].(type) {
+		switch v := s.index.Find(kit.Format(v)).(type) {
+		case string:
+			switch _v := s.value.Operate(op, v).(type) {
+			case nil:
+				return Object{Dict{kit.Dict()}, s.index.stack.value(ice.Pulse, v).(Struct)}
+			default:
+				return _v
+			}
 		case Function:
 			v.object = s
 			return v
@@ -86,7 +163,6 @@ func (s Object) Operate(op string, v Any) Any {
 	default:
 		return s.value.Operate(op, v)
 	}
-	return nil
 }
 
 const (
@@ -95,6 +171,7 @@ const (
 	STRUCT    = "struct"
 	INTERFACE = "interface"
 	STRING    = "string"
+	BOOL      = "bool"
 	INT       = "int"
 
 	INSTANCEOF = "instanceof"
@@ -121,6 +198,7 @@ func init() {
 		}},
 		TYPE: {Name: "type student struct {", Hand: func(m *ice.Message, arg ...string) {
 			s := _parse_stack(m)
+			pos := s.Position
 			switch name := s.next(m); s.next(m) {
 			case ASSIGN:
 				s.next(m)
@@ -129,9 +207,12 @@ func init() {
 				switch t := s.types(m).(type) {
 				case Interface:
 					t.name = name
+					t.stack = s
 					s.value(m, name, t)
 				case Struct:
 					t.name = name
+					t.stack = s
+					t.Position = pos
 					s.value(m, name, t)
 				default:
 					s.value(m, name, t)

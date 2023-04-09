@@ -82,6 +82,8 @@ func _binpack_all(m *ice.Message) {
 				_binpack_file(m, w, value[nfs.PATH])
 			}
 		})
+		m.Option(nfs.DIR_REG, kit.ExtReg(nfs.SHY))
+		_binpack_dir(m, w, "usr/release/")
 	}
 }
 

@@ -19,6 +19,7 @@ func init() {
 	)
 }
 func init() {
+	return
 	ice.Info.Stack[Prefix(Index.Register)] = func(m *ice.Message, key string, arg ...ice.Any) ice.Any {
 		return Index.Register(yac.TransContext(m, Prefix(), arg...), &web.Frame{})
 	}

@@ -12,6 +12,80 @@ import (
 	"shylinux.com/x/toolkits/miss"
 )
 
+func FormatPretty(v ice.Any, i, n int) string {
+	return kit.Formats(v)
+	switch v := v.(type) {
+	case map[string]ice.Any:
+		if n == 0 {
+			list := []string{"{"}
+			kit.For(v, func(k string, v ice.Any) {
+				list = append(list, kit.Format("%q", k), ice.DF, FormatPretty(v, 0, 0), ice.FS)
+			})
+			list = list[:len(list)-1]
+			list = append(list, "}")
+			return strings.Join(list, "")
+		}
+		list := []string{"{", ice.NL}
+		kit.For(v, func(k string, v ice.Any) {
+			list = append(list, strings.Repeat(ice.TB, i+1), kit.Format("%q", k), ice.DF)
+			if i < n && !kit.IsIn(k, mdb.META) && !strings.HasPrefix(k, "_") {
+				list = append(list, FormatPretty(v, i+1, n))
+			} else {
+				list = append(list, FormatPretty(v, 0, 0))
+			}
+			list = append(list, ice.FS, ice.NL)
+		})
+		list = append(list[:len(list)-2], ice.NL)
+		list = append(list, strings.Repeat(ice.TB, i), "}")
+		return strings.Join(list, "")
+	case []ice.Any:
+		if n == 0 {
+			list := []string{"["}
+			kit.For(v, func(k string, v ice.Any) {
+				list = append(list, FormatPretty(v, 0, 0), ice.FS)
+			})
+			list = list[:len(list)-1]
+			list = append(list, "]")
+			return strings.Join(list, "")
+		}
+		list := []string{"[", ice.NL}
+		kit.For(v, func(v ice.Any) {
+			list = append(list, strings.Repeat(ice.TB, i+1))
+			if i < n {
+				list = append(list, FormatPretty(v, i+1, n))
+			} else {
+				list = append(list, FormatPretty(v, 0, 0))
+			}
+			list = append(list, ice.FS, ice.NL)
+		})
+		list = append(list[:len(list)-2], ice.NL)
+		list = append(list, strings.Repeat(ice.TB, i), "]")
+		return strings.Join(list, "")
+	case string:
+		return kit.Format(v)
+		return kit.Format("%q", v)
+	default:
+		return kit.Format(v)
+	}
+}
+func _config_format_list(m *ice.Message, v ice.Any) string {
+	list := []string{"{", ice.NL}
+	kit.For(v, func(k string, v ice.Any) {
+		if k == mdb.HASH {
+			list = append(list, ice.TB, kit.Format("%q", k), ice.DF, "{", ice.NL)
+			kit.For(v, func(k string, v ice.Any) {
+				list = append(list, ice.TB, ice.TB, kit.Format("%q", k), ice.DF, kit.Format(v), ice.FS, ice.NL)
+			})
+			list = list[:len(list)-2]
+			list = append(list, ice.TB, ice.NL, ice.TB, "}", ice.FS, ice.NL)
+		} else {
+			list = append(list, ice.TB, kit.Format("%q", k), ice.DF, kit.Format(v), ice.FS, ice.NL)
+		}
+	})
+	list = list[:len(list)-2]
+	list = append(list, ice.NL, "}")
+	return strings.Join(list, "")
+}
 func _config_only(v ice.Any, arg ...string) bool {
 	switch v := v.(type) {
 	case nil:
@@ -69,9 +143,9 @@ func _config_make(m *ice.Message, key string, arg ...string) {
 		mdb.Confv(msg, key, arg[0], kit.Parse(nil, "", arg[1:]...))
 	}
 	if len(arg) > 0 {
-		m.Echo(kit.Formats(mdb.Confv(msg, key, arg[0])))
+		m.Echo(FormatPretty(mdb.Confv(msg, key, arg[0]), 0, 1))
 	} else {
-		m.Echo(kit.Formats(mdb.Confv(msg, key)))
+		m.Echo(FormatPretty(mdb.Confv(msg, key), 0, 1))
 	}
 }
 func _config_list(m *ice.Message) {

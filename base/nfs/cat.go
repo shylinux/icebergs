@@ -148,6 +148,9 @@ func Open(m *ice.Message, p string, cb ice.Any) {
 	if p == "" {
 		return
 	} else if strings.HasSuffix(p, PS) {
+		if p == PS {
+			p = ""
+		}
 		if ls, e := ReadDir(m, p); !m.Warn(e) {
 			switch cb := cb.(type) {
 			case func([]os.FileInfo):
@@ -190,4 +193,7 @@ func ReadAll(m *ice.Message, r io.Reader) []byte {
 func ReadFile(m *ice.Message, p string) (b []byte, e error) {
 	Open(m, p, func(r io.Reader) { b, e = ioutil.ReadAll(r) })
 	return
+}
+func Rewrite(m *ice.Message, p string, cb func(string) string) {
+	m.Cmd(SAVE, p, m.Cmdx(CAT, p, func(s string, i int) string { return cb(s) }))
 }

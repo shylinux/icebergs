@@ -176,7 +176,9 @@ func (c *Context) Merge(s *Context) *Context {
 	}
 	kit.If(c.Configs == nil, func() { c.Configs = Configs{} })
 	for k, v := range s.Configs {
-		c.Configs[k] = v
+		if c.Configs[k] == nil || c.Configs[k].Value == nil {
+			c.Configs[k] = v
+		}
 	}
 	kit.If(c.Caches == nil, func() { c.Caches = Caches{} })
 	return c

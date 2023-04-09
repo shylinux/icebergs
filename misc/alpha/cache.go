@@ -11,4 +11,4 @@ type cache struct {
 	list  string `name:"list word auto create prunes" help:"缓存"`
 }
 
-func init() { ice.WikiCtxCmd(cache{}) }
+func init() { ice.Cmd("web.wiki.alpha.cache", cache{}) }

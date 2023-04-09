@@ -60,4 +60,4 @@ func (s alpha) List(m *ice.Message, arg ...string) {
 	}).StatusTimeCount()
 }
 
-func init() { ice.WikiCtxCmd(alpha{}) }
+func init() { ice.Cmd("web.wiki.alpha.alpha", alpha{}) }

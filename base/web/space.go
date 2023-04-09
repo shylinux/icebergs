@@ -111,7 +111,7 @@ func _space_domain(m *ice.Message) (link string) {
 func _space_exec(m *ice.Message, source, target []string, c *websocket.Conn) {
 	switch kit.Select(cli.PWD, m.Detailv(), 0) {
 	case cli.PWD:
-		m.Push(mdb.LINK, kit.MergePOD(_space_domain(m), kit.Select("", source, -1)))
+		m.Push(mdb.LINK, m.MergePod(_space_domain(m), kit.Select("", source, -1)))
 	default:
 		kit.If(aaa.Right(m, m.Detailv()), func() { m = m.Cmd() })
 	}

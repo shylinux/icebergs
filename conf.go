@@ -210,7 +210,8 @@ const ( // MSG
 	MSG_HEIGHT  = "sess.height"
 	MSG_DAEMON  = "sess.daemon"
 	MSG_FILES   = "file.system"
-	YAC_STACK   = "stack"
+	YAC_STACK   = "yac.stack"
+	YAC_MESSAGE = "yac.message"
 	LOG_DISABLE = "log.disable"
 )
 const ( // RENDER

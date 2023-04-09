@@ -86,17 +86,3 @@ func init() {
 
 func IsLocalHost(m *ice.Message, ip string) bool         { return m.Cmdx(HOST, ISLOCAL, ip) == ice.OK }
 func PublishLocalhost(m *ice.Message, url string) string { return m.Cmdx(HOST, PUBLISH, url) }
-
-func init() {
-	ice.Info.Stack[Prefix(IsLocalHost)] = func(m *ice.Message, key string, arg ...ice.Any) ice.Any {
-		for _, v := range arg {
-			switch v := v.(type) {
-			case *ice.Message:
-				m = v
-			case string:
-				return IsLocalHost(m, v)
-			}
-		}
-		return false
-	}
-}

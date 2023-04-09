@@ -24,12 +24,13 @@ func _command_list(m *ice.Message, name string) *ice.Message {
 	if strings.HasPrefix(name, "can.") {
 		return m.Push(mdb.INDEX, name).Push(mdb.NAME, name).Push(mdb.HELP, "").Push(mdb.META, "").Push(mdb.LIST, "")
 	}
+
 	m.Spawn(m.Source()).Search(name, func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
 		m.Push(mdb.INDEX, kit.Keys(s.Prefix(), key))
 		m.Push(mdb.NAME, kit.Format(cmd.Name))
 		m.Push(mdb.HELP, kit.Format(cmd.Help))
-		m.Push(mdb.META, kit.Format(cmd.Meta))
-		m.Push(mdb.LIST, kit.Format(cmd.List))
+		m.Push(mdb.META, FormatPretty(cmd.Meta, 0, 2))
+		m.Push(mdb.LIST, FormatPretty(cmd.List, 0, 2))
 	})
 	return m
 }

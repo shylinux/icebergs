@@ -207,5 +207,6 @@ func InstallAction(args ...ice.Any) ice.Actions {
 	}
 }
 func init() {
+	return
 	ice.Info.Stack[Prefix(InstallAction)] = func(m *ice.Message, key string, arg ...ice.Any) ice.Any { return InstallAction(arg...) }
 }

@@ -6,7 +6,6 @@ import (
 )
 
 type sync struct {
-	ice.Lists
 	field  string `data:"time,id,type,name,link"`
 	insert string `name:"insert type name link" http:"/sync"`
 	list   string `name:"list id auto" help:"同步流"`
@@ -17,13 +16,10 @@ func (s sync) Inputs(m *ice.Message, arg ...string) {
 	case mdb.ZONE:
 		m.Cmdy(arg)
 	default:
-		m.Cmdy(s.Lists.Inputs, arg)
 	}
 }
 func (s sync) Insert(m *ice.Message, arg ...string) {
-	s.Lists.Insert(m, arg...)
 }
 func (s sync) List(m *ice.Message, arg ...string) {
-	s.Lists.List(m, arg...)
 }
 func init() { ice.CodeCtxCmd(sync{}) }

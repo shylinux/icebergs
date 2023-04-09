@@ -43,7 +43,7 @@ func init() {
 			if p := kit.Select("", arg, 0); p != "" && !strings.HasSuffix(p, PS) {
 				Open(m, p, func(r io.Reader) { m.Echo(string(ReadAll(m, r))) })
 			} else {
-				Open(m, p+PS, func(s os.FileInfo) {
+				Open(m, path.Join(p)+PS, func(s os.FileInfo) {
 					m.Push(mdb.TIME, s.ModTime().Format(ice.MOD_TIME))
 					m.Push(PATH, path.Join(p, s.Name())+kit.Select("", PS, s.IsDir()))
 					m.Push(SIZE, kit.FmtSize(s.Size()))

@@ -75,7 +75,7 @@ func init() {
 					for _, ext := range []string{SH, SHY, PY, JS, CSS, HTML} {
 						m.Push(nfs.PATH, kit.ExtChange(m.Option(nfs.FILE), ext))
 					}
-					m.Option(nfs.DIR_REG, kit.FileReg(SH, SHY, PY, JS, CSS, HTML))
+					m.Option(nfs.DIR_REG, kit.ExtReg(SH, SHY, PY, JS, CSS, HTML))
 					nfs.DirDeepAll(m, nfs.SRC, nfs.PWD, nil, nfs.PATH)
 				case web.DREAM, XTERM, AUTOGEN:
 					m.Cmdy(m.Option(ctx.ACTION), mdb.INPUTS, arg)
@@ -134,7 +134,7 @@ func init() {
 				}
 			}},
 			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) { nfs.Trash(m, arg[0]) }},
-			nfs.MODULE: {Name: "create name*=h2 help=示例 type*=Zone,Hash,Data,Code main*=main.go zone key", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
+			nfs.MODULE: {Name: "create name*=h2 help=示例 type*=Hash,Zone,Data,Code main*=main.go zone key", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(AUTOGEN, nfs.MODULE, arg)
 			}},
 			nfs.SCRIPT: {Name: "script file*=hi/hi.js", Help: "脚本", Hand: func(m *ice.Message, arg ...string) {

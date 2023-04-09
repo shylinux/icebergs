@@ -70,18 +70,18 @@ func (m *Message) Wait(cb ...Handler) (wait func(), done Handler) {
 	}
 }
 
-func (m *Message) Cmd(arg ...Any) *Message { return m._command(arg...) }
+func (m *Message) Cmd(arg ...Any) *Message  { return m._command(arg...) }
+func (m *Message) Cmds(arg ...Any) *Message { return m.Cmd(append(arg, OptionFields(""))...) }
 func (m *Message) Cmdv(arg ...Any) string {
 	args := kit.Simple(arg...)
 	field := kit.Slice(args, -1)[0]
 	return m._command(kit.Slice(args, 0, -1), OptionFields(field)).Append(field)
 }
-func (m *Message) Cmds(arg ...Any) *Message { return m.Cmd(append(arg, OptionFields(""))...) }
-func (m *Message) Cmdy(arg ...Any) *Message { return m.Copy(m._command(arg...)) }
 func (m *Message) Cmdx(arg ...Any) string {
 	res := kit.Select("", m._command(arg...).meta[MSG_RESULT], 0)
 	return kit.Select("", res, res != ErrWarn)
 }
+func (m *Message) Cmdy(arg ...Any) *Message { return m.Copy(m._command(arg...)) }
 func (m *Message) CmdHand(cmd *Command, key string, arg ...string) *Message {
 	if m._cmd, m._key = cmd, key; cmd == nil {
 		return m

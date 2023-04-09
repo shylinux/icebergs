@@ -27,13 +27,13 @@ func init() {
 				// } else {
 				// 	ctx.ProcessCommand(m, kit.TrimExt(arg[1], SHY), kit.Simple())
 				// }
-				ctx.ProcessCommand(m, yac.STACK, kit.Simple(arg[1]))
+				ctx.ProcessCommand(m, yac.STACK, kit.Simple(path.Join(arg[2], arg[1])))
 			}},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
-				if msg := m.Cmd(yac.STACK, arg[1]); msg.Option("__index") != "" {
+				if msg := m.Cmd(yac.STACK, path.Join(arg[2], arg[1])); msg.Option("__index") != "" {
 					ctx.ProcessCommand(m, msg.Option("__index"), kit.Simple())
 				} else {
-					ctx.ProcessCommand(m, yac.STACK, kit.Simple(arg[1]))
+					ctx.ProcessCommand(m, yac.STACK, kit.Simple(path.Join(arg[2], arg[1])))
 				}
 			}},
 			TEMPLATE: {Hand: func(m *ice.Message, arg ...string) {

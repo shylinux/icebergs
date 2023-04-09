@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
@@ -18,13 +17,12 @@ type Value struct {
 	list []Any
 }
 type Function struct {
-	obj []Field
-	arg []Field
-	res []Field
+	obj Fields
+	arg Fields
+	res Fields
 	Position
 	object Object
 }
-
 type Frame struct {
 	key    string
 	name   string
@@ -37,6 +35,7 @@ type Stack struct {
 	last    *Frame
 	frame   []*Frame
 	comment []string
+	Error   []Error
 	Position
 }
 type Position struct {
@@ -133,9 +132,11 @@ func (s *Stack) value(m *ice.Message, key string, arg ...Any) Any {
 	}
 	return nil
 }
+func (s *Stack) status_disable(f *Frame) { f.status = STATUS_DISABLE }
+func (s *Stack) status_normal(f *Frame) {
+	kit.If(s.frame[len(s.frame)-2].status == STATUS_NORMAL, func() { f.status = STATUS_NORMAL })
+}
 func (s *Stack) runable() bool { return s.peekf().status > STATUS_DISABLE }
-func (s *Stack) token() string { return kit.Select("", s.rest, s.skip) }
-func (s *Stack) show() string  { return Format(s.Position) }
 func (s *Stack) read(m *ice.Message) (text string, ok bool) {
 	isvoid := func(text string) bool { return strings.TrimSpace(text) == "" }
 	for s.line++; s.line < len(s.list); s.line++ {
@@ -149,7 +150,7 @@ func (s *Stack) read(m *ice.Message) (text string, ok bool) {
 		if s.line, s.list = len(s.list), append(s.list, text); isvoid(text) {
 			continue
 		}
-		m.Debug("input %d read \"%s\" %s", len(s.list), text, s.show())
+		m.Debug("input %d read %q %s", len(s.list), text, s.show())
 		return text, true
 	}
 	return
@@ -213,6 +214,8 @@ func (s *Stack) peek(m *ice.Message) string {
 	s.reads(m, func(k string) bool { return true })
 	return s.token()
 }
+func (s *Stack) token() string { return kit.Select("", s.rest, s.skip) }
+func (s *Stack) show() string  { return Format(s.Position) }
 func (s *Stack) pos(m *ice.Message, pos Position, n int) {
 	s.Position = pos
 	s.skip += n
@@ -265,18 +268,35 @@ func (s *Stack) types(m *ice.Message) Any {
 			s.skip += 2
 			return Slice{value: s.types(m)}
 		case STRUCT:
-			key, t := []string{}, Struct{index: map[string]Any{}}
+			key, t := []string{}, Struct{index: map[string]Any{}, stack: s}
 			for s.next(m); s.next(m) != END; {
+				line := s.line
+				kit.If(s.token() == "*", func() { s.next(m) })
 				if key = append(key, s.token()); s.next(m) == FIELD {
 					continue
 				}
-				types := s.types(m)
+				if s.line != line {
+					kit.For(key, func(key string) {
+						field := Field{types: key, name: kit.Select("", kit.Split(key, ice.PT), -1)}
+						m.Debug("value %s field %s %#v", Format(s), key, field)
+						t.index[field.name] = key
+						t.sups = append(t.sups, key)
+					})
+					key, s.skip = key[:0], s.skip-1
+					continue
+				}
+				types, tags := s.types(m), map[string]string{}
+				kit.If(strings.HasPrefix(s.peek(m), "`"), func() {
+					kit.For(kit.Split(strings.TrimPrefix(strings.TrimSuffix(s.next(m), "`"), "`"), ": "), func(k, v string) { tags[k] = v })
+				})
 				kit.For(key, func(key string) {
-					field := Field{types, map[string]string{}, key}
-					if strings.HasSuffix(s.list[s.line], "`") {
-						kit.For(kit.Split(kit.Select("", kit.Split(s.list[s.line]), -1), ": "), func(k, v string) { field.tags[k] = v })
-					}
-					t.index[key] = field
+					field := Field{types: types, name: key, tags: tags}
+					kit.If(field.types == nil, func() {
+						t.sups = append(t.sups, field.name)
+						field.types, field.name = field.name, kit.Select("", kit.Split(field.name, ice.PT), -1)
+					})
+					m.Debug("value %s field %s %#v", Format(s), key, field)
+					t.index[field.name] = field
 				})
 				key, s.skip = key[:0], len(s.rest)
 			}
@@ -308,10 +328,30 @@ func (s *Stack) types(m *ice.Message) Any {
 					}
 				}
 			}
+			rename := func(list []Field) []Field {
+				for i := len(list) - 1; i > 0; i-- {
+					field = list[i]
+					if field.types != nil {
+						continue
+					}
+					if i+1 < len(list) {
+						field.types = list[i].types
+					} else {
+						field.types, field.name = field.name, ""
+					}
+					list[i] = field
+				}
+				return list
+			}
 			kit.If(len(list) == 1, func() { list = append(list, []Field{}) })
-			return Function{arg: list[0], res: list[1]}
+			return Function{arg: rename(list[0]), res: rename(list[1])}
 		case "*":
+			continue
 		default:
+			if strings.HasPrefix(s.token(), "`") {
+				s.skip--
+				return nil
+			}
 			return s.token()
 		}
 	}
@@ -322,14 +362,21 @@ func (s *Stack) funcs(m *ice.Message, name string) Function {
 	if f := s.pushf(m, FUNC, name); name == INIT {
 		f.key = CALL
 	} else {
-		f.status = STATUS_DISABLE
+		s.status_disable(f)
 	}
 	v.Position = s.Position
 	s.run(m)
 	return v
 }
+func (s *Stack) pusherr(err Error) {
+	err.Position = s.Position
+	err.Position.skip = -1
+	s.Error = append(s.Error, err)
+}
 func (s *Stack) calls(m *ice.Message, obj Any, key string, cb func(*Frame, Function), arg ...Any) Any {
 	m.Debug("calls %s %T %s(%s)", Format(s), obj, key, Format(arg...))
+	m.Debug("calls %s %T %s(%#v)", Format(s), obj, key, arg)
+	_obj, _key := obj, key
 	switch v := obj.(type) {
 	case *Stack:
 		if _v := v.value(m, key); _v != nil {
@@ -339,21 +386,38 @@ func (s *Stack) calls(m *ice.Message, obj Any, key string, cb func(*Frame, Funct
 	kit.For(kit.Split(key, ice.PT), func(k string) {
 		switch v := obj.(type) {
 		case Operater:
-			obj, key = v.Operate(SUBS, k), strings.TrimPrefix(strings.TrimPrefix(key, k), ice.PT)
+			obj = v.Operate(SUBS, k)
 		case *Stack:
-			obj, key = v.value(m, k), strings.TrimPrefix(strings.TrimPrefix(key, k), ice.PT)
+			obj = v.value(m, k)
+		default:
+			return
 		}
+		key = strings.TrimPrefix(strings.TrimPrefix(key, k), ice.PT)
 	})
+	m.Debug("calls %s %T %s(%s)", Format(s), obj, key, Format(arg...))
+	if obj == nil {
+		if _obj == s {
+			s.pusherr(ErrNotFound(_key))
+		} else {
+			s.pusherr(ErrNotFound(_obj, _key))
+		}
+		return nil
+	}
 	switch obj := obj.(type) {
 	case Function:
 		name := kit.Format("%s%s", kit.Select("", kit.Format("%s.", obj.obj[0].types), len(obj.obj) > 1), obj.obj[len(obj.obj)-1].name)
 		m.Debug("calls %s %s(%s) %s", Format(s), name, Format(arg...), Format(obj.Position))
 		f := s.pushf(m, CALL, name, Format(obj.Position))
-		for _, field := range obj.res {
-			f.value[field.name] = nil
-		}
+		obj.res.For(func(field Field) { f.value[field.name] = nil })
+		obj.arg.For(func(field Field) { f.value[field.name] = nil })
 		for i, field := range obj.arg {
-			kit.If(i < len(arg), func() { f.value[field.name] = arg[i] }, func() { f.value[field.name] = nil })
+			kit.If(i < len(arg), func() {
+				if strings.HasPrefix(kit.Format(field.types), EXPAND) {
+					f.value[field.name] = List{arg[i:]}
+				} else {
+					f.value[field.name] = arg[i]
+				}
+			})
 		}
 		kit.If(len(obj.obj) > 1, func() { f.value[obj.obj[0].name] = obj.object })
 		value, pos := Value{list: kit.List()}, s.Position
@@ -367,29 +431,34 @@ func (s *Stack) calls(m *ice.Message, obj Any, key string, cb func(*Frame, Funct
 			}
 		}
 		s.Position, f.defers = obj.Position, append(f.defers, func() {
-			if len(obj.res) > 0 && len(value.list) == 0 {
-				for _, field := range obj.res {
-					value.list = append(value.list, f.value[field.name])
-				}
-			}
+			kit.If(len(obj.res) > 0 && len(value.list) == 0, func() { obj.res.For(func(field Field) { value.list = append(value.list, f.value[field.name]) }) })
 			s.Position = pos
 		})
 		kit.If(cb != nil, func() { cb(f, obj) })
 		s.run(m)
 		return value
 	case Caller:
+		if msg, ok := m.Optionv(ice.YAC_MESSAGE).(*ice.Message); ok {
+			m = msg
+		}
 		kit.For(arg, func(i int, v Any) { arg[i] = Trans(arg[i]) })
 		m.Debug("calls %s %s.%s(%s)", Format(s), Format(obj), key, Format(arg...))
-		return wrap(obj.Call(kit.Format(key), arg...))
+		return Wraps(obj.Call(kit.Format(key), arg...))
 	case func(*ice.Message, string, ...Any) Any:
+		if msg, ok := m.Optionv(ice.YAC_MESSAGE).(*ice.Message); ok {
+			m = msg
+		}
+		m.Debug("calls %s %s %s %#v", Format(s), Format(obj), key, arg)
 		kit.For(arg, func(i int, v Any) { arg[i] = Trans(arg[i]) })
 		m.Debug("calls %s %s %s %s", Format(s), Format(obj), key, Format(arg...))
-		return wrap(obj(m, kit.Format(key), arg...))
+		m.Debug("calls %s %s %s %#v", Format(s), Format(obj), key, arg)
+		return Wraps(obj(m, kit.Format(key), arg...))
 	case func():
 		obj()
 		return nil
 	default:
 		if key == "" {
+			s.pusherr(ErrNotSupport(obj))
 			return nil
 		}
 		args := kit.List(key)
@@ -400,17 +469,23 @@ func (s *Stack) calls(m *ice.Message, obj Any, key string, cb func(*Frame, Funct
 }
 func (s *Stack) Action(m *ice.Message, obj Any, key string, arg ...string) *ice.Message {
 	s.calls(m, obj, key, func(f *Frame, v Function) {
-		i := 0
-		for _, field := range v.arg {
+		n := 0
+		for i, field := range v.arg {
 			switch field.name {
 			case "m", "msg":
 				f.value[field.name] = Message{m}
 			case ice.ARG:
 				list := kit.List()
 				kit.For(arg, func(v string) { list = append(list, String{v}) })
-				f.value[field.name] = Value{list}
+				f.value[field.name] = List{list}
 			default:
-				f.value[field.name], i = String{m.Option(field.name, kit.Select(m.Option(field.name), arg, i))}, i+1
+				if strings.HasPrefix(kit.Format(field.types), EXPAND) {
+					list := kit.List()
+					kit.For(arg[i:], func(v string) { list = append(list, String{v}) })
+					f.value[field.name] = List{list}
+				} else {
+					f.value[field.name], n = String{m.Option(field.name, kit.Select(m.Option(field.name), arg, n))}, n+1
+				}
 			}
 		}
 	})
@@ -418,34 +493,51 @@ func (s *Stack) Action(m *ice.Message, obj Any, key string, arg ...string) *ice.
 }
 func (s *Stack) Handler(obj Any) ice.Handler {
 	return func(m *ice.Message, arg ...string) {
-		m.Copy(s.Action(m.Options(ice.YAC_STACK, s).Spawn(Index).Spawn(m.Target()), obj, "", arg...))
+		m.Copy(s.Action(m.Options(ice.YAC_STACK, s, ice.YAC_MESSAGE, m).Spawn(Index).Spawn(m.Target()), obj, "", arg...))
+		if m.Option(ice.DEBUG) == ice.TRUE && len(s.Error) > 0 {
+			m.EchoLine("")
+			for _, e := range s.Error {
+				m.EchoLine("%s%s %s %s", e.key, e.detail, Format(e.Position), e.fileline)
+			}
+		}
 	}
 }
 func (s *Stack) parse(m *ice.Message, name string, r io.Reader) *Stack {
 	pos := s.Position
-	defer func() { s.Position = pos }()
+	defer func() { s.Position, s.peekf().Position = pos, pos }()
 	s.Position = Position{Buffer: &Buffer{name: name, input: bufio.NewScanner(r)}}
 	s.peekf().Position = s.Position
 	m.Debug("stack %s parse %s", Format(s), s.show())
 	s.run(m)
 	return s
 }
+func (s *Stack) load(m *ice.Message, cb func(*Frame)) *Stack {
+	f := s.peekf()
+	for k, v := range ice.Info.Stack {
+		kit.If(strings.HasPrefix(k, "web.code."), func() { k = strings.TrimPrefix(k, "web.") })
+		f.value[k] = v
+	}
+	kit.If(cb != nil, func() { cb(f) })
+	f.value["m"] = Message{m}
+	return s
+}
 func NewStack(m *ice.Message, cb func(*Frame), arg ...string) *Stack {
 	s := &Stack{}
-	s.pushf(m.Options(ice.YAC_STACK, s), kit.Simple(STACK, arg)...)
-	s.load(m, cb)
-	return s
+	s.pushf(m.Options(ice.YAC_STACK, s, ice.YAC_MESSAGE, m), kit.Simple(STACK, arg)...)
+	return s.load(m, cb)
 }
 
 func _parse_stack(m *ice.Message) *Stack { return m.Optionv(ice.YAC_STACK).(*Stack) }
 func _parse_frame(m *ice.Message) (*Stack, *Frame) {
 	return _parse_stack(m), _parse_stack(m).pushf(m, "")
 }
+func _parse_link(m *ice.Message, p string) string {
+	ls := nfs.SplitPath(m, p)
+	return ice.Render(m, ice.RENDER_ANCHOR, p, m.MergePodCmd("", "web.code.vimer", nfs.PATH, ls[0], nfs.FILE, ls[1], nfs.LINE, ls[2]))
+}
 func _parse_const(m *ice.Message, key string) string {
 	if k := kit.Select(key, strings.Split(key, ice.PT), -1); kit.IsUpper(k) {
-		// if c, ok := ice.Info.Index[strings.ToLower(k)].(*ice.Context); ok && (key == k || key == c.Prefix(k)) {
 		return strings.ToLower(k)
-		// }
 	}
 	return ""
 }
@@ -468,17 +560,16 @@ const STACK = "stack"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		STACK: {Name: "stack path auto parse", Actions: ice.MergeActions(ice.Actions{
-			"start": {Hand: func(m *ice.Message, arg ...string) {}},
-		}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
-			if len(arg) == 0 || strings.HasSuffix(arg[0], ice.PS) {
-				m.Options(nfs.DIR_ROOT, nfs.SRC).Cmdy(nfs.CAT, arg)
+		STACK: {Name: "stack path auto", Hand: func(m *ice.Message, arg ...string) {
+			kit.If(len(arg) == 0, func() { arg = append(arg, nfs.SRC) })
+			if strings.HasSuffix(arg[0], nfs.PS) {
+				m.Cmdy(nfs.CAT, arg)
 				return
 			}
-			nfs.Open(m, path.Join(nfs.SRC, strings.TrimPrefix(path.Join(arg...), nfs.SRC)), func(r io.Reader, p string) {
-				s := NewStack(m, nil, "", p).parse(m, p, r)
+			nfs.Open(m, path.Join(arg...), func(r io.Reader, p string) {
+				s := NewStack(m, nil, p, p).parse(m, p, r)
 				if m.StatusTime(mdb.LINK, s.value(m, "_link")); m.Option(ice.DEBUG) == ice.TRUE {
-					m.Option("__index", kit.Format(s.value(m, "_index")))
+					m.Options("__index", kit.Format(s.value(m, "_index")))
 					m.Cmdy(INFO, arg)
 				}
 			})
@@ -492,8 +583,9 @@ func init() {
 }
 
 func StackHandler(m *ice.Message, arg ...string) {
-	s := NewStack(m, nil)
 	script := []string{}
+	m = m.Spawn(Index).Spawn(m.Target())
+	s := NewStack(m, nil, m.PrefixKey())
 	nfs.Open(m, ice.SRC_SCRIPT+m.PrefixKey()+ice.PS, func(r io.Reader, p string) {
 		kit.If(kit.Ext(p) == nfs.SHY, func() {
 			if strings.HasPrefix(path.Base(p), "on") {
@@ -509,26 +601,25 @@ func StackHandler(m *ice.Message, arg ...string) {
 				})
 				script = append(script, "})")
 			} else {
-				s.parse(m.Spawn(Index).Spawn(m.Target()), p, r)
+				s.parse(m, p, r)
 			}
 		})
 	})
 	if len(script) > 0 {
 		p := ice.USR_SCRIPT + m.PrefixKey() + ice.PS + "list.js"
-		s.value(m, "_script", "/require/"+p)
 		m.Cmd(nfs.SAVE, p, kit.Dict(nfs.CONTENT, strings.Join(script, ice.NL)))
+		s.value(m, "_script", "/require/"+p)
 	}
 	cmd := m.Commands("")
 	kit.For(s.peekf().value, func(k string, v Any) {
-		switch v := v.(type) {
+		switch k = kit.LowerCapital(k); v := v.(type) {
 		case Function:
 			list := kit.List()
-			for _, field := range v.arg {
+			v.arg.For(func(field Field) {
 				kit.If(!kit.IsIn(field.name, "m", "msg", ice.ARG), func() { list = append(list, kit.Dict(mdb.NAME, field.name, mdb.TYPE, mdb.TEXT, mdb.VALUE, "")) })
-			}
-			kit.If(k == mdb.LIST, func() { list = append(list, kit.Dict(mdb.NAME, mdb.LIST, mdb.TYPE, "button", mdb.ACTION, ice.AUTO)) })
+			})
 			if k == mdb.LIST {
-				cmd.Hand, cmd.List = s.Handler(v), list
+				cmd.Hand, cmd.List = s.Handler(v), append(list, kit.Dict(mdb.NAME, mdb.LIST, mdb.TYPE, "button", mdb.ACTION, ice.AUTO))
 			} else {
 				cmd.Actions[k], cmd.Meta[k] = &ice.Action{Hand: s.Handler(v)}, list
 			}

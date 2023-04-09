@@ -31,7 +31,7 @@ func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
 		}
 	})
 	if bin == "" {
-		if text := kit.ReadFile(ice.ETC_PATH); len(text) > 0 {
+		if text := m.Cmdx(nfs.CAT, ice.ETC_PATH); len(text) > 0 {
 			if bin = _system_find(m, arg[0], strings.Split(text, ice.NL)...); bin != "" {
 				m.Logs(FIND, "etcpath cmd", bin)
 			}
@@ -106,7 +106,7 @@ func _system_exec(m *ice.Message, cmd *exec.Cmd) {
 func _system_code(cmd *exec.Cmd) string {
 	return kit.Select("1", "0", cmd.ProcessState != nil && cmd.ProcessState.Success())
 }
-func _system_find(m Message, bin string, dir ...string) string {
+func _system_find(m *ice.Message, bin string, dir ...string) string {
 	if strings.Contains(bin, ice.DF) {
 		return bin
 	}
@@ -203,13 +203,8 @@ func init() {
 	})
 }
 
-type Message interface {
-	Append(key string, arg ...ice.Any) string
-	Optionv(key string, arg ...ice.Any) ice.Any
-}
-
-func SystemFind(m Message, bin string, dir ...string) string {
-	if text := kit.ReadFile(ice.ETC_PATH); len(text) > 0 {
+func SystemFind(m *ice.Message, bin string, dir ...string) string {
+	if text := m.Cmdx(nfs.CAT, ice.ETC_PATH); len(text) > 0 {
 		dir = append(dir, strings.Split(text, ice.NL)...)
 	}
 	return _system_find(m, bin, append(dir, _path_split(kit.Env(PATH))...)...)
@@ -218,4 +213,4 @@ func SystemExec(m *ice.Message, arg ...string) string { return strings.TrimSpace
 func SystemCmds(m *ice.Message, cmds string, args ...ice.Any) string {
 	return strings.TrimRight(m.Cmdx(SYSTEM, "sh", "-c", kit.Format(cmds, args...), ice.Option{CMD_OUTPUT, ""}), ice.NL)
 }
-func IsSuccess(m Message) bool { return m.Append(CODE) == "" || m.Append(CODE) == "0" }
+func IsSuccess(m *ice.Message) bool { return m.Append(CODE) == "" || m.Append(CODE) == "0" }

@@ -60,7 +60,7 @@ func (m *Message) Fields(length int, fields ...string) string {
 	return m.OptionDefault(MSG_FIELDS, kit.Select(FIELDS_DETAIL, fields, length))
 }
 func (m *Message) Action(arg ...Any) *Message {
-	kit.For(arg, func(i int, v Any) { arg[i] = kit.Format(v) })
+	kit.For(arg, func(i int, v Any) { arg[i] = kit.LowerCapital(kit.Format(v)) })
 	return m.Options(MSG_ACTION, kit.Format(arg))
 }
 func (m *Message) Status(arg ...Any) *Message {

@@ -1,6 +1,7 @@
 package ice
 
 import (
+	"reflect"
 	"strings"
 
 	kit "shylinux.com/x/toolkits"
@@ -196,4 +197,41 @@ func SplitCmd(name string, actions Actions) (list []Any) {
 		}
 	}
 	return list
+}
+func Module(prefix string, arg ...Any) {
+	list := map[string]Any{}
+	for _, v := range arg {
+		list[kit.FuncName(v)] = v
+	}
+	Info.Stack[prefix] = func(m *Message, key string, arg ...Any) Any {
+		if len(arg) > 0 {
+			switch v := arg[0].(type) {
+			case *Message:
+				m, arg = v, arg[1:]
+			}
+		}
+		if v, ok := list[key]; ok {
+			switch v := v.(type) {
+			case func(m *Message):
+				v(m)
+			case func(m *Message, arg ...Any):
+				v(m, arg...)
+			case func(m *Message, arg ...Any) string:
+				return v(m, arg...)
+			case func(m *Message, arg ...Any) *Message:
+				return v(m, arg...)
+			case func(m *Message, arg ...string) *Message:
+				return v(m, kit.Simple(arg...)...)
+			default:
+				cb, args := reflect.ValueOf(v), []reflect.Value{reflect.ValueOf(m)}
+				kit.For(arg, func(v Any) { args = append(args, reflect.ValueOf(v)) })
+				if res := cb.Call(args); len(res) > 0 && res[0].CanInterface() {
+					return res[0].Interface()
+				}
+			}
+		} else {
+			m.ErrorNotImplement(key)
+		}
+		return m
+	}
 }

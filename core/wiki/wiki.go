@@ -81,7 +81,7 @@ func init() {
 func Prefix(arg ...string) string { return web.Prefix(WIKI, kit.Keys(arg)) }
 
 func WikiAction(dir string, ext ...string) ice.Actions {
-	return ice.Actions{ice.CTX_INIT: mdb.AutoConfig(nfs.PATH, dir, lex.REGEXP, kit.FileReg(ext...)),
+	return ice.Actions{ice.CTX_INIT: mdb.AutoConfig(nfs.PATH, dir, lex.REGEXP, kit.ExtReg(ext...)),
 		web.UPLOAD: {Hand: func(m *ice.Message, arg ...string) { _wiki_upload(m, m.Option(nfs.PATH)) }},
 		nfs.TRASH:  {Name: "trash path*", Hand: func(m *ice.Message, arg ...string) { nfs.Trash(m, _wiki_path(m, m.Option(nfs.PATH))) }},
 		nfs.SAVE:   {Name: "save path* text", Hand: func(m *ice.Message, arg ...string) { _wiki_save(m, m.Option(nfs.PATH), m.Option(mdb.TEXT)) }},

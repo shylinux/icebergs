@@ -10,6 +10,7 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/ssh"
+	"shylinux.com/x/icebergs/base/yac"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -100,6 +101,8 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		GO: {Name: "go path auto", Help: "后端编程", Actions: ice.MergeActions(ice.Actions{
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
+				ctx.ProcessCommand(m, yac.STACK, kit.Simple(path.Join(arg[2], arg[1])))
+				return
 				cmds, text := "ice.bin source stdio", ctx.GetFileCmd(path.Join(arg[2], arg[1]))
 				if text != "" {
 					ls := strings.Split(text, ice.PT)
@@ -110,6 +113,12 @@ func init() {
 				ProcessXterm(m, cmds, text, arg[1])
 			}},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
+				if msg := m.Cmd(yac.STACK, path.Join(arg[2], arg[1])); msg.Option("__index") != "" {
+					ctx.ProcessCommand(m, msg.Option("__index"), kit.Simple())
+				} else {
+					ctx.ProcessCommand(m, yac.STACK, kit.Simple(path.Join(arg[2], arg[1])))
+				}
+				return
 				if cmd := ctx.GetFileCmd(path.Join(arg[2], arg[1])); cmd != "" {
 					ctx.ProcessCommand(m, cmd, kit.Simple())
 				} else {

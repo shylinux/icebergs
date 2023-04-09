@@ -70,7 +70,7 @@ func _dream_template(m *ice.Message, p string) {
 		}
 		switch m.Cmdy(nfs.COPY, path.Join(p, file), path.Join(ice.USR_LOCAL_WORK, m.Option(nfs.TEMPLATE), file)); file {
 		case ice.GO_MOD:
-			kit.Rewrite(path.Join(p, file), func(line string) string {
+			nfs.Rewrite(m, path.Join(p, file), func(line string) string {
 				return kit.Select(line, nfs.MODULE+ice.SP+m.Option(mdb.NAME), strings.HasPrefix(line, nfs.MODULE))
 			})
 		}

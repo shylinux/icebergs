@@ -57,6 +57,9 @@ func init() {
 					m.Push(cli.COLOR, color[strings.Count(value[nfs.PATH], ice.PS)%len(color)])
 					m.Push("", value, []string{nfs.PATH})
 				}, nfs.PATH)
+				m.Option(nfs.DIR_ROOT, _repos_path(arg[0]))
+			} else if len(arg) == 2 {
+
 			}
 		}},
 	})

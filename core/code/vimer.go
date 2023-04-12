@@ -173,7 +173,7 @@ func init() {
 		}, mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path"), web.DreamAction(), aaa.RoleAction(ctx.COMMAND)), Hand: func(m *ice.Message, arg ...string) {
 			if m.Cmdy(INNER, arg); arg[0] != ctx.ACTION {
 				kit.If(len(arg) > 1, func() { mdb.HashCreate(m.Spawn(), nfs.PATH, path.Join(kit.Slice(arg, 0, 2)...)) })
-				m.Action(nfs.MODULE, nfs.SCRIPT, nfs.SAVE, COMPILE)
+				m.Action(nfs.MODULE, nfs.SCRIPT, nfs.SAVE, COMPILE, "show", "exec")
 				ctx.DisplayLocal(m, "")
 			}
 		}},

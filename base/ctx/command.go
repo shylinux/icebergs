@@ -65,7 +65,7 @@ func init() {
 				})
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				if arg[0] == m.CommandKey() || arg[1] != "" {
+				if arg[0] == m.CommandKey() || len(arg) > 1 && arg[1] != "" {
 					_command_search(m, arg[0], kit.Select("", arg, 1), kit.Select("", arg, 2))
 				}
 			}},
@@ -74,7 +74,12 @@ func init() {
 					m.Echo(`%s	%s	%s;" f`+ice.NL, value[mdb.NAME], value[nfs.FILE], value[nfs.LINE])
 				}).Cmd(nfs.SAVE, nfs.TAGS, m.Result())
 			}},
-		}, aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, CmdAction(), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
+			if len(arg) == 0 {
+				m.Cmdy("", mdb.SEARCH, COMMAND, ice.OptionFields(INDEX))
+				DisplayStory(m.Options(nfs.DIR_ROOT, "ice."), "spide.js?split=.")
+				return
+			}
 			kit.If(len(arg) == 0, func() { arg = append(arg, "") })
 			kit.For(arg, func(k string) { _command_list(m, k) })
 		}},

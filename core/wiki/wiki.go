@@ -72,7 +72,9 @@ func WikiAction(dir string, ext ...string) ice.Actions {
 		nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
 			nfs.Trash(m, _wiki_path(m, kit.Select("some", kit.Select(m.Option(nfs.PATH), arg, 0))))
 		}},
-		nfs.SAVE: {Hand: func(m *ice.Message, arg ...string) { _wiki_save(m, m.Option(nfs.PATH), m.Option(mdb.TEXT)) }},
+		nfs.SAVE: {Hand: func(m *ice.Message, arg ...string) {
+			_wiki_save(m, m.Option(nfs.PATH), kit.Select(m.Option(mdb.TEXT), arg, 1))
+		}},
 		mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 			switch arg[0] {
 			case nfs.PATH:

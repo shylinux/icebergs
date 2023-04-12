@@ -23,7 +23,10 @@ func init() {
 				m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1]))
 			}},
 		}, WikiAction("", nfs.SVG), ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
-			kit.If(!_wiki_list(m, arg...), func() { _wiki_show(m, arg[0]) })
+			kit.If(!_wiki_list(m, arg...), func() {
+				_wiki_show(m, arg[0])
+				kit.If(m.IsErr(), func() { m.Option(ice.MSG_OUTPUT, "") })
+			})
 		}},
 	})
 }

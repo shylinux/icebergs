@@ -20,7 +20,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		DEBUG: {Name: "debug level=error,bench,debug,error,watch offset limit filter auto reset doc", Help: "后台日志", Actions: ice.Actions{
 			"doc": {Help: "文档", Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen("https://pkg.go.dev/std") }},
-			"reset": {Help: "文档", Hand: func(m *ice.Message, arg ...string) {
+			"reset": {Help: "重置", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.CAT, _debug_file(arg[0]), func(line string, index int) { m.ProcessRewrite(mdb.OFFSET, index+2, mdb.LIMIT, 1000) })
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {

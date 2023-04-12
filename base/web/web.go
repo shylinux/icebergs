@@ -4,12 +4,14 @@ import (
 	"net"
 	"net/http"
 	"path"
+	"strings"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
 	kit "shylinux.com/x/toolkits"
 	"shylinux.com/x/toolkits/logs"
@@ -47,7 +49,7 @@ func (f *Frame) Start(m *ice.Message, arg ...string) {
 				f.HandleFunc(key, func(w http.ResponseWriter, r *http.Request) {
 					m.TryCatch(m.Spawn(key, cmd, c, w, r), true, func(msg *ice.Message) { _serve_handle(key, cmd, msg, w, r) })
 				})
-				ice.Info.Route[path.Join(list[c], key)] = ctx.FileURI(cmd.FileLine())
+				ice.Info.Route[path.Join(list[c], key)+kit.Select("", nfs.PS, strings.HasSuffix(key, nfs.PS))] = ctx.FileURI(cmd.FileLine())
 			}(key, cmd)
 		}
 	})

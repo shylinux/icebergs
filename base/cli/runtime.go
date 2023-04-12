@@ -10,6 +10,7 @@ import (
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/gdb"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
@@ -153,10 +154,20 @@ func init() {
 				m.Echo("%d", runtime.GOMAXPROCS(0))
 			}},
 			API: {Hand: func(m *ice.Message, arg ...string) {
+				if len(arg) > 1 {
+					m.Cmdy(ctx.COMMAND, "web.code.inner").Push(ctx.ARGS, kit.Format(nfs.SplitPath(m, strings.TrimPrefix(m.Option(nfs.FILE), "/require/"))))
+					return
+				}
+				ctx.DisplayStorySpide(m.Options(nfs.DIR_ROOT, nfs.PS), lex.PREFIX, kit.Fields(ctx.ACTION, m.ActionKey()))
 				kit.For(ice.Info.Route, func(k, v string) { m.Push(nfs.PATH, k).Push(nfs.FILE, v) })
 				m.StatusTimeCount().Sort(nfs.PATH)
 			}},
 			CLI: {Hand: func(m *ice.Message, arg ...string) {
+				if len(arg) > 1 {
+					m.Cmdy(ctx.COMMAND, "web.code.inner").Push(ctx.ARGS, kit.Format(nfs.SplitPath(m, strings.TrimPrefix(m.Option(nfs.FILE), "/require/"))))
+					return
+				}
+				ctx.DisplayStorySpide(m.Options(nfs.DIR_ROOT, "ice."), lex.PREFIX, kit.Fields(ctx.ACTION, m.ActionKey()), mdb.FIELD, mdb.NAME, lex.SPLIT, nfs.PT)
 				kit.For(ice.Info.File, func(k, v string) { m.Push(nfs.FILE, k).Push(mdb.NAME, v) })
 				m.StatusTimeCount().Sort(nfs.FILE)
 			}},
@@ -181,7 +192,7 @@ func init() {
 				kit.For(_path_split(os.Getenv(PATH)), func(p string) { m.Push(nfs.PATH, p) })
 			}},
 			"chain": {Hand: func(m *ice.Message, arg ...string) { m.Echo(m.FormatChain()) }},
-		}, ctx.ConfAction("")), Hand: func(m *ice.Message, arg ...string) {
+		}, ctx.CmdAction(), ctx.ConfAction("")), Hand: func(m *ice.Message, arg ...string) {
 			kit.If(len(arg) > 0 && arg[0] == BOOTINFO, func() { arg = arg[1:] })
 			m.Cmdy(ctx.CONFIG, RUNTIME, arg)
 			ctx.DisplayStoryJSON(m)

@@ -7,6 +7,7 @@ import (
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	kit "shylinux.com/x/toolkits"
 )
 
 const DRAW = "draw"
@@ -22,9 +23,7 @@ func init() {
 				m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1]))
 			}},
 		}, WikiAction("", nfs.SVG), ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
-			if !_wiki_list(m, arg...) {
-				_wiki_show(m, arg[0])
-			}
+			kit.If(!_wiki_list(m, arg...), func() { _wiki_show(m, arg[0]) })
 		}},
 	})
 }

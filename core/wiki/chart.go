@@ -124,7 +124,7 @@ func _chart_show(m *ice.Message, kind, text string, arg ...string) {
 	m.Option(WIDTH, chart.GetWidth())
 	m.Option(HEIGHT, chart.GetHeight())
 
-	_wiki_template(m, "", text, arg...)
+	_wiki_template(m, "", "", text, arg...)
 	defer m.Echo("</svg>")
 	defer m.RenderResult()
 	chart.Draw(m, 0, 0)
@@ -156,10 +156,8 @@ const CHART = "chart"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		CHART: {Name: "chart type=label,chain,sequence run text", Help: "图表", Actions: WordAction(
-			`<svg xmlns="http://www.w3.org/2000/svg" vertion="1.1"
-{{.OptionTemplate}} {{.OptionKV "height,width,font-size,font-family,stroke-width,stroke,fill"}}
-text-anchor="middle" dominant-baseline="middle">`,
-		), Hand: func(m *ice.Message, arg ...string) { _chart_show(m, arg[0], strings.TrimSpace(arg[1]), arg[2:]...) }},
+		CHART: {Name: "chart type=label,chain,sequence auto text", Help: "图表", Hand: func(m *ice.Message, arg ...string) {
+			_chart_show(m, arg[0], strings.TrimSpace(arg[1]), arg[2:]...)
+		}},
 	})
 }

@@ -66,7 +66,7 @@ func _autogen_version(m *ice.Message) string {
 func _autogen_gits(m *ice.Message, arg ...string) string {
 	res := []string{}
 	kit.For(_autogen_git(m, arg...), func(k, v string) {
-		res = append(res, kit.Format(`		%s: "%s",`, kit.LowerCapital(k), strings.TrimSpace(v)))
+		res = append(res, kit.Format(`		%s: "%s",`, kit.Capital(k), strings.TrimSpace(v)))
 	})
 	return kit.Join(res, ice.NL)
 }

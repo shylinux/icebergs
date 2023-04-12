@@ -3,7 +3,6 @@ package wiki
 import (
 	"encoding/base64"
 	"encoding/hex"
-	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -39,36 +38,27 @@ func init() {
 				}
 			}
 			switch m.OptionFields(mdb.DETAIL); arg[0] {
-			case "base64":
-				if buf, err := base64.StdEncoding.DecodeString(arg[1]); err == nil {
-					m.Echo(hex.EncodeToString(buf))
-				}
 			case nfs.JSON:
 				m.Echo(kit.Formats(kit.UnMarshal(arg[1])))
 				ctx.DisplayStoryJSON(m)
 			case web.HTTP:
-				u, _ := url.Parse(arg[1])
-				m.Push(tcp.PROTO, u.Scheme)
-				m.Push(tcp.HOST, u.Host)
-				m.Push(nfs.PATH, u.Path)
-				for k, v := range u.Query() {
-					for _, v := range v {
-						m.Push(k, v)
-					}
-				}
+				u := kit.ParseURL(arg[1])
+				m.Push(tcp.PROTO, u.Scheme).Push(tcp.HOST, u.Host).Push(nfs.PATH, u.Path)
+				kit.For(u, func(k string, v []string) { m.Push(k, v) })
 				m.EchoQRCode(arg[1])
 			case web.FORM:
-				for _, v := range strings.Split(arg[1], "&") {
-					ls := strings.Split(v, ice.EQ)
-					m.Push(kit.QueryUnescape(ls[0]), kit.QueryUnescape(kit.Select("", ls, 1)))
-				}
+				kit.SplitKV("=", "&", arg[1], func(k string, v []string) {
+					kit.For(v, func(v string) { m.Push(kit.QueryUnescape(k), kit.QueryUnescape(v)) })
+				})
 			case mdb.TIME:
 				if i, e := strconv.ParseInt(arg[1], 10, 64); e == nil {
 					m.Echo(time.Unix(i, 0).Format(ice.MOD_TIME))
 				}
 			case mdb.LIST:
-				for i, v := range kit.Split(arg[1]) {
-					m.Push(kit.Format(i), v)
+				kit.For(kit.Split(arg[1]), func(i int, v string) { m.Push(kit.Format(i), v) })
+			case "base64":
+				if buf, err := base64.StdEncoding.DecodeString(arg[1]); err == nil {
+					m.Echo(hex.EncodeToString(buf))
 				}
 			}
 		}},

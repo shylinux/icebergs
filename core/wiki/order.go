@@ -7,16 +7,15 @@ import (
 )
 
 func _order_show(m *ice.Message, text string, arg ...string) {
-	m.Optionv(mdb.LIST, kit.SplitLine(text))
-	_wiki_template(m, "", text, arg...)
+	_wiki_template(m.Options(mdb.LIST, kit.SplitLine(text)), "", "", text, arg...)
 }
 
 const ORDER = "order"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		ORDER: {Name: "order text", Help: "列表", Actions: WordAction(
-			`<ul {{.OptionTemplate}}>{{range $index, $value := .Optionv "list"}}<li>{{$value}}</li>{{end}}</ul>`,
-		), Hand: func(m *ice.Message, arg ...string) { _order_show(m, arg[0], arg[1:]...) }},
+		ORDER: {Name: "order text", Help: "列表", Hand: func(m *ice.Message, arg ...string) {
+			_order_show(m, arg[0], arg[1:]...)
+		}},
 	})
 }

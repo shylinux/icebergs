@@ -133,7 +133,7 @@ func init() {
 func PlugAction() ice.Actions {
 	return ice.Actions{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-			kit.For([]string{mdb.PLUGIN, mdb.RENDER, mdb.ENGINE}, func(cmd string) { m.Cmd(cmd, mdb.CREATE, m.CommandKey(), m.PrefixKey()) })
+			kit.For([]string{mdb.PLUGIN, mdb.RENDER, mdb.ENGINE, TEMPLATE, COMPLETE}, func(cmd string) { m.Cmd(cmd, mdb.CREATE, m.CommandKey(), m.PrefixKey()) })
 			LoadPlug(m, m.CommandKey())
 		}},
 		mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) { m.Echo(mdb.Config(m, PLUG)) }},

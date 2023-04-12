@@ -96,11 +96,11 @@ func _space_handle(m *ice.Message, safe bool, name string, c *websocket.Conn) {
 	}
 }
 func _space_domain(m *ice.Message) (link string) {
-	// m.Options(ice.MSG_OPTION, ice.MSG_USERNAME, ice.MSG_OPTS, ice.MSG_USERNAME)
 	return kit.GetValid(
 		func() string { return ice.Info.Domain },
 		func() string {
 			if dev := kit.Select(ice.DEV, ice.OPS, ice.Info.NodeType == WORKER); mdb.HashSelectDetail(m, dev, nil) {
+				m.Options(ice.MSG_OPTION, ice.MSG_USERNAME, ice.MSG_OPTS, ice.MSG_USERNAME)
 				return m.Cmdv(SPACE, dev, cli.PWD, mdb.LINK)
 			}
 			return ""
@@ -111,7 +111,7 @@ func _space_domain(m *ice.Message) (link string) {
 func _space_exec(m *ice.Message, source, target []string, c *websocket.Conn) {
 	switch kit.Select(cli.PWD, m.Detailv(), 0) {
 	case cli.PWD:
-		m.Push(mdb.LINK, m.MergePod(_space_domain(m), kit.Select("", source, -1)))
+		m.Push(mdb.LINK, m.MergePod(kit.Select("", source, -1)))
 	default:
 		kit.If(aaa.Right(m, m.Detailv()), func() { m = m.Cmd() })
 	}

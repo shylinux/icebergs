@@ -29,25 +29,19 @@ func init() {
 				m.Cmd(nfs.PUSH, path.Join(mdb.Config(m, nfs.PATH), arg[0]), kit.Join(arg[1:], ice.FS)+ice.NL)
 			}}, "draw": {Help: "绘图"},
 		}, WikiAction(ice.USR_LOCAL_EXPORT, nfs.CSV)), Hand: func(m *ice.Message, arg ...string) {
-			if !_wiki_list(m, arg...) {
-				CSV(m, m.Cmdx(nfs.CAT, arg[0])).StatusTimeCount()
-			}
+			kit.If(!_wiki_list(m, arg...), func() { CSV(m, m.Cmdx(nfs.CAT, arg[0])).StatusTimeCount() })
 		}},
 	})
 }
 func CSV(m *ice.Message, text string, head ...string) *ice.Message {
 	r := csv.NewReader(bytes.NewBufferString(text))
-	if len(head) == 0 {
-		head, _ = r.Read()
-	}
+	kit.If(len(head) == 0, func() { head, _ = r.Read() })
 	for {
 		line, e := r.Read()
 		if e != nil {
 			break
 		}
-		for i, k := range head {
-			m.Push(k, kit.Select("", line, i))
-		}
+		kit.For(head, func(i int, k string) { m.Push(k, kit.Select("", line, i)) })
 	}
 	return m
 }

@@ -131,7 +131,7 @@ func Template(m templateMessage, p string, arg ...ice.Any) string {
 	return kit.Renders(kit.Format(TemplateText(m, p), arg...), m)
 }
 func TemplateText(m templateMessage, p string) string {
-	return m.Cmdx(CAT, path.Join(m.PrefixKey(), path.Base(p)), kit.Dict(DIR_ROOT, ice.SRC_TEMPLATE))
+	return strings.TrimSpace(m.Cmdx(CAT, path.Join(m.PrefixKey(), path.Base(p)), kit.Dict(DIR_ROOT, ice.SRC_TEMPLATE)))
 }
 func IsSourceFile(m *ice.Message, ext string) bool {
 	return mdb.Conf(m, Prefix(CAT), kit.Keym(SOURCE, ext)) == ice.TRUE

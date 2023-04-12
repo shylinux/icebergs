@@ -8,20 +8,14 @@ import (
 )
 
 func _table_run(m *ice.Message, arg ...string) {
-	msg := m.Cmd(arg)
 	list := [][]string{}
-	msg.Table(func(index int, value ice.Maps, head []string) {
-		if index == 0 {
-			m.Optionv("head", head)
-		}
+	m.Cmd(arg).Table(func(index int, value ice.Maps, head []string) {
+		kit.If(index == 0, func() { m.Optionv("head", head) })
 		line := []string{}
-		for _, h := range head {
-			line = append(line, value[h])
-		}
+		kit.For(head, func(h string) { line = append(line, value[h]) })
 		list = append(list, line)
 	})
-	m.Optionv("list", list)
-	_wiki_template(m, "", "")
+	_wiki_template(m.Options("list", list), "", "", "")
 }
 func _table_show(m *ice.Message, text string, arg ...string) {
 	head, list := []string{}, [][]string{}
@@ -30,22 +24,14 @@ func _table_show(m *ice.Message, text string, arg ...string) {
 			head = kit.SplitWord(line)
 			continue
 		}
-		list = append(list, transList(kit.SplitWord(line), func(value string) string {
+		list = append(list, kit.Simple(kit.SplitWord(line), func(value string) string {
 			if ls := kit.SplitWord(value); len(ls) > 1 {
 				return kit.Format(`<span style="%s">%s</span>`, kit.JoinKV(":", ";", transArgKey(ls[1:])...), ls[0])
 			}
 			return value
 		}))
 	}
-	m.Optionv("head", head)
-	m.Optionv("list", list)
-	_wiki_template(m, "", text, arg...)
-}
-func transList(arg []string, cb func(string) string) []string {
-	for i, v := range arg {
-		arg[i] = cb(v)
-	}
-	return arg
+	_wiki_template(m.Options("head", head, "list", list), "", "", text, arg...)
 }
 func transArgKey(arg []string) []string {
 	for i := 0; i < len(arg)-1; i += 2 {
@@ -65,9 +51,6 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		TABLE: {Name: "table text", Help: "表格", Actions: ice.MergeActions(ice.Actions{
 			ice.RUN: {Hand: func(m *ice.Message, arg ...string) { _table_run(m, arg...) }},
-		}, WordAction(`<table {{.OptionTemplate}}>
-<tr>{{range $i, $v := .Optionv "head"}}<th>{{$v}}</th>{{end}}</tr>
-{{range $index, $value := .Optionv "list"}}<tr>{{range $i, $v := $value}}<td>{{$v}}</td>{{end}}</tr>{{end}}
-</table>`)), Hand: func(m *ice.Message, arg ...string) { _table_show(m, arg[0], arg[1:]...) }},
+		}), Hand: func(m *ice.Message, arg ...string) { _table_show(m, arg[0], arg[1:]...) }},
 	})
 }

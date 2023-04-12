@@ -115,6 +115,9 @@ func _serve_auth(m *ice.Message, key string, cmds []string, w http.ResponseWrite
 	if r.URL.Path == PP(SPACE) {
 		return cmds, true
 	}
+	kit.For(r.Header, func(k string, v []string) {
+		m.Debug("what %v: %v", k, v)
+	})
 	defer func() { m.Options(ice.MSG_CMDS, "", ice.MSG_SESSID, "") }()
 	if aaa.SessCheck(m, m.Option(ice.MSG_SESSID)); m.Option(SHARE) != "" {
 		switch msg := m.Cmd(SHARE, m.Option(SHARE)); msg.Append(mdb.TYPE) {

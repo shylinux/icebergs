@@ -11,7 +11,7 @@ import (
 )
 
 func _role_keys(key ...string) string {
-	if _key := kit.Slice(strings.Split(key[0], ice.PT), -1)[0]; _key != "" {
+	if _key := kit.Select("", strings.Split(key[0], ice.PT), -1); _key != "" {
 		if c, ok := ice.Info.Index[_key].(*ice.Context); ok && kit.Keys(c.Prefix(), _key) == key[0] {
 			key[0] = _key
 		}

@@ -24,6 +24,7 @@ func _xterm_get(m *ice.Message, h string) xterm.XTerm {
 	return mdb.HashSelectTarget(m, h, func(value ice.Maps) ice.Any {
 		text := strings.Split(value[mdb.TEXT], ice.NL)
 		ls := kit.Split(strings.Split(kit.Select(nfs.SH, value[mdb.TYPE]), " # ")[0])
+		kit.If(value[nfs.PATH] != "" && !strings.HasSuffix(value[nfs.PATH], nfs.PS), func() { value[nfs.PATH] = path.Dir(value[nfs.PATH]) })
 		term, e := xterm.Command(m, value[nfs.PATH], cli.SystemFind(m, ls[0]), ls[1:]...)
 		if m.Warn(e) {
 			return nil
@@ -31,7 +32,7 @@ func _xterm_get(m *ice.Message, h string) xterm.XTerm {
 		m.Go(func() {
 			defer term.Close()
 			defer mdb.HashRemove(m, mdb.HASH, h)
-			m.Log("start", strings.Join(term.Args, ice.SP))
+			m.Log(cli.START, strings.Join(term.Args, ice.SP))
 			buf := make([]byte, ice.MOD_BUFS)
 			for {
 				if n, e := term.Read(buf); !m.Warn(e) && e == nil {
@@ -55,6 +56,7 @@ func _xterm_get(m *ice.Message, h string) xterm.XTerm {
 }
 func _xterm_echo(m *ice.Message, h string, str string) {
 	m.Options(ice.MSG_DAEMON, mdb.HashSelectField(m, h, web.VIEW))
+	m.Option(ice.LOG_DISABLE, ice.TRUE)
 	web.PushNoticeGrow(m, h, str)
 }
 func _xterm_cmds(m *ice.Message, h string, cmd string, arg ...ice.Any) {

@@ -33,10 +33,7 @@ func (b *Block) Init(m *ice.Message, arg ...string) wiki.Chart {
 	b.Padding = kit.Int(kit.Select("10", m.Option(wiki.PADDING)))
 	b.MarginX = kit.Int(kit.Select("10", m.Option(wiki.MARGINX)))
 	b.MarginY = kit.Int(kit.Select("10", m.Option(wiki.MARGINY)))
-
-	if len(arg) > 0 {
-		b.Text = arg[0]
-	}
+	kit.If(len(arg) > 0, func() { b.Text = arg[0] })
 	return b
 }
 func (b *Block) Data(m *ice.Message, meta ice.Any) wiki.Chart {
@@ -49,12 +46,8 @@ func (b *Block) Data(m *ice.Message, meta ice.Any) wiki.Chart {
 			b.RectData += kit.Format("%s='%s' ", wiki.FILL, value)
 		}
 	})
-	kit.For(kit.Value(meta, "data"), func(key string, value string) {
-		b.TextData += kit.Format("%s='%s' ", key, value)
-	})
-	kit.For(kit.Value(meta, "rect"), func(key string, value string) {
-		b.RectData += kit.Format("%s='%s' ", key, value)
-	})
+	kit.For(kit.Value(meta, "data"), func(key string, value string) { b.TextData += kit.Format("%s='%s' ", key, value) })
+	kit.For(kit.Value(meta, "rect"), func(key string, value string) { b.RectData += kit.Format("%s='%s' ", key, value) })
 	return b
 }
 func (b *Block) Draw(m *ice.Message, x, y int) wiki.Chart {

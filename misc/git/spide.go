@@ -19,7 +19,7 @@ const SPIDE = "spide"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		SPIDE: {Name: "spide repos auto depend", Help: "构架图", Actions: ice.MergeActions(ice.Actions{
+		SPIDE: {Name: "spide repos auto", Help: "构架图", Actions: ice.MergeActions(ice.Actions{
 			"depend": {Name: "depend path*=icebergs/base pkg=shy,all", Help: "依赖", Hand: func(m *ice.Message, arg ...string) {
 				list, keys := map[string]map[string]bool{}, map[string]bool{}
 				kit.SplitKV(ice.TB, ice.NL, m.Cmdx(cli.SYSTEM, "gotags", "-R", path.Join(ice.USR, m.Option(nfs.PATH))+ice.PS), func(text string, ls []string) {

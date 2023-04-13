@@ -33,15 +33,14 @@ func (s *Label) Init(m *ice.Message, arg ...string) wiki.Chart {
 }
 func (s *Label) Draw(m *ice.Message, x, y int) wiki.Chart {
 	gs := wiki.NewGroup(m, RECT, TEXT)
-	wiki.AddGroupOption(m, TEXT, wiki.FILL, m.Option(wiki.STROKE))
+	wiki.AddGroupOption(m, RECT, wiki.STROKE, m.Option(wiki.STROKE), wiki.FILL, m.Option(wiki.FILL))
+	wiki.AddGroupOption(m, TEXT, wiki.STROKE, m.Option(wiki.STROKE), wiki.FILL, m.Option(wiki.STROKE))
 	defer gs.DumpAll(m, RECT, TEXT)
-
 	top := y
 	for _, line := range s.data {
 		left, height := x, 0
 		for i, text := range line {
 			item := s.Fork(m)
-
 			ls := kit.SplitWord(text)
 			if item.Init(m, ls[0]); len(ls) > 1 {
 				data := kit.Dict()
@@ -50,7 +49,6 @@ func (s *Label) Draw(m *ice.Message, x, y int) wiki.Chart {
 				}
 				item.Data(m, data)
 			}
-
 			switch m.Option(COMPACT) {
 			case ice.TRUE:
 			case "max":
@@ -58,12 +56,10 @@ func (s *Label) Draw(m *ice.Message, x, y int) wiki.Chart {
 			default:
 				item.Width = s.max[i]
 			}
-
 			if m.Option(HIDE_BLOCK) != ice.TRUE {
 				gs.EchoRect(RECT, item.GetHeight(), item.GetWidth(), left+item.MarginX/2, top+item.MarginY/2)
 			}
 			gs.EchoTexts(TEXT, left+item.GetWidths()/2, top+item.GetHeights()/2, item.Text)
-
 			if left += item.GetWidths(); item.GetHeights() > height {
 				height = item.GetHeights()
 			}
@@ -79,9 +75,4 @@ const (
 )
 const LABEL = "label"
 
-func init() {
-	wiki.AddChart(LABEL, func(m *ice.Message) wiki.Chart {
-		wiki.AddGroupOption(m, TEXT, wiki.STROKE_WIDTH, "1")
-		return &Label{}
-	})
-}
+func init() { wiki.AddChart(LABEL, func(m *ice.Message) wiki.Chart { return &Label{} }) }

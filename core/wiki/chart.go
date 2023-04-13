@@ -12,9 +12,7 @@ type Item struct {
 	args []ice.Any
 }
 
-func NewItem(str string, args ...ice.Any) *Item {
-	return &Item{[]string{str}, args}
-}
+func NewItem(str string, args ...ice.Any) *Item { return &Item{[]string{str}, args} }
 func (item *Item) Push(str string, arg ice.Any) *Item {
 	switch arg := arg.(type) {
 	case string:
@@ -41,15 +39,11 @@ type Group struct{ list ice.Messages }
 
 func NewGroup(m *ice.Message, arg ...string) *Group {
 	g := &Group{list: ice.Messages{}}
-	for _, k := range arg {
-		g.list[k] = m.Spawn()
-	}
+	kit.For(arg, func(k string) { g.list[k] = m.Spawn() })
 	return g
 }
 func AddGroupOption(m *ice.Message, group string, arg ...string) {
-	for i := 0; i < len(arg)-1; i += 2 {
-		m.Option(kit.Keys(group, arg[i]), arg[i+1])
-	}
+	kit.For(arg, func(k, v string) { m.Option(kit.Keys(group, k), v) })
 }
 func (g *Group) Option(group string, key string, arg ...ice.Any) string {
 	return g.Get(group).Option(kit.Keys(group, key), arg...)
@@ -86,7 +80,7 @@ func (g *Group) DefsArrow(group string, height, width int, arg ...string) *ice.M
 </defs>`, kit.Select("arrowhead", arg, 0), height, width, height/2, width, height/2, height)
 }
 func (g *Group) Dump(m *ice.Message, group string, arg ...string) *Group {
-	item := NewItem("<g name=%s", group)
+	item := NewItem("<g class=%s", group)
 	for _, k := range kit.Simple(STROKE_DASHARRAY, STROKE_WIDTH, STROKE, FILL, FONT_SIZE, FONT_FAMILY, arg) {
 		item.Push(kit.Format(`%s="%%v"`, k), m.Option(kit.Keys(group, k)))
 	}
@@ -94,9 +88,7 @@ func (g *Group) Dump(m *ice.Message, group string, arg ...string) *Group {
 	return g
 }
 func (g *Group) DumpAll(m *ice.Message, group ...string) {
-	for _, grp := range group {
-		g.Dump(m, grp)
-	}
+	kit.For(group, func(grp string) { g.Dump(m, grp) })
 }
 
 type Chart interface {
@@ -110,21 +102,15 @@ var chart_list = map[string]func(m *ice.Message) Chart{}
 
 func AddChart(name string, hand func(m *ice.Message) Chart) { chart_list[name] = hand }
 
-func _chart_show(m *ice.Message, kind, text string, arg ...string) {
-	m.Option(FONT_SIZE, "24")
-	m.Option(STROKE_WIDTH, "2")
-	chart := chart_list[kind](m)
-	for i := 0; i < len(arg)-1; i++ {
-		m.Option(arg[i], arg[i+1])
-	}
+func _chart_show(m *ice.Message, name, text string, arg ...string) {
+	m.Options(FONT_SIZE, "24", STROKE_WIDTH, "2")
+	kit.For(arg, func(k, v string) { m.Option(k, v) })
 	m.Option(FILL, kit.Select(m.Option(FILL), m.Option(BG)))
 	m.Option(STROKE, kit.Select(m.Option(STROKE), m.Option(FG)))
-
+	chart := chart_list[name](m)
 	chart.Init(m, text)
-	m.Option(WIDTH, chart.GetWidth())
-	m.Option(HEIGHT, chart.GetHeight())
-
-	_wiki_template(m, "", "", text, arg...)
+	m.Options(HEIGHT, chart.GetHeight(), WIDTH, chart.GetWidth())
+	_wiki_template(m, "", name, text, arg...)
 	defer m.Echo("</svg>")
 	defer m.RenderResult()
 	chart.Draw(m, 0, 0)

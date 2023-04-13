@@ -82,6 +82,7 @@ func init() {
 		SESSION: {Name: "session session window pane cmds auto", Help: "会话", Actions: ice.MergeActions(ice.Actions{
 			web.DREAM_CREATE: {Hand: func(m *ice.Message, arg ...string) { m.Cmd("", mdb.CREATE) }},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
+				return
 				if arg[0] == mdb.FOREACH && arg[1] == "" {
 					m.Cmd("", ice.OptionFields(""), func(value ice.Maps) {
 						m.PushSearch(mdb.TYPE, ssh.SHELL, mdb.NAME, value[SESSION], mdb.TEXT, "tmux attach -t "+value[SESSION], value)

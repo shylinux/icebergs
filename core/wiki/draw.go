@@ -5,8 +5,10 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/log"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -21,6 +23,11 @@ func init() {
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
 				defer m.Echo("<html><body>").Echo("</body></html>")
 				m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1]))
+			}},
+			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
+				if arg[0] == mdb.FOREACH && arg[1] == "" {
+					m.PushSearch(mdb.TYPE, web.LINK, mdb.NAME, m.CommandKey(), mdb.TEXT, m.MergePodCmd("", "", log.DEBUG, ice.TRUE))
+				}
 			}},
 		}, WikiAction("", nfs.SVG), ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			kit.If(!_wiki_list(m, arg...), func() {

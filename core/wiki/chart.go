@@ -64,7 +64,8 @@ func (g *Group) EchoRect(group string, height, width, x, y int, arg ...string) *
 		height, width, kit.Select("4", arg, 0), kit.Select("4", arg, 1), x, y, kit.JoinKV(ice.EQ, ice.SP, kit.Slice(arg, 2)...))
 }
 func (g *Group) EchoText(group string, x, y int, text string, arg ...string) *ice.Message {
-	return g.Echo(group, "<text x=%d y=%d %s>%s</text>", x, y, kit.JoinKV(ice.EQ, ice.SP, arg...), text)
+	float := kit.Int(kit.Select("2", "6", strings.Contains(g.Get(group).Option(ice.MSG_USERUA), "Chrome")))
+	return g.Echo(group, "<text x=%d y=%d %s>%s</text>", x, y+float, kit.JoinKV(ice.EQ, ice.SP, arg...), text)
 }
 func (g *Group) EchoTexts(group string, x, y int, text string, arg ...string) *ice.Message {
 	m := g.Get(group)

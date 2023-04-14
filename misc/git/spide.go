@@ -58,6 +58,7 @@ func init() {
 					m.Push("", value, []string{nfs.PATH})
 				}, nfs.PATH)
 				m.Option(nfs.DIR_ROOT, _repos_path(arg[0]))
+				m.StatusTimeCount()
 			} else if len(arg) == 2 {
 
 			}

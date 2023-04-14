@@ -15,7 +15,6 @@ import (
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/base/web"
-	"shylinux.com/x/icebergs/core/code"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -34,52 +33,6 @@ func _status_tag(m *ice.Message, tags string) string {
 		return "v0.0.1"
 	}
 }
-func _status_tags(m *ice.Message) {
-	vs := ice.Maps{}
-	m.Cmd(STATUS, func(value ice.Maps) {
-		if value[mdb.TYPE] == "##" {
-			if value[REPOS] == ice.RELEASE {
-				value[REPOS] = ice.ICE
-			}
-			vs[value[REPOS]] = strings.Split(value[TAGS], "-")[0]
-		}
-	})
-	web.GoToast(m, TAGS, func(toast func(string, int, int)) {
-		count, total := 0, len(vs)
-		defer toast(ice.SUCCESS, count, count)
-		for k := range vs {
-			if count++; k == ice.ICE {
-				k = ice.RELEASE
-			}
-			change := false
-			toast(k, count, total)
-			m.Option(nfs.DIR_ROOT, _repos_path(k))
-			mod := m.Cmdx(nfs.CAT, ice.GO_MOD, func(text string, line int) string {
-				ls := kit.Split(strings.TrimPrefix(text, ice.REQUIRE))
-				if len(ls) < 2 || !strings.Contains(ls[0], ice.PS) || !strings.Contains(ls[1], ice.PT) {
-					return text
-				}
-				if v, ok := vs[kit.Select("", strings.Split(ls[0], ice.PS), -1)]; ok && ls[1] != v {
-					m.Logs(mdb.MODIFY, REPOS, ls[0], nfs.FROM, ls[1], nfs.TO, v)
-					text, change = strings.Replace(text, ls[1], v, -1), true
-				}
-				return text
-			})
-			if mod == "" || !change {
-				continue
-			}
-			m.Cmd(nfs.SAVE, ice.GO_MOD, mod)
-			switch m.Option(cli.CMD_DIR, _repos_path(k)); k {
-			case ice.RELEASE, ice.ICEBERGS, ice.TOOLKITS:
-				m.Cmd(cli.SYSTEM, code.GO, cli.BUILD)
-			case ice.CONTEXTS:
-				defer m.Cmd(cli.SYSTEM, cli.MAKE)
-			default:
-				m.Cmd(cli.SYSTEM, cli.MAKE)
-			}
-		}
-	})
-}
 func _status_each(m *ice.Message, title string, cmds ...string) {
 	web.GoToast(m, kit.Select(strings.Join(cmds, ice.SP), title), func(toast func(string, int, int)) {
 		list, count, total := []string{}, 0, m.Cmd(REPOS).Length()
@@ -87,8 +40,8 @@ func _status_each(m *ice.Message, title string, cmds ...string) {
 			toast(value[REPOS], count, total)
 			if msg := m.Cmd(cmds, kit.Dict(cli.CMD_DIR, value[nfs.PATH])); !cli.IsSuccess(msg) {
 				web.Toast(m, msg.Append(cli.CMD_ERR)+msg.Append(cli.CMD_OUT), "error: "+value[REPOS], "", "3s")
-				m.Sleep3s()
 				list = append(list, value[REPOS])
+				m.Sleep3s()
 			}
 			count++
 		})
@@ -100,7 +53,7 @@ func _status_each(m *ice.Message, title string, cmds ...string) {
 	})
 }
 func _status_stat(m *ice.Message, files, adds, dels int) (int, int, int) {
-	kit.SplitKV(ice.SP, ice.FS, _git_cmds(m, DIFF, "--shortstat"), func(text string, ls []string) {
+	kit.SplitKV(ice.SP, ice.FS, _git_diff(m), func(text string, ls []string) {
 		n := kit.Int(ls[0])
 		switch {
 		case strings.Contains(text, "file"):
@@ -114,7 +67,7 @@ func _status_stat(m *ice.Message, files, adds, dels int) (int, int, int) {
 	return files, adds, dels
 }
 func _status_list(m *ice.Message) (files, adds, dels int, last time.Time) {
-	onlychange := m.Option(ice.MSG_MODE) == mdb.ZONE || m.Option("view") == "change"
+	onlychange := m.Option(ice.MSG_MODE) == mdb.ZONE
 	defer m.Option(cli.CMD_DIR, "")
 	ReposList(m).Table(func(value ice.Maps) {
 		m.Option(cli.CMD_DIR, value[nfs.PATH])
@@ -124,8 +77,8 @@ func _status_list(m *ice.Message) (files, adds, dels int, last time.Time) {
 				last = ci.Author.When
 			}
 		}
-		tags := _git_cmds(m, "describe", "--tags")
-		kit.SplitKV(ice.SP, ice.NL, _git_cmds(m, STATUS, "-sb"), func(text string, ls []string) {
+		tags := _git_tags(m)
+		kit.SplitKV(ice.SP, ice.NL, _git_status(m), func(text string, ls []string) {
 			switch kit.Ext(ls[1]) {
 			case "swp", "swo", ice.BIN, ice.VAR:
 				return
@@ -134,8 +87,7 @@ func _status_list(m *ice.Message) (files, adds, dels int, last time.Time) {
 				return
 			}
 			if m.Push(REPOS, value[REPOS]).Push(mdb.TYPE, ls[0]).Push(nfs.FILE, ls[1]); onlychange {
-				m.Push(nfs.PATH, value[nfs.PATH]).Push(mdb.VIEW, kit.Format("%s %s",
-					ls[0]+strings.Repeat(" ", len(ls[0])-9), kit.Select("", ice.USR+ice.PS+value[REPOS]+ice.PS, value[REPOS] != ice.CONTEXTS)+ls[1]))
+				m.Push(nfs.PATH, value[nfs.PATH]).Push(mdb.VIEW, kit.Format("%s %s", ls[0]+strings.Repeat(ice.SP, len(ls[0])-9), kit.Select("", nfs.USR+value[REPOS]+nfs.PS, value[REPOS] != ice.CONTEXTS)+ls[1]))
 			}
 			switch ls[0] {
 			case "##":
@@ -168,9 +120,8 @@ const (
 
 	ADD = "add"
 	OPT = "opt"
-	PRO = "pro"
+	FIX = "fix"
 	TAG = "tag"
-	PIE = "pie"
 
 	COMMENT = "comment"
 	VERSION = "version"
@@ -199,7 +150,7 @@ func init() {
 					m.Push(arg[0], kit.Join(kit.Slice(ls, -1), ice.PS))
 					m.Push(arg[0], kit.Join(kit.Slice(ls, -2), ice.PS))
 					m.Push(arg[0], m.Option(nfs.FILE))
-				case VERSION, TAGS:
+				case VERSION:
 					m.Push(VERSION, _status_tag(m, m.Option(TAGS)))
 				case aaa.EMAIL:
 					m.Push(arg[0], _configs_get(m, USER_EMAIL), ice.Info.Make.Email)
@@ -220,95 +171,36 @@ func init() {
 				m.Sleep3s()
 			}},
 			PUSH: {Help: "上传", Hand: func(m *ice.Message, arg ...string) {
-				if m.Option(REPOS) == "" {
-					_status_each(m, "", cli.SYSTEM, GIT, PUSH)
-					_status_each(m, "", cli.SYSTEM, GIT, PUSH, "--tags")
-					m.Sleep3s()
-					return
-				}
-				m.Option(cli.CMD_DIR, _repos_path(m.Option(REPOS)))
-				if strings.TrimSpace(_git_cmds(m, "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}")) == "" {
-					_git_cmd(m, PUSH, "--set-upstream", ORIGIN, MASTER)
-				} else {
-					_git_cmd(m, PUSH)
-				}
-				_git_cmd(m, PUSH, "--tags")
+				_status_each(m, "", cli.SYSTEM, GIT, PUSH)
+				_status_each(m, "", cli.SYSTEM, GIT, PUSH, "--tags")
+				m.Sleep3s()
 			}},
-			ADD: {Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-				_repos_cmd(m, m.Option(REPOS), ADD, m.Option(nfs.FILE))
-			}}, OPT: {Help: "优化"}, PRO: {Help: "升级"},
-			COMMIT: {Name: "commit action=opt,add,pro comment=some", Help: "提交", Hand: func(m *ice.Message, arg ...string) {
+			ADD: {Help: "添加", Hand: func(m *ice.Message, arg ...string) { _repos_cmd(m, m.Option(REPOS), ADD, m.Option(nfs.FILE)) }}, OPT: {Help: "优化"}, FIX: {Help: "修复"},
+			COMMIT: {Name: "commit action=add,opt,fix comment=some", Help: "提交", Hand: func(m *ice.Message, arg ...string) {
 				_repos_cmd(m, m.Option(REPOS), COMMIT, "-am", m.Option(ctx.ACTION)+ice.SP+m.Option(COMMENT))
 				m.ProcessBack()
 			}},
-			PIE: {Help: "饼图", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(TOTAL, PIE) }},
 			TAG: {Name: "tag version", Help: "标签", Hand: func(m *ice.Message, arg ...string) {
-				if m.Option(VERSION) == "" {
-					m.Option(VERSION, _status_tag(m, m.Option(TAGS)))
-				}
+				kit.If(m.Option(VERSION) == "", func() { m.Option(VERSION, _status_tag(m, m.Option(TAGS))) })
 				_repos_cmd(m, m.Option(REPOS), TAG, m.Option(VERSION))
 				_repos_cmd(m, m.Option(REPOS), PUSH, "--tags")
 				ctx.ProcessRefresh(m)
 			}},
-			TAGS: {Help: "标签", Hand: func(m *ice.Message, arg ...string) { _status_tags(m) }},
 			STASH: {Help: "缓存", Hand: func(m *ice.Message, arg ...string) {
-				if len(arg) == 0 && m.Option(REPOS) == "" {
-					_status_each(m, STASH, cli.SYSTEM, GIT, STASH)
-				} else {
-					_repos_cmd(m, kit.Select(m.Option(REPOS), arg, 0), STASH)
-				}
-			}},
-			BRANCH: {Help: "分支", Hand: func(m *ice.Message, arg ...string) {
-				for _, line := range kit.Split(_repos_cmd(m.Spawn(), arg[0], BRANCH).Result(), ice.NL, ice.NL) {
-					if strings.HasPrefix(line, "*") {
-						m.Push(BRANCH, strings.TrimPrefix(line, "* ")).PushButton("")
-					} else {
-						m.Push(BRANCH, strings.TrimSpace(line)).PushButton("branch_switch")
-					}
-				}
-			}},
-			"insteadof": {Name: "insteadof from* to", Help: "代理", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(CONFIGS, func(value ice.Maps) {
-					if value[mdb.VALUE] == m.Option(nfs.FROM) {
-						_configs_set(m, "--unset", value[mdb.NAME])
-					}
-				})
-				if m.Option(nfs.TO) != "" {
-					_git_cmd(m, "config", "--global", "url."+m.Option(nfs.TO)+".insteadof", m.Option(nfs.FROM))
-				}
-			}},
-			"oauth": {Help: "授权", Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessOpen(kit.MergeURL2(kit.Select(ice.Info.Make.Remote, m.Cmdx(cli.SYSTEM, "git", "remote", "get-url", "origin")), "/chat/cmd/web.code.git.token",
-					aaa.USERNAME, m.Option(ice.MSG_USERNAME), tcp.HOST, web.UserHost(m)))
-			}},
-			"token": {Name: "token token", Help: "令牌", Hand: func(m *ice.Message, arg ...string) {
-				list := []string{m.Option(TOKEN)}
-				m.Cmd(nfs.CAT, kit.HomePath(".git-credentials"), func(line string) { list = append(list, line) })
-				m.Cmd(nfs.SAVE, kit.HomePath(".git-credentials"), strings.Join(list, ice.NL)+ice.NL)
-				ctx.ProcessHold(m)
-			}},
-			"branch_switch": {Help: "切换", Hand: func(m *ice.Message, arg ...string) {
-				_repos_cmd(m, m.Option(REPOS), "checkout", m.Option(BRANCH))
+				_repos_cmd(m, kit.Select(m.Option(REPOS), arg, 0), STASH)
 			}},
 			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
 				m.Assert(m.Option(REPOS) != "" && m.Option(nfs.FILE) != "")
 				nfs.Trash(m, path.Join(_repos_path(m.Option(REPOS)), m.Option(nfs.FILE)))
 			}},
-			code.COMPILE: {Help: "编译", Hand: func(m *ice.Message, arg ...string) {
-				defer web.ToastProcess(m)()
-				m.Cmdy(code.VIMER, code.COMPILE)
+			"insteadof": {Name: "insteadof from* to", Help: "代理", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(CONFIGS, func(value ice.Maps) {
+					kit.If(value[mdb.VALUE] == m.Option(nfs.FROM), func() { _configs_set(m, "--unset", value[mdb.NAME]) })
+				})
+				kit.If(m.Option(nfs.TO), func() { _git_cmd(m, CONFIG, "--global", "url."+m.Option(nfs.TO)+".insteadof", m.Option(nfs.FROM)) })
 			}},
-			code.PUBLISH: {Help: "发布", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(code.PUBLISH, ice.CONTEXTS, ice.MISC, ice.CORE)
-			}},
-			code.BINPACK: {Help: "发布模式", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(nfs.LINK, ice.GO_SUM, path.Join(ice.SRC_RELEASE, ice.GO_SUM))
-				m.Cmd(nfs.LINK, ice.GO_MOD, path.Join(ice.SRC_RELEASE, ice.GO_MOD))
-				m.Cmdy(nfs.CAT, ice.GO_MOD)
-				m.Cmdy(code.VIMER, code.BINPACK)
-			}},
-			code.DEVPACK: {Help: "开发模式", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(code.VIMER, code.DEVPACK)
+			"oauth": {Help: "授权", Hand: func(m *ice.Message, arg ...string) {
+				m.ProcessOpen(kit.MergeURL2(kit.Select(ice.Info.Make.Remote, _git_remote(m)), "/chat/cmd/web.code.git.token", aaa.USERNAME, m.Option(ice.MSG_USERNAME), tcp.HOST, web.UserHost(m)))
 			}},
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(mdb.TYPE) != web.WORKER {
@@ -326,19 +218,18 @@ func init() {
 				}
 				m.Push(mdb.TEXT, strings.Join(text, ", "))
 			}},
-		}, gdb.EventAction(web.DREAM_TABLES), ctx.CmdAction(), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, gdb.EventAction(web.DREAM_TABLES), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
 			if _configs_get(m, USER_EMAIL) == "" {
 				m.Echo("please config user.email").Action(CONFIGS)
 			} else if len(arg) == 0 {
 				files, adds, dels, last := _status_list(m)
-				m.StatusTimeCount("files", files, "adds", adds, "dels", dels, "last", last.Format(ice.MOD_TIME), "origin", _git_cmds(m, "remote", "get-url", "origin"))
-				m.Action(PULL, PUSH, "insteadof", "oauth")
-				m.Sort("repos,type,file")
+				m.StatusTimeCount("files", files, "adds", adds, "dels", dels, "last", last.Format(ice.MOD_TIME), nfs.ORIGIN, _git_remote(m))
+				m.Action(PULL, PUSH, "insteadof", "oauth").Sort("repos,type,file")
 			} else {
 				_repos_cmd(m, arg[0], DIFF)
 				files, adds, dels := _status_stat(m, 0, 0, 0)
 				m.StatusTime("files", files, "adds", adds, "dels", dels)
-				m.Action(COMMIT, TAGS, STASH, BRANCH)
+				m.Action(COMMIT, STASH)
 			}
 		}},
 	})

@@ -29,7 +29,7 @@ func init() {
 	)
 	Index.MergeCommands(ice.Commands{
 		TOTAL: {Name: "total repos auto pie", Help: "统计量", Actions: ice.MergeActions(ice.Actions{
-			PIE: {Help: "饼图", Hand: func(m *ice.Message, arg ...string) {
+			"pie": {Help: "饼图", Hand: func(m *ice.Message, arg ...string) {
 				defer ctx.DisplayStory(m, "pie.js")
 				m.Cmd("", func(value ice.Maps) {
 					if value[REPOS] != mdb.TOTAL {

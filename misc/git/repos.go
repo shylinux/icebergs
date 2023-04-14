@@ -19,8 +19,7 @@ func _repos_path(name string) string {
 	return kit.Select(path.Join(ice.USR, name)+ice.PS, nfs.PWD, name == path.Base(kit.Pwd()))
 }
 func _repos_cmd(m *ice.Message, name string, arg ...string) *ice.Message {
-	m.Option(cli.CMD_DIR, _repos_path(name))
-	return m.Copy(_git_cmd(m, arg...))
+	return m.Copy(_git_cmd(m.Options(cli.CMD_DIR, _repos_path(name)), arg...))
 }
 func _repos_init(m *ice.Message, dir string) string {
 	os.MkdirAll(path.Join(dir, REFS_HEADS), ice.MOD_DIR)
@@ -30,15 +29,11 @@ func _repos_init(m *ice.Message, dir string) string {
 func _repos_insert(m *ice.Message, name string, path string) bool {
 	if repos, e := gogit.OpenRepository(_git_dir(path)); e == nil {
 		origin := kit.Select("", kit.Split(repos.GetOrigin()), -1)
-		if origin == "" {
-			origin = _configs_read(m, _git_dir(path, "config"))["remote.origin.url"]
-		}
+		kit.If(origin == "", func() { origin = _configs_read(m, _git_dir(path, "config"))["remote.origin.url"] })
 		if ci, e := repos.GetCommit(); e == nil {
-			mdb.HashCreate(m, REPOS, name, nfs.PATH, path, mdb.TIME, ci.Author.When.Format(ice.MOD_TIME), COMMIT, strings.TrimSpace(ci.Message),
-				BRANCH, repos.GetBranch(), ORIGIN, origin)
+			mdb.HashCreate(m, REPOS, name, nfs.PATH, path, mdb.TIME, ci.Author.When.Format(ice.MOD_TIME), COMMIT, strings.TrimSpace(ci.Message), BRANCH, repos.GetBranch(), ORIGIN, origin)
 		} else {
-			mdb.HashCreate(m, REPOS, name, nfs.PATH, path, mdb.TIME, m.Time(),
-				BRANCH, repos.GetBranch(), ORIGIN, origin)
+			mdb.HashCreate(m, REPOS, name, nfs.PATH, path, mdb.TIME, m.Time(), BRANCH, repos.GetBranch(), ORIGIN, origin)
 		}
 		return true
 	}
@@ -215,9 +210,9 @@ func init() {
 				if p = path.Join(ice.USR_REQUIRE, path.Join(arg...)); !nfs.Exists(m, p) {
 					ls := strings.SplitN(path.Join(arg[:3]...), ice.AT, 2)
 					if v := kit.Select(ice.Info.Gomod[ls[0]], ls, 1); v == "" {
-						m.Cmd(cli.SYSTEM, "git", "clone", "https://"+ls[0], path.Join(ice.USR_REQUIRE, path.Join(arg[:3]...)))
+						_git_cmd(m, "clone", "https://"+ls[0], path.Join(ice.USR_REQUIRE, path.Join(arg[:3]...)))
 					} else {
-						m.Cmd(cli.SYSTEM, "git", "clone", "-b", v, "https://"+ls[0], path.Join(ice.USR_REQUIRE, path.Join(arg[:3]...)))
+						_git_cmd(m, "clone", "-b", v, "https://"+ls[0], path.Join(ice.USR_REQUIRE, path.Join(arg[:3]...)))
 					}
 				}
 			}
@@ -256,7 +251,7 @@ func init() {
 			}},
 			INIT: {Hand: func(m *ice.Message, arg ...string) {
 				if dir := _repos_init(m, _git_dir(m.Option(cli.CMD_DIR))); m.Option(ORIGIN, kit.Select("", kit.Split(m.Option(ORIGIN)), -1)) != "" {
-					m.Cmd(nfs.SAVE, path.Join(dir, CONFIG), kit.Format(_repos_config, m.Option(ORIGIN)))
+					m.Cmd(nfs.SAVE, path.Join(dir, CONFIG), kit.Format(nfs.TemplateText(m, CONFIG), m.Option(ORIGIN)))
 					_git_cmd(m, PULL, ORIGIN, m.OptionDefault(BRANCH, MASTER))
 				}
 			}},
@@ -268,7 +263,7 @@ func init() {
 						_repos_dir(m, dir, m.Option(BRANCH), m.Option(COMMIT), kit.Select("", arg, 1), nil)
 					} else {
 						_repos_cat(m, dir, m.Option(BRANCH), m.Option(COMMIT), arg[2])
-						ctx.DisplayLocal(m, "code/inner.js")
+						// ctx.DisplayLocal(m, "code/inner.js")
 					}
 					return
 				}
@@ -292,12 +287,3 @@ func init() {
 	})
 }
 func ReposList(m *ice.Message) *ice.Message { return m.Cmd(REPOS, ice.OptionFields("repos,path")) }
-
-var _repos_config = `
-[remote "origin"]
-	url = %s
-	fetch = +refs/heads/*:refs/remotes/origin/*
-[branch "master"]
-	remote = origin
-	merge = refs/heads/master
-`

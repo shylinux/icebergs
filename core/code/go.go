@@ -9,7 +9,6 @@ import (
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
-	"shylinux.com/x/icebergs/base/ssh"
 	"shylinux.com/x/icebergs/base/yac"
 	kit "shylinux.com/x/toolkits"
 )
@@ -101,6 +100,11 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		GO: {Name: "go path auto", Help: "后端编程", Actions: ice.MergeActions(ice.Actions{
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
+				if arg[1] == "main.go" {
+					// ProcessXterm(m, ssh.WEBIO, "", arg[1])
+					ProcessXterm(m, "ice.bin source stdio", "", arg[1])
+					return
+				}
 				ctx.ProcessCommand(m, yac.STACK, kit.Simple(path.Join(arg[2], arg[1])))
 				return
 				cmds, text := "ice.bin source stdio", ctx.GetFileCmd(path.Join(arg[2], arg[1]))
@@ -113,17 +117,14 @@ func init() {
 				ProcessXterm(m, cmds, text, arg[1])
 			}},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
+				if cmd := ctx.GetFileCmd(path.Join(arg[2], arg[1])); cmd != "" {
+					ctx.ProcessCommand(m, cmd, kit.Simple())
+					return
+				}
 				if msg := m.Cmd(yac.STACK, path.Join(arg[2], arg[1])); msg.Option("__index") != "" {
 					ctx.ProcessCommand(m, msg.Option("__index"), kit.Simple())
 				} else {
 					ctx.ProcessCommand(m, yac.STACK, kit.Simple(path.Join(arg[2], arg[1])))
-				}
-				return
-				if cmd := ctx.GetFileCmd(path.Join(arg[2], arg[1])); cmd != "" {
-					ctx.ProcessCommand(m, cmd, kit.Simple())
-				} else {
-					cmds := []string{GO, ice.RUN, path.Join(arg[2], arg[1])}
-					m.Cmdy(cli.SYSTEM, cmds).StatusTime(ssh.SHELL, strings.Join(cmds, ice.SP))
 				}
 			}},
 			TEMPLATE: {Hand: func(m *ice.Message, arg ...string) {

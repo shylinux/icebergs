@@ -17,7 +17,7 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _xterm_get(m *ice.Message, h string) xterm.XTerm {
+func _xterm_get(m *ice.Message, h string) *xterm.XTerm {
 	h = kit.Select(m.Option(mdb.HASH), h)
 	m.Assert(h != "")
 	mdb.HashModify(m, mdb.TIME, m.Time(), web.VIEW, m.Option(ice.MSG_DAEMON))
@@ -25,7 +25,7 @@ func _xterm_get(m *ice.Message, h string) xterm.XTerm {
 		text := strings.Split(value[mdb.TEXT], ice.NL)
 		ls := kit.Split(strings.Split(kit.Select(nfs.SH, value[mdb.TYPE]), " # ")[0])
 		kit.If(value[nfs.PATH] != "" && !strings.HasSuffix(value[nfs.PATH], nfs.PS), func() { value[nfs.PATH] = path.Dir(value[nfs.PATH]) })
-		term, e := xterm.Command(m, value[nfs.PATH], cli.SystemFind(m, ls[0]), ls[1:]...)
+		term, e := xterm.Command(m, value[nfs.PATH], kit.Select(ls[0], cli.SystemFind(m, ls[0])), ls[1:]...)
 		if m.Warn(e) {
 			return nil
 		}
@@ -52,7 +52,7 @@ func _xterm_get(m *ice.Message, h string) xterm.XTerm {
 			}
 		})
 		return term
-	}).(xterm.XTerm)
+	}).(*xterm.XTerm)
 }
 func _xterm_echo(m *ice.Message, h string, str string) {
 	m.Options(ice.MSG_DAEMON, mdb.HashSelectField(m, h, web.VIEW))
@@ -123,7 +123,7 @@ func init() {
 				m.PushAction(web.OUTPUT, mdb.REMOVE).Action(mdb.CREATE, mdb.PRUNES)
 			} else {
 				if m.Length() == 0 {
-					arg[0] = m.Cmdx("", mdb.CREATE, arg)
+					arg[0] = m.Cmdx("", mdb.CREATE, mdb.TYPE, arg)
 					mdb.HashSelect(m, arg[0])
 				}
 				m.Push(mdb.HASH, arg[0])

@@ -140,6 +140,7 @@ func init() {
 		}, ctx.CmdAction(), DreamAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				_dream_list(m)
+				ctx.DisplayTableCard(m)
 			} else if arg[0] == ctx.ACTION {
 				gdb.Event(m, DREAM_ACTION, arg)
 			} else {

@@ -6,6 +6,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/log"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
@@ -60,6 +61,11 @@ func init() {
 			mdb.PLUGIN: {Name: "plugin extra.index extra.args", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(TASK, mdb.MODIFY, arg) }},
 			mdb.INSERT: {Name: "insert zone* type=once,step,week name* text begin_time@date close_time@date", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(TASK, mdb.INSERT, arg)
+			}},
+			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
+				if arg[0] == mdb.FOREACH && arg[1] == "" {
+					m.PushSearch(mdb.TYPE, web.LINK, mdb.NAME, m.CommandKey(), mdb.TEXT, m.MergePodCmd("", "", log.DEBUG, ice.TRUE))
+				}
 			}},
 			ice.RUN: {Hand: func(m *ice.Message, arg ...string) {
 				if m.RenameOption(TASK_POD, ice.POD); ctx.PodCmd(m, m.PrefixKey(), ice.RUN, arg) {

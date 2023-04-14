@@ -146,11 +146,19 @@ func (f *Frame) Begin(m *ice.Message, arg ...string) {
 func (f *Frame) Start(m *ice.Message, arg ...string) {
 	m.Optionv(FRAME, f)
 	switch f.source = kit.Select(STDIO, arg, 0); f.source {
-	case STDIO:
+	case WEBIO:
+		wio := m.Optionv(WEBIO).(io.ReadWriter)
+		r, w, _ := os.Pipe()
+		go func() { io.Copy(w, wio) }()
+		f.pipe, f.stdin, f.stdout = w, r, wio
 		kit.If(f.target == nil, func() { f.target = m.Target() })
+		m.Optionv(ice.MSG_OPTS, ice.MSG_USERNAME, ice.MSG_USERROLE)
+		f.scan(m, STDIO, "")
+	case STDIO:
 		r, w, _ := os.Pipe()
 		go func() { io.Copy(w, os.Stdin) }()
 		f.pipe, f.stdin, f.stdout = w, r, os.Stdout
+		kit.If(f.target == nil, func() { f.target = m.Target() })
 		m.Optionv(ice.MSG_OPTS, ice.MSG_USERNAME, ice.MSG_USERROLE)
 		f.scan(m, STDIO, "")
 	default:
@@ -162,15 +170,14 @@ func (f *Frame) Start(m *ice.Message, arg ...string) {
 				}
 			}
 		}
-		m.Option(ice.MSG_SCRIPT, f.source)
-		f.target = m.Source()
-		if msg := m.Cmd(nfs.CAT, f.source); msg.IsErr() {
+		if msg := m.Cmd(nfs.CAT, m.Option(ice.MSG_SCRIPT, f.source)); msg.IsErr() {
 			return
 		} else {
 			buf := bytes.NewBuffer(make([]byte, 0, ice.MOD_BUFS))
 			f.stdin, f.stdout = bytes.NewBufferString(msg.Result()), buf
 			defer func() { m.Echo(buf.String()) }()
 		}
+		f.target = m.Source()
 		f.scan(m, "", "")
 	}
 }
@@ -183,6 +190,7 @@ func (f *Frame) Spawn(m *ice.Message, c *ice.Context, arg ...string) ice.Server 
 const (
 	FRAME = "frame"
 	SHELL = "shell"
+	WEBIO = "webio"
 	STDIO = "stdio"
 	PS1   = "PS1"
 	PS2   = "PS2"
@@ -215,8 +223,8 @@ func init() {
 			}
 		}},
 		PROMPT: {Name: "prompt arg run", Help: "命令提示", Actions: ctx.ConfAction(
-			PS1, ice.List{"\033[33;44m", mdb.COUNT, "@", tcp.HOSTNAME, "[", mdb.TIME, "]", "\033[5m", TARGET, "\033[0m", "\033[44m", ">", "\033[0m ", "\033[?25h", "\033[32m"},
-			PS2, ice.List{mdb.COUNT, " ", TARGET, "> "},
+			PS1, ice.List{"\033[33;44m", mdb.COUNT, ice.AT, tcp.HOSTNAME, "[", mdb.TIME, "]", "\033[5m", TARGET, "\033[0m", "\033[44m", ">", "\033[0m ", "\033[?25h", "\033[32m"},
+			PS2, ice.List{mdb.COUNT, ice.SP, TARGET, "> "},
 		), Hand: func(m *ice.Message, arg ...string) {
 			if f, ok := m.Target().Server().(*Frame); ok {
 				f.prompt(m, arg...)

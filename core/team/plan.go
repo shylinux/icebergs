@@ -32,8 +32,7 @@ func _plan_scope(m *ice.Message, arg ...string) (begin_time, end_time time.Time)
 	return begin_time, end_time
 }
 func _plan_list(m *ice.Message, begin_time, end_time string) {
-	m.Option(mdb.CACHE_LIMIT, "-1")
-	m.OptionFields("begin_time,close_time,zone,id,level,status,score,type,name,text,pod,extra")
+	m.Options(mdb.CACHE_LIMIT, "-1").OptionFields("begin_time,close_time,zone,id,level,status,score,type,name,text,pod,extra")
 	m.Cmd(mdb.SELECT, m.Prefix(TASK), "", mdb.ZONE, mdb.FOREACH, func(key string, fields []string, value, val ice.Map) {
 		if begin_time <= kit.Format(value[BEGIN_TIME]) && kit.Format(value[BEGIN_TIME]) < end_time {
 			m.Push(key, value, fields, val).PushButton(_task_action(m, value[STATUS], mdb.PLUGIN))
@@ -76,8 +75,8 @@ func init() {
 			begin_time, end_time := _plan_scope(m, kit.Slice(arg, 0, 2)...)
 			_plan_list(m, begin_time.Format(ice.MOD_TIME), end_time.Format(ice.MOD_TIME))
 			web.PushPodCmd(m, "", arg...)
-			ctx.Toolkit(m, TODO, TASK, EPIC)
 			ctx.DisplayLocal(m, "")
+			ctx.Toolkit(m, TODO, TASK, EPIC)
 		}},
 	})
 }

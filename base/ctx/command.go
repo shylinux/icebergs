@@ -88,6 +88,14 @@ func init() {
 
 var Upload = func(*ice.Message) []string { return nil }
 
+func CmdInputs(m *ice.Message, arg ...string) {
+	switch arg[0] {
+	case INDEX:
+		m.Cmdy(COMMAND, mdb.SEARCH, COMMAND, ice.OptionFields(INDEX))
+	case ARGS:
+		m.Cmdy(m.Option(INDEX))
+	}
+}
 func PodCmd(m *ice.Message, arg ...ice.Any) bool {
 	Upload(m)
 	if pod := m.Option(ice.POD); pod != "" {

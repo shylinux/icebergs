@@ -7,6 +7,6 @@ require (
 	shylinux.com/x/go-qrcode v0.0.2
 	shylinux.com/x/gogit v0.0.7
 	shylinux.com/x/ice v1.3.0
-	shylinux.com/x/toolkits v0.7.4
+	shylinux.com/x/toolkits v0.7.5
 	shylinux.com/x/websocket v0.0.2
 )

@@ -82,8 +82,7 @@ func Run(arg ...string) string {
 		if runtime.GOOS == "windows" {
 			arg = append(arg, SERVE, START, DEV, DEV)
 		} else {
-			arg = append(arg, "pwd")
-			// arg = append(arg, "forever", START, DEV, DEV)
+			arg = append(arg, FOREVER, START)
 		}
 	}
 	Pulse.meta[MSG_DETAIL] = arg

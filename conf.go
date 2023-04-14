@@ -329,8 +329,9 @@ const ( // nfs
 	SCRIPT = "script"
 )
 const ( // cli
-	SYSTEM = "system"
-	START  = "start"
+	FOREVER = "forever"
+	SYSTEM  = "system"
+	START   = "start"
 )
 const ( // log
 	DEBUG = "debug"

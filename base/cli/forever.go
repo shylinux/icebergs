@@ -46,7 +46,7 @@ func init() {
 				if bin := kit.Select(os.Args[0], ice.BIN_ICE_BIN, nfs.Exists(m, ice.BIN_ICE_BIN)); len(arg) > 0 && arg[0] == ice.SPACE {
 					m.Cmdy(FOREVER, bin, ice.SPACE, START, ice.DEV, ice.OPS, arg[1:])
 				} else {
-					kit.If(len(arg) == 0 || arg[0] != ice.DEV, func() { arg = append([]string{ice.DEV, ""}, arg...) })
+					kit.If(len(arg) > 0 && arg[0] != ice.DEV, func() { arg = append([]string{ice.DEV, ""}, arg...) })
 					m.Cmdy(FOREVER, bin, ice.SERVE, START, arg)
 				}
 			}},

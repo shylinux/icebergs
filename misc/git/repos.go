@@ -23,13 +23,13 @@ func _repos_cmd(m *ice.Message, name string, arg ...string) *ice.Message {
 }
 func _repos_init(m *ice.Message, dir string) string {
 	os.MkdirAll(path.Join(dir, REFS_HEADS), ice.MOD_DIR)
-	os.MkdirAll(path.Join(dir, "objects/info/"), ice.MOD_DIR)
+	os.MkdirAll(path.Join(dir, OBJECTS_INFO), ice.MOD_DIR)
 	return m.Cmdx(nfs.SAVE, path.Join(dir, "HEAD"), "ref: refs/heads/master")
 }
 func _repos_insert(m *ice.Message, name string, path string) bool {
 	if repos, e := gogit.OpenRepository(_git_dir(path)); e == nil {
 		origin := kit.Select("", kit.Split(repos.GetOrigin()), -1)
-		kit.If(origin == "", func() { origin = _configs_read(m, _git_dir(path, "config"))["remote.origin.url"] })
+		kit.If(origin == "", func() { origin = _configs_read(m, _git_dir(path, CONFIG))["remote.origin.url"] })
 		if ci, e := repos.GetCommit(); e == nil {
 			mdb.HashCreate(m, REPOS, name, nfs.PATH, path, mdb.TIME, ci.Author.When.Format(ice.MOD_TIME), COMMIT, strings.TrimSpace(ci.Message), BRANCH, repos.GetBranch(), ORIGIN, origin)
 		} else {
@@ -44,11 +44,8 @@ func _repos_branch(m *ice.Message, dir string) {
 		nfs.DirDeepAll(m, path.Join(dir, REFS_HEADS), "", func(value ice.Maps) {
 			if refer, e := repos.LookupReference(REFS_HEADS + value[nfs.PATH]); !m.Warn(e, ice.ErrNotValid, value[nfs.PATH]) {
 				if ci, e := repos.LookupCommit(refer.Oid); !m.Warn(e, ice.ErrNotValid, refer.Oid.String()) {
-					m.Push(mdb.TIME, ci.Author.When.Format(ice.MOD_TIME))
-					m.Push(BRANCH, value[nfs.PATH])
-					m.Push(COMMIT, ci.Oid.Short())
-					m.Push(AUTHOR, ci.Author.Name)
-					m.Push(MESSAGE, ci.Message)
+					m.Push(mdb.TIME, ci.Author.When.Format(ice.MOD_TIME)).Push(BRANCH, value[nfs.PATH])
+					m.Push(COMMIT, ci.Oid.Short()).Push(AUTHOR, ci.Author.Name).Push(MESSAGE, ci.Message)
 				}
 			}
 		}, nfs.PATH)
@@ -58,18 +55,12 @@ func _repos_commit(m *ice.Message, dir, branch string, cb func(*gogit.Commit, *g
 	if repos, e := gogit.OpenRepository(dir); !m.Warn(e, ice.ErrNotFound, dir) {
 		if refer, e := repos.LookupReference(REFS_HEADS + branch); !m.Warn(e, ice.ErrNotFound, branch) {
 			if cb == nil {
-				m.Push(mdb.TIME, m.Time())
-				m.Push(COMMIT, cli.PWD)
-				m.Push(AUTHOR, kit.Select(m.Option(ice.MSG_USERNAME), m.Option(ice.MSG_USERNICK)))
-				m.Push(MESSAGE, "opt some")
+				m.Push(mdb.TIME, m.Time()).Push(COMMIT, cli.PWD).Push(AUTHOR, kit.Select(m.Option(ice.MSG_USERNAME), m.Option(ice.MSG_USERNICK))).Push(MESSAGE, "opt some")
 			}
 			for oid := refer.Oid; oid != nil; {
-				if ci, e := repos.LookupCommit(oid); !m.Warn(e, ice.ErrNotValid, oid.String()) {
+				if ci, e := repos.LookupCommit(oid); !m.Warn(e, ice.ErrNotFound, oid.String()) {
 					if cb == nil {
-						m.Push(mdb.TIME, ci.Author.When.Format(ice.MOD_TIME))
-						m.Push(COMMIT, ci.Oid.Short())
-						m.Push(AUTHOR, ci.Author.Name)
-						m.Push(MESSAGE, ci.Message)
+						m.Push(mdb.TIME, ci.Author.When.Format(ice.MOD_TIME)).Push(COMMIT, ci.Oid.Short()).Push(AUTHOR, ci.Author.Name).Push(MESSAGE, ci.Message)
 					} else if cb(ci, repos) {
 						break
 					}
@@ -83,52 +74,46 @@ func _repos_commit(m *ice.Message, dir, branch string, cb func(*gogit.Commit, *g
 		}
 	}
 }
-func _repos_dir(m *ice.Message, dir, branch, commit, file string, cb func(*gogit.TreeEntry, *gogit.Repository) bool) {
-	if commit == cli.PWD && strings.HasPrefix(dir, ".git") {
-		nfs.DirDeepAll(m, path.Dir(dir), file, nil, "time,line,path")
-		m.Option(cli.CMD_DIR, path.Dir(dir))
-		m.Echo(_git_cmds(m, DIFF))
-		return
-	} else if commit == cli.PWD {
-		if repos, e := gogit.OpenRepository(dir); !m.Warn(e, ice.ErrNotFound, dir) {
-			if refer, e := repos.LookupReference(REFS_HEADS + branch); !m.Warn(e, ice.ErrNotFound, branch) {
-				commit = refer.Oid.String()
-			}
-		}
-	} else if file == nfs.PWD {
-		file = ""
-	}
+func _repos_cid(m *ice.Message, dir, branch, commit string) string {
 	if repos, e := gogit.OpenRepository(dir); !m.Warn(e, ice.ErrNotFound, dir) {
 		if refer, e := repos.LookupReference(REFS_TAGS + commit); e == nil {
+			m.Logs(nfs.FIND, "tags", commit, "commit", refer.Oid.String())
 			commit = refer.Oid.String()
 		}
 	}
+	return commit
+}
+func _repos_dir(m *ice.Message, dir, branch, commit, file string, cb func(*gogit.TreeEntry, *gogit.Repository) bool) {
+	if commit == cli.PWD {
+		nfs.DirDeepAll(m, path.Dir(dir), file, nil, "time,line,path")
+		m.Options(cli.CMD_DIR, path.Dir(dir)).Echo(_git_cmds(m, DIFF))
+		return
+	}
+	commit = _repos_cid(m, dir, branch, commit)
 	_repos_commit(m, dir, branch, func(ci *gogit.Commit, repos *gogit.Repository) bool {
 		if !strings.HasPrefix(ci.Oid.String(), commit) {
 			return false
 		}
 		prev := ice.Maps{}
 		if p := ci.ParentCommit(0); p != nil {
-			if ci, e := repos.LookupCommit(p.Oid); e == nil {
-				if tree, e := repos.LookupTree(ci.TreeId()); !m.Warn(e, ice.ErrNotValid, ci.TreeId().String) {
+			if ci, e := repos.LookupCommit(p.Oid); !m.Warn(e, ice.ErrNotFound, p.Oid.String()) {
+				if tree, e := repos.LookupTree(ci.TreeId()); !m.Warn(e, ice.ErrNotFound, ci.TreeId().String) {
 					tree.Walk(func(p string, v *gogit.TreeEntry) bool {
-						prev[path.Join(p, v.Name)+kit.Select("", ice.PS, v.Type == gogit.ObjectTree)] = v.Oid.String()
+						kit.If(v.Type == gogit.ObjectBlob, func() { prev[path.Join(p, v.Name)] = v.Oid.String() })
 						return false
 					})
 				}
 			}
 		}
-		if tree, e := repos.LookupTree(ci.TreeId()); !m.Warn(e, ice.ErrNotValid, ci.TreeId().String) {
-			m.Logs(mdb.SELECT, REPOS, dir, BRANCH, branch, COMMIT, commit, "tree", tree.Oid.Short())
+		if tree, e := repos.LookupTree(ci.TreeId()); !m.Warn(e, ice.ErrNotFound, ci.TreeId().String) {
+			m.Logs(nfs.FIND, REPOS, dir, BRANCH, branch, COMMIT, commit, TREE, tree.Oid.Short())
 			tree.Walk(func(p string, v *gogit.TreeEntry) bool {
 				if pp := path.Join(p, v.Name) + kit.Select("", ice.PS, v.Type == gogit.ObjectTree); strings.HasPrefix(pp, file) {
-					if cb == nil {
-						if path.Dir(file) != path.Dir(pp) {
-
-						} else if v.Type == gogit.ObjectTree {
-
-						} else if id, ok := prev[pp]; ok && id == v.Oid.String() {
-							if m.Option("_index") == web.CODE_INNER {
+					if v.Type == gogit.ObjectTree {
+						return false
+					} else if cb == nil {
+						if id, ok := prev[pp]; ok && id == v.Oid.String() {
+							if m.Option(ice.MSG_INDEX) == web.CODE_INNER {
 								m.Push(mdb.HASH, v.Oid.Short()).Push(nfs.PATH, pp).Push(mdb.STATUS, "")
 							}
 						} else if ok {
@@ -144,46 +129,36 @@ func _repos_dir(m *ice.Message, dir, branch, commit, file string, cb func(*gogit
 				return false
 			})
 		}
-		kit.For(prev, func(pp, id string) {
-			if path.Dir(file) != path.Dir(pp) {
-				return
-			}
-			m.Push(mdb.HASH, id[:6]).Push(nfs.PATH, pp).Push(mdb.STATUS, "---")
-		})
+		kit.For(prev, func(pp, id string) { m.Push(mdb.HASH, id[:6]).Push(nfs.PATH, pp).Push(mdb.STATUS, "---") })
 		if m.Sort(kit.Fields(mdb.STATUS, nfs.PATH), ice.STR_R, ice.STR); cb == nil {
-			m.Option(cli.CMD_DIR, dir)
-			m.Echo(_git_cmds(m, DIFF, ci.Oid.String()+"^", ci.Oid.String()))
+			m.Options(cli.CMD_DIR, dir).Echo(_git_cmds(m, DIFF, ci.Oid.String()+"^", ci.Oid.String()))
 			m.Status(mdb.TIME, ci.Author.When.Format(ice.MOD_TIME), DIFF, _git_cmds(m, DIFF, "--shortstat", ci.Oid.String()+"^", ci.Oid.String()), MESSAGE, ci.Message)
 		}
 		return true
 	})
 }
 func _repos_cat(m *ice.Message, dir, branch, commit, file string) {
-	if commit == cli.PWD && strings.HasPrefix(dir, ".git") {
+	if commit == cli.PWD {
 		m.Cmdy(nfs.CAT, path.Join(path.Dir(dir), file))
 		return
-	} else if commit == cli.PWD {
-		if repos, e := gogit.OpenRepository(dir); !m.Warn(e, ice.ErrNotFound, dir) {
-			if refer, e := repos.LookupReference(REFS_HEADS + branch); !m.Warn(e, ice.ErrNotFound, branch) {
-				commit = refer.Oid.String()
-			}
-		}
 	}
+	commit = _repos_cid(m, dir, branch, commit)
 	_repos_dir(m, dir, branch, commit, file, func(v *gogit.TreeEntry, repos *gogit.Repository) bool {
 		if blob, e := repos.LookupBlob(v.Oid); e == nil {
-			m.Logs(mdb.IMPORT, REPOS, dir, BRANCH, branch, COMMIT, commit, "blob", v.Oid.Short())
-			m.Echo(string(blob.Contents()))
+			m.Logs(nfs.LOAD, REPOS, dir, BRANCH, branch, COMMIT, commit, BLOB, v.Oid.Short()).Echo(string(blob.Contents()))
 		} else {
-			m.Option(cli.CMD_DIR, dir)
-			m.Echo(_git_cmds(m, "cat-file", "-p", v.Oid.String()))
+			m.Options(cli.CMD_DIR, dir).Echo(_git_cmds(m, "cat-file", "-p", v.Oid.String()))
 		}
 		return true
 	})
 }
 
 const (
-	REFS_HEADS = "refs/heads/"
-	REFS_TAGS  = "refs/tags/"
+	OBJECTS_INFO = "objects/info/"
+	REFS_HEADS   = "refs/heads/"
+	REFS_TAGS    = "refs/tags/"
+	TREE         = "tree"
+	BLOB         = "blob"
 
 	INIT    = "init"
 	CONFIG  = "config"
@@ -240,9 +215,9 @@ func init() {
 					mdb.HashInputs(m, arg)
 				}
 			}},
-			mdb.CREATE: {Name: "create origin name path", Hand: func(m *ice.Message, arg ...string) {
-				m.OptionDefault(mdb.NAME, strings.TrimSuffix(path.Base(m.Option(ORIGIN)), ".git"))
-				m.OptionDefault(nfs.PATH, path.Join(ice.USR, m.Option(mdb.NAME)))
+			mdb.CREATE: {Name: "create origin branch name path", Hand: func(m *ice.Message, arg ...string) {
+				m.OptionDefault(mdb.NAME, kit.TrimExt(m.Option(ORIGIN), GIT))
+				m.OptionDefault(nfs.PATH, path.Join(nfs.USR, m.Option(mdb.NAME)))
 				if _repos_insert(m, m.Option(mdb.NAME), m.Option(nfs.PATH)) {
 					return
 				}
@@ -255,19 +230,20 @@ func init() {
 					_git_cmd(m, PULL, ORIGIN, m.OptionDefault(BRANCH, MASTER))
 				}
 			}},
-			"inner": {Help: "编辑器", Hand: func(m *ice.Message, arg ...string) {
+			DIFF: {Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) == 0 || arg[0] != ice.RUN {
-					arg = []string{_repos_path(arg[0]), kit.Select("README.md", arg, 3)}
+					arg = []string{path.Join(arg[:3]...), kit.Select("README.md", arg, 3)}
 				} else if kit.Select("", arg, 1) != ctx.ACTION {
-					if dir := _git_dir(_repos_path(m.Option(REPOS))); len(arg) < 3 {
-						_repos_dir(m, dir, m.Option(BRANCH), m.Option(COMMIT), kit.Select("", arg, 1), nil)
+					ls := kit.Split(kit.Select(arg[1], m.Option(nfs.DIR_ROOT)), nfs.PS)
+					if dir := _git_dir(_repos_path(ls[0])); len(arg) < 3 {
+						_repos_dir(m, dir, ls[1], ls[2], kit.Select("", arg, 1), nil)
 					} else {
-						_repos_cat(m, dir, m.Option(BRANCH), m.Option(COMMIT), arg[2])
-						// ctx.DisplayLocal(m, "code/inner.js")
+						_repos_cat(m, dir, ls[1], ls[2], arg[2])
+						ctx.DisplayLocal(m, "code/inner.js")
 					}
 					return
 				}
-				ctx.ProcessField(m, "", arg, arg...)
+				ctx.ProcessField(m, web.CODE_INNER, arg, arg...)
 			}},
 		}, mdb.HashAction(mdb.SHORT, REPOS, mdb.FIELD, "time,repos,branch,commit,origin"), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 || arg[0] == "" {
@@ -280,7 +256,7 @@ func init() {
 				_repos_dir(m, dir, arg[1], arg[2], kit.Select("", arg, 3), nil)
 				return
 			} else {
-				m.Cmdy("", "inner", arg)
+				m.Cmdy("", DIFF, arg)
 			}
 			m.StatusTimeCount()
 		}},

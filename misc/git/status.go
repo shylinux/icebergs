@@ -111,20 +111,21 @@ func _status_list(m *ice.Message) (files, adds, dels int, last time.Time) {
 }
 
 const (
-	PULL   = "pull"
-	PUSH   = "push"
-	DIFF   = "diff"
-	TAGS   = "tags"
-	STASH  = "stash"
-	COMMIT = "commit"
+	INSTEADOF = "insteadof"
+	OAUTH     = "oauth"
+	PULL      = "pull"
+	PUSH      = "push"
+	DIFF      = "diff"
+	ADD       = "add"
+	OPT       = "opt"
+	FIX       = "fix"
+	COMMIT    = "commit"
+	STASH     = "stash"
+	TAG       = "tag"
 
-	ADD = "add"
-	OPT = "opt"
-	FIX = "fix"
-	TAG = "tag"
-
-	COMMENT = "comment"
+	TAGS    = "tags"
 	VERSION = "version"
+	COMMENT = "comment"
 )
 const STATUS = "status"
 
@@ -133,7 +134,7 @@ func init() {
 		STATUS: {Name: "status repos:text auto", Help: "代码库", Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch m.Option(ctx.ACTION) {
-				case "insteadof":
+				case INSTEADOF:
 					switch arg[0] {
 					case nfs.FROM:
 						m.Push(arg[0], kit.MergeURL2(ice.Info.Make.Remote, ice.PS))
@@ -162,8 +163,14 @@ func init() {
 				_configs_set(m, USER_NAME, m.Option(aaa.USERNAME))
 				_configs_set(m, USER_EMAIL, m.Option(aaa.EMAIL))
 			}},
-			INIT: {Name: "init origin*='https://shylinux.com/x/volcanos' name path", Help: "克隆", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(REPOS, mdb.CREATE)
+			INSTEADOF: {Name: "insteadof from* to", Help: "代理", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(CONFIGS, func(value ice.Maps) {
+					kit.If(value[mdb.VALUE] == m.Option(nfs.FROM), func() { _configs_set(m, "--unset", value[mdb.NAME]) })
+				})
+				kit.If(m.Option(nfs.TO), func() { _git_cmd(m, CONFIG, "--global", "url."+m.Option(nfs.TO)+".insteadof", m.Option(nfs.FROM)) })
+			}},
+			OAUTH: {Help: "授权", Hand: func(m *ice.Message, arg ...string) {
+				m.ProcessOpen(kit.MergeURL2(kit.Select(ice.Info.Make.Remote, _git_remote(m)), "/chat/cmd/web.code.git.token", aaa.USERNAME, m.Option(ice.MSG_USERNAME), tcp.HOST, web.UserHost(m)))
 			}},
 			PULL: {Help: "下载", Hand: func(m *ice.Message, arg ...string) {
 				_status_each(m, "", cli.SYSTEM, GIT, PULL)
@@ -180,27 +187,16 @@ func init() {
 				_repos_cmd(m, m.Option(REPOS), COMMIT, "-am", m.Option(ctx.ACTION)+ice.SP+m.Option(COMMENT))
 				m.ProcessBack()
 			}},
+			STASH: {Help: "缓存", Hand: func(m *ice.Message, arg ...string) { _repos_cmd(m, kit.Select(m.Option(REPOS), arg, 0), STASH) }},
 			TAG: {Name: "tag version", Help: "标签", Hand: func(m *ice.Message, arg ...string) {
 				kit.If(m.Option(VERSION) == "", func() { m.Option(VERSION, _status_tag(m, m.Option(TAGS))) })
 				_repos_cmd(m, m.Option(REPOS), TAG, m.Option(VERSION))
 				_repos_cmd(m, m.Option(REPOS), PUSH, "--tags")
 				ctx.ProcessRefresh(m)
 			}},
-			STASH: {Help: "缓存", Hand: func(m *ice.Message, arg ...string) {
-				_repos_cmd(m, kit.Select(m.Option(REPOS), arg, 0), STASH)
-			}},
 			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
 				m.Assert(m.Option(REPOS) != "" && m.Option(nfs.FILE) != "")
 				nfs.Trash(m, path.Join(_repos_path(m.Option(REPOS)), m.Option(nfs.FILE)))
-			}},
-			"insteadof": {Name: "insteadof from* to", Help: "代理", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(CONFIGS, func(value ice.Maps) {
-					kit.If(value[mdb.VALUE] == m.Option(nfs.FROM), func() { _configs_set(m, "--unset", value[mdb.NAME]) })
-				})
-				kit.If(m.Option(nfs.TO), func() { _git_cmd(m, CONFIG, "--global", "url."+m.Option(nfs.TO)+".insteadof", m.Option(nfs.FROM)) })
-			}},
-			"oauth": {Help: "授权", Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessOpen(kit.MergeURL2(kit.Select(ice.Info.Make.Remote, _git_remote(m)), "/chat/cmd/web.code.git.token", aaa.USERNAME, m.Option(ice.MSG_USERNAME), tcp.HOST, web.UserHost(m)))
 			}},
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(mdb.TYPE) != web.WORKER {

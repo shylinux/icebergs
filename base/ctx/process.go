@@ -41,7 +41,8 @@ func Process(m *ice.Message, key string, args ice.Any, arg ...string) {
 }
 func ProcessField(m *ice.Message, cmd string, args ice.Any, arg ...string) *ice.Message {
 	if cmd = kit.Select(m.ActionKey(), cmd); !kit.HasPrefixList(arg, ice.RUN) {
-		m.Cmdy(COMMAND, cmd).Push(ARGS, _process_args(m, args)).Options(ice.MSG_INDEX, m.PrefixKey()).ProcessField(ACTION, m.ActionKey(), ice.RUN)
+		m.Cmdy(COMMAND, cmd).Push(ARGS, kit.Format(_process_args(m, args))).Options(ice.MSG_INDEX, m.PrefixKey()).ProcessField(ACTION, m.ActionKey(), ice.RUN)
+		m.Debug("what %v", m.FormatMeta())
 	} else {
 		kit.If(aaa.Right(m, cmd, arg[1:]), func() { m.Cmdy(cmd, arg[1:]) })
 	}

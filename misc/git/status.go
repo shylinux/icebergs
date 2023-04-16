@@ -4,7 +4,6 @@ import (
 	"strings"
 	"time"
 
-	"shylinux.com/x/gogit"
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
@@ -52,11 +51,6 @@ func _status_list(m *ice.Message) (files, adds, dels int, last time.Time) {
 	ReposList(m).Table(func(value ice.Maps) {
 		m.Option(cli.CMD_DIR, value[nfs.PATH])
 		files, adds, dels = _status_stat(m, files, adds, dels)
-		if repos, e := gogit.OpenRepository(_git_dir(value[nfs.PATH])); e == nil {
-			if ci, e := repos.GetCommit(); e == nil && ci.Author.When.After(last) {
-				last = ci.Author.When
-			}
-		}
 		tags := _git_tags(m)
 		kit.SplitKV(ice.SP, ice.NL, _git_status(m), func(text string, ls []string) {
 			switch kit.Ext(ls[1]) {
@@ -146,6 +140,9 @@ func init() {
 			OAUTH: {Help: "授权", Hand: func(m *ice.Message, arg ...string) {
 				m.ProcessOpen(kit.MergeURL2(kit.Select(ice.Info.Make.Remote, _git_remote(m)), "/chat/cmd/web.code.git.token", aaa.USERNAME, m.Option(ice.MSG_USERNAME), tcp.HOST, web.UserHost(m)))
 			}},
+			COMMIT: {Name: "commit actions=add,opt,fix comment*=some", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(REPOS, COMMIT, arg)
+			}},
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(mdb.TYPE) != web.WORKER {
 					return
@@ -170,9 +167,6 @@ func init() {
 			if _configs_get(m, USER_EMAIL) == "" {
 				m.Echo("please config user.email").Action(CONFIGS)
 			} else if len(arg) == 0 {
-				m.Cmdy(REPOS, STATUS)
-				m.Action(PULL, PUSH, "insteadof", "oauth").Sort("repos,status,file")
-				return
 				files, adds, dels, last := _status_list(m)
 				m.StatusTimeCount("files", files, "adds", adds, "dels", dels, "last", last.Format(ice.MOD_TIME), nfs.ORIGIN, _git_remote(m))
 				m.Action(PULL, PUSH, "insteadof", "oauth").Sort("repos,type,file")

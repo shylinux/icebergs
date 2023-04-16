@@ -40,7 +40,7 @@ func Command(m *ice.Message, dir string, cli string, arg ...string) (*XTerm, err
 	cmd.Env = append(cmd.Env, os.Environ()...)
 	cmd.Env = append(cmd.Env, "TERM=xterm")
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true, Setctty: true}
-	pty, tty, err := open()
+	pty, tty, err := Open()
 	if err != nil {
 		return nil, err
 	}

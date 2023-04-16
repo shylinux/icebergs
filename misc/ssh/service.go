@@ -12,7 +12,6 @@ import (
 	"strings"
 
 	"golang.org/x/crypto/ssh"
-	pty "shylinux.com/x/creackpty"
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
@@ -22,6 +21,7 @@ import (
 	psh "shylinux.com/x/icebergs/base/ssh"
 	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/base/web"
+	"shylinux.com/x/icebergs/misc/xterm"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -87,7 +87,7 @@ func _ssh_accept(m *ice.Message, h string, c net.Conn) {
 	}
 }
 func _ssh_prepare(m *ice.Message, channel ssh.Channel, requests <-chan *ssh.Request) {
-	pty, tty, err := pty.Open()
+	pty, tty, err := xterm.Open()
 	if m.Warn(err) {
 		return
 	}

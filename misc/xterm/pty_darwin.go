@@ -12,7 +12,7 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func open() (pty, tty *os.File, err error) {
+func Open() (pty, tty *os.File, err error) {
 	pFD, err := syscall.Open("/dev/ptmx", syscall.O_RDWR|syscall.O_CLOEXEC, 0)
 	if err != nil {
 		return nil, nil, err

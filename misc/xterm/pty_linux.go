@@ -12,7 +12,7 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func open() (*os.File, *os.File, error) {
+func Open() (*os.File, *os.File, error) {
 	p, err := os.OpenFile("/dev/ptmx", os.O_RDWR, 0)
 	if err != nil {
 		return nil, nil, err

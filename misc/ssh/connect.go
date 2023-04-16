@@ -40,7 +40,7 @@ func _ssh_open(m *ice.Message, arg ...string) {
 }
 func _ssh_dial(m *ice.Message, cb func(net.Conn), arg ...string) {
 	p := kit.HomePath(".ssh", fmt.Sprintf("%s@%s:%s", m.Option(aaa.USERNAME), m.Option(tcp.HOST), m.Option(tcp.PORT)))
-	if nfs.ExistsFile(m, p) {
+	if nfs.Exists(m, p) {
 		if c, e := net.Dial("unix", p); e == nil {
 			cb(c)
 			return

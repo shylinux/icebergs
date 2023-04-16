@@ -85,14 +85,14 @@ const (
 const SERVICE = "service"
 
 func init() {
-	web.Index.MergeCommands(ice.Commands{"/x/": {Hand: func(m *ice.Message, arg ...string) {
+	web.Index.MergeCommands(ice.Commands{"/x/": {Actions: aaa.WhiteAction(), Hand: func(m *ice.Message, arg ...string) {
 		if arg[0] == ice.LIST {
 			m.Cmd(Prefix(SERVICE), func(value ice.Maps) { m.Push(nfs.REPOS, web.MergeLink(m, "/x/"+kit.Keys(value[nfs.REPOS], GIT))) })
 			m.Sort(nfs.REPOS)
 			return
 		} else if m.RenderVoid(); m.Option("go-get") == "1" {
 			p := _git_url(m, path.Join(arg...))
-			m.RenderResult(kit.Format(`<meta name="go-import" content="%s">`, kit.Format(`%s git %s`, kit.TrimExt(strings.Split(p, "://")[1], GIT), p)))
+			m.RenderResult(kit.Format(`<meta name="go-import" content="%s">`, kit.Format(`%s git %s`, strings.TrimSuffix(strings.Split(p, "://")[1], nfs.PT+GIT), p)))
 			return
 		}
 		switch repos, service := _service_param(m, arg...); service {

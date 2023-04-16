@@ -40,3 +40,5 @@ var Index = &ice.Context{Name: GIT, Help: "代码库", Commands: ice.Commands{
 }}
 
 func init() { code.Index.Register(Index, &web.Frame{}, REPOS) }
+
+func Prefix(arg ...string) string { return code.Prefix(GIT, kit.Keys(arg)) }

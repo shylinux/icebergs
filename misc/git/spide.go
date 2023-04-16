@@ -53,11 +53,11 @@ func init() {
 			} else if len(arg) == 1 {
 				color := []string{cli.YELLOW, cli.BLUE, cli.CYAN, cli.RED}
 				ctx.DisplayStory(m, "", mdb.FIELD, nfs.PATH, aaa.ROOT, arg[0])
-				nfs.DirDeepAll(m, _repos_path(arg[0]), "", func(value ice.Maps) {
+				nfs.DirDeepAll(m, _repos_path(m, arg[0]), "", func(value ice.Maps) {
 					m.Push(cli.COLOR, color[strings.Count(value[nfs.PATH], ice.PS)%len(color)])
 					m.Push("", value, []string{nfs.PATH})
 				}, nfs.PATH)
-				m.Option(nfs.DIR_ROOT, _repos_path(arg[0]))
+				m.Option(nfs.DIR_ROOT, _repos_path(m, arg[0]))
 				m.StatusTimeCount()
 			} else if len(arg) == 2 {
 

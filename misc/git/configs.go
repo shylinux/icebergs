@@ -31,6 +31,7 @@ func _configs_read(m *ice.Message, p string) ice.Maps {
 }
 
 const (
+	CONFIG     = "config"
 	USER_NAME  = "user.name"
 	USER_EMAIL = "user.email"
 )

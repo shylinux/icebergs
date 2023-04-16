@@ -1,7 +1,6 @@
 package git
 
 import (
-	"path"
 	"strings"
 	"time"
 
@@ -113,15 +112,9 @@ func _status_list(m *ice.Message) (files, adds, dels int, last time.Time) {
 const (
 	INSTEADOF = "insteadof"
 	OAUTH     = "oauth"
-	PULL      = "pull"
-	PUSH      = "push"
 	DIFF      = "diff"
-	ADD       = "add"
 	OPT       = "opt"
 	FIX       = "fix"
-	COMMIT    = "commit"
-	STASH     = "stash"
-	TAG       = "tag"
 
 	TAGS    = "tags"
 	VERSION = "version"
@@ -172,32 +165,6 @@ func init() {
 			OAUTH: {Help: "授权", Hand: func(m *ice.Message, arg ...string) {
 				m.ProcessOpen(kit.MergeURL2(kit.Select(ice.Info.Make.Remote, _git_remote(m)), "/chat/cmd/web.code.git.token", aaa.USERNAME, m.Option(ice.MSG_USERNAME), tcp.HOST, web.UserHost(m)))
 			}},
-			PULL: {Help: "下载", Hand: func(m *ice.Message, arg ...string) {
-				_status_each(m, "", cli.SYSTEM, GIT, PULL)
-				_status_each(m, "", cli.SYSTEM, GIT, PULL, "--tags")
-				m.Sleep3s()
-			}},
-			PUSH: {Help: "上传", Hand: func(m *ice.Message, arg ...string) {
-				_status_each(m, "", cli.SYSTEM, GIT, PUSH)
-				_status_each(m, "", cli.SYSTEM, GIT, PUSH, "--tags")
-				m.Sleep3s()
-			}},
-			ADD: {Help: "添加", Hand: func(m *ice.Message, arg ...string) { _repos_cmd(m, m.Option(REPOS), ADD, m.Option(nfs.FILE)) }}, OPT: {Help: "优化"}, FIX: {Help: "修复"},
-			COMMIT: {Name: "commit action=add,opt,fix comment=some", Help: "提交", Hand: func(m *ice.Message, arg ...string) {
-				_repos_cmd(m, m.Option(REPOS), COMMIT, "-am", m.Option(ctx.ACTION)+ice.SP+m.Option(COMMENT))
-				m.ProcessBack()
-			}},
-			STASH: {Help: "缓存", Hand: func(m *ice.Message, arg ...string) { _repos_cmd(m, kit.Select(m.Option(REPOS), arg, 0), STASH) }},
-			TAG: {Name: "tag version", Help: "标签", Hand: func(m *ice.Message, arg ...string) {
-				kit.If(m.Option(VERSION) == "", func() { m.Option(VERSION, _status_tag(m, m.Option(TAGS))) })
-				_repos_cmd(m, m.Option(REPOS), TAG, m.Option(VERSION))
-				_repos_cmd(m, m.Option(REPOS), PUSH, "--tags")
-				ctx.ProcessRefresh(m)
-			}},
-			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
-				m.Assert(m.Option(REPOS) != "" && m.Option(nfs.FILE) != "")
-				nfs.Trash(m, path.Join(_repos_path(m.Option(REPOS)), m.Option(nfs.FILE)))
-			}},
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(mdb.TYPE) != web.WORKER {
 					return
@@ -215,6 +182,10 @@ func init() {
 				m.Push(mdb.TEXT, strings.Join(text, ", "))
 			}},
 		}, gdb.EventAction(web.DREAM_TABLES), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
+			if len(arg) > 0 && arg[0] == ctx.ACTION {
+				m.Cmdy(REPOS, arg)
+				return
+			}
 			if _configs_get(m, USER_EMAIL) == "" {
 				m.Echo("please config user.email").Action(CONFIGS)
 			} else if len(arg) == 0 {

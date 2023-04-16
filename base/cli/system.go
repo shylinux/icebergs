@@ -94,7 +94,7 @@ func _system_exec(m *ice.Message, cmd *exec.Cmd) {
 			if m.IsErr() {
 				m.Option(ice.MSG_ARGS, kit.Simple(http.StatusBadRequest, cmd.Args, err.String()))
 				m.Echo(strings.TrimRight(err.String(), ice.NL))
-				// m.Debug("%s %s", err, out)
+				m.Debug("%s %s", err, out)
 			}
 		}()
 	}

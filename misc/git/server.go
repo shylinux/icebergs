@@ -43,19 +43,22 @@ func _server_login(m *ice.Message) error {
 	return nil
 }
 func _server_param(m *ice.Message, arg ...string) (string, string) {
-	repos, service := path.Join(arg...), kit.Select(arg[len(arg)-1], m.Option("service"))
+	repos, service := path.Join(kit.Slice(arg, 0, 1)...), kit.Select(arg[len(arg)-1], m.Option("service"))
 	switch {
 	case strings.HasSuffix(repos, INFO_REFS):
 		repos = strings.TrimSuffix(repos, INFO_REFS)
 	default:
 		repos = strings.TrimSuffix(repos, service)
 	}
+	m.Debug("what %v", repos)
 	return kit.Path(ice.USR_LOCAL_REPOS, strings.TrimSuffix(repos, ".git/")), strings.TrimPrefix(service, "git-")
 }
 func _server_repos(m *ice.Message, arg ...string) error {
 	repos, service := _server_param(m, arg...)
 	if m.Option(cli.CMD_DIR, repos); strings.HasSuffix(path.Join(arg...), INFO_REFS) {
 		web.RenderType(m.W, "", kit.Format("application/x-git-%s-advertisement", service))
+		// _server_writer(m, "# service=git-"+service+ice.NL, m.Cmd(cli.SYSTEM, "ice.bin", "web.git.repos", service, repos).Results())
+		// return nil
 		_server_writer(m, "# service=git-"+service+ice.NL, _git_cmds(m, service, "--stateless-rpc", "--advertise-refs", ice.PT))
 		return nil
 	}
@@ -66,6 +69,10 @@ func _server_repos(m *ice.Message, arg ...string) error {
 	defer reader.Close()
 	m.Options(cli.CMD_INPUT, reader, cli.CMD_OUTPUT, m.W)
 	web.RenderType(m.W, "", kit.Format("application/x-git-%s-result", service))
+
+	// m.Cmd(cli.SYSTEM, "ice.bin", "web.git.repos", service, repos)
+	// return nil
+	//
 	_git_cmd(m, service, "--stateless-rpc", ice.PT)
 	return nil
 }

@@ -35,6 +35,10 @@ func (m *Message) Assert(expr Any) bool {
 	switch e := expr.(type) {
 	case nil:
 		return true
+	case string:
+		if expr != "" {
+			return true
+		}
 	case bool:
 		if e == true {
 			return true

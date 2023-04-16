@@ -12,7 +12,7 @@ import (
 )
 
 func _count_count(m *ice.Message, arg []string, cb func(string)) {
-	if m.Warn(len(arg) == 0 || arg[0] == "usr/", ice.ErrNotValid, nfs.DIR, "to many files, please select sub dir") {
+	if m.Warn(len(arg) == 0 || arg[0] == nfs.USR, ice.ErrNotValid, nfs.DIR, "to many files, please select sub dir") {
 		return
 	}
 	nfs.DirDeepAll(m, "", arg[0], func(value ice.Maps) {
@@ -36,18 +36,17 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		COUNT: {Name: "count path auto count order tags", Help: "代码行", Actions: ice.Actions{
 			COUNT: {Help: "计数", Hand: func(m *ice.Message, arg ...string) {
-				files := map[string]int{}
-				lines := map[string]int{}
+				files, lines := map[string]int{}, map[string]int{}
 				_count_count(m, arg, func(file string) {
 					files[mdb.TOTAL]++
 					files[kit.Ext(file)]++
 					m.Cmdy(nfs.CAT, file, func(text string) {
 						if kit.Ext(file) == code.GO {
 							switch {
-							case strings.HasPrefix(text, "func "):
-								lines["_func"]++
 							case strings.HasPrefix(text, "type "):
 								lines["_type"]++
+							case strings.HasPrefix(text, "func "):
+								lines["_func"]++
 							}
 						}
 						lines[mdb.TOTAL]++
@@ -55,7 +54,7 @@ func init() {
 					})
 				})
 				kit.For(lines, func(k string, v int) { m.Push(mdb.TYPE, k).Push("files", files[k]).Push("lines", lines[k]) })
-				m.StatusTimeCount().SortIntR("lines")
+				m.SortIntR("lines").StatusTimeCount()
 			}},
 			"order": {Help: "排行", Hand: func(m *ice.Message, arg ...string) {
 				files := map[string]int{}
@@ -63,7 +62,7 @@ func init() {
 					m.Cmdy(nfs.CAT, file, func(text string) { files[strings.TrimPrefix(file, arg[0])]++ })
 				})
 				kit.For(files, func(k string, v int) { m.Push("files", k).Push("lines", v) })
-				m.StatusTimeCount().SortIntR("lines")
+				m.SortIntR("lines").StatusTimeCount()
 			}},
 			"tags": {Help: "索引", Hand: func(m *ice.Message, arg ...string) {
 				count := map[string]int{}
@@ -77,7 +76,7 @@ func init() {
 					}
 				})
 				kit.For(count, func(k string, v int) { m.Push(mdb.TYPE, k).Push(mdb.COUNT, v) })
-				m.StatusTimeCount().SortIntR(mdb.COUNT)
+				m.SortIntR(mdb.COUNT).StatusTimeCount()
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) { m.Cmdy(nfs.DIR, arg) }},
 	})

@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"path"
 	"strings"
+	"time"
 
 	git "shylinux.com/x/go-git/v5"
 	"shylinux.com/x/go-git/v5/plumbing"
@@ -22,27 +23,15 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _repos_cmd(m *ice.Message, name string, arg ...string) *ice.Message {
-	return m.Copy(_git_cmd(m.Options(cli.CMD_DIR, _repos_path(m, name)), arg...))
+func _repos_cmd(m *ice.Message, p string, arg ...string) *ice.Message {
+	return m.Copy(_git_cmd(m.Options(cli.CMD_DIR, _repos_path(m, p)), arg...))
 }
-func _repos_path(m *ice.Message, p string, arg ...string) string {
-	if p == path.Base(kit.Path("")) {
-		return kit.Path("", arg...)
-	}
-	return path.Join(nfs.USR, p, path.Join(arg...))
-}
-func _repos_open(m *ice.Message, p string) *git.Repository {
-	return mdb.HashSelectTarget(m, p, nil).(*git.Repository)
-}
-func _repos_init(m *ice.Message, p string) {
-	m.Debug("what %v", p)
-	git.PlainInit(p, true)
-}
+func _repos_init(m *ice.Message, p string) { git.PlainInit(p, true) }
 func _repos_insert(m *ice.Message, p string) {
 	if repos, err := git.PlainOpen(p); err == nil {
 		args := []string{REPOS, path.Base(p), nfs.PATH, p}
 		if refer, err := repos.Head(); err == nil {
-			args = append(args, BRANCH, refer.Name().String())
+			args = append(args, BRANCH, strings.TrimPrefix(refer.Name().String(), "refs/heads/"))
 			if commit, err := repos.CommitObject(refer.Hash()); err == nil {
 				args = append(args, mdb.TIME, commit.Author.When.Format(ice.MOD_TIME), COMMIT, commit.Message)
 			}
@@ -53,9 +42,18 @@ func _repos_insert(m *ice.Message, p string) {
 		mdb.HashCreate(m.Options(mdb.TARGET, repos), args)
 	}
 }
+func _repos_path(m *ice.Message, p string, arg ...string) string {
+	if p == path.Base(kit.Path("")) {
+		return kit.Path("", arg...)
+	}
+	return path.Join(nfs.USR, p, path.Join(arg...))
+}
+func _repos_open(m *ice.Message, p string) *git.Repository {
+	return mdb.HashSelectTarget(m, p, nil).(*git.Repository)
+}
 func _repos_each(m *ice.Message, title string, cb func(*git.Repository, ice.Maps) error) {
 	msg := m.Cmd("")
-	web.GoToast(m, title, func(toast func(string, int, int)) {
+	web.GoToast(m, kit.Select(m.CommandKey()+ice.SP+m.ActionKey(), title), func(toast func(string, int, int)) {
 		list, count, total := []string{}, 0, msg.Length()
 		msg.Table(func(value ice.Maps) {
 			toast(value[REPOS], count, total)
@@ -81,8 +79,7 @@ func _repos_log(m *ice.Message, repos *git.Repository) error {
 	}
 	limit := 30
 	defer m.StatusTimeCount()
-	m.Push(mdb.TIME, m.Time())
-	m.Push(COMMIT, INDEX)
+	m.Push(mdb.TIME, m.Time()).Push(COMMIT, INDEX)
 	m.Push(aaa.USERNAME, m.Option(ice.MSG_USERNAME))
 	m.Push(mdb.TEXT, "add some")
 	m.Push("files", 0).Push("adds", 0).Push("dels", 0)
@@ -119,7 +116,7 @@ func _repos_stats(m *ice.Message, repos *git.Repository, h string) error {
 	}
 	return nil
 }
-func _repos_status(m *ice.Message, repos *git.Repository) error {
+func _repos_status(m *ice.Message, p string, repos *git.Repository) error {
 	work, err := repos.Worktree()
 	if err != nil {
 		return err
@@ -130,12 +127,10 @@ func _repos_status(m *ice.Message, repos *git.Repository) error {
 	}
 	defer m.StatusTimeCount()
 	for k, v := range status {
-		switch kit.Ext(k) {
-		case "swp", "swo":
+		if kit.IsIn(kit.Ext(k), "swp", "swo") {
 			continue
 		}
-		m.Push(nfs.FILE, k).Push(STATUS, string(v.Worktree)+string(v.Staging))
-		switch v.Worktree {
+		switch m.Push(REPOS, p).Push(STATUS, string(v.Worktree)+string(v.Staging)).Push(nfs.FILE, k); v.Worktree {
 		case git.Untracked:
 			m.PushButton(ADD, nfs.TRASH)
 		case git.Modified:
@@ -146,12 +141,39 @@ func _repos_status(m *ice.Message, repos *git.Repository) error {
 	}
 	return nil
 }
+func _repos_total(m *ice.Message, p string, repos *git.Repository, stats map[string]int) *time.Time {
+	iter, err := repos.Log(&git.LogOptions{})
+	if err != nil {
+		return nil
+	}
+	from, cmts, adds, dels := time.Now(), 0, 0, 0
+	iter.ForEach(func(commit *object.Commit) error {
+		from, cmts = commit.Author.When, cmts+1
+		if stats, err := commit.Stats(); err == nil {
+			for _, stat := range stats {
+				adds, dels = adds+stat.Addition, dels+stat.Deletion
+			}
+		}
+		return nil
+	})
+	days := kit.Int(time.Now().Sub(from) / time.Hour / 24)
+	m.Push(REPOS, p).Push("from", from.Format(ice.MOD_TIME)).Push("days", days)
+	m.Push("commits", cmts).Push("adds", adds).Push("dels", dels).Push("rest", adds-dels)
+	stats["cmts"] += cmts
+	stats["adds"] += adds
+	stats["dels"] += dels
+	stats["rest"] += adds - dels
+	if days > stats["days"] {
+		stats["days"] = days
+		return &from
+	}
+	return nil
+}
 func _repos_vimer(m *ice.Message, _repos_path func(m *ice.Message, p string, arg ...string) string, arg ...string) {
 	if len(arg) == 0 || arg[0] != ice.RUN {
 		arg = []string{path.Join(arg[:2]...), kit.Select("README.md", arg, 2)}
 	} else if kit.Select("", arg, 1) != ctx.ACTION {
-		ls := kit.Split(kit.Select(arg[1], m.Option(nfs.DIR_ROOT)), nfs.PS)
-		if ls[1] == INDEX {
+		if ls := kit.Split(path.Join(m.Option(nfs.DIR_ROOT), arg[1]), nfs.PS); ls[1] == INDEX {
 			if len(arg) < 3 {
 				m.Cmdy(nfs.DIR, nfs.PWD, kit.Dict(nfs.DIR_ROOT, _repos_path(m, ls[0])))
 			} else {
@@ -184,8 +206,8 @@ const (
 	PULL   = "pull"
 	PUSH   = "push"
 	LOG    = "log"
-	ADD    = "add"
 	TAG    = "tag"
+	ADD    = "add"
 	STASH  = "stash"
 	COMMIT = "commit"
 
@@ -198,7 +220,7 @@ const REPOS = "repos"
 
 func init() {
 	web.Index.MergeCommands(ice.Commands{
-		web.PP(ice.REQUIRE): {Name: "/require/shylinux.com/x/volcanos/proto.js", Help: "代码库", Hand: func(m *ice.Message, arg ...string) {
+		web.PP(ice.REQUIRE): {Name: "/require/shylinux.com/x/volcanos/proto.js", Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 4 {
 				m.RenderStatusBadRequest()
 			} else if path.Join(arg[:3]...) == ice.Info.Make.Module && nfs.Exists(m, path.Join(arg[3:]...)) {
@@ -226,12 +248,12 @@ func init() {
 			CLONE: {Name: "clone origin* branch name path", Hand: func(m *ice.Message, arg ...string) {
 				m.OptionDefault(mdb.NAME, path.Base(m.Option(ORIGIN)))
 				m.OptionDefault(nfs.PATH, path.Join(path.Join(nfs.USR, m.Option(mdb.NAME))))
-				_, err := git.PlainClone(m.Option(nfs.PATH), false, &git.CloneOptions{URL: m.Option(ORIGIN)})
-				m.Warn(err)
-				_repos_insert(m, m.Option(nfs.PATH))
+				if _, err := git.PlainClone(m.Option(nfs.PATH), false, &git.CloneOptions{URL: m.Option(ORIGIN)}); m.Warn(err) {
+					_repos_insert(m, m.Option(nfs.PATH))
+				}
 			}},
 			PULL: {Hand: func(m *ice.Message, arg ...string) {
-				_repos_each(m, "repos pull", func(repos *git.Repository, value ice.Maps) error {
+				_repos_each(m, "", func(repos *git.Repository, value ice.Maps) error {
 					if value[ORIGIN] == "" {
 						return nil
 					} else if work, err := repos.Worktree(); err != nil {
@@ -247,7 +269,7 @@ func init() {
 					u := kit.ParseURL(line)
 					list[u.Host] = u
 				})
-				_repos_each(m, "repos push", func(repos *git.Repository, value ice.Maps) error {
+				_repos_each(m, "", func(repos *git.Repository, value ice.Maps) error {
 					if value[ORIGIN] == "" {
 						return nil
 					}
@@ -262,12 +284,21 @@ func init() {
 			LOG: {Hand: func(m *ice.Message, arg ...string) {
 				_repos_log(m, _repos_open(m, kit.Select(m.Option(REPOS), arg, 0)))
 			}},
+			TAG: {Name: "tag version", Hand: func(m *ice.Message, arg ...string) {
+				kit.If(m.Option(VERSION) == "", func() { m.Option(VERSION, _status_tag(m, m.Option(TAGS))) })
+				repos := _repos_open(m, m.Option(REPOS))
+				if refer, err := repos.Head(); !m.Warn(err) {
+					_, err := repos.CreateTag(m.Option(VERSION), refer.Hash(), &git.CreateTagOptions{})
+					m.Warn(err)
+				}
+			}},
 			ADD: {Hand: func(m *ice.Message, arg ...string) {
 				if work, err := _repos_open(m, m.Option(REPOS)).Worktree(); !m.Warn(err) {
 					_, err := work.Add(m.Option(nfs.FILE))
 					m.Warn(err)
 				}
 			}},
+			STASH: {Hand: func(m *ice.Message, arg ...string) { _repos_cmd(m, kit.Select(m.Option(REPOS), arg, 0), STASH) }},
 			COMMIT: {Name: "commit actions=add,opt,fix comment*=some", Hand: func(m *ice.Message, arg ...string) {
 				if work, err := _repos_open(m, m.Option(REPOS)).Worktree(); !m.Warn(err) {
 					_, err := work.Commit(m.Option("actions")+ice.SP+m.Option("comment"), &git.CommitOptions{})
@@ -275,34 +306,63 @@ func init() {
 				}
 			}},
 			STATUS: {Hand: func(m *ice.Message, arg ...string) {
-				_repos_each(m, "repos status", func(repos *git.Repository, value ice.Maps) error { return _repos_status(m, repos) })
+				if repos := kit.Select(m.Option(REPOS), arg, 0); repos != "" {
+					_repos_status(m, repos, _repos_open(m, repos))
+				} else {
+					_repos_each(m, "", func(repos *git.Repository, value ice.Maps) error {
+						return _repos_status(m, value[REPOS], repos)
+					})
+				}
 			}},
-			STASH: {Help: "缓存", Hand: func(m *ice.Message, arg ...string) { _repos_cmd(m, kit.Select(m.Option(REPOS), arg, 0), STASH) }},
-			TAG: {Name: "tag version", Help: "标签", Hand: func(m *ice.Message, arg ...string) {
-				kit.If(m.Option(VERSION) == "", func() { m.Option(VERSION, _status_tag(m, m.Option(TAGS))) })
-				_repos_cmd(m, m.Option(REPOS), TAG, m.Option(VERSION))
-				_repos_cmd(m, m.Option(REPOS), PUSH, "--tags")
-				ctx.ProcessRefresh(m)
+			TOTAL: {Hand: func(m *ice.Message, arg ...string) {
+				stats := map[string]int{}
+				if repos := kit.Select(m.Option(REPOS), arg, 0); repos == "" {
+					var from *time.Time
+					_repos_each(m, "", func(repos *git.Repository, value ice.Maps) error {
+						if kit.IsIn(value[REPOS], "go-git", "go-qrcode", "websocket") {
+							return nil
+						}
+						t := _repos_total(m, value[REPOS], repos, stats)
+						kit.If(t != nil, func() { from = t })
+						return nil
+					})
+					m.Push(REPOS, TOTAL)
+					m.Push("from", from.Format(ice.MOD_TIME))
+					m.Push("days", stats["days"])
+					m.Push("commits", stats["cmts"])
+					m.Push("adds", stats["adds"])
+					m.Push("dels", stats["dels"])
+					m.Push("rest", stats["rest"])
+					m.SortIntR("rest")
+				} else {
+					_repos_total(m, repos, _repos_open(m, repos), stats)
+				}
+				m.StatusTimeCount()
 			}},
-			code.VIMER: {Hand: func(m *ice.Message, arg ...string) { _repos_vimer(m, _repos_path, arg...) }},
 			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
+				m.Assert(m.Option(REPOS) != "" && m.Option(nfs.FILE) != "")
+				nfs.Trash(m, _repos_path(m, m.Option(REPOS), m.Option(nfs.FILE)))
+			}},
+			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) {
 				m.Assert(m.Option(REPOS) != "")
 				mdb.HashRemove(m, m.Option(REPOS))
-				nfs.Trash(m, _repos_path(m, m.Option(REPOS), m.Option(nfs.FILE)))
+				nfs.Trash(m, _repos_path(m, m.Option(REPOS)))
 			}},
 			web.DREAM_CREATE: {Hand: func(m *ice.Message, arg ...string) {
 				kit.If(m.Option(REPOS), func(p string) {
 					m.Cmd("", CLONE, ORIGIN, p, nfs.PATH, m.Option(cli.CMD_DIR), ice.Maps{cli.CMD_DIR: ""})
 				})
 			}},
+			code.VIMER: {Hand: func(m *ice.Message, arg ...string) { _repos_vimer(m, _repos_path, arg...) }},
 		}, mdb.HashAction(mdb.SHORT, REPOS, mdb.FIELD, "time,repos,branch,commit,origin"), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
-				mdb.HashSelect(m, arg...).Action(CLONE, PULL, PUSH, STATUS)
+				mdb.HashSelect(m, arg...).Sort(REPOS).Action(CLONE, PULL, PUSH, STATUS, TOTAL)
 			} else if len(arg) == 1 {
 				_repos_log(m, _repos_open(m, arg[0]))
+				m.Action(TOTAL)
 			} else if len(arg) == 2 {
 				if repos := _repos_open(m, arg[0]); arg[1] == INDEX {
-					_repos_status(m, repos)
+					_repos_status(m, arg[0], repos)
 				} else {
 					_repos_stats(m, repos, arg[1])
 				}

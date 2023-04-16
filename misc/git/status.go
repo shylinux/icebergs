@@ -32,25 +32,6 @@ func _status_tag(m *ice.Message, tags string) string {
 		return "v0.0.1"
 	}
 }
-func _status_each(m *ice.Message, title string, cmds ...string) {
-	web.GoToast(m, kit.Select(strings.Join(cmds, ice.SP), title), func(toast func(string, int, int)) {
-		list, count, total := []string{}, 0, m.Cmd(REPOS).Length()
-		ReposList(m).Table(func(value ice.Maps) {
-			toast(value[REPOS], count, total)
-			if msg := m.Cmd(cmds, kit.Dict(cli.CMD_DIR, value[nfs.PATH])); !cli.IsSuccess(msg) {
-				web.Toast(m, msg.Append(cli.CMD_ERR)+msg.Append(cli.CMD_OUT), "error: "+value[REPOS], "", "3s")
-				list = append(list, value[REPOS])
-				m.Sleep3s()
-			}
-			count++
-		})
-		if len(list) > 0 {
-			web.Toast(m, strings.Join(list, ice.NL), ice.FAILURE, "30s")
-		} else {
-			toast(ice.SUCCESS, count, total)
-		}
-	})
-}
 func _status_stat(m *ice.Message, files, adds, dels int) (int, int, int) {
 	kit.SplitKV(ice.SP, ice.FS, _git_diff(m), func(text string, ls []string) {
 		n := kit.Int(ls[0])
@@ -189,6 +170,9 @@ func init() {
 			if _configs_get(m, USER_EMAIL) == "" {
 				m.Echo("please config user.email").Action(CONFIGS)
 			} else if len(arg) == 0 {
+				m.Cmdy(REPOS, STATUS)
+				m.Action(PULL, PUSH, "insteadof", "oauth").Sort("repos,status,file")
+				return
 				files, adds, dels, last := _status_list(m)
 				m.StatusTimeCount("files", files, "adds", adds, "dels", dels, "last", last.Format(ice.MOD_TIME), nfs.ORIGIN, _git_remote(m))
 				m.Action(PULL, PUSH, "insteadof", "oauth").Sort("repos,type,file")

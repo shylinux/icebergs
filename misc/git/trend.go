@@ -17,8 +17,7 @@ func init() {
 			if len(arg) == 0 {
 				m.Cmdy(REPOS)
 			} else {
-				m.Cmdy(TOTAL, kit.Slice(arg, 0, 2))
-				ctx.DisplayStory(m, "")
+				ctx.DisplayStory(m.Cmdy(TOTAL, kit.Slice(arg, 0, 2)), "")
 			}
 		}},
 	})

@@ -122,7 +122,7 @@ func init() {
 			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) {
 				m.Assert(m.Option(REPOS) != "")
 				mdb.HashRemove(m, m.Option(REPOS))
-				nfs.Trash(m, _service_path(m, m.Option(REPOS), m.Option(nfs.FILE)))
+				nfs.Trash(m, _service_path(m, m.Option(REPOS)))
 			}},
 			RECEIVE_PACK: {Hand: func(m *ice.Message, arg ...string) {
 				if err := file.ServeReceivePack(arg[0]); err != nil {
@@ -138,16 +138,16 @@ func init() {
 			}},
 			TOKEN:      {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(TOKEN, cli.MAKE) }},
 			code.VIMER: {Hand: func(m *ice.Message, arg ...string) { _repos_vimer(m, _service_path, arg...) }},
-		}, mdb.HashAction(mdb.SHORT, REPOS, mdb.FIELD, "time,repos,branch,commit,origin"), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.SHORT, REPOS, mdb.FIELD, "time,repos,branch,commit"), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
-				mdb.HashSelect(m, arg...).Action(mdb.CREATE, TOKEN)
+				mdb.HashSelect(m, arg...).Sort(REPOS).Action(mdb.CREATE, TOKEN)
 				m.Echo(strings.ReplaceAll(m.Cmdx("web.code.publish", ice.CONTEXTS), "app username", "dev username"))
 				m.Echo(m.Cmdx(TOKEN, m.Option(ice.MSG_USERNAME)))
 			} else if len(arg) == 1 {
 				_repos_log(m, _repos_open(m, arg[0]))
 			} else if len(arg) == 2 {
 				if repos := _repos_open(m, arg[0]); arg[1] == INDEX {
-					_repos_status(m, repos)
+					_repos_status(m, arg[0], repos)
 				} else {
 					_repos_stats(m, repos, arg[1])
 				}

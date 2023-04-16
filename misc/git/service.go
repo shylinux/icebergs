@@ -49,6 +49,7 @@ func _service_repos(m *ice.Message, arg ...string) error {
 	repos, service := _service_param(m, arg...)
 	m.Logs(m.R.Method, service, repos)
 	if m.Option(cli.CMD_DIR, repos); strings.HasSuffix(path.Join(arg...), INFO_REFS) {
+		m.Option(ice.MSG_USERROLE, aaa.TECH)
 		web.RenderType(m.W, "", kit.Format("application/x-git-%s-advertisement", service))
 		_service_writer(m, "# service=git-"+service+ice.NL, _git_cmds(m, service, "--stateless-rpc", "--advertise-refs", ice.PT))
 		return nil

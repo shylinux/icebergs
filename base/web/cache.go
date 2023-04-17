@@ -20,9 +20,9 @@ func _cache_name(m *ice.Message, h string) string { return path.Join(ice.VAR_FIL
 func _cache_mime(m *ice.Message, mime, name string) string {
 	if mime == ApplicationOctet {
 		if kit.ExtIsImage(name) {
-			mime = IMAGE + ice.PS + kit.Ext(name)
+			mime = IMAGE + nfs.PS + kit.Ext(name)
 		} else if kit.ExtIsVideo(name) {
-			mime = VIDEO + ice.PS + kit.Ext(name)
+			mime = VIDEO + nfs.PS + kit.Ext(name)
 		}
 	} else if mime == "" {
 		return kit.Ext(name)
@@ -130,7 +130,7 @@ func init() {
 			ice.RENDER_DOWNLOAD: {Hand: func(m *ice.Message, arg ...string) {
 				m.Echo(_share_link(m, kit.Select(arg[0], arg, 1), ice.POD, m.Option(ice.MSG_USERPOD), "filename", kit.Select("", arg[0], len(arg) > 1)))
 			}},
-			ice.PS: {Hand: func(m *ice.Message, arg ...string) {
+			nfs.PS: {Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashSelectDetail(m, arg[0], func(value ice.Map) {
 					if kit.Format(value[nfs.FILE]) == "" {
 						m.RenderResult(value[mdb.TEXT])
@@ -183,9 +183,9 @@ func Download(m *ice.Message, link string, cb func(count, total, value int)) *ic
 	return m.Cmdy(Prefix(SPIDE), ice.DEV, SPIDE_CACHE, http.MethodGet, link, cb)
 }
 func PushDisplay(m *ice.Message, mime, name, link string) {
-	if strings.HasPrefix(mime, IMAGE+ice.PS) || kit.ExtIsImage(name) {
+	if strings.HasPrefix(mime, IMAGE+nfs.PS) || kit.ExtIsImage(name) {
 		m.PushImages(nfs.FILE, link)
-	} else if strings.HasPrefix(mime, VIDEO+ice.PS) || kit.ExtIsImage(name) {
+	} else if strings.HasPrefix(mime, VIDEO+nfs.PS) || kit.ExtIsImage(name) {
 		m.PushVideos(nfs.FILE, link)
 	} else {
 		m.PushDownload(nfs.FILE, name, link)

@@ -41,17 +41,17 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	}
 	if ip := r.Header.Get(X_REAL_IP); ip != "" {
 		if r.Header.Set(ice.MSG_USERIP, ip); r.Header.Get(X_REAL_PORT) != "" {
-			r.Header.Set(ice.MSG_USERADDR, ip+ice.DF+r.Header.Get(X_REAL_PORT))
+			r.Header.Set(ice.MSG_USERADDR, ip+nfs.DF+r.Header.Get(X_REAL_PORT))
 		}
 	} else if ip := r.Header.Get(X_FORWARDED_FOR); ip != "" {
 		r.Header.Set(ice.MSG_USERIP, kit.Split(ip)[0])
 	} else if strings.HasPrefix(r.RemoteAddr, "[") {
 		r.Header.Set(ice.MSG_USERIP, strings.Split(r.RemoteAddr, "]")[0][1:])
 	} else {
-		r.Header.Set(ice.MSG_USERIP, strings.Split(r.RemoteAddr, ice.DF)[0])
+		r.Header.Set(ice.MSG_USERIP, strings.Split(r.RemoteAddr, nfs.DF)[0])
 	}
 	if m.Logs(r.Header.Get(ice.MSG_USERIP), r.Method, r.URL.String()); r.Method == http.MethodGet {
-		if msg := m.Spawn(w, r).Options(ice.MSG_USERUA, r.UserAgent()); path.Join(r.URL.Path) == ice.PS {
+		if msg := m.Spawn(w, r).Options(ice.MSG_USERUA, r.UserAgent()); path.Join(r.URL.Path) == nfs.PS {
 			return !Render(RenderMain(msg), msg.Option(ice.MSG_OUTPUT), kit.List(msg.Optionv(ice.MSG_ARGS))...)
 		} else if p := path.Join(kit.Select(ice.USR_VOLCANOS, ice.USR_INTSHELL, msg.IsCliUA()), r.URL.Path); nfs.Exists(msg, p) {
 			return !Render(msg, ice.RENDER_DOWNLOAD, p)
@@ -63,7 +63,7 @@ func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.Response
 	_log := func(level string, arg ...ice.Any) *ice.Message { return m.Logs(strings.Title(level), arg...) }
 	if u, e := url.Parse(r.Header.Get(Referer)); e == nil {
 		add := func(k, v string) { _log(nfs.PATH, k, m.Option(k, v)) }
-		switch arg := strings.Split(strings.TrimPrefix(u.Path, ice.PS), ice.PS); arg[0] {
+		switch arg := strings.Split(strings.TrimPrefix(u.Path, nfs.PS), nfs.PS); arg[0] {
 		case CHAT:
 			kit.For(arg[1:], func(k, v string) { add(k, v) })
 		case SHARE:
@@ -85,7 +85,7 @@ func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.Response
 	m.Options(ice.MSG_USERUA, r.Header.Get(UserAgent), ice.MSG_USERIP, r.Header.Get(ice.MSG_USERIP))
 	m.Options(ice.MSG_SESSID, kit.Select(m.Option(ice.MSG_SESSID), m.Option(CookieName(m.Option(ice.MSG_USERWEB)))))
 	kit.If(m.Optionv(ice.MSG_CMDS) == nil, func() {
-		kit.If(strings.TrimPrefix(r.URL.Path, key), func(p string) { m.Optionv(ice.MSG_CMDS, strings.Split(p, ice.PS)) })
+		kit.If(strings.TrimPrefix(r.URL.Path, key), func(p string) { m.Optionv(ice.MSG_CMDS, strings.Split(p, nfs.PS)) })
 	})
 	defer func() { Render(m, m.Option(ice.MSG_OUTPUT), kit.List(m.Optionv(ice.MSG_ARGS))...) }()
 	if cmds, ok := _serve_auth(m, key, kit.Simple(m.Optionv(ice.MSG_CMDS)), w, r); ok {
@@ -177,9 +177,9 @@ func init() {
 		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,status,name,proto,host,port"), mdb.ClearOnExitHashAction())},
 	})
 	ice.AddMergeAction(func(c *ice.Context, key string, cmd *ice.Command, sub string, action *ice.Action) {
-		if strings.HasPrefix(sub, ice.PS) {
+		if strings.HasPrefix(sub, nfs.PS) {
 			kit.If(action.Hand == nil, func() { action.Hand = cmd.Hand })
-			sub = kit.Select(P(key, sub), PP(key, sub), strings.HasSuffix(sub, ice.PS))
+			sub = kit.Select(P(key, sub), PP(key, sub), strings.HasSuffix(sub, nfs.PS))
 			c.Commands[sub] = &ice.Command{Name: kit.Select(cmd.Name, action.Name), Actions: ctx.CmdAction(), Hand: action.Hand}
 		}
 	})

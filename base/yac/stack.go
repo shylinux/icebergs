@@ -76,7 +76,7 @@ func (s *Stack) stack(cb func(*Frame, int) bool) {
 	}
 }
 func (s *Stack) value(m *ice.Message, key string, arg ...Any) Any {
-	keys := strings.Split(key, ice.PT)
+	keys := strings.Split(key, nfs.PT)
 	f, n := s.peekf(), len(s.frame)-1
 	if len(arg) < 2 || arg[1] != DEFINE {
 		s.stack(func(_f *Frame, i int) bool {
@@ -172,15 +172,15 @@ func (s *Stack) reads(m *ice.Message, cb func(k string) bool) {
 			} else if len(block) > 0 {
 				kit.If(s.line != last, func() { block, last = append(block, ice.NL), s.line })
 				block = append(block, k)
-			} else if k == "*" && v == ice.PS {
+			} else if k == "*" && v == nfs.PS {
 				comment = false
 				s.skip++
 			} else if comment {
 
-			} else if k == ice.PS && v == "*" {
+			} else if k == nfs.PS && v == "*" {
 				comment = true
 				s.skip++
-			} else if k == ice.PS && v == ice.PS {
+			} else if k == nfs.PS && v == nfs.PS {
 				s.comment = append(s.comment, s.list[s.line])
 				s.skip = len(s.rest)
 			} else if s.skip == 0 && strings.HasPrefix(k, "#") {
@@ -277,7 +277,7 @@ func (s *Stack) types(m *ice.Message) Any {
 				}
 				if s.line != line {
 					kit.For(key, func(key string) {
-						field := Field{types: key, name: kit.Select("", kit.Split(key, ice.PT), -1)}
+						field := Field{types: key, name: kit.Select("", kit.Split(key, nfs.PT), -1)}
 						m.Debug("value %s field %s %#v", Format(s), key, field)
 						t.index[field.name] = key
 						t.sups = append(t.sups, key)
@@ -293,7 +293,7 @@ func (s *Stack) types(m *ice.Message) Any {
 					field := Field{types: types, name: key, tags: tags}
 					kit.If(field.types == nil, func() {
 						t.sups = append(t.sups, field.name)
-						field.types, field.name = field.name, kit.Select("", kit.Split(field.name, ice.PT), -1)
+						field.types, field.name = field.name, kit.Select("", kit.Split(field.name, nfs.PT), -1)
 					})
 					m.Debug("value %s field %s %#v", Format(s), key, field)
 					t.index[field.name] = field
@@ -383,7 +383,7 @@ func (s *Stack) calls(m *ice.Message, obj Any, key string, cb func(*Frame, Funct
 			obj, key = _v, ""
 		}
 	}
-	kit.For(kit.Split(key, ice.PT), func(k string) {
+	kit.For(kit.Split(key, nfs.PT), func(k string) {
 		switch v := obj.(type) {
 		case Operater:
 			obj = v.Operate(SUBS, k)
@@ -392,7 +392,7 @@ func (s *Stack) calls(m *ice.Message, obj Any, key string, cb func(*Frame, Funct
 		default:
 			return
 		}
-		key = strings.TrimPrefix(strings.TrimPrefix(key, k), ice.PT)
+		key = strings.TrimPrefix(strings.TrimPrefix(key, k), nfs.PT)
 	})
 	m.Debug("calls %s %T %s(%s)", Format(s), obj, key, Format(arg...))
 	if obj == nil {
@@ -536,7 +536,7 @@ func _parse_link(m *ice.Message, p string) string {
 	return ice.Render(m, ice.RENDER_ANCHOR, p, m.MergePodCmd("", "web.code.vimer", nfs.PATH, ls[0], nfs.FILE, ls[1], nfs.LINE, ls[2]))
 }
 func _parse_const(m *ice.Message, key string) string {
-	if k := kit.Select(key, strings.Split(key, ice.PT), -1); kit.IsUpper(k) {
+	if k := kit.Select(key, strings.Split(key, nfs.PT), -1); kit.IsUpper(k) {
 		return strings.ToLower(k)
 	}
 	return ""
@@ -577,7 +577,7 @@ func init() {
 	})
 	loaded := kit.Dict()
 	ice.AddMergeAction(func(c *ice.Context, key string, cmd *ice.Command, sub string, action *ice.Action) (init ice.Handler) {
-		kit.IfNoKey(loaded, ice.SRC_SCRIPT+c.Prefix(key)+ice.PS, func(p string) { kit.If(nfs.Exists(ice.Pulse, p), func() { init = StackHandler }) })
+		kit.IfNoKey(loaded, ice.SRC_SCRIPT+c.Prefix(key)+nfs.PS, func(p string) { kit.If(nfs.Exists(ice.Pulse, p), func() { init = StackHandler }) })
 		return
 	})
 }
@@ -586,7 +586,7 @@ func StackHandler(m *ice.Message, arg ...string) {
 	script := []string{}
 	m = m.Spawn(Index).Spawn(m.Target())
 	s := NewStack(m, nil, m.PrefixKey())
-	nfs.Open(m, ice.SRC_SCRIPT+m.PrefixKey()+ice.PS, func(r io.Reader, p string) {
+	nfs.Open(m, ice.SRC_SCRIPT+m.PrefixKey()+nfs.PS, func(r io.Reader, p string) {
 		kit.If(kit.Ext(p) == nfs.SHY, func() {
 			if strings.HasPrefix(path.Base(p), "on") {
 				script = append(script, kit.Format("Volcanos(\"%s\", {", kit.TrimExt(path.Base(p), nfs.SHY)))
@@ -606,7 +606,7 @@ func StackHandler(m *ice.Message, arg ...string) {
 		})
 	})
 	if len(script) > 0 {
-		p := ice.USR_SCRIPT + m.PrefixKey() + ice.PS + "list.js"
+		p := ice.USR_SCRIPT + m.PrefixKey() + nfs.PS + "list.js"
 		m.Cmd(nfs.SAVE, p, kit.Dict(nfs.CONTENT, strings.Join(script, ice.NL)))
 		s.value(m, "_script", "/require/"+p)
 	}

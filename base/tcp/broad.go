@@ -5,6 +5,7 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 	"shylinux.com/x/toolkits/logs"
 )
@@ -46,9 +47,9 @@ const (
 )
 
 func UDPAddr(m *ice.Message, host, port string) *net.UDPAddr {
-	if addr, e := net.ResolveUDPAddr(UDP4, host+ice.DF+port); !m.Warn(e, ice.ErrNotValid, host, port, logs.FileLineMeta(2)) {
+	if addr, e := net.ResolveUDPAddr(UDP4, host+nfs.DF+port); !m.Warn(e, ice.ErrNotValid, host, port, logs.FileLineMeta(2)) {
 		return addr
 	}
 	return nil
 }
-func HostPort(host, port string) string { return host + ice.DF + port }
+func HostPort(host, port string) string { return host + nfs.DF + port }

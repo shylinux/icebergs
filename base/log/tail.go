@@ -29,7 +29,7 @@ func init() {
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case mdb.NAME:
-					m.Push(arg[0], kit.Split(m.Option(FILE), ice.PS))
+					m.Push(arg[0], kit.Split(m.Option(FILE), nfs.PS))
 				case nfs.FILE:
 					m.Cmdy(nfs.DIR, kit.Select(nfs.PWD, arg, 1), nfs.PATH).RenameAppend(nfs.PATH, nfs.FILE).ProcessAgain()
 				}

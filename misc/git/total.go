@@ -103,8 +103,7 @@ func init() {
 					dels += kit.Int(del)
 					return
 				}
-				m.Push(FROM, ls[0]).Push(COMMIT, ls[1])
-				m.Push(ADDS, add).Push(DELS, del).Push(REST, kit.Int(add)-kit.Int(del))
+				m.Push(FROM, ls[0]).Push(ADDS, add).Push(DELS, del).Push(REST, kit.Int(add)-kit.Int(del)).Push(COMMIT, ls[1])
 			})
 			if total {
 				m.Push(TAGS, _git_cmds(m, "describe", "--tags"))

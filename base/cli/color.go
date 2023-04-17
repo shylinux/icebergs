@@ -25,6 +25,7 @@ var _color_map = map[string]color.Color{
 	PURPLE: color.RGBA{_DARK, 0, _DARK, _DARK},
 	CYAN:   color.RGBA{0, _DARK, _DARK, _DARK},
 	WHITE:  color.RGBA{_DARK, _DARK, _DARK, _DARK},
+	SILVER: color.RGBA{0xC0, 0xC0, 0xC0, _DARK},
 }
 
 func _parse_color(str string) color.Color {
@@ -60,6 +61,7 @@ const (
 	GRAY   = "gray"
 	CYAN   = "cyan"
 	GREEN  = "green"
+	SILVER = "silver"
 	PURPLE = "purple"
 	YELLOW = "yellow"
 	RANDOM = "random"

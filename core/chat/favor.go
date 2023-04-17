@@ -7,6 +7,7 @@ import (
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/gdb"
+	"shylinux.com/x/icebergs/base/log"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/ssh"
@@ -36,6 +37,9 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		FAVOR: {Name: "favor hash auto create getClipboardData getLocation scanQRCode record1 record2 upload demo", Help: "收藏夹", Actions: ice.MergeActions(ice.Actions{
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
+				if arg[0] == mdb.FOREACH && arg[1] == "" {
+					m.PushSearch(mdb.TYPE, web.LINK, mdb.NAME, m.CommandKey(), mdb.TEXT, m.MergePodCmd("", "", log.DEBUG, ice.TRUE))
+				}
 				if arg[0] == mdb.FOREACH {
 					m.Cmd("", ice.OptionFields("")).Table(func(value ice.Maps) {
 						if arg[1] == "" || arg[1] == value[mdb.TYPE] || strings.Contains(value[mdb.TEXT], arg[1]) {

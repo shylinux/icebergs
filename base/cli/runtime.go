@@ -36,19 +36,19 @@ func _runtime_init(m *ice.Message) {
 	}
 	m.Conf(RUNTIME, kit.Keys(BOOT, PATHNAME), path.Base(kit.Path("")))
 	m.Conf(RUNTIME, kit.Keys(BOOT, USERNAME), kit.UserName())
-	msg := m.Cmd(nfs.DIR, _system_find(m, os.Args[0]), "time,path,size,hash")
-	m.Conf(RUNTIME, kit.Keys(BOOT, ice.BIN), msg.Append(nfs.PATH))
-	m.Conf(RUNTIME, kit.Keys(BOOT, nfs.SIZE), msg.Append(nfs.SIZE))
-	m.Conf(RUNTIME, kit.Keys(BOOT, mdb.HASH), msg.Append(mdb.HASH))
-	m.Conf(RUNTIME, kit.Keys(BOOT, mdb.TIME), msg.Append(mdb.TIME))
-	m.Conf(RUNTIME, kit.Keys(BOOT, mdb.COUNT), count+1)
-	m.Conf(RUNTIME, mdb.META, "")
-	m.Conf(RUNTIME, mdb.HASH, "")
 	ice.Info.Hostname = m.Conf(RUNTIME, kit.Keys(BOOT, HOSTNAME))
 	ice.Info.Pathname = m.Conf(RUNTIME, kit.Keys(BOOT, PATHNAME))
 	ice.Info.Username = m.Conf(RUNTIME, kit.Keys(BOOT, USERNAME))
 	aaa.UserRoot(ice.Pulse, "", ice.Info.Username, aaa.ROOT, ice.OPS)
 	aaa.UserRoot(ice.Pulse, "", ice.Info.Make.Username, aaa.TECH, ice.DEV)
+	msg := m.Cmd(nfs.DIR, _system_find(m, os.Args[0]), "time,path,size,hash")
+	m.Conf(RUNTIME, kit.Keys(BOOT, mdb.TIME), msg.Append(mdb.TIME))
+	m.Conf(RUNTIME, kit.Keys(BOOT, mdb.HASH), msg.Append(mdb.HASH))
+	m.Conf(RUNTIME, kit.Keys(BOOT, nfs.SIZE), msg.Append(nfs.SIZE))
+	m.Conf(RUNTIME, kit.Keys(BOOT, ice.BIN), msg.Append(nfs.PATH))
+	m.Conf(RUNTIME, kit.Keys(BOOT, mdb.COUNT), count+1)
+	m.Conf(RUNTIME, mdb.META, "")
+	m.Conf(RUNTIME, mdb.HASH, "")
 }
 func _runtime_hostinfo(m *ice.Message) {
 	m.Push("nCPU", strings.Count(m.Cmdx(nfs.CAT, "/proc/cpuinfo"), "processor"))
@@ -155,31 +155,29 @@ func init() {
 			}},
 			API: {Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) > 1 {
-					m.Cmdy(ctx.COMMAND, "web.code.inner").Push(ctx.ARGS, kit.Format(nfs.SplitPath(m, strings.TrimPrefix(m.Option(nfs.FILE), "/require/"))))
+					m.Cmdy(ctx.COMMAND, "web.code.inner").Push(ctx.ARGS, kit.Format(nfs.SplitPath(m, m.Option(nfs.FILE))))
 					return
 				}
 				ctx.DisplayStorySpide(m.Options(nfs.DIR_ROOT, nfs.PS), lex.PREFIX, kit.Fields(ctx.ACTION, m.ActionKey()))
 				kit.For(ice.Info.Route, func(k, v string) { m.Push(nfs.PATH, k).Push(nfs.FILE, v) })
-				m.StatusTimeCount().Sort(nfs.PATH)
+				m.Sort(nfs.PATH).StatusTimeCount()
 			}},
 			CLI: {Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) > 1 {
-					m.Cmdy(ctx.COMMAND, "web.code.inner").Push(ctx.ARGS, kit.Format(nfs.SplitPath(m, strings.TrimPrefix(m.Option(nfs.FILE), "/require/"))))
+					m.Cmdy(ctx.COMMAND, "web.code.inner").Push(ctx.ARGS, kit.Format(nfs.SplitPath(m, m.Option(nfs.FILE))))
 					return
 				}
 				ctx.DisplayStorySpide(m.Options(nfs.DIR_ROOT, "ice."), lex.PREFIX, kit.Fields(ctx.ACTION, m.ActionKey()), mdb.FIELD, mdb.NAME, lex.SPLIT, nfs.PT)
 				kit.For(ice.Info.File, func(k, v string) { m.Push(nfs.FILE, k).Push(mdb.NAME, v) })
-				m.StatusTimeCount().Sort(nfs.FILE)
+				m.Sort(mdb.NAME).StatusTimeCount()
 			}},
 			CMD: {Hand: func(m *ice.Message, arg ...string) {
 				m.OptionFields(ctx.INDEX, mdb.NAME, mdb.HELP, nfs.FILE)
 				m.Cmdy(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND).StatusTimeCount()
 			}},
 			"mod": {Hand: func(m *ice.Message, arg ...string) {
-				kit.For(ice.Info.Gomod, func(k string, v ice.Any) {
-					m.Push("mod", k)
-					m.Push("url", v)
-				})
+				kit.For(ice.Info.Gomod, func(k string, v string) { m.Push(nfs.MODULE, k).Push(nfs.VERSION, v) })
+				m.StatusTimeCount()
 			}},
 			ENV: {Hand: func(m *ice.Message, arg ...string) {
 				kit.For(os.Environ(), func(v string) {

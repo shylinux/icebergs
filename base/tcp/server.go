@@ -5,6 +5,7 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -28,7 +29,7 @@ func (l Listener) Close() error {
 }
 
 func _server_listen(m *ice.Message, arg ...string) {
-	l, e := net.Listen(TCP, m.Option(HOST)+ice.DF+m.Option(PORT))
+	l, e := net.Listen(TCP, m.Option(HOST)+nfs.DF+m.Option(PORT))
 	l = &Listener{Listener: l, m: m, h: mdb.HashCreate(m, arg, kit.Dict(mdb.TARGET, l), STATUS, kit.Select(ERROR, OPEN, e == nil), ERROR, kit.Format(e)), s: &Stat{}}
 	defer kit.If(e == nil, func() { l.Close() })
 	switch cb := m.OptionCB("").(type) {

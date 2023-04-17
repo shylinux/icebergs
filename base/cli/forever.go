@@ -11,11 +11,11 @@ import (
 	"shylinux.com/x/toolkits/logs"
 )
 
-func _path_sep() string { return kit.Select(ice.DF, ";", strings.Contains(os.Getenv(PATH), ";")) }
+func _path_sep() string { return kit.Select(nfs.DF, ";", strings.Contains(os.Getenv(PATH), ";")) }
 func BinPath(arg ...string) string {
 	list := []string{}
 	push := func(p string) {
-		kit.If(kit.IndexOf(list, p) == -1, func() { list = append(list, kit.ReplaceAll(p, "\\", ice.PS)) })
+		kit.If(kit.IndexOf(list, p) == -1, func() { list = append(list, kit.ReplaceAll(p, "\\", nfs.PS)) })
 	}
 	kit.For(arg, func(p string) {
 		list = append(list, kit.Path(p, ice.BIN), kit.Path(p, ice.USR_PUBLISH), kit.Path(p, ice.USR_LOCAL_BIN), kit.Path(p, ice.USR_LOCAL_GO_BIN))

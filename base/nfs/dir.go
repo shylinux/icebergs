@@ -31,7 +31,7 @@ func _dir_list(m *ice.Message, root string, dir string, level int, deep bool, di
 		}
 	}
 	for _, s := range ls {
-		if s.Name() == ice.PT || s.Name() == ".." || strings.HasPrefix(s.Name(), ice.PT) && dir_type != TYPE_ALL {
+		if s.Name() == PT || s.Name() == ".." || strings.HasPrefix(s.Name(), PT) && dir_type != TYPE_ALL {
 			continue
 		}
 		p, pp := path.Join(root, dir, s.Name()), path.Join(dir, s.Name())
@@ -61,11 +61,11 @@ func _dir_list(m *ice.Message, root string, dir string, level int, deep bool, di
 						m.Push(field, strings.Repeat("| ", level-1)+"|-"+s.Name())
 					}
 				case FULL:
-					m.Push(field, p+kit.Select("", ice.PS, isDir))
+					m.Push(field, p+kit.Select("", PS, isDir))
 				case PATH:
-					m.Push(field, pp+kit.Select("", ice.PS, isDir))
+					m.Push(field, pp+kit.Select("", PS, isDir))
 				case FILE:
-					m.Push(field, s.Name()+kit.Select("", ice.PS, isDir))
+					m.Push(field, s.Name()+kit.Select("", PS, isDir))
 				case NAME:
 					m.Push(field, s.Name())
 				case SIZE:
@@ -125,8 +125,10 @@ func _dir_list(m *ice.Message, root string, dir string, level int, deep bool, di
 }
 
 const (
-	SRC = "src/"
-	USR = "usr/"
+	PWD     = "./"
+	SRC     = "src/"
+	USR     = "usr/"
+	REQUIRE = "/require/"
 
 	TYPE_ALL  = "all"
 	TYPE_CAT  = "cat"
@@ -175,8 +177,7 @@ func init() {
 			TRASH: {Hand: func(m *ice.Message, arg ...string) { m.Cmd(TRASH, mdb.CREATE, m.Option(PATH)) }},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			root, dir := kit.Select(PWD, m.Option(DIR_ROOT)), kit.Select(PWD, arg, 0)
-			kit.If(strings.HasPrefix(dir, ice.PS), func() { root, dir = ice.PS, strings.TrimPrefix(dir, ice.PS) })
-			kit.If(root == ice.PS && dir == ice.PS, func() { root, dir = PWD, PWD })
+			kit.If(strings.HasPrefix(dir, PS), func() { root = "" })
 			if !aaa.Right(m, path.Join(root, dir)) {
 				return
 			}
@@ -201,15 +202,21 @@ func Relative(m *ice.Message, p string) string {
 	return p
 }
 func SplitPath(m *ice.Message, p string) []string {
-	line := kit.Select("1", strings.Split(p, ice.DF), 1)
-	p = strings.TrimPrefix(p, kit.Path("")+ice.PS)
-	p = strings.Split(p, ice.DF)[0]
-	if ls := kit.Split(kit.Select(ice.SRC_MAIN_GO, p), ice.PS); len(ls) == 1 {
+	if kit.HasPrefix(p, ice.REQUIRE_SRC, ice.REQUIRE_USR) {
+		p = strings.TrimPrefix(p, REQUIRE)
+	} else if kit.HasPrefix(p, REQUIRE) {
+		ls := kit.Split(p, PS)
+		return []string{ice.USR_REQUIRE + path.Join(ls[1:4]...) + PS, path.Join(ls[4:]...)}
+	}
+	line := kit.Select("1", strings.Split(p, DF), 1)
+	p = strings.TrimPrefix(p, kit.Path("")+PS)
+	p = strings.Split(p, DF)[0]
+	if ls := kit.Split(kit.Select(ice.SRC_MAIN_GO, p), PS); len(ls) == 1 {
 		return []string{PWD, ls[0], line}
 	} else if ls[0] == ice.USR {
-		return []string{strings.Join(ls[:2], ice.PS) + ice.PS, strings.Join(ls[2:], ice.PS), line}
+		return []string{strings.Join(ls[:2], PS) + PS, strings.Join(ls[2:], PS), line}
 	} else {
-		return []string{strings.Join(ls[:1], ice.PS) + ice.PS, strings.Join(ls[1:], ice.PS), line}
+		return []string{strings.Join(ls[:1], PS) + PS, strings.Join(ls[1:], PS), line}
 	}
 }
 func Dir(m *ice.Message, field string) *ice.Message {

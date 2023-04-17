@@ -41,12 +41,12 @@ func init() {
 					m.Push(mdb.TIME, ls[0]+ice.SP+ls[1]).Push(mdb.ID, ls[2])
 					m.Push(nfs.PATH, ice.USR_ICEBERGS)
 					if i := strings.LastIndex(ls[5], ice.SP); strings.HasPrefix(ls[5][i+1:], ice.BASE) || strings.HasPrefix(ls[5][i+1:], ice.CORE) || strings.HasPrefix(ls[5][i+1:], ice.MISC) {
-						m.Push(nfs.FILE, strings.TrimSpace(strings.Split(ls[5][i:], ice.DF)[0]))
-						m.Push(nfs.LINE, strings.TrimSpace(strings.Split(ls[5][i:], ice.DF)[1]))
+						m.Push(nfs.FILE, strings.TrimSpace(strings.Split(ls[5][i:], nfs.DF)[0]))
+						m.Push(nfs.LINE, strings.TrimSpace(strings.Split(ls[5][i:], nfs.DF)[1]))
 						ls[5] = ls[5][:i]
 					} else if strings.HasPrefix(ls[5][i+1:], ice.USR_ICEBERGS) {
-						m.Push(nfs.FILE, strings.TrimPrefix(strings.TrimSpace(strings.Split(ls[5][i:], ice.DF)[0]), ice.USR_ICEBERGS))
-						m.Push(nfs.LINE, strings.TrimSpace(strings.Split(ls[5][i:], ice.DF)[1]))
+						m.Push(nfs.FILE, strings.TrimPrefix(strings.TrimSpace(strings.Split(ls[5][i:], nfs.DF)[0]), ice.USR_ICEBERGS))
+						m.Push(nfs.LINE, strings.TrimSpace(strings.Split(ls[5][i:], nfs.DF)[1]))
 						ls[5] = ls[5][:i]
 					} else {
 						m.Push(nfs.FILE, "base/web/serve.go").Push(nfs.LINE, "62")
@@ -70,8 +70,8 @@ func init() {
 					m.Push(mdb.TIME, ls[0]+ice.SP+ls[1]).Push(mdb.ID, ls[2])
 					i := strings.LastIndex(ls[5], ice.SP)
 					m.Push(nfs.PATH, ice.USR_ICEBERGS)
-					m.Push(nfs.FILE, strings.TrimSpace(strings.Split(ls[5][i:], ice.DF)[0]))
-					m.Push(nfs.LINE, strings.TrimSpace(strings.Split(ls[5][i:], ice.DF)[1]))
+					m.Push(nfs.FILE, strings.TrimSpace(strings.Split(ls[5][i:], nfs.DF)[0]))
+					m.Push(nfs.LINE, strings.TrimSpace(strings.Split(ls[5][i:], nfs.DF)[1]))
 					m.Push(ctx.SHIP, ls[3]).Push(ctx.ACTION, ls[4]).Push(nfs.CONTENT, ls[5][:i])
 					stats[ls[4]]++
 				})

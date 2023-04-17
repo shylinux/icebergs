@@ -20,8 +20,8 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		GREP: {Name: "grep word file path auto", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 			m.Options(mdb.VALUE, arg[0], CMD_DIR, kit.Select("", arg, 2))
-			kit.For(strings.Split(m.Cmdx("cli.system", GREP, "--exclude=.[a-z]*", "--exclude-dir=.[a-z]*", "-rni", arg[0], kit.Select(ice.PT, arg, 1)), ice.NL), func(s string) {
-				if ls := strings.SplitN(s, ice.DF, 3); len(ls) > 2 {
+			kit.For(strings.Split(m.Cmdx("cli.system", GREP, "--exclude=.[a-z]*", "--exclude-dir=.[a-z]*", "-rni", arg[0], kit.Select(PT, arg, 1)), ice.NL), func(s string) {
+				if ls := strings.SplitN(s, DF, 3); len(ls) > 2 {
 					m.Push(FILE, strings.TrimPrefix(ls[0], PWD)).Push(LINE, ls[1]).Push(mdb.TEXT, ls[2])
 				}
 			})

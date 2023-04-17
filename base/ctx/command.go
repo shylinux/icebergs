@@ -60,9 +60,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		COMMAND: {Name: "command key auto", Help: "命令", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				TravelCmd(m, func(key, file, line string) {
-					kit.If(strings.Contains(file, ice.ICEBERGS), func() { AddFileCmd(file, key) })
-				})
+				TravelCmd(m, func(key, file, line string) { AddFileCmd(file, key) })
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == m.CommandKey() || len(arg) > 1 && arg[1] != "" {
@@ -126,35 +124,35 @@ func FileURI(dir string) string {
 	} else if strings.Contains(dir, "/go/pkg/mod/") {
 		dir = strings.Split(dir, "/go/pkg/mod/")[1]
 	} else if path.IsAbs(dir) {
-		if strings.HasPrefix(dir, kit.Path("")+ice.PS) {
-			dir = strings.TrimPrefix(dir, kit.Path("")+ice.PS)
-		} else if ice.Info.Make.Path != "" && strings.HasPrefix(dir, ice.Info.Make.Path+ice.PS) {
-			dir = strings.TrimPrefix(dir, ice.Info.Make.Path+ice.PS)
+		if strings.HasPrefix(dir, kit.Path("")+nfs.PS) {
+			dir = strings.TrimPrefix(dir, kit.Path("")+nfs.PS)
+		} else if ice.Info.Make.Path != "" && strings.HasPrefix(dir, ice.Info.Make.Path+nfs.PS) {
+			dir = strings.TrimPrefix(dir, ice.Info.Make.Path+nfs.PS)
 		}
 	} else if nfs.Exists(ice.Pulse, path.Join(ice.SRC, dir)) {
 		dir = path.Join(ice.SRC, dir)
 	}
-	return path.Join(ice.PS, ice.REQUIRE, dir)
+	return path.Join(nfs.PS, ice.REQUIRE, dir)
 }
-func FileCmd(dir string) string { return FileURI(kit.ExtChange(strings.Split(dir, ice.DF)[0], nfs.GO)) }
+func FileCmd(dir string) string { return FileURI(kit.ExtChange(strings.Split(dir, nfs.DF)[0], nfs.GO)) }
 func AddFileCmd(dir, key string) {
 	ice.Info.File[FileCmd(dir)] = key
-	if ls := strings.SplitN(path.Join(kit.Slice(strings.Split(FileCmd(dir), ice.PS), 2, 5)...), ice.AT, 2); len(ls) > 1 {
+	if ls := strings.SplitN(path.Join(kit.Slice(kit.Split(FileCmd(dir), nfs.PS), 1, 4)...), ice.AT, 2); len(ls) > 1 {
 		ice.Info.Gomod[ls[0]] = ls[1]
 	}
 }
 func GetFileCmd(dir string) string {
-	if strings.HasPrefix(dir, ice.REQUIRE+ice.PS) {
-		dir = ice.PS + dir
+	if strings.HasPrefix(dir, ice.REQUIRE+nfs.PS) {
+		dir = nfs.PS + dir
 	} else if strings.HasPrefix(dir, ice.ISH_PLUGED) {
-		dir = path.Join(ice.PS, ice.REQUIRE, strings.TrimPrefix(dir, ice.ISH_PLUGED))
+		dir = path.Join(nfs.PS, ice.REQUIRE, strings.TrimPrefix(dir, ice.ISH_PLUGED))
 	}
-	for _, dir := range []string{dir, path.Join(ice.PS, ice.REQUIRE, ice.Info.Make.Module, dir), path.Join(ice.PS, ice.REQUIRE, ice.Info.Make.Module, ice.SRC, dir)} {
+	for _, dir := range []string{dir, path.Join(nfs.PS, ice.REQUIRE, ice.Info.Make.Module, dir), path.Join(nfs.PS, ice.REQUIRE, ice.Info.Make.Module, ice.SRC, dir)} {
 		if cmd, ok := ice.Info.File[FileCmd(dir)]; ok {
 			return cmd
 		}
 		p := path.Dir(dir)
-		if cmd, ok := ice.Info.File[FileCmd(path.Join(p, path.Base(p)+ice.PT+nfs.GO))]; ok {
+		if cmd, ok := ice.Info.File[FileCmd(path.Join(p, path.Base(p)+nfs.PT+nfs.GO))]; ok {
 			return cmd
 		}
 	}
@@ -162,7 +160,7 @@ func GetFileCmd(dir string) string {
 }
 func GetCmdFile(m *ice.Message, cmds string) (file string) {
 	m.Search(cmds, func(key string, cmd *ice.Command) {
-		if file = strings.TrimPrefix(FileURI(kit.Split(cmd.FileLine(), ice.DF)[0]), "/require/"); !nfs.Exists(m, file) {
+		if file = strings.TrimPrefix(FileURI(kit.Split(cmd.FileLine(), nfs.DF)[0]), "/require/"); !nfs.Exists(m, file) {
 			file = path.Join(ice.ISH_PLUGED, file)
 		}
 	})
@@ -173,8 +171,8 @@ func TravelCmd(m *ice.Message, cb func(key, file, line string)) *ice.Message {
 		if IsOrderCmd(key) {
 			return
 		}
-		if ls := kit.Split(cmd.FileLine(), ice.DF); len(ls) > 0 && cmd.Name != "" {
-			cb(kit.Keys(s.Prefix(), key), strings.TrimPrefix(ls[0], kit.Path("")+ice.PS), kit.Select("1", ls, 1))
+		if ls := kit.Split(cmd.FileLine(), nfs.DF); len(ls) > 0 && cmd.Name != "" {
+			cb(kit.Keys(s.Prefix(), key), strings.TrimPrefix(ls[0], kit.Path("")+nfs.PS), kit.Select("1", ls, 1))
 		}
 	})
 	return m

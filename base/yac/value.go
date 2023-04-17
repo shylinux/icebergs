@@ -293,10 +293,10 @@ func init() {
 				kit.If(v.tags[mdb.DATA] != "", func() { kit.Value(config.Value, kit.Keym(v.name), v.tags[mdb.DATA]) })
 			}
 		})
-		last, list := ice.Index, kit.Split(key, ice.PT)
+		last, list := ice.Index, kit.Split(key, nfs.PT)
 		for i := 1; i < len(list); i++ {
 			has := false
-			if ice.Pulse.Search(strings.Join(list[:i], ice.PT)+ice.PT, func(p *ice.Context, s *ice.Context) { has, last = true, s }); !has {
+			if ice.Pulse.Search(strings.Join(list[:i], nfs.PT)+nfs.PT, func(p *ice.Context, s *ice.Context) { has, last = true, s }); !has {
 				last = last.Register(&ice.Context{Name: list[i-1], Caches: ice.Caches{ice.CTX_FOLLOW: &ice.Cache{Value: kit.Keys(list[i-1])}}}, &web.Frame{})
 			}
 			if i == len(list)-1 {

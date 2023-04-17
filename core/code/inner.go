@@ -80,7 +80,7 @@ const INNER = "inner"
 func init() {
 	var bind = []string{"usr/icebergs/core/", "usr/volcanos/plugin/local/"}
 	Index.MergeCommands(ice.Commands{
-		INNER: {Name: "inner path=src/@key file=main.go@key line=1 auto", Help: "源代码", Actions: ice.MergeActions(ice.Actions{
+		INNER: {Name: "inner path=src/@key file=main.go@key line=1 auto exec", Help: "源代码", Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch p := kit.Select(nfs.PWD, arg, 1); arg[0] {
 				case ice.CMD:

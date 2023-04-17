@@ -59,12 +59,12 @@ func _binpack_all(m *ice.Message) {
 		list, cache := map[string]string{}, kit.Select(ice.USR_REQUIRE, m.Cmdx(cli.SYSTEM, GO, "env", "GOMODCACHE"))
 		const _mod_ = "/pkg/mod/"
 		for k := range ice.Info.File {
-			switch ls := strings.Split(k, ice.PS); ls[2] {
+			switch ls := kit.Split(k, ice.PS); ls[1] {
 			case ice.SRC:
 			case ice.USR:
-				list[path.Join(kit.Slice(ls, 2, -1)...)] = ""
+				list[path.Join(kit.Slice(ls, 1, -1)...)] = ""
 			default:
-				p := path.Join(cache, path.Join(kit.Slice(ls, 2, -1)...))
+				p := path.Join(cache, path.Join(kit.Slice(ls, 1, -1)...))
 				_ls := strings.Split(strings.Split(p, _mod_)[1], ice.PS)
 				list[path.Join(nfs.USR, strings.Split(_ls[2], ice.AT)[0], path.Join(kit.Slice(_ls, 3)...))] = p
 			}

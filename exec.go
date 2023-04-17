@@ -82,7 +82,7 @@ func (m *Message) Cmdv(arg ...Any) string {
 	return m._command(kit.Slice(args, 0, -1), OptionFields(field)).Append(field)
 }
 func (m *Message) Cmdx(arg ...Any) string {
-	res := kit.Select("", m._command(arg...).meta[MSG_RESULT], 0)
+	res := strings.TrimSpace(kit.Select("", m._command(arg...).meta[MSG_RESULT], 0))
 	return kit.Select("", res, res != ErrWarn)
 }
 func (m *Message) Cmdy(arg ...Any) *Message { return m.Copy(m._command(arg...)) }

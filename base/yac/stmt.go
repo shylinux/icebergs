@@ -6,6 +6,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -243,14 +244,14 @@ func init() {
 						case Message:
 							m.EchoLine("  %s: %v", k, show(kit.FileLine(v.Call, 100)))
 						case Function:
-							m.EchoLine("  %s: %v", k, show(v.Position.name+ice.DF+kit.Format(v.Position.line+1)))
+							m.EchoLine("  %s: %v", k, show(v.Position.name+nfs.DF+kit.Format(v.Position.line+1)))
 						case Struct:
-							m.EchoLine("  %s: %s", k, show(v.Position.name+ice.DF+kit.Format(v.Position.line+1)))
+							m.EchoLine("  %s: %s", k, show(v.Position.name+nfs.DF+kit.Format(v.Position.line+1)))
 							break
 							kit.For(v.index, func(k string, v Any) {
 								switch v := v.(type) {
 								case Function:
-									m.EchoLine("  	%s: %v", k, show(v.Position.name+ice.DF+kit.Format(v.Position.line+1)))
+									m.EchoLine("  	%s: %v", k, show(v.Position.name+nfs.DF+kit.Format(v.Position.line+1)))
 								case Field:
 									m.EchoLine("  	%s: %v", k, v.Format())
 								}

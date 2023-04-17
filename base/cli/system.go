@@ -18,8 +18,8 @@ import (
 )
 
 func _path_split(ps string) []string {
-	ps = kit.ReplaceAll(ps, "\\", ice.PS)
-	return kit.Split(ps, ice.NL+kit.Select(ice.DF, ";", strings.Contains(ps, ";")), ice.NL)
+	ps = kit.ReplaceAll(ps, "\\", nfs.PS)
+	return kit.Split(ps, ice.NL+kit.Select(nfs.DF, ";", strings.Contains(ps, ";")), ice.NL)
 }
 func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
 	bin, env := "", kit.Simple(m.Optionv(CMD_ENV))
@@ -42,12 +42,12 @@ func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
 			m.Logs(FIND, "contexts cmd", bin)
 		}
 	}
-	if bin == "" && !strings.Contains(arg[0], ice.PS) {
+	if bin == "" && !strings.Contains(arg[0], nfs.PS) {
 		if bin = _system_find(m, arg[0]); bin != "" {
 			m.Logs(FIND, "systems cmd", bin)
 		}
 	}
-	if bin == "" && !strings.Contains(arg[0], ice.PS) {
+	if bin == "" && !strings.Contains(arg[0], nfs.PS) {
 		m.Cmd(MIRRORS, CMD, arg[0])
 		if bin = _system_find(m, arg[0]); bin != "" {
 			m.Logs(FIND, "mirrors cmd", bin)
@@ -107,10 +107,10 @@ func _system_code(cmd *exec.Cmd) string {
 	return kit.Select("1", "0", cmd.ProcessState != nil && cmd.ProcessState.Success())
 }
 func _system_find(m *ice.Message, bin string, dir ...string) string {
-	if strings.Contains(bin, ice.DF) {
+	if strings.Contains(bin, nfs.DF) {
 		return bin
 	}
-	if strings.HasPrefix(bin, ice.PS) {
+	if strings.HasPrefix(bin, nfs.PS) {
 		return bin
 	}
 	if strings.HasPrefix(bin, nfs.PWD) {

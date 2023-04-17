@@ -35,13 +35,13 @@ func (f *Frame) Start(m *ice.Message, arg ...string) {
 		f.ServeMux = http.NewServeMux()
 		msg := m.Spawn(c)
 		if pf, ok := p.Server().(*Frame); ok && pf.ServeMux != nil {
-			route := ice.PS + c.Name + ice.PS
+			route := nfs.PS + c.Name + nfs.PS
 			msg.Log("route", "%s <= %s", p.Name, route)
 			pf.Handle(route, http.StripPrefix(path.Dir(route), f))
 			list[c] = path.Join(list[p], route)
 		}
 		for key, cmd := range c.Commands {
-			if key[:1] != ice.PS {
+			if key[:1] != nfs.PS {
 				continue
 			}
 			func(key string, cmd *ice.Command) {
@@ -75,7 +75,7 @@ var Index = &ice.Context{Name: WEB, Help: "网络模块"}
 
 func init() { ice.Index.Register(Index, &Frame{}, BROAD, SERVE, SPACE, DREAM, CACHE, SPIDE, SHARE) }
 
-func ApiAction(arg ...string) ice.Actions { return ice.Actions{kit.Select(ice.PS, arg, 0): {}} }
+func ApiAction(arg ...string) ice.Actions { return ice.Actions{kit.Select(nfs.PS, arg, 0): {}} }
 func Prefix(arg ...string) string {
 	for i, k := range arg {
 		switch k {
@@ -86,5 +86,5 @@ func Prefix(arg ...string) string {
 	return kit.Keys(WEB, arg)
 }
 
-func P(arg ...string) string  { return path.Join(ice.PS, path.Join(arg...)) }
-func PP(arg ...string) string { return P(arg...) + ice.PS }
+func P(arg ...string) string  { return path.Join(nfs.PS, path.Join(arg...)) }
+func PP(arg ...string) string { return P(arg...) + nfs.PS }

@@ -17,11 +17,11 @@ type displayMessage interface {
 }
 
 func isLocalFile(p string) bool {
-	return !strings.HasPrefix(p, ice.PS) && !strings.HasPrefix(p, ice.HTTP)
+	return !strings.HasPrefix(p, nfs.PS) && !strings.HasPrefix(p, ice.HTTP)
 }
 func Display(m displayMessage, file string, arg ...ice.Any) displayMessage {
 	kit.If(file == "", func() { file = kit.Keys(kit.FileName(5), nfs.JS) })
-	kit.If(isLocalFile(file), func() { file = path.Join(ice.PS, path.Join(path.Dir(FileURI(logs.FileLines(2))), file)) })
+	kit.If(isLocalFile(file), func() { file = path.Join(nfs.PS, path.Join(path.Dir(FileURI(logs.FileLines(2))), file)) })
 	return DisplayBase(m, file, arg...)
 }
 func DisplayTable(m displayMessage, arg ...ice.Any) displayMessage {

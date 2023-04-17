@@ -19,7 +19,7 @@ import (
 )
 
 func _share_link(m *ice.Message, p string, arg ...ice.Any) string {
-	return tcp.PublishLocalhost(m, MergeLink(m, kit.Select("", PP(SHARE, LOCAL), !strings.HasPrefix(p, ice.PS) && !strings.HasPrefix(p, HTTP))+p, arg...))
+	return tcp.PublishLocalhost(m, MergeLink(m, kit.Select("", PP(SHARE, LOCAL), !strings.HasPrefix(p, nfs.PS) && !strings.HasPrefix(p, HTTP))+p, arg...))
 }
 func _share_cache(m *ice.Message, arg ...string) {
 	if pod := m.Option(ice.POD); ctx.PodCmd(m, CACHE, arg[0]) {
@@ -72,7 +72,7 @@ func init() {
 			LOGIN: {Hand: func(m *ice.Message, arg ...string) {
 				m.EchoQRCode(m.Cmd(SHARE, mdb.CREATE, mdb.TYPE, LOGIN).Option(mdb.LINK)).ProcessInner()
 			}},
-			ice.PS: {Hand: func(m *ice.Message, arg ...string) {
+			nfs.PS: {Hand: func(m *ice.Message, arg ...string) {
 				if m.Warn(len(arg) == 0 || arg[0] == "", ice.ErrNotValid, SHARE) {
 					return
 				}
@@ -83,7 +83,7 @@ func init() {
 				}
 				switch msg.Append(mdb.TYPE) {
 				case LOGIN:
-					m.RenderRedirect(ice.PS, ice.MSG_SESSID, aaa.SessCreate(m, msg.Append(aaa.USERNAME)))
+					m.RenderRedirect(nfs.PS, ice.MSG_SESSID, aaa.SessCreate(m, msg.Append(aaa.USERNAME)))
 				default:
 					RenderMain(m)
 				}
@@ -116,7 +116,7 @@ func IsNotValidShare(m *ice.Message, time string) bool {
 }
 func ShareLocalFile(m *ice.Message, arg ...string) {
 	p := path.Join(arg...)
-	switch ls := strings.Split(p, ice.PS); ls[0] {
+	switch ls := strings.Split(p, nfs.PS); ls[0] {
 	case ice.ETC, ice.VAR:
 		if m.Warn(m.Option(ice.MSG_USERROLE) == aaa.VOID, ice.ErrNotRight, p) {
 			return

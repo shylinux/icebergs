@@ -145,7 +145,10 @@ func init() {
 				m.Echo(strings.ReplaceAll(m.Cmdx("web.code.publish", ice.CONTEXTS), "app username", "dev username"))
 				m.Echo(m.Cmdx(TOKEN, m.Option(ice.MSG_USERNAME)))
 			} else if len(arg) == 1 {
-				_repos_log(m, _repos_open(m, arg[0]))
+				repos := _repos_open(m, arg[0])
+				if branch, err := repos.Branch(arg[1]); !m.Warn(err) {
+					_repos_log(m, branch, repos)
+				}
 			} else if len(arg) == 2 {
 				if repos := _repos_open(m, arg[0]); arg[1] == INDEX {
 					_repos_status(m, arg[0], repos)

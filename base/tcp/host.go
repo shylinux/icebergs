@@ -7,6 +7,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -18,8 +19,8 @@ func _host_list(m *ice.Message, name string) {
 			}
 			if ips, e := v.Addrs(); m.Assert(e) {
 				for _, x := range ips {
-					ip := strings.Split(x.String(), ice.PS)
-					if strings.Contains(ip[0], ice.DF) || len(ip) == 0 {
+					ip := strings.Split(x.String(), nfs.PS)
+					if strings.Contains(ip[0], nfs.DF) || len(ip) == 0 {
 						continue
 					}
 					m.Push(mdb.INDEX, v.Index).Push(mdb.NAME, v.Name).Push(aaa.IP, ip[0]).Push("mask", ip[1]).Push("hard", v.HardwareAddr.String())
@@ -76,7 +77,7 @@ func init() {
 				m.Echo(arg[0])
 			}},
 			GATEWAY: {Hand: func(m *ice.Message, arg ...string) {
-				m.Push(aaa.IP, kit.Keys(kit.Slice(strings.Split(m.Cmdv(HOST, aaa.IP), ice.PT), 0, 3), "1"))
+				m.Push(aaa.IP, kit.Keys(kit.Slice(strings.Split(m.Cmdv(HOST, aaa.IP), nfs.PT), 0, 3), "1"))
 			}},
 		}, mdb.HashAction(mdb.SHORT, mdb.TEXT), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			_host_list(m, kit.Select("", arg, 0))

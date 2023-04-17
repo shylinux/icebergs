@@ -1,8 +1,8 @@
 package git
 
 import (
+	"path"
 	"strings"
-	"time"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
@@ -45,12 +45,14 @@ func _status_stat(m *ice.Message, files, adds, dels int) (int, int, int) {
 	})
 	return files, adds, dels
 }
-func _status_list(m *ice.Message) (files, adds, dels int, last time.Time) {
+func _status_list(m *ice.Message) (files, adds, dels int, last string) {
 	onlychange := m.Option(ice.MSG_MODE) == mdb.ZONE
 	defer m.Option(cli.CMD_DIR, "")
 	ReposList(m).Table(func(value ice.Maps) {
 		m.Option(cli.CMD_DIR, value[nfs.PATH])
 		files, adds, dels = _status_stat(m, files, adds, dels)
+		_last := m.Cmdv(REPOS, path.Base(value[nfs.PATH]), mdb.TIME)
+		kit.If(_last > last, func() { last = _last })
 		tags := _git_tags(m)
 		kit.SplitKV(ice.SP, ice.NL, _git_status(m), func(text string, ls []string) {
 			switch kit.Ext(ls[1]) {
@@ -153,7 +155,7 @@ func init() {
 						text = append(text, list[0]+" file")
 					} else if strings.Contains(line, "ins") {
 						text = append(text, list[0]+" +++")
-					} else if strings.Contains(line, "dele") {
+					} else if strings.Contains(line, "del") {
 						text = append(text, list[0]+" ---")
 					}
 				}
@@ -168,7 +170,7 @@ func init() {
 				m.Echo("please config user.email").Action(CONFIGS)
 			} else if len(arg) == 0 {
 				files, adds, dels, last := _status_list(m)
-				m.StatusTimeCount("files", files, "adds", adds, "dels", dels, "last", last.Format(ice.MOD_TIME), nfs.ORIGIN, _git_remote(m))
+				m.StatusTimeCount("files", files, "adds", adds, "dels", dels, "last", last, nfs.ORIGIN, _git_remote(m))
 				m.Action(PULL, PUSH, "insteadof", "oauth").Sort("repos,type,file")
 			} else {
 				_repos_cmd(m, arg[0], DIFF)

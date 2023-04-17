@@ -5,6 +5,7 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -28,7 +29,7 @@ func (c *Conn) Write(b []byte) (int, error) {
 func (c *Conn) Close() error { return c.Conn.Close() }
 
 func _client_dial(m *ice.Message, arg ...string) {
-	c, e := net.Dial(TCP, m.Option(HOST)+ice.DF+m.Option(PORT))
+	c, e := net.Dial(TCP, m.Option(HOST)+nfs.DF+m.Option(PORT))
 	c = &Conn{Conn: c, m: m, s: &Stat{}}
 	defer kit.If(e == nil, func() { c.Close() })
 	switch cb := m.OptionCB("").(type) {

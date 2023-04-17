@@ -19,7 +19,7 @@ func FormatPretty(v ice.Any, i, n int) string {
 		if n == 0 {
 			list := []string{"{"}
 			kit.For(v, func(k string, v ice.Any) {
-				list = append(list, kit.Format("%q", k), ice.DF, FormatPretty(v, 0, 0), ice.FS)
+				list = append(list, kit.Format("%q", k), nfs.DF, FormatPretty(v, 0, 0), ice.FS)
 			})
 			list = list[:len(list)-1]
 			list = append(list, "}")
@@ -27,7 +27,7 @@ func FormatPretty(v ice.Any, i, n int) string {
 		}
 		list := []string{"{", ice.NL}
 		kit.For(v, func(k string, v ice.Any) {
-			list = append(list, strings.Repeat(ice.TB, i+1), kit.Format("%q", k), ice.DF)
+			list = append(list, strings.Repeat(ice.TB, i+1), kit.Format("%q", k), nfs.DF)
 			if i < n && !kit.IsIn(k, mdb.META) && !strings.HasPrefix(k, "_") {
 				list = append(list, FormatPretty(v, i+1, n))
 			} else {
@@ -72,14 +72,14 @@ func _config_format_list(m *ice.Message, v ice.Any) string {
 	list := []string{"{", ice.NL}
 	kit.For(v, func(k string, v ice.Any) {
 		if k == mdb.HASH {
-			list = append(list, ice.TB, kit.Format("%q", k), ice.DF, "{", ice.NL)
+			list = append(list, ice.TB, kit.Format("%q", k), nfs.DF, "{", ice.NL)
 			kit.For(v, func(k string, v ice.Any) {
-				list = append(list, ice.TB, ice.TB, kit.Format("%q", k), ice.DF, kit.Format(v), ice.FS, ice.NL)
+				list = append(list, ice.TB, ice.TB, kit.Format("%q", k), nfs.DF, kit.Format(v), ice.FS, ice.NL)
 			})
 			list = list[:len(list)-2]
 			list = append(list, ice.TB, ice.NL, ice.TB, "}", ice.FS, ice.NL)
 		} else {
-			list = append(list, ice.TB, kit.Format("%q", k), ice.DF, kit.Format(v), ice.FS, ice.NL)
+			list = append(list, ice.TB, kit.Format("%q", k), nfs.DF, kit.Format(v), ice.FS, ice.NL)
 		}
 	})
 	list = list[:len(list)-2]

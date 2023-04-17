@@ -61,7 +61,7 @@ func init() {
 				_tar_list(m, m.Option(PATH), func(h *tar.Header, r *tar.Reader, i int) {
 					if h.Name == m.Option(FILE) || m.Option(FILE) == "" {
 						p := path.Join(path.Dir(m.Option(PATH)), h.Name)
-						if strings.HasSuffix(h.Name, ice.PS) {
+						if strings.HasSuffix(h.Name, PS) {
 							MkdirAll(m, p)
 							return
 						}
@@ -75,7 +75,7 @@ func init() {
 				})
 			}},
 		}, mdb.PageListAction()), Hand: func(m *ice.Message, arg ...string) {
-			if len(arg) == 0 || strings.HasSuffix(arg[0], ice.PS) {
+			if len(arg) == 0 || strings.HasSuffix(arg[0], PS) {
 				m.Cmdy(DIR, arg)
 				return
 			}

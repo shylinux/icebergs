@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -233,7 +234,7 @@ func (s *Expr) cals(m *ice.Message, arg ...string) Any {
 			return true
 		case BEGIN:
 			p := ""
-			kit.If(strings.Contains(s.gets(-1), ice.PT), func() { p = kit.Split(s.gets(-1), ice.PT)[0] })
+			kit.If(strings.Contains(s.gets(-1), nfs.PT), func() { p = kit.Split(s.gets(-1), nfs.PT)[0] })
 			switch t := s.getv(m, -1).(type) {
 			case Map:
 				s.pops(1, Dict{s.ktv(m, t, p)})
@@ -296,7 +297,7 @@ func (s *Expr) cals(m *ice.Message, arg ...string) Any {
 		if len(s.list) > 0 && !s.isop(-1) {
 			switch k {
 			case OPEN:
-				if strings.HasSuffix(s.gets(-1), ice.PT) {
+				if strings.HasSuffix(s.gets(-1), nfs.PT) {
 					if s.peek(m) == TYPE {
 						switch v := s.getv(m, -1).(type) {
 						case Object:
@@ -338,10 +339,10 @@ func (s *Expr) cals(m *ice.Message, arg ...string) Any {
 				return false
 			}
 			if !s.isop(k) {
-				if strings.HasPrefix(k, ice.PT) {
+				if strings.HasPrefix(k, nfs.PT) {
 					if s.peek(m) == OPEN {
 						s.skip++
-						s.pops(1, s.call(m, s.getv(m, -1), strings.TrimPrefix(k, ice.PT)))
+						s.pops(1, s.call(m, s.getv(m, -1), strings.TrimPrefix(k, nfs.PT)))
 						return false
 					} else if !s.isop(-1) && len(s.list) > 0 {
 						s.pops(1, s.gets(-1)+k)

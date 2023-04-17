@@ -70,7 +70,7 @@ func (f *Frame) change(m *ice.Message, ls []string) []string {
 			target, ls = ls[0], ls[1:]
 		}
 		kit.If(target == "~", func() { target = "" })
-		m.Spawn(f.target).Search(target+ice.PT, func(p *ice.Context, s *ice.Context) { f.target = s })
+		m.Spawn(f.target).Search(target+nfs.PT, func(p *ice.Context, s *ice.Context) { f.target = s })
 	}
 	return ls
 }
@@ -163,7 +163,7 @@ func (f *Frame) Start(m *ice.Message, arg ...string) {
 		f.scan(m, STDIO, "")
 	default:
 		if m.Option(ice.MSG_SCRIPT) != "" {
-			ls := kit.Split(m.Option(ice.MSG_SCRIPT), ice.PS)
+			ls := kit.Split(m.Option(ice.MSG_SCRIPT), nfs.PS)
 			for i := len(ls) - 1; i > 0; i-- {
 				if p := path.Join(path.Join(ls[:i]...), f.source); nfs.Exists(m, p) {
 					f.source = p
@@ -218,7 +218,7 @@ func init() {
 		}},
 		TARGET: {Name: "target name run", Help: "当前模块", Hand: func(m *ice.Message, arg ...string) {
 			if f, ok := m.Target().Server().(*Frame); ok {
-				m.Search(arg[0]+ice.PT, func(p *ice.Context, s *ice.Context) { f.target = s })
+				m.Search(arg[0]+nfs.PT, func(p *ice.Context, s *ice.Context) { f.target = s })
 				f.prompt(m)
 			}
 		}},

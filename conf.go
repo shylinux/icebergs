@@ -81,8 +81,8 @@ const ( // DIR
 	SH   = "sh"
 	GO   = "go"
 	JS   = "js"
-	CSS  = "css"
 	SVG  = "svg"
+	CSS  = "css"
 	HTML = "html"
 
 	LIB    = "lib"
@@ -96,10 +96,13 @@ const ( // DIR
 	FRAME_JS  = "frame.js"
 	INDEX_SH  = "index.sh"
 
-	FAVICON_ICO  = "/favicon.ico"
-	PLUGIN_INPUT = "/plugin/input/"
-	PLUGIN_LOCAL = "/plugin/local/"
-	PLUGIN_STORY = "/plugin/story/"
+	FAVICON_ICO     = "/favicon.ico"
+	PLUGIN_INPUT    = "/plugin/input/"
+	PLUGIN_LOCAL    = "/plugin/local/"
+	PLUGIN_STORY    = "/plugin/story/"
+	REQUIRE_SRC     = "/require/src/"
+	REQUIRE_USR     = "/require/usr/"
+	REQUIRE_MODULES = "/require/modules/"
 
 	ISH_PLUGED   = ".ish/pluged/"
 	USR_MODULES  = "usr/node_modules/"

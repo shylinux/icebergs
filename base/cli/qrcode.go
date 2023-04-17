@@ -60,7 +60,7 @@ func init() {
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			dark := kit.IndexOf([]string{BLACK, "dark"}, m.Option(ice.MSG_THEME)) > -1
-			m.Option(FG, kit.Select(kit.Select(BLACK, WHITE, dark), arg, 1))
+			m.Option(FG, kit.Select(kit.Select(BLACK, SILVER, dark), arg, 1))
 			m.Option(BG, kit.Select(kit.Select(WHITE, BLACK, dark), arg, 2))
 			if m.IsCliUA() {
 				_qrcode_cli(m, kit.Select(kit.Select(ice.Info.Make.Domain, ice.Info.Domain), arg, 0))

@@ -14,6 +14,7 @@ import (
 	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/log"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/ssh"
 	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/misc/websocket"
@@ -45,7 +46,7 @@ func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 }
 func _space_fork(m *ice.Message) {
 	addr := kit.Select(m.R.RemoteAddr, m.R.Header.Get(ice.MSG_USERADDR))
-	name := kit.ReplaceAll(kit.Select(addr, m.Option(mdb.NAME)), "[", "_", "]", "_", ice.DF, "_", ice.PT, "_")
+	name := kit.ReplaceAll(kit.Select(addr, m.Option(mdb.NAME)), "[", "_", "]", "_", nfs.DF, "_", nfs.PT, "_")
 	args := kit.Simple(mdb.TYPE, kit.Select(WORKER, m.Option(mdb.TYPE)), mdb.NAME, name, mdb.TEXT, kit.Select(addr, m.Option(mdb.TEXT)), m.OptionSimple(cli.DAEMON, ice.MSG_USERUA))
 	if c, e := websocket.Upgrade(m.W, m.R); !m.Warn(e) {
 		gdb.Go(m, func() {
@@ -129,7 +130,7 @@ func _space_send(m *ice.Message, name string, arg ...string) {
 	})
 	h := mdb.HashCreate(m.Spawn(), mdb.TYPE, tcp.SEND, mdb.NAME, kit.Keys(name, m.Target().ID()), mdb.TEXT, kit.Join(arg, ice.SP), kit.Dict(mdb.TARGET, done))
 	defer mdb.HashRemove(m, mdb.HASH, h)
-	if target := kit.Split(name, ice.PT, ice.PT); mdb.HashSelectDetail(m, target[0], func(value ice.Map) {
+	if target := kit.Split(name, nfs.PT, nfs.PT); mdb.HashSelectDetail(m, target[0], func(value ice.Map) {
 		if c, ok := value[mdb.TARGET].(*websocket.Conn); !m.Warn(!ok, ice.ErrNotValid, mdb.TARGET) {
 			kit.For(m.Optionv(ice.MSG_OPTS), func(k string) { m.Optionv(k, m.Optionv(k)) })
 			_space_echo(m.Set(ice.MSG_DETAIL, arg...), []string{h}, target, c)
@@ -196,7 +197,7 @@ func init() {
 					ctx.ProcessOpen(m, m.MergePod(m.Option(mdb.NAME), arg))
 				}
 			}},
-			ice.PS: {Hand: func(m *ice.Message, arg ...string) { _space_fork(m) }},
+			nfs.PS: {Hand: func(m *ice.Message, arg ...string) { _space_fork(m) }},
 		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,type,name,text", ctx.ACTION, OPEN, REDIAL, kit.Dict("a", 3000, "b", 1000, "c", 1000)), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 {
 				mdb.HashSelect(m, arg...).Sort("").Table(func(value ice.Maps) { m.PushButton(kit.Select(OPEN, LOGIN, value[mdb.TYPE] == LOGIN), mdb.REMOVE) })

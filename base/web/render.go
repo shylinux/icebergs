@@ -76,7 +76,7 @@ func Render(m *ice.Message, cmd string, args ...ice.Any) bool {
 func CookieName(url string) string { return ice.MSG_SESSID + "_" + kit.ParseURLMap(url)[tcp.PORT] }
 func RenderCookie(m *ice.Message, value string, arg ...string) { // name path expire
 	http.SetCookie(m.W, &http.Cookie{Value: value, Name: kit.Select(CookieName(m.Option(ice.MSG_USERWEB)), arg, 0),
-		Path: kit.Select(ice.PS, arg, 1), Expires: time.Now().Add(kit.Duration(kit.Select(mdb.MONTH, arg, 2)))})
+		Path: kit.Select(nfs.PS, arg, 1), Expires: time.Now().Add(kit.Duration(kit.Select(mdb.MONTH, arg, 2)))})
 }
 func RenderType(w http.ResponseWriter, name, mime string) {
 	if mime == "" {

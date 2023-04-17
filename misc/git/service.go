@@ -143,7 +143,6 @@ func init() {
 			if len(arg) == 0 {
 				mdb.HashSelect(m, arg...).Sort(REPOS).Action(mdb.CREATE, TOKEN)
 				m.Echo(strings.ReplaceAll(m.Cmdx("web.code.publish", ice.CONTEXTS), "app username", "dev username"))
-				m.Echo(m.Cmdx(TOKEN, m.Option(ice.MSG_USERNAME)))
 			} else if len(arg) == 1 {
 				repos := _repos_open(m, arg[0])
 				if branch, err := repos.Branch(arg[1]); !m.Warn(err) {

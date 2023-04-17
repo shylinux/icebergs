@@ -17,26 +17,32 @@ const TOKEN = "token"
 
 func init() {
 	const (
-		SET = "set"
-		GET = "get"
-		SID = "sid"
+		GEN   = "gen"
+		SET   = "set"
+		GET   = "get"
+		SID   = "sid"
+		FILE  = ".git-credentials"
+		LOCAL = "http://localhost:9020"
 	)
-	const LOCAL = "http://localhost:9020"
-	const FILE = ".git-credentials"
+	create := func(m *ice.Message) string {
+		msg := m.Cmd(Prefix(TOKEN), m.Cmdx(Prefix(TOKEN), mdb.CREATE, aaa.USERNAME, m.Option(ice.MSG_USERNAME), TOKEN, kit.Hashs(mdb.UNIQ)))
+		return strings.Replace(web.UserHost(m), "://", kit.Format("://%s:%s@", m.Option(ice.MSG_USERNAME), msg.Append(TOKEN)), 1)
+	}
 	Index.MergeCommands(ice.Commands{
 		TOKEN: {Name: "token username auto prunes", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { aaa.White(m, kit.Keys(TOKEN, SID)) }},
 			cli.MAKE: {Hand: func(m *ice.Message, arg ...string) {
-				msg := m.Cmd("", m.Cmdx("", mdb.CREATE, aaa.USERNAME, m.Option(ice.MSG_USERNAME), TOKEN, kit.Hashs(mdb.UNIQ)))
-				m.ProcessOpen(kit.MergeURL(LOCAL+m.PrefixPath(SET), TOKEN, msg.Append("url")))
+				m.ProcessReplace(kit.MergeURL2(LOCAL, m.PrefixPath(SET), TOKEN, create(m)))
+			}},
+			web.PP(GEN): {Hand: func(m *ice.Message, arg ...string) {
+				m.ProcessReplace(kit.MergeURL2(m.Option(tcp.HOST), m.PrefixPath(SET), TOKEN, create(m)))
 			}},
 			web.PP(SET): {Hand: func(m *ice.Message, arg ...string) {
 				defer web.RenderTemplate(m, "close.html")
 				host, list := ice.Map{kit.ParseURL(m.Option(TOKEN)).Host: true}, []string{m.Option(TOKEN)}
 				m.Cmd(nfs.CAT, kit.HomePath(FILE), func(line string) {
 					kit.IfNoKey(host, kit.ParseURL(line).Host, func(p string) { list = append(list, line) })
-				})
-				m.Cmd(nfs.SAVE, kit.HomePath(FILE), strings.Join(list, ice.NL)+ice.NL)
+				}).Cmd(nfs.SAVE, kit.HomePath(FILE), strings.Join(list, ice.NL)+ice.NL)
 			}},
 			web.PP(GET): {Hand: func(m *ice.Message, arg ...string) {
 				web.RenderOrigin(m.W, "*")
@@ -54,16 +60,6 @@ func init() {
 					web.RenderCookie(m.Echo(ice.OK), aaa.SessCreate(m, arg[0]))
 				}
 			}},
-		}, mdb.HashAction(mdb.EXPIRE, mdb.MONTH, mdb.SHORT, aaa.USERNAME, mdb.FIELD, "time,username,token")), Hand: func(m *ice.Message, arg ...string) {
-			if mdb.HashSelect(m, arg...); len(arg) > 0 && m.Length() > 0 {
-				p := strings.Replace(web.UserHost(m), "://", kit.Format("://%s:%s@", m.Option(ice.MSG_USERNAME), m.Append(TOKEN)), 1)
-				m.OptionDefault(tcp.HOST, LOCAL)
-				if m.Push("url", p).EchoScript(p).EchoScript(nfs.Template(m, "echo.sh", p)); m.Option(ice.CMD) == m.PrefixKey() {
-					m.ProcessReplace(kit.MergeURL2(m.Option(tcp.HOST), m.PrefixPath(SET), TOKEN, p))
-				} else {
-					m.EchoAnchor(kit.MergeURL2(m.Option(tcp.HOST), m.PrefixPath(SET), TOKEN, p))
-				}
-			}
-		}},
+		}, mdb.HashAction(mdb.EXPIRE, mdb.MONTH, mdb.SHORT, aaa.USERNAME, mdb.FIELD, "time,username,token"))},
 	})
 }

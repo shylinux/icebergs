@@ -190,7 +190,7 @@ func (m *Message) FormatsMeta(w io.Writer, arg ...string) (res string) {
 		count++
 	}
 	echo("{", NL)
-	defer echo("}", NL)
+	defer echo(NL, "}", NL)
 	kit.For(kit.Simple(MSG_DETAIL, MSG_OPTION, m.meta[MSG_OPTION], m.meta[MSG_APPEND], MSG_APPEND, MSG_RESULT), push)
 	return
 }

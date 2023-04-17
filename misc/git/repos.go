@@ -442,7 +442,7 @@ func init() {
 			code.VIMER: {Hand: func(m *ice.Message, arg ...string) { _repos_vimer(m, _repos_path, arg...) }},
 		}, mdb.HashAction(mdb.SHORT, REPOS, mdb.FIELD, "time,repos,branch,commit,origin"), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
-				mdb.HashSelect(m, arg...).Sort(REPOS).Action(CLONE, PULL, PUSH)
+				mdb.HashSelect(m, arg...).Sort(REPOS).Action(CLONE, PULL, PUSH, STATUS)
 			} else if len(arg) == 1 {
 				_repos_branch(m, _repos_open(m, arg[0]))
 			} else if len(arg) == 2 {

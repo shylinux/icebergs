@@ -109,9 +109,7 @@ func init() {
 					case nfs.FROM:
 						m.Push(arg[0], kit.MergeURL2(ice.Info.Make.Remote, ice.PS))
 					case nfs.TO:
-						m.Cmd(web.BROAD, func(value ice.Maps) {
-							m.Push(arg[0], kit.Format("http://%s:%s/", value[tcp.HOST], value[tcp.PORT]))
-						})
+						m.Cmd(web.BROAD, func(value ice.Maps) { m.Push(arg[0], kit.Format("http://%s:%s/", value[tcp.HOST], value[tcp.PORT])) })
 					}
 					return
 				}
@@ -140,10 +138,13 @@ func init() {
 				kit.If(m.Option(nfs.TO), func() { _git_cmd(m, CONFIG, "--global", "url."+m.Option(nfs.TO)+".insteadof", m.Option(nfs.FROM)) })
 			}},
 			OAUTH: {Help: "授权", Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessOpen(kit.MergeURL2(kit.Select(ice.Info.Make.Remote, _git_remote(m)), "/chat/cmd/web.code.git.token", aaa.USERNAME, m.Option(ice.MSG_USERNAME), tcp.HOST, web.UserHost(m)))
+				m.ProcessOpen(kit.MergeURL2(kit.Select(ice.Info.Make.Remote, _git_remote(m)), "/chat/cmd/web.code.git.token/gen/", tcp.HOST, web.UserHost(m)))
+			}},
+			TAG: {Name: "tag version", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(REPOS, m.ActionKey(), arg)
 			}},
 			COMMIT: {Name: "commit actions=add,opt,fix comment*=some", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(REPOS, COMMIT, arg)
+				m.Cmdy(REPOS, m.ActionKey(), arg)
 			}},
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(mdb.TYPE) != web.WORKER {
@@ -164,9 +165,7 @@ func init() {
 		}, gdb.EventAction(web.DREAM_TABLES), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 && arg[0] == ctx.ACTION {
 				m.Cmdy(REPOS, arg)
-				return
-			}
-			if _configs_get(m, USER_EMAIL) == "" {
+			} else if _configs_get(m, USER_EMAIL) == "" {
 				m.Echo("please config user.email").Action(CONFIGS)
 			} else if len(arg) == 0 {
 				files, adds, dels, last := _status_list(m)

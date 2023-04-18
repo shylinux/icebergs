@@ -285,7 +285,6 @@ const (
 	ADD    = "add"
 	STASH  = "stash"
 	COMMIT = "commit"
-
 	BRANCH = "branch"
 
 	ORIGIN = "origin"

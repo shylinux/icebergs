@@ -270,7 +270,7 @@ func _repos_vimer(m *ice.Message, _repos_path func(m *ice.Message, p string, arg
 				}
 			}
 		}
-		ctx.DisplayLocal(m, "code/vimer.js")
+		ctx.DisplayLocal(m, "code/vimer.js", "style", "output")
 		return
 	}
 	ctx.ProcessField(m, "", arg, arg...)

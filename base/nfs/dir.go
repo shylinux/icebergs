@@ -164,6 +164,7 @@ func init() {
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == mdb.FOREACH && arg[1] == "" && m.Cmdx("host", "islocal", m.Option(ice.MSG_USERIP)) == ice.OK {
+					return
 					kit.For([]string{"Desktop", "Documents", "Downloads", "Pictures"}, func(p string) {
 						p = kit.HomePath(p)
 						m.Cmd(DIR, PWD, mdb.NAME, mdb.TIME, kit.Dict(DIR_ROOT, p)).SortStrR(mdb.TIME).TablesLimit(5, func(value ice.Maps) {

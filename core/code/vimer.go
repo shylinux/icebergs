@@ -84,7 +84,7 @@ func init() {
 						push := func(k, p string) {
 							kit.IfNoKey(list, kit.Select(k, k+ice.DF, k != "")+p, func(p string) { m.Push(nfs.PATH, p) })
 						}
-						mdb.HashSelect(m.Spawn()).TablesLimit(10, func(value ice.Maps) { push("", value[nfs.PATH]) })
+						mdb.HashSelect(m.Spawn()).TablesLimit(30, func(value ice.Maps) { push("", value[nfs.PATH]) })
 						m.Cmd(mdb.SEARCH, mdb.FOREACH, "", ice.OptionFields("type,name,text")).Sort("type,name,text").Table(func(value ice.Maps) {
 							switch value[mdb.TYPE] {
 							case nfs.FILE:

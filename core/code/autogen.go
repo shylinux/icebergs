@@ -52,7 +52,9 @@ func _autogen_import(m *ice.Message, main string, ctx string, mod string) {
 }
 func _autogen_version(m *ice.Message) string {
 	if mod := _autogen_mod(m, ice.GO_MOD); !nfs.Exists(m, ".git") {
-		m.Cmd(REPOS, mdb.CREATE, nfs.ORIGIN, "https://"+mod, mdb.NAME, path.Base(mod), nfs.PATH, nfs.PWD)
+		m.Cmd(REPOS, "init", nfs.ORIGIN, kit.Select(m.Option(ice.MSG_USERHOST), ice.Info.Make.Domain)+"/x/"+path.Base(mod), mdb.NAME, path.Base(mod), nfs.PATH, nfs.PWD)
+		defer m.Cmd(REPOS, "add", kit.Dict(nfs.REPOS, path.Base(mod), nfs.FILE, nfs.SRC))
+		defer m.Cmd(REPOS, "add", kit.Dict(nfs.REPOS, path.Base(mod), nfs.FILE, "go.mod"))
 	}
 	m.Cmd(nfs.DEFS, ".gitignore", nfs.Template(m, "gitignore"))
 	m.Cmd(nfs.DEFS, ice.SRC_BINPACK_GO, nfs.Template(m, ice.SRC_BINPACK_GO))
@@ -82,7 +84,7 @@ func _autogen_git(m *ice.Message, arg ...string) ice.Map {
 	)
 }
 func _autogen_mod(m *ice.Message, file string) (mod string) {
-	host := web.UserWeb(m).Hostname()
+	host := kit.ParseURL(kit.Select(m.Option(ice.MSG_USERHOST), ice.Info.Make.Domain)).Hostname()
 	if host == "" {
 		host = path.Base(kit.Path(""))
 	} else {

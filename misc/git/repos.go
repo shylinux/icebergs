@@ -56,6 +56,9 @@ func _repos_open(m *ice.Message, p string) *git.Repository {
 }
 func _repos_each(m *ice.Message, title string, cb func(*git.Repository, ice.Maps) error) {
 	msg := m.Cmd("")
+	if msg.Length() == 0 {
+		return
+	}
 	web.GoToast(m, kit.Select(m.CommandKey()+ice.SP+m.ActionKey(), title), func(toast func(string, int, int)) {
 		list, count, total := []string{}, 0, msg.Length()
 		msg.Table(func(value ice.Maps) {
@@ -157,7 +160,11 @@ func _repos_status(m *ice.Message, p string, repos *git.Repository) error {
 		if kit.IsIn(kit.Ext(k), "swp", "swo") {
 			continue
 		}
-		switch m.Push(REPOS, p).Push(STATUS, string(v.Worktree)+string(v.Staging)).Push(nfs.FILE, k); v.Worktree {
+		if m.Push(REPOS, p).Push(STATUS, string(v.Worktree)+string(v.Staging)).Push(nfs.FILE, k); m.Option("mode") == "zone" {
+			ls := nfs.SplitPath(m, kit.Path(_repos_path(m, p), k))
+			m.Push(nfs.PATH, ls[0]).Push(mdb.TEXT, string(v.Worktree)+string(v.Staging)+ice.SP+ls[0]+ls[1])
+		}
+		switch v.Worktree {
 		case git.Untracked:
 			m.PushButton(ADD, nfs.TRASH)
 		case git.Modified:
@@ -277,6 +284,7 @@ func _repos_vimer(m *ice.Message, _repos_path func(m *ice.Message, p string, arg
 }
 
 const (
+	INIT   = "init"
 	CLONE  = "clone"
 	PULL   = "pull"
 	PUSH   = "push"
@@ -287,6 +295,7 @@ const (
 	COMMIT = "commit"
 	BRANCH = "branch"
 
+	REMOTE = "remote"
 	ORIGIN = "origin"
 	MASTER = "master"
 	INDEX  = "index"
@@ -324,6 +333,11 @@ func init() {
 				if arg[0] == mdb.FOREACH && arg[1] == "" {
 					m.PushSearch(mdb.TYPE, web.LINK, mdb.NAME, m.CommandKey(), mdb.TEXT, m.MergePodCmd("", "", log.DEBUG, ice.TRUE))
 				}
+			}},
+			INIT: {Name: "clone origin* branch name path", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(nfs.DEFS, kit.Path(".git/config"), nfs.Template(m, "config", m.Option("origin")))
+				git.PlainInit(m.Option(nfs.PATH), false)
+				_repos_insert(m, kit.Path(""))
 			}},
 			CLONE: {Name: "clone origin* branch name path", Hand: func(m *ice.Message, arg ...string) {
 				m.OptionDefault(mdb.NAME, path.Base(m.Option(ORIGIN)))
@@ -384,7 +398,17 @@ func init() {
 			STASH: {Hand: func(m *ice.Message, arg ...string) { _repos_cmd(m, kit.Select(m.Option(REPOS), arg, 0), STASH) }},
 			COMMIT: {Name: "commit actions=add,opt,fix comment*=some", Hand: func(m *ice.Message, arg ...string) {
 				if work, err := _repos_open(m, m.Option(REPOS)).Worktree(); !m.Warn(err) {
-					_, err := work.Commit(m.Option("actions")+ice.SP+m.Option("comment"), &git.CommitOptions{All: true})
+					opt := &git.CommitOptions{All: true}
+					if cfg, err := config.LoadConfig(config.GlobalScope); err == nil {
+						if cfg.Author.Email == "" || cfg.Author.Name == "" {
+							opt.Author = &object.Signature{
+								Name:  m.Option(ice.MSG_USERNAME),
+								Email: m.Option(ice.MSG_USERNAME) + "@163.com",
+								When:  time.Now(),
+							}
+						}
+					}
+					_, err := work.Commit(m.Option("actions")+ice.SP+m.Option("comment"), opt)
 					m.Warn(err)
 				}
 			}},
@@ -392,9 +416,20 @@ func init() {
 				if repos := kit.Select(m.Option(REPOS), arg, 0); repos != "" {
 					_repos_status(m, repos, _repos_open(m, repos))
 				} else {
+					last, remote := "", ""
 					_repos_each(m, "", func(repos *git.Repository, value ice.Maps) error {
+						if refer, err := repos.Head(); err == nil {
+							if commit, err := repos.CommitObject(refer.Hash()); err == nil {
+								_last := commit.Author.When.Format(ice.MOD_TIME)
+								kit.If(_last > last, func() { last = _last })
+							}
+						}
+						if _remote, err := repos.Remote(ORIGIN); err == nil {
+							remote = kit.Select(remote, kit.Select("", _remote.Config().URLs, 0))
+						}
 						return _repos_status(m, value[REPOS], repos)
 					})
+					m.Sort("repos,status,file").Status(mdb.TIME, last, REMOTE, remote, kit.MDB_COUNT, kit.Split(m.FormatSize())[0], kit.MDB_COST, m.FormatCost())
 				}
 			}},
 			TOTAL: {Hand: func(m *ice.Message, arg ...string) {

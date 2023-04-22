@@ -2,12 +2,13 @@ package yac
 
 import (
 	"encoding/json"
+	"path"
 	"reflect"
 	"strconv"
 	"strings"
-	"time"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
@@ -296,10 +297,12 @@ func init() {
 		last, list := ice.Index, kit.Split(key, nfs.PT)
 		for i := 1; i < len(list); i++ {
 			has := false
+			m.Debug("what %v", list[:i])
 			if ice.Pulse.Search(strings.Join(list[:i], nfs.PT)+nfs.PT, func(p *ice.Context, s *ice.Context) { has, last = true, s }); !has {
-				last = last.Register(&ice.Context{Name: list[i-1], Caches: ice.Caches{ice.CTX_FOLLOW: &ice.Cache{Value: kit.Keys(list[i-1])}}}, &web.Frame{})
+				last = last.Register(&ice.Context{Name: list[i-1], Caches: ice.Caches{ice.CTX_FOLLOW: &ice.Cache{Value: kit.Keys(list[:i])}}}, &web.Frame{})
 			}
 			if i == len(list)-1 {
+				m.Debug("what %v", last.Cap(ice.CTX_FOLLOW))
 				last.Merge(&ice.Context{Commands: ice.Commands{list[i]: command}, Configs: ice.Configs{list[i]: config}})
 			}
 		}
@@ -447,11 +450,13 @@ func (m Message) Call(cmd string, arg ...Any) Any {
 		s := _parse_stack(m.Message)
 		m.Table(func(val ice.Maps) { s.calls(m.Message, arg[0], "", nil, Dict{kit.Dict(val)}) })
 	case "Display":
-		if len(arg) > 0 {
-			m.ProcessDisplay(arg...)
-		} else {
-			m.ProcessDisplay(kit.Format("%s?_t=%d", Trans(_parse_stack(m.Message).value(m.Message, "_script")), time.Now().Unix()))
+		file := kit.Format(Trans(arg[0]))
+		if file == "" {
+			file = kit.Split(_parse_stack(m.Message).name, ice.DF)[0]
+		} else if !strings.HasPrefix(file, nfs.PS) && !strings.HasPrefix(file, ice.HTTP) {
+			file = path.Join(path.Dir(kit.Split(_parse_stack(m.Message).name, ice.DF)[0]), file)
 		}
+		m.Display(ctx.FileURI(file), arg[1:]...)
 	case "DebugStack":
 		list := []string{}
 		s := _parse_stack(m.Message)

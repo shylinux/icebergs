@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
@@ -568,10 +569,9 @@ func init() {
 			}
 			nfs.Open(m, path.Join(arg...), func(r io.Reader, p string) {
 				s := NewStack(m, nil, p, p).parse(m, p, r)
-				if m.StatusTime(mdb.LINK, s.value(m, "_link")); m.Option(ice.DEBUG) == ice.TRUE {
-					m.Options("__index", kit.Format(s.value(m, "_index")))
-					m.Cmdy(INFO, arg)
-				}
+				m.Options("__index", kit.Format(s.value(m, "_index"))).Cmdy(INFO, arg)
+				m.StatusTime(mdb.LINK, s.value(m, "_link"))
+				ctx.AddFileCmd(kit.Path(p), m.Option("__index"))
 			})
 		}},
 	})

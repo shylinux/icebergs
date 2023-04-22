@@ -34,6 +34,10 @@ func init() {
 			cli.MAKE: {Hand: func(m *ice.Message, arg ...string) {
 				m.ProcessReplace(kit.MergeURL2(LOCAL, m.PrefixPath(SET), TOKEN, create(m)))
 			}},
+			GEN: {Hand: func(m *ice.Message, arg ...string) {
+				m.ProcessReplace(kit.MergeURL2(m.Option(tcp.HOST), m.PrefixPath(SET), TOKEN, create(m)))
+				m.Debug("what %v", m.FormatMeta())
+			}},
 			web.PP(GEN): {Hand: func(m *ice.Message, arg ...string) {
 				m.ProcessReplace(kit.MergeURL2(m.Option(tcp.HOST), m.PrefixPath(SET), TOKEN, create(m)))
 			}},

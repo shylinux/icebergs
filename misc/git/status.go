@@ -138,7 +138,7 @@ func init() {
 				kit.If(m.Option(nfs.TO), func() { _git_cmd(m, CONFIG, "--global", "url."+m.Option(nfs.TO)+".insteadof", m.Option(nfs.FROM)) })
 			}},
 			OAUTH: {Help: "授权", Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessOpen(kit.MergeURL2(kit.Select(ice.Info.Make.Remote, _git_remote(m)), "/chat/cmd/web.code.git.token/gen/", tcp.HOST, web.UserHost(m)))
+				m.ProcessOpen(kit.MergeURL2(kit.Select(ice.Info.Make.Domain, _git_remote(m)), "/chat/cmd/web.code.git.token/gen/", tcp.HOST, m.Option(ice.MSG_USERWEB)))
 			}},
 			TAG: {Name: "tag version", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(REPOS, m.ActionKey(), arg)
@@ -165,13 +165,15 @@ func init() {
 		}, gdb.EventAction(web.DREAM_TABLES), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 && arg[0] == ctx.ACTION {
 				m.Cmdy(REPOS, arg)
-			} else if _configs_get(m, USER_EMAIL) == "" {
-				m.Echo("please config user.email").Action(CONFIGS)
 			} else if len(arg) == 0 {
+				m.Cmdy(REPOS, STATUS).Action(PULL, PUSH, "oauth", "insteadof")
+				return
 				files, adds, dels, last := _status_list(m)
 				m.StatusTimeCount("files", files, "adds", adds, "dels", dels, "last", last, nfs.ORIGIN, _git_remote(m))
 				m.Action(PULL, PUSH, "insteadof", "oauth").Sort("repos,type,file")
 			} else {
+				m.Cmdy(REPOS, arg[0], MASTER, INDEX, "README.md")
+				return
 				_repos_cmd(m, arg[0], DIFF)
 				files, adds, dels := _status_stat(m, 0, 0, 0)
 				m.StatusTime("files", files, "adds", adds, "dels", dels)

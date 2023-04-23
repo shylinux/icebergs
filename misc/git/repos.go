@@ -158,6 +158,9 @@ func _repos_status(m *ice.Message, p string, repos *git.Repository) error {
 	}
 	defer m.StatusTimeCount()
 	for k, v := range status {
+		if kit.IsIn(k, ice.SRC_VERSION_GO, ice.SRC_BINPACK_GO, ice.ETC_LOCAL_SHY) {
+			continue
+		}
 		if kit.IsIn(kit.Ext(k), "swp", "swo") || kit.IsIn(kit.Split(k, nfs.PS)[0], ice.BIN, ice.VAR, ice.USR) {
 			continue
 		}

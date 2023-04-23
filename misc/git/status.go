@@ -173,7 +173,7 @@ func init() {
 				m.StatusTimeCount("files", files, "adds", adds, "dels", dels, "last", last, nfs.ORIGIN, _git_remote(m))
 				m.Action(PULL, PUSH, "insteadof", "oauth").Sort("repos,type,file")
 			} else {
-				m.Cmdy(REPOS, arg[0], MASTER, INDEX, "README.md")
+				m.Cmdy(REPOS, arg[0], MASTER, INDEX, m.Cmdv(REPOS, arg[0], MASTER, INDEX, nfs.FILE))
 				return
 				_repos_cmd(m, arg[0], DIFF)
 				files, adds, dels := _status_stat(m, 0, 0, 0)

@@ -8,6 +8,7 @@ import (
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -66,7 +67,7 @@ func init() {
 				m.Echo(get(m, "place/v1/search", m.OptionSimple("keyword,boundary,page_index")))
 			}},
 			"direction": {Name: "direction", Help: "导航", Hand: func(m *ice.Message, arg ...string) {
-				m.Echo(get(m, "direction/v1/"+m.Option(mdb.TYPE)+ice.PS, m.OptionSimple("from,to")))
+				m.Echo(get(m, "direction/v1/"+m.Option(mdb.TYPE)+nfs.PS, m.OptionSimple("from,to")))
 			}},
 			"district": {Name: "district", Help: "地区", Hand: func(m *ice.Message, arg ...string) {
 				m.Echo(get(m, "district/v1/getchildren", m.OptionSimple(mdb.ID)))

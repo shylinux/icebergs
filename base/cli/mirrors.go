@@ -6,6 +6,7 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
@@ -47,8 +48,8 @@ func release(m *ice.Message) string {
 	}
 	m.Option(nfs.CAT_CONTENT, _release)
 	_release = m.Cmdx(nfs.CAT, "/etc/os-release", kit.Dict(ice.MSG_USERROLE, aaa.ROOT), func(text string, _ int) string {
-		if ls := kit.Split(text, ice.EQ); len(ls) > 1 {
-			kit.Switch(ls[0], []string{"ID", "ID_LIKE"}, func() { osid = strings.TrimSpace(ls[1] + ice.SP + osid) })
+		if ls := kit.Split(text, mdb.EQ); len(ls) > 1 {
+			kit.Switch(ls[0], []string{"ID", "ID_LIKE"}, func() { osid = strings.TrimSpace(ls[1] + lex.SP + osid) })
 		}
 		return text
 	})
@@ -59,7 +60,7 @@ func insert(m *ice.Message, sys, cmd string, arg ...string) bool {
 		return false
 	}
 	if len(arg) > 0 {
-		m.GoSleep("300ms", mdb.INSERT, kit.Keys(CLI, MIRRORS), "", mdb.ZONE, arg[0], OSID, sys, CMD, cmd+ice.SP+kit.Select(arg[0], arg, 1))
+		m.GoSleep("300ms", mdb.INSERT, kit.Keys(CLI, MIRRORS), "", mdb.ZONE, arg[0], OSID, sys, CMD, cmd+lex.SP+kit.Select(arg[0], arg, 1))
 	}
 	return true
 }

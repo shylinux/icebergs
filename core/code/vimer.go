@@ -9,6 +9,7 @@ import (
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/log"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -20,11 +21,11 @@ import (
 
 func _vimer_make(m *ice.Message, dir string, msg *ice.Message) {
 	defer m.StatusTimeCount()
-	for _, line := range strings.Split(msg.Append(cli.CMD_ERR), ice.NL) {
-		if !strings.Contains(line, ice.DF) {
+	for _, line := range strings.Split(msg.Append(cli.CMD_ERR), lex.NL) {
+		if !strings.Contains(line, nfs.DF) {
 			continue
 		}
-		if ls := strings.SplitN(line, ice.DF, 4); len(ls) > 3 {
+		if ls := strings.SplitN(line, nfs.DF, 4); len(ls) > 3 {
 			for i, p := range kit.Split(dir) {
 				if strings.HasPrefix(ls[0], p) {
 					m.Push(nfs.PATH, p)
@@ -32,7 +33,7 @@ func _vimer_make(m *ice.Message, dir string, msg *ice.Message) {
 					m.Push(nfs.LINE, ls[1])
 					m.Push(mdb.TEXT, ls[3])
 					break
-				} else if i == strings.Count(dir, ice.FS) {
+				} else if i == strings.Count(dir, mdb.FS) {
 					ps := nfs.SplitPath(m, ls[0])
 					m.Push(nfs.PATH, ps[0])
 					m.Push(nfs.FILE, ps[1])
@@ -61,7 +62,7 @@ func init() {
 					m.PushSearch(mdb.TYPE, nfs.FILE, mdb.NAME, "main", mdb.TEXT, ice.SRC_MAIN_GO)
 					m.PushSearch(mdb.TYPE, nfs.FILE, mdb.NAME, "main", mdb.TEXT, ice.SRC_MAIN_SH)
 					m.PushSearch(mdb.TYPE, nfs.FILE, mdb.NAME, "main", mdb.TEXT, ice.SRC_MAIN_JS)
-					m.PushSearch(mdb.TYPE, web.LINK, mdb.NAME, "admin", mdb.TEXT, web.MergeURL2(m, ice.PS, log.DEBUG, ice.TRUE))
+					m.PushSearch(mdb.TYPE, web.LINK, mdb.NAME, "admin", mdb.TEXT, web.MergeURL2(m, nfs.PS, log.DEBUG, ice.TRUE))
 					m.PushSearch(mdb.TYPE, web.LINK, mdb.NAME, m.CommandKey(), mdb.TEXT, m.MergePodCmd("", "", log.DEBUG, ice.TRUE))
 				}
 			}},
@@ -82,7 +83,7 @@ func init() {
 					case nfs.FILE:
 						list := ice.Map{}
 						push := func(k, p string) {
-							kit.IfNoKey(list, kit.Select(k, k+ice.DF, k != "")+p, func(p string) { m.Push(nfs.PATH, p) })
+							kit.IfNoKey(list, kit.Select(k, k+nfs.DF, k != "")+p, func(p string) { m.Push(nfs.PATH, p) })
 						}
 						mdb.HashSelect(m.Spawn()).TablesLimit(30, func(value ice.Maps) { push("", value[nfs.PATH]) })
 						m.Cmd(mdb.SEARCH, mdb.FOREACH, "", ice.OptionFields("type,name,text")).Sort("type,name,text").Table(func(value ice.Maps) {
@@ -153,7 +154,7 @@ func init() {
 				isWebview := func() bool { return strings.HasSuffix(os.Args[0], _app) }
 				cmds := []string{COMPILE, ice.SRC_MAIN_GO, ice.BIN_ICE_BIN}
 				if isWebview() {
-					m.Option(cli.ENV, "CGO_ENABLED", "1", cli.HOME, kit.Env(cli.HOME), cli.PATH, kit.Path(ice.USR_LOCAL_GO_BIN)+ice.DF+kit.Env(cli.PATH))
+					m.Option(cli.ENV, "CGO_ENABLED", "1", cli.HOME, kit.Env(cli.HOME), cli.PATH, kit.Path(ice.USR_LOCAL_GO_BIN)+nfs.DF+kit.Env(cli.PATH))
 					cmds = []string{COMPILE, ice.SRC_WEBVIEW_GO, path.Join(app, _app)}
 				}
 				if msg := m.Cmd(cmds); cli.IsSuccess(msg) {
@@ -195,7 +196,7 @@ func init() {
 	})
 }
 func Complete(m *ice.Message, text string, data ice.Map) {
-	if strings.HasSuffix(text, ice.PT) {
+	if strings.HasSuffix(text, nfs.PT) {
 		m.Push(mdb.TEXT, kit.Simple(data[kit.Slice(kit.Split(text, " ."), -1)[0]]))
 	} else {
 		m.Push(mdb.TEXT, data[""])

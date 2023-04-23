@@ -6,6 +6,8 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/gdb"
+	"shylinux.com/x/icebergs/base/lex"
+	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 	"shylinux.com/x/toolkits/logs"
@@ -19,7 +21,7 @@ func BinPath(arg ...string) string {
 	}
 	kit.For(arg, func(p string) {
 		list = append(list, kit.Path(p, ice.BIN), kit.Path(p, ice.USR_PUBLISH), kit.Path(p, ice.USR_LOCAL_BIN), kit.Path(p, ice.USR_LOCAL_GO_BIN))
-		kit.For(kit.Reverse(strings.Split(ice.Pulse.Cmdx(nfs.CAT, kit.Path(p, ice.ETC_PATH)), ice.NL)), func(l string) {
+		kit.For(kit.Reverse(strings.Split(ice.Pulse.Cmdx(nfs.CAT, kit.Path(p, ice.ETC_PATH)), lex.NL)), func(l string) {
 			kit.If(strings.TrimSpace(l) != "" && !strings.HasPrefix(strings.TrimSpace(l), "#"), func() { push(kit.Path(p, l)) })
 		})
 	})
@@ -36,7 +38,7 @@ func init() {
 				env := []string{PATH, BinPath(""), HOME, kit.Select(kit.Path(""), os.Getenv(HOME))}
 				kit.For(ENV_LIST, func(k string) { kit.If(kit.Env(k) != "", func() { env = append(env, k, kit.Env(k)) }) })
 				kit.For(os.Environ(), func(v string) {
-					if ls := kit.Split(v, ice.EQ, ice.EQ); kit.IndexOf(env, ls[0]) == -1 && len(ls) > 1 {
+					if ls := kit.Split(v, mdb.EQ, mdb.EQ); kit.IndexOf(env, ls[0]) == -1 && len(ls) > 1 {
 						env = append(env, ls[0], ls[1])
 					}
 				})
@@ -59,7 +61,7 @@ func init() {
 				return
 			}
 			for {
-				if logs.Println("run %s", kit.Join(arg, ice.SP)); IsSuccess(m.Cmd(SYSTEM, arg)) {
+				if logs.Println("run %s", kit.Join(arg, lex.SP)); IsSuccess(m.Cmd(SYSTEM, arg)) {
 					logs.Println(ice.EXIT)
 					break
 				}

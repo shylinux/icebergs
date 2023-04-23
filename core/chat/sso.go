@@ -7,6 +7,7 @@ import (
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
@@ -31,6 +32,6 @@ func GetSSO(m *ice.Message) string {
 	if !strings.Contains(link, web.PP(CHAT, POD)) {
 		return ""
 	}
-	ls := strings.Split(kit.ParseURL(link).Path, ice.PS)
+	ls := strings.Split(kit.ParseURL(link).Path, nfs.PS)
 	return kit.MergeURL2(link, web.P(CHAT, SSO), web.SPACE, kit.Select("", ls, 3), cli.BACK, m.R.Header.Get(web.Referer))
 }

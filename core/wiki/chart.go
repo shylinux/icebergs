@@ -4,6 +4,8 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/lex"
+	"shylinux.com/x/icebergs/base/mdb"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -32,7 +34,7 @@ func (item *Item) Echo(str string, arg ...ice.Any) *Item {
 	return item
 }
 func (item *Item) Dump(m *ice.Message) *ice.Message {
-	return m.Echo(kit.Join(item.list, ice.SP), item.args...).Echo(ice.NL)
+	return m.Echo(kit.Join(item.list, lex.SP), item.args...).Echo(lex.NL)
 }
 
 type Group struct{ list ice.Messages }
@@ -61,11 +63,11 @@ func (g *Group) EchoLine(group string, x1, y1, x2, y2 int) *ice.Message {
 }
 func (g *Group) EchoRect(group string, height, width, x, y int, arg ...string) *ice.Message { // rx ry
 	return g.Echo(group, `<rect height=%d width=%d rx=%s ry=%s x=%d y=%d %s/>`,
-		height, width, kit.Select("4", arg, 0), kit.Select("4", arg, 1), x, y, kit.JoinKV(ice.EQ, ice.SP, kit.Slice(arg, 2)...))
+		height, width, kit.Select("4", arg, 0), kit.Select("4", arg, 1), x, y, kit.JoinKV(mdb.EQ, lex.SP, kit.Slice(arg, 2)...))
 }
 func (g *Group) EchoText(group string, x, y int, text string, arg ...string) *ice.Message {
 	float := kit.Int(kit.Select("2", "6", strings.Contains(g.Get(group).Option(ice.MSG_USERUA), "Chrome")))
-	return g.Echo(group, "<text x=%d y=%d %s>%s</text>", x, y+float, kit.JoinKV(ice.EQ, ice.SP, arg...), text)
+	return g.Echo(group, "<text x=%d y=%d %s>%s</text>", x, y+float, kit.JoinKV(mdb.EQ, lex.SP, arg...), text)
 }
 func (g *Group) EchoTexts(group string, x, y int, text string, arg ...string) *ice.Message {
 	m := g.Get(group)

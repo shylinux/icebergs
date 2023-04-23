@@ -6,6 +6,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
@@ -35,13 +36,13 @@ func init() {
 			val := []string{}
 			m.Table(func(index int, value ice.Maps, head []string) {
 				kit.For(head, func(k string) { val = append(val, kit.Format("%s:\t%s", k, value[k])) })
-				val = append(val, ice.NL)
+				val = append(val, lex.NL)
 			})
 			_lark_post(m, m.Option(APP_ID), "/open-apis/message/v4/send/", web.SPIDE_DATA, kit.Formats(
 				kit.Dict("msg_type", "interactive", "chat_id", m.Option(OPEN_CHAT_ID), "card", kit.Dict(
 					"header", kit.Dict("title", kit.Dict("tag", "lark_md", "content", strings.Join(cmds, " "))),
 					"elements", []ice.Any{kit.Dict("tag", "div", "fields", []ice.Any{
-						kit.Dict("is_short", true, "text", kit.Dict("tag", "lark_md", "content", strings.Join(val, ice.NL))),
+						kit.Dict("is_short", true, "text", kit.Dict("tag", "lark_md", "content", strings.Join(val, lex.NL))),
 					})},
 				)),
 			))

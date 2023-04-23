@@ -7,7 +7,9 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/ssh"
 	"shylinux.com/x/icebergs/base/web"
 	"shylinux.com/x/icebergs/core/code"
@@ -16,9 +18,9 @@ import (
 
 func _tmux_key(arg ...string) string {
 	if len(arg) > 2 {
-		return arg[0] + ice.DF + arg[1] + ice.PT + arg[2]
+		return arg[0] + nfs.DF + arg[1] + nfs.PT + arg[2]
 	} else if len(arg) > 1 {
-		return arg[0] + ice.DF + arg[1]
+		return arg[0] + nfs.DF + arg[1]
 	} else if len(arg) > 0 {
 		return arg[0]
 	} else {
@@ -181,23 +183,23 @@ func init() {
 			} else if len(arg) > 0 {
 				m.Cmdy(WINDOW, arg[0])
 			} else {
-				m.Split(_tmux_cmd(m, LIST_SESSION, "-F", mdb.Config(m, FORMAT)).Result(), mdb.Config(m, FIELDS), ice.FS, ice.NL)
+				m.Split(_tmux_cmd(m, LIST_SESSION, "-F", mdb.Config(m, FORMAT)).Result(), mdb.Config(m, FIELDS), mdb.FS, lex.NL)
 			}
 			m.Table(func(value ice.Maps) {
 				kit.If(value["tag"] == "1", func() { m.PushButton("") }, func() { m.PushButton(code.XTERM, mdb.SELECT, mdb.REMOVE) })
 			}).StatusTimeCount()
 		}},
 		WINDOW: {Hand: func(m *ice.Message, arg ...string) {
-			m.Split(m.Cmdx(cli.SYSTEM, TMUX, LIST_WINDOWS, "-t", kit.Select("", arg, 0), "-F", mdb.Config(m, FORMAT)), mdb.Config(m, FIELDS), ice.FS, ice.NL)
+			m.Split(m.Cmdx(cli.SYSTEM, TMUX, LIST_WINDOWS, "-t", kit.Select("", arg, 0), "-F", mdb.Config(m, FORMAT)), mdb.Config(m, FIELDS), mdb.FS, lex.NL)
 		}},
 		PANE: {Hand: func(m *ice.Message, arg ...string) {
-			m.Split(_tmux_cmds(m, LIST_PANES, "-t", kit.Select("", arg, 0), "-F", mdb.Config(m, FORMAT)), mdb.Config(m, FIELDS), ice.FS, ice.NL)
+			m.Split(_tmux_cmds(m, LIST_PANES, "-t", kit.Select("", arg, 0), "-F", mdb.Config(m, FORMAT)), mdb.Config(m, FIELDS), mdb.FS, lex.NL)
 		}},
 		VIEW: {Hand: func(m *ice.Message, arg ...string) {
 			m.Echo(_tmux_cmds(m, CAPTURE_PANE, "-p", "-t", kit.Select("", arg, 0)))
 		}},
 		CMD: {Hand: func(m *ice.Message, arg ...string) {
-			_tmux_cmd(m, SEND_KEYS, "-t", arg[0], strings.Join(arg[1:], ice.SP), ENTER)
+			_tmux_cmd(m, SEND_KEYS, "-t", arg[0], strings.Join(arg[1:], lex.SP), ENTER)
 		}},
 	}})
 }

@@ -15,6 +15,7 @@ import (
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/gdb"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	psh "shylinux.com/x/icebergs/base/ssh"
@@ -32,7 +33,7 @@ func _ssh_open(m *ice.Message, arg ...string) {
 		c.Write([]byte(fmt.Sprintf("#height:%d,width:%d\n", h, w)))
 		for _, item := range kit.Simple(m.Optionv(ice.INIT)) {
 			m.Sleep300ms()
-			c.Write([]byte(item + ice.NL))
+			c.Write([]byte(item + lex.NL))
 		}
 		m.Go(func() { io.Copy(c, os.Stdin) })
 		io.Copy(os.Stdout, c)
@@ -114,7 +115,7 @@ func _ssh_conn(m *ice.Message, cb func(*ssh.Client), arg ...string) {
 		return
 	}))
 	m.Cmdy(tcp.CLIENT, tcp.DIAL, mdb.TYPE, SSH, mdb.NAME, m.Option(tcp.HOST), m.OptionSimple(tcp.HOST, tcp.PORT), arg, func(c net.Conn) {
-		conn, chans, reqs, err := ssh.NewClientConn(c, m.Option(tcp.HOST)+ice.DF+m.Option(tcp.PORT), &ssh.ClientConfig{
+		conn, chans, reqs, err := ssh.NewClientConn(c, m.Option(tcp.HOST)+nfs.DF+m.Option(tcp.PORT), &ssh.ClientConfig{
 			User: m.Option(aaa.USERNAME), Auth: methods, BannerCallback: func(message string) error { return nil },
 			HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error { return nil },
 		})

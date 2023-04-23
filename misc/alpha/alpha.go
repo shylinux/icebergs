@@ -7,6 +7,7 @@ import (
 	"shylinux.com/x/ice"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/core/wiki"
@@ -38,7 +39,7 @@ func (s alpha) Load(m *ice.Message, arg ...string) {
 	m.Cmd(mdb.IMPORT, m.PrefixKey(), prefix, mdb.LIST, m.Option(nfs.FILE))
 	mdb.Conf(m, "", kit.Keys(prefix, kit.Keym(mdb.LIMIT)), 0)
 	mdb.Conf(m, "", kit.Keys(prefix, kit.Keym(mdb.LEAST)), 0)
-	m.Echo("%s: %d", lib, mdb.Grow(m, m.PrefixKey(), prefix, kit.Dict(WORD, ice.SP)))
+	m.Echo("%s: %d", lib, mdb.Grow(m, m.PrefixKey(), prefix, kit.Dict(WORD, lex.SP)))
 }
 func (s alpha) List(m *ice.Message, arg ...string) {
 	if len(arg) < 2 || arg[1] == "" {
@@ -53,7 +54,7 @@ func (s alpha) List(m *ice.Message, arg ...string) {
 		}
 		defer func() { kit.If(m.Length() > 0, func() { m.Cmd(cache{}, mdb.CREATE, m.AppendSimple()) }) }()
 		m.OptionFields(ice.FIELDS_DETAIL)
-		arg[1] = "^" + arg[1] + ice.FS
+		arg[1] = "^" + arg[1] + mdb.FS
 	}
 	wiki.CSV(m.Message.Spawn(), m.Cmdx(cli.SYSTEM, "grep", "-rih", arg[1], mdb.Config(m, mdb.STORE)), kit.Split(mdb.Config(m, mdb.FIELD))...).Table(func(value ice.Maps) {
 		kit.If(m.FieldsIsDetail(), func() { m.PushDetail(value, mdb.Config(m, mdb.FIELD)) }, func() { m.PushRecord(value, mdb.Config(m, mdb.FIELD)) })

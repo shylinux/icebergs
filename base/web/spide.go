@@ -116,7 +116,7 @@ func _spide_part(m *ice.Message, arg ...string) (string, io.Reader) {
 			if t, e := time.ParseInLocation(ice.MOD_TIME, arg[i+1], time.Local); !m.Warn(e, ice.ErrNotValid) {
 				cache = t
 			}
-		} else if strings.HasPrefix(arg[i+1], ice.AT) {
+		} else if strings.HasPrefix(arg[i+1], mdb.AT) {
 			if s, e := nfs.StatFile(m, arg[i+1][1:]); !m.Warn(e, ice.ErrNotValid) {
 				if s.Size() == size && s.ModTime().Before(cache) {
 					continue

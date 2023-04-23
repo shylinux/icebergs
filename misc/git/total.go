@@ -9,6 +9,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
@@ -75,16 +76,16 @@ func init() {
 			kit.If(len(arg) > 0 && arg[0] == mdb.TOTAL, func() { total, arg = true, arg[1:] })
 			args := []string{"log", "--shortstat", "--pretty=commit: %ad %n%s", "--date=iso", "--reverse"}
 			if len(arg) > 0 {
-				arg[0] += kit.Select("", " 00:00:00", strings.Contains(arg[0], "-") && !strings.Contains(arg[0], ice.DF))
+				arg[0] += kit.Select("", " 00:00:00", strings.Contains(arg[0], "-") && !strings.Contains(arg[0], nfs.DF))
 				args = append(args, kit.Select("-n", "--since", strings.Contains(arg[0], "-")))
 				args = append(args, arg...)
 			} else {
 				args = append(args, "-n", "30")
 			}
 			from, days, commit, adds, dels := "", 0, 0, 0, 0
-			kit.SplitKV(ice.NL, "commit:", _git_cmds(m, args...), func(text string, ls []string) {
+			kit.SplitKV(lex.NL, "commit:", _git_cmds(m, args...), func(text string, ls []string) {
 				add, del := "0", "0"
-				for _, v := range kit.Split(strings.TrimSpace(kit.Select("", ls, -1)), ice.FS) {
+				for _, v := range kit.Split(strings.TrimSpace(kit.Select("", ls, -1)), mdb.FS) {
 					switch {
 					case strings.Contains(v, "inser"):
 						add = kit.Split(v)[0]
@@ -94,7 +95,7 @@ func init() {
 				}
 				if total {
 					if commit++; from == "" {
-						hs := strings.Split(ls[0], ice.SP)
+						hs := strings.Split(ls[0], lex.SP)
 						if t, e := time.Parse("2006-01-02", hs[0]); e == nil {
 							from, days = hs[0], int(time.Now().Sub(t).Hours())/24
 						}

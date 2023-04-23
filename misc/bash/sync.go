@@ -7,6 +7,7 @@ import (
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
@@ -42,9 +43,9 @@ func init() {
 		}},
 		web.PP(SYNC): {Actions: ice.Actions{
 			HISTORY: {Hand: func(m *ice.Message, arg ...string) {
-				ls := strings.SplitN(strings.TrimSpace(m.Option(ARG)), ice.SP, 4)
-				if text := strings.TrimSpace(strings.Join(ls[3:], ice.SP)); text != "" {
-					m.Cmd(SYNC, mdb.INSERT, mdb.TIME, ls[1]+ice.SP+ls[2], mdb.TYPE, SHELL, mdb.NAME, ls[0], mdb.TEXT, text, m.OptionSimple(cli.PWD, aaa.USERNAME, tcp.HOSTNAME))
+				ls := strings.SplitN(strings.TrimSpace(m.Option(ARG)), lex.SP, 4)
+				if text := strings.TrimSpace(strings.Join(ls[3:], lex.SP)); text != "" {
+					m.Cmd(SYNC, mdb.INSERT, mdb.TIME, ls[1]+lex.SP+ls[2], mdb.TYPE, SHELL, mdb.NAME, ls[0], mdb.TEXT, text, m.OptionSimple(cli.PWD, aaa.USERNAME, tcp.HOSTNAME))
 				}
 			}},
 		}},

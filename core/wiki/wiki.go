@@ -26,11 +26,11 @@ func _wiki_path(m *ice.Message, arg ...string) string {
 	return path.Join(mdb.Config(m, nfs.PATH), path.Join(arg...))
 }
 func _wiki_link(m *ice.Message, text string) string {
-	kit.If(!kit.HasPrefix(text, ice.PS, ice.HTTP), func() { text = path.Join(web.SHARE_LOCAL, _wiki_path(m, text)) })
+	kit.If(!kit.HasPrefix(text, nfs.PS, ice.HTTP), func() { text = path.Join(web.SHARE_LOCAL, _wiki_path(m, text)) })
 	return text
 }
 func _wiki_list(m *ice.Message, arg ...string) bool {
-	if m.Option(nfs.DIR_ROOT, _wiki_path(m)); len(arg) == 0 || kit.HasSuffix(arg[0], ice.PS) {
+	if m.Option(nfs.DIR_ROOT, _wiki_path(m)); len(arg) == 0 || kit.HasSuffix(arg[0], nfs.PS) {
 		kit.If(m.Option(nfs.DIR_DEEP) != ice.TRUE, func() { m.Cmdy(nfs.DIR, kit.Slice(arg, 0, 1), kit.Dict(nfs.DIR_TYPE, nfs.DIR)) })
 		m.Cmdy(nfs.DIR, kit.Slice(arg, 0, 1), kit.Dict(nfs.DIR_TYPE, nfs.CAT, nfs.DIR_REG, mdb.Config(m, lex.REGEXP)))
 		m.SortStrR(mdb.TIME).StatusTimeCount()
@@ -97,12 +97,12 @@ func (m *Message) OptionTemplate() string {
 	kit.For(kit.Split("type,name,text"), func(k string) { add("data-", k) })
 	kit.For(m.Optionv(mdb.EXTRA), func(k string, v string) { kit.If(!strings.Contains(k, "-"), func() { add("data-", k) }) })
 	kit.For(kit.Split(ctx.STYLE), func(k string) { add("", k) })
-	return kit.Join(res, ice.SP)
+	return kit.Join(res, lex.SP)
 }
 func (m *Message) OptionKV(key ...string) string {
 	res := []string{}
 	kit.For(kit.Split(kit.Join(key)), func(k string) {
 		kit.If(m.Option(k), func() { res = append(res, kit.Format("%s='%s'", k, m.Option(k))) })
 	})
-	return kit.Join(res, ice.SP)
+	return kit.Join(res, lex.SP)
 }

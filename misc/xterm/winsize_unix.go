@@ -5,6 +5,7 @@ package xterm
 
 import (
 	"os"
+	"os/exec"
 	"syscall"
 	"unsafe"
 )
@@ -24,4 +25,7 @@ func ioctl(fd, cmd, ptr uintptr) error {
 		return e
 	}
 	return nil
+}
+func Setsid(cmd *exec.Cmd) {
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true, Setctty: true}
 }

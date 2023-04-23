@@ -9,6 +9,7 @@ import (
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/gdb"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
@@ -20,7 +21,7 @@ func _status_tag(m *ice.Message, tags string) string {
 	if tags == "" {
 		return "v0.0.1"
 	}
-	ls := kit.Split(strings.TrimPrefix(kit.Split(tags, "-")[0], "v"), ice.PT)
+	ls := kit.Split(strings.TrimPrefix(kit.Split(tags, "-")[0], "v"), nfs.PT)
 	if v := kit.Int(ls[2]); v < 9 {
 		return kit.Format("v%v.%v.%v", ls[0], ls[1], v+1)
 	} else if v := kit.Int(ls[1]); v < 9 {
@@ -32,7 +33,7 @@ func _status_tag(m *ice.Message, tags string) string {
 	}
 }
 func _status_stat(m *ice.Message, files, adds, dels int) (int, int, int) {
-	kit.SplitKV(ice.SP, ice.FS, _git_diff(m), func(text string, ls []string) {
+	kit.SplitKV(lex.SP, mdb.FS, _git_diff(m), func(text string, ls []string) {
 		n := kit.Int(ls[0])
 		switch {
 		case strings.Contains(text, "file"):
@@ -54,7 +55,7 @@ func _status_list(m *ice.Message) (files, adds, dels int, last string) {
 		_last := m.Cmdv(REPOS, path.Base(value[nfs.PATH]), mdb.TIME)
 		kit.If(_last > last, func() { last = _last })
 		tags := _git_tags(m)
-		kit.SplitKV(ice.SP, ice.NL, _git_status(m), func(text string, ls []string) {
+		kit.SplitKV(lex.SP, lex.NL, _git_status(m), func(text string, ls []string) {
 			switch kit.Ext(ls[1]) {
 			case "swp", "swo", ice.BIN, ice.VAR:
 				return
@@ -63,7 +64,7 @@ func _status_list(m *ice.Message) (files, adds, dels int, last string) {
 				return
 			}
 			if m.Push(REPOS, value[REPOS]).Push(mdb.TYPE, ls[0]).Push(nfs.FILE, ls[1]); onlychange {
-				m.Push(nfs.PATH, value[nfs.PATH]).Push(mdb.VIEW, kit.Format("%s %s", ls[0]+strings.Repeat(ice.SP, len(ls[0])-9), kit.Select("", nfs.USR+value[REPOS]+nfs.PS, value[REPOS] != ice.CONTEXTS)+ls[1]))
+				m.Push(nfs.PATH, value[nfs.PATH]).Push(mdb.VIEW, kit.Format("%s %s", ls[0]+strings.Repeat(lex.SP, len(ls[0])-9), kit.Select("", nfs.USR+value[REPOS]+nfs.PS, value[REPOS] != ice.CONTEXTS)+ls[1]))
 			}
 			switch ls[0] {
 			case "##":
@@ -107,7 +108,7 @@ func init() {
 				case INSTEADOF:
 					switch arg[0] {
 					case nfs.FROM:
-						m.Push(arg[0], kit.MergeURL2(ice.Info.Make.Remote, ice.PS))
+						m.Push(arg[0], kit.MergeURL2(ice.Info.Make.Remote, nfs.PS))
 					case nfs.TO:
 						m.Cmd(web.BROAD, func(value ice.Maps) { m.Push(arg[0], kit.Format("http://%s:%s/", value[tcp.HOST], value[tcp.PORT])) })
 					}
@@ -116,8 +117,8 @@ func init() {
 				switch arg[0] {
 				case COMMENT:
 					ls := kit.Split(m.Option(nfs.FILE), " /")
-					m.Push(arg[0], kit.Join(kit.Slice(ls, -1), ice.PS))
-					m.Push(arg[0], kit.Join(kit.Slice(ls, -2), ice.PS))
+					m.Push(arg[0], kit.Join(kit.Slice(ls, -1), nfs.PS))
+					m.Push(arg[0], kit.Join(kit.Slice(ls, -2), nfs.PS))
 					m.Push(arg[0], m.Option(nfs.FILE))
 				case VERSION:
 					m.Push(VERSION, _status_tag(m, m.Option(TAGS)))
@@ -151,7 +152,7 @@ func init() {
 					return
 				}
 				text := []string{}
-				for _, line := range kit.Split(m.Cmdx(web.SPACE, m.Option(mdb.NAME), cli.SYSTEM, GIT, DIFF, "--shortstat"), ice.FS, ice.FS) {
+				for _, line := range kit.Split(m.Cmdx(web.SPACE, m.Option(mdb.NAME), cli.SYSTEM, GIT, DIFF, "--shortstat"), mdb.FS, mdb.FS) {
 					if list := kit.Split(line); strings.Contains(line, "file") {
 						text = append(text, list[0]+" file")
 					} else if strings.Contains(line, "ins") {

@@ -59,14 +59,14 @@ func _binpack_all(m *ice.Message) {
 		list, cache := map[string]string{}, kit.Select(ice.USR_REQUIRE, m.Cmdx(cli.SYSTEM, GO, "env", "GOMODCACHE"))
 		const _mod_ = "/pkg/mod/"
 		for k := range ice.Info.File {
-			switch ls := kit.Split(k, ice.PS); ls[1] {
+			switch ls := kit.Split(k, nfs.PS); ls[1] {
 			case ice.SRC:
 			case ice.USR:
 				list[path.Join(kit.Slice(ls, 1, -1)...)] = ""
 			default:
 				p := path.Join(cache, path.Join(kit.Slice(ls, 1, -1)...))
-				_ls := strings.Split(strings.Split(p, _mod_)[1], ice.PS)
-				list[path.Join(nfs.USR, strings.Split(_ls[2], ice.AT)[0], path.Join(kit.Slice(_ls, 3)...))] = p
+				_ls := strings.Split(strings.Split(p, _mod_)[1], nfs.PS)
+				list[path.Join(nfs.USR, strings.Split(_ls[2], mdb.AT)[0], path.Join(kit.Slice(_ls, 3)...))] = p
 			}
 		}
 		for _, k := range kit.SortedKey(list) {
@@ -76,7 +76,7 @@ func _binpack_all(m *ice.Message) {
 			})
 		}
 		mdb.HashSelects(m).Sort(nfs.PATH).Table(func(value ice.Maps) {
-			if strings.HasSuffix(value[nfs.PATH], ice.PS) {
+			if strings.HasSuffix(value[nfs.PATH], nfs.PS) {
 				_binpack_dir(m, w, value[nfs.PATH])
 			} else {
 				_binpack_file(m, w, value[nfs.PATH])

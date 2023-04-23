@@ -11,6 +11,7 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
@@ -40,7 +41,7 @@ func init() {
 			mdb.CREATE: {Name: "create bits=2048,4096 title=some", Hand: func(m *ice.Message, arg ...string) {
 				if key, err := rsa.GenerateKey(rand.Reader, kit.Int(m.Option(BITS))); !m.Warn(err, ice.ErrNotValid) {
 					if pub, err := ssh.NewPublicKey(key.Public()); !m.Warn(err, ice.ErrNotValid) {
-						mdb.HashCreate(m, m.OptionSimple(TITLE), PUBLIC, string(ssh.MarshalAuthorizedKey(pub))+ice.SP+m.Option(TITLE),
+						mdb.HashCreate(m, m.OptionSimple(TITLE), PUBLIC, string(ssh.MarshalAuthorizedKey(pub))+lex.SP+m.Option(TITLE),
 							PRIVATE, string(pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(key)})),
 						)
 					}

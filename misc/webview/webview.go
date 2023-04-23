@@ -6,6 +6,7 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 	"shylinux.com/x/webview"
@@ -40,7 +41,7 @@ func (w WebView) Menu() bool {
 	} else {
 		w.WebView.SetTitle(ice.CONTEXTS)
 		w.WebView.SetSize(200, 60*len(list), webview.HintNone)
-		w.WebView.Navigate(kit.Format(`data:text/html,`+ice.Pulse.Cmdx(nfs.CAT, path.Join(ice.SRC_TEMPLATE, "webview", "home.html")), kit.Join(list, ice.NL)))
+		w.WebView.Navigate(kit.Format(`data:text/html,`+ice.Pulse.Cmdx(nfs.CAT, path.Join(ice.SRC_TEMPLATE, "webview", "home.html")), kit.Join(list, lex.NL)))
 		return true
 	}
 }
@@ -58,7 +59,7 @@ func (w WebView) SetSize(width, height int) {
 }
 func (w WebView) System(arg ...string) string { return w.Cmdx(cli.SYSTEM, arg) }
 func (w WebView) Power() string {
-	ls := strings.Split(w.Cmdx(cli.SYSTEM, "pmset", "-g", "ps"), ice.NL)
+	ls := strings.Split(w.Cmdx(cli.SYSTEM, "pmset", "-g", "ps"), lex.NL)
 	for _, line := range ls[1:] {
 		ls := kit.Split(line, "\t ;", "\t ;")
 		return ls[2]

@@ -8,6 +8,7 @@ import (
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
@@ -86,7 +87,7 @@ func init() {
 			msg := m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME))
 			kit.For([]string{aaa.USERNICK, aaa.LANGUAGE}, func(k string) { m.Option(k, msg.Append(k)) })
 			for _, k := range []string{aaa.BACKGROUND, aaa.AVATAR} {
-				if strings.HasPrefix(msg.Append(k), ice.PS) || strings.HasPrefix(msg.Append(k), ice.HTTP) {
+				if strings.HasPrefix(msg.Append(k), nfs.PS) || strings.HasPrefix(msg.Append(k), ice.HTTP) {
 					m.Option(k, msg.Append(k))
 				} else if msg.Append(k) != "" && aaa.Right(m.Spawn(), msg.Append(k)) {
 					m.Option(k, web.SHARE_LOCAL+k)

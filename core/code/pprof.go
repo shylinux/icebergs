@@ -8,6 +8,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
@@ -44,13 +45,13 @@ func init() {
 				}
 				msg := m.Cmd(web.SPIDE, ice.DEV, web.SPIDE_CACHE, http.MethodGet, m.Option(SERVICE), m.OptionSimple(SECONDS))
 				cmd := kit.Simple(mdb.Configv(m, PPROF), "-text", m.Option(BINNARY), msg.Append(nfs.FILE))
-				m.Option(mdb.TEXT, strings.Join(kit.Slice(strings.Split(m.Cmdx(cli.SYSTEM, cmd), ice.NL), 0, 20), ice.NL))
+				m.Option(mdb.TEXT, strings.Join(kit.Slice(strings.Split(m.Cmdx(cli.SYSTEM, cmd), lex.NL), 0, 20), lex.NL))
 				mdb.ZoneInsert(m, m.OptionSimple("zone,text"), msg.AppendSimple(nfs.FILE))
 				m.Echo(m.Option(mdb.TEXT)).ProcessInner()
 			}},
 			web.SERVE: {Help: "展示", Hand: func(m *ice.Message, arg ...string) {
 				u := web.UserWeb(m)
-				p := u.Hostname() + ice.DF + m.Cmdx(tcp.PORT, aaa.RIGHT)
+				p := u.Hostname() + nfs.DF + m.Cmdx(tcp.PORT, aaa.RIGHT)
 				m.Cmd(cli.DAEMON, mdb.Configv(m, PPROF), "-http="+p, m.Option(BINNARY), m.Option(nfs.FILE))
 				m.Sleep3s().ProcessOpen(kit.Format("http://%s/ui/top", p))
 			}},

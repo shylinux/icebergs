@@ -8,6 +8,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/ssh"
@@ -27,7 +28,7 @@ func _autogen_list(m *ice.Message) string {
 }
 func _autogen_source(m *ice.Message, main, file string) {
 	m.Cmd(nfs.DEFS, main, nfs.Template(m, ice.SRC_MAIN_SHY))
-	m.Cmd(nfs.PUSH, main, ssh.SOURCE+ice.SP+strings.TrimPrefix(file, ice.SRC+ice.PS)+ice.NL)
+	m.Cmd(nfs.PUSH, main, ssh.SOURCE+lex.SP+strings.TrimPrefix(file, ice.SRC+nfs.PS)+lex.NL)
 }
 func _autogen_script(m *ice.Message, file string) { m.Cmd(nfs.DEFS, file, nfs.Template(m, "demo.shy")) }
 func _autogen_module(m *ice.Message, file string) { m.Cmd(nfs.DEFS, file, nfs.Template(m, "demo.go")) }
@@ -47,7 +48,7 @@ func _autogen_import(m *ice.Message, main string, ctx string, mod string) {
 			done, list = true, append(list, kit.Format(`import _ "%s/src/%s"`, mod, ctx))
 		}
 	})
-	m.Cmd(nfs.SAVE, main, kit.Join(list, ice.NL))
+	m.Cmd(nfs.SAVE, main, kit.Join(list, lex.NL))
 	m.Cmd(cli.SYSTEM, "goimports", "-w", main)
 }
 func _autogen_version(m *ice.Message) string {
@@ -70,7 +71,7 @@ func _autogen_gits(m *ice.Message, arg ...string) string {
 	kit.For(_autogen_git(m, arg...), func(k, v string) {
 		res = append(res, kit.Format(`		%s: "%s",`, kit.Capital(k), strings.TrimSpace(v)))
 	})
-	return kit.Join(res, ice.NL)
+	return kit.Join(res, lex.NL)
 }
 func _autogen_git(m *ice.Message, arg ...string) ice.Map {
 	return kit.Dict(arg,
@@ -92,7 +93,7 @@ func _autogen_mod(m *ice.Message, file string) (mod string) {
 	}
 	m.Cmd(nfs.DEFS, file, nfs.Template(m, ice.GO_MOD, host))
 	m.Cmd(nfs.CAT, file, func(line string) {
-		kit.If(strings.HasPrefix(line, nfs.MODULE), func() { mod = kit.Split(line, ice.SP)[1] })
+		kit.If(strings.HasPrefix(line, nfs.MODULE), func() { mod = kit.Split(line, lex.SP)[1] })
 	})
 	return
 }

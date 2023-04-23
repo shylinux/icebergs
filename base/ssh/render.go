@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/lex"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -20,8 +21,8 @@ func Render(msg *ice.Message, cmd string, arg ...ice.Any) (res string) {
 			res = msg.TableEcho().Result()
 		}
 	}
-	if fmt.Fprint(msg.O, res); !strings.HasSuffix(res, ice.NL) {
-		fmt.Fprint(msg.O, ice.NL)
+	if fmt.Fprint(msg.O, res); !strings.HasSuffix(res, lex.NL) {
+		fmt.Fprint(msg.O, lex.NL)
 	}
 	return res
 }

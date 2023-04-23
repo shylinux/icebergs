@@ -17,7 +17,7 @@ type Label struct {
 func (s *Label) Init(m *ice.Message, arg ...string) wiki.Chart {
 	(&s.Block).Init(m)
 	s.max = map[int]int{}
-	m.Cmd(lex.SPLIT, "", kit.Dict(lex.SPLIT_BLOCK, ice.SP, nfs.CAT_CONTENT, arg[0]), func(ls []string) {
+	m.Cmd(lex.SPLIT, "", kit.Dict(lex.SPLIT_BLOCK, lex.SP, nfs.CAT_CONTENT, arg[0]), func(ls []string) {
 		s.data = append(s.data, ls)
 		for i, v := range ls {
 			if w := s.GetWidth(kit.SplitWord(v)[0]); w > s.max[i] {

@@ -18,7 +18,7 @@ func init() {
 				m.Cmdy(REPOS)
 			} else if len(arg) == 1 {
 				nfs.DirDeepAll(m, _repos_path(m, arg[0]), "", func(value ice.Maps) { m.Push("", value, []string{nfs.PATH}) }, nfs.PATH)
-				m.Options(nfs.DIR_ROOT, _repos_path(m, arg[0])).StatusTimeCount()
+				m.Options(nfs.DIR_ROOT, _repos_path(m, arg[0])+nfs.PS).StatusTimeCount()
 				ctx.DisplayStory(m, "", mdb.FIELD, nfs.PATH, aaa.ROOT, arg[0])
 			}
 		}},

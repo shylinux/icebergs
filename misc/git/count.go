@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/core/code"
@@ -67,7 +68,7 @@ func init() {
 			"tags": {Help: "索引", Hand: func(m *ice.Message, arg ...string) {
 				count := map[string]int{}
 				m.Cmd(nfs.CAT, path.Join(arg[0], nfs.TAGS), func(line string) {
-					if ls := strings.SplitN(line, ice.TB, 3); len(ls) < 3 {
+					if ls := strings.SplitN(line, lex.TB, 3); len(ls) < 3 {
 						return
 					} else if ls = strings.SplitN(ls[2], ";\"", 2); len(ls) < 2 {
 						return

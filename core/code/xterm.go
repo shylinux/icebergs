@@ -8,6 +8,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/log"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -22,7 +23,7 @@ func _xterm_get(m *ice.Message, h string) *xterm.XTerm {
 	m.Assert(h != "")
 	mdb.HashModify(m, mdb.TIME, m.Time(), web.VIEW, m.Option(ice.MSG_DAEMON))
 	return mdb.HashSelectTarget(m, h, func(value ice.Maps) ice.Any {
-		text := strings.Split(value[mdb.TEXT], ice.NL)
+		text := strings.Split(value[mdb.TEXT], lex.NL)
 		ls := kit.Split(strings.Split(kit.Select(nfs.SH, value[mdb.TYPE]), " # ")[0])
 		kit.If(value[nfs.PATH] != "" && !strings.HasSuffix(value[nfs.PATH], nfs.PS), func() { value[nfs.PATH] = path.Dir(value[nfs.PATH]) })
 		term, e := xterm.Command(m, value[nfs.PATH], kit.Select(ls[0], cli.SystemFind(m, ls[0])), ls[1:]...)
@@ -32,7 +33,7 @@ func _xterm_get(m *ice.Message, h string) *xterm.XTerm {
 		m.Go(func() {
 			defer term.Close()
 			defer mdb.HashRemove(m, mdb.HASH, h)
-			m.Log(cli.START, strings.Join(term.Args, ice.SP))
+			m.Log(cli.START, strings.Join(term.Args, lex.SP))
 			buf := make([]byte, ice.MOD_BUFS)
 			for {
 				if n, e := term.Read(buf); !m.Warn(e) && e == nil {
@@ -40,7 +41,7 @@ func _xterm_get(m *ice.Message, h string) *xterm.XTerm {
 						if cmd := text[0]; text[0] != "" {
 							m.Go(func() {
 								m.Sleep30ms()
-								term.Write(cmd + ice.NL)
+								term.Write(cmd + lex.NL)
 							})
 						}
 						text = text[1:]
@@ -88,7 +89,7 @@ func init() {
 					m.Cmdy(nfs.DIR, ice.USR_LOCAL_REPOS, nfs.PATH)
 					m.Cmdy(nfs.DIR, ice.USR_LOCAL_DAEMON, nfs.PATH)
 				case nfs.FILE:
-					push := func(arg ...string) { m.Push(nfs.FILE, strings.Join(arg, ice.DF)) }
+					push := func(arg ...string) { m.Push(nfs.FILE, strings.Join(arg, nfs.DF)) }
 					m.Cmd("", func(value ice.Maps) {
 						kit.If(value[mdb.TYPE] == web.LAYOUT, func() { push(web.LAYOUT, value[mdb.HASH], value[mdb.NAME]) })
 					})

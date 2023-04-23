@@ -3,6 +3,7 @@ package lark
 import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
 	"shylinux.com/x/icebergs/core/chat"
 	kit "shylinux.com/x/toolkits"
@@ -21,7 +22,7 @@ func init() {
 				m.Cmd("web.chat./river", func(val ice.Maps) {
 					m.Cmd("web.chat./river", val[mdb.HASH], chat.STORM, func(value ice.Maps) {
 						list = append(list, kit.Keys(val[mdb.NAME], value[mdb.NAME]),
-							ice.CMD, kit.Format([]string{HOME, val[mdb.HASH], value[mdb.HASH], val[mdb.NAME] + ice.PT + value[mdb.NAME]}))
+							ice.CMD, kit.Format([]string{HOME, val[mdb.HASH], value[mdb.HASH], val[mdb.NAME] + nfs.PT + value[mdb.NAME]}))
 					})
 				})
 			} else {

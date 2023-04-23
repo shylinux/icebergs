@@ -7,6 +7,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/yac"
@@ -39,9 +40,9 @@ func _go_complete(m *ice.Message, arg ...string) {
 	)
 	if m.Option(mdb.TEXT) == "" {
 		m.Push(mdb.TEXT, PACKAGE, IMPORT, CONST, TYPE, FUNC, VAR)
-	} else if strings.HasSuffix(m.Option(mdb.TEXT), ice.PT) {
+	} else if strings.HasSuffix(m.Option(mdb.TEXT), nfs.PT) {
 		msg := m.Cmd(cli.SYSTEM, GO, "doc", _go_trans(m, kit.Slice(kit.Split(m.Option(mdb.TEXT), "\t ."), -1)[0]))
-		for _, l := range strings.Split(kit.Select(msg.Result(), msg.Append(cli.CMD_OUT)), ice.NL) {
+		for _, l := range strings.Split(kit.Select(msg.Result(), msg.Append(cli.CMD_OUT)), lex.NL) {
 			if ls := kit.Split(l, "\t *", "()"); len(ls) > 1 {
 				kit.Switch(ls[0], []string{CONST, TYPE, FUNC, VAR}, func() {
 					kit.If(ls[1] == "(", func() { m.Push(mdb.NAME, ls[5]) }, func() { m.Push(mdb.NAME, ls[1]) })
@@ -51,8 +52,8 @@ func _go_complete(m *ice.Message, arg ...string) {
 		}
 	} else {
 		m.Push(mdb.TEXT, "m", "msg", "code", "wiki", "chat", "team", "mall", "arg", "aaa", "cli", "ctx", "mdb", "nfs", "web", "ice", "kit")
-		for _, l := range strings.Split(m.Cmdx(cli.SYSTEM, GO, "list", "std"), ice.NL) {
-			m.Push(mdb.TEXT, kit.Slice(kit.Split(l, ice.PS), -1)[0])
+		for _, l := range strings.Split(m.Cmdx(cli.SYSTEM, GO, "list", "std"), lex.NL) {
+			m.Push(mdb.TEXT, kit.Slice(kit.Split(l, nfs.PS), -1)[0])
 		}
 	}
 }
@@ -109,8 +110,8 @@ func init() {
 				return
 				cmds, text := "ice.bin source stdio", ctx.GetFileCmd(path.Join(arg[2], arg[1]))
 				if text != "" {
-					ls := strings.Split(text, ice.PT)
-					text = "~" + kit.Join(kit.Slice(ls, 0, -1), ice.PT) + ice.NL + kit.Slice(ls, -1)[0]
+					ls := strings.Split(text, nfs.PT)
+					text = "~" + kit.Join(kit.Slice(ls, 0, -1), nfs.PT) + lex.NL + kit.Slice(ls, -1)[0]
 				} else {
 					text = "cli.system go run " + path.Join(arg[2], arg[1])
 				}
@@ -134,9 +135,9 @@ func init() {
 			COMPLETE: {Hand: func(m *ice.Message, arg ...string) { _go_complete(m, arg...) }},
 			NAVIGATE: {Hand: func(m *ice.Message, arg ...string) {
 				for _, cmd := range []string{"guru", "gopls"} {
-					if ls := kit.Split(m.Cmdx(cli.SYSTEM, cmd, "definition", m.Option(nfs.PATH)+m.Option(nfs.FILE)+ice.DF+"#"+m.Option("offset")), ice.DF); len(ls) > 0 {
+					if ls := kit.Split(m.Cmdx(cli.SYSTEM, cmd, "definition", m.Option(nfs.PATH)+m.Option(nfs.FILE)+nfs.DF+"#"+m.Option("offset")), nfs.DF); len(ls) > 0 {
 						if strings.HasPrefix(ls[0], kit.Path("")) {
-							_ls := nfs.SplitPath(m, strings.TrimPrefix(ls[0], kit.Path("")+ice.PS))
+							_ls := nfs.SplitPath(m, strings.TrimPrefix(ls[0], kit.Path("")+nfs.PS))
 							m.Push(nfs.PATH, _ls[0]).Push(nfs.FILE, _ls[1]).Push(nfs.LINE, ls[1])
 							return
 						}

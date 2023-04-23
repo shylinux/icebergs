@@ -7,6 +7,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
@@ -22,20 +23,20 @@ func _tags_input(m *ice.Message, arg ...string) {
 		if arg[1] == "" {
 			kit.For([]string{"field", "shell", "refer", "section", "chapter", "title"}, func(k string) { kit.If(strings.HasPrefix(k, arg[0]), func() { m.EchoLine(k) }) })
 		}
-		m.EchoLine(kit.Join(bash.Complete(m, true, kit.Split(m.Option(PRE)+kit.Select("", ice.SP, !strings.HasSuffix(m.Option(PRE), ice.PT))+m.Option("cmds"))...), ice.SP+ice.NL))
+		m.EchoLine(kit.Join(bash.Complete(m, true, kit.Split(m.Option(PRE)+kit.Select("", lex.SP, !strings.HasSuffix(m.Option(PRE), nfs.PT))+m.Option("cmds"))...), lex.SP+lex.NL))
 		return
 	}
 	switch name := kit.Select("", kit.Slice(kit.Split(arg[1], "\t \n."), -1), 0); name {
 	case "can", "sup", "sub":
 		mdb.ZoneSelect(m).Table(func(value ice.Maps) {
-			if strings.Contains(value[mdb.ZONE], arg[0]) || arg[0] == ice.PT {
+			if strings.Contains(value[mdb.ZONE], arg[0]) || arg[0] == nfs.PT {
 				m.EchoLine(value[mdb.ZONE])
 			}
 		})
 	default:
-		mdb.ZoneSelectCB(m.Echo("func").Echo(ice.NL), name, func(value ice.Maps) {
-			if strings.Contains(value[mdb.NAME], arg[0]) || arg[0] == ice.PT {
-				m.EchoLine(value[mdb.NAME]+kit.Select("", "(", value[mdb.TYPE] == "function")).EchoLine("%s: %s", value[mdb.NAME], strings.Split(value[mdb.TEXT], ice.NL)[0])
+		mdb.ZoneSelectCB(m.Echo("func").Echo(lex.NL), name, func(value ice.Maps) {
+			if strings.Contains(value[mdb.NAME], arg[0]) || arg[0] == nfs.PT {
+				m.EchoLine(value[mdb.NAME]+kit.Select("", "(", value[mdb.TYPE] == "function")).EchoLine("%s: %s", value[mdb.NAME], strings.Split(value[mdb.TEXT], lex.NL)[0])
 			}
 		})
 	}
@@ -77,12 +78,12 @@ func init() {
 					Qrcode(m, args[1])
 				case wiki.FIELD:
 					m.Search(kit.Select(args[1], args, 2), func(key string, cmd *ice.Command) {
-						ls := kit.Split(cmd.FileLine(), ice.DF)
+						ls := kit.Split(cmd.FileLine(), nfs.DF)
 						m.Echo("vi +%s %s", ls[1], ls[0])
 					})
 				default:
 					m.Search(args[0], func(key string, cmd *ice.Command) {
-						ls := kit.Split(cmd.FileLine(), ice.DF)
+						ls := kit.Split(cmd.FileLine(), nfs.DF)
 						m.Echo("vi +%s %s", ls[1], ls[0])
 					})
 				}

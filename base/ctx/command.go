@@ -6,6 +6,7 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
@@ -69,7 +70,7 @@ func init() {
 			}},
 			mdb.EXPORT: {Hand: func(m *ice.Message, arg ...string) {
 				TravelCmd(m, func(key, file, line string) { m.Push(mdb.NAME, key).Push(nfs.FILE, file).Push(nfs.LINE, line) }).Sort(mdb.NAME).Table(func(value ice.Maps) {
-					m.Echo(`%s	%s	%s;" f`+ice.NL, value[mdb.NAME], value[nfs.FILE], value[nfs.LINE])
+					m.Echo(`%s	%s	%s;" f`+lex.NL, value[mdb.NAME], value[nfs.FILE], value[nfs.LINE])
 				}).Cmd(nfs.SAVE, nfs.TAGS, m.Result())
 			}},
 		}, CmdAction(), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
@@ -137,7 +138,7 @@ func FileURI(dir string) string {
 func FileCmd(dir string) string { return FileURI(kit.ExtChange(strings.Split(dir, nfs.DF)[0], nfs.GO)) }
 func AddFileCmd(dir, key string) {
 	ice.Info.File[FileCmd(dir)] = key
-	if ls := strings.SplitN(path.Join(kit.Slice(kit.Split(FileCmd(dir), nfs.PS), 1, 4)...), ice.AT, 2); len(ls) > 1 {
+	if ls := strings.SplitN(path.Join(kit.Slice(kit.Split(FileCmd(dir), nfs.PS), 1, 4)...), mdb.AT, 2); len(ls) > 1 {
 		ice.Info.Gomod[ls[0]] = ls[1]
 	}
 }

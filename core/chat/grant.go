@@ -5,7 +5,9 @@ import (
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/gdb"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/base/web"
 )
@@ -32,10 +34,10 @@ func init() {
 					m.Option(ice.MSG_USERUA, msg.Append(ice.MSG_USERUA))
 				}
 				m.Cmd(web.SPACE, m.Option(web.SPACE), ice.MSG_SESSID, aaa.SessCreate(m, m.Option(ice.MSG_USERNAME)))
-				m.ProcessLocation(web.MergeURL2(m, ice.PS))
+				m.ProcessLocation(web.MergeURL2(m, nfs.PS))
 			}},
 		}, gdb.EventAction(web.SPACE_LOGIN), aaa.RoleAction(CONFIRM)), Hand: func(m *ice.Message, arg ...string) {
-			m.Echo("请授权: %s 访问设备: %s", arg[0], ice.Info.Hostname).Echo(ice.NL).EchoButton(CONFIRM)
+			m.Echo("请授权: %s 访问设备: %s", arg[0], ice.Info.Hostname).Echo(lex.NL).EchoButton(CONFIRM)
 		}},
 	})
 }

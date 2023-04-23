@@ -18,6 +18,7 @@ import (
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/log"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -59,7 +60,7 @@ func _repos_each(m *ice.Message, title string, cb func(*git.Repository, ice.Maps
 	if msg.Length() == 0 {
 		return
 	}
-	web.GoToast(m, kit.Select(m.CommandKey()+ice.SP+m.ActionKey(), title), func(toast func(string, int, int)) {
+	web.GoToast(m, kit.Select(m.CommandKey()+lex.SP+m.ActionKey(), title), func(toast func(string, int, int)) {
 		list, count, total := []string{}, 0, msg.Length()
 		msg.Table(func(value ice.Maps) {
 			toast(value[REPOS], count, total)
@@ -71,7 +72,7 @@ func _repos_each(m *ice.Message, title string, cb func(*git.Repository, ice.Maps
 			count++
 		})
 		if len(list) > 0 {
-			web.Toast(m, strings.Join(list, ice.NL), ice.FAILURE, "30s")
+			web.Toast(m, strings.Join(list, lex.NL), ice.FAILURE, "30s")
 		} else {
 			toast(ice.SUCCESS, count, total)
 		}
@@ -157,12 +158,12 @@ func _repos_status(m *ice.Message, p string, repos *git.Repository) error {
 	}
 	defer m.StatusTimeCount()
 	for k, v := range status {
-		if kit.IsIn(kit.Ext(k), "swp", "swo") {
+		if kit.IsIn(kit.Ext(k), "swp", "swo") || kit.IsIn(kit.Split(k, nfs.PS)[0], ice.BIN, ice.VAR, ice.USR) {
 			continue
 		}
-		if m.Push(REPOS, p).Push(STATUS, string(v.Worktree)+string(v.Staging)).Push(nfs.FILE, k); m.Option("mode") == "zone" {
+		if m.Push(REPOS, p).Push(STATUS, string(v.Worktree)+string(v.Staging)).Push(nfs.FILE, k); m.Option(ice.MSG_MODE) == mdb.ZONE {
 			ls := nfs.SplitPath(m, kit.Path(_repos_path(m, p), k))
-			m.Push(nfs.PATH, ls[0]).Push(mdb.TEXT, string(v.Worktree)+string(v.Staging)+ice.SP+ls[0]+ls[1])
+			m.Push(nfs.PATH, ls[0]).Push(mdb.TEXT, string(v.Worktree)+string(v.Staging)+lex.SP+ls[0]+ls[1])
 		}
 		switch v.Worktree {
 		case git.Untracked:
@@ -209,14 +210,15 @@ func _repos_vimer(m *ice.Message, _repos_path func(m *ice.Message, p string, arg
 	} else if kit.Select("", arg, 1) != ctx.ACTION {
 		if ls := kit.Split(path.Join(m.Option(nfs.DIR_ROOT), arg[1]), nfs.PS); len(ls) < 2 || ls[2] == INDEX {
 			if repos := _repos_open(m, ls[0]); len(arg) < 3 {
+				// m.Cmdy(nfs.DIR, nfs.PWD, kit.Dict(nfs.DIR_ROOT, _repos_path(m, ls[0])))
 				if work, err := repos.Worktree(); err == nil {
 					if status, err := work.Status(); err == nil {
 						for k := range status {
-							m.Echo(k)
+							m.Push(nfs.PATH, k)
+							// m.Echo(k)
 						}
 					}
 				}
-				m.Cmdy(nfs.DIR, nfs.PWD, kit.Dict(nfs.DIR_ROOT, _repos_path(m, ls[0])))
 			} else {
 				m.Cmdy(nfs.CAT, _repos_path(m, ls[0], arg[2]))
 				if refer, err := repos.Head(); err == nil {
@@ -313,7 +315,7 @@ func init() {
 				p := path.Join(kit.Select(ice.USR_REQUIRE, m.Cmdx(cli.SYSTEM, "go", "env", "GOMODCACHE")), path.Join(arg...))
 				if !nfs.Exists(m, p) {
 					if p = path.Join(ice.USR_REQUIRE, path.Join(arg...)); !nfs.Exists(m, p) {
-						ls := strings.SplitN(path.Join(arg[:3]...), ice.AT, 2)
+						ls := strings.SplitN(path.Join(arg[:3]...), mdb.AT, 2)
 						to := path.Join(ice.USR_REQUIRE, path.Join(arg[:3]...))
 						_, err := git.PlainClone(to, false, &git.CloneOptions{URL: "https://" + ls[0], ReferenceName: plumbing.NewBranchReferenceName(kit.Select(ice.Info.Gomod[ls[0]], ls, 1))})
 						m.Warn(err)
@@ -408,7 +410,7 @@ func init() {
 							}
 						}
 					}
-					_, err := work.Commit(m.Option("actions")+ice.SP+m.Option("comment"), opt)
+					_, err := work.Commit(m.Option("actions")+lex.SP+m.Option("comment"), opt)
 					m.Warn(err)
 				}
 			}},

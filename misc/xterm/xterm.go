@@ -3,9 +3,9 @@ package xterm
 import (
 	"os"
 	"os/exec"
-	"syscall"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
@@ -26,7 +26,7 @@ func (s XTerm) Setsize(rows, cols string) error {
 	return Setsize(s.File, &Winsize{Rows: uint16(kit.Int(rows)), Cols: uint16(kit.Int(cols))})
 }
 func (s XTerm) Writeln(data string, arg ...ice.Any) {
-	s.Write(kit.Format(data, arg...) + ice.NL)
+	s.Write(kit.Format(data, arg...) + lex.NL)
 }
 func (s XTerm) Write(data string) (int, error) {
 	return s.File.Write([]byte(data))
@@ -39,11 +39,11 @@ func Command(m *ice.Message, dir string, cli string, arg ...string) (*XTerm, err
 	cmd.Dir = nfs.MkdirAll(m, kit.Path(dir))
 	cmd.Env = append(cmd.Env, os.Environ()...)
 	cmd.Env = append(cmd.Env, "TERM=xterm")
-	cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true, Setctty: true}
 	pty, tty, err := Open()
 	if err != nil {
 		return nil, err
 	}
 	cmd.Stdin, cmd.Stdout, cmd.Stderr = tty, tty, tty
+	Setsid(cmd)
 	return &XTerm{cmd, pty}, cmd.Start()
 }

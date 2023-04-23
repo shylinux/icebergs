@@ -25,7 +25,7 @@ func (s spring) Build(m *ice.Message) {
 	s.Code.Stream(m, m.Option(nfs.PATH), MVN, "package")
 }
 func (s spring) Start(m *ice.Message, arg ...string) {
-	s.Code.Daemon(m, m.Option(nfs.PATH), kit.Simple(JAVA, kit.Simple(arg, func(k, v string) string { return "-D" + k + ice.EQ + v }),
+	s.Code.Daemon(m, m.Option(nfs.PATH), kit.Simple(JAVA, kit.Simple(arg, func(k, v string) string { return "-D" + k + mdb.EQ + v }),
 		"-jar", kit.Format("target/%s-0.0.1-SNAPSHOT.jar", m.Option(mdb.NAME)))...)
 }
 func (s spring) List(m *ice.Message, arg ...string) {

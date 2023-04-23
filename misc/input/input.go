@@ -90,10 +90,10 @@ func (s input) List(m *ice.Message, arg ...string) {
 	switch arg[0] {
 	case LINE:
 	case WORD:
-		arg[1] = "^" + arg[1] + ice.FS
+		arg[1] = "^" + arg[1] + mdb.FS
 	}
 	res := m.Cmdx(cli.SYSTEM, "grep", "-rn", arg[1], mdb.Config(m, mdb.STORE))
-	bio := csv.NewReader(bytes.NewBufferString(strings.Replace(res, ice.DF, ice.FS, -1)))
+	bio := csv.NewReader(bytes.NewBufferString(strings.Replace(res, nfs.DF, mdb.FS, -1)))
 	for i := 0; i < kit.Int(10); i++ {
 		if line, e := bio.Read(); e != nil {
 			break

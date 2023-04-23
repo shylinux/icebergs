@@ -14,7 +14,7 @@ func _refer_show(m *ice.Message, text string, arg ...string) {
 	for _, v := range kit.SplitLine(text) {
 		if ls := kit.SplitWord(v); len(ls) == 1 {
 			p := kit.QueryUnescape(ls[0])
-			list = append(list, []string{kit.Select(ls[0], path.Base(strings.Split(p, ice.QS)[0])), ls[0], p})
+			list = append(list, []string{kit.Select(ls[0], path.Base(strings.Split(p, mdb.QS)[0])), ls[0], p})
 		} else {
 			list = append(list, append(ls, kit.QueryUnescape(ls[1])))
 		}

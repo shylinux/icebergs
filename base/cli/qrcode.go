@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/misc/qrcode"
@@ -25,9 +26,9 @@ func _qrcode_cli(m *ice.Message, text string) {
 			}
 			m.Echo("\033[4%sm  \033[0m", kit.Select(bg, fg, col))
 		}
-		m.Echo(ice.NL)
+		m.Echo(lex.NL)
 	}
-	m.Echo(text).Echo(ice.NL)
+	m.Echo(text).Echo(lex.NL)
 }
 func _qrcode_web(m *ice.Message, text string) string {
 	sc := qrcode.New(text)

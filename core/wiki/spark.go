@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
@@ -13,7 +14,7 @@ func _spark_md(m *ice.Message, arg ...string) *ice.Message {
 	block, code := "", []string{}
 	text := func() {
 		if len(code) > 0 {
-			m.Cmdy(SPARK, kit.Join(code, ice.NL))
+			m.Cmdy(SPARK, kit.Join(code, lex.NL))
 			code = []string{}
 		}
 	}
@@ -30,7 +31,7 @@ func _spark_md(m *ice.Message, arg ...string) *ice.Message {
 				text()
 				block = "```"
 			} else {
-				m.Cmdy(SPARK, SHELL, kit.Join(code, ice.NL))
+				m.Cmdy(SPARK, SHELL, kit.Join(code, lex.NL))
 				block, code = "", []string{}
 			}
 			return

@@ -9,6 +9,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/ssh"
@@ -20,15 +21,15 @@ import (
 func _merge_url(m *ice.Message, domain, key string, arg ...ice.Any) string {
 	if domain == "" {
 		if m.Option(ice.MSG_USERPOD) == "" {
-			domain = web.MergeLink(m, ice.PS)
+			domain = web.MergeLink(m, nfs.PS)
 		} else {
 			domain = web.MergeLink(m, "/chat/pod/"+m.Option(ice.MSG_USERPOD))
 		}
 	}
-	if domain = strings.TrimSuffix(domain, ice.PS); strings.Contains(domain, "/chat/pod/") {
+	if domain = strings.TrimSuffix(domain, nfs.PS); strings.Contains(domain, "/chat/pod/") {
 		domain += web.P(strings.TrimPrefix(m.Prefix(web.P(key)), "web.chat."))
 	} else {
-		domain += path.Join(strings.TrimPrefix(strings.Replace(m.Target().Prefix(), ice.PT, ice.PS, -1), "web"), path.Join(key))
+		domain += path.Join(strings.TrimPrefix(strings.Replace(m.Target().Prefix(), nfs.PT, nfs.PS, -1), "web"), path.Join(key))
 	}
 	return kit.MergeURL(domain, arg...)
 }
@@ -156,7 +157,7 @@ var Index = &ice.Context{Name: OAUTH, Help: "认证授权", Commands: ice.Comman
 		}
 	}},
 	web.P(USERINFO): {Name: "/userinfo Authorization", Help: "信息", Hand: func(m *ice.Message, arg ...string) {
-		if ls := strings.SplitN(m.R.Header.Get(web.Authorization), ice.SP, 2); m.Warn(len(ls) != 2 || ls[1] == "", ice.ErrNotFound, web.Bearer) {
+		if ls := strings.SplitN(m.R.Header.Get(web.Authorization), lex.SP, 2); m.Warn(len(ls) != 2 || ls[1] == "", ice.ErrNotFound, web.Bearer) {
 			m.RenderStatusBadRequest() // 参数错误
 
 		} else if msg := m.Cmd(ACCESS, ls[1]); msg.Append(mdb.TIME) < m.Time() {

@@ -47,7 +47,7 @@ func DisplayLocal(m displayMessage, file string, arg ...ice.Any) displayMessage 
 	return DisplayBase(m, file, arg...)
 }
 func DisplayBase(m displayMessage, file string, arg ...ice.Any) displayMessage {
-	m.Option(ice.MSG_DISPLAY, kit.MergeURL(kit.Select(kit.ExtChange(file, nfs.JS), file, strings.Contains(file, ice.QS)), arg...))
+	m.Option(ice.MSG_DISPLAY, kit.MergeURL(kit.Select(kit.ExtChange(file, nfs.JS), file, strings.Contains(file, mdb.QS)), arg...))
 	return m
 }
 func Toolkit(m *ice.Message, arg ...string) {

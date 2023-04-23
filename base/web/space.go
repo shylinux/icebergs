@@ -12,6 +12,7 @@ import (
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/gdb"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/log"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -42,7 +43,7 @@ func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 				}
 			}).Cost(mdb.COUNT, i, mdb.NEXT, next, tcp.DIAL, dev, LINK, u.String()).Sleep(next)
 		}
-	}, kit.Join(kit.Simple(SPACE, name), ice.SP))
+	}, kit.Join(kit.Simple(SPACE, name), lex.SP))
 }
 func _space_fork(m *ice.Message) {
 	addr := kit.Select(m.R.RemoteAddr, m.R.Header.Get(ice.MSG_USERADDR))
@@ -60,7 +61,7 @@ func _space_fork(m *ice.Message) {
 				gdb.Event(m, SPACE_LOGIN, args)
 			}
 			_space_handle(m, false, name, c)
-		}, kit.Join(kit.Simple(SPACE, name), ice.SP))
+		}, kit.Join(kit.Simple(SPACE, name), lex.SP))
 	}
 }
 func _space_handle(m *ice.Message, safe bool, name string, c *websocket.Conn) {
@@ -80,7 +81,7 @@ func _space_handle(m *ice.Message, safe bool, name string, c *websocket.Conn) {
 				msg.Option(ice.MSG_USERROLE, aaa.VOID)
 			}
 			if msg.Option("_exec") == "go" {
-				m.Go(func() { _space_exec(msg, source, target, c) }, strings.Join(kit.Simple(SPACE, name, msg.Detailv()), ice.SP))
+				m.Go(func() { _space_exec(msg, source, target, c) }, strings.Join(kit.Simple(SPACE, name, msg.Detailv()), lex.SP))
 			} else {
 				_space_exec(msg, source, target, c)
 			}
@@ -128,7 +129,7 @@ func _space_send(m *ice.Message, name string, arg ...string) {
 	wait, done := m.Wait(func(msg *ice.Message, arg ...string) {
 		m.Cost(kit.Format("%v->[%v] %v %v", m.Optionv(ice.MSG_SOURCE), name, m.Detailv(), msg.FormatSize())).Copy(msg)
 	})
-	h := mdb.HashCreate(m.Spawn(), mdb.TYPE, tcp.SEND, mdb.NAME, kit.Keys(name, m.Target().ID()), mdb.TEXT, kit.Join(arg, ice.SP), kit.Dict(mdb.TARGET, done))
+	h := mdb.HashCreate(m.Spawn(), mdb.TYPE, tcp.SEND, mdb.NAME, kit.Keys(name, m.Target().ID()), mdb.TEXT, kit.Join(arg, lex.SP), kit.Dict(mdb.TARGET, done))
 	defer mdb.HashRemove(m, mdb.HASH, h)
 	if target := kit.Split(name, nfs.PT, nfs.PT); mdb.HashSelectDetail(m, target[0], func(value ice.Map) {
 		if c, ok := value[mdb.TARGET].(*websocket.Conn); !m.Warn(!ok, ice.ErrNotValid, mdb.TARGET) {

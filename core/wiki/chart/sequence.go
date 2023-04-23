@@ -26,7 +26,7 @@ func (s *Sequence) push(m *ice.Message, list string, arg ...ice.Any) ice.Map {
 }
 func (s *Sequence) Init(m *ice.Message, arg ...string) wiki.Chart {
 	(&s.Block).Init(m)
-	m.Cmd(lex.SPLIT, "", kit.Dict(lex.SPLIT_BLOCK, ice.SP, nfs.CAT_CONTENT, arg[0]), func(ls []string) {
+	m.Cmd(lex.SPLIT, "", kit.Dict(lex.SPLIT_BLOCK, lex.SP, nfs.CAT_CONTENT, arg[0]), func(ls []string) {
 		if len(s.head) == 0 {
 			s.head, s.pos = ls, make([]int, len(ls))
 			for i := 0; i < len(ls); i++ {

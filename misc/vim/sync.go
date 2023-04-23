@@ -21,7 +21,7 @@ func init() {
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(FAVOR, mdb.INPUTS, arg) }},
 			code.INNER: {Hand: func(m *ice.Message, arg ...string) {
 				p := path.Join(m.Option(cli.PWD), m.Option(BUF))
-				ctx.ProcessField(m, "", []string{path.Dir(p) + ice.PS, path.Base(p), m.Option(ROW)}, arg...)
+				ctx.ProcessField(m, "", []string{path.Dir(p) + nfs.PS, path.Base(p), m.Option(ROW)}, arg...)
 			}},
 			FAVOR: {Name: "favor zone*=some type name text pwd buf row", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(FAVOR, mdb.INSERT, m.OptionSimple(mdb.ZONE, "type,name,text,pwd"), nfs.FILE, m.Option(BUF), nfs.LINE, m.Option(ROW))

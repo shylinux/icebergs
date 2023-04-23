@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
@@ -19,47 +20,47 @@ func FormatPretty(v ice.Any, i, n int) string {
 		if n == 0 {
 			list := []string{"{"}
 			kit.For(v, func(k string, v ice.Any) {
-				list = append(list, kit.Format("%q", k), nfs.DF, FormatPretty(v, 0, 0), ice.FS)
+				list = append(list, kit.Format("%q", k), nfs.DF, FormatPretty(v, 0, 0), mdb.FS)
 			})
 			list = list[:len(list)-1]
 			list = append(list, "}")
 			return strings.Join(list, "")
 		}
-		list := []string{"{", ice.NL}
+		list := []string{"{", lex.NL}
 		kit.For(v, func(k string, v ice.Any) {
-			list = append(list, strings.Repeat(ice.TB, i+1), kit.Format("%q", k), nfs.DF)
+			list = append(list, strings.Repeat(lex.TB, i+1), kit.Format("%q", k), nfs.DF)
 			if i < n && !kit.IsIn(k, mdb.META) && !strings.HasPrefix(k, "_") {
 				list = append(list, FormatPretty(v, i+1, n))
 			} else {
 				list = append(list, FormatPretty(v, 0, 0))
 			}
-			list = append(list, ice.FS, ice.NL)
+			list = append(list, mdb.FS, lex.NL)
 		})
-		list = append(list[:len(list)-2], ice.NL)
-		list = append(list, strings.Repeat(ice.TB, i), "}")
+		list = append(list[:len(list)-2], lex.NL)
+		list = append(list, strings.Repeat(lex.TB, i), "}")
 		return strings.Join(list, "")
 	case []ice.Any:
 		if n == 0 {
 			list := []string{"["}
 			kit.For(v, func(k string, v ice.Any) {
-				list = append(list, FormatPretty(v, 0, 0), ice.FS)
+				list = append(list, FormatPretty(v, 0, 0), mdb.FS)
 			})
 			list = list[:len(list)-1]
 			list = append(list, "]")
 			return strings.Join(list, "")
 		}
-		list := []string{"[", ice.NL}
+		list := []string{"[", lex.NL}
 		kit.For(v, func(v ice.Any) {
-			list = append(list, strings.Repeat(ice.TB, i+1))
+			list = append(list, strings.Repeat(lex.TB, i+1))
 			if i < n {
 				list = append(list, FormatPretty(v, i+1, n))
 			} else {
 				list = append(list, FormatPretty(v, 0, 0))
 			}
-			list = append(list, ice.FS, ice.NL)
+			list = append(list, mdb.FS, lex.NL)
 		})
-		list = append(list[:len(list)-2], ice.NL)
-		list = append(list, strings.Repeat(ice.TB, i), "]")
+		list = append(list[:len(list)-2], lex.NL)
+		list = append(list, strings.Repeat(lex.TB, i), "]")
 		return strings.Join(list, "")
 	case string:
 		return kit.Format(v)
@@ -69,21 +70,21 @@ func FormatPretty(v ice.Any, i, n int) string {
 	}
 }
 func _config_format_list(m *ice.Message, v ice.Any) string {
-	list := []string{"{", ice.NL}
+	list := []string{"{", lex.NL}
 	kit.For(v, func(k string, v ice.Any) {
 		if k == mdb.HASH {
-			list = append(list, ice.TB, kit.Format("%q", k), nfs.DF, "{", ice.NL)
+			list = append(list, lex.TB, kit.Format("%q", k), nfs.DF, "{", lex.NL)
 			kit.For(v, func(k string, v ice.Any) {
-				list = append(list, ice.TB, ice.TB, kit.Format("%q", k), nfs.DF, kit.Format(v), ice.FS, ice.NL)
+				list = append(list, lex.TB, lex.TB, kit.Format("%q", k), nfs.DF, kit.Format(v), mdb.FS, lex.NL)
 			})
 			list = list[:len(list)-2]
-			list = append(list, ice.TB, ice.NL, ice.TB, "}", ice.FS, ice.NL)
+			list = append(list, lex.TB, lex.NL, lex.TB, "}", mdb.FS, lex.NL)
 		} else {
-			list = append(list, ice.TB, kit.Format("%q", k), nfs.DF, kit.Format(v), ice.FS, ice.NL)
+			list = append(list, lex.TB, kit.Format("%q", k), nfs.DF, kit.Format(v), mdb.FS, lex.NL)
 		}
 	})
 	list = list[:len(list)-2]
-	list = append(list, ice.NL, "}")
+	list = append(list, lex.NL, "}")
 	return strings.Join(list, "")
 }
 func _config_only(v ice.Any, arg ...string) bool {
@@ -139,7 +140,7 @@ func _config_load(m *ice.Message, name string, arg ...string) {
 func _config_make(m *ice.Message, key string, arg ...string) {
 	msg := m.Spawn(m.Source())
 	if len(arg) > 1 {
-		kit.If(strings.HasPrefix(arg[1], ice.AT), func() { arg[1] = msg.Cmdx(nfs.CAT, arg[1][1:]) })
+		kit.If(strings.HasPrefix(arg[1], mdb.AT), func() { arg[1] = msg.Cmdx(nfs.CAT, arg[1][1:]) })
 		mdb.Confv(msg, key, arg[0], kit.Parse(nil, "", arg[1:]...))
 	}
 	if len(arg) > 0 {

@@ -96,7 +96,7 @@ const SPLIT = "split"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		SPLIT: {Name: "split path key auto", Help: "分词", Hand: func(m *ice.Message, arg ...string) {
-			if len(arg) == 0 || strings.HasSuffix(arg[0], ice.PS) {
+			if len(arg) == 0 || strings.HasSuffix(arg[0], nfs.PS) {
 				m.Cmdy(nfs.DIR, arg)
 				return
 			}

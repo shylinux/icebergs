@@ -10,7 +10,7 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func require(arg ...string) string { return path.Join(ice.PS, ice.REQUIRE, path.Join(arg...)) }
+func require(arg ...string) string { return path.Join(nfs.PS, ice.REQUIRE, path.Join(arg...)) }
 
 const HTML = "html"
 

@@ -22,7 +22,7 @@ func _install_path(m *ice.Message, link string) string {
 	if p := path.Join(ice.USR_INSTALL, kit.TrimExt(u.Path)); nfs.Exists(m, p) {
 		return p
 	} else if pp := path.Join(ice.USR_INSTALL, path.Base(u.Path)); nfs.Exists(m, pp) {
-		return path.Join(ice.USR_INSTALL, strings.Split(m.Cmd(nfs.TAR, pp, "", "1").Append(nfs.FILE), ice.PS)[0])
+		return path.Join(ice.USR_INSTALL, strings.Split(m.Cmd(nfs.TAR, pp, "", "1").Append(nfs.FILE), nfs.PS)[0])
 	} else {
 		return p
 	}

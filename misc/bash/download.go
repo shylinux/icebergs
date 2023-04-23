@@ -4,6 +4,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
@@ -29,7 +30,7 @@ func init() {
 			m.Optionv(ice.MSG_UPLOAD, web.UPLOAD)
 			up := web.Upload(m)
 			m.Cmd(FAVOR, mdb.INSERT, _DOWNLOAD, mdb.TYPE, kit.Ext(up[1]), mdb.NAME, up[1], mdb.TEXT, up[0], m.OptionSimple(cli.PWD, aaa.USERNAME, tcp.HOSTNAME))
-			m.Echo(up[0]).Echo(ice.NL)
+			m.Echo(up[0]).Echo(lex.NL)
 		}},
 	})
 }

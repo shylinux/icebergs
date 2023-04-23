@@ -9,6 +9,7 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
@@ -439,7 +440,7 @@ func Format(arg ...Any) string {
 			res = append(res, kit.Format(v))
 		}
 	}
-	return strings.Join(res, ice.SP)
+	return strings.Join(res, lex.SP)
 }
 
 type Message struct{ *ice.Message }
@@ -452,9 +453,9 @@ func (m Message) Call(cmd string, arg ...Any) Any {
 	case "Display":
 		file := kit.Format(Trans(arg[0]))
 		if file == "" {
-			file = kit.Split(_parse_stack(m.Message).name, ice.DF)[0]
+			file = kit.Split(_parse_stack(m.Message).name, nfs.DF)[0]
 		} else if !strings.HasPrefix(file, nfs.PS) && !strings.HasPrefix(file, ice.HTTP) {
-			file = path.Join(path.Dir(kit.Split(_parse_stack(m.Message).name, ice.DF)[0]), file)
+			file = path.Join(path.Dir(kit.Split(_parse_stack(m.Message).name, nfs.DF)[0]), file)
 		}
 		m.Display(ctx.FileURI(file), arg[1:]...)
 	case "DebugStack":
@@ -465,7 +466,7 @@ func (m Message) Call(cmd string, arg ...Any) Any {
 			kit.For(f.value, func(k string, v Any) { list = append(list, kit.Format("stack: %s %s:%#v", f.key, k, v)) })
 			return false
 		})
-		m.Debug(ice.NL + strings.Join(list, ice.NL))
+		m.Debug(lex.NL + strings.Join(list, lex.NL))
 	default:
 		msg, args := reflect.ValueOf(m), []reflect.Value{}
 		kit.For(arg, func(v Any) { args = append(args, reflect.ValueOf(v)) })

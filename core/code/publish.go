@@ -10,6 +10,7 @@ import (
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
@@ -19,8 +20,8 @@ import (
 func _publish_bin_list(m *ice.Message) *ice.Message {
 	defer m.SortStrR(mdb.TIME)
 	m.Option(cli.CMD_DIR, ice.USR_PUBLISH)
-	for _, ls := range strings.Split(cli.SystemCmds(m, "ls |xargs file |grep executable"), ice.NL) {
-		if file := strings.TrimSpace(strings.Split(ls, ice.DF)[0]); file != "" {
+	for _, ls := range strings.Split(cli.SystemCmds(m, "ls |xargs file |grep executable"), lex.NL) {
+		if file := strings.TrimSpace(strings.Split(ls, nfs.DF)[0]); file != "" {
 			if s, e := nfs.StatFile(m, path.Join(ice.USR_PUBLISH, file)); e == nil {
 				m.Push(mdb.TIME, s.ModTime()).Push(nfs.SIZE, kit.FmtSize(s.Size())).Push(nfs.PATH, file)
 				m.PushDownload(mdb.LINK, file, path.Join(ice.USR_PUBLISH, file)).PushButton(nfs.TRASH)
@@ -46,7 +47,7 @@ func _publish_file(m *ice.Message, file string, arg ...string) string {
 func _publish_contexts(m *ice.Message, arg ...string) {
 	m.Option(nfs.DIR_ROOT, "")
 	for _, k := range kit.Default(arg, ice.MISC) {
-		m.Options(web.DOMAIN, web.UserHost(m), cli.CTX_ENV, kit.Select("", ice.SP+kit.JoinKV(ice.EQ, ice.SP, cli.CTX_POD, m.Option(ice.MSG_USERPOD)), m.Option(ice.MSG_USERPOD) != ""))
+		m.Options(web.DOMAIN, web.UserHost(m), cli.CTX_ENV, kit.Select("", lex.SP+kit.JoinKV(mdb.EQ, lex.SP, cli.CTX_POD, m.Option(ice.MSG_USERPOD)), m.Option(ice.MSG_USERPOD) != ""))
 		switch k {
 		case INSTALL:
 			m.Echo(strings.TrimSpace(nfs.Template(m, kit.Keys(ice.MISC, SH))))
@@ -73,7 +74,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		PUBLISH: {Name: "publish path auto create volcanos icebergs intshell", Help: "发布", Actions: ice.MergeActions(ice.Actions{
 			ice.VOLCANOS: {Help: "火山架", Hand: func(m *ice.Message, arg ...string) {
-				_publish_list(m, kit.ExtReg(HTML, CSS, JS)).Cmdy("", ice.CONTEXTS, ice.MISC).Echo(ice.NL).EchoQRCode(m.Option(ice.MSG_USERWEB))
+				_publish_list(m, kit.ExtReg(HTML, CSS, JS)).Cmdy("", ice.CONTEXTS, ice.MISC).Echo(lex.NL).EchoQRCode(m.Option(ice.MSG_USERWEB))
 			}},
 			ice.ICEBERGS: {Help: "冰山架", Hand: func(m *ice.Message, arg ...string) {
 				_publish_bin_list(m).Cmdy("", ice.CONTEXTS, ice.CORE)

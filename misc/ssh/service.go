@@ -16,6 +16,7 @@ import (
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	psh "shylinux.com/x/icebergs/base/ssh"
@@ -184,7 +185,7 @@ func init() {
 					list = append(list, fmt.Sprintf("%s %s %s", value[mdb.TYPE], value[mdb.TEXT], value[mdb.NAME]))
 				})
 				if len(list) > 0 {
-					m.Cmdy(nfs.SAVE, kit.HomePath(m.Option(AUTHKEY)), strings.Join(list, ice.NL)+ice.NL)
+					m.Cmdy(nfs.SAVE, kit.HomePath(m.Option(AUTHKEY)), strings.Join(list, lex.NL)+lex.NL)
 				}
 			}},
 			aaa.INVITE: {Help: "邀请", Hand: func(m *ice.Message, arg ...string) {

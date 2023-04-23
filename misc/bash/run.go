@@ -7,6 +7,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
@@ -34,7 +35,7 @@ ish_sys_dev_run_source() {
 		ish_sys_dev_source $url
 	done
 }
-`, kit.Join(list, ice.SP), arg[0], kit.Join(args, ice.NL))
+`, kit.Join(list, lex.SP), arg[0], kit.Join(args, lex.NL))
 	m.Echo(`
 ish_sys_dev_run_action() {
 	select action in %s; do
@@ -46,7 +47,7 @@ ish_sys_dev_run_action() {
 		echo
 	done
 }
-`, kit.Join(list, ice.SP), arg[0], kit.Join(args, ice.NL))
+`, kit.Join(list, lex.SP), arg[0], kit.Join(args, lex.NL))
 	m.Echo(`
 ish_sys_dev_run_command() {
 	ish_sys_dev_run %s "$@"
@@ -66,11 +67,11 @@ func init() {
 				if len(list) == kit.Int(m.Option("cword")) {
 					list = kit.Slice(list, 0, -1)
 				}
-				m.Echo(strings.Join(Complete(m, false, list...), ice.NL))
+				m.Echo(strings.Join(Complete(m, false, list...), lex.NL))
 			}},
 			ctx.COMMAND: {Hand: func(m *ice.Message, arg ...string) {
 				m.Search(arg[0], func(_ *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
-					if p := kit.ExtChange(kit.Select("/app/cat.sh", cmd.Meta[ctx.DISPLAY]), nfs.SH); strings.HasPrefix(p, ice.PS+ice.REQUIRE) {
+					if p := kit.ExtChange(kit.Select("/app/cat.sh", cmd.Meta[ctx.DISPLAY]), nfs.SH); strings.HasPrefix(p, nfs.PS+ice.REQUIRE) {
 						m.Cmdy(web.SPIDE, ice.DEV, web.SPIDE_RAW, p)
 					} else {
 						m.Cmdy(nfs.CAT, path.Join(ice.USR_INTSHELL, p))
@@ -82,8 +83,8 @@ func init() {
 				if !ctx.PodCmd(m, arg) && aaa.Right(m, arg) {
 					m.Cmdy(arg)
 				}
-				if m.Result() != "" && !strings.HasSuffix(m.Result(), ice.NL) {
-					m.Echo(ice.NL)
+				if m.Result() != "" && !strings.HasSuffix(m.Result(), lex.NL) {
+					m.Echo(lex.NL)
 				}
 			}},
 		}},
@@ -95,17 +96,17 @@ func Complete(m *ice.Message, detail bool, arg ...string) (res []string) {
 	if len(arg) < 2 || arg[1] != ctx.ACTION {
 		list := ctx.CmdList(m.Spawn()).Appendv(ctx.INDEX)
 		if len(arg) > 0 {
-			pre := arg[0][0 : strings.LastIndex(arg[0], ice.PT)+1]
+			pre := arg[0][0 : strings.LastIndex(arg[0], nfs.PT)+1]
 			list = kit.Simple(list, func(cmd string) bool { return strings.HasPrefix(cmd, arg[0]) }, func(cmd string) string { return strings.TrimPrefix(cmd, pre) })
 		}
-		if len(arg) > 1 || (len(list) == 1 && kit.Select("", kit.Split(arg[0], ice.PT), -1) == list[0]) {
+		if len(arg) > 1 || (len(list) == 1 && kit.Select("", kit.Split(arg[0], nfs.PT), -1) == list[0]) {
 			kit.If(detail, func() { echo("func") })
 			m.Cmdy(arg).Search(arg[0], func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
 				field := kit.Format(kit.Value(cmd.List, kit.Keys(len(arg)-1, mdb.NAME)))
 				m.Table(func(index int, value ice.Maps, head []string) {
 					echo(value[field])
 					if detail {
-						echo(kit.Join(kit.Simple(head, func(key string) string { return key + ": " + value[key] }), ice.SP))
+						echo(kit.Join(kit.Simple(head, func(key string) string { return key + ": " + value[key] }), lex.SP))
 					}
 				})
 			})
@@ -129,7 +130,7 @@ func Complete(m *ice.Message, detail bool, arg ...string) (res []string) {
 						m.Options(arg[3:])
 						m.Cmdy(arg[0], mdb.INPUTS, kit.Select("", arg, -1)).Table(func(value ice.Maps) {
 							v := value[m.Appendv(ice.MSG_APPEND)[0]]
-							kit.If(strings.Contains(v, ice.SP), func() { echo("\"" + v + "\"") }, func() { echo(v) })
+							kit.If(strings.Contains(v, lex.SP), func() { echo("\"" + v + "\"") }, func() { echo(v) })
 						})
 					}
 					return
@@ -140,7 +141,7 @@ func Complete(m *ice.Message, detail bool, arg ...string) (res []string) {
 				kit.For(kit.SortedKey(cmd.Actions), func(sub string) {
 					if strings.HasPrefix(sub, kit.Select("", arg, 2)) {
 						if echo(sub); detail {
-							echo(cmd.Actions[sub].Name + ice.SP + cmd.Actions[sub].Help)
+							echo(cmd.Actions[sub].Name + lex.SP + cmd.Actions[sub].Help)
 						}
 					}
 				})

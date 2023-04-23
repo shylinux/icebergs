@@ -29,7 +29,7 @@ func init() {
 					arg[0] = nfs.JSON
 				} else if strings.HasPrefix(arg[1], web.HTTP) {
 					arg[0] = web.HTTP
-				} else if strings.Contains(arg[1], ice.EQ) {
+				} else if strings.Contains(arg[1], mdb.EQ) {
 					arg[0] = web.FORM
 				} else if _, e := strconv.ParseInt(arg[1], 10, 64); e == nil {
 					arg[0] = mdb.TIME

@@ -52,17 +52,17 @@ func _runtime_init(m *ice.Message) {
 }
 func _runtime_hostinfo(m *ice.Message) {
 	m.Push("nCPU", strings.Count(m.Cmdx(nfs.CAT, "/proc/cpuinfo"), "processor"))
-	for i, ls := range strings.Split(m.Cmdx(nfs.CAT, "/proc/meminfo"), ice.NL) {
+	for i, ls := range strings.Split(m.Cmdx(nfs.CAT, "/proc/meminfo"), lex.NL) {
 		if vs := kit.Split(ls, ": "); len(vs) > 1 {
 			if m.Push(strings.TrimSpace(vs[0]), kit.FmtSize(kit.Int64(strings.TrimSpace(vs[1]))*1024)); i > 1 {
 				break
 			}
 		}
 	}
-	m.Push("uptime", kit.Split(m.Cmdx(SYSTEM, "uptime"), ice.FS)[0])
+	m.Push("uptime", kit.Split(m.Cmdx(SYSTEM, "uptime"), mdb.FS)[0])
 }
 func _runtime_diskinfo(m *ice.Message) {
-	m.Spawn().Split(kit.Replace(m.Cmdx(SYSTEM, "df", "-h"), "Mounted on", "Mountedon"), "", ice.SP, ice.NL).Table(func(index int, value ice.Maps, head []string) {
+	m.Spawn().Split(kit.Replace(m.Cmdx(SYSTEM, "df", "-h"), "Mounted on", "Mountedon"), "", lex.SP, lex.NL).Table(func(index int, value ice.Maps, head []string) {
 		kit.If(strings.HasPrefix(value["Filesystem"], "/dev"), func() { m.Push("", value, head) })
 	})
 	m.RenameAppend("%iused", "piused", "Use%", "Usep")
@@ -181,7 +181,7 @@ func init() {
 			}},
 			ENV: {Hand: func(m *ice.Message, arg ...string) {
 				kit.For(os.Environ(), func(v string) {
-					ls := strings.SplitN(v, ice.EQ, 2)
+					ls := strings.SplitN(v, mdb.EQ, 2)
 					m.Push(mdb.NAME, ls[0]).Push(mdb.VALUE, ls[1])
 				})
 				m.StatusTimeCount().Sort(mdb.NAME)

@@ -13,6 +13,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
@@ -119,7 +120,7 @@ func (f *Frame) scan(m *ice.Message, h, line string) *Frame {
 			continue
 		}
 		if line += bio.Text(); strings.Count(line, "`")%2 == 1 {
-			line += ice.NL
+			line += lex.NL
 			ps = f.ps2
 			continue
 		}
@@ -223,8 +224,8 @@ func init() {
 			}
 		}},
 		PROMPT: {Name: "prompt arg run", Help: "命令提示", Actions: ctx.ConfAction(
-			PS1, ice.List{"\033[33;44m", mdb.COUNT, ice.AT, tcp.HOSTNAME, "[", mdb.TIME, "]", "\033[5m", TARGET, "\033[0m", "\033[44m", ">", "\033[0m ", "\033[?25h", "\033[32m"},
-			PS2, ice.List{mdb.COUNT, ice.SP, TARGET, "> "},
+			PS1, ice.List{"\033[33;44m", mdb.COUNT, mdb.AT, tcp.HOSTNAME, "[", mdb.TIME, "]", "\033[5m", TARGET, "\033[0m", "\033[44m", ">", "\033[0m ", "\033[?25h", "\033[32m"},
+			PS2, ice.List{mdb.COUNT, lex.SP, TARGET, "> "},
 		), Hand: func(m *ice.Message, arg ...string) {
 			if f, ok := m.Target().Server().(*Frame); ok {
 				f.prompt(m, arg...)
@@ -237,9 +238,9 @@ func init() {
 		}},
 		SCREEN: {Name: "screen run text", Help: "输出命令", Hand: func(m *ice.Message, arg ...string) {
 			if f, ok := m.Target().Server().(*Frame); ok {
-				for _, line := range kit.Split(arg[0], ice.NL, ice.NL) {
-					fmt.Fprintf(f.pipe, line+ice.NL)
-					f.printf(m, line+ice.NL)
+				for _, line := range kit.Split(arg[0], lex.NL, lex.NL) {
+					fmt.Fprintf(f.pipe, line+lex.NL)
+					f.printf(m, line+lex.NL)
 					m.Sleep300ms()
 				}
 				m.Echo(f.res)
@@ -249,5 +250,5 @@ func init() {
 }
 
 func PrintQRCode(m *ice.Message, url string) {
-	m.Spawn(ice.OptionSilent()).Cmd(PRINTF, kit.Dict(nfs.CONTENT, ice.NL+ice.Render(m, ice.RENDER_QRCODE, url))).Cmd(PROMPT)
+	m.Spawn(ice.OptionSilent()).Cmd(PRINTF, kit.Dict(nfs.CONTENT, lex.NL+ice.Render(m, ice.RENDER_QRCODE, url))).Cmd(PROMPT)
 }

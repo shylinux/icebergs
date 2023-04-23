@@ -6,6 +6,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
@@ -46,7 +47,7 @@ func init() {
 				host, list := ice.Map{kit.ParseURL(m.Option(TOKEN)).Host: true}, []string{m.Option(TOKEN)}
 				m.Cmd(nfs.CAT, kit.HomePath(FILE), func(line string) {
 					kit.IfNoKey(host, kit.ParseURL(line).Host, func(p string) { list = append(list, line) })
-				}).Cmd(nfs.SAVE, kit.HomePath(FILE), strings.Join(list, ice.NL)+ice.NL)
+				}).Cmd(nfs.SAVE, kit.HomePath(FILE), strings.Join(list, lex.NL)+lex.NL)
 			}},
 			web.PP(GET): {Hand: func(m *ice.Message, arg ...string) {
 				web.RenderOrigin(m.W, "*")

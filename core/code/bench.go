@@ -8,6 +8,7 @@ import (
 	"sync/atomic"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
@@ -18,7 +19,7 @@ func _bench_http(m *ice.Message, target string, arg ...string) {
 	nconn := kit.Int64(kit.Select("10", m.Option(NCONN)))
 	nreqs := kit.Int64(kit.Select("100", m.Option(NREQS)))
 	list := []*http.Request{}
-	for _, v := range strings.Split(target, ice.NL) {
+	for _, v := range strings.Split(target, lex.NL) {
 		switch ls := kit.Split(v); ls[0] {
 		case http.MethodPost:
 			if f, e := nfs.OpenFile(m, ls[2]); m.Assert(e) {

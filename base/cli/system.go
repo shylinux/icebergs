@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
@@ -19,7 +20,7 @@ import (
 
 func _path_split(ps string) []string {
 	ps = kit.ReplaceAll(ps, "\\", nfs.PS)
-	return kit.Split(ps, ice.NL+kit.Select(nfs.DF, ";", strings.Contains(ps, ";")), ice.NL)
+	return kit.Split(ps, lex.NL+kit.Select(nfs.DF, ";", strings.Contains(ps, ";")), lex.NL)
 }
 func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
 	bin, env := "", kit.Simple(m.Optionv(CMD_ENV))
@@ -32,7 +33,7 @@ func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
 	})
 	if bin == "" {
 		if text := m.Cmdx(nfs.CAT, ice.ETC_PATH); len(text) > 0 {
-			if bin = _system_find(m, arg[0], strings.Split(text, ice.NL)...); bin != "" {
+			if bin = _system_find(m, arg[0], strings.Split(text, lex.NL)...); bin != "" {
 				m.Logs(FIND, "etcpath cmd", bin)
 			}
 		}
@@ -89,11 +90,11 @@ func _system_exec(m *ice.Message, cmd *exec.Cmd) {
 		cmd.Stdout, cmd.Stderr = out, err
 		defer func() {
 			m.Push(CMD_OUT, out.String()).Push(CMD_ERR, err.String())
-			// m.Echo(strings.TrimRight(out.String(), ice.NL))
+			// m.Echo(strings.TrimRight(out.String(), lex.NL))
 			m.Echo(out.String())
 			if m.IsErr() {
 				m.Option(ice.MSG_ARGS, kit.Simple(http.StatusBadRequest, cmd.Args, err.String()))
-				m.Echo(strings.TrimRight(err.String(), ice.NL))
+				m.Echo(strings.TrimRight(err.String(), lex.NL))
 				m.Debug("%s %s", err, out)
 			}
 		}()
@@ -160,7 +161,7 @@ func init() {
 					if arg[0] == mdb.FOREACH && arg[1] == "" {
 						return
 						list := map[string]bool{"Terminal.app": true, "Docker.app": true, "Google Chrome.app": true}
-						for _, p := range strings.Split(m.Cmdx("", nfs.SH, "-c", `ps aux|grep /Applications/|grep -v Cache|grep -v Helper|grep -v Widget|grep -v Extension|grep -v Chrome|grep -v com.app|grep -v grep|grep -o "[^/]*.app"|sort|uniq`), ice.NL) {
+						for _, p := range strings.Split(m.Cmdx("", nfs.SH, "-c", `ps aux|grep /Applications/|grep -v Cache|grep -v Helper|grep -v Widget|grep -v Extension|grep -v Chrome|grep -v com.app|grep -v grep|grep -o "[^/]*.app"|sort|uniq`), lex.NL) {
 							list[p] = true
 						}
 						for p := range list {
@@ -177,7 +178,7 @@ func init() {
 			nfs.PUSH: {Hand: func(m *ice.Message, arg ...string) {
 				for _, p := range arg {
 					if !strings.Contains(m.Cmdx(nfs.CAT, ice.ETC_PATH), p) {
-						m.Cmd(nfs.PUSH, ice.ETC_PATH, strings.TrimSpace(p)+ice.NL)
+						m.Cmd(nfs.PUSH, ice.ETC_PATH, strings.TrimSpace(p)+lex.NL)
 					}
 				}
 				m.Cmdy(nfs.CAT, ice.ETC_PATH)
@@ -206,12 +207,12 @@ func init() {
 
 func SystemFind(m *ice.Message, bin string, dir ...string) string {
 	if text := m.Cmdx(nfs.CAT, ice.ETC_PATH); len(text) > 0 {
-		dir = append(dir, strings.Split(text, ice.NL)...)
+		dir = append(dir, strings.Split(text, lex.NL)...)
 	}
 	return _system_find(m, bin, append(dir, _path_split(kit.Env(PATH))...)...)
 }
 func SystemExec(m *ice.Message, arg ...string) string { return strings.TrimSpace(m.Cmdx(SYSTEM, arg)) }
 func SystemCmds(m *ice.Message, cmds string, args ...ice.Any) string {
-	return strings.TrimRight(m.Cmdx(SYSTEM, "sh", "-c", kit.Format(cmds, args...), ice.Option{CMD_OUTPUT, ""}), ice.NL)
+	return strings.TrimRight(m.Cmdx(SYSTEM, "sh", "-c", kit.Format(cmds, args...), ice.Option{CMD_OUTPUT, ""}), lex.NL)
 }
 func IsSuccess(m *ice.Message) bool { return m.Append(CODE) == "" || m.Append(CODE) == "0" }

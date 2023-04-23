@@ -129,6 +129,11 @@ const (
 	JSON = "json"
 	CSV  = "csv"
 	SUB  = "sub"
+
+	QS = ice.QS
+	EQ = ice.EQ
+	AT = ice.AT
+	FS = ice.FS
 )
 
 const MDB = "mdb"

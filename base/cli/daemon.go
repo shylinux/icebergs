@@ -8,6 +8,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/gdb"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
@@ -24,7 +25,7 @@ func _daemon_exec(m *ice.Message, cmd *exec.Cmd) {
 		cmd.Stderr = w
 	}
 	h := mdb.HashCreate(m.Spawn(), STATUS, START,
-		ice.CMD, kit.Join(cmd.Args, ice.SP), DIR, cmd.Dir, ENV, kit.Select("", cmd.Env),
+		ice.CMD, kit.Join(cmd.Args, lex.SP), DIR, cmd.Dir, ENV, kit.Select("", cmd.Env),
 		m.OptionSimple(CMD_INPUT, CMD_OUTPUT, CMD_ERRPUT, mdb.CACHE_CLEAR_ON_EXIT),
 	)
 	if e := cmd.Start(); m.Warn(e, ice.ErrNotStart, cmd.Args) {

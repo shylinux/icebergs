@@ -10,6 +10,7 @@ import (
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/gdb"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
@@ -71,7 +72,7 @@ func _dream_template(m *ice.Message, p string) {
 		switch m.Cmdy(nfs.COPY, path.Join(p, file), path.Join(ice.USR_LOCAL_WORK, m.Option(nfs.TEMPLATE), file)); file {
 		case ice.GO_MOD:
 			nfs.Rewrite(m, path.Join(p, file), func(line string) string {
-				return kit.Select(line, nfs.MODULE+ice.SP+m.Option(mdb.NAME), strings.HasPrefix(line, nfs.MODULE))
+				return kit.Select(line, nfs.MODULE+lex.SP+m.Option(mdb.NAME), strings.HasPrefix(line, nfs.MODULE))
 			})
 		}
 	})

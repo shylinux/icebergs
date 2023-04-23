@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/lex"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -58,7 +59,7 @@ func (s Field) Format() string {
 	} else {
 		res := []string{}
 		kit.For(s.tags, func(k, v string) { res = append(res, kit.Format("%s:\"%s\"", k, v)) })
-		return kit.Format("%s `%s`", types, strings.Join(res, ice.SP))
+		return kit.Format("%s `%s`", types, strings.Join(res, lex.SP))
 	}
 }
 func (s Function) Operate(op string, v Any) Any {

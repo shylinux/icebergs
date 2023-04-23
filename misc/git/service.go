@@ -15,6 +15,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
@@ -26,11 +27,11 @@ import (
 func _service_login(m *ice.Message) error {
 	if ice.Info.Localhost && tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) {
 		return nil
-	} else if auth := strings.SplitN(m.R.Header.Get(web.Authorization), ice.SP, 2); strings.ToLower(auth[0]) != "basic" {
+	} else if auth := strings.SplitN(m.R.Header.Get(web.Authorization), lex.SP, 2); strings.ToLower(auth[0]) != "basic" {
 		return fmt.Errorf("Authentication type error")
 	} else if data, err := base64.StdEncoding.DecodeString(auth[1]); err != nil {
 		return err
-	} else if auth := strings.SplitN(string(data), ice.DF, 2); m.Cmdv(Prefix(TOKEN), auth[0], TOKEN) != auth[1] {
+	} else if auth := strings.SplitN(string(data), nfs.DF, 2); m.Cmdv(Prefix(TOKEN), auth[0], TOKEN) != auth[1] {
 		return fmt.Errorf("username or password error")
 	} else if aaa.UserRole(m, auth[0]) == aaa.VOID {
 		return fmt.Errorf("userrole has no right")
@@ -51,7 +52,7 @@ func _service_repos(m *ice.Message, arg ...string) error {
 	if m.Option(cli.CMD_DIR, repos); strings.HasSuffix(path.Join(arg...), INFO_REFS) {
 		m.Option(ice.MSG_USERROLE, aaa.TECH)
 		web.RenderType(m.W, "", kit.Format("application/x-git-%s-advertisement", service))
-		_service_writer(m, "# service=git-"+service+ice.NL, _git_cmds(m, service, "--stateless-rpc", "--advertise-refs", ice.PT))
+		_service_writer(m, "# service=git-"+service+lex.NL, _git_cmds(m, service, "--stateless-rpc", "--advertise-refs", nfs.PT))
 		return nil
 	}
 	reader, err := _service_reader(m)
@@ -60,7 +61,7 @@ func _service_repos(m *ice.Message, arg ...string) error {
 	}
 	defer reader.Close()
 	web.RenderType(m.W, "", kit.Format("application/x-git-%s-result", service))
-	_git_cmd(m.Options(cli.CMD_INPUT, reader, cli.CMD_OUTPUT, m.W), service, "--stateless-rpc", ice.PT)
+	_git_cmd(m.Options(cli.CMD_INPUT, reader, cli.CMD_OUTPUT, m.W), service, "--stateless-rpc", nfs.PT)
 	return nil
 }
 func _service_writer(m *ice.Message, cmd string, str ...string) {

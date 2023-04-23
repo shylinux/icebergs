@@ -86,6 +86,11 @@ func _split_list(m *ice.Message, file string, arg ...string) ice.Map {
 }
 
 const (
+	TB = ice.TB
+	SP = ice.SP
+	NL = ice.NL
+)
+const (
 	SPLIT_SPACE = "split.space"
 	SPLIT_BLOCK = "split.block"
 	SPLIT_QUOTE = "split.quote"

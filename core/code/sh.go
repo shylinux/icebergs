@@ -6,6 +6,7 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/ssh"
@@ -15,7 +16,7 @@ import (
 
 func _sh_cmds(m *ice.Message, p string) (string, string) {
 	cmds, text := kit.Select(SH, mdb.Config(m, ssh.SHELL)), kit.Format(strings.TrimSpace(nfs.Template(m, "cmd.sh")), web.UserHost(m), m.Option(ice.MSG_USERPOD), p)
-	if head := kit.Select("", strings.Split(m.Cmdx(nfs.CAT, p), ice.NL), 0); strings.HasPrefix(head, "#!") {
+	if head := kit.Select("", strings.Split(m.Cmdx(nfs.CAT, p), lex.NL), 0); strings.HasPrefix(head, "#!") {
 		cmds = strings.TrimSpace(strings.TrimPrefix(head, "#!"))
 	}
 	return cmds, text
@@ -44,7 +45,7 @@ func init() {
 			}},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
 				cmds, text := _sh_cmds(m, path.Join(arg[2], arg[1]))
-				m.Cmdy(cli.SYSTEM, cmds, "-c", text).Status(ssh.SHELL, strings.ReplaceAll(text, ice.NL, "; "))
+				m.Cmdy(cli.SYSTEM, cmds, "-c", text).Status(ssh.SHELL, strings.ReplaceAll(text, lex.NL, "; "))
 			}},
 			TEMPLATE: {Hand: func(m *ice.Message, arg ...string) { m.Echo(nfs.Template(m, "demo.sh")) }},
 			NAVIGATE: {Hand: func(m *ice.Message, arg ...string) { _c_tags(m, "ctags", "-a", "-R", nfs.PWD) }},

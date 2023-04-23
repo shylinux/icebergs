@@ -9,6 +9,7 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
@@ -163,15 +164,15 @@ func (s *Stack) reads(m *ice.Message, cb func(k string) bool) {
 		if s.skip++; s.skip < len(s.rest) {
 			if k, v := s.rest[s.skip], kit.Select("", s.rest, s.skip+1); k == "`" {
 				if len(block) > 0 {
-					kit.If(s.line != last, func() { block, last = append(block, ice.NL), s.line })
+					kit.If(s.line != last, func() { block, last = append(block, lex.NL), s.line })
 					block = append(block, k)
-					cb(strings.Join(block, ice.SP))
+					cb(strings.Join(block, lex.SP))
 					block = block[:0]
 				} else {
 					block = append(block, k)
 				}
 			} else if len(block) > 0 {
-				kit.If(s.line != last, func() { block, last = append(block, ice.NL), s.line })
+				kit.If(s.line != last, func() { block, last = append(block, lex.NL), s.line })
 				block = append(block, k)
 			} else if k == "*" && v == nfs.PS {
 				comment = false
@@ -592,11 +593,11 @@ func StackHandler(m *ice.Message, arg ...string) {
 				script = append(script, kit.Format("Volcanos(\"%s\", {", kit.TrimExt(path.Base(p), nfs.SHY)))
 				kit.For(r, func(s string) {
 					if strings.HasPrefix(s, FUNC) {
-						script = append(script, ice.TB+strings.Replace(strings.TrimPrefix(s, FUNC+ice.SP), "(", ": function(", 1))
+						script = append(script, lex.TB+strings.Replace(strings.TrimPrefix(s, FUNC+lex.SP), "(", ": function(", 1))
 					} else if strings.HasPrefix(s, END) {
-						script = append(script, ice.TB+"},")
+						script = append(script, lex.TB+"},")
 					} else {
-						script = append(script, ice.TB+s)
+						script = append(script, lex.TB+s)
 					}
 				})
 				script = append(script, "})")
@@ -607,7 +608,7 @@ func StackHandler(m *ice.Message, arg ...string) {
 	})
 	if len(script) > 0 {
 		p := ice.USR_SCRIPT + m.PrefixKey() + nfs.PS + "list.js"
-		m.Cmd(nfs.SAVE, p, kit.Dict(nfs.CONTENT, strings.Join(script, ice.NL)))
+		m.Cmd(nfs.SAVE, p, kit.Dict(nfs.CONTENT, strings.Join(script, lex.NL)))
 		s.value(m, "_script", "/require/"+p)
 	}
 	cmd := m.Commands("")

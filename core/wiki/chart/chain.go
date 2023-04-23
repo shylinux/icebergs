@@ -20,7 +20,7 @@ func (c *Chain) Init(m *ice.Message, arg ...string) wiki.Chart {
 	const _DEEP = "_deep"
 	stack, max := kit.List(kit.Dict(_DEEP, -1, wiki.WIDTH, "0")), 0
 	last := func(key string) int { return kit.Int(kit.Value(stack[len(stack)-1], key)) }
-	m.Cmd(lex.SPLIT, "", mdb.TEXT, kit.Dict(lex.SPLIT_BLOCK, ice.SP, nfs.CAT_CONTENT, arg[0]), func(deep int, ls []string, data, root ice.Map) {
+	m.Cmd(lex.SPLIT, "", mdb.TEXT, kit.Dict(lex.SPLIT_BLOCK, lex.SP, nfs.CAT_CONTENT, arg[0]), func(deep int, ls []string, data, root ice.Map) {
 		for deep <= last(_DEEP) {
 			stack = stack[:len(stack)-1]
 		}

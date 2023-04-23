@@ -6,6 +6,7 @@ import (
 	"path"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
@@ -47,11 +48,11 @@ func (f *Frame) Start(m *ice.Message, arg ...string) {
 				}
 				defer bio.Flush()
 				defer fmt.Fprintln(bio)
-				fmt.Fprint(bio, l.p, ice.SP)
+				fmt.Fprint(bio, l.p, lex.SP)
 				view := mdb.Confm(m, VIEW, m.Conf(SHOW, kit.Keys(l.l, VIEW)))
 				kit.If(ice.Info.Colors, func() { bio.WriteString(kit.Format(view[PREFIX])) })
 				defer kit.If(ice.Info.Colors, func() { bio.WriteString(kit.Format(view[SUFFIX])) })
-				fmt.Fprint(bio, l.l, ice.SP, l.s)
+				fmt.Fprint(bio, l.l, lex.SP, l.s)
 			})
 		}
 	}

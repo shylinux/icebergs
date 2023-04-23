@@ -103,7 +103,7 @@ func init() {
 				web.RenderHeader(m.W, "WWW-Authenticate", `Basic realm="git server"`)
 				return
 			} else if !nfs.Exists(m, repos) {
-				_repos_init(m, repos)
+				m.Cmd(Prefix(SERVICE), mdb.CREATE, mdb.NAME, path.Base(repos))
 			}
 		case UPLOAD_PACK:
 			if m.Warn(!nfs.Exists(m, repos), ice.ErrNotFound, arg[0]) {
@@ -139,7 +139,7 @@ func init() {
 				}
 			}},
 			TOKEN:      {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(TOKEN, cli.MAKE) }},
-			code.VIMER: {Hand: func(m *ice.Message, arg ...string) { _repos_vimer(m, _service_path, arg...) }},
+			code.INNER: {Hand: func(m *ice.Message, arg ...string) { _repos_inner(m, _service_path, arg...) }},
 		}, mdb.HashAction(mdb.SHORT, REPOS, mdb.FIELD, "time,repos,branch,commit"), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				mdb.HashSelect(m, arg...).Sort(REPOS).Action(mdb.CREATE, TOKEN)
@@ -156,7 +156,7 @@ func init() {
 					_repos_stats(m, repos, arg[1])
 				}
 			} else {
-				m.Cmdy("", code.VIMER, arg)
+				m.Cmdy("", code.INNER, arg)
 			}
 		}},
 	})

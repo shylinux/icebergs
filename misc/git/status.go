@@ -4,6 +4,7 @@ import (
 	"path"
 	"strings"
 
+	"shylinux.com/x/go-git/v5/config"
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
@@ -129,8 +130,8 @@ func init() {
 				}
 			}},
 			CONFIGS: {Name: "configs email username", Help: "配置", Hand: func(m *ice.Message, arg ...string) {
-				_configs_set(m, USER_NAME, m.Option(aaa.USERNAME))
-				_configs_set(m, USER_EMAIL, m.Option(aaa.EMAIL))
+				mdb.Config(m, aaa.USERNAME, m.Option(aaa.USERNAME))
+				mdb.Config(m, aaa.EMAIL, m.Option(aaa.EMAIL))
 			}},
 			INSTEADOF: {Name: "insteadof from* to", Help: "代理", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(CONFIGS, func(value ice.Maps) {
@@ -166,19 +167,13 @@ func init() {
 		}, gdb.EventAction(web.DREAM_TABLES), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 && arg[0] == ctx.ACTION {
 				m.Cmdy(REPOS, arg)
+			} else if config, err := config.LoadConfig(config.GlobalScope); err == nil && config.User.Email == "" && mdb.Config(m, aaa.EMAIL) == "" {
+				m.Action(CONFIGS).Echo("please config email and name. ").EchoButton(CONFIGS)
 			} else if len(arg) == 0 {
-				m.Cmdy(REPOS, STATUS).Action(PULL, PUSH, "oauth", "insteadof")
-				return
-				files, adds, dels, last := _status_list(m)
-				m.StatusTimeCount("files", files, "adds", adds, "dels", dels, "last", last, nfs.ORIGIN, _git_remote(m))
-				m.Action(PULL, PUSH, "insteadof", "oauth").Sort("repos,type,file")
+				m.Option(aaa.EMAIL, kit.Select(mdb.Config(m, aaa.EMAIL), config.User.Email))
+				m.Cmdy(REPOS, STATUS).Action(PULL, PUSH, "oauth", CONFIGS)
 			} else {
 				m.Cmdy(REPOS, arg[0], MASTER, INDEX, m.Cmdv(REPOS, arg[0], MASTER, INDEX, nfs.FILE))
-				return
-				_repos_cmd(m, arg[0], DIFF)
-				files, adds, dels := _status_stat(m, 0, 0, 0)
-				m.StatusTime("files", files, "adds", adds, "dels", dels)
-				m.Action(COMMIT, STASH)
 			}
 		}},
 	})

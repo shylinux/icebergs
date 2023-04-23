@@ -160,8 +160,7 @@ func _repos_status(m *ice.Message, p string, repos *git.Repository) error {
 	for k, v := range status {
 		if kit.IsIn(k, ice.SRC_VERSION_GO, ice.SRC_BINPACK_GO, ice.ETC_LOCAL_SHY) {
 			continue
-		}
-		if kit.IsIn(kit.Ext(k), "swp", "swo") || kit.IsIn(kit.Split(k, nfs.PS)[0], ice.BIN, ice.VAR, ice.USR) {
+		} else if kit.IsIn(kit.Ext(k), "swp", "swo") || kit.IsIn(kit.Split(k, nfs.PS)[0], ice.BIN, ice.VAR, ice.USR) {
 			continue
 		}
 		if m.Push(REPOS, p).Push(STATUS, string(v.Worktree)+string(v.Staging)).Push(nfs.FILE, k); m.Option(ice.MSG_MODE) == mdb.ZONE {
@@ -172,7 +171,7 @@ func _repos_status(m *ice.Message, p string, repos *git.Repository) error {
 		case git.Untracked:
 			m.PushButton(ADD, nfs.TRASH)
 		case git.Modified:
-			m.PushButton(ADD)
+			m.PushButton(COMMIT)
 		default:
 			m.PushButton(COMMIT)
 		}
@@ -207,9 +206,9 @@ func _repos_total(m *ice.Message, p string, repos *git.Repository, stats map[str
 	}
 	return nil
 }
-func _repos_vimer(m *ice.Message, _repos_path func(m *ice.Message, p string, arg ...string) string, arg ...string) {
+func _repos_inner(m *ice.Message, _repos_path func(m *ice.Message, p string, arg ...string) string, arg ...string) {
 	if len(arg) == 0 || arg[0] != ice.RUN {
-		arg = []string{path.Join(arg[:3]...), kit.Select("README.md", arg, 3)}
+		arg = []string{path.Join(arg[:3]...) + nfs.PS, kit.Select("README.md", arg, 3)}
 	} else if kit.Select("", arg, 1) != ctx.ACTION {
 		if ls := kit.Split(path.Join(m.Option(nfs.DIR_ROOT), arg[1]), nfs.PS); len(ls) < 2 || ls[2] == INDEX {
 			if repos := _repos_open(m, ls[0]); len(arg) < 3 {
@@ -249,13 +248,14 @@ func _repos_vimer(m *ice.Message, _repos_path func(m *ice.Message, p string, arg
 		} else if len(arg) < 3 {
 			if iter, err := commit.Files(); !m.Warn(err) {
 				iter.ForEach(func(file *object.File) error {
-					m.Push(nfs.PATH, file.Name)
+					// m.Push(nfs.PATH, file.Name)
 					return nil
 				})
 			}
 			if stats, err := commit.Stats(); err == nil {
 				for _, stat := range stats {
-					m.Echo(stat.Name)
+					m.Push(nfs.PATH, stat.Name)
+					// m.Echo(stat.Name)
 				}
 			}
 		} else {
@@ -282,10 +282,18 @@ func _repos_vimer(m *ice.Message, _repos_path func(m *ice.Message, p string, arg
 				}
 			}
 		}
-		ctx.DisplayLocal(m, "code/vimer.js", "style", "output")
+		ctx.DisplayLocal(m, "code/inner.js", "style", "output")
 		return
 	}
 	ctx.ProcessField(m, "", arg, arg...)
+}
+func _repos_credentials(m *ice.Message) map[string]*url.URL {
+	list := map[string]*url.URL{}
+	m.Cmd(nfs.CAT, kit.HomePath(".git-credentials"), func(line string) {
+		u := kit.ParseURL(line)
+		list[u.Host] = u
+	})
+	return list
 }
 
 const (
@@ -363,11 +371,7 @@ func init() {
 				})
 			}},
 			PUSH: {Hand: func(m *ice.Message, arg ...string) {
-				list := map[string]*url.URL{}
-				m.Cmd(nfs.CAT, kit.HomePath(".git-credentials"), func(line string) {
-					u := kit.ParseURL(line)
-					list[u.Host] = u
-				})
+				list := _repos_credentials(m)
 				_repos_each(m, "", func(repos *git.Repository, value ice.Maps) error {
 					if value[ORIGIN] == "" {
 						return nil
@@ -407,8 +411,8 @@ func init() {
 					if cfg, err := config.LoadConfig(config.GlobalScope); err == nil {
 						if cfg.Author.Email == "" || cfg.Author.Name == "" {
 							opt.Author = &object.Signature{
-								Name:  m.Option(ice.MSG_USERNAME),
-								Email: m.Option(ice.MSG_USERNAME) + "@163.com",
+								Email: kit.Select(m.Option(ice.MSG_USERNAME)+"@163.com", mdb.Config(m, aaa.EMAIL)),
+								Name:  kit.Select(m.Option(ice.MSG_USERNAME), mdb.Config(m, aaa.USERNAME)),
 								When:  time.Now(),
 							}
 						}
@@ -421,7 +425,7 @@ func init() {
 				if repos := kit.Select(m.Option(REPOS), arg, 0); repos != "" {
 					_repos_status(m, repos, _repos_open(m, repos))
 				} else {
-					last, remote := "", ""
+					last, remote, password, list := "", "", "", _repos_credentials(m)
 					_repos_each(m, "", func(repos *git.Repository, value ice.Maps) error {
 						if refer, err := repos.Head(); err == nil {
 							if commit, err := repos.CommitObject(refer.Hash()); err == nil {
@@ -429,12 +433,15 @@ func init() {
 								kit.If(_last > last, func() { last = _last })
 							}
 						}
-						if _remote, err := repos.Remote(ORIGIN); err == nil {
+						if _remote, err := repos.Remote(ORIGIN); err == nil && (remote == "" || remote == path.Base(kit.Path(""))) {
 							remote = kit.Select(remote, kit.Select("", _remote.Config().URLs, 0))
 						}
 						return _repos_status(m, value[REPOS], repos)
 					})
-					m.Sort("repos,status,file").Status(mdb.TIME, last, REMOTE, remote, kit.MDB_COUNT, kit.Split(m.FormatSize())[0], kit.MDB_COST, m.FormatCost())
+					if u, ok := list[kit.ParseURL(remote).Host]; ok {
+						password, _ = u.User.Password()
+					}
+					m.Sort("repos,status,file").Status(mdb.TIME, last, kit.Select(aaa.TECH, aaa.VOID, password == ""), m.Option(aaa.EMAIL), REMOTE, remote, kit.MDB_COUNT, kit.Split(m.FormatSize())[0], kit.MDB_COST, m.FormatCost())
 				}
 			}},
 			TOTAL: {Hand: func(m *ice.Message, arg ...string) {
@@ -478,7 +485,7 @@ func init() {
 					m.Cmd("", CLONE, ORIGIN, p, nfs.PATH, m.Option(cli.CMD_DIR), ice.Maps{cli.CMD_DIR: ""})
 				})
 			}},
-			code.VIMER: {Hand: func(m *ice.Message, arg ...string) { _repos_vimer(m, _repos_path, arg...) }},
+			code.INNER: {Hand: func(m *ice.Message, arg ...string) { _repos_inner(m, _repos_path, arg...) }},
 		}, mdb.HashAction(mdb.SHORT, REPOS, mdb.FIELD, "time,repos,branch,commit,origin"), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				mdb.HashSelect(m, arg...).Sort(REPOS).Action(CLONE, PULL, PUSH, STATUS)
@@ -496,7 +503,7 @@ func init() {
 					_repos_stats(m, repos, arg[2])
 				}
 			} else {
-				m.Cmdy("", code.VIMER, arg)
+				m.Cmdy("", code.INNER, arg)
 			}
 		}},
 	})

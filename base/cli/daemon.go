@@ -26,7 +26,7 @@ func _daemon_exec(m *ice.Message, cmd *exec.Cmd) {
 	}
 	h := mdb.HashCreate(m.Spawn(), STATUS, START,
 		ice.CMD, kit.Join(cmd.Args, lex.SP), DIR, cmd.Dir, ENV, kit.Select("", cmd.Env),
-		m.OptionSimple(CMD_INPUT, CMD_OUTPUT, CMD_ERRPUT, mdb.CACHE_CLEAR_ON_EXIT),
+		m.OptionSimple(CMD_INPUT, CMD_OUTPUT, CMD_ERRPUT, mdb.CACHE_CLEAR_ONEXIT),
 	)
 	if e := cmd.Start(); m.Warn(e, ice.ErrNotStart, cmd.Args) {
 		mdb.HashModify(m, h, STATUS, ERROR, ERROR, e)
@@ -100,7 +100,7 @@ const DAEMON = "daemon"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		DAEMON: {Name: "daemon hash auto", Help: "守护进程", Actions: ice.MergeActions(ice.Actions{
-			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { mdb.HashPrunesValue(m, mdb.CACHE_CLEAR_ON_EXIT, ice.TRUE) }},
+			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { mdb.HashPrunesValue(m, mdb.CACHE_CLEAR_ONEXIT, ice.TRUE) }},
 			START: {Name: "start cmd* dir env", Hand: func(m *ice.Message, arg ...string) {
 				m.Options(CMD_DIR, m.Option(DIR), CMD_ENV, kit.Split(m.Option(ENV), " ="))
 				_daemon_exec(m, _system_cmd(m, kit.Split(m.Option(ice.CMD))...))

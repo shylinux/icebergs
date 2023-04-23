@@ -117,6 +117,8 @@ const (
 	MONTH = "720h"
 	DAYS  = "72h"
 	HOUR  = "1h"
+
+	CACHE_CLEAR_ONEXIT = "cache.clear.onexit"
 )
 const (
 	HASH_FIELD = "time,hash,type,name,text"

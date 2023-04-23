@@ -54,7 +54,7 @@ func _dream_show(m *ice.Message, name string) {
 	m.Options(cli.CMD_DIR, kit.Path(p), cli.CMD_ENV, kit.Simple(
 		cli.CTX_OPS, Domain(tcp.LOCALHOST, m.Cmdv(SERVE, tcp.PORT)), cli.CTX_LOG, ice.VAR_LOG_BOOT_LOG, cli.CTX_PID, ice.VAR_LOG_ICE_PID,
 		cli.PATH, cli.BinPath(p, ""), cli.USER, ice.Info.Username, kit.EnvSimple(cli.HOME, cli.TERM, cli.SHELL), mdb.Configv(m, cli.ENV),
-	), cli.CMD_OUTPUT, path.Join(p, ice.VAR_LOG_BOOT_LOG))
+	), cli.CMD_OUTPUT, path.Join(p, ice.VAR_LOG_BOOT_LOG), mdb.CACHE_CLEAR_ONEXIT, ice.TRUE)
 	defer m.Options(cli.CMD_DIR, "", cli.CMD_ENV, "", cli.CMD_OUTPUT, "")
 	gdb.Event(m, DREAM_CREATE, m.OptionSimple(mdb.NAME, mdb.TYPE))
 	kit.If(m.Option(nfs.TEMPLATE), func() { _dream_template(m, p) })

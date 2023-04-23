@@ -48,7 +48,7 @@ func init() {
 					m.Push(PATH, path.Join(p, s.Name())+kit.Select("", PS, s.IsDir()))
 					m.Push(SIZE, kit.FmtSize(s.Size()))
 				})
-				m.Sort(PATH).PushAction(mdb.REMOVE).StatusTimeCount()
+				m.PushAction(mdb.REMOVE).StatusTimeCount()
 			}
 		}},
 	})
@@ -86,7 +86,9 @@ func ReadDir(m optionMessage, p string) ([]os.FileInfo, error) {
 	list, e := OptionFiles(m).ReadDir(p)
 	for i := 0; i < len(list)-1; i++ {
 		for j := i + 1; j < len(list); j++ {
-			if !list[i].IsDir() && list[j].IsDir() || list[i].Name() > list[j].Name() {
+			if list[i].IsDir() && !list[j].IsDir() {
+				continue
+			} else if !list[i].IsDir() && list[j].IsDir() || list[i].Name() > list[j].Name() {
 				list[i], list[j] = list[j], list[i]
 			}
 		}

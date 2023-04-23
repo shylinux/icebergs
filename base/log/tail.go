@@ -11,7 +11,7 @@ import (
 func _tail_create(m *ice.Message, arg ...string) {
 	h := mdb.HashCreate(m, arg)
 	kit.For(kit.Split(m.Option(nfs.FILE)), func(file string) {
-		m.Options(cli.CMD_OUTPUT, nfs.Pipe(m, func(text string) { mdb.ZoneInsert(m, h, nfs.FILE, file, nfs.SIZE, len(text), mdb.TEXT, text) }), mdb.CACHE_CLEAR_ON_EXIT, ice.TRUE)
+		m.Options(cli.CMD_OUTPUT, nfs.Pipe(m, func(text string) { mdb.ZoneInsert(m, h, nfs.FILE, file, nfs.SIZE, len(text), mdb.TEXT, text) }), mdb.CACHE_CLEAR_ONEXIT, ice.TRUE)
 		m.Cmd(cli.DAEMON, TAIL, "-n", "0", "-f", file)
 	})
 }

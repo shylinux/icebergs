@@ -74,7 +74,7 @@ func init() {
 			}
 			total := false
 			kit.If(len(arg) > 0 && arg[0] == mdb.TOTAL, func() { total, arg = true, arg[1:] })
-			args := []string{"log", "--shortstat", "--pretty=commit: %ad %n%s", "--date=iso", "--reverse"}
+			args := []string{"log", "--shortstat", "--pretty=commit: %H %ad %n%s", "--date=iso", "--reverse"}
 			if len(arg) > 0 {
 				arg[0] += kit.Select("", " 00:00:00", strings.Contains(arg[0], "-") && !strings.Contains(arg[0], nfs.DF))
 				args = append(args, kit.Select("-n", "--since", strings.Contains(arg[0], "-")))
@@ -84,6 +84,7 @@ func init() {
 			}
 			from, days, commit, adds, dels := "", 0, 0, 0, 0
 			kit.SplitKV(lex.NL, "commit:", _git_cmds(m, args...), func(text string, ls []string) {
+				m.Debug("what %v", ls)
 				add, del := "0", "0"
 				for _, v := range kit.Split(strings.TrimSpace(kit.Select("", ls, -1)), mdb.FS) {
 					switch {
@@ -93,18 +94,18 @@ func init() {
 						del = kit.Split(v)[0]
 					}
 				}
+				hs := strings.Split(ls[0], lex.SP)
 				if total {
 					if commit++; from == "" {
-						hs := strings.Split(ls[0], lex.SP)
-						if t, e := time.Parse("2006-01-02", hs[0]); e == nil {
-							from, days = hs[0], int(time.Now().Sub(t).Hours())/24
+						if t, e := time.Parse("2006-01-02", hs[1]); e == nil {
+							from, days = hs[1], int(time.Now().Sub(t).Hours())/24
 						}
 					}
 					adds += kit.Int(add)
 					dels += kit.Int(del)
 					return
 				}
-				m.Push(FROM, ls[0]).Push(ADDS, add).Push(DELS, del).Push(REST, kit.Int(add)-kit.Int(del)).Push(COMMIT, ls[1])
+				m.Push(FROM, hs[1]).Push(ADDS, add).Push(DELS, del).Push(REST, kit.Int(add)-kit.Int(del)).Push(COMMIT, ls[1]).Push(mdb.HASH, hs[0])
 			})
 			if total {
 				m.Push(TAGS, _git_cmds(m, "describe", "--tags"))

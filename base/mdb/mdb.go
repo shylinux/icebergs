@@ -94,8 +94,6 @@ const (
 
 	SOURCE = "_source"
 	TARGET = "_target"
-
-	CACHE_CLEAR_ON_EXIT = "cache.clear.on.exit"
 )
 const (
 	INPUTS = "inputs"

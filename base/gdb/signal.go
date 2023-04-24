@@ -71,7 +71,7 @@ func init() {
 			KILL: {Name: "kill pid signal", Help: "结束", Hand: func(m *ice.Message, arg ...string) {
 				_signal_process(m, m.Option(PID), syscall.Signal(kit.Int(kit.Select("9", m.Option(SIGNAL)))))
 			}},
-		}, mdb.HashAction(mdb.SHORT, SIGNAL, mdb.FIELD, "time,signal,name,cmd", mdb.ACTION, HAPPEN)), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.SHORT, SIGNAL, mdb.FIELD, "time,signal,name,cmd", mdb.ACTION, HAPPEN), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, arg...).Sort(SIGNAL)
 		}},
 	})

@@ -95,7 +95,16 @@ func _config_only(v ice.Any, arg ...string) bool {
 		if len(v) > len(arg) {
 			return false
 		}
-		for k := range v {
+		for k, v := range v {
+			if v, ok := v.(ice.Map); ok && len(v) == 0 {
+				continue
+			} else {
+				for k := range v {
+					if kit.IsIn(k, "important") && len(v) > 1 {
+						return false
+					}
+				}
+			}
 			if kit.IndexOf(arg, k) == -1 {
 				return false
 			}

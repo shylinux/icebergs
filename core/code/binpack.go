@@ -10,6 +10,7 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
@@ -47,8 +48,9 @@ func _binpack_all(m *ice.Message) {
 	if w, p, e := nfs.CreateFile(m, ice.SRC_BINPACK_GO); m.Assert(e) {
 		defer w.Close()
 		defer m.Echo(p)
-		fmt.Fprint(w, nfs.Template(m, ice.SRC_BINPACK_GO))
-		defer fmt.Fprint(w, nfs.Template(m, "binpack_end.go"))
+		fmt.Fprintln(w, nfs.Template(m, ice.SRC_BINPACK_GO))
+		defer fmt.Fprintln(w, nfs.Template(m, "binpack_end.go"))
+		defer fmt.Fprint(w, lex.TB)
 		nfs.OptionFiles(m, nfs.DiskFile)
 		for _, p := range []string{ice.USR_VOLCANOS, ice.USR_INTSHELL, ice.SRC} {
 			_binpack_dir(m, w, p)

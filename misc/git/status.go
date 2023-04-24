@@ -164,7 +164,7 @@ func init() {
 				}
 				m.Push(mdb.TEXT, strings.Join(text, ", "))
 			}},
-		}, gdb.EventAction(web.DREAM_TABLES), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, gdb.EventAction(web.DREAM_TABLES), aaa.RoleAction(), mdb.ImportantDataAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 && arg[0] == ctx.ACTION {
 				m.Cmdy(REPOS, arg)
 			} else if config, err := config.LoadConfig(config.GlobalScope); err == nil && config.User.Email == "" && mdb.Config(m, aaa.EMAIL) == "" {

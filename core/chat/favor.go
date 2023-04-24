@@ -35,7 +35,7 @@ const FAVOR = "favor"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		FAVOR: {Name: "favor hash auto create getClipboardData getLocation scanQRCode record1 record2 upload demo", Help: "收藏夹", Actions: ice.MergeActions(ice.Actions{
+		FAVOR: {Name: "favor hash auto create getClipboardData getLocation scanQRCode record1 record2 upload", Help: "收藏夹", Actions: ice.MergeActions(ice.Actions{
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == mdb.FOREACH && arg[1] == "" {
 					m.PushSearch(mdb.TYPE, web.LINK, mdb.NAME, m.CommandKey(), mdb.TEXT, m.MergePodCmd("", "", log.DEBUG, ice.TRUE))

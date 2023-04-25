@@ -15,6 +15,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -113,7 +114,7 @@ func init() {
 		m.Warn(_service_repos(m, arg...), ice.ErrNotValid)
 	}}})
 	Index.MergeCommands(ice.Commands{
-		SERVICE: {Name: "service repos commit file auto", Help: "代码源", Actions: ice.MergeActions(ice.Actions{
+		SERVICE: {Name: "service repos branch commit file auto", Help: "代码源", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.DIR, ice.USR_LOCAL_REPOS, func(value ice.Maps) { _repos_insert(m, value[nfs.PATH]) })
 			}},
@@ -140,20 +141,29 @@ func init() {
 			}},
 			TOKEN:      {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(TOKEN, cli.MAKE) }},
 			code.INNER: {Hand: func(m *ice.Message, arg ...string) { _repos_inner(m, _service_path, arg...) }},
-		}, mdb.HashAction(mdb.SHORT, REPOS, mdb.FIELD, "time,repos,branch,commit"), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
+			web.DREAM_INPUTS: {Hand: func(m *ice.Message, arg ...string) {
+				switch arg[0] {
+				case REPOS:
+					mdb.HashSelect(m).Sort(REPOS).Cut("repos,branch,commit,time")
+				}
+			}},
+		}, gdb.EventsAction(web.DREAM_INPUTS), mdb.HashAction(mdb.SHORT, REPOS, mdb.FIELD, "time,repos,branch,commit"), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				mdb.HashSelect(m, arg...).Sort(REPOS).Action(mdb.CREATE, TOKEN)
 				m.Echo(strings.ReplaceAll(m.Cmdx("web.code.publish", ice.CONTEXTS), "app username", "dev username"))
 			} else if len(arg) == 1 {
+				_repos_branch(m, _repos_open(m, arg[0]))
+				m.EchoScript(tcp.PublishLocalhost(m, kit.Split(web.MergeURL2(m, "/x/"+arg[0]), mdb.QS)[0]))
+			} else if len(arg) == 2 {
 				repos := _repos_open(m, arg[0])
 				if branch, err := repos.Branch(arg[1]); !m.Warn(err) {
 					_repos_log(m, branch, repos)
 				}
-			} else if len(arg) == 2 {
-				if repos := _repos_open(m, arg[0]); arg[1] == INDEX {
+			} else if len(arg) == 3 {
+				if repos := _repos_open(m, arg[0]); arg[2] == INDEX {
 					_repos_status(m, arg[0], repos)
 				} else {
-					_repos_stats(m, repos, arg[1])
+					_repos_stats(m, repos, arg[2])
 				}
 			} else {
 				m.Cmdy("", code.INNER, arg)

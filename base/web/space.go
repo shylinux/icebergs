@@ -48,11 +48,18 @@ func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 func _space_fork(m *ice.Message) {
 	addr := kit.Select(m.R.RemoteAddr, m.R.Header.Get(ice.MSG_USERADDR))
 	name := kit.ReplaceAll(kit.Select(addr, m.Option(mdb.NAME)), "[", "_", "]", "_", nfs.DF, "_", nfs.PT, "_")
-	args := kit.Simple(mdb.TYPE, kit.Select(WORKER, m.Option(mdb.TYPE)), mdb.NAME, name, mdb.TEXT, kit.Select(addr, m.Option(mdb.TEXT)), m.OptionSimple(cli.DAEMON, ice.MSG_USERUA))
+	text := kit.Select(addr, m.Option(mdb.TEXT))
+	if kit.IsIn(m.Option(mdb.TYPE), CHROME) || !(ice.Info.Localhost && tcp.IsLocalHost(m, strings.Split(m.R.RemoteAddr, nfs.DF)[0]) ||
+		m.Option(TOKEN) != "" && m.Cmdv(TOKEN, m.Option(TOKEN), mdb.TIME) > m.Time()) {
+		name = kit.ReplaceAll(addr, "[", "_", "]", "_", nfs.DF, "_", nfs.PT, "_")
+		text = kit.Select(addr, m.Option(mdb.NAME), m.Option(mdb.TEXT))
+	}
+	args := kit.Simple(mdb.TYPE, kit.Select(WORKER, m.Option(mdb.TYPE)), mdb.NAME, name, mdb.TEXT, text, m.OptionSimple(cli.DAEMON, ice.MSG_USERUA))
 	if c, e := websocket.Upgrade(m.W, m.R); !m.Warn(e) {
 		gdb.Go(m, func() {
 			defer mdb.HashCreateDeferRemove(m, args, kit.Dict(mdb.TARGET, c))()
 			switch m.Option(mdb.TYPE) {
+			case SERVER:
 			case WORKER:
 				defer gdb.EventDeferEvent(m, DREAM_OPEN, args)(DREAM_CLOSE, args)
 			case CHROME:
@@ -115,7 +122,11 @@ func _space_exec(m *ice.Message, source, target []string, c *websocket.Conn) {
 	case cli.PWD:
 		m.Push(mdb.LINK, m.MergePod(kit.Select("", source, -1)))
 	default:
-		kit.If(aaa.Right(m, m.Detailv()), func() { m = m.Cmd() })
+		kit.If(aaa.Right(m, m.Detailv()), func() {
+			m.TryCatch(m, true, func(_ *ice.Message) {
+				m = m.Cmd()
+			})
+		})
 	}
 	defer m.Cost(kit.Format("%v->%v %v %v", source, target, m.Detailv(), m.FormatSize()))
 	_space_echo(m.Set(ice.MSG_OPTS).Options(log.DEBUG, m.Option(log.DEBUG)), []string{}, kit.Reverse(kit.Simple(source)), c)

@@ -54,11 +54,11 @@ func _spide_show(m *ice.Message, name string, arg ...string) {
 	}
 	defer res.Body.Close()
 	m.Cost(cli.STATUS, res.Status, nfs.SIZE, res.Header.Get(ContentLength), mdb.TYPE, res.Header.Get(ContentType))
-	kit.For(res.Header, func(k string, v []string) { m.Logs(mdb.IMPORT, k, v) })
+	kit.For(res.Header, func(k string, v []string) { m.Logs("response", k, v) })
 	mdb.HashSelectUpdate(m, name, func(value ice.Map) {
 		kit.For(res.Cookies(), func(v *http.Cookie) {
 			kit.Value(value, kit.Keys(SPIDE_COOKIE, v.Name), v.Value)
-			m.Logs(mdb.IMPORT, v.Name, v.Value)
+			m.Logs("response", v.Name, v.Value)
 		})
 	})
 	if m.Warn(res.StatusCode != http.StatusOK, ice.ErrNotValid, uri, cli.STATUS, res.Status) {

@@ -19,6 +19,9 @@ import (
 )
 
 func _share_link(m *ice.Message, p string, arg ...ice.Any) string {
+	if strings.HasPrefix(p, ice.USR_PUBLISH) {
+		return tcp.PublishLocalhost(m, MergeLink(m, strings.TrimPrefix(p, ice.USR), arg...))
+	}
 	return tcp.PublishLocalhost(m, MergeLink(m, kit.Select("", PP(SHARE, LOCAL), !strings.HasPrefix(p, nfs.PS) && !strings.HasPrefix(p, HTTP))+p, arg...))
 }
 func _share_cache(m *ice.Message, arg ...string) {
@@ -127,6 +130,9 @@ func ShareLocalFile(m *ice.Message, arg ...string) {
 		}
 	}
 	if m.Option(ice.POD) == "" {
+		m.RenderDownload(p)
+		return
+	} else if p := kit.Path(ice.USR_LOCAL_WORK, m.Option(ice.POD), p); nfs.Exists(m, p) {
 		m.RenderDownload(p)
 		return
 	}

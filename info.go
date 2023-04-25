@@ -105,6 +105,7 @@ func MergeActions(arg ...Any) Actions {
 				h = list[CTX_INIT]
 			}
 			h.Hand = MergeHand(h.Hand, func(m *Message, arg ...string) {
+				_cmd := m._cmd
 				m.Search(from, func(p *Context, s *Context, key string, cmd *Command) {
 					for k, v := range cmd.Actions {
 						func(k string) {
@@ -113,6 +114,12 @@ func MergeActions(arg ...Any) Actions {
 							} else if h.Hand == nil {
 								h.Hand = func(m *Message, arg ...string) { m.Cmdy(from, k, arg) }
 							}
+							if help := kit.Split(v.Help, " :："); len(help) > 0 {
+								if kit.Value(_cmd.Meta, kit.Keys("_trans", strings.TrimPrefix(k, "_")), help[0]); len(help) > 1 {
+									kit.Value(_cmd.Meta, kit.Keys("_title", k), help[1])
+								}
+							}
+							kit.If(len(v.List) > 0, func() { _cmd.Meta[k] = v.List })
 						}(k)
 					}
 				})

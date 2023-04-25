@@ -53,7 +53,7 @@ func _autogen_import(m *ice.Message, main string, ctx string, mod string) {
 }
 func _autogen_version(m *ice.Message) string {
 	if mod := _autogen_mod(m, ice.GO_MOD); !nfs.Exists(m, ".git") {
-		m.Cmd(REPOS, "init", nfs.ORIGIN, kit.Select(m.Option(ice.MSG_USERHOST), ice.Info.Make.Domain)+"/x/"+path.Base(mod), mdb.NAME, path.Base(mod), nfs.PATH, nfs.PWD)
+		m.Cmd(REPOS, "init", nfs.ORIGIN, strings.Split(kit.MergeURL2(kit.Select(ice.Info.Make.Remote, ice.Info.Make.Domain), "/x/"+path.Base(mod)), mdb.QS)[0], mdb.NAME, path.Base(mod), nfs.PATH, nfs.PWD)
 		defer m.Cmd(REPOS, "add", kit.Dict(nfs.REPOS, path.Base(mod), nfs.FILE, nfs.SRC))
 		defer m.Cmd(REPOS, "add", kit.Dict(nfs.REPOS, path.Base(mod), nfs.FILE, "go.mod"))
 	}
@@ -74,14 +74,11 @@ func _autogen_gits(m *ice.Message, arg ...string) string {
 	return kit.Join(res, lex.NL)
 }
 func _autogen_git(m *ice.Message, arg ...string) ice.Map {
+	msg := m.Cmd("web.code.git.repos", "remote")
 	return kit.Dict(arg,
-		mdb.TIME, m.Time(), nfs.PATH, kit.Path(""), web.DOMAIN, web.UserHost(m),
-		mdb.HASH, m.Cmdx(cli.SYSTEM, GIT, "log", "-n1", `--pretty=%H`),
-		nfs.REMOTE, m.Cmdx(cli.SYSTEM, GIT, "config", "remote.origin.url"),
-		nfs.BRANCH, m.Cmdx(cli.SYSTEM, GIT, "rev-parse", "--abbrev-ref", "HEAD"),
-		nfs.VERSION, m.Cmdx(cli.SYSTEM, GIT, "describe", "--tags"),
-		aaa.EMAIL, m.Cmdx(cli.SYSTEM, GIT, "config", "user.email"),
-		aaa.USERNAME, kit.Select(ice.Info.Username, m.Cmdx(cli.SYSTEM, GIT, "config", "user.name")),
+		mdb.TIME, m.Time(), nfs.PATH, kit.Path(""), web.DOMAIN, tcp.PublishLocalhost(m, m.Option(ice.MSG_USERWEB)),
+		mdb.HASH, msg.Append(mdb.HASH), nfs.REMOTE, msg.Append(nfs.REMOTE), nfs.BRANCH, msg.Append(nfs.BRANCH), nfs.VERSION, msg.Append(nfs.VERSION),
+		aaa.EMAIL, msg.Append(aaa.EMAIL), aaa.USERNAME, msg.Append(aaa.USERNAME),
 	)
 }
 func _autogen_mod(m *ice.Message, file string) (mod string) {

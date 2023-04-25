@@ -83,7 +83,7 @@ func (m *Message) Cmdv(arg ...Any) string {
 }
 func (m *Message) Cmdx(arg ...Any) string {
 	res := strings.TrimSpace(kit.Select("", m._command(arg...).meta[MSG_RESULT], 0))
-	return kit.Select("", res, res != ErrWarn)
+	return kit.Select("", res, res != strings.TrimSpace(ErrWarn))
 }
 func (m *Message) Cmdy(arg ...Any) *Message { return m.Copy(m._command(arg...)) }
 func (m *Message) CmdHand(cmd *Command, key string, arg ...string) *Message {

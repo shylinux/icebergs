@@ -116,22 +116,13 @@ func init() {
 					return
 				}
 				switch arg[0] {
-				case COMMENT:
-					ls := kit.Split(m.Option(nfs.FILE), " /")
-					m.Push(arg[0], kit.Join(kit.Slice(ls, -1), nfs.PS))
-					m.Push(arg[0], kit.Join(kit.Slice(ls, -2), nfs.PS))
-					m.Push(arg[0], m.Option(nfs.FILE))
-				case VERSION:
-					m.Push(VERSION, _status_tag(m, m.Option(TAGS)))
 				case aaa.EMAIL:
 					m.Push(arg[0], _configs_get(m, USER_EMAIL), ice.Info.Make.Email)
 				case aaa.USERNAME:
 					m.Push(arg[0], kit.Select(m.Option(ice.MSG_USERNAME), _configs_get(m, USER_NAME)), ice.Info.Make.Username)
+				default:
+					m.Cmdy(REPOS, mdb.INPUTS, arg)
 				}
-			}},
-			CONFIGS: {Name: "configs email username", Help: "配置", Hand: func(m *ice.Message, arg ...string) {
-				mdb.Config(m, aaa.USERNAME, m.Option(aaa.USERNAME))
-				mdb.Config(m, aaa.EMAIL, m.Option(aaa.EMAIL))
 			}},
 			INSTEADOF: {Name: "insteadof from* to", Help: "代理", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(CONFIGS, func(value ice.Maps) {
@@ -139,14 +130,12 @@ func init() {
 				})
 				kit.If(m.Option(nfs.TO), func() { _git_cmd(m, CONFIG, "--global", "url."+m.Option(nfs.TO)+".insteadof", m.Option(nfs.FROM)) })
 			}},
+			CONFIGS: {Name: "configs email username", Help: "配置", Hand: func(m *ice.Message, arg ...string) {
+				mdb.Config(m, aaa.USERNAME, m.Option(aaa.USERNAME))
+				mdb.Config(m, aaa.EMAIL, m.Option(aaa.EMAIL))
+			}},
 			OAUTH: {Help: "授权", Hand: func(m *ice.Message, arg ...string) {
 				m.ProcessOpen(kit.MergeURL2(kit.Select(ice.Info.Make.Domain, _git_remote(m)), "/chat/cmd/web.code.git.token/gen/", tcp.HOST, m.Option(ice.MSG_USERWEB)))
-			}},
-			TAG: {Name: "tag version", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(REPOS, m.ActionKey(), arg)
-			}},
-			COMMIT: {Name: "commit actions=add,opt,fix comment*=some", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(REPOS, m.ActionKey(), arg)
 			}},
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(mdb.TYPE) != web.WORKER {
@@ -164,7 +153,7 @@ func init() {
 				}
 				m.Push(mdb.TEXT, strings.Join(text, ", "))
 			}},
-		}, gdb.EventAction(web.DREAM_TABLES), aaa.RoleAction(), mdb.ImportantDataAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, gdb.EventAction(web.DREAM_TABLES), Prefix(REPOS), mdb.ImportantDataAction(), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 && arg[0] == ctx.ACTION {
 				m.Cmdy(REPOS, arg)
 			} else if config, err := config.LoadConfig(config.GlobalScope); err == nil && config.User.Email == "" && mdb.Config(m, aaa.EMAIL) == "" {

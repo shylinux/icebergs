@@ -27,8 +27,10 @@ func Render(m *ice.Message, cmd string, args ...ice.Any) bool {
 	}
 	arg := kit.Simple(args...)
 	kit.If(len(arg) == 0, func() { args = nil })
-	if cmd != "" && (cmd != ice.RENDER_DOWNLOAD || m.R.Method != http.MethodGet) {
-		defer func() { m.Logs("Render", cmd, args) }()
+	if cmd != "" {
+		if cmd != ice.RENDER_DOWNLOAD || !kit.HasPrefix(arg[0], ice.USR_VOLCANOS, ice.USR_INTSHELL) {
+			defer func() { m.Logs("Render", cmd, args) }()
+		}
 	}
 	switch cmd {
 	case COOKIE: // value [name [path [expire]]]

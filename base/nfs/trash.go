@@ -35,7 +35,7 @@ func init() {
 				mdb.HashRemove(m, m.OptionSimple(mdb.HASH))
 			}},
 			mdb.CREATE: {Hand: func(m *ice.Message, arg ...string) {
-				_trash_create(m, m.Option(FROM))
+				_trash_create(m, kit.Paths(m.Option(FROM)))
 			}},
 			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) {
 				Remove(m, m.Option(FILE))
@@ -48,4 +48,4 @@ func init() {
 	})
 }
 
-func Trash(m *ice.Message, p string) *ice.Message { return m.Cmd(TRASH, mdb.CREATE, p) }
+func Trash(m *ice.Message, p string, arg ...string) *ice.Message { return m.Cmd(TRASH, mdb.CREATE, p) }

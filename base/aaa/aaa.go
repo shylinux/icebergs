@@ -6,7 +6,9 @@ import (
 )
 
 const (
-	RSA = "rsa"
+	RSA    = "rsa"
+	SIGN   = "sign"
+	VERIFY = "verify"
 )
 const AAA = "aaa"
 

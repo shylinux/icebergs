@@ -2,6 +2,7 @@ package chat
 
 import (
 	"path"
+	"strings"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
@@ -18,12 +19,12 @@ const POD = "pod"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		POD: {Name: "pod", Help: "节点", Actions: ice.MergeActions(ctx.CmdAction(), web.ApiAction(), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {
-			if web.AgentIs(m, "curl", "wget") {
-				m.Cmdy(web.SHARE_LOCAL, ice.BIN_ICE_BIN, kit.Dict(ice.POD, kit.Select("", arg, 0), ice.MSG_USERROLE, aaa.TECH))
-				return
-			}
 			if len(arg) == 0 || kit.Select("", arg, 0) == "" {
 				web.RenderCmd(m, web.SPACE)
+			} else if strings.HasPrefix(m.Option(ice.MSG_USERUA), "git/") {
+				m.RenderRedirect(m.Cmdv(web.SPACE, arg[0], "web.code.git.repos", nfs.REMOTE, nfs.REMOTE) + "/info/refs?service=" + m.Option("service"))
+			} else if m.Option(cli.GOOS) != "" && m.Option(cli.GOARCH) != "" {
+				m.RenderDownload(path.Join(ice.USR_LOCAL_WORK, arg[0], ice.USR_PUBLISH, kit.Keys(ice.ICE, m.Option(cli.GOOS), m.Option(cli.GOARCH))))
 			} else if len(arg) == 1 {
 				if m.Cmd(web.SPACE, arg[0]).Length() == 0 && nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, arg[0])) {
 					m.Cmd(web.DREAM, cli.START, kit.Dict(mdb.NAME, arg[0]))

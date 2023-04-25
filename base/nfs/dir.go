@@ -36,7 +36,8 @@ func _dir_list(m *ice.Message, root string, dir string, level int, deep bool, di
 		}
 		p, pp := path.Join(root, dir, s.Name()), path.Join(dir, s.Name())
 		isDir := s.IsDir() || kit.IsDir(p) && deep == false
-		if !(dir_type == TYPE_CAT && isDir || dir_type == TYPE_DIR && !isDir) && (dir_reg == nil || dir_reg.MatchString(s.Name())) {
+		isBin := s.Mode().String()[3] == 'x'
+		if !(dir_type == TYPE_BIN && !isBin || dir_type == TYPE_CAT && isDir || dir_type == TYPE_DIR && !isDir) && (dir_reg == nil || dir_reg.MatchString(s.Name())) {
 			switch cb := m.OptionCB("").(type) {
 			case func(os.FileInfo, string):
 				cb(s, p)
@@ -131,6 +132,7 @@ const (
 	REQUIRE = "/require/"
 
 	TYPE_ALL  = "all"
+	TYPE_BIN  = "bin"
 	TYPE_CAT  = "cat"
 	TYPE_DIR  = "dir"
 	TYPE_BOTH = "both"

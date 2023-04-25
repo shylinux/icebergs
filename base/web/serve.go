@@ -21,7 +21,9 @@ import (
 
 func _serve_address(m *ice.Message) string { return Domain(tcp.LOCALHOST, m.Option(tcp.PORT)) }
 func _serve_start(m *ice.Message) {
-	defer kit.For(kit.Split(m.Option(ice.DEV)), func(v string) { m.Sleep("10ms").Cmd(SPACE, tcp.DIAL, ice.DEV, v, mdb.NAME, ice.Info.NodeName) })
+	defer kit.For(kit.Split(m.Option(ice.DEV)), func(v string) {
+		m.Sleep("10ms").Cmd(SPACE, tcp.DIAL, ice.DEV, v, mdb.NAME, ice.Info.NodeName, TOKEN, m.Option(TOKEN))
+	})
 	kit.If(m.Option(aaa.USERNAME), func() { aaa.UserRoot(m, m.Option(aaa.USERNICK), m.Option(aaa.USERNAME)) })
 	kit.If(m.Option(tcp.PORT) == tcp.RANDOM, func() { m.Option(tcp.PORT, m.Cmdx(tcp.PORT, aaa.RIGHT)) })
 	kit.If(cli.IsWindows(), func() { m.Cmd(SPIDE, ice.OPS, _serve_address(m)+"/exit").Sleep30ms() })

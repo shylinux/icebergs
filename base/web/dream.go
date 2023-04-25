@@ -3,6 +3,7 @@ package web
 import (
 	"os"
 	"path"
+	"runtime"
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
@@ -57,19 +58,29 @@ func _dream_show(m *ice.Message, name string) {
 	), cli.CMD_OUTPUT, path.Join(p, ice.VAR_LOG_BOOT_LOG), mdb.CACHE_CLEAR_ONEXIT, ice.TRUE)
 	defer m.Options(cli.CMD_DIR, "", cli.CMD_ENV, "", cli.CMD_OUTPUT, "")
 	gdb.Event(m, DREAM_CREATE, m.OptionSimple(mdb.NAME, mdb.TYPE))
-	kit.If(m.Option(nfs.TEMPLATE), func() { _dream_template(m, p) })
+	kit.If(m.Option(nfs.BINARY), func(p string) { _dream_binary(m, p) })
+	kit.If(m.Option(nfs.TEMPLATE), func(p string) { _dream_template(m, p) })
 	m.Cmd(cli.DAEMON, kit.Select(kit.Path(os.Args[0]), cli.SystemFind(m, ice.ICE_BIN, nfs.PWD+path.Join(p, ice.BIN), nfs.PWD+ice.BIN)),
 		SPACE, tcp.DIAL, ice.DEV, ice.OPS, mdb.TYPE, WORKER, m.OptionSimple(mdb.NAME), cli.DAEMON, ice.OPS)
 }
+func _dream_binary(m *ice.Message, p string) {
+	if bin := path.Join(m.Option(cli.CMD_DIR), ice.BIN_ICE_BIN); kit.IsUrl(p) {
+		SpideSave(m, bin, kit.MergeURL(p, cli.GOOS, runtime.GOOS, cli.GOARCH, runtime.GOARCH), nil)
+		os.Chmod(bin, ice.MOD_DIR)
+	} else {
+		m.Cmd(nfs.LINK, bin, kit.Path(p))
+	}
+}
 func _dream_template(m *ice.Message, p string) {
-	kit.For([]string{ice.ETC_MISS_SH,
+	kit.For([]string{
 		ice.LICENSE, ice.MAKEFILE, ice.README_MD, ice.GO_MOD, ice.GO_SUM,
-		ice.SRC_MAIN_GO, ice.SRC_MAIN_SH, ice.SRC_MAIN_SHY, ice.SRC_MAIN_JS,
+		ice.SRC_MAIN_SH, ice.SRC_MAIN_SHY, ice.SRC_MAIN_GO, ice.SRC_MAIN_JS,
+		ice.ETC_MISS_SH, ice.ETC_INIT_SHY, ice.ETC_EXIT_SHY,
 	}, func(file string) {
-		if nfs.Exists(m, path.Join(p, file)) {
+		if nfs.Exists(m, kit.Path(m.Option(cli.CMD_DIR), file)) {
 			return
 		}
-		switch m.Cmdy(nfs.COPY, path.Join(p, file), path.Join(ice.USR_LOCAL_WORK, m.Option(nfs.TEMPLATE), file)); file {
+		switch m.Cmdy(nfs.COPY, kit.Path(m.Option(cli.CMD_DIR), file), kit.Path(ice.USR_LOCAL_WORK, p, file)); file {
 		case ice.GO_MOD:
 			nfs.Rewrite(m, path.Join(p, file), func(line string) string {
 				return kit.Select(line, nfs.MODULE+lex.SP+m.Option(mdb.NAME), strings.HasPrefix(line, nfs.MODULE))
@@ -101,20 +112,16 @@ func init() {
 				switch arg[0] {
 				case mdb.NAME, nfs.TEMPLATE:
 					_dream_list(m).Cut("name,status,time")
-				case nfs.REPOS:
-					if msg := m.Cmd(SPIDE, ice.OPS, SPIDE_MSG, UserHost(m)+"/x/list"); !msg.IsErr() {
-						m.Copy(msg)
-					}
-					kit.For([]string{ice.OPS, ice.DEV, ice.SHY}, func(dev string) {
-						if msg := m.Cmd(SPIDE, dev, SPIDE_MSG, "/x/list"); !msg.IsErr() {
-							m.Copy(msg)
-						}
+				case nfs.BINARY:
+					m.Cmdy(nfs.DIR, ice.BIN, "path,size,hashs,time", kit.Dict(nfs.DIR_TYPE, nfs.TYPE_BIN))
+					m.Cmd(nfs.DIR, ice.USR_LOCAL_WORK, func(value ice.Maps) {
+						m.Cmdy(nfs.DIR, path.Join(value[nfs.PATH], ice.BIN), "path,size,hashs,time", kit.Dict(nfs.DIR_TYPE, nfs.TYPE_BIN))
 					})
 				default:
-					gdb.Event(m, "", arg)
+					gdb.Event(m, DREAM_INPUTS, arg)
 				}
 			}},
-			mdb.CREATE: {Name: "create name*=hi repos template", Hand: func(m *ice.Message, arg ...string) {
+			mdb.CREATE: {Name: "create name*=hi repos binary template", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(nfs.REPOS, kit.Select("", kit.Slice(kit.Split(m.Option(nfs.REPOS)), -1), 0))
 				_dream_show(m, m.OptionDefault(mdb.NAME, path.Base(m.Option(nfs.REPOS))))
 			}},

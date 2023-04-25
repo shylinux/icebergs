@@ -18,6 +18,7 @@ import (
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/log"
 	"shylinux.com/x/icebergs/base/mdb"
@@ -347,6 +348,17 @@ func init() {
 					m.PushSearch(mdb.TYPE, web.LINK, mdb.NAME, m.CommandKey(), mdb.TEXT, m.MergePodCmd("", "", log.DEBUG, ice.TRUE))
 				}
 			}},
+			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
+				switch arg[0] {
+				case COMMENT:
+					ls := kit.Split(m.Option(nfs.FILE), " /")
+					m.Push(arg[0], kit.Join(kit.Slice(ls, -1), nfs.PS))
+					m.Push(arg[0], kit.Join(kit.Slice(ls, -2), nfs.PS))
+					m.Push(arg[0], m.Option(nfs.FILE))
+				case VERSION:
+					m.Push(VERSION, _status_tag(m, m.Option(TAGS)))
+				}
+			}},
 			INIT: {Name: "clone origin* branch name path", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.DEFS, kit.Path(".git/config"), nfs.Template(m, "config", m.Option("origin")))
 				git.PlainInit(m.Option(nfs.PATH), false)
@@ -359,7 +371,7 @@ func init() {
 					_repos_insert(m, m.Option(nfs.PATH))
 				}
 			}},
-			PULL: {Hand: func(m *ice.Message, arg ...string) {
+			PULL: {Help: "下载", Hand: func(m *ice.Message, arg ...string) {
 				_repos_each(m, "", func(repos *git.Repository, value ice.Maps) error {
 					if value[ORIGIN] == "" {
 						return nil
@@ -370,14 +382,15 @@ func init() {
 					}
 				})
 			}},
-			PUSH: {Hand: func(m *ice.Message, arg ...string) {
+			PUSH: {Help: "上传", Hand: func(m *ice.Message, arg ...string) {
 				list := _repos_credentials(m)
 				_repos_each(m, "", func(repos *git.Repository, value ice.Maps) error {
 					if value[ORIGIN] == "" {
 						return nil
 					}
-					u := list[kit.ParseURL(value[ORIGIN]).Host]
-					if password, ok := u.User.Password(); !ok {
+					if u, ok := list[kit.ParseURL(value[ORIGIN]).Host]; !ok {
+						return errors.New("not found userinfo")
+					} else if password, ok := u.User.Password(); !ok {
 						return errors.New("not found password")
 					} else {
 						return repos.Push(&git.PushOptions{Auth: &http.BasicAuth{Username: u.User.Username(), Password: password}})
@@ -405,7 +418,7 @@ func init() {
 				}
 			}},
 			STASH: {Hand: func(m *ice.Message, arg ...string) { _repos_cmd(m, kit.Select(m.Option(REPOS), arg, 0), STASH) }},
-			COMMIT: {Name: "commit actions=add,opt,fix comment*=some", Hand: func(m *ice.Message, arg ...string) {
+			COMMIT: {Name: "commit actions=add,opt,fix comment*=some", Help: "提交", Hand: func(m *ice.Message, arg ...string) {
 				if work, err := _repos_open(m, m.Option(REPOS)).Worktree(); !m.Warn(err) {
 					opt := &git.CommitOptions{All: true}
 					if cfg, err := config.LoadConfig(config.GlobalScope); err == nil {
@@ -442,6 +455,25 @@ func init() {
 						password, _ = u.User.Password()
 					}
 					m.Sort("repos,status,file").Status(mdb.TIME, last, kit.Select(aaa.TECH, aaa.VOID, password == ""), m.Option(aaa.EMAIL), REMOTE, remote, kit.MDB_COUNT, kit.Split(m.FormatSize())[0], kit.MDB_COST, m.FormatCost())
+				}
+			}},
+			REMOTE: {Hand: func(m *ice.Message, arg ...string) {
+				repos := _repos_open(m, kit.Select(path.Base(kit.Path("")), kit.Select(m.Option(REPOS), arg, 0)))
+				if _remote, err := repos.Remote(ORIGIN); err == nil {
+					m.Push(REMOTE, kit.Select("", _remote.Config().URLs, 0))
+				}
+				if refer, err := repos.Head(); err == nil {
+					m.Push(BRANCH, strings.TrimPrefix(refer.Name().String(), "refs/heads/"))
+					m.Push(mdb.HASH, refer.Hash().String())
+				}
+				if iter, err := repos.Tags(); err == nil {
+					if refer, err := iter.Next(); err == nil {
+						m.Push(nfs.VERSION, strings.TrimPrefix(refer.Name().String(), "refs/tags/"))
+					}
+				}
+				if cfg, err := config.LoadConfig(config.GlobalScope); err == nil {
+					m.Push(aaa.EMAIL, kit.Select(m.Option(ice.MSG_USERNAME)+"@163.com", cfg.User.Email))
+					m.Push(aaa.USERNAME, kit.Select(m.Option(ice.MSG_USERNAME), cfg.User.Name))
 				}
 			}},
 			TOTAL: {Hand: func(m *ice.Message, arg ...string) {
@@ -482,11 +514,13 @@ func init() {
 			}},
 			web.DREAM_CREATE: {Hand: func(m *ice.Message, arg ...string) {
 				kit.If(m.Option(REPOS), func(p string) {
+					p = strings.Split(p, mdb.QS)[0]
+					kit.If(!strings.Contains(p, "://"), func() { p = web.UserHost(m) + "/x/" + p })
 					m.Cmd("", CLONE, ORIGIN, p, nfs.PATH, m.Option(cli.CMD_DIR), ice.Maps{cli.CMD_DIR: ""})
 				})
 			}},
 			code.INNER: {Hand: func(m *ice.Message, arg ...string) { _repos_inner(m, _repos_path, arg...) }},
-		}, mdb.HashAction(mdb.SHORT, REPOS, mdb.FIELD, "time,repos,branch,commit,origin"), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, gdb.EventsAction(web.DREAM_CREATE), mdb.HashAction(mdb.SHORT, REPOS, mdb.FIELD, "time,repos,branch,commit,origin"), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				mdb.HashSelect(m, arg...).Sort(REPOS).Action(CLONE, PULL, PUSH, STATUS)
 			} else if len(arg) == 1 {

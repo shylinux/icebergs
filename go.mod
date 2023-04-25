@@ -1,6 +1,6 @@
 module shylinux.com/x/icebergs
 
-go 1.11
+go 1.13
 
 require (
 	shylinux.com/x/go-git/v5 v5.6.3

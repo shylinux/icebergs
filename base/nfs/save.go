@@ -142,7 +142,6 @@ func Copy(m *ice.Message, w io.Writer, r io.Reader, cb ice.Any) {
 }
 func CopyStream(m *ice.Message, to io.WriteCloser, from io.ReadCloser, cache, total int, cb ice.Any) {
 	count, buf := 0, make([]byte, cache)
-	kit.If(total == 0, func() { total = 1 })
 	for {
 		n, e := from.Read(buf)
 		to.Write(buf[0:n])

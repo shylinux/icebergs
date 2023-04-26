@@ -36,9 +36,14 @@ func _repos_insert(m *ice.Message, p string) {
 	if repos, err := git.PlainOpen(p); err == nil {
 		args := []string{REPOS, path.Base(p), nfs.PATH, p}
 		if refer, err := repos.Head(); err == nil {
-			args = append(args, BRANCH, strings.TrimPrefix(refer.Name().String(), "refs/heads/"))
+			args = append(args, BRANCH, refer.Name().Short())
 			if commit, err := repos.CommitObject(refer.Hash()); err == nil {
-				args = append(args, mdb.TIME, commit.Author.When.Format(ice.MOD_TIME), COMMIT, commit.Message)
+				args = append(args, mdb.TIME, commit.Author.When.Format(ice.MOD_TIME), COMMENT, commit.Message)
+			}
+		}
+		if iter, err := repos.Tags(); err == nil {
+			if refer, err := iter.Next(); err == nil {
+				args = append(args, VERSION, refer.Name().Short())
 			}
 		}
 		if remote, err := repos.Remotes(); err == nil && len(remote) > 0 {
@@ -89,7 +94,7 @@ func _repos_branch(m *ice.Message, repos *git.Repository) error {
 	iter.ForEach(func(refer *plumbing.Reference) error {
 		if commit, err := repos.CommitObject(refer.Hash()); err == nil {
 			m.Push(mdb.TIME, commit.Author.When.Format(ice.MOD_TIME))
-			m.Push(BRANCH, strings.TrimPrefix(refer.Name().String(), "refs/heads/"))
+			m.Push(BRANCH, refer.Name().Short())
 			m.Push(aaa.USERNAME, commit.Author.Name)
 			m.Push(mdb.TEXT, commit.Message)
 		}
@@ -97,12 +102,8 @@ func _repos_branch(m *ice.Message, repos *git.Repository) error {
 	})
 	return nil
 }
-func _repos_log(m *ice.Message, branch *config.Branch, repos *git.Repository) error {
-	refer, err := repos.Reference(branch.Merge, true)
-	if err != nil {
-		return err
-	}
-	iter, err := repos.Log(&git.LogOptions{From: refer.Hash()})
+func _repos_log(m *ice.Message, hash plumbing.Hash, repos *git.Repository) error {
+	iter, err := repos.Log(&git.LogOptions{From: hash})
 	if err != nil {
 		return err
 	}
@@ -400,7 +401,9 @@ func init() {
 			LOG: {Hand: func(m *ice.Message, arg ...string) {
 				repos := _repos_open(m, kit.Select(m.Option(REPOS), arg, 0))
 				if branch, err := repos.Branch(kit.Select(m.Option(BRANCH), arg, 1)); !m.Warn(err) {
-					_repos_log(m, branch, repos)
+					if refer, err := repos.Reference(branch.Merge, true); !m.Warn(err) {
+						_repos_log(m, refer.Hash(), repos)
+					}
 				}
 			}},
 			TAG: {Name: "tag version", Hand: func(m *ice.Message, arg ...string) {
@@ -463,12 +466,12 @@ func init() {
 					m.Push(REMOTE, kit.Select("", _remote.Config().URLs, 0))
 				}
 				if refer, err := repos.Head(); err == nil {
-					m.Push(BRANCH, strings.TrimPrefix(refer.Name().String(), "refs/heads/"))
+					m.Push(BRANCH, refer.Name().Short())
 					m.Push(mdb.HASH, refer.Hash().String())
 				}
 				if iter, err := repos.Tags(); err == nil {
 					if refer, err := iter.Next(); err == nil {
-						m.Push(nfs.VERSION, strings.TrimPrefix(refer.Name().String(), "refs/tags/"))
+						m.Push(nfs.VERSION, refer.Name().Short())
 					}
 				}
 				if cfg, err := config.LoadConfig(config.GlobalScope); err == nil {
@@ -512,6 +515,9 @@ func init() {
 					mdb.HashRemove(m, m.Option(REPOS))
 				}
 			}},
+			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
+				kit.Switch(m.Option(mdb.TYPE), kit.Simple(web.SERVER, web.WORKER), func() { m.PushButton(kit.Dict(m.CommandKey(), "仓库")) })
+			}},
 			web.DREAM_CREATE: {Hand: func(m *ice.Message, arg ...string) {
 				kit.If(m.Option(REPOS), func(p string) {
 					p = strings.Split(p, mdb.QS)[0]
@@ -520,7 +526,7 @@ func init() {
 				})
 			}},
 			code.INNER: {Hand: func(m *ice.Message, arg ...string) { _repos_inner(m, _repos_path, arg...) }},
-		}, gdb.EventsAction(web.DREAM_CREATE), mdb.HashAction(mdb.SHORT, REPOS, mdb.FIELD, "time,repos,branch,commit,origin"), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, gdb.EventsAction(web.DREAM_CREATE), web.DreamAction(), mdb.HashAction(mdb.SHORT, REPOS, mdb.FIELD, "time,repos,branch,version,comment,origin"), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				mdb.HashSelect(m, arg...).Sort(REPOS).Action(CLONE, PULL, PUSH, STATUS)
 			} else if len(arg) == 1 {
@@ -528,7 +534,9 @@ func init() {
 			} else if len(arg) == 2 {
 				repos := _repos_open(m, arg[0])
 				if branch, err := repos.Branch(arg[1]); !m.Warn(err) {
-					_repos_log(m, branch, repos)
+					if refer, err := repos.Reference(branch.Merge, true); !m.Warn(err) {
+						_repos_log(m, refer.Hash(), repos)
+					}
 				}
 			} else if len(arg) == 3 {
 				if repos := _repos_open(m, arg[0]); arg[2] == INDEX {

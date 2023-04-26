@@ -18,6 +18,9 @@ const DEBUG = "debug"
 func _debug_file(k string) string { return ice.VAR_LOG + k + ".log" }
 
 func init() {
+	const (
+		LEVEL = "level"
+	)
 	Index.MergeCommands(ice.Commands{
 		DEBUG: {Name: "debug level=error,bench,debug,error,watch offset limit filter auto reset doc", Help: "后台日志", Actions: ice.Actions{
 			"doc": {Help: "文档", Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen("https://pkg.go.dev/std") }},
@@ -36,7 +39,7 @@ func init() {
 					if _, e := time.Parse(kit.Split(ice.MOD_TIMES)[0], ls[0]); e != nil || len(ls) < 6 {
 						m.Push(mdb.TIME, "").Push(mdb.ID, "")
 						m.Push(nfs.PATH, "").Push(nfs.FILE, "").Push(nfs.LINE, "")
-						m.Push(ctx.SHIP, "").Push(ctx.ACTION, "").Push(nfs.CONTENT, line)
+						m.Push(ctx.SHIP, "").Push(LEVEL, "").Push(nfs.CONTENT, line)
 						return
 					}
 					m.Push(mdb.TIME, ls[0]+lex.SP+ls[1]).Push(mdb.ID, ls[2])
@@ -59,7 +62,7 @@ func init() {
 							ls[4], ls[5] = ls[4]+lex.SP+_ls[0], _ls[1]
 						}
 					}
-					m.Push(ctx.SHIP, ls[3]).Push(ctx.ACTION, ls[4]).Push(nfs.CONTENT, ls[5])
+					m.Push(ctx.SHIP, ls[3]).Push(LEVEL, ls[4]).Push(nfs.CONTENT, ls[5])
 					stats[ls[4]]++
 				})
 			case WATCH:
@@ -73,7 +76,7 @@ func init() {
 					m.Push(nfs.PATH, ice.USR_ICEBERGS)
 					m.Push(nfs.FILE, strings.TrimSpace(strings.Split(ls[5][i:], nfs.DF)[0]))
 					m.Push(nfs.LINE, strings.TrimSpace(strings.Split(ls[5][i:], nfs.DF)[1]))
-					m.Push(ctx.SHIP, ls[3]).Push(ctx.ACTION, ls[4]).Push(nfs.CONTENT, ls[5][:i])
+					m.Push(ctx.SHIP, ls[3]).Push(LEVEL, ls[4]).Push(nfs.CONTENT, ls[5][:i])
 					stats[ls[4]]++
 				})
 			}

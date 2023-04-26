@@ -19,16 +19,7 @@ import (
 
 func _publish_bin_list(m *ice.Message) *ice.Message {
 	defer m.SortStrR(mdb.TIME)
-	m.Option(cli.CMD_DIR, ice.USR_PUBLISH)
-	for _, ls := range strings.Split(cli.SystemCmds(m, "ls |xargs file |grep executable"), lex.NL) {
-		if file := strings.TrimSpace(strings.Split(ls, nfs.DF)[0]); file != "" {
-			if s, e := nfs.StatFile(m, path.Join(ice.USR_PUBLISH, file)); e == nil {
-				m.Push(mdb.TIME, s.ModTime()).Push(nfs.SIZE, kit.FmtSize(s.Size())).Push(nfs.PATH, file)
-				m.PushDownload(mdb.LINK, file, path.Join(ice.USR_PUBLISH, file)).PushButton(nfs.TRASH)
-			}
-		}
-	}
-	return m
+	return m.Cmdy(nfs.DIR, nfs.PWD, nfs.DIR_WEB_FIELDS, kit.Dict(nfs.DIR_TYPE, nfs.TYPE_BIN, nfs.DIR_DEEP, ice.TRUE, nfs.DIR_ROOT, ice.USR_PUBLISH))
 }
 func _publish_list(m *ice.Message, arg ...string) *ice.Message {
 	defer m.SortStrR(mdb.TIME)
@@ -74,13 +65,13 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		PUBLISH: {Name: "publish path auto create volcanos icebergs intshell", Help: "发布", Actions: ice.MergeActions(ice.Actions{
 			ice.VOLCANOS: {Help: "火山架", Hand: func(m *ice.Message, arg ...string) {
-				_publish_list(m, kit.ExtReg(HTML, CSS, JS)).Cmdy("", ice.CONTEXTS, ice.MISC).Echo(lex.NL).EchoQRCode(m.Option(ice.MSG_USERWEB))
+				_publish_list(m, kit.ExtReg(HTML, CSS, JS)).EchoQRCode(m.Option(ice.MSG_USERWEB))
 			}},
 			ice.ICEBERGS: {Help: "冰山架", Hand: func(m *ice.Message, arg ...string) {
-				_publish_bin_list(m).Cmdy("", ice.CONTEXTS, ice.CORE)
+				_publish_bin_list(m).Cmdy("", ice.CONTEXTS)
 			}},
 			ice.INTSHELL: {Help: "神农架", Hand: func(m *ice.Message, arg ...string) {
-				_publish_list(m, kit.ExtReg(SH, VIM, CONF)).Cmdy("", ice.CONTEXTS, ice.BASE)
+				_publish_list(m, kit.ExtReg(SH, VIM, CONF))
 			}},
 			ice.CONTEXTS: {Hand: func(m *ice.Message, arg ...string) { _publish_contexts(m, arg...) }},
 			mdb.INPUTS:   {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(nfs.DIR, arg[1:], nfs.DIR_CLI_FIELDS) }},
@@ -88,9 +79,10 @@ func init() {
 			nfs.TRASH:    {Hand: func(m *ice.Message, arg ...string) { nfs.Trash(m, path.Join(ice.USR_PUBLISH, m.Option(nfs.PATH))) }},
 		}, ctx.ConfAction(mdb.FIELD, nfs.PATH), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
 			if m.Option(nfs.DIR_ROOT, ice.USR_PUBLISH); len(arg) == 0 {
-				_publish_list(m)
+				_publish_list(m).Cmdy("", ice.CONTEXTS)
 			} else {
-				m.Cmdy(nfs.DIR, arg[0], "time,size,path,hash,link,action", ice.OptionFields(mdb.DETAIL))
+				m.Cmdy(nfs.DIR, arg[0], "time,path,size,hash,link,action", ice.OptionFields(mdb.DETAIL))
+				web.PushImages(m, web.P(PUBLISH, arg[0]))
 			}
 		}},
 	})

@@ -64,6 +64,13 @@ func PushPodCmd(m *ice.Message, cmd string, arg ...string) {
 		})
 	})
 }
+func PushImages(m *ice.Message, name string) {
+	if kit.ExtIsImage(name) {
+		m.PushImages(IMAGE, name)
+	} else if kit.ExtIsVideo(name) {
+		m.PushVideos(VIDEO, name)
+	}
+}
 func PushNotice(m *ice.Message, arg ...ice.Any) {
 	if m.Option(ice.MSG_DAEMON) == "" {
 		return

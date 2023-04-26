@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 
+	"shylinux.com/x/go-git/v5/plumbing"
 	"shylinux.com/x/go-git/v5/plumbing/transport/file"
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
@@ -55,6 +56,9 @@ func _service_repos(m *ice.Message, arg ...string) error {
 		web.RenderType(m.W, "", kit.Format("application/x-git-%s-advertisement", service))
 		_service_writer(m, "# service=git-"+service+lex.NL, _git_cmds(m, service, "--stateless-rpc", "--advertise-refs", nfs.PT))
 		return nil
+	}
+	if service == RECEIVE_PACK {
+		defer m.Cmd(Prefix(SERVICE), mdb.CREATE, mdb.NAME, path.Base(repos))
 	}
 	reader, err := _service_reader(m)
 	if err != nil {
@@ -106,6 +110,7 @@ func init() {
 			} else if !nfs.Exists(m, repos) {
 				m.Cmd(Prefix(SERVICE), mdb.CREATE, mdb.NAME, path.Base(repos))
 			}
+
 		case UPLOAD_PACK:
 			if m.Warn(!nfs.Exists(m, repos), ice.ErrNotFound, arg[0]) {
 				return
@@ -139,7 +144,6 @@ func init() {
 					os.Exit(128)
 				}
 			}},
-			TOKEN:      {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(TOKEN, cli.MAKE) }},
 			code.INNER: {Hand: func(m *ice.Message, arg ...string) { _repos_inner(m, _service_path, arg...) }},
 			web.DREAM_INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
@@ -147,17 +151,23 @@ func init() {
 					mdb.HashSelect(m).Sort(REPOS).Cut("repos,branch,commit,time")
 				}
 			}},
-		}, gdb.EventsAction(web.DREAM_INPUTS), mdb.HashAction(mdb.SHORT, REPOS, mdb.FIELD, "time,repos,branch,commit"), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, gdb.EventsAction(web.DREAM_INPUTS), mdb.HashAction(mdb.SHORT, REPOS, mdb.FIELD, "time,repos,branch,version,comment"), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
-				mdb.HashSelect(m, arg...).Sort(REPOS).Action(mdb.CREATE, TOKEN)
-				m.Echo(strings.ReplaceAll(m.Cmdx("web.code.publish", ice.CONTEXTS), "app username", "dev username"))
+				mdb.HashSelect(m, arg...).Table(func(value ice.Maps) {
+					m.PushScript(kit.Format("git clone %s", tcp.PublishLocalhost(m, kit.Split(web.MergeURL2(m, "/x/"+value[REPOS]+".git"), mdb.QS)[0])))
+				}).Sort(REPOS).Echo(strings.ReplaceAll(m.Cmdx("web.code.publish", ice.CONTEXTS), "app username", "dev username"))
 			} else if len(arg) == 1 {
 				_repos_branch(m, _repos_open(m, arg[0]))
 				m.EchoScript(tcp.PublishLocalhost(m, kit.Split(web.MergeURL2(m, "/x/"+arg[0]), mdb.QS)[0]))
 			} else if len(arg) == 2 {
 				repos := _repos_open(m, arg[0])
-				if branch, err := repos.Branch(arg[1]); !m.Warn(err) {
-					_repos_log(m, branch, repos)
+				if iter, err := repos.Branches(); err == nil {
+					iter.ForEach(func(refer *plumbing.Reference) error {
+						if refer.Name().Short() == arg[1] {
+							_repos_log(m, refer.Hash(), repos)
+						}
+						return nil
+					})
 				}
 			} else if len(arg) == 3 {
 				if repos := _repos_open(m, arg[0]); arg[2] == INDEX {

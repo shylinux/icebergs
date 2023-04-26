@@ -36,7 +36,7 @@ func _dream_list(m *ice.Message) *ice.Message {
 	})
 	return m.Sort("status,type,name", ice.STR, ice.STR, ice.STR_R).StatusTimeCount(cli.START, len(list))
 }
-func _dream_show(m *ice.Message, name string) {
+func _dream_start(m *ice.Message, name string) {
 	if m.Warn(name == "", ice.ErrNotValid, mdb.NAME) {
 		return
 	}
@@ -123,19 +123,15 @@ func init() {
 			}},
 			mdb.CREATE: {Name: "create name*=hi repos binary template", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(nfs.REPOS, kit.Select("", kit.Slice(kit.Split(m.Option(nfs.REPOS)), -1), 0))
-				_dream_show(m, m.OptionDefault(mdb.NAME, path.Base(m.Option(nfs.REPOS))))
+				_dream_start(m, m.OptionDefault(mdb.NAME, path.Base(m.Option(nfs.REPOS))))
 			}},
-			cli.START: {Hand: func(m *ice.Message, arg ...string) {
-				_dream_show(m, m.Option(mdb.NAME))
-			}},
+			cli.START: {Hand: func(m *ice.Message, arg ...string) { _dream_start(m, m.Option(mdb.NAME)) }},
 			cli.STOP: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(SPACE, mdb.MODIFY, m.OptionSimple(mdb.NAME), mdb.STATUS, cli.STOP)
 				m.Go(func() { m.Cmd(SPACE, m.Option(mdb.NAME), ice.EXIT) })
 				m.Sleep30ms()
 			}},
-			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
-				nfs.Trash(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME)))
-			}},
+			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) { nfs.Trash(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME))) }},
 			DREAM_CLOSE: {Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(cli.DAEMON) == ice.OPS && m.Cmdv(SPACE, m.Option(mdb.NAME), mdb.STATUS) != cli.STOP {
 					m.Go(func() { m.Sleep30ms(DREAM, cli.START, m.OptionSimple(mdb.NAME)) })
@@ -144,7 +140,7 @@ func init() {
 			DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				kit.Switch(m.Option(mdb.TYPE), []string{SERVER, WORKER}, func() { m.PushButton(OPEN) })
 			}},
-			OPEN: {Hand: func(m *ice.Message, arg ...string) { ctx.ProcessOpen(m, m.MergePod(m.Option(mdb.NAME), arg)) }},
+			OPEN: {Hand: func(m *ice.Message, arg ...string) { ctx.ProcessOpen(m, m.MergePod(m.Option(mdb.NAME))) }},
 		}, ctx.CmdAction(), DreamAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				_dream_list(m)

@@ -36,8 +36,8 @@ func _dir_list(m *ice.Message, root string, dir string, level int, deep bool, di
 		}
 		p, pp := path.Join(root, dir, s.Name()), path.Join(dir, s.Name())
 		isDir := s.IsDir() || kit.IsDir(p) && deep == false
-		isBin := s.Mode().String()[3] == 'x'
-		if !(dir_type == TYPE_BIN && !isBin || dir_type == TYPE_CAT && isDir || dir_type == TYPE_DIR && !isDir) && (dir_reg == nil || dir_reg.MatchString(s.Name())) {
+		isBin := s.Mode().String()[3] == 'x' || kit.Ext(s.Name()) == "exe"
+		if !(dir_type == TYPE_BIN && (!isBin || isDir) || dir_type == TYPE_CAT && isDir || dir_type == TYPE_DIR && !isDir) && (dir_reg == nil || dir_reg.MatchString(s.Name())) {
 			switch cb := m.OptionCB("").(type) {
 			case func(os.FileInfo, string):
 				cb(s, p)
@@ -90,10 +90,12 @@ func _dir_list(m *ice.Message, root string, dir string, level int, deep bool, di
 					}
 					m.Push(mdb.HASH, kit.Select(h[:6], h[:], field == mdb.HASH))
 				case mdb.LINK:
-					if strings.Contains(p, "ice.windows.") {
+					if isDir {
+						m.Push(mdb.LINK, "")
+					} else if strings.Contains(p, "ice.windows.") {
 						m.PushDownload(mdb.LINK, "ice.exe", p)
 					} else {
-						m.PushDownload(mdb.LINK, kit.Select("", s.Name(), !isDir), p)
+						m.PushDownload(mdb.LINK, p)
 					}
 				case mdb.SHOW:
 					switch p := kit.MergeURL("/share/local/"+p, ice.POD, m.Option(ice.MSG_USERPOD)); kit.Ext(s.Name()) {
@@ -142,8 +144,8 @@ const (
 	DIR_DEEP = "dir_deep"
 	DIR_REG  = "dir_reg"
 
-	DIR_DEF_FIELDS = "time,size,path,action"
-	DIR_WEB_FIELDS = "time,size,path,link,action"
+	DIR_DEF_FIELDS = "time,path,size,action"
+	DIR_WEB_FIELDS = "time,path,size,link,action"
 	DIR_CLI_FIELDS = "path,size,time"
 
 	ROOT = "root"

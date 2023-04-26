@@ -22,7 +22,7 @@ func _trash_create(m *ice.Message, from string) {
 	p := path.Join(ice.VAR_TRASH, path.Base(from))
 	kit.If(!s.IsDir(), func() { Open(m, from, func(r io.Reader) { p = path.Join(ice.VAR_TRASH, kit.HashsPath(r)) }) })
 	RemoveAll(m, p)
-	kit.If(!m.Warn(Rename(m, from, p)), func() { mdb.HashCreate(m, FROM, from, FILE, p) })
+	kit.If(!m.Warn(Rename(m, from, p)), func() { mdb.HashCreate(m, FROM, kit.Paths(from), FILE, p) })
 }
 
 const TRASH = "trash"

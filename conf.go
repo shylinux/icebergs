@@ -254,6 +254,7 @@ const ( // PROCESS
 	PROCESS_RICH  = "_rich"
 	PROCESS_GROW  = "_grow"
 	PROCESS_OPEN  = "_open"
+	PROCESS_CLOSE = "_close"
 
 	PROCESS_ARG   = "_arg"
 	FIELD_PREFIX  = "_prefix"

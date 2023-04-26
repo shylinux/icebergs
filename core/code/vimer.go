@@ -109,6 +109,9 @@ func init() {
 						for _, p := range kit.Split(kit.Select(m.Option(nfs.PATH), m.Option("paths"))) {
 							nfs.DirDeepAll(m.Spawn(), nfs.PWD, p, func(value ice.Maps) { push("", value[nfs.PATH]) }, nfs.PATH)
 						}
+						m.Cmd(XTERM).Table(func(value ice.Maps) {
+							push(ctx.INDEX, kit.Join([]string{"web.code.xterm", value[mdb.HASH], kit.Select(value[mdb.TYPE], value[mdb.NAME])}))
+						})
 						m.Cmd(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND, ice.OptionFields(ctx.INDEX)).Table(func(value ice.Maps) { push(ctx.INDEX, value[ctx.INDEX]) })
 						m.Cmd(mdb.SEARCH, cli.SYSTEM, cli.OPENS, ice.OptionFields("type,name,text")).Sort("type,name,text").Table(func(value ice.Maps) { push(cli.OPENS, value[nfs.NAME]) })
 					default:
@@ -169,7 +172,7 @@ func init() {
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				kit.Switch(m.Option(mdb.TYPE), kit.Simple(web.SERVER, web.WORKER), func() { m.PushButton(kit.Dict(m.CommandKey(), "源码")) })
 			}},
-		}, mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path"), web.DreamAction(), aaa.RoleAction(ctx.COMMAND)), Hand: func(m *ice.Message, arg ...string) {
+		}, aaa.RoleAction(ctx.COMMAND), web.DreamAction(), mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path")), Hand: func(m *ice.Message, arg ...string) {
 			if m.Cmdy(INNER, arg); arg[0] != ctx.ACTION {
 				kit.If(len(arg) > 1, func() { mdb.HashCreate(m.Spawn(), nfs.PATH, path.Join(kit.Slice(arg, 0, 2)...)) })
 				m.Action(nfs.MODULE, nfs.SCRIPT, nfs.SAVE, COMPILE, "show", "exec")

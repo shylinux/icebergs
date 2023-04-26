@@ -72,6 +72,11 @@ func _cache_upload(m *ice.Message, r *http.Request) (mime, name, file, size stri
 }
 func _cache_download(m *ice.Message, r *http.Response, file string, cb ice.Any) string {
 	if f, p, e := miss.CreateFile(file); !m.Warn(e, ice.ErrNotValid, DOWNLOAD) {
+		defer func() {
+			if s, e := os.Stat(file); e == nil && s.Size() == 0 {
+				nfs.Remove(m, file)
+			}
+		}()
 		defer f.Close()
 		last, base := 0, 10
 		nfs.CopyStream(m, f, r.Body, base*ice.MOD_BUFS, kit.Int(kit.Select("100", r.Header.Get(ContentLength))), func(count, total, value int) {
@@ -132,11 +137,7 @@ func init() {
 			}},
 			nfs.PS: {Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashSelectDetail(m, arg[0], func(value ice.Map) {
-					if kit.Format(value[nfs.FILE]) == "" {
-						m.RenderResult(value[mdb.TEXT])
-					} else {
-						m.RenderDownload(value[nfs.FILE])
-					}
+					kit.If(kit.Format(value[nfs.FILE]), func() { m.RenderDownload(value[nfs.FILE]) }, func() { m.RenderResult(value[mdb.TEXT]) })
 				})
 			}},
 		}, mdb.HashAction(mdb.SHORT, mdb.TEXT, mdb.FIELD, "time,hash,size,type,name,text,file", ctx.ACTION, WATCH), ice.RenderAction(ice.RENDER_DOWNLOAD)), Hand: func(m *ice.Message, arg ...string) {

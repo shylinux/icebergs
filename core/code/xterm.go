@@ -21,7 +21,7 @@ import (
 func _xterm_get(m *ice.Message, h string) *xterm.XTerm {
 	h = kit.Select(m.Option(mdb.HASH), h)
 	m.Assert(h != "")
-	mdb.HashModify(m, mdb.TIME, m.Time(), web.VIEW, m.Option(ice.MSG_DAEMON))
+	mdb.HashModify(m, mdb.TIME, m.Time(), cli.DAEMON, m.Option(ice.MSG_DAEMON))
 	return mdb.HashSelectTarget(m, h, func(value ice.Maps) ice.Any {
 		text := strings.Split(value[mdb.TEXT], lex.NL)
 		ls := kit.Split(strings.Split(kit.Select(nfs.SH, value[mdb.TYPE]), " # ")[0])
@@ -56,7 +56,7 @@ func _xterm_get(m *ice.Message, h string) *xterm.XTerm {
 	}).(*xterm.XTerm)
 }
 func _xterm_echo(m *ice.Message, h string, str string) {
-	m.Options(ice.MSG_DAEMON, mdb.HashSelectField(m, h, web.VIEW))
+	m.Options(ice.MSG_DAEMON, mdb.HashSelectField(m, h, cli.DAEMON))
 	m.Option(ice.LOG_DISABLE, ice.TRUE)
 	web.PushNoticeGrow(m, h, str)
 }
@@ -119,7 +119,7 @@ func init() {
 			ctx.PROCESS: {Hand: func(m *ice.Message, arg ...string) {
 				ctx.ProcessField(m, m.PrefixKey(), func() string { return m.Cmdx("", mdb.CREATE, arg) }, arg...)
 			}},
-		}, ctx.CmdAction(), ctx.ProcessAction(), web.DreamAction(), mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,path,view,theme")), Hand: func(m *ice.Message, arg ...string) {
+		}, ctx.CmdAction(), ctx.ProcessAction(), web.DreamAction(), mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,path,theme,daemon")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) == 0 {
 				m.PushAction(web.OUTPUT, mdb.REMOVE).Action(mdb.CREATE, mdb.PRUNES)
 			} else {

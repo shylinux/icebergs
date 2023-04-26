@@ -130,12 +130,13 @@ func init() {
 				})
 				kit.If(m.Option(nfs.TO), func() { _git_cmd(m, CONFIG, "--global", "url."+m.Option(nfs.TO)+".insteadof", m.Option(nfs.FROM)) })
 			}},
-			CONFIGS: {Name: "configs email username", Help: "配置", Hand: func(m *ice.Message, arg ...string) {
+			CONFIGS: {Name: "configs email* username*", Help: "配置", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(nfs.DEFS, kit.HomePath(".gitconfig"), nfs.Template(m, "gitconfig", m.Option(aaa.USERNAME), m.Option(aaa.EMAIL)))
 				mdb.Config(m, aaa.USERNAME, m.Option(aaa.USERNAME))
 				mdb.Config(m, aaa.EMAIL, m.Option(aaa.EMAIL))
 			}},
 			OAUTH: {Help: "授权", Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessOpen(kit.MergeURL2(kit.Select(ice.Info.Make.Domain, _git_remote(m)), "/chat/cmd/web.code.git.token/gen/", tcp.HOST, m.Option(ice.MSG_USERWEB)))
+				m.ProcessOpen(kit.MergeURL2(kit.Select(ice.Info.Make.Domain, _git_remote(m)), web.ChatCmdPath(Prefix(TOKEN), "gen"), tcp.HOST, m.Option(ice.MSG_USERWEB)))
 			}},
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(mdb.TYPE) != web.WORKER {
@@ -153,7 +154,7 @@ func init() {
 				}
 				m.Push(mdb.TEXT, strings.Join(text, ", "))
 			}},
-		}, gdb.EventAction(web.DREAM_TABLES), Prefix(REPOS), mdb.ImportantDataAction(), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, aaa.RoleAction(), gdb.EventAction(web.DREAM_TABLES), Prefix(REPOS), mdb.ImportantDataAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 && arg[0] == ctx.ACTION {
 				m.Cmdy(REPOS, arg)
 			} else if config, err := config.LoadConfig(config.GlobalScope); err == nil && config.User.Email == "" && mdb.Config(m, aaa.EMAIL) == "" {

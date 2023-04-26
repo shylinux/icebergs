@@ -33,6 +33,11 @@ func (m *Message) OptionSplit(key ...string) (res []string) {
 	kit.For(kit.Split(kit.Join(key)), func(k string) { res = append(res, m.Option(k)) })
 	return res
 }
+func (m *Message) OptionArgs(key ...string) string {
+	res := []string{}
+	kit.For(kit.Split(kit.Join(key)), func(k string) { kit.If(m.Option(k), func(v string) { res = append(res, k, kit.Format("%q", v)) }) })
+	return strings.Join(res, SP)
+}
 func (m *Message) OptionCB(key string, cb ...Any) Any {
 	kit.If(len(cb) > 0, func() { m.Optionv(kit.Keycb(kit.Select(m.CommandKey(), key)), cb...) })
 	return m.Optionv(kit.Keycb(kit.Select(m.CommandKey(), key)))
@@ -101,3 +106,4 @@ func (m *Message) ProcessBack()              { m.Process(PROCESS_BACK) }
 func (m *Message) ProcessRich(arg ...Any)    { m.Process(PROCESS_RICH, arg...) }
 func (m *Message) ProcessGrow(arg ...Any)    { m.Process(PROCESS_GROW, arg...) }
 func (m *Message) ProcessOpen(url string)    { m.Process(PROCESS_OPEN, url) }
+func (m *Message) ProcessClose()             { m.Process(PROCESS_CLOSE) }

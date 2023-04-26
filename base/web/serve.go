@@ -183,13 +183,16 @@ func init() {
 		if strings.HasPrefix(sub, nfs.PS) {
 			kit.If(action.Hand == nil, func() { action.Hand = cmd.Hand })
 			sub = kit.Select(P(key, sub), PP(key, sub), strings.HasSuffix(sub, nfs.PS))
-			c.Commands[sub] = &ice.Command{Name: kit.Select(cmd.Name, action.Name), Actions: ctx.CmdAction(), Hand: action.Hand}
+			c.Commands[sub] = &ice.Command{Name: kit.Select(cmd.Name, action.Name), Actions: ctx.CmdAction(), Hand: func(m *ice.Message, arg ...string) {
+				msg := m.Spawn(c, key, cmd)
+				defer m.Copy(msg)
+				action.Hand(msg, arg...)
+			}}
 		}
 	})
 }
-func Domain(host, port string) string {
-	return kit.Format("%s://%s:%s", HTTP, host, port)
-}
+func Domain(host, port string) string { return kit.Format("%s://%s:%s", HTTP, host, port) }
 func Script(m *ice.Message, str string, arg ...ice.Any) string {
 	return ice.Render(m, ice.RENDER_SCRIPT, kit.Format(str, arg...))
 }
+func ChatCmdPath(arg ...string) string { return path.Join("/chat/cmd/", path.Join(arg...)) }

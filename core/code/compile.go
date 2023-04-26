@@ -40,7 +40,7 @@ func init() {
 		VERSION = "version"
 	)
 	Index.MergeCommands(ice.Commands{
-		COMPILE: {Name: "compile arch=amd64,386,arm,arm64,mipsle os=linux,darwin,windows src=src/main.go@key run binpack webpack devpack upgrade install", Help: "编译", Actions: ice.MergeActions(ice.Actions{
+		COMPILE: {Name: "compile arch=amd64,386,arm,arm64,mipsle os=linux,darwin,windows src=src/main.go@key run binpack webpack devpack install", Help: "编译", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { cli.IsAlpine(m, GO, "go git") }},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
@@ -55,7 +55,6 @@ func init() {
 			BINPACK: {Help: "版本", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(AUTOGEN, BINPACK) }},
 			WEBPACK: {Help: "打包", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(AUTOGEN, WEBPACK) }},
 			DEVPACK: {Help: "开发", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(AUTOGEN, DEVPACK) }},
-			UPGRADE: {Help: "升级", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(UPGRADE, nfs.TARGET) }},
 			INSTALL: {Name: "install service*='https://golang.google.cn/dl/' version*=1.15.5", Help: "安装", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(INSTALL, web.DOWNLOAD, kit.Format("%s/go%s.%s-%s.%s", m.Option(SERVICE), m.Option(VERSION), runtime.GOOS, runtime.GOARCH, kit.Select("tar.gz", "zip", runtime.GOOS == cli.WINDOWS)), ice.USR_LOCAL)
 			}},
@@ -64,8 +63,7 @@ func init() {
 			main, file, goos, arch := _compile_target(m, arg...)
 			env := kit.Simple(cli.PATH, cli.BinPath(), cli.HOME, kit.Select(kit.Path(""), kit.Env(cli.HOME)), mdb.Configv(m, cli.ENV), m.Optionv(cli.ENV), cli.GOOS, goos, cli.GOARCH, arch)
 			kit.If(runtime.GOOS == cli.WINDOWS, func() { env = append(env, "GOPATH", kit.HomePath(GO), "GOCACHE", kit.HomePath("go/go-build")) })
-			m.Optionv(cli.CMD_ENV, env)
-			m.Cmd(AUTOGEN, VERSION)
+			m.Options(cli.CMD_ENV, env).Cmd(AUTOGEN, VERSION)
 			defer m.StatusTime(VERSION, strings.TrimPrefix(m.Cmdx(cli.SYSTEM, GO, VERSION), "go version"))
 			kit.If(!strings.Contains(m.Cmdx(nfs.CAT, ice.GO_MOD), "shylinux.com/x/ice"), func() { m.Cmd(cli.SYSTEM, GO, "get", "shylinux.com/x/ice") })
 			if msg := m.Cmd(cli.SYSTEM, GO, cli.BUILD, "-o", file, main, ice.SRC_VERSION_GO, ice.SRC_BINPACK_GO); !cli.IsSuccess(msg) {
@@ -73,9 +71,8 @@ func init() {
 				return
 			}
 			m.Logs(nfs.SAVE, nfs.TARGET, file, nfs.SOURCE, main)
-			if m.Cmdy(nfs.DIR, file, "time,size,path,hash,link"); strings.Contains(file, ice.ICE) {
-				m.Cmdy(PUBLISH, ice.CONTEXTS)
-			}
+			m.Cmdy(nfs.DIR, file, "time,path,size,hash,link")
+			kit.If(strings.Contains(file, ice.ICE), func() { m.Cmdy(PUBLISH, ice.CONTEXTS) })
 		}},
 	})
 }

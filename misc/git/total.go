@@ -84,7 +84,6 @@ func init() {
 			}
 			from, days, commit, adds, dels := "", 0, 0, 0, 0
 			kit.SplitKV(lex.NL, "commit:", _git_cmds(m, args...), func(text string, ls []string) {
-				m.Debug("what %v", ls)
 				add, del := "0", "0"
 				for _, v := range kit.Split(strings.TrimSpace(kit.Select("", ls, -1)), mdb.FS) {
 					switch {

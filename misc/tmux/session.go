@@ -154,7 +154,7 @@ func init() {
 					_tmux_cmd(m, SELECT_PANE, "-t", _tmux_key(m.Option(SESSION), m.Option(WINDOW), m.Option(PANE)))
 				}
 			}},
-			code.XTERM: {Help: "切入", Hand: func(m *ice.Message, arg ...string) {
+			code.XTERM: {Help: "终端", Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(WINDOW) == "" {
 					ctx.ProcessField(m, web.CODE_XTERM, []string{"tmux attach -t " + m.Option(SESSION)}, arg...)
 				}

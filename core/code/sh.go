@@ -33,7 +33,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		SH: {Name: "sh path auto", Help: "命令", Actions: ice.MergeActions(ice.Actions{
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				if arg[0] == mdb.FOREACH && (arg[1] == "" || arg[1] == ssh.SHELL) {
+				if arg[0] == mdb.FOREACH && arg[1] == ssh.SHELL {
 					m.Cmd(nfs.CAT, "/etc/shells", func(text string) {
 						kit.If(text != "" && !strings.HasPrefix(text, "#"), func() { m.PushSearch(mdb.TYPE, ssh.SHELL, mdb.NAME, path.Base(text), mdb.TEXT, path.Base(text)) })
 					})

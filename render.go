@@ -34,7 +34,7 @@ func Render(m *Message, cmd string, args ...Any) string {
 				}
 				kit.For(kit.Split(k), func(k string) { list = append(list, kit.Format(`<input type="button" name="%s" value="%s">`, k, k)) })
 			case Map:
-				kit.For(k, func(k string) { list = append(list, kit.Format(`<input type="button" name="%s" value="%s">`, k, k)) })
+				kit.For(k, func(k, v string) { list = append(list, kit.Format(`<input type="button" name="%s" value="%s">`, k, v)) })
 			default:
 				list = append(list, Render(m, RENDER_BUTTON, kit.LowerCapital(kit.Format(k))))
 			}

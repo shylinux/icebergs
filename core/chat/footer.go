@@ -34,6 +34,9 @@ func init() {
 			ctx.CONFIG: {Hand: func(m *ice.Message, arg ...string) {
 				ctx.ProcessField(m, ctx.CONFIG, arg, arg...)
 			}},
+			"help": {Hand: func(m *ice.Message, arg ...string) {
+				ctx.ProcessField(m, web.WIKI_WORD, []string{"src/document/" + arg[0] + "/list.shy"}, arg...)
+			}},
 		}, ctx.CmdAction(), aaa.WhiteAction(ctx.COMMAND, ice.RUN)), Hand: func(m *ice.Message, arg ...string) {
 			m.Result(kit.Select(mdb.Config(m, TITLE), ice.Info.Make.Email))
 		}},

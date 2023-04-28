@@ -57,6 +57,9 @@ func ProcessCommand(m *ice.Message, cmd string, args []string, arg ...string) {
 		m.Cmdy(cmd, arg[1:])
 	}
 }
+func ProcessCmds(m *ice.Message, cmd string, arg ...string) {
+	m.Cmdy(COMMAND, cmd).Push(ice.ARG, kit.Format(arg)).ProcessField(ACTION, ice.RUN, cmd)
+}
 
 func ProcessRefresh(m *ice.Message, arg ...string)  { m.ProcessRefresh(arg...) }
 func ProcessRewrite(m *ice.Message, arg ...ice.Any) { m.ProcessRewrite(arg...) }

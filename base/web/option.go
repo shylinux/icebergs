@@ -111,7 +111,7 @@ func GoToast(m *ice.Message, title string, cb func(toast func(string, int, int))
 		kit.If(total == 0, func() { total = 1 })
 		Toast(m,
 			kit.Format("%s %s/%s", name, strings.TrimSuffix(kit.FmtSize(int64(count)), "B"), strings.TrimSuffix(kit.FmtSize(int64(total)), "B")),
-			kit.Format("%s %d%%", title, count*100/total), kit.Select("3000", "30000", count < total), count*100/total,
+			kit.Format("%s %d%%", title, count*100/total), kit.Select("1000", "30000", count < total), count*100/total,
 		)
 	})
 }

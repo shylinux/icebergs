@@ -120,6 +120,7 @@ const (
 	OFFEND = "offend"
 	OFFSET = "offset"
 
+	ICON = "icon"
 	PAGE = "page"
 	NEXT = "next"
 	PREV = "prev"
@@ -140,6 +141,11 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: ice.Commands
 	ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {}},
 	ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) {}},
 	INPUTS: {Name: "inputs key sub type field value", Hand: func(m *ice.Message, arg ...string) {
+		switch arg[3] {
+		case "index":
+			m.Cmdy("command", SEARCH, "command", "", "", ice.OptionFields("index"))
+			return
+		}
 		kit.Switch(arg[2],
 			HASH, func() { _hash_inputs(m, arg[0], arg[1], kit.Select(NAME, arg, 3), kit.Select("", arg, 4)) },
 			ZONE, func() { _zone_inputs(m, arg[0], arg[1], arg[3], kit.Select(NAME, arg, 4), kit.Select("", arg, 5)) },

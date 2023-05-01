@@ -152,10 +152,11 @@ const (
 	VIEW    = "view"
 	CHAT    = "chat"
 
-	CODE_VIMER  = "web.code.vimer"
+	WIKI_WORD   = "web.wiki.word"
+	WIKI_DRAW   = "web.wiki.draw"
 	CODE_INNER  = "web.code.inner"
+	CODE_VIMER  = "web.code.vimer"
 	CODE_XTERM  = "web.code.xterm"
 	CHAT_FAVOR  = "web.chat.favor"
 	CHAT_IFRAME = "web.chat.iframe"
-	WIKI_WORD   = "web.wiki.word"
 )

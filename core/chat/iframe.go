@@ -13,19 +13,29 @@ const IFRAME = "iframe"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		IFRAME: {Name: "iframe hash auto", Help: "浏览器", Actions: ice.MergeActions(ice.Actions{
+			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
+				switch mdb.HashInputs(m, arg); arg[0] {
+				case mdb.NAME:
+					m.Push(arg[0], web.UserWeb(m).Host)
+				case mdb.LINK:
+					m.Push(arg[0], m.Option(ice.MSG_USERWEB))
+					m.Copy(m.Cmd(web.SPIDE).CutTo("client.url", arg[0]))
+				}
+			}},
 			FAVOR_INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case mdb.TYPE:
 					m.Push(arg[0], web.LINK)
 				default:
-					if m.Option(mdb.TYPE) != web.LINK {
+					if m.Option(mdb.TYPE) != "" && m.Option(mdb.TYPE) != web.LINK {
 						return
 					}
 					switch arg[0] {
 					case mdb.NAME:
 						m.Push(arg[0], web.UserWeb(m).Host)
-					case mdb.TEXT:
+					case mdb.LINK:
 						m.Push(arg[0], m.Option(ice.MSG_USERWEB))
+						m.Copy(m.Cmd(web.SPIDE).CutTo("client.url", arg[0]))
 					}
 				}
 			}},

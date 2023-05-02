@@ -152,8 +152,10 @@ const (
 	VIEW    = "view"
 	CHAT    = "chat"
 
+	TEAM_PLAN   = "web.team.plan"
 	WIKI_WORD   = "web.wiki.word"
 	WIKI_DRAW   = "web.wiki.draw"
+	WIKI_FEEL   = "web.wiki.feel"
 	CODE_INNER  = "web.code.inner"
 	CODE_VIMER  = "web.code.vimer"
 	CODE_XTERM  = "web.code.xterm"

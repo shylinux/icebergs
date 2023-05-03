@@ -20,6 +20,7 @@ func RenderAction(arg ...ice.Any) ice.Actions {
 				HashSelect(m, arg...)
 				return
 			}
+			m.OptionDefault(ice.MSG_FIELDS, kit.Select("", arg, 2))
 			kit.For(kit.Split(arg[0]), func(k string) {
 				HashSelects(m.Spawn(), k).Table(func(value ice.Maps) {
 					m.Cmdy(kit.Keys(value[TEXT], value[NAME]), m.CommandKey(), k, arg[1], kit.Select("", arg, 2), kit.Slice(arg, 3))

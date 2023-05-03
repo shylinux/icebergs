@@ -257,7 +257,8 @@ func init() {
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == mdb.FOREACH && arg[1] == "" {
-					m.PushSearch(mdb.TYPE, LINK, mdb.NAME, ice.DEV, mdb.TEXT, mdb.HashSelectField(m, ice.COM, CLIENT_ORIGIN))
+					m.PushSearch(mdb.TYPE, LINK, mdb.NAME, ice.DEV, mdb.TEXT, mdb.HashSelectField(m, ice.DEV, CLIENT_ORIGIN))
+					m.PushSearch(mdb.TYPE, LINK, mdb.NAME, ice.COM, mdb.TEXT, mdb.HashSelectField(m, ice.COM, CLIENT_ORIGIN))
 					m.PushSearch(mdb.TYPE, LINK, mdb.NAME, ice.SHY, mdb.TEXT, mdb.HashSelectField(m, ice.SHY, CLIENT_ORIGIN))
 				}
 			}},

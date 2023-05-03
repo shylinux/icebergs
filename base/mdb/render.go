@@ -26,6 +26,7 @@ func RenderAction(arg ...ice.Any) ice.Actions {
 					m.Cmdy(kit.Keys(value[TEXT], value[NAME]), m.CommandKey(), k, arg[1], kit.Select("", arg, 2), kit.Slice(arg, 3))
 				})
 			})
+			m.Sort(m.OptionFields())
 		}},
 	}, ClearOnExitHashAction())
 }

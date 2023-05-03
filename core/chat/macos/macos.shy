@@ -1,0 +1,17 @@
+title "MacOS"
+chain `
+desktop
+	menu
+		notifications
+		searchs
+		session
+		desktop
+		window
+		layout
+	dock
+		Finder
+			Applications
+			Pictures
+		Safari
+		Terminal
+`

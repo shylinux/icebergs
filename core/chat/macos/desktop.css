@@ -7,9 +7,10 @@ fieldset.macos.desktop>div.output>fieldset.macos.searchs>form.option>div.item.ic
 fieldset.macos.desktop>div.output>fieldset.macos.searchs>form.option>div.item.keyword input { width:320px; background-color:transparent; border:#404141 solid 1px; }
 fieldset.macos.desktop>div.output>fieldset.macos.searchs>form.option>div.item.keyword:hover { background-color:transparent; }
 fieldset.macos.desktop>div.output>fieldset.macos.notifications { height:calc(100% - 25px); width:250px; overflow:auto; position:absolute; top:25px; right:0; }
+fieldset.macos.desktop>div.output>fieldset.macos.notifications>div.action>div.item input { background-color:transparent; }
 fieldset.macos.desktop>div.output>fieldset.macos.notifications>div.output>div.item { margin-top:10px; margin-right:10px; min-height:60px; clear:both; }
-fieldset.macos.desktop>div.output>fieldset.macos.notifications div.item div.title { padding-top:10px; height:24px; width:132px; overflow:hidden; }
-fieldset.macos.desktop>div.output>fieldset.macos.notifications div.item div.time { color:gray; font-size:12px; padding:5px; padding-top:10px; height:24px; width:48px; }
+fieldset.macos.desktop>div.output>fieldset.macos.notifications div.item div.title { margin-top:10px; width:132px; overflow:hidden; }
+fieldset.macos.desktop>div.output>fieldset.macos.notifications div.item div.time { color:gray; font-size:12px; margin-top:10px; width:48px; }
 fieldset.macos.desktop>div.output>fieldset.macos.notifications div.item div.content { width:180px; }
 fieldset.macos.desktop>div.output>fieldset.macos.dock { border:#ffffff3d solid 1px; border-radius:20px; position:absolute; bottom:10px; z-index:11; transition:margin-left 0.3s; }
 fieldset.macos.desktop>div.output>fieldset.macos.dock:hover { margin-left:-40px; transition:margin-left 0.3s; }
@@ -22,13 +23,21 @@ fieldset.macos.desktop>div.output>div.desktop>div.item>div.name { font-size:12px
 fieldset.macos.desktop>div.output>div.desktop>fieldset { border-radius:10px; position:absolute; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>div.item.button { border-radius:20px; height:20px; width:20px; scale:0.7; position:absolute; top:15px; right:10px; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>legend { background-color:unset; padding-right:10px; margin:10px 0; }
-fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>* { margin:10px 0px 10px 10px; }
+fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>*:not(.textarea) { margin:10px 0px 10px 10px; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>div.icon { margin-left:0; margin-top:12px; margin-bottom:8px; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>div.item.icons { margin-left:0; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>div.item:last-child { margin-right:20px; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>div.action>* { margin:10px 0px 10px 10px; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>div.action>div.item.icons>span.icon { margin-top:12px; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>div.action>div.item:last-child { margin-right:80px; }
+fieldset.macos.desktop>div.output>div.desktop>fieldset.web.code.xterm>div.status { display:none; }
+fieldset.macos.desktop>div.output>div.desktop>fieldset.web.code.vimer>div.status { display:none; }
+fieldset.macos.desktop>div.output>div.desktop>fieldset.web.wiki.feel>div.status { display:none; }
+fieldset.macos.desktop>div.output>div.desktop>fieldset.web.chat.iframe>div.status { display:none; }
+fieldset.macos.desktop>div.output>div.desktop>fieldset.web.chat.macos.finder>div.status { display:none; }
+fieldset.macos.desktop>div.output>div.desktop>fieldset.web.code.compile>form.option>div.item:last-child { margin-right:80px; }
+fieldset.macos.desktop>div.output>div.desktop>fieldset>div.output>fieldset>form.option>div.item { margin-right:0px; }
+fieldset.macos.desktop>div.output>div.desktop>fieldset>div.output>fieldset>div.action>div.item { margin-right:0px; }
 fieldset.macos.menu>div.output>div.item { padding:0 5px; float:right; cursor:pointer; }
 fieldset.macos.menu>div.output>div.menu { float:left; padding:0 20px; cursor:pointer; }
 fieldset.macos.menu>div.output>div.tabs { float:left; }

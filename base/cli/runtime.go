@@ -41,11 +41,13 @@ func _runtime_init(m *ice.Message) {
 	ice.Info.Username = m.Conf(RUNTIME, kit.Keys(BOOT, USERNAME))
 	aaa.UserRoot(ice.Pulse, "", ice.Info.Username, aaa.ROOT, ice.OPS)
 	aaa.UserRoot(ice.Pulse, "", ice.Info.Make.Username, aaa.TECH, ice.DEV)
-	msg := m.Cmd(nfs.DIR, _system_find(m, os.Args[0]), "time,path,size,hash")
-	m.Conf(RUNTIME, kit.Keys(BOOT, mdb.TIME), msg.Append(mdb.TIME))
-	m.Conf(RUNTIME, kit.Keys(BOOT, mdb.HASH), msg.Append(mdb.HASH))
-	m.Conf(RUNTIME, kit.Keys(BOOT, nfs.SIZE), msg.Append(nfs.SIZE))
-	m.Conf(RUNTIME, kit.Keys(BOOT, ice.BIN), msg.Append(nfs.PATH))
+	if runtime.GOARCH != MIPSLE {
+		msg := m.Cmd(nfs.DIR, _system_find(m, os.Args[0]), "time,path,size,hash")
+		m.Conf(RUNTIME, kit.Keys(BOOT, mdb.TIME), msg.Append(mdb.TIME))
+		m.Conf(RUNTIME, kit.Keys(BOOT, mdb.HASH), msg.Append(mdb.HASH))
+		m.Conf(RUNTIME, kit.Keys(BOOT, nfs.SIZE), msg.Append(nfs.SIZE))
+		m.Conf(RUNTIME, kit.Keys(BOOT, ice.BIN), msg.Append(nfs.PATH))
+	}
 	m.Conf(RUNTIME, kit.Keys(BOOT, mdb.COUNT), count+1)
 	m.Conf(RUNTIME, mdb.META, "")
 	m.Conf(RUNTIME, mdb.HASH, "")

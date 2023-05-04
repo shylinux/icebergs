@@ -17,11 +17,15 @@ func init() {
 					DockAppend(m, "Finder", m.PrefixKey())
 					DockAppend(m, "Safari", web.CHAT_IFRAME)
 					DockAppend(m, "Terminal", web.CODE_XTERM)
+					DockAppend(m, "", web.CODE_GIT_STATUS, mdb.ICON, "usr/icons/git.jpg")
+					DockAppend(m, "", web.CODE_COMPILE, mdb.ICON, "usr/icons/go.png")
 					DockAppend(m, "", web.CODE_VIMER)
 				}
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				mdb.IsSearchForEach(m, arg, func() []string { return []string{web.LINK, DESKTOP, m.MergePodCmd("", DESKTOP, log.DEBUG, ice.TRUE)} })
+				mdb.IsSearchForEach(m, arg, func() []string {
+					return []string{web.LINK, DESKTOP, m.MergePodCmd("", DESKTOP, log.DEBUG, ice.TRUE)}
+				})
 			}},
 		}, CmdHashAction(mdb.NAME))},
 	})

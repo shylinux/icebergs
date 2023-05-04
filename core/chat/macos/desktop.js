@@ -1,17 +1,15 @@
 Volcanos(chat.ONIMPORT, {
 	_init: function(can, msg, cb) { if (can.isCmdMode()) { can.onappend.style(can, html.OUTPUT), can.ConfHeight(can.page.height()) } can.onimport.layout(can)
-		can.ui = {}, can.base.isFunc(cb) && cb(msg), can.onmotion.clear(can), can.onlayout.background(can, can.user.info.background, can._fields)
+		can.ui = {}, can.base.isFunc(cb) && cb(msg), can.onmotion.clear(can), can.onlayout.background(can, can.user.info.background||"/require/usr/icons/background.jpg", can._fields)
 		can.onimport._menu(can), can.onimport._dock(can), can.onimport._searchs(can), can.onimport._notifications(can)
 	},
 	_menu: function(can) { can.onappend.plugin(can, {index: "web.chat.macos.menu", style: html.OUTPUT}, function(sub) { can.ui.menu = sub
 		sub.onexport.record = function(_, value, key, item) { delete(can.onfigure._path)
 			switch (value) {
-				case "create":
-					can.onaction.create(event, can)
-					break
+				case "create": can.onaction.create(event, can); break
 				case "desktop": var carte = can.user.carte(event, can, {}, can.core.Item(can.onfigure), function(event, button, meta, carte) { can.onfigure[button](event, can, carte) }); break
 				case "searchs": can.onmotion.toggle(can, can.ui.searchs._target); break
-				case "notifications": can.onmotion.toggle(can, can.ui.notifications._target); break
+				case "notifications": can.ui.notifications._output.innerHTML && can.onmotion.toggle(can, can.ui.notifications._target); break
 			}
 		}
 		sub.onexport.output = function() { can.onimport._desktop(can, can._msg) }
@@ -44,7 +42,9 @@ Volcanos(chat.ONIMPORT, {
 		target._tabs = can.onimport.tabs(can, [{name: "Desktop"+(can.page.Select(can, can._output, html.DIV_DESKTOP).length-1)}], function() { can.onmotion.select(can, can._output, "div.desktop", target), can.ui.desktop = target }, function() { can.page.Remove(can, target) }, can.ui.menu._output), target._tabs._desktop = target
 		target.ondragend = function() { can.onimport._item(can, window._drag_item) }
 	},
-	_window: function(can, item) { item.height = can.base.Min(can.ConfHeight()-400, 320, 800), item.width = can.base.Min(can.ConfWidth()-400, 480, 1000)
+	_window: function(can, item) {
+		item.top = 125, item.height = can.base.Min(can.ConfHeight()-400, 480, 800), item.width = can.base.Min(can.ConfWidth()-400, 640, 1000)
+		if (can.ConfHeight() < 800) { item.top = 25, item.height = can.ConfHeight()-165 }
 		can.onappend.plugin(can, item, function(sub) { can.ondetail.select(can, sub._target)
 			var index = 0; can.core.Item({
 				"#f95f57": function(event) { sub.onaction.close(event, sub) },
@@ -55,7 +55,8 @@ Volcanos(chat.ONIMPORT, {
 				},
 				"#32c840": function(event) { sub.onaction.full(event, sub) },
 			}, function(color, cb) { can.page.insertBefore(can, [{view: [[html.ITEM, html.BUTTON]], style: {"background-color": color, right: 10+20*index++}, onclick: cb}], sub._output) })
-			sub.onimport.size(sub, item.height, item.width, true), can.onmotion.move(can, sub._target, {"z-index": 10, top: 125, left: 100})
+			sub.onimport.size(sub, item.height, item.width, true), can.onmotion.move(can, sub._target, {"z-index": 10, top: item.top, left: 100})
+			sub.onimport._open = function(sub, msg, arg) { can.onimport._window(can, {index: "web.chat.iframe", args: [arg]}) }
 			sub.onmotion.resize(can, sub._target, function(height, width) { sub.onimport.size(sub, height, width) }, 25)
 			sub.onexport.record = function(sub, value, key, item) { can.onimport._window(can, item) }
 			sub.onexport.actionHeight = function(sub) { return can.page.ClassList.has(can, sub._target, html.OUTPUT)? 0: html.ACTION_HEIGHT+20 },

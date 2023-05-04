@@ -111,7 +111,7 @@ func init() {
 				web.ProcessPodCmd(m, "", "", m.OptionSimple(mdb.HASH), ctx.STYLE, web.OUTPUT)
 			}},
 			web.DREAM_CREATE: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd("", mdb.CREATE, mdb.TYPE, BASH, m.OptionSimple(mdb.NAME), nfs.PATH, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME)))
+				m.Cmd("", mdb.CREATE, mdb.TYPE, BASH, m.OptionSimple(mdb.NAME), nfs.PATH, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME))+nfs.PS)
 			}},
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				kit.Switch(m.Option(mdb.TYPE), kit.Simple(web.SERVER, web.WORKER), func() { m.PushButton(kit.Dict(m.CommandKey(), "命令")) })

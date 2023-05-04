@@ -76,7 +76,7 @@ func _autogen_gits(m *ice.Message, arg ...string) string {
 func _autogen_git(m *ice.Message, arg ...string) ice.Map {
 	msg := m.Cmd("web.code.git.repos", "remote")
 	return kit.Dict(arg,
-		mdb.TIME, m.Time(), nfs.PATH, kit.Path(""), web.DOMAIN, tcp.PublishLocalhost(m, m.Option(ice.MSG_USERWEB)),
+		mdb.TIME, m.Time(), nfs.PATH, kit.Path("")+nfs.PS, web.DOMAIN, tcp.PublishLocalhost(m, m.Option(ice.MSG_USERWEB)),
 		mdb.HASH, msg.Append(mdb.HASH), nfs.REMOTE, msg.Append(nfs.REMOTE), nfs.BRANCH, msg.Append(nfs.BRANCH), nfs.VERSION, msg.Append(nfs.VERSION),
 		aaa.EMAIL, msg.Append(aaa.EMAIL), aaa.USERNAME, msg.Append(aaa.USERNAME),
 	)

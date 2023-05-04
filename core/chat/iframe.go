@@ -60,6 +60,9 @@ func init() {
 				mdb.HashCreate(m, mdb.TYPE, web.LINK, mdb.NAME, kit.ParseURL(m.Option(web.LINK)).Host, m.OptionSimple())
 			}},
 			web.OPEN: {Hand: func(m *ice.Message, arg ...string) { ctx.ProcessOpen(m, m.Option(web.LINK)) }},
+			web.DREAM_CREATE: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd("", mdb.CREATE, kit.Dict(web.LINK, m.MergePod(m.Option(mdb.NAME))))
+			}},
 		}, mdb.HashAction(mdb.SHORT, web.LINK, mdb.FIELD, "time,hash,type,name,link"), FavorAction()), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) == 0 {
 				m.PushAction(web.OPEN, mdb.REMOVE).Action(mdb.CREATE, mdb.PRUNES)

@@ -1,6 +1,8 @@
 package macos
 
 import (
+	"strings"
+
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
@@ -21,7 +23,7 @@ func init() { chat.Index.Register(Index, nil, DESKTOP) }
 func Prefix(arg ...string) string { return chat.Prefix(MACOS, kit.Keys(arg)) }
 
 func CmdHashAction(arg ...string) ice.Actions {
-	file := kit.PathJoin("/require/", kit.FileLines(2))
+	file := kit.FileLine(2, 100)
 	return ice.MergeActions(ice.Actions{
 		mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 			switch mdb.HashInputs(m, arg); arg[0] {
@@ -31,6 +33,8 @@ func CmdHashAction(arg ...string) ice.Actions {
 				m.Cmd(nfs.DIR, USR_ICONS, func(value ice.Maps) { m.Push(arg[0], value[nfs.PATH]) })
 			}
 		}},
-		mdb.SELECT: {Name: "list hash auto create", Hand: func(m *ice.Message, arg ...string) { mdb.HashSelect(m, arg...).Sort(mdb.NAME).Display(file) }},
+		mdb.SELECT: {Name: "list hash auto create", Hand: func(m *ice.Message, arg ...string) {
+			mdb.HashSelect(m, arg...).Sort(mdb.NAME).Display(kit.PathJoin("/require/", strings.TrimPrefix(file, ice.Info.Make.Path)))
+		}},
 	}, ctx.CmdAction(), mdb.HashAction(mdb.SHORT, kit.Select("", arg, 0), mdb.FIELD, kit.Select("time,hash,name,icon,text,index,args", arg, 1), kit.Slice(arg, 2)))
 }

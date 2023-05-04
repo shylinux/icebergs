@@ -130,7 +130,7 @@ func RenderCmds(m *ice.Message, list ...ice.Any) {
 func RenderPodCmd(m *ice.Message, pod, cmd string, arg ...ice.Any) {
 	msg := m.Cmd(Space(m, pod), ctx.COMMAND, kit.Select("web.wiki.word", cmd))
 	RenderCmds(m, kit.Dict(msg.AppendSimple(mdb.NAME, mdb.HELP),
-		ctx.INDEX, cmd, ctx.ARGS, kit.Simple(arg), ctx.DISPLAY, m.Option(ice.MSG_DISPLAY),
+		ctx.INDEX, msg.Append(ctx.INDEX), ctx.ARGS, kit.Simple(arg), ctx.DISPLAY, m.Option(ice.MSG_DISPLAY),
 		mdb.LIST, kit.UnMarshal(msg.Append(mdb.LIST)), mdb.META, kit.UnMarshal(msg.Append(mdb.META)),
 	))
 }
@@ -152,13 +152,15 @@ const (
 	VIEW    = "view"
 	CHAT    = "chat"
 
-	TEAM_PLAN   = "web.team.plan"
-	WIKI_WORD   = "web.wiki.word"
-	WIKI_DRAW   = "web.wiki.draw"
-	WIKI_FEEL   = "web.wiki.feel"
-	CODE_INNER  = "web.code.inner"
-	CODE_VIMER  = "web.code.vimer"
-	CODE_XTERM  = "web.code.xterm"
-	CHAT_FAVOR  = "web.chat.favor"
-	CHAT_IFRAME = "web.chat.iframe"
+	TEAM_PLAN       = "web.team.plan"
+	WIKI_WORD       = "web.wiki.word"
+	WIKI_DRAW       = "web.wiki.draw"
+	WIKI_FEEL       = "web.wiki.feel"
+	CODE_INNER      = "web.code.inner"
+	CODE_VIMER      = "web.code.vimer"
+	CODE_XTERM      = "web.code.xterm"
+	CODE_COMPILE    = "web.code.compile"
+	CODE_GIT_STATUS = "web.code.git.status"
+	CHAT_FAVOR      = "web.chat.favor"
+	CHAT_IFRAME     = "web.chat.iframe"
 )

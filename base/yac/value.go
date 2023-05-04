@@ -295,15 +295,16 @@ func init() {
 				kit.If(v.tags[mdb.DATA] != "", func() { kit.Value(config.Value, kit.Keym(v.name), v.tags[mdb.DATA]) })
 			}
 		})
+		kit.If(strings.HasPrefix(command.Name, "list"), func() {
+			command.Name = strings.Replace(command.Name, "list", kit.Select("", kit.Split(key, nfs.PT), -1), 1)
+		})
 		last, list := ice.Index, kit.Split(key, nfs.PT)
 		for i := 1; i < len(list); i++ {
 			has := false
-			m.Debug("what %v", list[:i])
 			if ice.Pulse.Search(strings.Join(list[:i], nfs.PT)+nfs.PT, func(p *ice.Context, s *ice.Context) { has, last = true, s }); !has {
 				last = last.Register(&ice.Context{Name: list[i-1], Caches: ice.Caches{ice.CTX_FOLLOW: &ice.Cache{Value: kit.Keys(list[:i])}}}, &web.Frame{})
 			}
 			if i == len(list)-1 {
-				m.Debug("what %v", last.Cap(ice.CTX_FOLLOW))
 				last.Merge(&ice.Context{Commands: ice.Commands{list[i]: command}, Configs: ice.Configs{list[i]: config}})
 			}
 		}

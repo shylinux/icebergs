@@ -9,6 +9,7 @@ import (
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/log"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/tcp"
 	kit "shylinux.com/x/toolkits"
@@ -37,6 +38,9 @@ func AgentIs(m Message, arg ...string) bool {
 	return false
 }
 func MergeURL2(m Message, url string, arg ...ice.Any) string {
+	if m.Option(log.DEBUG) == ice.TRUE {
+		arg = append([]ice.Any{log.DEBUG, ice.TRUE}, arg)
+	}
 	if m.Option(ice.MSG_USERWEB) == "" {
 		return kit.MergeURL2(Domain(ice.Pulse.Cmdv(tcp.HOST, aaa.IP), ice.Pulse.Cmdv(SERVE, tcp.PORT)), url, arg...)
 	}

@@ -167,7 +167,7 @@ func init() {
 				aaa.Black(m, ice.USR_LOCAL)
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				if arg[0] == mdb.FOREACH && arg[1] == "" && m.Cmdx("host", "islocal", m.Option(ice.MSG_USERIP)) == ice.OK {
+				if mdb.IsSearchForEach(m, arg, nil) && m.Cmdx("host", "islocal", m.Option(ice.MSG_USERIP)) == ice.OK {
 					return
 					kit.For([]string{"Desktop", "Documents", "Downloads", "Pictures"}, func(p string) {
 						p = kit.HomePath(p)

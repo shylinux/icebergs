@@ -9,7 +9,6 @@ import (
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/lex"
-	"shylinux.com/x/icebergs/base/log"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/ssh"
@@ -71,9 +70,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		XTERM: {Name: "xterm hash auto", Help: "命令行", Actions: ice.MergeActions(ice.Actions{
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				if arg[0] == mdb.FOREACH && arg[1] == "" {
-					m.PushSearch(mdb.TYPE, web.LINK, mdb.NAME, m.CommandKey(), mdb.TEXT, m.MergePodCmd("", "", log.DEBUG, ice.TRUE))
-				}
+				mdb.IsSearchForEach(m, arg, func() []string { return []string{web.LINK, m.CommandKey(), m.MergePodCmd("", "")} })
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch mdb.HashInputs(m, arg); arg[0] {
@@ -121,7 +118,11 @@ func init() {
 			}},
 		}, ctx.CmdAction(), ctx.ProcessAction(), web.DreamAction(), mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,path,theme,daemon")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) == 0 {
-				m.PushAction(web.OUTPUT, mdb.REMOVE).Action(mdb.CREATE, mdb.PRUNES)
+				if m.Length() == 0 {
+					m.Action(mdb.CREATE)
+				} else {
+					m.PushAction(web.OUTPUT, mdb.REMOVE).Action(mdb.CREATE, mdb.PRUNES)
+				}
 			} else {
 				if m.Length() == 0 {
 					arg[0] = m.Cmdx("", mdb.CREATE, mdb.TYPE, arg)

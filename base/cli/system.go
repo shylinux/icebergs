@@ -158,7 +158,7 @@ func init() {
 		SYSTEM: {Name: "system cmd", Help: "系统命令", Actions: ice.MergeActions(ice.Actions{
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if runtime.GOOS == DARWIN && tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) {
-					if arg[0] == mdb.FOREACH && arg[1] == "" {
+					if mdb.IsSearchForEach(m, arg, nil) {
 						return
 						list := map[string]bool{"Terminal.app": true, "Docker.app": true, "Google Chrome.app": true}
 						for _, p := range strings.Split(m.Cmdx("", nfs.SH, "-c", `ps aux|grep /Applications/|grep -v Cache|grep -v Helper|grep -v Widget|grep -v Extension|grep -v Chrome|grep -v com.app|grep -v grep|grep -o "[^/]*.app"|sort|uniq`), lex.NL) {

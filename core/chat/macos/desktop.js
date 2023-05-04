@@ -18,6 +18,7 @@ Volcanos(chat.ONIMPORT, {
 		can.page.style(can, sub._target, html.LEFT, can.ConfWidth()/4, html.TOP, can.ConfHeight()/4), sub.onimport.size(sub, can.ConfHeight()/2, can.ConfWidth()/2, true)
 		sub.onexport.record = function(sub, value, key, item) {
 			if (item.cmd == ctx.COMMAND) { can.onimport._window(can, {index: can.core.Keys(item.type, item.name.split(lex.SP)[0])}) }
+			if (item.type == nfs.FILE) { can.onimport._window(can, {index: web.CODE_VIMER, args: can.misc.SplitPath(can, item.text) }) }
 		}
 	}) },
 	_notifications: function(can) { can.onappend.plugin(can, {index: "web.chat.macos.notifications", style: html.OUTPUT}, function(sub) { can.ui.notifications = sub
@@ -30,14 +31,12 @@ Volcanos(chat.ONIMPORT, {
 	_item: function(can, item) { can.runAction(can.request(event, item), mdb.CREATE, [], function() { can.run(event, [], function(msg) {
 		can.page.SelectChild(can, can.ui.desktop, html.DIV_ITEM, function(target) { can.page.Remove(can, target) }), can.onimport.__item(can, msg, can.ui.desktop)
 	}) }) },
-	__item: function(can, msg, target) { msg = msg||can._msg, msg.Table(function(item, index) {
-		can.page.Append(can, target, [{view: html.ITEM, list: [{view: html.ICON, list: [{img: can.misc.PathJoin(item.icon)}]}, {view: [mdb.NAME, "", item.name]}],
-			onclick: function(event) { can.onimport._window(can, item) }, style: can.onexport.position(can, index),
-			oncontextmenu: function(event) { var carte = can.user.carteRight(event, can, {
-				remove: function() { can.runAction(event, mdb.REMOVE, [item.hash]) },
-			}); can.page.style(can, carte._target, html.TOP, event.y) },
-		}])
-	}) },
+	__item: function(can, msg, target) { var index = 0; can.onimport.icon(can, msg = msg||can._msg, target, function(target, item) { can.page.Modify(can, target, {
+		onclick: function(event) { can.onimport._window(can, item) }, style: can.onexport.position(can, index++),
+		oncontextmenu: function(event) { var carte = can.user.carteRight(event, can, {
+			remove: function() { can.runAction(event, mdb.REMOVE, [item.hash]) },
+		}); can.page.style(can, carte._target, html.TOP, event.y) },
+	}) }) },
 	_desktop: function(can, msg) { var target = can.page.Append(can, can._output, [{view: html.DESKTOP}])._target; can.onimport.__item(can, msg, target), can.ui.desktop = target
 		target._tabs = can.onimport.tabs(can, [{name: "Desktop"+(can.page.Select(can, can._output, html.DIV_DESKTOP).length-1)}], function() { can.onmotion.select(can, can._output, "div.desktop", target), can.ui.desktop = target }, function() { can.page.Remove(can, target) }, can.ui.menu._output), target._tabs._desktop = target
 		target.ondragend = function() { can.onimport._item(can, window._drag_item) }
@@ -63,6 +62,8 @@ Volcanos(chat.ONIMPORT, {
 			sub.onexport.marginTop = function() { return 25 }
 			sub.onappend.desktop = function(item) { can.onimport._item(can, item) }
 			sub.onappend.dock = function(item) { can.ui.dock.runAction(can.request(event, item), mdb.CREATE, [], function() { can.ui.dock.Update() }) }
+			sub.onexport.output = function() { if (item.index == "web.chat.macos.opens") { can.page.Remove(can, sub._target) } }
+			
 		}, can.ui.desktop)
 	},
 	session: function(can, list) { can.page.Select(can, can._output, html.DIV_DESKTOP, function(target) { can.page.Remove(can, target) }), can.onmotion.clear(can, can._action)

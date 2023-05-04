@@ -161,6 +161,7 @@ const (
 	CODE_XTERM      = "web.code.xterm"
 	CODE_COMPILE    = "web.code.compile"
 	CODE_GIT_STATUS = "web.code.git.status"
+	CODE_GIT_REPOS  = "web.code.git.repos"
 	CHAT_FAVOR      = "web.chat.favor"
 	CHAT_IFRAME     = "web.chat.iframe"
 )

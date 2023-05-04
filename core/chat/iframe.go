@@ -65,7 +65,11 @@ func init() {
 			}},
 		}, mdb.HashAction(mdb.SHORT, web.LINK, mdb.FIELD, "time,hash,type,name,link"), FavorAction()), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) == 0 {
-				m.PushAction(web.OPEN, mdb.REMOVE).Action(mdb.CREATE, mdb.PRUNES)
+				if m.Length() == 0 {
+					m.Action(mdb.CREATE)
+				} else {
+					m.PushAction(web.OPEN, mdb.REMOVE).Action(mdb.CREATE, mdb.PRUNES)
+				}
 			} else {
 				if m.Length() == 0 {
 					m.Append(web.LINK, arg[0])

@@ -46,6 +46,7 @@ func (m *Message) OptionCB(key string, cb ...Any) Any {
 func (m *Message) MergePod(pod string, arg ...Any) string {
 	ls := []string{"chat"}
 	kit.If(kit.Keys(m.Option(MSG_USERPOD), pod), func(p string) { ls = append(ls, POD, p) })
+	kit.If(m.Option(DEBUG) == TRUE, func() { arg = append([]Any{DEBUG, TRUE}, arg...) })
 	return kit.MergeURL2(strings.Split(kit.Select(Info.Domain, m.Option(MSG_USERWEB)), QS)[0], PS+kit.Join(ls, PS), arg...)
 }
 func (m *Message) MergePodCmd(pod, cmd string, arg ...Any) string {
@@ -56,6 +57,7 @@ func (m *Message) MergePodCmd(pod, cmd string, arg ...Any) string {
 		cmd = kit.Select(m.PrefixKey(), m.CommandKey(), ok)
 	}
 	ls = append(ls, CMD, cmd)
+	kit.If(m.Option(DEBUG) == TRUE, func() { arg = append([]Any{DEBUG, TRUE}, arg...) })
 	return kit.MergeURL2(strings.Split(kit.Select(Info.Domain, m.Option(MSG_USERWEB)), QS)[0], PS+kit.Join(ls, PS), arg...)
 }
 func (m *Message) FieldsIsDetail() bool {

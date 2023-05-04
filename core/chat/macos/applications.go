@@ -2,6 +2,7 @@ package macos
 
 import (
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -17,16 +18,34 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		APPLICATIONS: {Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				Notify(m, "runtime", "系统启动成功", ctx.INDEX, "cli.runtime")
+				Notify(m, cli.RUNTIME, "系统启动成功", ctx.INDEX, cli.RUNTIME)
 				FinderAppend(m, "Applications", m.PrefixKey())
-				FinderAppend(m, "Pictures", web.WIKI_FEEL)
-				AppInstall(m, "Finder", "nfs.dir")
+				AppInstall(m, "Finder", nfs.DIR)
 				AppInstall(m, "Safari", web.CHAT_IFRAME)
 				AppInstall(m, "Calendar", web.TEAM_PLAN, ctx.ARGS, team.MONTH)
 				AppInstall(m, "Terminal", web.CODE_XTERM)
 				AppInstall(m, "Grapher", web.WIKI_DRAW)
 				AppInstall(m, "Photos", web.WIKI_FEEL)
 				AppInstall(m, "Books", web.WIKI_WORD)
+				AppInstall(m, "", web.CODE_VIMER)
+				AppInstall(m, "", web.CHAT_FAVOR)
+				AppInstall(m, "", web.DREAM)
+				if m.Cmd(DESKTOP).Length() == 0 {
+					DeskAppend(m, "Books", web.WIKI_WORD)
+					DeskAppend(m, "Photos", web.WIKI_FEEL)
+					DeskAppend(m, "Grapher", web.WIKI_DRAW)
+					DeskAppend(m, "Calendar", web.TEAM_PLAN, ctx.ARGS, team.MONTH)
+					DeskAppend(m, "", web.CHAT_FAVOR)
+				}
+				if m.Cmd(DOCK).Length() == 0 {
+					DockAppend(m, "Finder", Prefix(FINDER))
+					DockAppend(m, "Safari", web.CHAT_IFRAME)
+					DockAppend(m, "Terminal", web.CODE_XTERM)
+					DockAppend(m, "", web.CODE_GIT_REPOS, mdb.ICON, "usr/icons/git.jpg")
+					DockAppend(m, "", web.CODE_COMPILE, mdb.ICON, "usr/icons/go.png")
+					DockAppend(m, "", web.CODE_VIMER)
+					DockAppend(m, "", web.DREAM)
+				}
 			}},
 			code.INSTALL: {Hand: func(m *ice.Message, arg ...string) { AppInstall(m, arg[0], arg[1], arg[2:]...) }},
 		}, CmdHashAction("index,args"))},

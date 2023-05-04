@@ -7,6 +7,7 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/ssh"
+	"shylinux.com/x/icebergs/base/web"
 	"shylinux.com/x/icebergs/core/code"
 	"shylinux.com/x/icebergs/misc/git"
 	kit "shylinux.com/x/toolkits"
@@ -32,6 +33,9 @@ func init() {
 				WordAlias(m, LABEL, CHART, LABEL)
 				WordAlias(m, CHAIN, CHART, CHAIN)
 				WordAlias(m, SEQUENCE, CHART, SEQUENCE)
+			}},
+			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
+				mdb.IsSearchForEach(m, arg, func() []string { return []string{web.LINK, m.CommandKey(), m.MergePodCmd("", "")} })
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(git.REPOS, ice.OptionFields(nfs.PATH)).Table(func(value ice.Maps) {

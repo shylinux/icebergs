@@ -6,7 +6,8 @@ fieldset.macos.desktop>div.output>fieldset.macos.searchs { position:absolute; }
 fieldset.macos.desktop>div.output>fieldset.macos.searchs>form.option>div.item.icon.delete { display:none; }
 fieldset.macos.desktop>div.output>fieldset.macos.searchs>form.option>div.item.keyword input { width:320px; background-color:transparent; border:#404141 solid 1px; }
 fieldset.macos.desktop>div.output>fieldset.macos.searchs>form.option>div.item.keyword:hover { background-color:transparent; }
-fieldset.macos.desktop>div.output>fieldset.macos.notifications { height:calc(100% - 25px); width:250px; overflow:auto; position:absolute; top:25px; right:0; }
+fieldset.macos.desktop>div.output>fieldset.macos.notifications { border-radius:0; height:calc(100% - 25px); width:250px; overflow:auto; position:absolute; top:25px; right:0; }
+fieldset.macos.desktop>div.output>fieldset.macos.notifications>div.action>div.item { margin-top:10px; }
 fieldset.macos.desktop>div.output>fieldset.macos.notifications>div.action>div.item input { background-color:transparent; }
 fieldset.macos.desktop>div.output>fieldset.macos.notifications>div.output>div.item { margin-top:10px; margin-right:10px; min-height:60px; clear:both; }
 fieldset.macos.desktop>div.output>fieldset.macos.notifications div.item div.title { margin-top:10px; width:132px; overflow:hidden; }
@@ -30,7 +31,9 @@ fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>div.item:last
 fieldset.macos.desktop>div.output>div.desktop>fieldset>div.action>* { margin:10px 0px 10px 10px; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>div.action>div.item.icons>span.icon { margin-top:12px; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>div.action>div.item:last-child { margin-right:80px; }
+fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>div.item:last-child { margin-right:80px; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset.web.code.xterm>div.status { display:none; }
+fieldset.macos.desktop>div.output>div.desktop>fieldset.web.code.xterm>div.action>div.tabs:only-child { display:none; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset.web.code.vimer>div.status { display:none; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset.web.wiki.feel>div.status { display:none; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset.web.chat.iframe>div.status { display:none; }
@@ -46,6 +49,7 @@ fieldset.macos.dock>div.output { height:80px; overflow:visible; display:flex; }
 fieldset.macos.dock>div.output>div.space { background-color:#ececec36; margin:10px; height:calc(100% - 20px); width:2px; }
 fieldset.macos.dock>div.output>div.item { text-align:center; align-self:baseline; transition:margin-top 0.3s; }
 fieldset.macos.dock>div.output>div.item:hover { background-color:unset; margin-top:-80px; transition:margin-top 0.3s; }
+fieldset.macos.dock>div.output>div.item>div.name { display:none; }
 fieldset.macos.dock>div.output>div.item img { border-radius:80px; width:80px; transition:width 0.3s; }
 fieldset.macos.dock>div.output>div.item img:hover { width:160px; transition:width 0.3s; }
 fieldset.macos.finder>div.output>div.project>div.item input { width:100%; }

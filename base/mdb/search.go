@@ -18,8 +18,10 @@ func init() {
 }
 func IsSearchForEach(m *ice.Message, arg []string, cb func() []string) bool {
 	if arg[0] == FOREACH && arg[1] == "" {
-		args := cb()
-		m.PushSearch(TYPE, kit.Select("", args, 0), NAME, kit.Select("", args, 1), TEXT, kit.Select("", args, 2))
+		if cb != nil {
+			args := cb()
+			m.PushSearch(TYPE, kit.Select("", args, 0), NAME, kit.Select("", args, 1), TEXT, kit.Select("", args, 2))
+		}
 		return true
 	}
 	return false

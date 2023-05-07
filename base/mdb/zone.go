@@ -2,6 +2,7 @@ package mdb
 
 import (
 	"encoding/csv"
+	"os"
 	"path"
 
 	ice "shylinux.com/x/icebergs"
@@ -84,13 +85,19 @@ func _zone_export(m *ice.Message, prefix, chain, file string) {
 			})
 		})
 	}
+	if count == 0 {
+		os.Remove(p)
+		return
+	}
 	m.Logs(EXPORT, KEY, path.Join(prefix, chain), FILE, p, COUNT, count)
 	m.Conf(prefix, kit.Keys(chain, HASH), "")
 }
 func _zone_import(m *ice.Message, prefix, chain, file string) {
 	defer Lock(m, prefix, chain)()
 	f, e := miss.OpenFile(kit.Keys(file, CSV))
-	m.Assert(e)
+	if m.Warn(e) {
+		return
+	}
 	defer f.Close()
 	r := csv.NewReader(f)
 	head, _ := r.Read()

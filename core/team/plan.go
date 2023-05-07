@@ -74,7 +74,10 @@ func init() {
 					m.Cmdy(arg)
 				}
 			}},
-		}, TASK, ctx.CmdAction(), aaa.RoleAction(ctx.COMMAND)), Hand: func(m *ice.Message, arg ...string) {
+			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
+				kit.Switch(m.Option(mdb.TYPE), kit.Simple(web.SERVER, web.WORKER), func() { m.PushButton(kit.Dict(m.CommandKey(), "计划")) })
+			}},
+		}, TASK, web.DreamAction(), ctx.CmdAction(), aaa.RoleAction(ctx.COMMAND)), Hand: func(m *ice.Message, arg ...string) {
 			begin_time, end_time := _plan_scope(m, kit.Slice(arg, 0, 2)...)
 			_plan_list(m, begin_time.Format(ice.MOD_TIME), end_time.Format(ice.MOD_TIME))
 			web.PushPodCmd(m, "", arg...)

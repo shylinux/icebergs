@@ -161,7 +161,7 @@ func _repos_status(m *ice.Message, p string, repos *git.Repository) error {
 	for k, v := range status {
 		if kit.IsIn(k, ice.SRC_VERSION_GO, ice.SRC_BINPACK_GO, ice.ETC_LOCAL_SHY) {
 			continue
-		} else if kit.IsIn(kit.Ext(k), "swp", "swo") || kit.IsIn(kit.Split(k, nfs.PS)[0], ice.BIN, ice.VAR, ice.USR) {
+		} else if kit.IsIn(kit.Ext(k), "swp", "swo") || kit.IsIn(kit.Split(k, nfs.PS)[0], ice.BIN, ice.VAR, ice.USR) && !strings.HasPrefix(k, ice.USR_LOCAL_EXPORT) {
 			continue
 		}
 		if m.Push(REPOS, p).Push(STATUS, string(v.Worktree)+string(v.Staging)).Push(nfs.FILE, k); m.Option(ice.MSG_MODE) == mdb.ZONE {
@@ -176,6 +176,29 @@ func _repos_status(m *ice.Message, p string, repos *git.Repository) error {
 		default:
 			m.PushButton(COMMIT)
 		}
+	}
+	if p == path.Base(kit.Path("")) {
+		var tree *object.Tree
+		if refer, err := repos.Head(); err == nil {
+			if commit, err := repos.CommitObject(refer.Hash()); err == nil {
+				tree, err = commit.Tree()
+			}
+		}
+		m.Cmd(nfs.DIR, ice.USR_LOCAL_EXPORT, kit.Dict(nfs.DIR_DEEP, ice.TRUE, nfs.DIR_TYPE, nfs.TYPE_CAT), func(value ice.Maps) {
+			if _, ok := status[value[nfs.PATH]]; ok {
+				return
+			} else if tree != nil {
+				if file, err := tree.File(value[nfs.PATH]); err == nil {
+					if content, err := file.Contents(); err == nil && strings.TrimSpace(content) == strings.TrimSpace(m.Cmdx(nfs.CAT, value[nfs.PATH])) {
+						return
+					} else {
+						m.Push(REPOS, p).Push(STATUS, "M").Push(nfs.FILE, value[nfs.PATH]).PushButton(ADD)
+						return
+					}
+				}
+			}
+			m.Push(REPOS, p).Push(STATUS, "??").Push(nfs.FILE, value[nfs.PATH]).PushButton(ADD)
+		})
 	}
 	return nil
 }
@@ -444,6 +467,7 @@ func init() {
 							if commit, err := repos.CommitObject(refer.Hash()); err == nil {
 								_last := commit.Author.When.Format(ice.MOD_TIME)
 								kit.If(_last > last, func() { last = _last })
+
 							}
 						}
 						if _remote, err := repos.Remote(ORIGIN); err == nil && (remote == "" || remote == path.Base(kit.Path(""))) {

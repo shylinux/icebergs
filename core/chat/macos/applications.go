@@ -30,22 +30,6 @@ func init() {
 				AppInstall(m, "", web.CODE_VIMER)
 				AppInstall(m, "", web.CHAT_FAVOR)
 				AppInstall(m, "", web.DREAM)
-				if m.Cmd(DESKTOP).Length() == 0 {
-					DeskAppend(m, "Books", web.WIKI_WORD)
-					DeskAppend(m, "Photos", web.WIKI_FEEL)
-					DeskAppend(m, "Grapher", web.WIKI_DRAW)
-					DeskAppend(m, "Calendar", web.TEAM_PLAN, ctx.ARGS, team.MONTH)
-					DeskAppend(m, "", web.CHAT_FAVOR)
-				}
-				if m.Cmd(DOCK).Length() == 0 {
-					DockAppend(m, "Finder", Prefix(FINDER))
-					DockAppend(m, "Safari", web.CHAT_IFRAME)
-					DockAppend(m, "Terminal", web.CODE_XTERM)
-					DockAppend(m, "", web.CODE_GIT_REPOS, mdb.ICON, "usr/icons/git.jpg")
-					DockAppend(m, "", web.CODE_COMPILE, mdb.ICON, "usr/icons/go.png")
-					DockAppend(m, "", web.CODE_VIMER)
-					DockAppend(m, "", web.DREAM)
-				}
 			}},
 			code.INSTALL: {Hand: func(m *ice.Message, arg ...string) { AppInstall(m, arg[0], arg[1], arg[2:]...) }},
 		}, CmdHashAction("index,args"))},

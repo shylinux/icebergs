@@ -29,11 +29,13 @@ func _list_inputs(m *ice.Message, prefix, chain string, field, value string) {
 func _list_insert(m *ice.Message, prefix, chain string, arg ...string) {
 	m.Logs(INSERT, KEY, path.Join(prefix, chain), arg)
 	defer Lock(m, prefix, chain)()
+	saveImportant(m, prefix, chain, kit.Simple(INSERT, prefix, chain, LIST, TIME, m.Time(), arg)...)
 	m.Echo("%d", Grow(m, prefix, chain, kit.Dict(arg, TARGET, m.Optionv(TARGET))))
 }
 func _list_modify(m *ice.Message, prefix, chain string, field, value string, arg ...string) {
 	m.Logs(MODIFY, KEY, path.Join(prefix, chain), field, value, arg)
 	defer Lock(m, prefix, chain)()
+	saveImportant(m, prefix, chain, kit.Simple(MODIFY, prefix, chain, LIST, field, value, arg)...)
 	Grows(m, prefix, chain, field, value, func(index int, val ice.Map) { _mdb_modify(m, val, field, arg...) })
 }
 func _list_select(m *ice.Message, prefix, chain, field, value string) {

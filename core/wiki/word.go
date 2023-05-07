@@ -52,7 +52,10 @@ func init() {
 				ls := kit.Split(m.Option(mdb.TEXT))
 				kit.If(kit.IsIn(ls[0], IMAGE, VIDEO, AUDIO), func() { m.Cmdy(FEEL).CutTo(nfs.PATH, mdb.NAME) })
 			}},
-		}, WikiAction("", nfs.SHY), ctx.CmdAction(), aaa.RoleAction("story.field")), Hand: func(m *ice.Message, arg ...string) {
+			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
+				kit.Switch(m.Option(mdb.TYPE), kit.Simple(web.SERVER, web.WORKER), func() { m.PushButton(kit.Dict(m.CommandKey(), "文档")) })
+			}},
+		}, web.DreamAction(), WikiAction("", nfs.SHY), ctx.CmdAction(), aaa.RoleAction("story.field")), Hand: func(m *ice.Message, arg ...string) {
 			if m.Option(nfs.DIR_DEEP, ice.TRUE); len(arg) == 0 {
 				arg = append(arg, nfs.SRC)
 			}

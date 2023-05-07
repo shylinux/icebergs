@@ -144,7 +144,6 @@ func (c *Context) Merge(s *Context) *Context {
 		}
 		c.Commands[key] = cmd
 		kit.If(cmd.Meta == nil, func() { cmd.Meta = kit.Dict() })
-		kit.If(cmd.List == nil, func() { cmd.List = SplitCmd(cmd.Name, cmd.Actions) })
 		for sub, action := range cmd.Actions {
 			if pre, ok := c.Commands[sub]; ok && s == c {
 				kit.Switch(sub,
@@ -162,6 +161,7 @@ func (c *Context) Merge(s *Context) *Context {
 					}
 				}
 			}
+			kit.If(sub == SELECT, func() { cmd.Name = kit.Select(action.Name, cmd.Name) })
 			if help := kit.Split(action.Help, " :："); len(help) > 0 {
 				if kit.Value(cmd.Meta, kit.Keys("_trans", strings.TrimPrefix(sub, "_")), help[0]); len(help) > 1 {
 					kit.Value(cmd.Meta, kit.Keys("_title", sub), help[1])
@@ -173,6 +173,8 @@ func (c *Context) Merge(s *Context) *Context {
 			kit.If(action.List == nil, func() { action.List = SplitCmd(action.Name, nil) })
 			kit.If(len(action.List) > 0, func() { cmd.Meta[sub] = action.List })
 		}
+		kit.If(strings.HasPrefix(cmd.Name, "list"), func() { cmd.Name = strings.Replace(cmd.Name, "list", key, 1) })
+		kit.If(cmd.List == nil, func() { cmd.List = SplitCmd(cmd.Name, cmd.Actions) })
 	}
 	kit.If(c.Configs == nil, func() { c.Configs = Configs{} })
 	for k, v := range s.Configs {

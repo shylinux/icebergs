@@ -26,7 +26,10 @@ func init() {
 				defer m.Echo("<html><body>").Echo("</body></html>")
 				m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1]))
 			}},
-		}, WikiAction("", nfs.SVG), ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
+			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
+				kit.Switch(m.Option(mdb.TYPE), kit.Simple(web.SERVER, web.WORKER), func() { m.PushButton(kit.Dict(m.CommandKey(), "导图")) })
+			}},
+		}, web.DreamAction(), WikiAction("", nfs.SVG), ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			kit.If(!_wiki_list(m, arg...), func() {
 				_wiki_show(m, arg[0])
 				kit.If(m.IsErr(), func() { m.Option(ice.MSG_OUTPUT, "") })

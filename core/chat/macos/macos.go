@@ -34,7 +34,7 @@ func CmdHashAction(arg ...string) ice.Actions {
 			}
 		}},
 		mdb.SELECT: {Name: "list hash auto create", Hand: func(m *ice.Message, arg ...string) {
-			mdb.HashSelect(m, arg...).Sort(mdb.NAME).Display(kit.PathJoin("/require/", strings.TrimPrefix(file, ice.Info.Make.Path)))
+			mdb.HashSelect(m, arg...).Sort(mdb.NAME).Display(strings.TrimPrefix(file, ice.Info.Make.Path))
 		}},
 	}, ctx.CmdAction(), mdb.HashAction(mdb.SHORT, kit.Select("", arg, 0), mdb.FIELD, kit.Select("time,hash,name,icon,text,index,args", arg, 1), kit.Slice(arg, 2)))
 }

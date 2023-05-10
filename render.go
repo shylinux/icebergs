@@ -201,7 +201,10 @@ func (m *Message) EchoDownload(arg ...string) *Message {
 }
 func (m *Message) Display(file string, arg ...Any) {
 	if file == "" {
-		file = kit.PathJoin("/require/", strings.TrimPrefix(kit.FileLine(2, 100), Info.Make.Path))
+		file = strings.TrimPrefix(kit.FileLine(2, 100), Info.Make.Path)
+	}
+	if !strings.HasPrefix(file, PS) && !strings.HasPrefix(file, HTTP) {
+		file = "/require/" + file
 	}
 	m.Option(MSG_DISPLAY, kit.MergeURL(kit.Select(kit.ExtChange(file, JS), file, strings.Contains(file, QS)), arg...))
 }

@@ -8,15 +8,13 @@ Volcanos(chat.ONIMPORT, { _init: function(can, msg) { can.onmotion.clear(can), c
 			})
 		}); index == 0 && item.click()
 	}), can.onmotion.hidden(can, can.ui.profile), can.onmotion.hidden(can, can.ui.display) },
-	icons: function(can, msg, target) {
-		can.onimport.icon(can, msg = msg||can._msg, target, function(target, item) { can.page.Modify(can, target, {
-			onclick: function(event) {
-				can.sup.onexport.record(can.sup, item.name, mdb.NAME, item)
-			}, oncontextmenu: function(event) { can.user.carteRight(event, can, {
-				"add to desktop": function() { can.sup.onappend.desktop(item) },
-				"add to dock": function() { can.sup.onappend.dock(item) },
-			}, []) }, draggable: true, ondragstart: function(event) { window._drag_item = item },
-		})})
-	},
+	icons: function(can, msg, target) { can.onimport.icon(can, msg = msg||can._msg, target, function(target, item) { can.page.Modify(can, target, {
+		onclick: function(event) {
+			can.sup.onexport.record(can.sup, item.name, mdb.NAME, item)
+		}, oncontextmenu: function(event) { can.user.carteRight(event, can, {
+			"add to desktop": function() { can.sup.onappend.desktop(item) },
+			"add to dock": function() { can.sup.onappend.dock(item) },
+		}, []) }, draggable: true, ondragstart: function(event) { window._drag_item = item },
+	})}) },
 	layout: function(can) { can.ui.layout(can.ConfHeight(), can.ConfWidth()) },
 })

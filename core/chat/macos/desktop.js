@@ -25,10 +25,12 @@ Volcanos(chat.ONIMPORT, {
 			if (item.cmd == ctx.COMMAND) { can.onimport._window(can, {index: can.core.Keys(item.type, item.name.split(lex.SP)[0])}) }
 			if (item.type == nfs.FILE) { can.onimport._window(can, {index: web.CODE_VIMER, args: can.misc.SplitPath(can, item.text) }) }
 		}, can.ConfHeight() < 800 && can.onmotion.delay(can, function() { can.onmotion.hidden(can, sub._target) })
+		can.onmotion.hidden(can, sub._target)
 	}) },
 	_notifications: function(can) { can.onappend.plugin(can, {index: "web.chat.macos.notifications", style: html.OUTPUT}, function(sub) { can.ui.notifications = sub
 		sub.onexport.record = function(sub, value, key, item) { can.onimport._window(can, item) }
 		can.ConfHeight() < 800 && can.onmotion.delay(can, function() { can.onmotion.hidden(can, sub._target) })
+		can.onmotion.hidden(can, sub._target)
 	}) },
 	_dock: function(can) { can.onappend.plugin(can, {index: "web.chat.macos.dock", style: html.OUTPUT}, function(sub) { can.ui.dock = sub
 		sub.onexport.output = function(sub, msg) { can.page.style(can, sub._target, html.LEFT, can.base.Min((can.ConfWidth()-msg.Length()*80)/2, 0)) }
@@ -71,7 +73,6 @@ Volcanos(chat.ONIMPORT, {
 			sub.onappend.dock = function(item) { can.ui.dock.runAction(can.request(event, item), mdb.CREATE, [], function() { can.ui.dock.Update() }) }
 			sub.onexport.output = function() { if (item.index == "web.chat.macos.opens") { can.page.Remove(can, sub._target) } }
 			sub._target.onclick = function(event) { can.page.Select(can, sub._target.parentNode, html.FIELDSET, function(target) { can.page.style(can, target, "z-index", target == sub._target? "10": "9") }) }
-			
 		}, can.ui.desktop)
 	},
 	session: function(can, list) { can.page.Select(can, can._output, html.DIV_DESKTOP, function(target) { can.page.Remove(can, target) })

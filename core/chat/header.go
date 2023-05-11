@@ -89,8 +89,8 @@ func init() {
 			for _, k := range []string{aaa.BACKGROUND, aaa.AVATAR} {
 				if strings.HasPrefix(msg.Append(k), nfs.PS) || strings.HasPrefix(msg.Append(k), ice.HTTP) {
 					m.Option(k, msg.Append(k))
-				} else if msg.Append(k) != "" && aaa.Right(m.Spawn(), msg.Append(k)) {
-					m.Option(k, web.SHARE_LOCAL+k)
+				} else if msg.Append(k) != "" {
+					m.Option(k, "/require/"+msg.Append(k))
 				}
 			}
 			m.Echo(kit.Select(kit.Select("", strings.SplitN(ice.Info.Make.Remote, "://", 2), 1), mdb.Config(m, TITLE))).Option(MENUS, mdb.Config(m, MENUS))

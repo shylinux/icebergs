@@ -112,8 +112,17 @@ func init() {
 					if h == "" && value[PID] != pid {
 						return
 					}
-					mdb.HashModify(m, mdb.HASH, value[mdb.HASH], STATUS, STOP)
+					mdb.HashModify(m, mdb.HASH, kit.Select(h, value[mdb.HASH]), STATUS, STOP)
 					m.Cmd(gdb.SIGNAL, gdb.KILL, value[PID])
+				})
+			}},
+			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) {
+				h, pid := m.Option(mdb.HASH), m.Option(PID)
+				mdb.HashSelects(m, h).Table(func(value ice.Maps) {
+					if h == "" && value[PID] != pid {
+						return
+					}
+					mdb.HashRemove(m, kit.Select(h, value[mdb.HASH]))
 				})
 			}},
 		}, mdb.StatusHashAction(mdb.FIELD, "time,hash,status,pid,cmd,dir,env")), Hand: func(m *ice.Message, arg ...string) {

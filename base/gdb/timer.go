@@ -33,6 +33,6 @@ func init() {
 			mdb.PRUNES: {Hand: func(m *ice.Message, arg ...string) { mdb.HashPrunesValue(m, mdb.COUNT, "0") }},
 			HAPPEN:     {Hand: func(m *ice.Message, arg ...string) { _timer_action(m, time.Now(), arg...) }},
 			RESTART:    {Name: "restart count=3", Hand: func(m *ice.Message, arg ...string) { mdb.HashModify(m, m.OptionSimple(mdb.HashShort(m)), arg) }},
-		}, mdb.HashAction(mdb.FIELD, "time,hash,name,delay,interval,count,cmd", TICK, "600s"))},
+		}, mdb.HashAction(mdb.FIELD, "time,hash,name,delay,interval,count,cmd", TICK, "1s"))},
 	})
 }

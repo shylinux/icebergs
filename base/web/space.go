@@ -209,6 +209,12 @@ func init() {
 					ctx.ProcessOpen(m, m.MergePod(m.Option(mdb.NAME), arg))
 				}
 			}},
+			"main": {Hand: func(m *ice.Message, arg ...string) {
+				kit.If(mdb.Config(m, "main"), func(cmd string) { RenderPodCmd(m, "", cmd) }, func() {
+					m.RenderResult(nfs.Template(m.Options(nfs.VERSION, renderVersion(m)), "main.html"))
+				})
+				m.Optionv(ice.MSG_ARGS, kit.Simple(m.Optionv(ice.MSG_ARGS)))
+			}},
 			nfs.PS: {Hand: func(m *ice.Message, arg ...string) { _space_fork(m) }},
 		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,type,name,text", ctx.ACTION, OPEN, REDIAL, kit.Dict("a", 3000, "b", 1000, "c", 1000)), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 {

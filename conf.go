@@ -26,6 +26,7 @@ const (
 	AUTO  = "auto"
 	LIST  = "list"
 	BACK  = "back"
+	MAIN  = "main"
 
 	BASE = "base"
 	CORE = "core"

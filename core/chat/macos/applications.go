@@ -28,8 +28,9 @@ func init() {
 				AppInstall(m, "Photos", web.WIKI_FEEL)
 				AppInstall(m, "Books", web.WIKI_WORD)
 				AppInstall(m, "", web.CODE_VIMER)
-				AppInstall(m, "", web.CHAT_FAVOR)
-				AppInstall(m, "", web.DREAM)
+				AppInstall(m, "", web.DREAM, mdb.ICON, "usr/icons/Mission Control.png")
+				AppInstall(m, "", web.CODE_GIT_REPOS, mdb.ICON, "usr/icons/git.jpg")
+				AppInstall(m, "", web.CODE_COMPILE, mdb.ICON, "usr/icons/go.png")
 			}},
 			code.INSTALL: {Hand: func(m *ice.Message, arg ...string) { AppInstall(m, arg[0], arg[1], arg[2:]...) }},
 		}, CmdHashAction("index,args"))},

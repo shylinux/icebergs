@@ -130,7 +130,12 @@ func _install_clear(m *ice.Message, arg ...string) {
 	})
 }
 func _install_trash(m *ice.Message, arg ...string) {
-	nfs.Trash(m, kit.Path(ice.USR_LOCAL_DAEMON, m.Option(tcp.PORT), m.Option(nfs.PATH)))
+	if m.Option(tcp.PORT) == "" {
+		nfs.Trash(m, m.Option(nfs.PATH))
+	} else {
+		m.Cmd(cli.DAEMON, mdb.REMOVE)
+		nfs.Trash(m, kit.Path(ice.USR_LOCAL_DAEMON, m.Option(tcp.PORT), m.Option(nfs.PATH)))
+	}
 }
 func _install_service(m *ice.Message, arg ...string) {
 	arg = kit.Split(path.Base(arg[0]), "_-.")[:1]

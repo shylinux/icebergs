@@ -15,10 +15,7 @@ func init() {
 				DockAppend(m, "Finder", Prefix(FINDER))
 				DockAppend(m, "Safari", web.CHAT_IFRAME)
 				DockAppend(m, "Terminal", web.CODE_XTERM)
-				DockAppend(m, "", web.CODE_GIT_REPOS, mdb.ICON, "usr/icons/git.jpg")
-				DockAppend(m, "", web.CODE_COMPILE, mdb.ICON, "usr/icons/go.png")
 				DockAppend(m, "", web.CODE_VIMER)
-				DockAppend(m, "", web.DREAM)
 			}
 		}},
 	}, mdb.ImportantHashAction(), CmdHashAction())}})

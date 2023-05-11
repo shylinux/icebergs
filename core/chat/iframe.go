@@ -13,6 +13,18 @@ const IFRAME = "iframe"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		IFRAME: {Name: "iframe hash auto", Help: "浏览器", Actions: ice.MergeActions(ice.Actions{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				if m.Cmd("").Length() == 0 {
+					m.Cmd(web.SPIDE, ice.OptionFields(web.CLIENT_NAME, web.CLIENT_ORIGIN), func(value ice.Maps) {
+						if kit.IsIn(value[web.CLIENT_NAME], "ops", "dev", "com", "shy") {
+							m.Cmd("", mdb.CREATE, kit.Dict(mdb.NAME, value[web.CLIENT_NAME], web.LINK, value[web.CLIENT_ORIGIN]))
+						}
+					})
+				}
+			}},
+			mdb.CREATE: {Hand: func(m *ice.Message, arg ...string) {
+				mdb.HashCreate(m, mdb.TYPE, web.LINK, mdb.NAME, kit.ParseURL(m.Option(web.LINK)).Host, m.OptionSimple())
+			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch mdb.HashInputs(m, arg); arg[0] {
 				case mdb.NAME:
@@ -40,10 +52,7 @@ func init() {
 				}
 			}},
 			FAVOR_TABLES: {Hand: func(m *ice.Message, arg ...string) {
-				switch arg[1] {
-				case web.LINK:
-					m.PushButton(IFRAME, mdb.REMOVE)
-				}
+				kit.If(arg[1] == web.LINK, func() { m.PushButton(IFRAME, mdb.REMOVE) })
 			}},
 			FAVOR_ACTION: {Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(mdb.TYPE) != web.LINK {
@@ -55,9 +64,6 @@ func init() {
 				default:
 					ctx.ProcessField(m, m.PrefixKey(), []string{m.Option(mdb.TEXT)}, arg...)
 				}
-			}},
-			mdb.CREATE: {Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashCreate(m, mdb.TYPE, web.LINK, mdb.NAME, kit.ParseURL(m.Option(web.LINK)).Host, m.OptionSimple())
 			}},
 			web.OPEN: {Hand: func(m *ice.Message, arg ...string) { ctx.ProcessOpen(m, m.Option(web.LINK)) }},
 			web.DREAM_CREATE: {Hand: func(m *ice.Message, arg ...string) {
@@ -71,9 +77,7 @@ func init() {
 					m.PushAction(web.OPEN, mdb.REMOVE).Action(mdb.CREATE, mdb.PRUNES)
 				}
 			} else {
-				if m.Length() == 0 {
-					m.Append(web.LINK, arg[0])
-				}
+				kit.If(m.Length() == 0, func() { m.Append(web.LINK, arg[0]) })
 				m.Action(web.FULL, web.OPEN).StatusTime(m.AppendSimple(web.LINK))
 				ctx.DisplayLocal(m, "")
 			}

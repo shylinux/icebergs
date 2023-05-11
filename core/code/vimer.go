@@ -153,7 +153,7 @@ func init() {
 				m.Cmdy(COMPLETE, kit.Ext(m.Option(mdb.FILE)), m.Option(nfs.FILE), m.Option(nfs.PATH))
 			}},
 			COMPILE: {Help: "编译", Hand: func(m *ice.Message, arg ...string) {
-				const app, _app = "usr/publish/contexts.app", "Contents/MacOS/contexts"
+				const app, _app = "usr/publish/Contexts.app", "Contents/MacOS/Contexts"
 				isWebview := func() bool { return strings.HasSuffix(os.Args[0], _app) }
 				cmds := []string{COMPILE, ice.SRC_MAIN_GO, ice.BIN_ICE_BIN}
 				if isWebview() {

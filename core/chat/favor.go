@@ -36,7 +36,6 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		FAVOR: {Name: "favor hash auto create upload getClipboardData", Help: "收藏夹", Actions: ice.MergeActions(ice.Actions{
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				mdb.IsSearchForEach(m, arg, func() []string { return []string{web.LINK, m.CommandKey(), m.MergePodCmd("", "")} })
 				if arg[0] == mdb.FOREACH {
 					m.Cmd("", ice.OptionFields("")).Table(func(value ice.Maps) {
 						if arg[1] == "" || arg[1] == value[mdb.TYPE] || strings.Contains(value[mdb.TEXT], arg[1]) {

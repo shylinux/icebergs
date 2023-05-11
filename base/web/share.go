@@ -104,12 +104,6 @@ func init() {
 		}},
 		PP(SHARE, CACHE): {Hand: func(m *ice.Message, arg ...string) { _share_cache(m, arg...) }},
 		PP(SHARE, LOCAL): {Hand: func(m *ice.Message, arg ...string) { ShareLocalFile(m, arg...) }},
-		PP(SHARE, LOCAL, aaa.AVATAR): {Hand: func(m *ice.Message, arg ...string) {
-			m.RenderDownload(strings.TrimPrefix(m.Cmdv(aaa.USER, m.Option(ice.MSG_USERNAME), aaa.AVATAR), PP(SHARE, LOCAL)))
-		}},
-		PP(SHARE, LOCAL, aaa.BACKGROUND): {Hand: func(m *ice.Message, arg ...string) {
-			m.RenderDownload(strings.TrimPrefix(m.Cmdv(aaa.USER, m.Option(ice.MSG_USERNAME), aaa.BACKGROUND), PP(SHARE, LOCAL)))
-		}},
 		PP(SHARE, PROXY): {Hand: func(m *ice.Message, arg ...string) { _share_proxy(m) }},
 		PP(SHARE, TOAST): {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(SPACE, arg[0], kit.UnMarshal(m.Option(ice.ARG))) }},
 	})

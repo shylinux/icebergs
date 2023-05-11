@@ -3,7 +3,6 @@ package shy
 import (
 	_ "shylinux.com/x/icebergs/core/chat"
 	_ "shylinux.com/x/icebergs/core/chat/macos"
-	_ "shylinux.com/x/icebergs/core/chat/oauth"
 	_ "shylinux.com/x/icebergs/core/code"
 	_ "shylinux.com/x/icebergs/core/mall"
 	_ "shylinux.com/x/icebergs/core/team"

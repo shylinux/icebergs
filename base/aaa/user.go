@@ -45,7 +45,7 @@ func init() {
 					m.Push(arg[0], m.Option(ice.MSG_USERNAME))
 				}
 			}},
-			mdb.CREATE: {Name: "create usernick username* userrole=void,tech userzone", Hand: func(m *ice.Message, arg ...string) {
+			mdb.CREATE: {Name: "create usernick username* userrole=void,tech userzone background", Hand: func(m *ice.Message, arg ...string) {
 				_user_create(m, m.Option(USERNAME), m.OptionSimple(USERNICK, USERROLE, USERZONE)...)
 			}},
 		}, mdb.HashAction(mdb.SHORT, USERNAME, mdb.FIELD, "time,usernick,username,userrole,userzone"), mdb.ImportantHashAction())},
@@ -78,9 +78,10 @@ func UserRoot(m *ice.Message, arg ...string) *ice.Message {
 	userrole := kit.Select(ROOT, arg, 2)
 	username := kit.Select(ice.Info.Username, arg, 1)
 	usernick := kit.Select(UserNick(m, username), arg, 0)
+	background := kit.Select("usr/icons/background.jpg", UserInfo(m, username, BACKGROUND, ""))
 	if len(arg) > 0 {
-		m.Cmd(USER, mdb.CREATE, usernick, username, userrole, userzone)
 		ice.Info.Username = username
+		m.Cmd(USER, mdb.CREATE, usernick, username, userrole, userzone, background)
 	}
 	return SessAuth(m, kit.Dict(USERNICK, usernick, USERNAME, username, USERROLE, userrole))
 }

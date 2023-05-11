@@ -18,7 +18,7 @@ const POD = "pod"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		POD: {Name: "pod", Help: "节点", Actions: ice.MergeActions(ctx.CmdAction(), web.ApiAction(), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {
+		POD: {Actions: ice.MergeActions(ctx.CmdAction(), web.ApiAction(), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 || kit.Select("", arg, 0) == "" {
 				web.RenderCmd(m, web.SPACE)
 			} else if strings.HasPrefix(m.Option(ice.MSG_USERUA), "git/") {
@@ -29,7 +29,7 @@ func init() {
 				if m.Cmd(web.SPACE, arg[0]).Length() == 0 && nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, arg[0])) {
 					m.Cmd(web.DREAM, cli.START, kit.Dict(mdb.NAME, arg[0]))
 				}
-				web.RenderMain(m)
+				m.Cmdy(web.SPACE, arg[0], web.SPACE, ice.MAIN)
 			} else if arg[1] == CMD {
 				web.RenderPodCmd(m, arg[0], arg[2], arg[3:])
 			}

@@ -28,7 +28,7 @@ func _tar_list(m *ice.Message, p string, cb func(*tar.Header, *tar.Reader, int))
 				i := 0
 				for r := tar.NewReader(r); ; i++ {
 					h, e := r.Next()
-					if m.Warn(e) {
+					if m.Warn(e) || e == io.EOF {
 						break
 					}
 					if h.Size == 0 {

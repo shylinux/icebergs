@@ -174,7 +174,7 @@ func (m *Message) FormatsMeta(w io.Writer, arg ...string) (res string) {
 	kit.For(m.meta[MSG_OPTION], func(i int, k string) {
 		kit.If(len(m.meta[k]) == 0 || len(m.meta[k]) == 1 && m.meta[k][0] == "", func() { m.meta[MSG_OPTION][i] = "" })
 	})
-	m.meta[MSG_OPTION] = kit.Filters(m.meta[MSG_OPTION], MSG_CMDS, MSG_FIELDS, MSG_SESSID, MSG_OPTS, MSG_OUTPUT, MSG_INDEX, "", "aaa.checker")
+	m.meta[MSG_OPTION] = kit.Filters(m.meta[MSG_OPTION], MSG_CMDS, MSG_FIELDS, MSG_SESSID, MSG_OPTS, MSG_INDEX, "", "aaa.checker")
 	kit.If(len(arg) == 0 && m.Option(DEBUG) == TRUE, func() { arg = []string{SP, SP, NL} })
 	bio, count, NL := bufio.NewWriter(w), 0, kit.Select("", arg, 2)
 	defer bio.Flush()

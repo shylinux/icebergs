@@ -160,7 +160,9 @@ func init() {
 			} else if config, err := config.LoadConfig(config.GlobalScope); err == nil && config.User.Email == "" && mdb.Config(m, aaa.EMAIL) == "" {
 				m.Action(CONFIGS).Echo("please config email and name. ").EchoButton(CONFIGS)
 			} else if len(arg) == 0 {
-				m.Option(aaa.EMAIL, kit.Select(mdb.Config(m, aaa.EMAIL), config.User.Email))
+				if config != nil {
+					m.Option(aaa.EMAIL, kit.Select(mdb.Config(m, aaa.EMAIL), config.User.Email))
+				}
 				m.Cmdy(REPOS, STATUS).Action(PULL, PUSH, "oauth", CONFIGS)
 			} else {
 				m.Cmdy(REPOS, arg[0], MASTER, INDEX, m.Cmdv(REPOS, arg[0], MASTER, INDEX, nfs.FILE))

@@ -36,6 +36,7 @@ func _autogen_module(m *ice.Message, file string) { m.Cmd(nfs.DEFS, file, nfs.Te
 func _autogen_import(m *ice.Message, main string, ctx string, mod string) {
 	// m.Cmd(nfs.DEFS, main, nfs.Template(m, ice.SRC_MAIN_GO))
 	m.Cmd(nfs.DEFS, ice.MAKEFILE, m.Cmdx(nfs.CAT, ice.MAKEFILE))
+	m.Cmd(nfs.DEFS, ice.LICENSE, m.Cmdx(nfs.CAT, ice.LICENSE))
 	m.Cmd(nfs.DEFS, main, m.Cmdx(nfs.CAT, ice.SRC_MAIN_GO))
 	begin, done, list := false, false, []string{}
 	m.Cmd(nfs.CAT, main, func(line string, index int) {

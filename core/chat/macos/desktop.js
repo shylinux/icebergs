@@ -28,12 +28,11 @@ Volcanos(chat.ONIMPORT, {
 		can.onmotion.hidden(can, sub._target)
 	}) },
 	_notifications: function(can) { can.onappend.plugin(can, {index: "web.chat.macos.notifications", style: html.OUTPUT}, function(sub) { can.ui.notifications = sub
+		can.ConfHeight() < 800 && can.onmotion.delay(can, function() { can.onmotion.hidden(can, sub._target) }), can.onmotion.hidden(can, sub._target)
 		sub.onexport.record = function(sub, value, key, item) { can.onimport._window(can, item) }
-		can.ConfHeight() < 800 && can.onmotion.delay(can, function() { can.onmotion.hidden(can, sub._target) })
-		can.onmotion.hidden(can, sub._target)
 	}) },
 	_dock: function(can) { can.onappend.plugin(can, {index: "web.chat.macos.dock", style: html.OUTPUT}, function(sub) { can.ui.dock = sub
-		sub.onexport.output = function(sub, msg) { can.page.style(can, sub._target, html.LEFT, can.base.Min((can.ConfWidth()-msg.Length()*80)/2, 0)) }
+		sub.onexport.output = function(sub, msg) { can.onimport.layout(can) }
 		sub.onexport.record = function(sub, value, key, item) { can.onimport._window(can, item) }
 	}) },
 	_item: function(can, item) { can.runAction(can.request(event, item), mdb.CREATE, [], function() { can.run(event, [], function(msg) {
@@ -50,9 +49,9 @@ Volcanos(chat.ONIMPORT, {
 		target.ondragend = function() { can.onimport._item(can, window._drag_item) }
 	},
 	_window: function(can, item) { if (!item.index) { return }
-		item.left = 100, item.top = 125, item.height = can.base.Min(can.ConfHeight()-400, 480, 800), item.width = can.base.Min(can.ConfWidth()-400, 640, 1000)
-		if (can.ConfHeight() < 800) { item.top = 25, item.height = can.ConfHeight()-165 }
-		if (can.user.isMobile) { item.left = 0, item.top = 25 }
+		item.left = 100, item.top = 125, item.height = can.base.Min(can.ConfHeight()-345, 480, 800), item.width = can.base.Min(can.ConfWidth()-360, 640, 1000)
+		if (can.ConfHeight() < 800) { item.top = 25, item.height = can.ConfHeight()-145, item.width = can.ConfWidth()-110 }
+		if (can.user.isMobile) { item.left = 0, item.top = 25, item.height = can.ConfHeight()-145, item.width = can.ConfWidth() }
 		can.onappend.plugin(can, item, function(sub) { can.ondetail.select(can, sub._target)
 			var index = 0; can.core.Item({
 				"#f95f57": function(event) { sub.onaction.close(event, sub) },
@@ -110,9 +109,7 @@ Volcanos(chat.ONFIGURE, {
 			return {view: [html.ITEM, "", value.name],
 				onclick: function() { can.onimport.session(can, can.base.Obj(value.args, [])) },
 				oncontextmenu: function(event) { can.user.carteRight(event, can, {
-					open: function() {
-						can.user.open(can.misc.MergePodCmd(can, {cmd: "desktop", session: value.name}))
-					},
+					open: function() { can.user.open(can.misc.MergePodCmd(can, {cmd: "desktop", session: value.name})) },
 					remove: function() { can.runActionCommand(event, "session", [mdb.REMOVE, value.name], function() { can.user.toastSuccess(can, "session removed") }) },
 				}, [], function() {}, _carte) },
 			}

@@ -6,7 +6,7 @@ fieldset.macos.desktop>div.output>fieldset.macos.searchs { position:absolute; }
 fieldset.macos.desktop>div.output>fieldset.macos.searchs>form.option>div.item.icon.delete { display:none; }
 fieldset.macos.desktop>div.output>fieldset.macos.searchs>form.option>div.item.keyword input { width:320px; background-color:transparent; border:#404141 solid 1px; }
 fieldset.macos.desktop>div.output>fieldset.macos.searchs>form.option>div.item.keyword:hover { background-color:transparent; }
-fieldset.macos.desktop>div.output>fieldset.macos.notifications { border-radius:0; height:calc(100% - 25px); width:250px; overflow:auto; position:absolute; top:25px; right:0; }
+fieldset.macos.desktop>div.output>fieldset.macos.notifications { border-radius:0; height:calc(100% - 125px); width:250px; overflow:auto; position:absolute; top:25px; right:0; }
 fieldset.macos.desktop>div.output>fieldset.macos.notifications>div.action>div.item { margin-top:10px; }
 fieldset.macos.desktop>div.output>fieldset.macos.notifications>div.action>div.item input { background-color:transparent; }
 fieldset.macos.desktop>div.output>fieldset.macos.notifications>div.output>div.item { margin-top:10px; margin-right:10px; min-height:60px; clear:both; }
@@ -75,6 +75,7 @@ body.dark fieldset.macos.desktop>div.output { background-color:unset; }
 body.dark fieldset.macos.desktop>div.output>fieldset.macos { background-color:#08234ad1; }
 body.dark fieldset.macos.desktop>div.output>fieldset.macos.notifications { background-color:transparent; }
 body.dark fieldset.macos.desktop>div.output>fieldset.macos.notifications div.item { background-color:#08234ad1; }
+body.dark fieldset.macos.desktop>div.output>fieldset.macos.notifications>div.output>div.item { width:240px; }
 body.dark fieldset.macos.desktop>div.output>fieldset.macos.searchs a { color:silver; }
 body.dark fieldset.macos.desktop>div.output>div.desktop>fieldset { background-color:#333434; }
 body.dark fieldset.macos.desktop>div.output>div.desktop fieldset input { background-color:#333434; border:#404141 solid 1px; }

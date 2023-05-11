@@ -91,7 +91,7 @@ func init() {
 	wiki.AddChart(CHAIN, func(m *ice.Message) wiki.Chart {
 		m.Option(wiki.FONT_SIZE, "18")
 		m.Option(wiki.MARGINX, "60")
-		m.Option(wiki.MARGINY, "20")
+		m.Option(wiki.MARGINY, "16")
 		m.Option(wiki.PADDING, "10")
 		wiki.AddGroupOption(m, SHIP, wiki.FILL, cli.GLASS)
 		return &Chain{}

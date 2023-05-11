@@ -69,6 +69,15 @@ const XTERM = "xterm"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		XTERM: {Name: "xterm hash auto", Help: "命令行", Actions: ice.MergeActions(ice.Actions{
+			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
+				mdb.IsSearchForEach(m, arg, func() []string {
+					if nfs.Exists(m, "/bin/bash") {
+						return []string{ssh.SHELL, BASH, "/bin/bash"}
+					} else {
+						return []string{ssh.SHELL, SH, "/bin/sh"}
+					}
+				})
+			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch mdb.HashInputs(m, arg); arg[0] {
 				case mdb.TYPE:

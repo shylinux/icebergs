@@ -16,5 +16,12 @@ Volcanos(chat.ONIMPORT, { _init: function(can, msg) { can.onmotion.clear(can), c
 			"add to dock": function() { can.sup.onappend.dock(item) },
 		}, []) }, draggable: true, ondragstart: function(event) { window._drag_item = item },
 	})}) },
-	layout: function(can) { can.ui.layout(can.ConfHeight(), can.ConfWidth()) },
+	layout: function(can) {
+		var width = can.ConfWidth()-(can.ui? can.ui.project.offsetWidth: 0)
+		var margin = width%80/parseInt(width/80)/2
+		can.page.SelectChild(can, can.ui.content, mdb.FOREACH, function(target) {
+			can.page.style(can, target, html.MARGIN, margin)
+		})
+		can.ui.layout(can.ConfHeight(), can.ConfWidth())
+	},
 })

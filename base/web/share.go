@@ -105,7 +105,9 @@ func init() {
 		PP(SHARE, CACHE): {Hand: func(m *ice.Message, arg ...string) { _share_cache(m, arg...) }},
 		PP(SHARE, LOCAL): {Hand: func(m *ice.Message, arg ...string) { ShareLocalFile(m, arg...) }},
 		PP(SHARE, PROXY): {Hand: func(m *ice.Message, arg ...string) { _share_proxy(m) }},
-		PP(SHARE, TOAST): {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(SPACE, arg[0], kit.UnMarshal(m.Option(ice.ARG))) }},
+		PP(SHARE, TOAST): {Hand: func(m *ice.Message, arg ...string) {
+			m.Options(ice.LOG_DISABLE, ice.TRUE).Cmdy(SPACE, arg[0], kit.UnMarshal(m.Option(ice.ARG)))
+		}},
 	})
 }
 func IsNotValidShare(m *ice.Message, time string) bool {

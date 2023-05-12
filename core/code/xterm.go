@@ -17,7 +17,7 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _xterm_get(m *ice.Message, h string) *xterm.XTerm {
+func _xterm_get(m *ice.Message, h string) xterm.XTerm {
 	h = kit.Select(m.Option(mdb.HASH), h)
 	m.Assert(h != "")
 	mdb.HashModify(m, mdb.TIME, m.Time(), cli.DAEMON, m.Option(ice.MSG_DAEMON))
@@ -32,7 +32,7 @@ func _xterm_get(m *ice.Message, h string) *xterm.XTerm {
 		m.Go(func() {
 			defer term.Close()
 			defer mdb.HashRemove(m, mdb.HASH, h)
-			m.Log(cli.START, strings.Join(term.Args, lex.SP))
+			// m.Log(cli.START, strings.Join(term.Args, lex.SP))
 			buf := make([]byte, ice.MOD_BUFS)
 			for {
 				if n, e := term.Read(buf); !m.Warn(e) && e == nil {
@@ -52,11 +52,12 @@ func _xterm_get(m *ice.Message, h string) *xterm.XTerm {
 			}
 		})
 		return term
-	}).(*xterm.XTerm)
+	}).(xterm.XTerm)
 }
 func _xterm_echo(m *ice.Message, h string, str string) {
 	m.Options(ice.MSG_DAEMON, mdb.HashSelectField(m, h, cli.DAEMON))
-	m.Option(ice.LOG_DISABLE, ice.TRUE)
+	// m.Option(ice.LOG_DISABLE, ice.TRUE)
+	m.Debug("what ---%o--- ---[%v]---", []byte(str), str)
 	web.PushNoticeGrow(m, h, str)
 }
 func _xterm_cmds(m *ice.Message, h string, cmd string, arg ...ice.Any) {
@@ -77,14 +78,15 @@ func init() {
 						return []string{ssh.SHELL, SH, "/bin/sh"}
 					}
 				})
+				mdb.IsSearchForEach(m, arg, func() []string { return []string{ssh.SHELL, "ice", "ish"} })
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch mdb.HashInputs(m, arg); arg[0] {
 				case mdb.TYPE:
+					m.Push(arg[0], "ish", BASH, SH)
 					m.Cmd(mdb.SEARCH, mdb.FOREACH, ssh.SHELL, ice.OptionFields("type,name,text"), func(value ice.Maps) {
 						kit.If(value[mdb.TYPE] == ssh.SHELL, func() { m.Push(arg[0], value[mdb.TEXT]) })
 					})
-					m.Push(arg[0], BASH, SH)
 				case mdb.NAME:
 					m.Push(arg[0], path.Base(m.Option(mdb.TYPE)), ice.Info.Hostname)
 				case nfs.PATH:
@@ -102,11 +104,13 @@ func init() {
 					m.Cmd(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND, "", "", ice.OptionFields(ctx.INDEX), func(value ice.Maps) { push(ctx.INDEX, value[ctx.INDEX]) })
 				}
 			}},
+			mdb.CREATE: {Hand: func(m *ice.Message, arg ...string) { m.ProcessRewrite(mdb.HASH, mdb.HashCreate(m, arg)) }},
 			web.RESIZE: {Hand: func(m *ice.Message, arg ...string) {
 				_xterm_get(m, "").Setsize(m.OptionDefault("rows", "24"), m.OptionDefault("cols", "80"))
 			}},
 			web.INPUT: {Hand: func(m *ice.Message, arg ...string) {
 				if b, e := base64.StdEncoding.DecodeString(strings.Join(arg, "")); !m.Warn(e) {
+					m.Debug("what ---%o--- ---[%v]---", b, string(b))
 					_xterm_get(m, "").Write(string(b))
 				}
 			}},

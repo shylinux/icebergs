@@ -192,8 +192,6 @@ func init() {
 							m.PushSearch(mdb.TEXT, m.MergePod(value[mdb.NAME]), value)
 						}
 					})
-				} else if arg[0] == mdb.FOREACH && arg[1] == ssh.SHELL {
-					m.PushSearch(mdb.TYPE, ssh.SHELL, mdb.TEXT, "ice.bin space dial dev ops")
 				}
 			}},
 			DOMAIN: {Hand: func(m *ice.Message, arg ...string) { m.Echo(_space_domain(m)) }},

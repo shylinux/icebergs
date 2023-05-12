@@ -101,28 +101,22 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		GO: {Name: "go path auto", Help: "后端编程", Actions: ice.MergeActions(ice.Actions{
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
-				if arg[1] == "main.go" {
-					// ProcessXterm(m, ssh.WEBIO, "", arg[1])
-					ProcessXterm(m, "ice.bin source stdio", "", arg[1])
-					return
-				}
-				ctx.ProcessCommand(m, yac.STACK, kit.Simple(path.Join(arg[2], arg[1])))
-				return
-				cmds, text := "ice.bin source stdio", ctx.GetFileCmd(path.Join(arg[2], arg[1]))
-				if text != "" {
-					ls := strings.Split(text, nfs.PT)
-					text = "~" + kit.Join(kit.Slice(ls, 0, -1), nfs.PT) + lex.NL + kit.Slice(ls, -1)[0]
+				if arg[1] == "misc/xterm/iterm.go" {
+					ProcessXterm(m, "ish", "", arg[1])
+				} else if arg[1] == "main.go" {
+					ProcessXterm(m, "ish", "", arg[1])
 				} else {
-					text = "cli.system go run " + path.Join(arg[2], arg[1])
+					ctx.ProcessCommand(m, yac.STACK, kit.Simple(path.Join(arg[2], arg[1])))
 				}
-				ProcessXterm(m, cmds, text, arg[1])
 			}},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
-				if cmd := ctx.GetFileCmd(path.Join(arg[2], arg[1])); cmd != "" {
+				if arg[1] == "misc/xterm/iterm.go" {
+					ProcessXterm(m, "ish", "", arg[1])
+				} else if arg[1] == "main.go" {
+					ProcessXterm(m, "ish", "", arg[1])
+				} else if cmd := ctx.GetFileCmd(path.Join(arg[2], arg[1])); cmd != "" {
 					ctx.ProcessCommand(m, cmd, kit.Simple())
-					return
-				}
-				if msg := m.Cmd(yac.STACK, path.Join(arg[2], arg[1])); msg.Option("__index") != "" {
+				} else if msg := m.Cmd(yac.STACK, path.Join(arg[2], arg[1])); msg.Option("__index") != "" {
 					ctx.ProcessCommand(m, msg.Option("__index"), kit.Simple())
 				} else {
 					ctx.ProcessCommand(m, yac.STACK, kit.Simple(path.Join(arg[2], arg[1])))

@@ -102,6 +102,13 @@ func (m *Message) CmdHand(cmd *Command, key string, arg ...string) *Message {
 	}
 	return m
 }
+func (m *Message) CmdList(arg ...string) []string {
+	msg, list := m.Cmd(arg), []string{}
+	kit.For(msg._cmd.List, func(value Map) {
+		kit.If(!kit.IsIn(kit.Format(kit.Value(value, TYPE)), "button"), func() { list = append(list, kit.Format(kit.Value(value, NAME))) })
+	})
+	return msg.Appendv(kit.Select(kit.Select("", list, 0), list, len(arg)-1))
+}
 func (m *Message) ActionHand(cmd *Command, key, sub string, arg ...string) *Message {
 	if action, ok := cmd.Actions[sub]; !m.Warn(!ok, ErrNotFound, sub, cmd.FileLines()) {
 		return m.Target()._action(m, cmd, key, sub, action, arg...)

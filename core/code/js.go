@@ -8,6 +8,7 @@ import (
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -29,12 +30,12 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		JS: {Name: "js path auto", Help: "前端", Actions: ice.MergeActions(ice.Actions{
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
-				_js_show(m, arg...)
-				return
 				if arg[1] == "main.js" {
-					m.EchoIFrame(nfs.PS)
-					return
+					ctx.ProcessCommand(m, "web.chat.iframe", kit.Simple(web.UserHost(m)))
+				} else {
+					_js_show(m, arg...)
 				}
+				return
 				ProcessXterm(m, "node", kit.Format(`require("./usr/volcanos/proto.js"), require("./usr/volcanos/publish/client/nodejs/proto.js"), Volcanos.meta._main("%s")`, path.Join(nfs.PS, arg[2], arg[1])))
 			}},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {

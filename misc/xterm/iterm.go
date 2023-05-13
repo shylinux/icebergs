@@ -1,6 +1,7 @@
 package xterm
 
 import (
+	"bytes"
 	"os"
 	"strings"
 	"time"
@@ -25,6 +26,7 @@ type idata struct {
 	cmds []string
 	list []string
 	pos  int
+	pipe *os.File
 }
 type iterm struct {
 	m *ice.Message
@@ -35,7 +37,11 @@ type iterm struct {
 
 func newiterm(m *ice.Message) (XTerm, error) {
 	r, w, e := os.Pipe()
-	return &iterm{m: m, r: r, w: w, idata: &idata{cmds: append(append(kit.SortedKey(ice.Info.Index), m.Cmd(ctx.COMMAND).Appendv(ctx.INDEX)...), m.Cmd(nfs.DIR, "/bin", mdb.NAME).Appendv(mdb.NAME)...)}}, e
+	return &iterm{m: m, r: r, w: w, idata: &idata{cmds: kit.Simple(
+		kit.SortedKey(ice.Info.Index),
+		m.Cmd(ctx.COMMAND).Appendv(ctx.INDEX),
+		m.Cmd(nfs.DIR, "/bin", mdb.NAME).Appendv(mdb.NAME),
+	)}}, e
 }
 func (s iterm) Setsize(rows, cols string) error {
 	s.w.Write([]byte(s.prompt()))
@@ -43,6 +49,9 @@ func (s iterm) Setsize(rows, cols string) error {
 }
 func (s iterm) Writeln(data string, arg ...ice.Any) { s.Write(kit.Format(data, arg...) + lex.NL) }
 func (s iterm) Write(data string) (int, error) {
+	if s.pipe != nil {
+		return s.pipe.Write([]byte(data))
+	}
 	res, ctrl := "", ""
 	for _, c := range data {
 		switch c := string(c); c {
@@ -57,6 +66,8 @@ func (s iterm) Write(data string) (int, error) {
 			if len(s.app) > 0 {
 				s.app = s.app[1:]
 				res = s.rest(res)
+			} else {
+				s.w.Close()
 			}
 		case ENQ: // Ctrl+E
 			res += s.repeat(s.app, ESC_C)
@@ -68,7 +79,7 @@ func (s iterm) Write(data string) (int, error) {
 		case BS: // Ctrl+H
 			res = s.dels(res)
 		case NL: // Ctrl+J
-			res = s.exec(res)
+			res = s.exec(s.m, res)
 		case VT: // Ctrl+K
 			if len(s.app) > 0 {
 				s.cut, s.app = s.app, ""
@@ -77,16 +88,15 @@ func (s iterm) Write(data string) (int, error) {
 		case NP: // Ctrl+L
 			res = s.rest(res + ESC_H + ESC_2J + s.prompt() + s.arg)
 		case CR: // Ctrl+M
-			res = s.exec(res)
+			res = s.exec(s.m, res)
 		case SO: // Ctrl+N
 			res = s.hist(res, 1)
 		case SI: // Ctrl+O
 			if s.arg == "" {
 				s.arg = kit.Select("", s.list, -1)
-				res += s.arg
-				res = s.exec(res)
+				res = s.exec(s.m, res+s.arg)
 			} else {
-				res = s.exec(res)
+				res = s.exec(s.m, res)
 			}
 		case DLE: // Ctrl+P
 			res = s.hist(res, -1)
@@ -212,14 +222,25 @@ func (s iterm) dels(res string) string {
 	return res
 }
 func (s iterm) tips(arg string) (tip string) {
-	if kit.HasSuffix(s.arg+s.app, lex.SP, nfs.PS) {
-		s.args = s.m.CmdList(kit.Split(s.arg + s.app)...)
+	if kit.HasSuffix(arg, lex.SP, nfs.PS) {
+		s.args = s.m.CmdList(kit.Split(arg)...)
+		kit.For(s.args, func(i int, v string) { s.args[i] = strings.TrimPrefix(v, kit.Select("", kit.Split(arg), -1)) })
 		s.due = CRNL + ESC_K + strings.Join(s.args, lex.SP)
 	} else if len(s.args) > 0 {
-		args, key := []string{}, kit.Select("", kit.Split(s.arg+s.app), -1)
+		args, key := []string{}, kit.Select("", kit.Split(arg, "\t ./"), -1)
+		kit.If(kit.HasSuffix(arg, ".", "/"), func() { key = "" })
 		kit.For(s.args, func(arg string) { kit.If(strings.HasPrefix(arg, key), func() { args = append(args, arg) }) })
 		s.due = CRNL + ESC_K + strings.Join(args, lex.SP)
 		return strings.TrimPrefix(kit.Select("", args, 0), key)
+	} else {
+		s.due = ""
+	}
+	if strings.HasSuffix(arg, nfs.PT) {
+		s.args = nil
+		kit.For(s.cmds, func(cmd string) {
+			kit.If(strings.HasPrefix(cmd, arg), func() { s.args = append(s.args, strings.TrimPrefix(cmd, arg)) })
+		})
+		s.due = CRNL + ESC_K + strings.Join(s.args, lex.SP)
 	}
 	for i := len(s.list) - 1; i >= 0; i-- {
 		if v := s.list[i]; strings.HasPrefix(v, arg) {
@@ -237,21 +258,29 @@ func (s iterm) rest(res string) string {
 	s.tip = s.tips(s.arg + s.app)
 	return res + ESC_K + ESC_s + s.app + s.style("2", s.tip+s.due) + ESC_u
 }
-func (s iterm) exec(res string) string {
-	res += CRNL
+func (s iterm) exec(m *ice.Message, res string) string {
+	defer func() { s.arg, s.app, s.args, s.pipe = "", "", nil, nil }()
 	arg := kit.Split(s.arg + s.app)
 	if len(arg) == 0 {
-		return res + s.prompt()
+		return CRNL + s.prompt()
 	} else if len(s.list) == 0 || s.arg+s.app != s.list[len(s.list)-1] {
-		s.list = append(s.list, s.arg+s.app)
-		s.pos = len(s.list)
+		s.list, s.pos = append(s.list, s.arg+s.app), len(s.list)+1
 	}
-	defer func() { s.arg, s.app, s.due, s.args = "", "", "", []string{} }()
-	msg := s.m.Cmd(arg, kit.Dict(ice.MSG_USERUA, "ish"))
-	kit.If(msg.IsErrNotFound(), func() { msg = s.m.Cmd(cli.SYSTEM, arg) })
-	kit.If(msg.Result() == "", func() { msg.TableEcho() })
-	res += ESC_K + strings.ReplaceAll(msg.Result(), lex.NL, CRNL)
-	kit.If(!strings.HasSuffix(res, CRNL), func() { res += CRNL })
+	msg, end := m.Cmd(arg, kit.Dict(ice.MSG_USERUA, "ish")), false
+	if res += CRNL + ESC_K; msg.IsErrNotFound() {
+		s.w.Write([]byte(res))
+		r, w, _ := os.Pipe()
+		res, s.pipe = "", w
+		m.Cmd(cli.SYSTEM, arg, kit.Dict(cli.CMD_INPUT, r, cli.CMD_OUTPUT, nfs.Pipe(m, func(buf []byte) {
+			s.w.Write(bytes.ReplaceAll(buf, []byte(lex.NL), []byte(CRNL)))
+			end = bytes.HasSuffix(buf, []byte(lex.NL))
+		}), cli.CMD_ENV, kit.EnvList("TERM", "xterm", "LINES", m.Option("rows"), "COLUMNS", m.Option("cols"), "SHELL", "/bin/ish", "USER", m.Option(ice.MSG_USERNAME))))
+	} else {
+		kit.If(msg.Result() == "", func() { msg.TableEcho() })
+		res += strings.ReplaceAll(msg.Result(), lex.NL, CRNL)
+		end = strings.HasSuffix(res, lex.NL)
+	}
+	kit.If(!end, func() { res += CRNL })
 	return res + s.prompt()
 }
 func (s iterm) hist(res string, skip int) string {
@@ -301,8 +330,8 @@ const (
 	SUB    = "\032" // Ctrl+Z
 	ESC    = "\033" // Ctrl+[
 	ESC_C  = "\033[C"
-	ESC_K  = "\033[K"
 	ESC_H  = "\033[H"
+	ESC_K  = "\033[K"
 	ESC_2J = "\033[2J"
 	ESC_s  = "\033[s"
 	ESC_u  = "\033[u"

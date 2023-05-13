@@ -177,8 +177,22 @@ func CopyFile(m *ice.Message, to, from string, cb func([]byte, int) []byte) {
 		})
 	})
 }
-func Pipe(m *ice.Message, cb func(string)) io.WriteCloser {
+func Pipe(m *ice.Message, cb ice.Any) io.WriteCloser {
 	r, w := io.Pipe()
-	m.Go(func() { kit.For(r, cb) })
+	switch cb := cb.(type) {
+	case func(string):
+		m.Go(func() { kit.For(r, cb) })
+	case func([]byte):
+		m.Go(func() {
+			buf := make([]byte, ice.MOD_BUFS)
+			for {
+				n, e := r.Read(buf)
+				if cb(buf[:n]); e != nil {
+					break
+				}
+			}
+		})
+	default:
+	}
 	return w
 }

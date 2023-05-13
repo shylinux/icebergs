@@ -53,24 +53,23 @@ Volcanos(chat.ONIMPORT, {
 		if (can.ConfHeight() < 800) { item.top = 25, item.height = can.ConfHeight()-145, item.width = can.ConfWidth()-110 }
 		if (can.user.isMobile) { item.left = 0, item.top = 25, item.height = can.ConfHeight()-145, item.width = can.ConfWidth() }
 		can.onappend.plugin(can, item, function(sub) { can.ondetail.select(can, sub._target)
+			can.page.style(can, sub._target, html.MIN_WIDTH, 480)
 			var index = 0; can.core.Item({
 				"#f95f57": function(event) { sub.onaction.close(event, sub) },
-				"#fcbc2f": function(event) {
-					var dock = can.page.Append(can, can.ui.dock._output, [{view: html.ITEM, list: [{view: html.ICON, list: [{img: can.misc.PathJoin(item.icon)}]}], onclick: function() {
-						can.onmotion.toggle(can, sub._target, true), can.page.Remove(can, dock)
-					}}])._target; sub.onmotion.hidden(sub, sub._target)
-				},
+				"#fcbc2f": function(event) { var dock = can.page.Append(can, can.ui.dock._output, [{view: html.ITEM, list: [{view: html.ICON, list: [{img: can.misc.PathJoin(item.icon)}]}], onclick: function() {
+					can.onmotion.toggle(can, sub._target, true), can.page.Remove(can, dock)
+				}}])._target; sub.onmotion.hidden(sub, sub._target) },
 				"#32c840": function(event) { sub.onaction.full(event, sub) },
 			}, function(color, cb) { can.page.insertBefore(can, [{view: [[html.ITEM, html.BUTTON]], style: {"background-color": color, right: 10+20*index++}, onclick: cb}], sub._output) })
-			sub.onimport.size(sub, item.height, item.width, true), can.onmotion.move(can, sub._target, {"z-index": 10, top: item.top, left: item.left})
-			sub.onimport._open = function(sub, msg, arg) { can.onimport._window(can, {index: "web.chat.iframe", args: [arg]}) }
-			sub.onmotion.resize(can, sub._target, function(height, width) { sub.onimport.size(sub, height, width) }, 25)
-			sub.onexport.record = function(sub, value, key, item) { can.onimport._window(can, item) }
-			sub.onexport.actionHeight = function(sub) { return can.page.ClassList.has(can, sub._target, html.OUTPUT)? 0: html.ACTION_HEIGHT+20 },
-			sub.onexport.marginTop = function() { return 25 }
 			sub.onappend.desktop = function(item) { can.onimport._item(can, item) }
 			sub.onappend.dock = function(item) { can.ui.dock.runAction(can.request(event, item), mdb.CREATE, [], function() { can.ui.dock.Update() }) }
+			sub.onimport._open = function(sub, msg, arg) { can.onimport._window(can, {index: web.CHAT_IFRAME, args: [arg]}) }
 			sub.onexport.output = function() { if (item.index == "web.chat.macos.opens") { can.page.Remove(can, sub._target) } }
+			sub.onexport.record = function(sub, value, key, item) { can.onimport._window(can, item) }
+			sub.onexport.marginTop = function() { return 25 }
+			sub.onexport.actionHeight = function(sub) { return can.page.ClassList.has(can, sub._target, html.OUTPUT)? 0: html.ACTION_HEIGHT+20 },
+			sub.onmotion.resize(can, sub._target, function(height, width) { sub.onimport.size(sub, height, width) }, 25)
+			sub.onimport.size(sub, item.height, item.width, true), can.onmotion.move(can, sub._target, {"z-index": 10, top: item.top, left: item.left})
 			sub._target.onclick = function(event) { can.page.Select(can, sub._target.parentNode, html.FIELDSET, function(target) { can.page.style(can, target, "z-index", target == sub._target? "10": "9") }) }
 		}, can.ui.desktop)
 	},

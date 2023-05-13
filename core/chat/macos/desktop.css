@@ -22,20 +22,20 @@ fieldset.macos.desktop>div.output>div.desktop>div.item img { width:80px; border-
 fieldset.macos.desktop>div.output>div.desktop>div.item>div.name { font-size:12px; width:80px; overflow:hidden; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset { border-radius:10px; position:absolute; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>div.output>table.content { width:100%; }
-fieldset.macos.desktop>div.output>div.desktop>fieldset>div.item.button { border-radius:20px; height:20px; width:20px; scale:0.7; position:absolute; top:17px; right:10px; }
+fieldset.macos.desktop>div.output>div.desktop>fieldset>div.item.button { border-radius:20px; height:20px; width:20px; scale:0.7; position:absolute; top:16px; right:10px; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>legend { background-color:unset; padding-right:10px; margin:10px 0; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>*:not(.textarea) { margin:10px 0px 10px 10px; }
-fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>div.icon { margin-left:0; margin-top:12px; margin-bottom:8px; }
+fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>div.icon { margin-left:0; margin-top:10px; margin-bottom:8px; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>div.item.icons { margin-left:0; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>div.item:last-child { margin-right:20px; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>div.item:last-child { margin-right:80px; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>div.action>* { margin:10px 0px 10px 10px; }
-fieldset.macos.desktop>div.output>div.desktop>fieldset>div.action>div.item.icons>span.icon { margin-top:12px; }
+fieldset.macos.desktop>div.output>div.desktop>fieldset>div.action>div.item.icons>span.icon { margin-top:10px; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>div.action>div.item:last-child { margin-right:80px; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset.web.wiki.feel>div.status { display:none; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset.web.code.vimer>div.status { display:none; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset.web.code.xterm>div.status { display:none; }
-fieldset.macos.desktop>div.output>div.desktop>fieldset.web.code.xterm>div.action>div.tabs:only-child { display:none; }
+fieldset.web.code.xterm>div.action>div.tabs:only-child { display:none; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset.web.code.compile>form.option>div.item:last-child { margin-right:80px; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset.web.chat.iframe>div.status { display:none; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset.web.chat.iframe>form.option>div.item.hash>input { width:360px; }
@@ -87,11 +87,13 @@ body.dark fieldset.macos.desktop>div.output>div.desktop>fieldset>div.status { bo
 body.dark div.carte.macos.float { background-color:#29323beb; }
 body.black fieldset.macos.desktop>div.output>fieldset.macos.searchs a { color:cyan; }
 body.black fieldset.macos.desktop>div.output>div.desktop>fieldset { background-color:#3433337a; }
+body.black fieldset.macos.desktop>div.output>div.desktop fieldset input { background-color:#243783bd; box-shadow:unset; }
 body.black fieldset.macos.desktop>div.output>div.desktop fieldset table.content tbody tr:nth-child(odd) { background-color:#1a1d1ee0; }
 body.black fieldset.macos.desktop>div.output>div.desktop fieldset table.content tbody tr:nth-child(even) { background-color:#282b2fc7; }
 body.black fieldset.macos.desktop>div.output>div.desktop>fieldset>div.output { background-color:#1a1d1d9c; }
 body.white fieldset.macos.desktop>div.output>fieldset.macos.searchs a { color:black; }
 body.white fieldset.macos.desktop>div.output>div.desktop>fieldset { background-color:#f5f5f594; }
+body.white fieldset.macos.desktop>div.output>div.desktop fieldset input { background-color:#ffffff7d; box-shadow:unset; }
 body.white fieldset.macos.desktop>div.output>div.desktop fieldset table.content tbody tr:nth-child(odd) { background-color:#a5afbdb5; }
 body.white fieldset.macos.desktop>div.output>div.desktop fieldset table.content tbody tr:nth-child(even) { background-color:#d4dddfd4; }
 body.white fieldset.macos.desktop>div.output>div.desktop>fieldset>div.output { background-color:#ffffff94; }

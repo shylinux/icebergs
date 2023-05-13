@@ -101,18 +101,18 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		GO: {Name: "go path auto", Help: "后端编程", Actions: ice.MergeActions(ice.Actions{
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
-				if arg[1] == "misc/xterm/iterm.go" {
+				if arg[1] == "main.go" {
 					ProcessXterm(m, "ish", "", arg[1])
-				} else if arg[1] == "main.go" {
+				} else if arg[1] == "misc/xterm/iterm.go" {
 					ProcessXterm(m, "ish", "", arg[1])
 				} else {
 					ctx.ProcessCommand(m, yac.STACK, kit.Simple(path.Join(arg[2], arg[1])))
 				}
 			}},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
-				if arg[1] == "misc/xterm/iterm.go" {
+				if arg[1] == "main.go" {
 					ProcessXterm(m, "ish", "", arg[1])
-				} else if arg[1] == "main.go" {
+				} else if arg[1] == "misc/xterm/iterm.go" {
 					ProcessXterm(m, "ish", "", arg[1])
 				} else if cmd := ctx.GetFileCmd(path.Join(arg[2], arg[1])); cmd != "" {
 					ctx.ProcessCommand(m, cmd, kit.Simple())

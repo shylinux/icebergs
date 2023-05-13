@@ -26,6 +26,7 @@ const (
 	BASH = "bash"
 	CONF = "conf"
 	VIM  = "vim"
+	ISH  = "ish"
 )
 const SH = nfs.SH
 

@@ -3,6 +3,7 @@ package xterm
 import (
 	"os"
 	"os/exec"
+	"path"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/lex"
@@ -38,7 +39,7 @@ func (s xterm) Read(buf []byte) (int, error)        { return s.File.Read(buf) }
 func (s xterm) Close() error                        { return s.Cmd.Process.Kill() }
 
 func Command(m *ice.Message, dir string, cli string, arg ...string) (XTerm, error) {
-	if cli == "ish" {
+	if path.Base(cli) == "ish" {
 		return newiterm(m)
 	}
 	cmd := exec.Command(cli, arg...)

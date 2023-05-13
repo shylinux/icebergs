@@ -32,7 +32,7 @@ func _xterm_get(m *ice.Message, h string) xterm.XTerm {
 		m.Go(func() {
 			defer term.Close()
 			defer mdb.HashRemove(m, mdb.HASH, h)
-			// m.Log(cli.START, strings.Join(term.Args, lex.SP))
+			m.Log(cli.START, strings.Join(ls, lex.SP))
 			buf := make([]byte, ice.MOD_BUFS)
 			for {
 				if n, e := term.Read(buf); !m.Warn(e) && e == nil {
@@ -78,12 +78,12 @@ func init() {
 						return []string{ssh.SHELL, SH, "/bin/sh"}
 					}
 				})
-				mdb.IsSearchForEach(m, arg, func() []string { return []string{ssh.SHELL, "ice", "ish"} })
+				mdb.IsSearchForEach(m, arg, func() []string { return []string{ssh.SHELL, "ice", "/bin/ish"} })
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch mdb.HashInputs(m, arg); arg[0] {
 				case mdb.TYPE:
-					m.Push(arg[0], "ish", BASH, SH)
+					m.Push(arg[0], ISH, SH)
 					m.Cmd(mdb.SEARCH, mdb.FOREACH, ssh.SHELL, ice.OptionFields("type,name,text"), func(value ice.Maps) {
 						kit.If(value[mdb.TYPE] == ssh.SHELL, func() { m.Push(arg[0], value[mdb.TEXT]) })
 					})
@@ -126,7 +126,7 @@ func init() {
 			ctx.PROCESS: {Hand: func(m *ice.Message, arg ...string) {
 				ctx.ProcessField(m, m.PrefixKey(), func() string { return m.Cmdx("", mdb.CREATE, arg) }, arg...)
 			}},
-		}, ctx.CmdAction(), ctx.ProcessAction(), web.DreamAction(), mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,path,theme,daemon")), Hand: func(m *ice.Message, arg ...string) {
+		}, ctx.CmdAction(), ctx.ProcessAction(), web.DreamAction(), mdb.ImportantHashAction(), mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,path,theme,daemon")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) == 0 {
 				if m.Length() == 0 {
 					m.Action(mdb.CREATE)

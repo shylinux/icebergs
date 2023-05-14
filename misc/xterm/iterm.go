@@ -271,10 +271,17 @@ func (s iterm) exec(m *ice.Message, res string) string {
 		s.w.Write([]byte(res))
 		r, w, _ := os.Pipe()
 		res, s.pipe = "", w
+		env := kit.EnvList(
+			"TERM", "xterm",
+			"LINES", m.Option("rows"),
+			"COLUMNS", m.Option("cols"),
+			"SHELL", "/bin/ish",
+			"USER", m.Option(ice.MSG_USERNAME),
+		)
 		m.Cmd(cli.SYSTEM, arg, kit.Dict(cli.CMD_INPUT, r, cli.CMD_OUTPUT, nfs.Pipe(m, func(buf []byte) {
 			s.w.Write(bytes.ReplaceAll(buf, []byte(lex.NL), []byte(CRNL)))
 			end = bytes.HasSuffix(buf, []byte(lex.NL))
-		}), cli.CMD_ENV, kit.EnvList("TERM", "xterm", "LINES", m.Option("rows"), "COLUMNS", m.Option("cols"), "SHELL", "/bin/ish", "USER", m.Option(ice.MSG_USERNAME))))
+		}), cli.CMD_ENV, env))
 	} else {
 		kit.If(msg.Result() == "", func() { msg.TableEcho() })
 		res += strings.ReplaceAll(msg.Result(), lex.NL, CRNL)

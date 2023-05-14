@@ -21,9 +21,12 @@ Volcanos(chat.ONIMPORT, {
 	}) },
 	_searchs: function(can) { can.onappend.plugin(can, {index: "web.chat.macos.searchs"}, function(sub) { can.ui.searchs = sub
 		can.page.style(can, sub._target, html.LEFT, can.ConfWidth()/4, html.TOP, can.ConfHeight()/4), sub.onimport.size(sub, can.ConfHeight()/2, can.ConfWidth()/2, true)
-		sub.onexport.record = function(sub, value, key, item) {
+		sub.onexport.record = function(sub, value, key, item, event) {
 			if (item.cmd == ctx.COMMAND) { can.onimport._window(can, {index: can.core.Keys(item.type, item.name.split(lex.SP)[0])}) }
 			if (item.type == nfs.FILE) { can.onimport._window(can, {index: web.CODE_VIMER, args: can.misc.SplitPath(can, item.text) }) }
+			if (item.type == ice.CMD) { can.onimport._window(can, {index: item.name, args: can.base.Obj(item.text) }) }
+			if (can.base.isIn(item.type, web.LINK, web.WORKER, web.SERVER, web.GATEWAY)) { can.onimport._window(can, {index: web.CHAT_IFRAME, args: [item.text]}), can.onkeymap.prevent(event) }
+			if (item.type == ssh.SHELL) { can.onimport._window(can, {index: web.CODE_XTERM, args: [item.text]}) }
 		}, can.ConfHeight() < 800 && can.onmotion.delay(can, function() { can.onmotion.hidden(can, sub._target) })
 		can.onmotion.hidden(can, sub._target)
 	}) },

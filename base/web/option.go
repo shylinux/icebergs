@@ -81,14 +81,13 @@ func PushNotice(m *ice.Message, arg ...ice.Any) {
 	} else if m.Option(ice.MSG_USERPOD) == "" {
 		m.Cmd(SPACE, m.Option(ice.MSG_DAEMON), arg, ice.Maps{ice.MSG_OPTION: "", ice.MSG_OPTS: ""})
 	} else {
-		m.Cmd(Prefix(SPIDE), ice.OPS, MergeURL2(m, P(SHARE, TOAST, m.Option(ice.MSG_DAEMON))), ice.ARG, kit.Format(arg))
+		m.Cmd(SPACE, kit.Keys(m.Option("__target"), m.Option(ice.MSG_DAEMON)), arg, ice.Maps{ice.MSG_OPTION: "", ice.MSG_OPTS: ""})
 	}
 }
-func PushNoticeGrow(m *ice.Message, arg ...ice.Any)  { PushNotice(m, kit.List("grow", arg)...) }
 func PushNoticeToast(m *ice.Message, arg ...ice.Any) { PushNotice(m, kit.List("toast", arg)...) }
-func PushStream(m *ice.Message) *ice.Message {
-	m.ProcessHold()
-	return m.Options(cli.CMD_OUTPUT, file.NewWriteCloser(func(buf []byte) { PushNoticeGrow(m, string(buf)) }, func() { PushNoticeToast(m, "done") }))
+func PushNoticeGrow(m *ice.Message, arg ...ice.Any)  { PushNotice(m, kit.List("grow", arg)...) }
+func PushStream(m *ice.Message) {
+	m.Options(cli.CMD_OUTPUT, file.NewWriteCloser(func(buf []byte) { PushNoticeGrow(m, string(buf)) }, func() { PushNoticeToast(m, "done") })).ProcessHold()
 }
 
 func Toast(m *ice.Message, text string, arg ...ice.Any) { // [title [duration [progress]]]

@@ -23,7 +23,7 @@ func _xterm_get(m *ice.Message, h string) xterm.XTerm {
 	mdb.HashModify(m, mdb.TIME, m.Time(), cli.DAEMON, m.Option(ice.MSG_DAEMON))
 	return mdb.HashSelectTarget(m, h, func(value ice.Maps) ice.Any {
 		text := strings.Split(value[mdb.TEXT], lex.NL)
-		ls := kit.Split(strings.Split(kit.Select(nfs.SH, value[mdb.TYPE]), " # ")[0])
+		ls := kit.Split(strings.Split(kit.Select(ISH, value[mdb.TYPE]), " # ")[0])
 		kit.If(value[nfs.PATH] != "" && !strings.HasSuffix(value[nfs.PATH], nfs.PS), func() { value[nfs.PATH] = path.Dir(value[nfs.PATH]) })
 		term, e := xterm.Command(m, value[nfs.PATH], kit.Select(ls[0], cli.SystemFind(m, ls[0])), ls[1:]...)
 		if m.Warn(e) {
@@ -57,7 +57,8 @@ func _xterm_get(m *ice.Message, h string) xterm.XTerm {
 func _xterm_echo(m *ice.Message, h string, str string) {
 	m.Options(ice.MSG_DAEMON, mdb.HashSelectField(m, h, cli.DAEMON))
 	// m.Option(ice.LOG_DISABLE, ice.TRUE)
-	m.Debug("what ---%o--- ---[%v]---", []byte(str), str)
+	// m.Debug("what ---%o--- ---[%v]---", []byte(str), str)
+	m.Debug("what ---%o---", []byte(str))
 	web.PushNoticeGrow(m, h, str)
 }
 func _xterm_cmds(m *ice.Message, h string, cmd string, arg ...ice.Any) {
@@ -78,7 +79,7 @@ func init() {
 						return []string{ssh.SHELL, SH, "/bin/sh"}
 					}
 				})
-				mdb.IsSearchForEach(m, arg, func() []string { return []string{ssh.SHELL, "ice", "/bin/ish"} })
+				mdb.IsSearchForEach(m, arg, func() []string { return []string{ssh.SHELL, ISH, "/bin/ish"} })
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch mdb.HashInputs(m, arg); arg[0] {
@@ -110,7 +111,8 @@ func init() {
 			}},
 			web.INPUT: {Hand: func(m *ice.Message, arg ...string) {
 				if b, e := base64.StdEncoding.DecodeString(strings.Join(arg, "")); !m.Warn(e) {
-					m.Debug("what ---%o--- ---[%v]---", b, string(b))
+					// m.Debug("what ---%o--- ---[%v]---", b, string(b))
+					m.Debug("what ---%o---", b)
 					_xterm_get(m, "").Write(string(b))
 				}
 			}},

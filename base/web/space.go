@@ -122,11 +122,8 @@ func _space_exec(m *ice.Message, source, target []string, c *websocket.Conn) {
 	case cli.PWD:
 		m.Push(mdb.LINK, m.MergePod(kit.Select("", source, -1)))
 	default:
-		kit.If(aaa.Right(m, m.Detailv()), func() {
-			m.TryCatch(m, true, func(_ *ice.Message) {
-				m = m.Cmd()
-			})
-		})
+		m.Option("__target", kit.Reverse(kit.Simple(source)))
+		kit.If(aaa.Right(m, m.Detailv()), func() { m.TryCatch(m, true, func(_ *ice.Message) { m = m.Cmd() }) })
 	}
 	defer m.Cost(kit.Format("%v->%v %v %v", source, target, m.Detailv(), m.FormatSize()))
 	_space_echo(m.Set(ice.MSG_OPTS).Options(log.DEBUG, m.Option(log.DEBUG)), []string{}, kit.Reverse(kit.Simple(source)), c)

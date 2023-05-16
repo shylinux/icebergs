@@ -40,7 +40,7 @@ func _xterm_get(m *ice.Message, h string) xterm.XTerm {
 						if cmd := text[0]; text[0] != "" {
 							m.Go(func() {
 								m.Sleep30ms()
-								term.Write(cmd + lex.NL)
+								term.Writeln(cmd)
 							})
 						}
 						text = text[1:]
@@ -113,7 +113,7 @@ func init() {
 				if b, e := base64.StdEncoding.DecodeString(strings.Join(arg, "")); !m.Warn(e) {
 					// m.Debug("what ---%o--- ---[%v]---", b, string(b))
 					m.Debug("what ---%o---", b)
-					_xterm_get(m, "").Write(string(b))
+					_xterm_get(m, "").Write(b)
 				}
 			}},
 			web.OUTPUT: {Help: "全屏", Hand: func(m *ice.Message, arg ...string) {

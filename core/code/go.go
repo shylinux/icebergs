@@ -99,6 +99,13 @@ const GO = "go"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
+		"godoc": {Name: "godoc key auto", Hand: func(m *ice.Message, arg ...string) {
+			if len(arg) == 0 {
+				m.Cmdy(cli.SYSTEM, "go", "list", "std")
+			} else {
+				m.Cmdy(cli.SYSTEM, "go", "doc", arg)
+			}
+		}},
 		GO: {Name: "go path auto", Help: "后端编程", Actions: ice.MergeActions(ice.Actions{
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[1] == "main.go" {

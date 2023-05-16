@@ -147,14 +147,6 @@ func (f *Frame) Begin(m *ice.Message, arg ...string) {
 func (f *Frame) Start(m *ice.Message, arg ...string) {
 	m.Optionv(FRAME, f)
 	switch f.source = kit.Select(STDIO, arg, 0); f.source {
-	case WEBIO:
-		wio := m.Optionv(WEBIO).(io.ReadWriter)
-		r, w, _ := os.Pipe()
-		go func() { io.Copy(w, wio) }()
-		f.pipe, f.stdin, f.stdout = w, r, wio
-		kit.If(f.target == nil, func() { f.target = m.Target() })
-		m.Optionv(ice.MSG_OPTS, ice.MSG_USERNAME, ice.MSG_USERROLE)
-		f.scan(m, STDIO, "")
 	case STDIO:
 		r, w, _ := os.Pipe()
 		go func() { io.Copy(w, os.Stdin) }()

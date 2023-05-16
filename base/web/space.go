@@ -87,20 +87,24 @@ func _space_handle(m *ice.Message, safe bool, name string, c *websocket.Conn) {
 			} else { // 上行请求
 				msg.Option(ice.MSG_USERROLE, aaa.VOID)
 			}
-			if msg.Option("_exec") == "go" {
-				m.Go(func() { _space_exec(msg, source, target, c) }, strings.Join(kit.Simple(SPACE, name, msg.Detailv()), lex.SP))
-			} else {
-				_space_exec(msg, source, target, c)
-			}
+			m.Go(func() { _space_exec(msg, source, target, c) }, strings.Join(kit.Simple(SPACE, name, msg.Detailv()), lex.SP))
+			// if msg.Option("_exec") == "go" {
+			// 	m.Go(func() { _space_exec(msg, source, target, c) }, strings.Join(kit.Simple(SPACE, name, msg.Detailv()), lex.SP))
+			// } else {
+			// 	_space_exec(msg, source, target, c)
+			// }
 		} else {
+			done := false
 			m.Warn(!mdb.HashSelectDetail(m, next, func(value ice.Map) {
 				switch c := value[mdb.TARGET].(type) {
 				case (*websocket.Conn): // 转发报文
 					_space_echo(msg, source, target, c)
 				case ice.Handler: // 接收响应
+					done = true
 					c(msg)
 				}
 			}), ice.ErrNotFound, next)
+			kit.If(done, func() { mdb.HashRemove(m, mdb.HASH, next) })
 		}
 	}
 }
@@ -133,12 +137,11 @@ func _space_echo(m *ice.Message, source, target []string, c *websocket.Conn) {
 		m.Log(tcp.SEND, "%v->%v %v %v", source, target, m.Detailv(), m.FormatsMeta(nil))
 	}
 }
-func _space_send(m *ice.Message, name string, arg ...string) {
+func _space_send(m *ice.Message, name string, arg ...string) (h string) {
 	wait, done := m.Wait(func(msg *ice.Message, arg ...string) {
 		m.Cost(kit.Format("%v->[%v] %v %v", m.Optionv(ice.MSG_SOURCE), name, m.Detailv(), msg.FormatSize())).Copy(msg)
 	})
-	h := mdb.HashCreate(m.Spawn(), mdb.TYPE, tcp.SEND, mdb.NAME, kit.Keys(name, m.Target().ID()), mdb.TEXT, kit.Join(arg, lex.SP), kit.Dict(mdb.TARGET, done))
-	defer mdb.HashRemove(m, mdb.HASH, h)
+	h = mdb.HashCreate(m.Spawn(), mdb.TYPE, tcp.SEND, mdb.NAME, kit.Keys(name, m.Target().ID()), mdb.TEXT, kit.Join(arg, lex.SP), kit.Dict(mdb.TARGET, done))
 	if target := kit.Split(name, nfs.PT, nfs.PT); mdb.HashSelectDetail(m, target[0], func(value ice.Map) {
 		if c, ok := value[mdb.TARGET].(*websocket.Conn); !m.Warn(!ok, ice.ErrNotValid, mdb.TARGET) {
 			kit.For(m.Optionv(ice.MSG_OPTS), func(k string) { m.Optionv(k, m.Optionv(k)) })
@@ -149,6 +152,7 @@ func _space_send(m *ice.Message, name string, arg ...string) {
 	} else {
 		m.Warn(kit.IndexOf([]string{ice.OPS, ice.DEV}, target[0]) == -1, ice.ErrNotFound, name)
 	}
+	return
 }
 
 const (

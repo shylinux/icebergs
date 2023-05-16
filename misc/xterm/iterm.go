@@ -35,25 +35,28 @@ type iterm struct {
 	*idata
 }
 
-func newiterm(m *ice.Message) (XTerm, error) {
+func NewITerm(m *ice.Message) (XTerm, error) {
 	r, w, e := os.Pipe()
 	return &iterm{m: m, r: r, w: w, idata: &idata{cmds: kit.Simple(
 		kit.SortedKey(ice.Info.Index),
 		m.Cmd(ctx.COMMAND).Appendv(ctx.INDEX),
 		m.Cmd(nfs.DIR, "/bin", mdb.NAME).Appendv(mdb.NAME),
+		strings.Split(m.Cmdx(nfs.CAT, kit.HomePath(".bash_history")), lex.NL),
 	)}}, e
 }
 func (s iterm) Setsize(rows, cols string) error {
 	s.w.Write([]byte(s.prompt()))
 	return nil
 }
-func (s iterm) Writeln(data string, arg ...ice.Any) { s.Write(kit.Format(data, arg...) + lex.NL) }
-func (s iterm) Write(data string) (int, error) {
+func (s iterm) Writeln(str string, arg ...ice.Any) {
+	s.Write([]byte(kit.Format(str, arg...) + lex.NL))
+}
+func (s iterm) Write(buf []byte) (int, error) {
 	if s.pipe != nil {
-		return s.pipe.Write([]byte(data))
+		return s.pipe.Write(buf)
 	}
 	res, ctrl := "", ""
-	for _, c := range data {
+	for _, c := range string(buf) {
 		switch c := string(c); c {
 		case SOH: // Ctrl+A
 			res += s.repeat(s.arg)
@@ -176,7 +179,7 @@ func (s iterm) Write(data string) (int, error) {
 		}
 	}
 	s.w.Write([]byte(res))
-	return len(data), nil
+	return len(buf), nil
 }
 func (s iterm) Read(buf []byte) (int, error) {
 	return s.r.Read(buf)

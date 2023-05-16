@@ -21,7 +21,7 @@ type Winsize struct {
 type XTerm interface {
 	Setsize(rows, cols string) error
 	Writeln(data string, arg ...ice.Any)
-	Write(data string) (int, error)
+	Write(buf []byte) (int, error)
 	Read(buf []byte) (int, error)
 	Close() error
 }
@@ -33,14 +33,14 @@ type xterm struct {
 func (s xterm) Setsize(rows, cols string) error {
 	return Setsize(s.File, &Winsize{Rows: uint16(kit.Int(rows)), Cols: uint16(kit.Int(cols))})
 }
-func (s xterm) Writeln(data string, arg ...ice.Any) { s.Write(kit.Format(data, arg...) + lex.NL) }
-func (s xterm) Write(data string) (int, error)      { return s.File.Write([]byte(data)) }
-func (s xterm) Read(buf []byte) (int, error)        { return s.File.Read(buf) }
-func (s xterm) Close() error                        { return s.Cmd.Process.Kill() }
+func (s xterm) Writeln(str string, arg ...ice.Any) { s.Write([]byte(kit.Format(str, arg...) + lex.NL)) }
+func (s xterm) Write(buf []byte) (int, error)      { return s.File.Write(buf) }
+func (s xterm) Read(buf []byte) (int, error)       { return s.File.Read(buf) }
+func (s xterm) Close() error                       { return s.Cmd.Process.Kill() }
 
 func Command(m *ice.Message, dir string, cli string, arg ...string) (XTerm, error) {
 	if path.Base(cli) == "ish" {
-		return newiterm(m)
+		return NewITerm(m)
 	}
 	cmd := exec.Command(cli, arg...)
 	cmd.Dir = nfs.MkdirAll(m, kit.Path(dir))

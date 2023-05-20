@@ -2,6 +2,7 @@ package nfs
 
 import (
 	"archive/tar"
+	"archive/zip"
 	"compress/gzip"
 	"io"
 	"os"
@@ -13,7 +14,20 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _tar_list(m *ice.Message, p string, cb func(*tar.Header, *tar.Reader, int)) {
+func _zip_list(m *ice.Message, p string, cb func(zip.FileHeader, io.Reader, int)) {
+	if f, e := zip.OpenReader(p); m.Warn(e, ice.ErrNotValid, p) {
+		return
+	} else {
+		defer f.Close()
+		for i, f := range f.File {
+			if r, e := f.Open(); e == nil {
+				defer r.Close()
+				cb(f.FileHeader, r, i)
+			}
+		}
+	}
+}
+func _tar_list(m *ice.Message, p string, cb func(*tar.Header, io.Reader, int)) {
 	Open(m, p, func(r io.Reader) {
 		for {
 			switch kit.Ext(p) {
@@ -47,7 +61,8 @@ func _tar_list(m *ice.Message, p string, cb func(*tar.Header, *tar.Reader, int))
 }
 
 const (
-	GZ = "gz"
+	GZ  = "gz"
+	ZIP = "zip"
 )
 const TAR = "tar"
 
@@ -58,7 +73,23 @@ func init() {
 			mdb.PREV: {Hand: func(m *ice.Message, arg ...string) { mdb.NextPageLimit(m, arg[0], kit.Slice(arg, 1)...) }},
 			mdb.EXPORT: {Hand: func(m *ice.Message, arg ...string) {
 				list, size := kit.Dict(), 0
-				_tar_list(m, m.Option(PATH), func(h *tar.Header, r *tar.Reader, i int) {
+				if kit.Ext(m.Option(PATH)) == ZIP {
+					_zip_list(m, m.Option(PATH), func(h zip.FileHeader, r io.Reader, i int) {
+						p := path.Join(path.Dir(m.Option(PATH)), kit.Split(path.Base(m.Option(PATH)), "-.")[0], h.Name)
+						if strings.HasSuffix(h.Name, PS) {
+							MkdirAll(m, p)
+							return
+						}
+						kit.IfNoKey(list, path.Dir(p), func(p string) { MkdirAll(m, p) })
+						Create(m, p, func(w io.Writer) {
+							os.Chmod(p, os.FileMode(h.Mode()))
+							Copy(m, w, r, func(n int) { size += n })
+							kit.If(m.Option(FILE), func() { m.Cmdy(DIR, p).Cmdy(CAT, p) })
+						})
+					})
+					return
+				}
+				_tar_list(m, m.Option(PATH), func(h *tar.Header, r io.Reader, i int) {
 					if h.Name == m.Option(FILE) || m.Option(FILE) == "" {
 						p := path.Join(path.Dir(m.Option(PATH)), h.Name)
 						if strings.HasSuffix(h.Name, PS) {
@@ -80,7 +111,7 @@ func init() {
 				return
 			}
 			page, size := mdb.OptionPages(m, kit.Slice(arg, 2)...)
-			_tar_list(m, arg[0], func(h *tar.Header, r *tar.Reader, i int) {
+			_tar_list(m, arg[0], func(h *tar.Header, r io.Reader, i int) {
 				if len(kit.Slice(arg, 0, 2)) > 1 {
 					if h.Name != arg[1] {
 						return

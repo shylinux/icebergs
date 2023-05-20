@@ -71,6 +71,9 @@ const XTERM = "xterm"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		XTERM: {Name: "xterm hash auto", Help: "命令行", Actions: ice.MergeActions(ice.Actions{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				kit.If(m.Cmd("").Length() == 0, func() { m.Cmd("", mdb.CREATE, mdb.TYPE, ISH) })
+			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				mdb.IsSearchForEach(m, arg, func() []string {
 					if nfs.Exists(m, "/bin/bash") {
@@ -105,7 +108,9 @@ func init() {
 					m.Cmd(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND, "", "", ice.OptionFields(ctx.INDEX), func(value ice.Maps) { push(ctx.INDEX, value[ctx.INDEX]) })
 				}
 			}},
-			mdb.CREATE: {Hand: func(m *ice.Message, arg ...string) { m.ProcessRewrite(mdb.HASH, mdb.HashCreate(m, arg)) }},
+			mdb.CREATE: {Hand: func(m *ice.Message, arg ...string) {
+				m.ProcessRewrite(mdb.HASH, mdb.HashCreate(m, arg))
+			}},
 			web.RESIZE: {Hand: func(m *ice.Message, arg ...string) {
 				_xterm_get(m, "").Setsize(m.OptionDefault("rows", "24"), m.OptionDefault("cols", "80"))
 			}},

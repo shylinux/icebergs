@@ -151,7 +151,7 @@ const (
 	FORM   = "form"
 	BODY   = "body"
 
-	ApplicationJSON  = "Application/json"
+	ApplicationJSON  = "application/json"
 	ApplicationOctet = "application/octet-stream"
 )
 const SERVE = "serve"

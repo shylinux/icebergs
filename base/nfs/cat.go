@@ -89,12 +89,14 @@ const (
 	CSV  = ice.CSV
 	JSON = ice.JSON
 
-	CONF = "conf"
-	XML  = "xml"
-	YML  = "yml"
-	TXT  = "txt"
-	MD   = "md"
-	PY   = "py"
+	PROTO = "proto"
+	YAML  = "yaml"
+	CONF  = "conf"
+	XML   = "xml"
+	YML   = "yml"
+	TXT   = "txt"
+	MD    = "md"
+	PY    = "py"
 
 	PNG = "png"
 	JPG = "jpg"
@@ -111,7 +113,7 @@ const CAT = "cat"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		CAT: {Name: "cat path auto", Help: "文件", Actions: ice.MergeActions(ice.Actions{ice.CTX_INIT: mdb.AutoConfig(SOURCE, kit.DictList(
-			HTML, CSS, JS, GO, SH, PY, SHY, CSV, JSON, CONFIGURE, CONF, XML, YML, TXT, MD, strings.ToLower(ice.LICENSE), strings.ToLower(ice.MAKEFILE),
+			HTML, CSS, JS, GO, SH, PY, SHY, CSV, JSON, CONFIGURE, PROTO, YAML, CONF, XML, YML, TXT, MD, strings.ToLower(ice.LICENSE), strings.ToLower(ice.MAKEFILE),
 		))}), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 || strings.HasSuffix(arg[0], PS) {
 				m.Cmdy(DIR, arg)

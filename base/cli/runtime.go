@@ -1,10 +1,12 @@
 package cli
 
 import (
+	"bytes"
 	"os"
 	"path"
 	"runtime"
 	"strings"
+	"time"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
@@ -53,7 +55,7 @@ func _runtime_init(m *ice.Message) {
 	m.Conf(RUNTIME, mdb.HASH, "")
 }
 func _runtime_hostinfo(m *ice.Message) {
-	m.Push("nCPU", strings.Count(m.Cmdx(nfs.CAT, "/proc/cpuinfo"), "processor"))
+	m.Push("nCPU", runtime.NumCPU())
 	for i, ls := range strings.Split(m.Cmdx(nfs.CAT, "/proc/meminfo"), lex.NL) {
 		if vs := kit.Split(ls, ": "); len(vs) > 1 {
 			if m.Push(strings.TrimSpace(vs[0]), kit.FmtSize(kit.Int64(strings.TrimSpace(vs[1]))*1024)); i > 1 {
@@ -62,6 +64,15 @@ func _runtime_hostinfo(m *ice.Message) {
 		}
 	}
 	m.Push("uptime", kit.Split(m.Cmdx(SYSTEM, "uptime"), mdb.FS)[0])
+	m.Push("GOMAXPROCS", runtime.GOMAXPROCS(0))
+	m.Push("NumGoroutine", runtime.NumGoroutine())
+	var stats runtime.MemStats
+	runtime.ReadMemStats(&stats)
+	m.Push("Sys", kit.FmtSize(int64(stats.Sys)))
+	m.Push("Alloc", kit.FmtSize(int64(stats.Alloc)))
+	m.Push("Objects", stats.HeapObjects)
+	m.Push("NumGC", stats.NumGC)
+	m.Push("LastGC", time.Unix(int64(stats.LastGC)/int64(time.Second), int64(stats.LastGC)%int64(time.Second)))
 }
 func _runtime_diskinfo(m *ice.Message) {
 	m.Spawn().Split(kit.Replace(m.Cmdx(SYSTEM, "df", "-h"), "Mounted on", "Mountedon"), "", lex.SP, lex.NL).Table(func(index int, value ice.Maps, head []string) {
@@ -133,7 +144,7 @@ const RUNTIME = "runtime"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		RUNTIME: {Name: "runtime info=bootinfo,ifconfig,diskinfo,hostinfo,userinfo,procinfo,bootinfo,api,cli,cmd,mod,env,path,chain auto", Help: "运行环境", Actions: ice.MergeActions(ice.Actions{
+		RUNTIME: {Name: "runtime info=bootinfo,ifconfig,diskinfo,hostinfo,userinfo,procinfo,bootinfo,api,cli,cmd,mod,env,path,chain,routine auto", Help: "运行环境", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { _runtime_init(m) }},
 			IFCONFIG:     {Hand: func(m *ice.Message, arg ...string) { m.Cmdy("tcp.host") }},
 			DISKINFO:     {Hand: func(m *ice.Message, arg ...string) { _runtime_diskinfo(m) }},
@@ -180,6 +191,30 @@ func init() {
 			"mod": {Hand: func(m *ice.Message, arg ...string) {
 				kit.For(ice.Info.Gomod, func(k string, v string) { m.Push(nfs.MODULE, k).Push(nfs.VERSION, v) })
 				m.StatusTimeCount()
+			}},
+			"routine": {Hand: func(m *ice.Message, arg ...string) {
+				buf := make([]byte, 4096*4096)
+				runtime.Stack(buf, true)
+				status := map[string]int{}
+			outer:
+				for _, v := range bytes.Split(buf, []byte(lex.NL+lex.NL)) {
+					ls := bytes.Split(v, []byte(lex.NL))
+					if ls := strings.SplitN(string(ls[0]), " ", 3); len(ls) > 0 {
+						m.Push(mdb.ID, ls[1]).Push("status", ls[2])
+						status[kit.Split(string(ls[2]), " []:")[0]]++
+					}
+					for i := 1; i < len(ls); i += 2 {
+						if bytes.HasPrefix(ls[i], []byte("shylinux.com/x/")) {
+							m.Push(nfs.PATH, kit.TrimPath(string(ls[i+1]))).Push("func", string(ls[i]))
+							continue outer
+						}
+					}
+					m.Push(nfs.PATH, kit.TrimPath(string(ls[2]))).Push("func", string(ls[1]))
+				}
+				var stats runtime.MemStats
+				runtime.ReadMemStats(&stats)
+				m.StatusTimeCount(status, "GOMAXPROCS", runtime.GOMAXPROCS(0), "NumGC", stats.NumGC, "Alloc", kit.FmtSize(int64(stats.Alloc)), "Sys", kit.FmtSize(int64(stats.Sys)))
+				m.Echo("%v", string(buf))
 			}},
 			ENV: {Hand: func(m *ice.Message, arg ...string) {
 				kit.For(os.Environ(), func(v string) {

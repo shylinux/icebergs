@@ -23,7 +23,7 @@ func init() {
 				}
 			}},
 			mdb.CREATE: {Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashCreate(m, mdb.TYPE, web.LINK, mdb.NAME, kit.ParseURL(m.Option(web.LINK)).Host, m.OptionSimple())
+				m.ProcessRewrite(mdb.HASH, mdb.HashCreate(m, mdb.TYPE, web.LINK, mdb.NAME, kit.ParseURL(m.Option(web.LINK)).Host, m.OptionSimple()))
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch mdb.HashInputs(m, arg); arg[0] {
@@ -31,7 +31,8 @@ func init() {
 					m.Push(arg[0], web.UserWeb(m).Host)
 				case mdb.LINK:
 					m.Push(arg[0], m.Option(ice.MSG_USERWEB))
-					m.Copy(m.Cmd(web.SPIDE).CutTo("client.url", arg[0]))
+					m.Push(arg[0], "http://localhost:20000")
+					m.Copy(m.Cmd(web.SPIDE).CutTo(web.CLIENT_URL, arg[0]))
 				}
 			}},
 			FAVOR_INPUTS: {Hand: func(m *ice.Message, arg ...string) {

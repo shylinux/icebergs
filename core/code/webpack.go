@@ -19,6 +19,9 @@ import (
 func _volcanos(m *ice.Message, p ...string) string { return ice.USR_VOLCANOS + path.Join(p...) }
 func _publish(m *ice.Message, p ...string) string  { return ice.USR_PUBLISH + path.Join(p...) }
 func _require(m *ice.Message, p string) string {
+	if kit.HasPrefix(p, "src/", "usr/") {
+		return path.Join("/require/", p)
+	}
 	return path.Join(nfs.PS, strings.TrimPrefix(strings.Replace(p, ice.USR_MODULES, "/require/modules/", 1), ice.USR_VOLCANOS))
 }
 func _webpack_css(m *ice.Message, css, js io.Writer, p string) {
@@ -67,6 +70,11 @@ func _webpack_cache(m *ice.Message, dir string, write bool) {
 	for _, k := range []string{ice.FRAME_JS} {
 		_webpack_js(m, js, _volcanos(m, k))
 	}
+	_webpack_css(m, css, js, "src/template/web.chat.header/dark.css")
+	_webpack_css(m, css, js, "src/template/web.chat.header/light.css")
+	_webpack_css(m, css, js, "src/template/web.chat.header/black.css")
+	_webpack_css(m, css, js, "src/template/web.chat.header/white.css")
+	_webpack_css(m, css, js, "src/template/web.chat.header/mobile.css")
 	mdb.HashSelects(m).Sort(nfs.PATH).Table(func(value ice.Maps) {
 		defer fmt.Fprintln(js, "")
 		if p := value[nfs.PATH]; kit.Ext(p) == nfs.CSS {

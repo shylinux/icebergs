@@ -58,8 +58,15 @@ func _binpack_all(m *ice.Message) {
 		for _, p := range []string{ice.ETC_MISS_SH, ice.ETC_INIT_SHY, ice.ETC_EXIT_SHY, ice.README_MD, ice.MAKEFILE, ice.LICENSE} {
 			_binpack_file(m, w, p)
 		}
-		list, cache := map[string]string{}, kit.Select(ice.USR_REQUIRE, m.Cmdx(cli.SYSTEM, GO, "env", "GOMODCACHE"))
-		const _mod_ = "/pkg/mod/"
+		list, cache := map[string]string{}, kit.GetValid(
+			func() string { return m.Cmdx(cli.SYSTEM, GO, "env", "GOMODCACHE") },
+			func() string {
+				return kit.Select(kit.HomePath("go")+nfs.PS, m.Cmdx(cli.SYSTEM, GO, "env", "GOPATH")) + "/pkg/mod/"
+			},
+			func() string {
+				return ice.USR_REQUIRE
+			},
+		)
 		for k := range ice.Info.File {
 			switch ls := kit.Split(k, nfs.PS); ls[1] {
 			case ice.SRC:
@@ -67,8 +74,7 @@ func _binpack_all(m *ice.Message) {
 				list[path.Join(kit.Slice(ls, 1, -1)...)] = ""
 			default:
 				p := path.Join(cache, path.Join(kit.Slice(ls, 1, -1)...))
-				_ls := strings.Split(strings.Split(p, _mod_)[1], nfs.PS)
-				list[path.Join(nfs.USR, strings.Split(_ls[2], mdb.AT)[0], path.Join(kit.Slice(_ls, 3)...))] = p
+				list[path.Join(nfs.USR, strings.Split(ls[3], mdb.AT)[0], path.Join(kit.Slice(ls, 4)...))] = p
 			}
 		}
 		for _, k := range kit.SortedKey(list) {

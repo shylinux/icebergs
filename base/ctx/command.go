@@ -122,8 +122,8 @@ func IsOrderCmd(key string) bool { return key[0] == '/' || key[0] == '_' }
 func FileURI(dir string) string {
 	if dir == "" {
 		return ""
-	} else if strings.Contains(dir, "/go/pkg/mod/") {
-		dir = strings.Split(dir, "/go/pkg/mod/")[1]
+	} else if strings.Contains(dir, "/pkg/mod/") {
+		dir = strings.Split(dir, "/pkg/mod/")[1]
 	} else if path.IsAbs(dir) {
 		if strings.HasPrefix(dir, kit.Path("")+nfs.PS) {
 			dir = strings.TrimPrefix(dir, kit.Path("")+nfs.PS)

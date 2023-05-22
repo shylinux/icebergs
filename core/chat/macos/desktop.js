@@ -1,6 +1,7 @@
 Volcanos(chat.ONIMPORT, {
 	_init: function(can, msg, cb) { if (can.isCmdMode()) { can.onappend.style(can, html.OUTPUT), can.ConfHeight(can.page.height()) }
-		can.ui = {}, can.base.isFunc(cb) && cb(msg), can.onmotion.clear(can), can.onlayout.background(can, can.user.info.background||"/require/usr/icons/background.jpg", can._fields)
+		(!can.page.ClassList.has(can, document.body, cli.BLACK) || can.isCmdMode()) && can.onlayout.background(can, can.user.info.background||"/require/usr/icons/background.jpg", can._fields)
+		can.ui = {}, can.base.isFunc(cb) && cb(msg), can.onmotion.clear(can)
 		can.onimport._menu(can), can.onimport._dock(can), can.onimport._searchs(can), can.onimport._notifications(can), can.onimport.layout(can)
 	},
 	_menu: function(can) { can.onappend.plugin(can, {index: "web.chat.macos.menu", style: html.OUTPUT}, function(sub) { can.ui.menu = sub

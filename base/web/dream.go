@@ -49,7 +49,6 @@ func _dream_start(m *ice.Message, name string) {
 	if m.Warn(name == "", ice.ErrNotValid, mdb.NAME) {
 		return
 	}
-	kit.If(!strings.Contains(name, "-") || !strings.HasPrefix(name, "20"), func() { name = m.Time("20060102-") + name })
 	defer m.ProcessOpen(m.MergePod(m.Option(mdb.NAME, name)))
 	p := path.Join(ice.USR_LOCAL_WORK, name)
 	if pid := m.Cmdx(nfs.CAT, path.Join(p, ice.Info.PidPath), kit.Dict(ice.MSG_USERROLE, aaa.TECH)); pid != "" && nfs.Exists(m, "/proc/"+pid) {
@@ -73,7 +72,9 @@ func _dream_start(m *ice.Message, name string) {
 		SPACE, tcp.DIAL, ice.DEV, ice.OPS, mdb.TYPE, WORKER, m.OptionSimple(mdb.NAME), cli.DAEMON, ice.OPS)
 }
 func _dream_binary(m *ice.Message, p string) {
-	if bin := path.Join(m.Option(cli.CMD_DIR), ice.BIN_ICE_BIN); kit.IsUrl(p) {
+	if bin := path.Join(m.Option(cli.CMD_DIR), ice.BIN_ICE_BIN); nfs.Exists(m, bin) {
+
+	} else if kit.IsUrl(p) {
 		SpideSave(m, bin, kit.MergeURL(p, cli.GOOS, runtime.GOOS, cli.GOARCH, runtime.GOARCH), nil)
 		os.Chmod(bin, ice.MOD_DIR)
 	} else {
@@ -132,8 +133,10 @@ func init() {
 			}},
 			mdb.CREATE: {Name: "create name*=hi repos binary template", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(nfs.REPOS, kit.Select("", kit.Slice(kit.Split(m.Option(nfs.REPOS)), -1), 0))
-				mdb.HashCreate(m)
-				// _dream_start(m, m.OptionDefault(mdb.NAME, path.Base(m.Option(nfs.REPOS))))
+				kit.If(!strings.Contains(m.Option(mdb.NAME), "-") || !strings.HasPrefix(m.Option(mdb.NAME), "20"), func() { m.Option(mdb.NAME, m.Time("20060102-")+m.Option(mdb.NAME)) })
+				if mdb.HashCreate(m); !m.IsCliUA() {
+					_dream_start(m, m.OptionDefault(mdb.NAME, path.Base(m.Option(nfs.REPOS))))
+				}
 			}},
 			cli.START: {Hand: func(m *ice.Message, arg ...string) { _dream_start(m, m.Option(mdb.NAME)) }},
 			cli.STOP: {Hand: func(m *ice.Message, arg ...string) {
@@ -144,7 +147,7 @@ func init() {
 			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) { nfs.Trash(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME))) }},
 			DREAM_CLOSE: {Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(cli.DAEMON) == ice.OPS && m.Cmdv(SPACE, m.Option(mdb.NAME), mdb.STATUS) != cli.STOP {
-					m.Go(func() { m.Sleep30ms(DREAM, cli.START, m.OptionSimple(mdb.NAME)) })
+					m.Go(func() { m.Sleep300ms(DREAM, cli.START, m.OptionSimple(mdb.NAME)) })
 				}
 			}},
 			DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {

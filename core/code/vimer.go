@@ -49,10 +49,13 @@ const VIMER = "vimer"
 
 func init() {
 	web.Index.MergeCommands(ice.Commands{
-		ice.REQUIRE_SRC: {Actions: ice.MergeActions(ctx.CmdAction(), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
-			web.ShareLocalFile(m, ice.SRC, path.Join(arg...))
-		}},
+		ice.REQUIRE_SRC: {Actions: ice.MergeActions(ctx.CmdAction(), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) { web.ShareLocalFile(m, ice.SRC, path.Join(arg...)) }},
 		ice.REQUIRE_USR: {Hand: func(m *ice.Message, arg ...string) { web.ShareLocalFile(m, ice.USR, path.Join(arg...)) }},
+		ice.REQUIRE_MODULES: {Hand: func(m *ice.Message, arg ...string) {
+			p := path.Join(ice.USR_MODULES, path.Join(arg...))
+			kit.If(!nfs.Exists(m, p), func() { m.Cmd(cli.SYSTEM, "npm", "install", arg[0], kit.Dict(cli.CMD_DIR, ice.USR)) })
+			m.RenderDownload(p)
+		}},
 	})
 	Index.MergeCommands(ice.Commands{
 		VIMER: {Name: "vimer path=src/@key file=main.go line=1 list", Help: "编辑器", Meta: kit.Dict(ctx.STYLE, INNER), Actions: ice.MergeActions(ice.Actions{

@@ -204,6 +204,10 @@ func (m *Message) EchoDownload(arg ...string) *Message {
 func (m *Message) Display(file string, arg ...Any) {
 	if file == "" {
 		file = strings.TrimPrefix(kit.FileLine(2, 100), Info.Make.Path)
+		file = strings.TrimPrefix(file, kit.Path("")+PS)
+		if strings.Contains(file, "/pkg/mod/") {
+			file = strings.Split(file, "/pkg/mod/")[1]
+		}
 	}
 	if !strings.HasPrefix(file, PS) && !strings.HasPrefix(file, HTTP) {
 		file = "/require/" + file

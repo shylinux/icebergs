@@ -265,8 +265,8 @@ func ImportantZoneAction() ice.Actions {
 		}},
 	}
 }
-func ImportantHashAction() ice.Actions {
-	return ice.Actions{
+func ImportantHashAction(arg ...Any) ice.Actions {
+	return ice.MergeActions(ice.Actions{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 			Config(m, "important", ice.TRUE)
 			HashImport(m)
@@ -274,7 +274,7 @@ func ImportantHashAction() ice.Actions {
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) {
 			HashExport(m)
 		}},
-	}
+	}, HashAction(arg...))
 }
 func saveImportant(m *ice.Message, key, sub string, arg ...string) {
 	kit.If(m.Conf(key, kit.Keys(META, "important")) == ice.TRUE, func() { ice.SaveImportant(m, arg...) })

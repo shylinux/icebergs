@@ -9,7 +9,7 @@ const MENU = "menu"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		MENU: {Actions: ice.MergeActions(mdb.ImportantHashAction(), CmdHashAction())},
+		MENU: {Actions: ice.MergeActions(CmdHashAction(), mdb.ImportantHashAction())},
 	})
 }
 func MenuAppend(m *ice.Message, name, index string, arg ...string) {

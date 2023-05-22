@@ -18,7 +18,7 @@ func init() {
 				DockAppend(m, "", web.CODE_VIMER)
 			}
 		}},
-	}, mdb.ImportantHashAction(), CmdHashAction())}})
+	}, CmdHashAction(), mdb.ImportantHashAction())}})
 }
 
 func DockAppend(m *ice.Message, name, index string, arg ...string) {

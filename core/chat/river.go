@@ -55,7 +55,7 @@ func init() {
 				}
 				gdb.Event(m, RIVER_CREATE, RIVER, m.Option(ice.MSG_RIVER, h), arg)
 			}},
-		}, mdb.ImportantHashAction(), mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,template"), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, aaa.WhiteAction(), mdb.ImportantHashAction(mdb.FIELD, "time,hash,type,name,text,template")), Hand: func(m *ice.Message, arg ...string) {
 			if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin) || !aaa.Right(m, RIVER, arg) {
 				return
 			} else if len(arg) == 0 {

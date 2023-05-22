@@ -133,7 +133,7 @@ func init() {
 			ctx.PROCESS: {Hand: func(m *ice.Message, arg ...string) {
 				ctx.ProcessField(m, m.PrefixKey(), func() string { return m.Cmdx("", mdb.CREATE, arg) }, arg...)
 			}},
-		}, ctx.CmdAction(), ctx.ProcessAction(), web.DreamAction(), mdb.ImportantHashAction(), mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,path,theme,daemon")), Hand: func(m *ice.Message, arg ...string) {
+		}, ctx.CmdAction(), ctx.ProcessAction(), web.DreamAction(), mdb.ImportantHashAction(mdb.FIELD, "time,hash,type,name,text,path,theme,daemon")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) == 0 {
 				if m.Length() == 0 {
 					m.Action(mdb.CREATE)

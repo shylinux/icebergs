@@ -69,7 +69,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		SHARE: {Name: "share hash auto login prunes", Help: "共享链", Actions: ice.MergeActions(ice.Actions{
 			mdb.CREATE: {Name: "create type name text", Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashCreate(m, arg, aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERROLE, m.Option(ice.MSG_USERROLE))
+				mdb.HashCreate(m, arg, m.OptionSimple(ice.CMD), aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERROLE, m.Option(ice.MSG_USERROLE))
 				m.Option(mdb.LINK, _share_link(m, P(SHARE, m.Result())))
 			}},
 			LOGIN: {Hand: func(m *ice.Message, arg ...string) {
@@ -86,9 +86,17 @@ func init() {
 				}
 				switch msg.Append(mdb.TYPE) {
 				case LOGIN:
-					m.RenderRedirect(nfs.PS, ice.MSG_SESSID, aaa.SessCreate(m, msg.Append(aaa.USERNAME)))
+					if msg.Append(ice.CMD) != "" {
+						m.RenderRedirect(m.MergePodCmd("", msg.Append(ice.CMD)), ice.MSG_SESSID, aaa.SessCreate(m, msg.Append(aaa.USERNAME)))
+					} else {
+						m.RenderRedirect(nfs.PS, ice.MSG_SESSID, aaa.SessCreate(m, msg.Append(aaa.USERNAME)))
+					}
 				default:
-					RenderMain(m)
+					if msg.Append(ice.CMD) != "" {
+						RenderCmd(m, msg.Append(ice.CMD))
+					} else {
+						RenderMain(m)
+					}
 				}
 			}},
 		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,river,storm,usernick,username,userrole", mdb.EXPIRE, mdb.DAYS), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {

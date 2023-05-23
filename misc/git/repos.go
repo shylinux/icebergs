@@ -346,7 +346,7 @@ func init() {
 				m.RenderStatusBadRequest()
 			} else if path.Join(arg[:3]...) == ice.Info.Make.Module && nfs.Exists(m, path.Join(arg[3:]...)) {
 				m.RenderDownload(path.Join(arg[3:]...))
-			} else if p := path.Join(kit.Split(arg[2], mdb.AT)[0], path.Join(arg[3:]...)); nfs.Exists(m, p) {
+			} else if p := path.Join(nfs.USR, kit.Split(arg[2], mdb.AT)[0], path.Join(arg[3:]...)); nfs.Exists(m, p) {
 				m.RenderDownload(p)
 			} else {
 				p := path.Join(kit.GetValid(
@@ -354,9 +354,7 @@ func init() {
 					func() string {
 						return kit.Select(kit.HomePath("go")+nfs.PS, m.Cmdx(cli.SYSTEM, "go", "env", "GOPATH")) + "/pkg/mod/"
 					},
-					func() string {
-						return ice.USR_REQUIRE
-					},
+					func() string { return ice.USR_REQUIRE },
 				), path.Join(arg...))
 				if !nfs.Exists(m, p) {
 					if p = path.Join(ice.USR_REQUIRE, path.Join(arg...)); !nfs.Exists(m, p) {

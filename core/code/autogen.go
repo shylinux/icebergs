@@ -33,6 +33,7 @@ func _autogen_source(m *ice.Message, main, file string) {
 func _autogen_script(m *ice.Message, file string) { m.Cmd(nfs.DEFS, file, nfs.Template(m, "demo.shy")) }
 func _autogen_module(m *ice.Message, file string) { m.Cmd(nfs.DEFS, file, nfs.Template(m, "demo.go")) }
 func _autogen_import(m *ice.Message, main string, ctx string, mod string) {
+	m.Cmd(nfs.DEFS, ice.ETC_MISS_SH, m.Cmdx(nfs.CAT, ice.ETC_MISS_SH))
 	m.Cmd(nfs.DEFS, ice.README_MD, m.Cmdx(nfs.CAT, ice.README_MD))
 	m.Cmd(nfs.DEFS, ice.MAKEFILE, m.Cmdx(nfs.CAT, ice.MAKEFILE))
 	m.Cmd(nfs.DEFS, ice.LICENSE, m.Cmdx(nfs.CAT, ice.LICENSE))
@@ -56,7 +57,7 @@ func _autogen_import(m *ice.Message, main string, ctx string, mod string) {
 }
 func _autogen_version(m *ice.Message) string {
 	if mod := _autogen_mod(m, ice.GO_MOD); !nfs.Exists(m, ".git") {
-		m.Cmd(REPOS, "init", nfs.ORIGIN, strings.Split(kit.MergeURL2(kit.Select(ice.Info.Make.Remote, ice.Info.Make.Domain), "/x/"+path.Base(mod)), mdb.QS)[0], mdb.NAME, path.Base(mod), nfs.PATH, nfs.PWD)
+		m.Cmd(REPOS, "init", nfs.ORIGIN, strings.Split(kit.MergeURL2(kit.Select(m.Option(ice.MSG_USERWEB), ice.Info.Make.Remote, ice.Info.Make.Domain), "/x/"+path.Base(mod)), mdb.QS)[0], mdb.NAME, path.Base(mod), nfs.PATH, nfs.PWD)
 		defer m.Cmd(REPOS, "add", kit.Dict(nfs.REPOS, path.Base(mod), nfs.FILE, nfs.SRC))
 		defer m.Cmd(REPOS, "add", kit.Dict(nfs.REPOS, path.Base(mod), nfs.FILE, "go.mod"))
 	}

@@ -45,6 +45,7 @@ func init() {
 			if len(arg) > 0 {
 				u := kit.ParseURL(m.Option(ice.MSG_USERWEB))
 				m.EchoScript(kit.Format("%s://%s:%s@%s", u.Scheme, m.Append(aaa.USERNAME), m.Append(TOKEN), u.Host))
+				m.EchoScript(kit.Format("echo '%s://%s:%s@%s' >>~/.git-credentials", u.Scheme, m.Append(aaa.USERNAME), m.Append(TOKEN), u.Host))
 			}
 		}},
 	})

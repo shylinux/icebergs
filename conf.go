@@ -24,6 +24,7 @@ const (
 	HTTPS = "https"
 	HTTP  = "http"
 	AUTO  = "auto"
+	VIEW  = "view"
 	LIST  = "list"
 	BACK  = "back"
 	MAIN  = "main"

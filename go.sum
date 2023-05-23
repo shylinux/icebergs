@@ -2,6 +2,7 @@ shylinux.com/x/go-git/v5 v5.6.3 h1:TgxQSryjeDVOA33eYF8s+URzC3xdXsfJQaJAyq1liz0=
 shylinux.com/x/go-git/v5 v5.6.3/go.mod h1:FiJKLqM5ppFERgywelAfywwxc7UxpaYN5YH3Lhc2gys=
 shylinux.com/x/go-qrcode v0.0.2 h1:/c0PLj+1RT+kUPfnZVXwgbgH5m1SxBUjM2MIKXbDk+E=
 shylinux.com/x/go-qrcode v0.0.2/go.mod h1:TlzGBENHXy19xC3AsC6h4Vs5fx2ZuDA4TZ0U3C2OeK4=
+shylinux.com/x/toolkits v0.7.5/go.mod h1:8LbYHe7oxBIqb6s4MSOD+4d28QvPdvkyCVtwB/JW7AA=
 shylinux.com/x/toolkits v0.7.6 h1:QwRxrS2uDHbT9MegM26gtq9j5qojmahOHVDAp1eVEms=
 shylinux.com/x/toolkits v0.7.6/go.mod h1:CHDJarGlDkg60kVsvMLYL/a5hAnRLEOShiEsMOuEp0Q=
 shylinux.com/x/websocket v0.0.2 h1:aeeZyAsh6QN7+l5oMXlO9/rlQgx6CHvDtpZyAqMCSlU=

@@ -30,21 +30,37 @@ func _repos_cmd(m *ice.Message, p string, arg ...string) *ice.Message {
 	return m.Copy(_git_cmd(m.Options(cli.CMD_DIR, _repos_path(m, p)), arg...))
 }
 func _repos_init(m *ice.Message, p string) { git.PlainInit(p, true) }
+func _repos_recent(m *ice.Message, repos *git.Repository) (r *plumbing.Reference) {
+	max := 0
+	if iter, err := repos.Tags(); err == nil {
+		for {
+			refer, err := iter.Next()
+			if err != nil {
+				break
+			}
+			ls := kit.Split(refer.Name().Short(), "v.")
+			if n := kit.Int(ls[0])*1000000 + kit.Int(ls[1])*1000 + kit.Int(ls[2]); n > max {
+				max, r = n, refer
+			}
+		}
+	}
+	return
+}
 func _repos_insert(m *ice.Message, p string) {
 	if repos, err := git.PlainOpen(p); err == nil {
 		args := []string{REPOS, path.Base(p), nfs.PATH, p}
-		if refer, err := repos.Head(); err == nil {
-			args = append(args, BRANCH, refer.Name().Short())
-			if commit, err := repos.CommitObject(refer.Hash()); err == nil {
+		if head, err := repos.Head(); err == nil {
+			args = append(args, BRANCH, head.Name().Short())
+			if commit, err := repos.CommitObject(head.Hash()); err == nil {
 				args = append(args, mdb.TIME, commit.Author.When.Format(ice.MOD_TIME), COMMENT, commit.Message)
 			}
 		}
-		if iter, err := repos.Tags(); err == nil {
-			if refer, err := iter.Next(); err == nil {
-				args = append(args, VERSION, refer.Name().Short())
-			}
+		if refer := _repos_recent(m, repos); refer != nil {
+			args = append(args, VERSION, refer.Name().Short())
 		}
-		if remote, err := repos.Remotes(); err == nil && len(remote) > 0 {
+		if remote, err := repos.Remote("origin"); err == nil {
+			args = append(args, ORIGIN, remote.Config().URLs[0])
+		} else if remote, err := repos.Remotes(); err == nil && len(remote) > 0 {
 			args = append(args, ORIGIN, remote[0].Config().URLs[0])
 		}
 		mdb.HashCreate(m.Options(mdb.TARGET, repos), args)

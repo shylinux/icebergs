@@ -107,7 +107,7 @@ func (m *Message) AppendSimple(key ...string) (res []string) {
 			key = append(key, m.Appendv(MSG_APPEND)...)
 		}
 	}
-	kit.For(key, func(k string) { res = append(res, k, m.Append(k)) })
+	kit.For(kit.Split(kit.Join(key)), func(k string) { res = append(res, k, m.Append(k)) })
 	return
 }
 func (m *Message) AppendTrans(cb func(value string, key string, index int) string) *Message {

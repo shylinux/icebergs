@@ -123,9 +123,9 @@ func init() {
 				case mdb.NAME, nfs.TEMPLATE:
 					_dream_list(m).Cut("name,status,time")
 				case nfs.BINARY:
-					m.Cmdy(nfs.DIR, ice.BIN, "path,size,hashs,time", kit.Dict(nfs.DIR_TYPE, nfs.TYPE_BIN))
+					m.Cmdy(nfs.DIR, ice.BIN, "path,size,time", kit.Dict(nfs.DIR_TYPE, nfs.TYPE_BIN))
 					m.Cmd(nfs.DIR, ice.USR_LOCAL_WORK, kit.Dict(nfs.DIR_TYPE, nfs.TYPE_BOTH), func(value ice.Maps) {
-						m.Cmdy(nfs.DIR, path.Join(value[nfs.PATH], ice.BIN), "path,size,hashs,time", kit.Dict(nfs.DIR_TYPE, nfs.TYPE_BIN))
+						m.Cmdy(nfs.DIR, path.Join(value[nfs.PATH], ice.BIN), "path,size,time", kit.Dict(nfs.DIR_TYPE, nfs.TYPE_BIN))
 					})
 				default:
 					gdb.Event(m, DREAM_INPUTS, arg)

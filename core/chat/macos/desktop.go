@@ -25,7 +25,7 @@ func init() {
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				kit.Switch(m.Option(mdb.TYPE), kit.Simple(web.SERVER, web.WORKER), func() { m.PushButton(kit.Dict(m.CommandKey(), "桌面")) })
 			}},
-		}, web.DreamAction(), CmdHashAction(), mdb.ImportantHashAction())},
+		}, CmdHashAction(), mdb.ImportantHashAction())},
 	})
 }
 

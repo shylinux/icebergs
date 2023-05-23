@@ -9,7 +9,6 @@ import (
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
-	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -142,6 +141,10 @@ func init() {
 				if m.Option(mdb.TYPE) != web.WORKER {
 					return
 				}
+				if !nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME), ".git")) {
+					m.Push(mdb.TEXT, "")
+					return
+				}
 				text := []string{}
 				for _, line := range kit.Split(m.Cmdx(web.SPACE, m.Option(mdb.NAME), cli.SYSTEM, GIT, DIFF, "--shortstat"), mdb.FS, mdb.FS) {
 					if list := kit.Split(line); strings.Contains(line, "file") {
@@ -154,7 +157,7 @@ func init() {
 				}
 				m.Push(mdb.TEXT, strings.Join(text, ", "))
 			}},
-		}, aaa.RoleAction(), gdb.EventAction(web.DREAM_TABLES), Prefix(REPOS), mdb.ImportantHashAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, aaa.RoleAction(), web.DreamAction(), Prefix(REPOS), mdb.ImportantHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 && arg[0] == ctx.ACTION {
 				m.Cmdy(REPOS, arg)
 			} else if config, err := config.LoadConfig(config.GlobalScope); err == nil && config.User.Email == "" && mdb.Config(m, aaa.EMAIL) == "" {

@@ -24,12 +24,6 @@ func _binpack_file(m *ice.Message, w io.Writer, arg ...string) {
 		fmt.Fprintf(w, "        \"%s\": \"%s\",\n", kit.Select(arg[0], arg, 1), "")
 		return
 	}
-	switch path.Base(arg[0]) {
-	case ice.GO_MOD, ice.GO_SUM:
-		if !strings.HasPrefix(arg[0], ice.SRC_TEMPLATE) {
-			return
-		}
-	}
 	switch arg[0] {
 	case ice.SRC_VERSION_GO, ice.SRC_BINPACK_GO, ice.ETC_LOCAL_SHY:
 		return

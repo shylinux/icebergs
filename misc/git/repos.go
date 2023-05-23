@@ -18,7 +18,6 @@ import (
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
-	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -340,23 +339,27 @@ const (
 const REPOS = "repos"
 
 func init() {
+	cache := ""
 	web.Index.MergeCommands(ice.Commands{
-		web.PP(ice.REQUIRE): {Name: "/require/shylinux.com/x/volcanos/proto.js", Hand: func(m *ice.Message, arg ...string) {
+		web.PP(ice.REQUIRE): {Name: "/require/shylinux.com/x/volcanos/proto.js", Actions: ice.MergeActions(ice.Actions{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				cache = kit.GetValid(
+					func() string { return ice.Pulse.Cmdx(cli.SYSTEM, "go", "env", "GOMODCACHE") },
+					func() string {
+						return kit.Select(kit.HomePath("go")+nfs.PS, ice.Pulse.Cmdx(cli.SYSTEM, "go", "env", "GOPATH")) + "/pkg/mod/"
+					},
+					func() string { return ice.USR_REQUIRE },
+				)
+			}},
+		}), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 4 {
 				m.RenderStatusBadRequest()
 			} else if path.Join(arg[:3]...) == ice.Info.Make.Module && nfs.Exists(m, path.Join(arg[3:]...)) {
 				m.RenderDownload(path.Join(arg[3:]...))
-			} else if p := path.Join(nfs.USR, kit.Split(arg[2], mdb.AT)[0], path.Join(arg[3:]...)); nfs.Exists(m, p) {
+			} else if p := path.Join(nfs.USR, kit.Split(arg[2], mdb.AT)[0], path.Join(arg[3:]...)); nfs.Exists(m, p) && kit.Select("", kit.Split(arg[2], mdb.AT), 1) == ice.Info.Gomod[path.Join(arg[0], arg[1], kit.Split(arg[2], mdb.AT)[0])] {
 				m.RenderDownload(p)
 			} else {
-				p := path.Join(kit.GetValid(
-					func() string { return m.Cmdx(cli.SYSTEM, "go", "env", "GOMODCACHE") },
-					func() string {
-						return kit.Select(kit.HomePath("go")+nfs.PS, m.Cmdx(cli.SYSTEM, "go", "env", "GOPATH")) + "/pkg/mod/"
-					},
-					func() string { return ice.USR_REQUIRE },
-				), path.Join(arg...))
-				if !nfs.Exists(m, p) {
+				if p = path.Join(cache, path.Join(arg...)); !nfs.Exists(m, p) {
 					if p = path.Join(ice.USR_REQUIRE, path.Join(arg...)); !nfs.Exists(m, p) {
 						ls := strings.SplitN(path.Join(arg[:3]...), mdb.AT, 2)
 						to := path.Join(ice.USR_REQUIRE, path.Join(arg[:3]...))
@@ -541,9 +544,6 @@ func init() {
 					mdb.HashRemove(m, m.Option(REPOS))
 				}
 			}},
-			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
-				kit.Switch(m.Option(mdb.TYPE), kit.Simple(web.SERVER, web.WORKER), func() { m.PushButton(kit.Dict(m.CommandKey(), "仓库")) })
-			}},
 			web.DREAM_CREATE: {Hand: func(m *ice.Message, arg ...string) {
 				kit.If(m.Option(REPOS), func(p string) {
 					p = strings.Split(p, mdb.QS)[0]
@@ -551,10 +551,18 @@ func init() {
 					m.Cmd("", CLONE, ORIGIN, p, nfs.PATH, m.Option(cli.CMD_DIR), ice.Maps{cli.CMD_DIR: ""})
 				})
 			}},
+			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
+				kit.Switch(m.Option(mdb.TYPE), kit.Simple(web.SERVER, web.WORKER), func() {
+					kit.If(nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME), ".git")), func() {
+						m.PushButton(kit.Dict(m.CommandKey(), "仓库"))
+					})
+				})
+			}},
 			code.INNER: {Hand: func(m *ice.Message, arg ...string) { _repos_inner(m, _repos_path, arg...) }},
-		}, gdb.EventsAction(web.DREAM_CREATE), web.DreamAction(), mdb.HashAction(mdb.SHORT, REPOS, mdb.FIELD, "time,repos,branch,version,comment,origin"), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, aaa.RoleAction(REMOTE), web.DreamAction(), mdb.ClearOnExitHashAction(), mdb.HashAction(mdb.SHORT, REPOS, mdb.FIELD, "time,repos,branch,version,comment,origin")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				mdb.HashSelect(m, arg...).Sort(REPOS).Action(CLONE, PULL, PUSH, STATUS)
+				m.Echo(strings.ReplaceAll(m.Cmdx(code.PUBLISH, ice.CONTEXTS), "app username", "dev username"))
 			} else if len(arg) == 1 {
 				_repos_branch(m, _repos_open(m, arg[0]))
 			} else if len(arg) == 2 {

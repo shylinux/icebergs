@@ -27,14 +27,13 @@ func _autogen_list(m *ice.Message) string {
 	}[m.Option(mdb.TYPE)])
 }
 func _autogen_source(m *ice.Message, main, file string) {
-	// m.Cmd(nfs.DEFS, main, nfs.Template(m, ice.SRC_MAIN_SHY))
 	m.Cmd(nfs.DEFS, main, m.Cmdx(nfs.CAT, ice.SRC_MAIN_SHY))
 	m.Cmd(nfs.PUSH, main, lex.NL+ssh.SOURCE+lex.SP+strings.TrimPrefix(file, ice.SRC+nfs.PS)+lex.NL)
 }
 func _autogen_script(m *ice.Message, file string) { m.Cmd(nfs.DEFS, file, nfs.Template(m, "demo.shy")) }
 func _autogen_module(m *ice.Message, file string) { m.Cmd(nfs.DEFS, file, nfs.Template(m, "demo.go")) }
 func _autogen_import(m *ice.Message, main string, ctx string, mod string) {
-	// m.Cmd(nfs.DEFS, main, nfs.Template(m, ice.SRC_MAIN_GO))
+	m.Cmd(nfs.DEFS, ice.README_MD, m.Cmdx(nfs.CAT, ice.README_MD))
 	m.Cmd(nfs.DEFS, ice.MAKEFILE, m.Cmdx(nfs.CAT, ice.MAKEFILE))
 	m.Cmd(nfs.DEFS, ice.LICENSE, m.Cmdx(nfs.CAT, ice.LICENSE))
 	m.Cmd(nfs.DEFS, main, m.Cmdx(nfs.CAT, ice.SRC_MAIN_GO))

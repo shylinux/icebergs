@@ -10,7 +10,6 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
-	"shylinux.com/x/toolkits/logs"
 )
 
 func _command_list(m *ice.Message, name string) *ice.Message {
@@ -121,19 +120,14 @@ func CmdList(m *ice.Message) *ice.Message {
 
 func IsOrderCmd(key string) bool { return key[0] == '/' || key[0] == '_' }
 func FileURI(dir string) string {
-	logs.Println("%v %v %v", dir, ice.Info.Make.Path, kit.Path(""))
 	if dir == "" {
 		return ""
 	} else if strings.Contains(dir, "/pkg/mod/") {
 		dir = strings.Split(dir, "/pkg/mod/")[1]
-	} else if path.IsAbs(dir) {
-		if ice.Info.Make.Path != "" && strings.HasPrefix(dir, ice.Info.Make.Path) {
-			dir = strings.TrimPrefix(dir, ice.Info.Make.Path)
-		} else if strings.HasPrefix(dir, kit.Path("")+nfs.PS) {
-			dir = strings.TrimPrefix(dir, kit.Path("")+nfs.PS)
-		}
-	} else if nfs.Exists(ice.Pulse, path.Join(ice.SRC, dir)) {
-		dir = path.Join(ice.SRC, dir)
+	} else if ice.Info.Make.Path != "" && strings.HasPrefix(dir, ice.Info.Make.Path) {
+		dir = strings.TrimPrefix(dir, ice.Info.Make.Path)
+	} else if strings.HasPrefix(dir, kit.Path("")+nfs.PS) {
+		dir = strings.TrimPrefix(dir, kit.Path("")+nfs.PS)
 	}
 	return path.Join(nfs.PS, ice.REQUIRE, dir)
 }

@@ -40,6 +40,12 @@ func init() {
 				}).Cmd(nfs.SAVE, kit.HomePath(FILE), strings.Join(list, lex.NL)+lex.NL)
 				m.ProcessClose()
 			}},
-		}, mdb.HashAction(mdb.EXPIRE, mdb.MONTH, mdb.SHORT, aaa.USERNAME, mdb.FIELD, "time,username,token"))},
+		}, mdb.HashAction(mdb.EXPIRE, mdb.MONTH, mdb.SHORT, aaa.USERNAME, mdb.FIELD, "time,username,token")), Hand: func(m *ice.Message, arg ...string) {
+			mdb.HashSelect(m, arg...)
+			if len(arg) > 0 {
+				u := kit.ParseURL(m.Option(ice.MSG_USERWEB))
+				m.EchoScript(kit.Format("%s://%s:%s@%s", u.Scheme, m.Append(aaa.USERNAME), m.Append(TOKEN), u.Host))
+			}
+		}},
 	})
 }

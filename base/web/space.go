@@ -36,7 +36,7 @@ func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 			next := time.Duration(rand.Intn(a*(i+1))+b*i) * time.Millisecond
 			m.Cmd(tcp.CLIENT, tcp.DIAL, args, func(c net.Conn) {
 				if c, e := websocket.NewClient(c, u); !m.Warn(e, tcp.DIAL, dev, SPACE, u.String()) {
-					defer mdb.HashCreateDeferRemove(m, kit.SimpleKV("", MASTER, dev, u.Hostname()), kit.Dict(mdb.TARGET, c))()
+					defer mdb.HashCreateDeferRemove(m, kit.SimpleKV("", MASTER, dev, u.Host), kit.Dict(mdb.TARGET, c))()
 					kit.If(ice.Info.Colors, func() { once.Do(func() { m.Go(func() { _space_qrcode(m, dev) }) }) })
 					_space_handle(m.Spawn(), true, dev, c)
 					i = 0

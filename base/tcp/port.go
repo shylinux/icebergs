@@ -3,6 +3,7 @@ package tcp
 import (
 	"net"
 	"path"
+	"strconv"
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
@@ -41,12 +42,48 @@ const PORT = "port"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		PORT: {Name: "port port path auto", Help: "端口", Actions: ice.MergeActions(ice.Actions{
+		PORT: {Name: "port port path auto socket", Help: "端口", Actions: ice.MergeActions(ice.Actions{
 			CURRENT:   {Hand: func(m *ice.Message, arg ...string) { m.Echo(mdb.Config(m, CURRENT)) }},
 			aaa.RIGHT: {Hand: func(m *ice.Message, arg ...string) { m.Echo(_port_right(m, arg...)) }},
 			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
 				m.Assert(m.Option(PORT) != "")
 				nfs.Trash(m, path.Join(ice.USR_LOCAL_DAEMON, m.Option(PORT)))
+			}},
+			"socket": {Hand: func(m *ice.Message, arg ...string) {
+				parse := func(str string) int64 {
+					port, _ := strconv.ParseInt(str, 16, 32)
+					return port
+				}
+				trans := func(str string) string {
+					switch str {
+					case "0A":
+						return "LISTEN"
+					case "01":
+						return "ESTABLISHED"
+					case "06":
+						return "TIME_WAIT"
+					default:
+						return str
+					}
+				}
+				stats := map[string]int{}
+				m.Spawn().Split(m.Cmdx(nfs.CAT, "/proc/net/tcp")).Table(func(value ice.Maps) {
+					stats[trans(value["st"])]++
+					m.Push("status", trans(value["st"]))
+					ls := kit.Split(value["local_address"], ":")
+					m.Push("local", kit.Format("%d.%d.%d.%d:%d", parse(ls[0][6:8]), parse(ls[0][4:6]), parse(ls[0][2:4]), parse(ls[0][:2]), parse(ls[1])))
+					ls = kit.Split(value["rem_address"], ":")
+					m.Push("remote", kit.Format("%d.%d.%d.%d:%d", parse(ls[0][6:8]), parse(ls[0][4:6]), parse(ls[0][2:4]), parse(ls[0][:2]), parse(ls[1])))
+				})
+				m.Spawn().Split(m.Cmdx(nfs.CAT, "/proc/net/tcp6")).Table(func(value ice.Maps) {
+					stats[trans(value["st"])]++
+					m.Push("status", trans(value["st"]))
+					ls := kit.Split(value["local_address"], ":")
+					m.Push("local", kit.Format("%d.%d.%d.%d:%d", parse(ls[0][30:32]), parse(ls[0][28:30]), parse(ls[0][26:28]), parse(ls[0][24:26]), parse(ls[1])))
+					ls = kit.Split(value["remote_address"], ":")
+					m.Push("remote", kit.Format("%d.%d.%d.%d:%d", parse(ls[0][30:32]), parse(ls[0][28:30]), parse(ls[0][26:28]), parse(ls[0][24:26]), parse(ls[1])))
+				})
+				m.Sort("status,local").StatusTimeCount(stats)
 			}},
 		}, mdb.HashAction(BEGIN, 10000, CURRENT, 10000, END, 20000)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 {

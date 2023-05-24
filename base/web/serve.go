@@ -53,6 +53,7 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	} else {
 		r.Header.Set(ice.MSG_USERIP, strings.Split(r.RemoteAddr, nfs.DF)[0])
 	}
+	// kit.For(r.Header, func(k string, v []string) { m.Debug("what %v %v", k, v) })
 	kit.If(path.Join(r.URL.Path) == nfs.PS, func() { r.URL.Path = kit.Select(nfs.PS, mdb.Config(m, "main")) })
 	if m.Logs(r.Header.Get(ice.MSG_USERIP), r.Method, r.URL.String()); r.Method == http.MethodGet {
 		if msg := m.Spawn(w, r).Options(ice.MSG_USERUA, r.UserAgent()); path.Join(r.URL.Path) == nfs.PS {

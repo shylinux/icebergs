@@ -2,6 +2,7 @@ package cli
 
 import (
 	"os"
+	"runtime"
 	"strings"
 	"time"
 
@@ -30,6 +31,9 @@ type procstat struct {
 }
 
 func newprocstat(m *ice.Message) (stat procstat) {
+	if runtime.GOOS != LINUX {
+		return
+	}
 	m.Option(ice.MSG_USERROLE, aaa.ROOT)
 	if ls := kit.Split(m.Cmdx(nfs.CAT, kit.Format("/proc/%d/stat", os.Getpid())), " ()"); len(ls) > 0 {
 		stat = procstat{utime: kit.Int64(ls[13]), stime: kit.Int64(ls[14]), vmsize: kit.Int64(ls[22]), vmrss: kit.Int64(ls[23]) * 4096}
@@ -81,7 +85,7 @@ func init() {
 			}},
 		}, mdb.PageListAction(mdb.LIMIT, "720", mdb.LEAST, "360", mdb.FIELD, "time,id,utime,vmrss,user,idle,free,rx,tx,established,time_wait")), Hand: func(m *ice.Message, arg ...string) {
 			m.OptionDefault(mdb.CACHE_LIMIT, "360")
-			if mdb.PageListSelect(m, arg...); len(arg) == 0 || arg[0] == "" {
+			if mdb.PageListSelect(m, arg...); (len(arg) == 0 || arg[0] == "") && m.Length() > 0 {
 				m.SortInt(mdb.ID).Display("/plugin/story/trend.js", ice.VIEW, "折线图", "min", "0", "max", "1000", COLOR, "yellow,cyan,red,green,blue,purple,purple")
 				m.Status("from", m.Append(mdb.TIME), "span", kit.FmtDuration(time.Duration(kit.Time(m.Time())-kit.Time(m.Append(mdb.TIME)))), m.AppendSimple(mdb.Config(m, mdb.FIELD)), "cursor", "0")
 			}

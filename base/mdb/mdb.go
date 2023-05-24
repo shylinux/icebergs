@@ -253,27 +253,16 @@ func AutoConfig(arg ...Any) *ice.Action {
 		}
 	}}
 }
-func ImportantZoneAction() ice.Actions {
-	return ice.Actions{
-		ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-			Config(m, "important", ice.TRUE)
-			ZoneImport(m)
-		}},
-		ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) {
-			m.OptionFields("")
-			ZoneExport(m)
-		}},
-	}
-}
-func ImportantHashAction(arg ...Any) ice.Actions {
+func ImportantZoneAction(arg ...Any) ice.Actions {
 	return ice.MergeActions(ice.Actions{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 			Config(m, "important", ice.TRUE)
-			HashImport(m)
 		}},
-		ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) {
-			HashExport(m)
-		}},
+	}, ZoneAction(arg...))
+}
+func ImportantHashAction(arg ...Any) ice.Actions {
+	return ice.MergeActions(ice.Actions{
+		ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { Config(m, "important", ice.TRUE) }},
 	}, HashAction(arg...))
 }
 func saveImportant(m *ice.Message, key, sub string, arg ...string) {

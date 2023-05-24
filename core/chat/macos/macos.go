@@ -14,7 +14,9 @@ const (
 )
 const MACOS = "macos"
 
-var Index = &ice.Context{Name: MACOS, Commands: ice.Commands{ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { ice.Info.Load(m).Cmd(FINDER, ice.CTX_INIT) }}}}
+var Index = &ice.Context{Name: MACOS, Commands: ice.Commands{ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+	ice.Info.Load(m).Cmd(FINDER, ice.CTX_INIT)
+}}}}
 
 func init() { chat.Index.Register(Index, nil, DESKTOP) }
 

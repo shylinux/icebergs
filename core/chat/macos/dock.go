@@ -11,13 +11,14 @@ const DOCK = "dock"
 func init() {
 	Index.MergeCommands(ice.Commands{DOCK: {Actions: ice.MergeActions(ice.Actions{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-			if m.Cmd(DOCK).Length() == 0 {
+			if mdb.HashImport(m); m.Cmd(DOCK).Length() == 0 {
 				DockAppend(m, "Finder", Prefix(FINDER))
 				DockAppend(m, "Safari", web.CHAT_IFRAME)
 				DockAppend(m, "Terminal", web.CODE_XTERM)
 				DockAppend(m, "", web.CODE_VIMER)
 			}
 		}},
+		ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { mdb.HashExport(m) }},
 	}, CmdHashAction(), mdb.ImportantHashAction())}})
 }
 

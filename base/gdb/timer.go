@@ -16,7 +16,7 @@ func _timer_action(m *ice.Message, now time.Time, arg ...string) {
 		}
 		m.Option(ice.LOG_DISABLE, ice.FALSE)
 		// m.Cmd(ROUTINE, mdb.CREATE, mdb.NAME, value[mdb.NAME], kit.Keycb(ROUTINE), value[ice.CMD])
-		m.Cmd(kit.Split(value[ice.CMD]))
+		m.Cmd(kit.Split(value[ice.CMD])).Cost()
 		kit.If(count < 0, func() { count++ })
 		mdb.HashModify(m, mdb.HASH, value[mdb.HASH], mdb.COUNT, count-1, mdb.TIME, m.Time(value[INTERVAL]))
 	})

@@ -15,13 +15,14 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		DESKTOP: {Help: "应用桌面", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				if m.Cmd(DESKTOP).Length() == 0 {
+				if mdb.HashImport(m); m.Cmd(DESKTOP).Length() == 0 {
 					DeskAppend(m, "Books", web.WIKI_WORD)
 					DeskAppend(m, "Photos", web.WIKI_FEEL)
 					DeskAppend(m, "Grapher", web.WIKI_DRAW)
 					DeskAppend(m, "Calendar", web.TEAM_PLAN, ctx.ARGS, team.MONTH)
 				}
 			}},
+			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { mdb.HashExport(m) }},
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				kit.Switch(m.Option(mdb.TYPE), kit.Simple(web.SERVER, web.WORKER), func() { m.PushButton(kit.Dict(m.CommandKey(), "桌面")) })
 			}},

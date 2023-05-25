@@ -199,7 +199,7 @@ func _repos_status(m *ice.Message, p string, repos *git.Repository) error {
 				tree, err = commit.Tree()
 			}
 		}
-		m.Cmd(nfs.DIR, ice.USR_LOCAL_EXPORT, kit.Dict(nfs.DIR_DEEP, ice.TRUE, nfs.DIR_TYPE, nfs.TYPE_CAT), func(value ice.Maps) {
+		m.Cmd(nfs.DIR, ice.USR_LOCAL_EXPORT, kit.Dict(ice.MSG_FILES, nfs.DiskFile, nfs.DIR_DEEP, ice.TRUE, nfs.DIR_TYPE, nfs.TYPE_CAT), func(value ice.Maps) {
 			if _, ok := status[value[nfs.PATH]]; ok {
 				return
 			} else if tree != nil {
@@ -355,17 +355,11 @@ const (
 const REPOS = "repos"
 
 func init() {
-	cache := ""
+	cache := ice.USR_REQUIRE
 	web.Index.MergeCommands(ice.Commands{
 		web.PP(ice.REQUIRE): {Name: "/require/shylinux.com/x/volcanos/proto.js", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				cache = kit.GetValid(
-					func() string { return ice.Pulse.Cmdx(cli.SYSTEM, "go", "env", "GOMODCACHE") },
-					func() string {
-						return kit.Select(kit.HomePath("go")+nfs.PS, ice.Pulse.Cmdx(cli.SYSTEM, "go", "env", "GOPATH")) + "/pkg/mod/"
-					},
-					func() string { return ice.USR_REQUIRE },
-				)
+				kit.If(cli.SystemFind(m, code.GO), func() { cache = code.GoCache(m) })
 			}},
 		}), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 4 {
@@ -392,6 +386,9 @@ func init() {
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.DIR, nfs.USR, func(value ice.Maps) { _repos_insert(m, value[nfs.PATH]) })
 				_repos_insert(m, kit.Path(""))
+			}},
+			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
+				mdb.IsSearchForEach(m, arg, func() []string { return []string{ice.CMD, m.PrefixKey()} })
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
@@ -514,10 +511,8 @@ func init() {
 					m.Push(BRANCH, refer.Name().Short())
 					m.Push(mdb.HASH, refer.Hash().String())
 				}
-				if iter, err := repos.Tags(); err == nil {
-					if refer, err := iter.Next(); err == nil {
-						m.Push(nfs.VERSION, refer.Name().Short())
-					}
+				if refer := _repos_recent(m, repos); refer != nil {
+					m.Push(nfs.VERSION, refer.Name().Short())
 				}
 				if cfg, err := config.LoadConfig(config.GlobalScope); err == nil {
 					m.Push(aaa.EMAIL, kit.Select(m.Option(ice.MSG_USERNAME)+"@163.com", cfg.User.Email))

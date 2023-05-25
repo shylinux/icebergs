@@ -129,13 +129,16 @@ func init() {
 				})
 				kit.If(m.Option(nfs.TO), func() { _git_cmd(m, CONFIG, "--global", "url."+m.Option(nfs.TO)+".insteadof", m.Option(nfs.FROM)) })
 			}},
-			CONFIGS: {Name: "configs email* username*", Help: "配置", Hand: func(m *ice.Message, arg ...string) {
+			CONFIGS: {Name: "configs email* username* token", Help: "配置", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.DEFS, kit.HomePath(".gitconfig"), nfs.Template(m, "gitconfig", m.Option(aaa.USERNAME), m.Option(aaa.EMAIL)))
 				mdb.Config(m, aaa.USERNAME, m.Option(aaa.USERNAME))
 				mdb.Config(m, aaa.EMAIL, m.Option(aaa.EMAIL))
 			}},
 			OAUTH: {Help: "授权", Hand: func(m *ice.Message, arg ...string) {
 				m.ProcessOpen(kit.MergeURL2(kit.Select(ice.Info.Make.Domain, _git_remote(m)), web.ChatCmdPath(Prefix(TOKEN), "gen"), tcp.HOST, m.Option(ice.MSG_USERWEB)))
+			}},
+			cli.RESTART: {Hand: func(m *ice.Message, arg ...string) {
+				m.Go(func() { m.Cmd(ice.EXIT, "1") }).ProcessHold()
 			}},
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(mdb.TYPE) != web.WORKER {
@@ -163,10 +166,8 @@ func init() {
 			} else if config, err := config.LoadConfig(config.GlobalScope); err == nil && config.User.Email == "" && mdb.Config(m, aaa.EMAIL) == "" {
 				m.Action(CONFIGS).Echo("please config email and name. ").EchoButton(CONFIGS)
 			} else if len(arg) == 0 {
-				if config != nil {
-					m.Option(aaa.EMAIL, kit.Select(mdb.Config(m, aaa.EMAIL), config.User.Email))
-				}
-				m.Cmdy(REPOS, STATUS).Action(PULL, PUSH, "oauth", CONFIGS)
+				kit.If(config != nil, func() { m.Option(aaa.EMAIL, kit.Select(mdb.Config(m, aaa.EMAIL), config.User.Email)) })
+				m.Cmdy(REPOS, STATUS).Action(PULL, PUSH, "oauth", CONFIGS, cli.RESTART)
 			} else {
 				m.Cmdy(REPOS, arg[0], MASTER, INDEX, m.Cmdv(REPOS, arg[0], MASTER, INDEX, nfs.FILE))
 			}

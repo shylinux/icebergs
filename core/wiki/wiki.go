@@ -1,6 +1,7 @@
 package wiki
 
 import (
+	"html"
 	"path"
 	"strings"
 
@@ -92,7 +93,7 @@ type Message struct{ *ice.Message }
 func (m *Message) OptionTemplate() string {
 	res := []string{`class="story"`}
 	add := func(pre, key string) {
-		kit.If(m.Option(key), func() { res = append(res, kit.Format(`%s%s=%q`, pre, key, m.Option(key))) })
+		kit.If(m.Option(key), func() { res = append(res, kit.Format(`%s%s=%q`, pre, key, html.EscapeString(m.Option(key)))) })
 	}
 	kit.For(kit.Split("type,name,text"), func(k string) { add("data-", k) })
 	kit.For(m.Optionv(mdb.EXTRA), func(k string, v string) { kit.If(!strings.Contains(k, "-"), func() { add("data-", k) }) })

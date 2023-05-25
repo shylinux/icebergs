@@ -35,6 +35,8 @@ const FAVOR = "favor"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		FAVOR: {Name: "favor hash auto create upload getClipboardData", Help: "收藏夹", Actions: ice.MergeActions(ice.Actions{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { mdb.HashImport(m) }},
+			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { mdb.HashExport(m) }},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == mdb.FOREACH {
 					m.Cmd("", ice.OptionFields("")).Table(func(value ice.Maps) {

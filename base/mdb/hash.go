@@ -3,6 +3,7 @@ package mdb
 import (
 	"encoding/json"
 	"io"
+	"os"
 	"path"
 	"strings"
 
@@ -105,7 +106,10 @@ func _hash_export(m *ice.Message, prefix, chain, file string) {
 }
 func _hash_import(m *ice.Message, prefix, chain, file string) {
 	defer Lock(m, prefix, chain)()
-	f, e := miss.OpenFile(kit.Keys(file, JSON))
+	f, e := ice.Info.OpenFile(m, kit.Keys(file, JSON))
+	if os.IsNotExist(e) {
+		return
+	}
 	if m.Warn(e) {
 		return
 	}
@@ -113,8 +117,9 @@ func _hash_import(m *ice.Message, prefix, chain, file string) {
 	data := Map{}
 	m.Assert(json.NewDecoder(f).Decode(&data))
 	m.Logs(IMPORT, KEY, path.Join(prefix, chain), FILE, kit.Keys(file, JSON), COUNT, len(data))
-	defer m.Echo("%d", len(data))
+	kit.If(m.Confv(prefix, kit.Keys(chain, HASH)) == nil, func() { m.Confv(prefix, kit.Keys(chain, HASH), ice.Map{}) })
 	kit.For(data, func(k string, v Any) { m.Confv(prefix, kit.Keys(chain, HASH, k), v) })
+	m.Echo("%d", len(data))
 }
 
 const (

@@ -48,7 +48,7 @@ func _publish_contexts(m *ice.Message, arg ...string) {
 		case ice.CORE:
 			m.Option(web.DOMAIN, m.Cmd(web.SPIDE, ice.DEV).Append(web.CLIENT_ORIGIN))
 		default:
-			_publish_file(m, ice.ICE_BIN)
+			// _publish_file(m, ice.ICE_BIN)
 		}
 		m.EchoScript(strings.TrimSpace(nfs.Template(m, kit.Keys(k, SH))))
 	}

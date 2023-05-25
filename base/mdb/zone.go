@@ -94,7 +94,10 @@ func _zone_export(m *ice.Message, prefix, chain, file string) {
 }
 func _zone_import(m *ice.Message, prefix, chain, file string) {
 	defer Lock(m, prefix, chain)()
-	f, e := miss.OpenFile(kit.Keys(file, CSV))
+	f, e := ice.Info.OpenFile(m, kit.Keys(file, CSV))
+	if os.IsNotExist(e) {
+		return
+	}
 	if m.Warn(e) {
 		return
 	}

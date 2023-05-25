@@ -55,7 +55,7 @@ const PLAN = "plan"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		PLAN: {Name: "plan scale=week,day,week,month,year,long begin_time@date list prev next", Help: "任务计划", Actions: ice.MergeActions(ice.Actions{
+		PLAN: {Name: "plan scale=week,day,week,month,year,long begin_time@date list prev next", Help: "计划表", Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(TODO, mdb.INPUTS, arg) }},
 			mdb.PLUGIN: {Name: "plugin extra.index extra.args", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(TASK, mdb.MODIFY, arg) }},
 			mdb.INSERT: {Name: "insert zone* type=once,step,week name* text begin_time@date close_time@date", Hand: func(m *ice.Message, arg ...string) {

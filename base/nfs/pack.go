@@ -58,6 +58,7 @@ var PackFile = file.NewPackFile()
 var DiskFile = file.NewDiskFile()
 
 func init() { file.Init(OptionFiles(ice.Pulse, DiskFile, PackFile)) }
+func init() { ice.Info.OpenFile = OpenFile }
 
 type optionMessage interface {
 	Optionv(key string, arg ...ice.Any) ice.Any
@@ -71,8 +72,8 @@ func OptionFiles(m optionMessage, f ...file.File) file.File {
 	}
 	return m.Optionv(ice.MSG_FILES).(file.File)
 }
-func StatFile(m optionMessage, p string) (os.FileInfo, error)   { return OptionFiles(m).StatFile(p) }
-func OpenFile(m optionMessage, p string) (io.ReadCloser, error) { return OptionFiles(m).OpenFile(p) }
+func StatFile(m optionMessage, p string) (os.FileInfo, error)  { return OptionFiles(m).StatFile(p) }
+func OpenFile(m *ice.Message, p string) (io.ReadCloser, error) { return OptionFiles(m).OpenFile(p) }
 func CreateFile(m optionMessage, p string) (io.WriteCloser, string, error) {
 	return OptionFiles(m).CreateFile(p)
 }

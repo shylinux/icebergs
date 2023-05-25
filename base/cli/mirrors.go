@@ -43,7 +43,7 @@ var _release = ""
 
 func release(m *ice.Message) string {
 	osid := runtime.GOOS
-	if osid != LINUX {
+	if osid != LINUX || !nfs.Exists(m, "/etc/os-release") {
 		return osid
 	}
 	m.Option(nfs.CAT_CONTENT, _release)

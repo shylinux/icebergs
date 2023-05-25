@@ -6,6 +6,7 @@ import (
 	"path"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -16,7 +17,7 @@ const DATA = "data"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		DATA: {Name: "data path type@key field auto create push save draw", Help: "数据表格", Actions: ice.MergeActions(ice.Actions{
+		DATA: {Name: "data path type@key field auto", Help: "数据表格", Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case mdb.TYPE:
@@ -29,8 +30,15 @@ func init() {
 			nfs.PUSH: {Name: "push path record", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.PUSH, path.Join(mdb.Config(m, nfs.PATH), arg[0]), kit.Join(arg[1:], mdb.FS)+lex.NL)
 			}}, "draw": {Help: "绘图"},
-		}, WikiAction(ice.USR_LOCAL_EXPORT, nfs.CSV)), Hand: func(m *ice.Message, arg ...string) {
-			kit.If(!_wiki_list(m, arg...), func() { CSV(m, m.Cmdx(nfs.CAT, arg[0])).StatusTimeCount() })
+		}, WikiAction(ice.USR_LOCAL_EXPORT, nfs.CSV, nfs.JSON)), Hand: func(m *ice.Message, arg ...string) {
+			kit.If(!_wiki_list(m, arg...), func() {
+				if kit.Ext(arg[0]) == nfs.JSON {
+					m.Cmdy(nfs.CAT, arg[0])
+					ctx.DisplayStoryJSON(m)
+				} else {
+					CSV(m, m.Cmdx(nfs.CAT, arg[0])).StatusTimeCount()
+				}
+			})
 		}},
 	})
 }

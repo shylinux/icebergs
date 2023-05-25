@@ -1,13 +1,13 @@
 package cli
 
 import (
-	"os"
 	"runtime"
 	"strings"
 	"time"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
+	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -35,13 +35,11 @@ func newprocstat(m *ice.Message) (stat procstat) {
 		return
 	}
 	m.Option(ice.MSG_USERROLE, aaa.ROOT)
-	if ls := kit.Split(m.Cmdx(nfs.CAT, kit.Format("/proc/%d/stat", os.Getpid())), " ()"); len(ls) > 0 {
+	if ls := kit.Split(m.Cmdx(nfs.CAT, "/proc/self/stat"), " ()"); len(ls) > 0 {
 		stat = procstat{utime: kit.Int64(ls[13]), stime: kit.Int64(ls[14]), vmsize: kit.Int64(ls[22]), vmrss: kit.Int64(ls[23]) * 4096}
 	}
 	if ls := kit.Split(kit.Select("", strings.Split(m.Cmdx(nfs.CAT, "/proc/stat"), lex.NL), 1)); len(ls) > 0 {
-		stat.user = kit.Int64(ls[1])
-		stat.sys = kit.Int64(ls[3])
-		stat.idle = kit.Int64(ls[4])
+		stat.user, stat.sys, stat.idle = kit.Int64(ls[1]), kit.Int64(ls[3]), kit.Int64(ls[4])
 	}
 	for _, line := range strings.Split(strings.TrimSpace(m.Cmdx(nfs.CAT, "/proc/meminfo")), lex.NL) {
 		switch ls := kit.Split(line, ": "); ls[0] {
@@ -71,9 +69,14 @@ func newprocstat(m *ice.Message) (stat procstat) {
 func init() {
 	var last procstat
 	Index.MergeCommands(ice.Commands{
-		"procstat": {Name: "procstat id list page", Actions: ice.MergeActions(ice.Actions{
+		PROCSTAT: {Name: "procstat id list page start", Help: "进程统计", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { last = newprocstat(m) }},
-			mdb.INSERT: {Name: "insert", Hand: func(m *ice.Message, arg ...string) {
+			START: {Name: "start interval*=10s least*=360 limit*=720", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(gdb.TIMER, mdb.CREATE, mdb.NAME, m.CommandKey(), gdb.DELAY, "1s", m.OptionSimple(gdb.INTERVAL), mdb.COUNT, "-1", ice.CMD, "cli.procstat insert")
+				mdb.Config(m, mdb.LEAST, m.Option(mdb.LEAST))
+				mdb.Config(m, mdb.LIMIT, m.Option(mdb.LIMIT))
+			}},
+			mdb.INSERT: {Hand: func(m *ice.Message, arg ...string) {
 				stat := newprocstat(m)
 				total := stat.user - last.user + stat.sys - last.sys + stat.idle - last.idle
 				m.Cmd(mdb.INSERT, m.PrefixKey(), "", mdb.LIST,
@@ -83,8 +86,8 @@ func init() {
 				)
 				last = stat
 			}},
-		}, mdb.PageListAction(mdb.LIMIT, "720", mdb.LEAST, "360", mdb.FIELD, "time,id,utime,vmrss,user,idle,free,rx,tx,established,time_wait")), Hand: func(m *ice.Message, arg ...string) {
-			m.OptionDefault(mdb.CACHE_LIMIT, "360")
+		}, mdb.PageListAction(mdb.FIELD, "time,id,utime,vmrss,user,idle,free,rx,tx,established,time_wait")), Hand: func(m *ice.Message, arg ...string) {
+			m.OptionDefault(mdb.CACHE_LIMIT, mdb.Config(m, mdb.LEAST))
 			if mdb.PageListSelect(m, arg...); (len(arg) == 0 || arg[0] == "") && m.Length() > 0 {
 				m.SortInt(mdb.ID).Display("/plugin/story/trend.js", ice.VIEW, "折线图", "min", "0", "max", "1000", COLOR, "yellow,cyan,red,green,blue,purple,purple")
 				m.Status("from", m.Append(mdb.TIME), "span", kit.FmtDuration(time.Duration(kit.Time(m.Time())-kit.Time(m.Append(mdb.TIME)))), m.AppendSimple(mdb.Config(m, mdb.FIELD)), "cursor", "0")

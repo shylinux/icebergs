@@ -111,16 +111,17 @@ func (f *Frame) scan(m *ice.Message, h, line string) *Frame {
 		if len(bio.Text()) == 0 && h == STDIO {
 			continue
 		}
-		if f.count++; len(bio.Text()) == 0 {
+		f.count++
+		if line += bio.Text(); strings.Count(line, "`")%2 == 1 {
+			line += lex.NL
+			ps = f.ps2
+			continue
+		}
+		if len(bio.Text()) == 0 {
 			continue
 		}
 		if strings.HasSuffix(bio.Text(), "\\") {
 			line += bio.Text()[:len(bio.Text())-1]
-			ps = f.ps2
-			continue
-		}
-		if line += bio.Text(); strings.Count(line, "`")%2 == 1 {
-			line += lex.NL
 			ps = f.ps2
 			continue
 		}

@@ -135,6 +135,7 @@ const (
 	DISKINFO = "diskinfo"
 	HOSTINFO = "hostinfo"
 	USERINFO = "userinfo"
+	PROCSTAT = "procstat"
 	PROCINFO = "procinfo"
 	PROCKILL = "prockill"
 	BOOTINFO = "bootinfo"
@@ -144,7 +145,7 @@ const RUNTIME = "runtime"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		RUNTIME: {Name: "runtime info=bootinfo,ifconfig,diskinfo,hostinfo,userinfo,procinfo,bootinfo,api,cli,cmd,mod,env,path,chain,routine auto", Help: "运行环境", Actions: ice.MergeActions(ice.Actions{
+		RUNTIME: {Name: "runtime info=bootinfo,ifconfig,diskinfo,hostinfo,userinfo,procstat,procinfo,bootinfo,api,cli,cmd,mod,env,path,chain,routine auto", Help: "运行环境", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { _runtime_init(m) }},
 			IFCONFIG:     {Hand: func(m *ice.Message, arg ...string) { m.Cmdy("tcp.host") }},
 			DISKINFO:     {Hand: func(m *ice.Message, arg ...string) { _runtime_diskinfo(m) }},
@@ -156,11 +157,8 @@ func init() {
 				m.Echo(ice.Info.Hostname)
 			}},
 			USERINFO: {Hand: func(m *ice.Message, arg ...string) { m.Split(m.Cmdx(SYSTEM, "who"), "user term time") }},
-			PROCINFO: {Hand: func(m *ice.Message, arg ...string) {
-				msg := m.Cmd("", HOSTINFO)
-				m.Split(m.Cmdx(SYSTEM, "ps", "u")).PushAction(PROCKILL).Sort("COMMAND")
-				m.StatusTimeCount("nCPU", msg.Append("nCPU"), "MemTotal", msg.Append("MemTotal"), "MemFree", msg.Append("MemFree"))
-			}},
+			PROCSTAT: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(PROCSTAT) }},
+			PROCINFO: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(PROCINFO) }},
 			PROCKILL: {Help: "结束进程", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(gdb.SIGNAL, gdb.STOP, m.Option("PID")).ProcessRefresh() }},
 			MAXPROCS: {Hand: func(m *ice.Message, arg ...string) {
 				kit.If(len(arg) > 0, func() { runtime.GOMAXPROCS(kit.Int(mdb.Conf(m, RUNTIME, kit.Keys(HOST, MAXPROCS), arg[0]))) })

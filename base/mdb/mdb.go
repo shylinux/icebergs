@@ -255,9 +255,7 @@ func AutoConfig(arg ...Any) *ice.Action {
 }
 func ImportantZoneAction(arg ...Any) ice.Actions {
 	return ice.MergeActions(ice.Actions{
-		ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-			Config(m, "important", ice.TRUE)
-		}},
+		ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { Config(m, "important", ice.TRUE) }},
 	}, ZoneAction(arg...))
 }
 func ImportantHashAction(arg ...Any) ice.Actions {

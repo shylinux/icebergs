@@ -20,12 +20,11 @@ func _binpack_file(m *ice.Message, w io.Writer, arg ...string) {
 	if strings.HasPrefix(arg[0], "usr/volcanos/publish/") && !strings.HasSuffix(arg[0], "/proto.js") {
 		return
 	}
-	if strings.HasPrefix(arg[0], "usr/volcanos/page/") && !strings.Contains(arg[0], "/cache.") {
-		fmt.Fprintf(w, "        \"%s\": \"%s\",\n", kit.Select(arg[0], arg, 1), "")
-		return
-	}
 	switch arg[0] {
-	case ice.SRC_VERSION_GO, ice.SRC_BINPACK_GO, ice.ETC_LOCAL_SHY:
+	case ice.SRC_VERSION_GO, ice.SRC_BINPACK_GO:
+		return
+	case ice.ETC_LOCAL_SHY:
+		fmt.Fprintf(w, "        \"%s\": \"%s\",\n", kit.Select(arg[0], arg, 1), "")
 		return
 	}
 	if f, e := nfs.OpenFile(m, arg[0]); !m.Warn(e, ice.ErrNotFound, arg[0]) {
@@ -49,18 +48,10 @@ func _binpack_all(m *ice.Message) {
 		for _, p := range []string{ice.USR_VOLCANOS, ice.USR_INTSHELL, ice.SRC} {
 			_binpack_dir(m, w, p)
 		}
-		for _, p := range []string{ice.ETC_MISS_SH, ice.ETC_INIT_SHY, ice.ETC_EXIT_SHY, ice.README_MD, ice.MAKEFILE, ice.LICENSE} {
+		for _, p := range []string{ice.ETC_MISS_SH, ice.ETC_INIT_SHY, ice.ETC_LOCAL_SHY, ice.ETC_EXIT_SHY, ice.ETC_PATH, ice.README_MD, ice.MAKEFILE, ice.LICENSE} {
 			_binpack_file(m, w, p)
 		}
-		list, cache := map[string]string{}, kit.GetValid(
-			func() string { return m.Cmdx(cli.SYSTEM, GO, "env", "GOMODCACHE") },
-			func() string {
-				return kit.Select(kit.HomePath("go")+nfs.PS, m.Cmdx(cli.SYSTEM, GO, "env", "GOPATH")) + "/pkg/mod/"
-			},
-			func() string {
-				return ice.USR_REQUIRE
-			},
-		)
+		list, cache := map[string]string{}, GoCache(m)
 		for k := range ice.Info.File {
 			switch ls := kit.Split(k, nfs.PS); ls[1] {
 			case ice.SRC:
@@ -98,4 +89,13 @@ func init() {
 			mdb.INSERT: {Name: "insert path*", Hand: func(m *ice.Message, arg ...string) { mdb.HashCreate(m, m.OptionSimple(nfs.PATH)) }},
 		}, mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path"))},
 	})
+}
+func GoCache(m *ice.Message) string {
+	return kit.GetValid(
+		func() string { return m.Cmdx(cli.SYSTEM, GO, "env", "GOMODCACHE") },
+		func() string {
+			return kit.Select(kit.HomePath("go")+nfs.PS, m.Cmdx(cli.SYSTEM, GO, "env", "GOPATH")) + "/pkg/mod/"
+		},
+		func() string { return ice.USR_REQUIRE },
+	)
 }

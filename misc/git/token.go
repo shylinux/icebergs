@@ -44,8 +44,8 @@ func init() {
 		}, mdb.HashAction(mdb.EXPIRE, mdb.MONTH, mdb.SHORT, aaa.USERNAME, mdb.FIELD, "time,username,token")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) > 0 {
 				u := kit.ParseURL(m.Option(ice.MSG_USERWEB))
-				m.EchoScript(kit.Format("%s://%s:%s@%s", u.Scheme, m.Append(aaa.USERNAME), m.Append(TOKEN), u.Host))
-				m.EchoScript(kit.Format("echo '%s://%s:%s@%s' >>~/.git-credentials", u.Scheme, m.Append(aaa.USERNAME), m.Append(TOKEN), u.Host))
+				p := tcp.PublishLocalhost(m, kit.Format("%s://%s:%s@%s", u.Scheme, m.Append(aaa.USERNAME), m.Append(TOKEN), u.Host))
+				m.EchoScript(p).EchoScript(kit.Format("echo '%s' >>~/.git-credentials", p))
 			}
 		}},
 	})

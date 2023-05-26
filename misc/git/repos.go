@@ -39,6 +39,9 @@ func _repos_recent(m *ice.Message, repos *git.Repository) (r *plumbing.Reference
 				break
 			}
 			ls := kit.Split(refer.Name().Short(), "v.")
+			if len(ls) < 2 {
+				continue
+			}
 			if n := kit.Int(ls[0])*1000000 + kit.Int(ls[1])*1000 + kit.Int(ls[2]); n > max {
 				max, r = n, refer
 			}

@@ -14,7 +14,8 @@ fieldset.macos.desktop>div.output>fieldset.macos.notifications>div.output>div.it
 fieldset.macos.desktop>div.output>fieldset.macos.notifications div.item div.title { margin-top:10px; width:132px; overflow:hidden; }
 fieldset.macos.desktop>div.output>fieldset.macos.notifications div.item div.time { font-size:12px; margin-top:10px; width:48px; }
 fieldset.macos.desktop>div.output>fieldset.macos.notifications div.item div.content { width:180px; }
-fieldset.macos.desktop>div.output>fieldset.macos.dock { border:#ffffff3d solid 1px; border-radius:20px; position:absolute; bottom:10px; z-index:11; transition:margin-left 0.3s; }
+fieldset.macos.desktop>div.output>fieldset.macos.dock { border:#ffffff3d solid 1px; border-radius:20px; position:absolute; bottom:10px; transition:margin-left 0.3s; }
+fieldset.macos.desktop.cmd>div.output>fieldset.macos.dock { z-index:11; }
 fieldset.macos.desktop>div.output>div.desktop { padding-top:25px; }
 fieldset.macos.desktop>div.output>div.desktop:not(.select) { display:none; }
 fieldset.macos.desktop>div.output>div.desktop>div.item { position:absolute; text-align:center; }

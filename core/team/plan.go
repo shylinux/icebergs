@@ -58,9 +58,6 @@ func init() {
 		PLAN: {Name: "plan scale=week,day,week,month,year,long begin_time@date list prev next", Help: "计划表", Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(TODO, mdb.INPUTS, arg) }},
 			mdb.PLUGIN: {Name: "plugin extra.index extra.args", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(TASK, mdb.MODIFY, arg) }},
-			mdb.INSERT: {Name: "insert zone* type=once,step,week name* text begin_time@date close_time@date", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(TASK, mdb.INSERT, arg)
-			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				mdb.IsSearchForEach(m, arg, func() []string { return []string{web.LINK, m.CommandKey(), m.MergePodCmd("", "")} })
 			}},

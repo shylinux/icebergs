@@ -3,6 +3,7 @@ package chat
 import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
+	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -39,10 +40,22 @@ const RIVER = "river"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		web.P(RIVER): {Name: "/river", Help: "群组", Actions: ice.MergeActions(ice.Actions{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { mdb.HashImport(m) }},
+			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { mdb.HashExport(m) }},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case nfs.TEMPLATE:
 					m.Cmdy(TEMPLATE).CutTo(RIVER, arg[0])
+				case web.SPACE:
+					m.Cmd(web.SPACE, func(value ice.Maps) {
+						kit.If(kit.IsIn(value[mdb.TYPE], web.WORKER), func() { m.Push(arg[0], value[mdb.NAME]) })
+					})
+				case ctx.INDEX:
+					if m.Option(web.SPACE) == "" {
+						m.Cmdy(ctx.COMMAND)
+					} else {
+						m.Cmdy(web.SPACE, m.Option(web.SPACE), ctx.COMMAND)
+					}
 				default:
 					mdb.HashInputs(m, arg)
 				}

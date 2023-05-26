@@ -27,6 +27,9 @@ func init() {
 			mdb.INSERT: {Name: "insert hash space index args style display", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(mdb.INSERT, RIVER, _storm_key(m), mdb.LIST, arg)
 			}},
+			mdb.DELETE: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(mdb.MODIFY, RIVER, _storm_key(m), mdb.LIST, arg, "deleted", "true")
+			}},
 			mdb.MODIFY: {Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) > 0 && arg[0] == mdb.ID {
 					m.Cmdy(mdb.MODIFY, RIVER, _storm_key(m), mdb.LIST, arg)
@@ -38,7 +41,7 @@ func init() {
 			if m.Option(ice.MSG_STORM) == "" {
 				m.Cmdy(mdb.SELECT, RIVER, _river_key(m), mdb.HASH, ice.OptionFields("time,hash,name,text,count"))
 			} else if len(arg) == 0 || kit.Int(arg[0]) > 0 {
-				m.Cmdy(mdb.SELECT, RIVER, _storm_key(m), mdb.LIST, mdb.ID, arg, ice.OptionFields("time,id,space,index,args,style,display")).SortInt(mdb.ID)
+				m.Cmdy(mdb.SELECT, RIVER, _storm_key(m), mdb.LIST, mdb.ID, arg, ice.OptionFields("time,id,space,index,args,style,display,deleted")).SortInt(mdb.ID)
 			} else if aaa.Right(m, arg) {
 				m.Push(ctx.INDEX, arg[0])
 			}

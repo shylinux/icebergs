@@ -72,6 +72,7 @@ func init() {
 		web.P(HEADER): {Name: "/header", Help: "标题栏", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT:   {Hand: func(m *ice.Message, arg ...string) { aaa.White(m, HEADER) }},
 			mdb.INPUTS:     {Hand: func(m *ice.Message, arg ...string) {}},
+			aaa.LOGIN:      {Hand: func(m *ice.Message, arg ...string) {}},
 			aaa.LOGOUT:     {Hand: aaa.SessLogout},
 			aaa.PASSWORD:   {Hand: _header_users},
 			aaa.USERNICK:   {Hand: _header_users},

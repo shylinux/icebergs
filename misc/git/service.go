@@ -92,6 +92,9 @@ const (
 const SERVICE = "service"
 
 func init() {
+	web.Index.MergeCommands(ice.Commands{"/info/refs": {Actions: aaa.WhiteAction(), Hand: func(m *ice.Message, arg ...string) {
+		m.RenderRedirect(kit.MergeURL(ice.Info.Make.Remote+"/info/refs", m.OptionSimple(SERVICE)))
+	}}})
 	web.Index.MergeCommands(ice.Commands{"/x/": {Actions: aaa.WhiteAction(), Hand: func(m *ice.Message, arg ...string) {
 		if arg[0] == ice.LIST {
 			m.Cmd(Prefix(SERVICE), func(value ice.Maps) { m.Push(nfs.REPOS, web.MergeLink(m, "/x/"+kit.Keys(value[nfs.REPOS], GIT))) })
@@ -149,10 +152,7 @@ func init() {
 			}},
 			code.INNER: {Hand: func(m *ice.Message, arg ...string) { _repos_inner(m, _service_path, arg...) }},
 			web.DREAM_INPUTS: {Hand: func(m *ice.Message, arg ...string) {
-				switch arg[0] {
-				case REPOS:
-					mdb.HashSelect(m).Sort(REPOS).Cut("repos,branch,commit,time")
-				}
+				kit.If(arg[0] == REPOS, func() { mdb.HashSelect(m).Sort(REPOS).Cut("repos,branch,commit,time") })
 			}},
 		}, gdb.EventsAction(web.DREAM_INPUTS), mdb.HashAction(mdb.SHORT, REPOS, mdb.FIELD, "time,repos,branch,version,comment"), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {

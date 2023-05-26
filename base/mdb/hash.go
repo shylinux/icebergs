@@ -91,10 +91,14 @@ func _hash_prunes(m *ice.Message, prefix, chain string, arg ...string) {
 func _hash_export(m *ice.Message, prefix, chain, file string) {
 	defer Lock(m, prefix, chain)()
 	count := len(Confm(m, prefix, kit.Keys(chain, HASH)))
+	p := kit.Keys(file, JSON)
 	if count == 0 {
+		if s, e := os.Stat(p); e == nil && !s.IsDir() {
+			os.Remove(p)
+		}
 		return
 	}
-	f, p, e := miss.CreateFile(kit.Keys(file, JSON))
+	f, p, e := miss.CreateFile(p)
 	m.Assert(e)
 	defer f.Close()
 	defer m.Echo(p)

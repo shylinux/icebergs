@@ -133,6 +133,7 @@ func init() {
 				m.Cmd(nfs.DEFS, kit.HomePath(".gitconfig"), nfs.Template(m, "gitconfig", m.Option(aaa.USERNAME), m.Option(aaa.EMAIL)))
 				mdb.Config(m, aaa.USERNAME, m.Option(aaa.USERNAME))
 				mdb.Config(m, aaa.EMAIL, m.Option(aaa.EMAIL))
+				kit.If(m.Option(TOKEN), func() { m.Cmd(TOKEN, "set") })
 			}},
 			OAUTH: {Help: "授权", Hand: func(m *ice.Message, arg ...string) {
 				m.ProcessOpen(kit.MergeURL2(kit.Select(ice.Info.Make.Domain, _git_remote(m)), web.ChatCmdPath(Prefix(TOKEN), "gen"), tcp.HOST, m.Option(ice.MSG_USERWEB)))

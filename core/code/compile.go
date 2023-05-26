@@ -52,7 +52,7 @@ func init() {
 				case SERVICE:
 					m.Push(arg[0], kit.MergeURL2(m.Cmd(web.SPIDE, ice.DEV).Append(web.CLIENT_ORIGIN), "/publish/"))
 				case VERSION:
-					m.Push(arg[0], "1.15.5", "1.17.3")
+					m.Push(arg[0], "1.13.5", "1.15.5", "1.17.3")
 				default:
 					m.Cmdy(nfs.DIR, ice.SRC, nfs.DIR_CLI_FIELDS, kit.Dict(nfs.DIR_REG, kit.ExtReg(GO)))
 				}
@@ -60,7 +60,7 @@ func init() {
 			BINPACK: {Help: "版本", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(AUTOGEN, BINPACK) }},
 			WEBPACK: {Help: "打包", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(AUTOGEN, WEBPACK) }},
 			DEVPACK: {Help: "开发", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(AUTOGEN, DEVPACK) }},
-			INSTALL: {Name: "install service*='https://golang.google.cn/dl/' version*=1.15.5", Help: "安装", Hand: func(m *ice.Message, arg ...string) {
+			INSTALL: {Name: "install service*='https://golang.google.cn/dl/' version*=1.13.5", Help: "安装", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(INSTALL, web.DOWNLOAD, kit.Format("%s/go%s.%s-%s.%s", m.Option(SERVICE), m.Option(VERSION), runtime.GOOS, runtime.GOARCH, kit.Select("tar.gz", "zip", runtime.GOOS == cli.WINDOWS)), ice.USR_LOCAL)
 			}},
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {

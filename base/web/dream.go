@@ -112,7 +112,7 @@ const DREAM = "dream"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		DREAM: {Name: "dream name auto create", Help: "梦想家", Actions: ice.MergeActions(ice.Actions{
+		DREAM: {Name: "dream name@key auto create", Help: "梦想家", Actions: ice.MergeActions(ice.Actions{
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if mdb.IsSearchForEach(m, arg, nil) {
 					m.Cmds("", func(value ice.Maps) { m.PushSearch(mdb.TEXT, m.MergePod(value[mdb.NAME]), value) })

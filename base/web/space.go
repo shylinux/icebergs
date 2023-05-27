@@ -211,8 +211,8 @@ func init() {
 					ctx.ProcessOpen(m, m.MergePod(m.Option(mdb.NAME), arg))
 				}
 			}},
-			"main": {Hand: func(m *ice.Message, arg ...string) {
-				kit.If(mdb.Config(m, "main"), func(cmd string) { RenderPodCmd(m, "", cmd) }, func() {
+			ice.MAIN: {Hand: func(m *ice.Message, arg ...string) {
+				kit.If(mdb.Config(m, ice.MAIN), func(cmd string) { RenderPodCmd(m, "", cmd) }, func() {
 					m.RenderResult(nfs.Template(m.Options(nfs.VERSION, renderVersion(m)), "main.html"))
 				})
 				m.Optionv(ice.MSG_ARGS, kit.Simple(m.Optionv(ice.MSG_ARGS)))

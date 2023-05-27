@@ -12,10 +12,10 @@ import (
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		PROCINFO: {Name: "procinfo PID auto", Help: "进程列表", Actions: ice.MergeActions(ice.Actions{
+		PROCINFO: {Name: "procinfo PID auto filter:text", Help: "进程列表", Actions: ice.MergeActions(ice.Actions{
 			PROCKILL: {Help: "结束进程", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(gdb.SIGNAL, gdb.STOP, m.Option("PID")).ProcessRefresh() }},
 		}), Hand: func(m *ice.Message, arg ...string) {
-			if len(arg) == 0 {
+			if len(arg) == 0 || arg[0] == "" {
 				m.Split(m.Cmdx(SYSTEM, "ps", "u")).PushAction(PROCKILL).Sort("COMMAND").StatusTimeCount(m.Cmd(RUNTIME, HOSTINFO).AppendSimple("nCPU,MemTotal,MemFree"))
 				return
 			}

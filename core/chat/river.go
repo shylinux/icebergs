@@ -12,7 +12,10 @@ import (
 )
 
 func _river_right(m *ice.Message, hash string) bool {
-	return m.Option(ice.MSG_USERROLE) == aaa.ROOT || m.Cmdx(aaa.ROLE, aaa.RIGHT, m.Option(ice.MSG_USERROLE), RIVER, hash) == ice.OK
+	if m.Option(ice.MSG_USERROLE) == aaa.ROOT {
+		return true
+	}
+	return kit.IsIn(mdb.Conf(m, RIVER, kit.Keys(mdb.HASH, hash, mdb.META, mdb.TYPE)), "", aaa.VOID, m.Option(ice.MSG_USERROLE))
 }
 func _river_key(m *ice.Message, key ...ice.Any) string {
 	return kit.Keys(mdb.HASH, m.Option(ice.MSG_RIVER), kit.Simple(key))
@@ -26,10 +29,9 @@ func _river_list(m *ice.Message) {
 		}
 	}
 	m.Cmd(mdb.SELECT, m.PrefixKey(), "", mdb.HASH, ice.OptionFields(mdb.HASH, mdb.NAME), func(value ice.Maps) {
-		if _river_right(m, value[mdb.HASH]) {
-			m.PushRecord(value, mdb.HASH, mdb.NAME)
-		}
+		kit.If(_river_right(m, value[mdb.HASH]), func() { m.PushRecord(value, mdb.HASH, mdb.NAME) })
 	})
+	m.Sort(mdb.NAME)
 }
 
 const (
@@ -60,7 +62,7 @@ func init() {
 					mdb.HashInputs(m, arg)
 				}
 			}},
-			mdb.CREATE: {Name: "create type=void,tech name=hi text=hello template=base", Hand: func(m *ice.Message, arg ...string) {
+			mdb.CREATE: {Name: "create type=void,tech,root name=hi text=hello template=base", Hand: func(m *ice.Message, arg ...string) {
 				h := mdb.HashCreate(m, arg)
 				defer m.Result(h)
 				if m.Option(mdb.TYPE) == aaa.VOID {

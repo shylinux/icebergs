@@ -20,7 +20,11 @@ import (
 func _xterm_get(m *ice.Message, h string) xterm.XTerm {
 	h = kit.Select(m.Option(mdb.HASH), h)
 	m.Assert(h != "")
-	mdb.HashModify(m, mdb.TIME, m.Time(), cli.DAEMON, kit.Keys(m.Option("__target"), m.Option(ice.MSG_DAEMON)))
+	if m.Option(ice.MSG_USERPOD) == "" {
+		mdb.HashModify(m, mdb.TIME, m.Time(), cli.DAEMON, kit.Keys(m.Option("__target"), m.Option(ice.MSG_DAEMON)))
+	} else {
+		mdb.HashModify(m, mdb.TIME, m.Time(), cli.DAEMON, kit.Keys(m.Option(ice.MSG_DAEMON)))
+	}
 	return mdb.HashSelectTarget(m, h, func(value ice.Maps) ice.Any {
 		text := strings.Split(value[mdb.TEXT], lex.NL)
 		ls := kit.Split(strings.Split(kit.Select(ISH, value[mdb.TYPE]), " # ")[0])

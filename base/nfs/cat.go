@@ -22,10 +22,7 @@ func _cat_find(m *ice.Message, p string) (io.ReadCloser, error) {
 	return OpenFile(m, path.Join(m.Option(DIR_ROOT), p))
 }
 func _cat_hash(m *ice.Message, p string) (h string) {
-	Open(m, p, func(r io.Reader) {
-		h = kit.Hashs(r)
-		m.Debug("what %v %v", p, h)
-	})
+	Open(m, p, func(r io.Reader) { h = kit.Hashs(r) })
 	return
 }
 func _cat_line(m *ice.Message, p string) (n int) {
@@ -33,7 +30,7 @@ func _cat_line(m *ice.Message, p string) (n int) {
 	return
 }
 func _cat_list(m *ice.Message, p string) {
-	if m.Option(CAT_CONTENT) == "" && !aaa.Right(m, p) {
+	if m.Option(CAT_CONTENT) == "" && !aaa.Right(m, path.Join(m.Option(DIR_ROOT), p)) {
 		return
 	}
 	f, e := _cat_find(m, p)

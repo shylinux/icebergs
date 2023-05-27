@@ -15,9 +15,9 @@ const OFFER = "offer"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		OFFER: {Name: "offer hash auto", Help: "邀请", Actions: ice.MergeActions(ice.Actions{
-			INVITE: {Name: "invite email*='shylinux@163.com' subject content", Help: "邀请", Hand: func(m *ice.Message, arg ...string) {
+			mdb.CREATE: {Name: "create email*='shylinux@163.com' subject content", Help: "邀请", Hand: func(m *ice.Message, arg ...string) {
 				h := mdb.HashCreate(m.Spawn(), m.OptionSimple(EMAIL, SUBJECT, CONTENT), INVITE, m.Option(ice.MSG_USERNAME), mdb.STATUS, INVITE)
-				m.Cmd(EMAIL, SEND, m.Option(EMAIL), m.OptionDefault(SUBJECT, "welcome to contents, please continue"),
+				m.Cmd(EMAIL, SEND, m.Option(EMAIL), m.OptionDefault(SUBJECT, "welcome to contexts, please continue"),
 					m.OptionDefault(CONTENT, ice.Render(m, ice.RENDER_ANCHOR, m.Cmdx("host", "publish", m.MergePodCmd("", "", mdb.HASH, h)))),
 				)
 			}},
@@ -32,9 +32,9 @@ func init() {
 					mdb.HashModify(m, m.OptionSimple(mdb.HASH), mdb.STATUS, ACCEPT)
 				}
 			}},
-		}, mdb.HashAction(mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,status,invite,email,title,content"), RoleAction(ACCEPT)), Hand: func(m *ice.Message, arg ...string) {
+		}, RoleAction(ACCEPT), mdb.ImportantHashAction(mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,status,invite,email,title,content")), Hand: func(m *ice.Message, arg ...string) {
 			if !m.Warn(len(arg) == 0 && m.Option(ice.MSG_USERROLE) == VOID, ice.ErrNotRight) {
-				kit.If(mdb.HashSelect(m, arg...).FieldsIsDetail(), func() { m.PushAction(ACCEPT) }, func() { m.Action(INVITE) })
+				kit.If(mdb.HashSelect(m, arg...).FieldsIsDetail(), func() { m.PushAction(ACCEPT) }, func() { m.Action(mdb.CREATE) })
 			}
 		}},
 	})

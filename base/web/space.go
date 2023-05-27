@@ -150,7 +150,7 @@ func _space_send(m *ice.Message, name string, arg ...string) (h string) {
 	}) {
 		wait()
 	} else {
-		m.Warn(kit.IndexOf([]string{ice.OPS, ice.DEV}, target[0]) == -1, ice.ErrNotFound, name)
+		m.Warn(kit.IndexOf([]string{ice.OPS, ice.DEV}, target[0]) == -1, ice.ErrNotFound, SPACE, name)
 	}
 	return
 }

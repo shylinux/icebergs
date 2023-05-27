@@ -78,6 +78,12 @@ func init() {
 			RIGHT: {Hand: func(m *ice.Message, arg ...string) {
 				kit.If(_role_right(m, arg[0], kit.Split(_role_keys(arg[1:]...), ice.PT)...), func() { m.Echo(ice.OK) })
 			}},
+			"whiteblack": {Hand: func(m *ice.Message, arg ...string) {
+				kit.For(arg, func(cmd string) {
+					m.Cmd(ROLE, WHITE, VOID, cmd)
+					m.Cmd(ROLE, BLACK, VOID, cmd, ice.ACTION)
+				})
+			}},
 		}, mdb.HashAction(mdb.SHORT, mdb.NAME)), Hand: func(m *ice.Message, arg ...string) {
 			_role_list(m, kit.Select("", arg, 0)).PushAction(mdb.DELETE)
 		}},

@@ -68,7 +68,9 @@ func _webpack_cache(m *ice.Message, dir string, write bool) {
 		})
 	}
 	for _, k := range []string{ice.FRAME_JS} {
-		_webpack_js(m, js, _volcanos(m, k))
+		m.Option(nfs.DIR_ROOT, _volcanos(m))
+		_webpack_js(m, js, k)
+		m.Option(nfs.DIR_ROOT, "")
 	}
 	_webpack_css(m, css, js, "src/template/web.chat.header/dark.css")
 	_webpack_css(m, css, js, "src/template/web.chat.header/light.css")

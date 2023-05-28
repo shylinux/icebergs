@@ -122,7 +122,7 @@ func _install_stop(m *ice.Message, arg ...string) {
 	m.Cmd(cli.DAEMON, func(value ice.Maps) {
 		kit.If(value[cli.PID] == m.Option(cli.PID), func() { m.Cmd(cli.DAEMON, cli.STOP, kit.Dict(mdb.HASH, value[mdb.HASH])) })
 	})
-	m.Cmd(gdb.SIGNAL, gdb.KILL, m.Option(cli.PID))
+	kit.If(m.Option(cli.PID), func() { m.Cmd(gdb.SIGNAL, gdb.KILL, m.Option(cli.PID)) })
 }
 func _install_clear(m *ice.Message, arg ...string) {
 	m.Cmd(cli.DAEMON, func(value ice.Maps) {

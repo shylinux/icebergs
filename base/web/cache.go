@@ -84,7 +84,7 @@ func _cache_download(m *ice.Message, r *http.Response, file string, cb ice.Any) 
 				return
 			}
 			last = value / base
-			switch m.Logs(nfs.SAVE, nfs.FILE, p, mdb.COUNT, count, mdb.TOTAL, total, mdb.VALUE, value); cb := cb.(type) {
+			switch m.Logs(nfs.SAVE, nfs.FILE, p, mdb.COUNT, kit.FmtSize(int64(count)), mdb.TOTAL, kit.FmtSize(int64(total)), mdb.VALUE, value); cb := cb.(type) {
 			case func(int, int, int):
 				kit.If(cb != nil, func() { cb(count, total, value) })
 			case nil:

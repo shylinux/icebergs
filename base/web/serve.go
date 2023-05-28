@@ -198,3 +198,11 @@ func Script(m *ice.Message, str string, arg ...ice.Any) string {
 	return ice.Render(m, ice.RENDER_SCRIPT, kit.Format(str, arg...))
 }
 func ChatCmdPath(arg ...string) string { return path.Join("/chat/cmd/", path.Join(arg...)) }
+func RequireFile(m *ice.Message, file string) string {
+	if strings.HasPrefix(file, nfs.PS) || strings.HasPrefix(file, ice.HTTP) {
+		return file
+	} else if file != "" {
+		return "/require/" + file
+	}
+	return ""
+}

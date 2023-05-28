@@ -11,6 +11,7 @@ shell `
 wget https://github.com/Tencent/TencentKona-8/releases/download/8.0.11-GA/TencentKona8.0.11.b2_jdk_linux-x86_64_8u345.tar.gz
 tar xvf TencentKona8.0.11.b2_jdk_linux-x86_64_8u345.tar.gz && cd TencentKona-8.0.11-345/
 
+https://repo.huaweicloud.com/java/jdk/8u202-b08/
 wget https://mirrors.huaweicloud.com/openjdk/18/openjdk-18_linux-x64_bin.tar.gz
 tar xvf openjdk-18_linux-x64_bin.tar.gz && cd jdk-18
 `

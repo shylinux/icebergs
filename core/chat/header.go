@@ -1,14 +1,11 @@
 package chat
 
 import (
-	"strings"
-
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
-	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
@@ -17,8 +14,7 @@ import (
 func _header_users(m *ice.Message, arg ...string) {
 	if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin) {
 		return
-	}
-	if m.Warn(m.Option(web.SHARE) != "", ice.ErrNotRight, "没有权限") {
+	} else if m.Warn(m.Option(web.SHARE) != "", ice.ErrNotRight, "没有权限") {
 		return
 	}
 	m.Cmdy(aaa.USER, mdb.MODIFY, aaa.USERNAME, m.Option(ice.MSG_USERNAME), m.ActionKey(), m.Option(m.ActionKey(), arg[0]))
@@ -26,8 +22,7 @@ func _header_users(m *ice.Message, arg ...string) {
 func _header_share(m *ice.Message, arg ...string) {
 	if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin, "没有登录") {
 		return
-	}
-	if kit.For(arg, func(k, v string) { m.Option(k, v) }); m.Option(mdb.LINK) == "" {
+	} else if kit.For(arg, func(k, v string) { m.Option(k, v) }); m.Option(mdb.LINK) == "" {
 		m.Cmdy(web.SHARE, mdb.CREATE, mdb.TYPE, web.LOGIN, arg)
 	} else {
 		m.Option(mdb.LINK, tcp.PublishLocalhost(m, m.Option(mdb.LINK)))
@@ -52,8 +47,7 @@ func _header_check(m *ice.Message, arg ...string) bool {
 	}
 	if m.Option(ice.MSG_USERNAME) != "" {
 		return true
-	}
-	if ctx.OptionFromConfig(m, SSO) == "" && ctx.OptionFromConfig(m, web.LOGIN) == "" {
+	} else if ctx.OptionFromConfig(m, SSO) == "" && ctx.OptionFromConfig(m, web.LOGIN) == "" {
 		m.Option(SSO, GetSSO(m))
 	}
 	return false
@@ -81,20 +75,15 @@ func init() {
 			aaa.AVATAR:     {Hand: _header_users},
 			web.SHARE:      {Hand: _header_share},
 			"webpack":      {Hand: ctx.CmdHandler("webpack", "build")},
-		}, ctx.ConfAction(SSO, "")), Hand: func(m *ice.Message, arg ...string) {
+		}, ctx.ConfAction(SSO, "", aaa.LANGUAGE, "zh")), Hand: func(m *ice.Message, arg ...string) {
 			if gdb.Event(m, HEADER_AGENT); !_header_check(m, arg...) {
 				return
 			}
 			msg := m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME))
 			kit.For([]string{aaa.USERNICK, aaa.LANGUAGE}, func(k string) { m.Option(k, msg.Append(k)) })
-			for _, k := range []string{aaa.BACKGROUND, aaa.AVATAR} {
-				if strings.HasPrefix(msg.Append(k), nfs.PS) || strings.HasPrefix(msg.Append(k), ice.HTTP) {
-					m.Option(k, msg.Append(k))
-				} else if msg.Append(k) != "" {
-					m.Option(k, "/require/"+msg.Append(k))
-				}
-			}
-			m.Echo(kit.Select(kit.Select("", strings.SplitN(ice.Info.Make.Remote, "://", 2), 1), mdb.Config(m, TITLE))).Option(MENUS, mdb.Config(m, MENUS))
+			kit.For([]string{aaa.AVATAR, aaa.BACKGROUND}, func(k string) { m.Option(k, web.RequireFile(m, msg.Append(k))) })
+			kit.If(m.Option(aaa.LANGUAGE) == "", func() { m.Option(aaa.LANGUAGE, mdb.Config(m, aaa.LANGUAGE)) })
+			m.Echo(mdb.Config(m, TITLE)).Option(MENUS, mdb.Config(m, MENUS))
 		}},
 	})
 }

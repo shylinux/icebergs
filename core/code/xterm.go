@@ -146,7 +146,7 @@ func init() {
 				}
 			} else {
 				if m.Length() == 0 {
-					arg[0] = m.Cmdx("", mdb.CREATE, mdb.TYPE, arg)
+					arg[0] = m.Cmdx("", mdb.CREATE, kit.SimpleKV("type,name,text,path", arg))
 					mdb.HashSelect(m, arg[0])
 				}
 				m.Push(mdb.HASH, arg[0])

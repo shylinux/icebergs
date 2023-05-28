@@ -113,7 +113,7 @@ func init() {
 						return
 					}
 					mdb.HashModify(m, mdb.HASH, kit.Select(h, value[mdb.HASH]), STATUS, STOP)
-					m.Cmd(gdb.SIGNAL, gdb.KILL, value[PID])
+					kit.If(value[PID], func() { m.Cmd(gdb.SIGNAL, gdb.KILL, value[PID]) })
 				})
 			}},
 			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) {

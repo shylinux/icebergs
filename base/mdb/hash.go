@@ -172,7 +172,9 @@ func HashKey(m *ice.Message) string {
 func HashShort(m *ice.Message) string {
 	return kit.Select(HASH, Config(m, SHORT), Config(m, SHORT) != UNIQ)
 }
-func HashField(m *ice.Message) string { return kit.Select(HASH_FIELD, Config(m, FIELD)) }
+func HashField(m *ice.Message) string {
+	return kit.Select(HASH_FIELD, Config(m, FIELD), Config(m, FIELDS))
+}
 func HashInputs(m *ice.Message, arg ...Any) *ice.Message {
 	return m.Cmdy(INPUTS, m.PrefixKey(), "", HASH, arg)
 }

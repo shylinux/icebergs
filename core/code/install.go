@@ -116,7 +116,7 @@ func _install_start(m *ice.Message, arg ...string) {
 		m.ErrorNotImplement(cb)
 		return
 	}
-	m.Cmdy(cli.DAEMON, kit.Select(path.Join(ice.BIN, kit.Split(path.Base(arg[0]), "-.")[0]), arg, 1), kit.Slice(arg, 2), args)
+	m.Cmdy(cli.DAEMON, kit.Select(path.Join(ice.BIN, path.Base(_install_path(m, ""))), arg, 1), kit.Slice(arg, 2), args)
 }
 func _install_stop(m *ice.Message, arg ...string) {
 	m.Cmd(cli.DAEMON, func(value ice.Maps) {
@@ -138,10 +138,10 @@ func _install_trash(m *ice.Message, arg ...string) {
 	}
 }
 func _install_service(m *ice.Message, arg ...string) {
-	arg = kit.Split(path.Base(arg[0]), "_-.")[:1]
+	name := kit.Split(path.Base(arg[0]), "_-.")[0]
 	m.Fields(len(arg[1:]), "time,port,status,pid,cmd,dir")
 	m.Cmd(mdb.SELECT, cli.DAEMON, "", mdb.HASH, func(value ice.Maps) {
-		if strings.Contains(value[ice.CMD], path.Join(ice.BIN, arg[0])) {
+		if strings.Contains(value[ice.CMD], path.Join(ice.BIN, name)) {
 			switch m.Push("", value, kit.Split(m.OptionFields())); value[mdb.STATUS] {
 			case cli.START:
 				m.PushButton(gdb.DEBUG, cli.STOP)

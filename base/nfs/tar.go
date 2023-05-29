@@ -2,7 +2,6 @@ package nfs
 
 import (
 	"archive/tar"
-	"archive/zip"
 	"compress/gzip"
 	"io"
 	"os"
@@ -14,23 +13,12 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _zip_list(m *ice.Message, p string, cb func(zip.FileHeader, io.Reader, int)) {
-	if f, e := zip.OpenReader(p); m.Warn(e, ice.ErrNotValid, p) {
-		return
-	} else {
-		defer f.Close()
-		for i, f := range f.File {
-			if r, e := f.Open(); e == nil {
-				defer r.Close()
-				cb(f.FileHeader, r, i)
-			}
-		}
-	}
-}
 func _tar_list(m *ice.Message, p string, cb func(*tar.Header, io.Reader, int)) {
 	Open(m, p, func(r io.Reader) {
 		for {
 			switch kit.Ext(p) {
+			case "tgz":
+				p = kit.Keys(kit.TrimExt(p, kit.Ext(p)), TAR, GZ)
 			case GZ:
 				if f, e := gzip.NewReader(r); m.Warn(e, ice.ErrNotValid, p) {
 					return
@@ -61,8 +49,7 @@ func _tar_list(m *ice.Message, p string, cb func(*tar.Header, io.Reader, int)) {
 }
 
 const (
-	GZ  = "gz"
-	ZIP = "zip"
+	GZ = "gz"
 )
 const TAR = "tar"
 
@@ -72,23 +59,11 @@ func init() {
 			mdb.NEXT: {Hand: func(m *ice.Message, arg ...string) { mdb.PrevPage(m, arg[0], kit.Slice(arg, 1)...) }},
 			mdb.PREV: {Hand: func(m *ice.Message, arg ...string) { mdb.NextPageLimit(m, arg[0], kit.Slice(arg, 1)...) }},
 			mdb.EXPORT: {Hand: func(m *ice.Message, arg ...string) {
-				list, size := kit.Dict(), 0
 				if kit.Ext(m.Option(PATH)) == ZIP {
-					_zip_list(m, m.Option(PATH), func(h zip.FileHeader, r io.Reader, i int) {
-						p := path.Join(path.Dir(m.Option(PATH)), kit.Split(path.Base(m.Option(PATH)), "-.")[0], h.Name)
-						if strings.HasSuffix(h.Name, PS) {
-							MkdirAll(m, p)
-							return
-						}
-						kit.IfNoKey(list, path.Dir(p), func(p string) { MkdirAll(m, p) })
-						Create(m, p, func(w io.Writer) {
-							os.Chmod(p, os.FileMode(h.Mode()))
-							Copy(m, w, r, func(n int) { size += n })
-							kit.If(m.Option(FILE), func() { m.Cmdy(DIR, p).Cmdy(CAT, p) })
-						})
-					})
+					m.Cmdy(ZIP, mdb.EXPORT, arg)
 					return
 				}
+				list, size := kit.Dict(), 0
 				_tar_list(m, m.Option(PATH), func(h *tar.Header, r io.Reader, i int) {
 					if h.Name == m.Option(FILE) || m.Option(FILE) == "" {
 						p := path.Join(path.Dir(m.Option(PATH)), h.Name)
@@ -108,6 +83,13 @@ func init() {
 		}, mdb.PageListAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 || strings.HasSuffix(arg[0], PS) {
 				m.Cmdy(DIR, arg)
+				return
+			}
+			defer func() {
+				m.Debug("waht %v", m.FormatMeta())
+			}()
+			if kit.Ext(arg[0]) == ZIP {
+				m.Cmdy(ZIP, arg)
 				return
 			}
 			page, size := mdb.OptionPages(m, kit.Slice(arg, 2)...)

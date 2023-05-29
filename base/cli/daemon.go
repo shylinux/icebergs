@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"bytes"
 	"io"
 	"os/exec"
 	"runtime"
@@ -18,6 +19,8 @@ func _daemon_exec(m *ice.Message, cmd *exec.Cmd) {
 	if r, ok := m.Optionv(CMD_INPUT).(io.Reader); ok {
 		cmd.Stdin = r
 	}
+	err := bytes.NewBuffer(make([]byte, 0, ice.MOD_BUFS))
+	cmd.Stderr = err
 	if w := _system_out(m, CMD_OUTPUT); w != nil {
 		cmd.Stdout, cmd.Stderr = w, w
 	}
@@ -28,18 +31,20 @@ func _daemon_exec(m *ice.Message, cmd *exec.Cmd) {
 		ice.CMD, kit.Join(cmd.Args, lex.SP), DIR, cmd.Dir, ENV, kit.Select("", cmd.Env),
 		m.OptionSimple(CMD_INPUT, CMD_OUTPUT, CMD_ERRPUT, mdb.CACHE_CLEAR_ONEXIT),
 	)
-	if e := cmd.Start(); m.Warn(e, ice.ErrNotStart, cmd.Args) {
+	if e := cmd.Start(); m.Warn(e, ice.ErrNotStart, cmd.Args, err.String()) {
+		m.Debug("what %v", e)
 		mdb.HashModify(m, h, STATUS, ERROR, ERROR, e)
 		return
 	}
 	mdb.HashSelectUpdate(m, h, func(value ice.Map) { value[PID] = cmd.Process.Pid })
 	m.Echo("%d", cmd.Process.Pid)
 	m.Go(func() {
-		if e := cmd.Wait(); !m.Warn(e, ice.ErrNotStart, cmd.Args) && cmd.ProcessState != nil && cmd.ProcessState.Success() {
+		if e := cmd.Wait(); !m.Warn(e, ice.ErrNotStart, cmd.Args, err.String()) && cmd.ProcessState != nil && cmd.ProcessState.Success() {
 			mdb.HashModify(m, mdb.HASH, h, STATUS, STOP)
 			m.Cost(CODE, "0", ctx.ARGS, cmd.Args)
 		} else {
-			mdb.HashSelectUpdate(m, h, func(value ice.Map) { kit.If(value[STATUS] == START, func() { value[STATUS], value[ERROR] = ERROR, e }) })
+			mdb.HashSelectUpdate(m, h, func(value ice.Map) { value[STATUS], value[ERROR] = ERROR, e })
+			m.Debug("what %v", e)
 		}
 		switch status := mdb.HashSelectField(m.Sleep300ms(), h, STATUS); cb := m.OptionCB("").(type) {
 		case func(string) bool:

@@ -53,7 +53,7 @@ func _spide_show(m *ice.Message, name string, arg ...string) {
 		return
 	}
 	defer res.Body.Close()
-	m.Cost(cli.STATUS, res.Status, nfs.SIZE, res.Header.Get(ContentLength), mdb.TYPE, res.Header.Get(ContentType))
+	m.Cost(cli.STATUS, res.Status, nfs.SIZE, kit.FmtSize(kit.Int64(res.Header.Get(ContentLength))), mdb.TYPE, res.Header.Get(ContentType))
 	kit.For(res.Header, func(k string, v []string) { m.Logs("response", k, v) })
 	mdb.HashSelectUpdate(m, name, func(value ice.Map) {
 		kit.For(res.Cookies(), func(v *http.Cookie) {

@@ -2,3 +2,4 @@ section "npm"
 shell `
 ./bin/npm install -g cnpm --registry=https://registry.npm.taobao.org
 `
+field web.code.node.npm

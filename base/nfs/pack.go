@@ -25,13 +25,16 @@ func init() {
 			}},
 			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) { PackFile.Remove(path.Clean(m.Option(PATH))) }},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				if arg[0] == mdb.FOREACH {
-					OptionFiles(m, PackFile)
-					m.Cmd(DIR, SRC, PATH, kit.Dict(DIR_REG, kit.Format(`.*%s.*\.shy`, arg[1]), DIR_DEEP, ice.TRUE, DIR_TYPE, CAT), func(value ice.Maps) {
-						m.PushSearch(mdb.TYPE, SHY, mdb.NAME, value[PATH])
+				if arg[0] == mdb.FOREACH && arg[1] != "" {
+					m.Cmd(DIR, SRC, PATH, kit.Dict(DIR_REG, arg[1], DIR_DEEP, ice.TRUE, DIR_TYPE, CAT), func(value ice.Maps) {
+						if strings.HasPrefix(value[PATH], ice.SRC_TEMPLATE) {
+							return
+						}
+						m.PushSearch(mdb.TYPE, kit.Ext(value[PATH]), mdb.NAME, path.Base(value[PATH]), mdb.TEXT, value[PATH])
 					})
-					m.Cmd(DIR, USR, PATH, kit.Dict(DIR_REG, kit.Format(`.*%s.*\.shy`, arg[1]), DIR_DEEP, ice.TRUE, DIR_TYPE, CAT), func(value ice.Maps) {
-						m.PushSearch(mdb.TYPE, SHY, mdb.NAME, value[PATH])
+					OptionFiles(m, PackFile)
+					m.Cmd(DIR, USR, PATH, kit.Dict(DIR_REG, arg[1], DIR_DEEP, ice.TRUE, DIR_TYPE, CAT), func(value ice.Maps) {
+						m.PushSearch(mdb.TYPE, kit.Ext(value[PATH]), mdb.NAME, path.Base(value[PATH]), mdb.TEXT, value[PATH])
 					})
 				}
 			}},

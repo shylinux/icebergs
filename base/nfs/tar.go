@@ -17,7 +17,7 @@ func _tar_list(m *ice.Message, p string, cb func(*tar.Header, io.Reader, int)) {
 	Open(m, p, func(r io.Reader) {
 		for {
 			switch kit.Ext(p) {
-			case "tgz":
+			case TGZ:
 				p = kit.Keys(kit.TrimExt(p, kit.Ext(p)), TAR, GZ)
 			case GZ:
 				if f, e := gzip.NewReader(r); m.Warn(e, ice.ErrNotValid, p) {
@@ -49,7 +49,9 @@ func _tar_list(m *ice.Message, p string, cb func(*tar.Header, io.Reader, int)) {
 }
 
 const (
-	GZ = "gz"
+	XZ  = "xz"
+	GZ  = "gz"
+	TGZ = "tgz"
 )
 const TAR = "tar"
 

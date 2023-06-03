@@ -17,7 +17,7 @@ type node struct {
 	regexp string `data:"js"`
 	darwin string `data:"https://mirrors.tencent.com/nodejs-release/v16.15.1/node-v16.15.1-darwin-x64.tar.gz"`
 	linux  string `data:"https://mirrors.tencent.com/nodejs-release/v16.15.1/node-v16.15.1-linux-x64.tar.xz"`
-	list   string `name:"list path auto listScript xterm order install" help:"node"`
+	list   string `name:"list path auto listScript xterm order install" help:"运行时"`
 }
 
 func (s node) Init(m *ice.Message) {

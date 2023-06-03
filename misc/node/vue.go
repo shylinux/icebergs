@@ -7,7 +7,7 @@ import (
 
 type vue struct {
 	ice.Code
-	list string `name:"list path auto" help:"vue"`
+	list string `name:"list path auto" help:"框架"`
 }
 
 func (s vue) List(m *ice.Message) {

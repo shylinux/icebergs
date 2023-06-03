@@ -10,7 +10,7 @@ const NPM = "npm"
 
 type npm struct {
 	ice.Code
-	list string `name:"list path auto" help:"npm"`
+	list string `name:"list path auto" help:"依赖库"`
 }
 
 func (s npm) Init(m *ice.Message) {

@@ -3,7 +3,7 @@ section "node"
 refer `
 官网 https://nodejs.org/
 源码 https://github.com/nodejs/node
-文档 https://nodejs.org/docs/latest-v6.x/api/
+文档 https://nodejs.org/dist/latest-v18.x/docs/api/
 `
 
 field web.code.node.node
@@ -21,9 +21,12 @@ http://mirrors.tencent.com/nodejs-release/v16.15.1/node-v16.15.1-x64.msi
 shell `
 ./bin/node
 `
+field web.code.xterm args "node" auto delay height 240
 
 source npm.shy
 source vue.shy
 source grpc.shy
-source admin.shy
+source router.shy
+source element.shy
 source vscode.shy
+source admin.shy

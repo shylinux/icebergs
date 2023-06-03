@@ -1,0 +1,14 @@
+section "admin"
+refer `
+https://www.imooc.com/course/list?c=nodejs
+https://gitee.com/talelin
+https://doc.cms.talelin.com
+http://face.cms.talelin.com
+https://www.imooc.com/video/23022
+https://www.imooc.com/video/23025
+`
+
+shell `
+git clone -b imooc-island https://gitee.com/talelin/lin-cms-vue.git
+git clone -b imooc-island https://gitee.com/talelin/lin-cms-koa.git
+`

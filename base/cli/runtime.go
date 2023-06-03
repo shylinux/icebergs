@@ -99,6 +99,7 @@ const (
 	MIPSLE  = "mipsle"
 	GOOS    = "GOOS"
 	LINUX   = "linux"
+	MACOS   = "macos"
 	DARWIN  = "darwin"
 	WINDOWS = "windows"
 )

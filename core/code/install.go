@@ -76,11 +76,9 @@ func _install_build(m *ice.Message, arg ...string) string {
 }
 func _install_order(m *ice.Message, arg ...string) {
 	p := _install_path(m, "")
-	if m.Option(nfs.PATH) == "" {
-		kit.For([]string{"", "sbin", "bin", "_install/bin"}, func(v string) {
-			kit.If(nfs.Exists(m, path.Join(p, v)), func() { m.Option(nfs.PATH, v) })
-		})
-	}
+	kit.For([]string{"", "sbin", "bin", "_install/bin"}, func(v string) {
+		kit.If(nfs.Exists(m, path.Join(p, v)), func() { m.Option(nfs.PATH, v) })
+	})
 	m.Cmdy(cli.SYSTEM, nfs.PUSH, path.Join(p, m.Option(nfs.PATH)))
 }
 func _install_spawn(m *ice.Message, arg ...string) {

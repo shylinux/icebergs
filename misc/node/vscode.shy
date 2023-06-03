@@ -1,0 +1,13 @@
+section "vscode"
+refer `
+官网 https://code.visualstudio.com
+文档 https://code.visualstudio.com/docs
+`
+shell linux `
+
+` macos `
+https://az764295.vo.msecnd.net/stable/b3e4e68a0bc097f0ae7907b217c1119af9e03435/VSCode-darwin-universal.zip
+https://vscode.cdn.azure.cn/stable/b3e4e68a0bc097f0ae7907b217c1119af9e03435/VSCode-darwin-universal.zip
+` windows `
+
+`

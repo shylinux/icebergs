@@ -24,6 +24,17 @@ func init() {
 				})
 			}},
 			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) { PackFile.Remove(path.Clean(m.Option(PATH))) }},
+			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
+				if arg[0] == mdb.FOREACH {
+					OptionFiles(m, PackFile)
+					m.Cmd(DIR, SRC, PATH, kit.Dict(DIR_REG, kit.Format(`.*%s.*\.shy`, arg[1]), DIR_DEEP, ice.TRUE, DIR_TYPE, CAT), func(value ice.Maps) {
+						m.PushSearch(mdb.TYPE, SHY, mdb.NAME, value[PATH])
+					})
+					m.Cmd(DIR, USR, PATH, kit.Dict(DIR_REG, kit.Format(`.*%s.*\.shy`, arg[1]), DIR_DEEP, ice.TRUE, DIR_TYPE, CAT), func(value ice.Maps) {
+						m.PushSearch(mdb.TYPE, SHY, mdb.NAME, value[PATH])
+					})
+				}
+			}},
 			mdb.IMPORT: {Hand: func(m *ice.Message, arg ...string) {
 				OptionFiles(m, DiskFile)
 				Open(m, path.Join(m.Option(PATH), m.Option(FILE)), func(r io.Reader, p string) {

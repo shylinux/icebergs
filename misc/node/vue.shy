@@ -4,3 +4,9 @@ refer `
 源码 https://github.com/vuejs/vue
 入门 https://vuejs.org/guide/quick-start.html
 `
+
+shell `
+cnpm install -g @vue/cli
+vue create demo && cd demo
+vue serve
+`

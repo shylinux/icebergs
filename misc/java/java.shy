@@ -1,0 +1,20 @@
+section "java"
+refer `
+官网 https://www.java.com/
+文档 https://docs.oracle.com/javase/tutorial/
+下载 https://repo.huaweicloud.com/java/jdk/8u202-b08/
+源码 https://github.com/openjdk/jdk
+开源 https://openjdk.org/
+`
+field web.code.java.java
+
+shell linux `
+wget https://mirrors.huaweicloud.com/openjdk/18/openjdk-18_linux-x64_bin.tar.gz
+tar xvf openjdk-18_linux-x64_bin.tar.gz && cd jdk-18
+` macos `
+curl -O https://repo.huaweicloud.com/java/jdk/8u202-b08/jdk-8u202-macosx-x64.dmg
+open jdk-8u202-macosx-x64.dmg
+` window `
+wget https://repo.huaweicloud.com/java/jdk/8u202-b08/jdk-8u202-windows-x64.exe
+explore jdk-8u202-windows-x64.exe
+`

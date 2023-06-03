@@ -65,7 +65,7 @@ func _binpack_all(m *ice.Message) {
 		for _, k := range kit.SortedKey(list) {
 			v := kit.Select(k, list[k])
 			m.Cmd(nfs.DIR, nfs.PWD, nfs.PATH, kit.Dict(nfs.DIR_ROOT, v, nfs.DIR_REG, kit.ExtReg(SH, SHY, PY, JS, CSS, HTML))).Table(func(value ice.Maps) {
-				if ice.Info.Make.Remote != "shylinux.com/x/contexts" && kit.HasPrefix(k, ice.USR_ICEBERGS) {
+				if ice.Info.Make.Remote != "https://shylinux.com/x/contexts" && kit.HasPrefix(k, ice.USR_ICEBERGS) {
 					return
 				}
 				_binpack_file(m, w, kit.Path(v, value[nfs.PATH]), path.Join(k, value[nfs.PATH]))

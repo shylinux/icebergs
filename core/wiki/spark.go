@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -44,6 +45,18 @@ func _spark_md(m *ice.Message, arg ...string) *ice.Message {
 func _spark_show(m *ice.Message, name, text string, arg ...string) *ice.Message {
 	return _wiki_template(m.Options(mdb.LIST, kit.SplitLine(text)), name, name, text, arg...)
 }
+func _spark_tabs(m *ice.Message, arg ...string) {
+	m.Echo(`<div class="story" data-type="spark_tabs">`)
+	{
+		m.Echo(`<div class="tabs">`)
+		{
+			kit.For(arg[1:], func(k, v string) { m.Echo(`<div class="item">%s</div>`, k) })
+		}
+		m.Echo(`</div>`)
+		kit.For(arg[1:], func(k, v string) { m.Cmdy("", arg[0], v) })
+	}
+	m.Echo(`</div>`)
+}
 
 const (
 	SHELL = "shell"
@@ -60,6 +73,8 @@ func init() {
 		}), Hand: func(m *ice.Message, arg ...string) {
 			if kit.Ext(arg[0]) == "md" {
 				_spark_md(m, arg...)
+			} else if arg[0] == SHELL && kit.IsIn(kit.Select("", arg, 1), cli.LINUX, cli.MACOS, cli.DARWIN, cli.WINDOWS) {
+				_spark_tabs(m, arg...)
 			} else {
 				arg = _name(m, arg)
 				_spark_show(m, arg[0], strings.TrimSpace(arg[1]), arg[2:]...)

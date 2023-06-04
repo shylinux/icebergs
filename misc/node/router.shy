@@ -1,4 +1,0 @@
-section "router"
-refer `
-https://router.vuejs.org/zh/guide/essentials/nested-routes.html
-`

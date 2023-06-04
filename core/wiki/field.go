@@ -21,6 +21,10 @@ func _field_show(m *ice.Message, name, text string, arg ...string) {
 	kit.For(arg, func(k, v string) {
 		if k == ctx.ARGS {
 			kit.Value(meta, k, kit.Split(strings.TrimSuffix(strings.TrimPrefix(v, "["), "]")))
+		} else if k == ice.MSG_RESULT {
+			m.Option("output", strings.TrimSpace(v))
+			kit.Value(meta, "meta.mode", "result")
+			kit.Value(meta, "msg", kit.Dict())
 		} else {
 			kit.Value(meta, k, v)
 		}
@@ -34,8 +38,11 @@ const FIELD = "field"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		FIELD: {Name: "field name cmd", Help: "插件", Actions: ctx.CmdAction(), Hand: func(m *ice.Message, arg ...string) {
-			kit.If(kit.Select("", arg, 1) == ctx.ARGS, func() { arg = kit.Simple("", arg) })
+			kit.If(kit.IsIn(kit.Select("", arg, 1), ctx.ARGS, ice.MSG_RESULT), func() { arg = kit.Simple("", arg) })
 			arg = _name(m, arg)
+			if arg[0] == "inner" {
+				arg = append([]string{"", "web.code.inner", "args", "src/ main.go", "result", arg[1], "meta.display", "/plugin/local/code/inner.js", "style", "output"}, arg[2:]...)
+			}
 			_field_show(m, arg[0], arg[1], arg[2:]...)
 		}},
 	})

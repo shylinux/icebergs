@@ -12,3 +12,4 @@ shell `
 git clone -b imooc-island https://gitee.com/talelin/lin-cms-vue.git
 git clone -b imooc-island https://gitee.com/talelin/lin-cms-koa.git
 `
+field web.code.vimer args "usr/lin-cms-vue/ src/views/home/Home.vue"

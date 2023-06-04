@@ -1,7 +1,0 @@
-section "grpc"
-shell `
-cnpm i --save-dev grpc-web
-cnpm i --save-dev google-protobuf
-cnpm i -g protoc-gen-js protoc-gen-grpc-web
-protoc --js_out=import_style=commonjs:./demo/src --grpc-web_out=import_style=commonjs,mode=grpcwebtext:./demo/src ./idl/*.proto
-`

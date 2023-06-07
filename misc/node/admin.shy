@@ -1,4 +1,15 @@
-section "admin"
+section "vue-element-admin"
+shell `
+git clone https://shylinux.com/x/vue-element-admin
+cd vue-element-admin
+npm install
+vue serve
+vue build
+`
+
+field web.code.vimer args "usr/vue-element-admin/ src/main.js"
+
+section "lin-cms-vue"
 refer `
 https://www.imooc.com/course/list?c=nodejs
 https://gitee.com/talelin
@@ -12,4 +23,4 @@ shell `
 git clone -b imooc-island https://gitee.com/talelin/lin-cms-vue.git
 git clone -b imooc-island https://gitee.com/talelin/lin-cms-koa.git
 `
-field web.code.vimer args "usr/lin-cms-vue/ src/views/home/Home.vue"
+# field web.code.vimer args "usr/lin-cms-vue/ src/views/home/Home.vue"

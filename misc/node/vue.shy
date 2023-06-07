@@ -14,9 +14,10 @@ vue build
 
 section "grpc"
 shell `
-cnpm i --save-dev grpc-web
-cnpm i --save-dev google-protobuf
-cnpm i -g protoc-gen-js protoc-gen-grpc-web
+cnpm install -D grpc-web
+cnpm install -D google-protobuf
+cnpm install -g protoc-gen-js
+cnpm install -g protoc-gen-grpc-web
 protoc --js_out=import_style=commonjs:./demo/src --grpc-web_out=import_style=commonjs,mode=grpcwebtext:./demo/src ./idl/*.proto
 `
 
@@ -25,6 +26,10 @@ refer `
 官网 https://www.axios-http.cn
 文档 https://www.axios-http.cn/docs/intro
 源码 https://github.com/axios/axios
+`
+
+shell `
+npm install axios
 `
 
 section "router"
@@ -38,6 +43,7 @@ https://element.eleme.cn/2.0/#/zh-CN/component/installation
 `
 shell `
 npm install element-ui
+npm install @vueuse/core 
 `
 
 field inner `
@@ -45,4 +51,15 @@ field inner `
 import ElementUI from "element-ui"
 
 Vue.use(ElementUI)
+`
+
+shell `
+npm install element-plus
+npm install @vueuse/core
+`
+field inner `
+<html lang="" class="dark">
+`
+field inner `
+import 'element-plus/theme-chalk/dark/css-vars.css'
 `

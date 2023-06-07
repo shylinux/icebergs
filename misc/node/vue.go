@@ -22,29 +22,25 @@ func (s vue) Init(m *ice.Message) {
 	s.Lang.Init(m, code.PREPARE, ice.Map{
 		code.KEYWORD: kit.List(
 			"template", "script", "style",
+			"component", "slot",
 			"router-link", "router-view",
 			"el-container", "el-aside", "el-header", "el-main",
-
-			"el-tabs",
-			"el-tab-pane",
 			"el-dialog",
-			"el-form",
-			"el-form-item",
+
+			"el-icon", "el-avatar",
+
+			"el-menu", "el-sub-menu", "el-menu-item",
+			"el-table", "el-table-column", "el-pagination",
+
+			"el-tabs", "el-tab-pane",
+			"el-form", "el-form-item",
 
 			"el-input",
 			"el-select",
 			"el-option",
 			"el-button",
-			"el-checkbox-group",
 			"el-checkbox",
-			"el-pagination",
-
-			"el-menu",
-			"el-submenu",
-			"el-menu-item",
-
-			"el-table",
-			"el-table-column",
+			"el-checkbox-group",
 		),
 		code.FUNCTION: kit.List(
 			"data",
@@ -55,6 +51,7 @@ func (s vue) Init(m *ice.Message) {
 			"computed",
 			"created",
 			"mounted",
+			"unmounted",
 			"methods",
 			"watch",
 		),

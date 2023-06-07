@@ -4,7 +4,7 @@ refer `
 官网 https://nodejs.org/
 源码 https://github.com/nodejs/node
 文档 https://nodejs.org/dist/latest-v18.x/docs/api/
-https://cloud.tencent.com/developer/section/1489885
+文档 https://cloud.tencent.com/developer/section/1489885
 `
 
 field web.code.node.node

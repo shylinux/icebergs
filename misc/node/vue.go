@@ -20,21 +20,29 @@ func (s vue) Render(m *ice.Message, arg ...string) {
 }
 func (s vue) Init(m *ice.Message) {
 	s.Lang.Init(m, code.PREPARE, ice.Map{
+		"regexp": kit.Dict(
+			"^el-[a-z0-9_]+$", code.KEYWORD,
+		),
 		code.KEYWORD: kit.List(
 			"template", "script", "style",
 			"component", "slot",
 			"router-link", "router-view",
+
 			"el-container", "el-aside", "el-header", "el-main",
 			"el-dialog",
+			"el-drawer",
 
 			"el-icon", "el-avatar",
-
+			"el-dropdown", "el-dropdown-menu", "el-dropdown-item",
 			"el-menu", "el-sub-menu", "el-menu-item",
 			"el-table", "el-table-column", "el-pagination",
+			"el-row", "el-col",
+			"el-breadcrumb", "el-breadcrumb-item",
 
 			"el-tabs", "el-tab-pane",
 			"el-form", "el-form-item",
 
+			"el-switch",
 			"el-input",
 			"el-select",
 			"el-option",

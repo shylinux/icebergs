@@ -12,6 +12,13 @@ vue serve
 vue build
 `
 
+section "docs"
+refer `
+文档 https://cloud.tencent.com/developer/section/1489885
+文档 https://developer.mozilla.org/zh-CN/docs/Web/CSS/CSS_Flexible_Box_Layout/Basic_Concepts_of_Flexbox
+文档 https://vueuse.org/shared/useToggle/
+`
+
 section "grpc"
 shell `
 cnpm install -D grpc-web
@@ -27,7 +34,6 @@ refer `
 文档 https://www.axios-http.cn/docs/intro
 源码 https://github.com/axios/axios
 `
-
 shell `
 npm install axios
 `
@@ -37,22 +43,10 @@ refer `
 https://router.vuejs.org/zh/guide/essentials/nested-routes.html
 `
 
-section "element"
+section "element-plus"
 refer `
-https://element.eleme.cn/2.0/#/zh-CN/component/installation
+https://element-plus.org/zh-CN/guide/quickstart.html
 `
-shell `
-npm install element-ui
-npm install @vueuse/core 
-`
-
-field inner `
-// main.js
-import ElementUI from "element-ui"
-
-Vue.use(ElementUI)
-`
-
 shell `
 npm install element-plus
 npm install @vueuse/core

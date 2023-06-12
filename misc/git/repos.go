@@ -576,6 +576,7 @@ func init() {
 		}, aaa.RoleAction(REMOTE), web.DreamAction(), mdb.ClearOnExitHashAction(), mdb.HashAction(mdb.SHORT, REPOS, mdb.FIELD, "time,repos,branch,version,comment,origin")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				mdb.HashSelect(m, arg...).Sort(REPOS).Action(CLONE, PULL, PUSH, STATUS)
+				m.PushAction(STATUS, mdb.REMOVE)
 				m.Echo(strings.ReplaceAll(m.Cmdx(code.PUBLISH, ice.CONTEXTS), "app username", "dev username"))
 			} else if len(arg) == 1 {
 				_repos_branch(m, _repos_open(m, arg[0]))

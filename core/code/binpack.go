@@ -17,6 +17,9 @@ import (
 )
 
 func _binpack_file(m *ice.Message, w io.Writer, arg ...string) {
+	if kit.Contains(arg[0], "/node_modules/", "/dist/", "/bin/", "/log/") {
+		return
+	}
 	if strings.HasPrefix(arg[0], "usr/volcanos/publish/") && !strings.HasSuffix(arg[0], "/proto.js") {
 		return
 	}

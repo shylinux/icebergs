@@ -17,7 +17,10 @@ import (
 )
 
 func _binpack_file(m *ice.Message, w io.Writer, arg ...string) {
-	if kit.Contains(arg[0], "/node_modules/", "/dist/", "/bin/", "/log/") {
+	if kit.IsIn(kit.Ext(arg[0]), "zip", "gz") {
+		return
+	}
+	if kit.Contains(arg[0], "/node_modules/", "/dist/", "/bin/", "/usr/", "/log/") {
 		return
 	}
 	if strings.HasPrefix(arg[0], "usr/volcanos/publish/") && !strings.HasSuffix(arg[0], "/proto.js") {
@@ -33,6 +36,9 @@ func _binpack_file(m *ice.Message, w io.Writer, arg ...string) {
 	if f, e := nfs.OpenFile(m, arg[0]); !m.Warn(e, ice.ErrNotFound, arg[0]) {
 		defer f.Close()
 		if b, e := ioutil.ReadAll(f); !m.Warn(e, ice.ErrNotValid, arg[0]) {
+			if len(b) > 1<<20 {
+				m.Warn("too larger %s %s", arg[0], len(b))
+			}
 			fmt.Fprintf(w, "        \"%s\": \"%s\",\n", kit.Select(arg[0], arg, 1), base64.StdEncoding.EncodeToString(b))
 		}
 	}

@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/mdb"
@@ -24,11 +23,11 @@ func (f *Frame) Start(m *ice.Message, arg ...string) {
 			fmt.Fprint(f, os.Getpid())
 		}
 	})
-	t := kit.Duration(mdb.Conf(m, TIMER, kit.Keym(TICK)))
+	// t := kit.Duration(mdb.Conf(m, TIMER, kit.Keym(TICK)))
 	for {
 		select {
-		case <-time.Tick(t):
-			m.Cmd(TIMER, HAPPEN, kit.Dict(ice.LOG_DISABLE, ice.TRUE))
+		// case <-time.Tick(t):
+		// 	m.Cmd(TIMER, HAPPEN, kit.Dict(ice.LOG_DISABLE, ice.TRUE))
 		case s, ok := <-f.s:
 			if !ok {
 				return

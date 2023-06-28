@@ -73,11 +73,22 @@ func init() {
 		}), Hand: func(m *ice.Message, arg ...string) {
 			if kit.Ext(arg[0]) == "md" {
 				_spark_md(m, arg...)
-			} else if arg[0] == SHELL && kit.IsIn(kit.Select("", arg, 1), cli.LINUX, cli.MACOS, cli.DARWIN, cli.WINDOWS) {
+			} else if arg[0] == SHELL && kit.IsIn(kit.Select("", arg, 1), cli.ALPINE, cli.CENTOS, cli.LINUX, cli.MACOS, cli.DARWIN, cli.WINDOWS) {
 				_spark_tabs(m, arg...)
 			} else {
 				arg = _name(m, arg)
-				_spark_show(m, arg[0], strings.TrimSpace(arg[1]), arg[2:]...)
+				meta := kit.Dict()
+				kit.For(arg[2:], func(k, v string) { kit.Value(meta, k, v) })
+				m.Option(mdb.META, kit.Format(meta))
+				_spark_show(m, arg[0], strings.TrimSpace(arg[1]))
+			}
+		}},
+		"style": {Hand: func(m *ice.Message, arg ...string) {
+			switch arg[0] {
+			case "end":
+				m.Echo("</div>")
+			default:
+				m.Echo(`<div class="%s %s">`, "story", arg[0])
 			}
 		}},
 	})

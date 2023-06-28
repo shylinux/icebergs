@@ -184,6 +184,7 @@ func init() {
 			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(mdb.EXPORT, arg[0], "", mdb.HASH, path.Join(ice.VAR_TRASH, kit.Keys(arg[0])))
 				nfs.Trash(m, path.Join(ice.VAR_DATA, arg[0]))
+				mdb.Config(m, arg[0], nil, nil)
 				m.Go(func() { m.Cmd(ice.EXIT, 1) })
 			}},
 			mdb.LIST: {Hand: func(m *ice.Message, arg ...string) {

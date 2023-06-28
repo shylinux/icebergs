@@ -17,7 +17,7 @@ func _split_tab(text string) (tab int) {
 		case ' ':
 			tab++
 		default:
-			break
+			return
 		}
 	}
 	return

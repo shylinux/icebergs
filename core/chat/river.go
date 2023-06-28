@@ -28,8 +28,8 @@ func _river_list(m *ice.Message) {
 			return
 		}
 	}
-	m.Cmd(mdb.SELECT, m.PrefixKey(), "", mdb.HASH, ice.OptionFields(mdb.HASH, mdb.NAME), func(value ice.Maps) {
-		kit.If(_river_right(m, value[mdb.HASH]), func() { m.PushRecord(value, mdb.HASH, mdb.NAME) })
+	m.Cmd(mdb.SELECT, m.PrefixKey(), "", mdb.HASH, ice.OptionFields(mdb.HASH, mdb.NAME, mdb.ICON), func(value ice.Maps) {
+		kit.If(_river_right(m, value[mdb.HASH]), func() { m.PushRecord(value, mdb.HASH, mdb.NAME, mdb.ICON) })
 	})
 	m.Sort(mdb.NAME)
 }
@@ -70,7 +70,7 @@ func init() {
 				}
 				gdb.Event(m, RIVER_CREATE, RIVER, m.Option(ice.MSG_RIVER, h), arg)
 			}},
-		}, aaa.WhiteAction(), mdb.ImportantHashAction(mdb.FIELD, "time,hash,type,name,text,template")), Hand: func(m *ice.Message, arg ...string) {
+		}, aaa.WhiteAction(), mdb.ImportantHashAction(mdb.FIELD, "time,hash,type,icon,name,text,template")), Hand: func(m *ice.Message, arg ...string) {
 			if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin) || !aaa.Right(m, RIVER, arg) {
 				return
 			} else if len(arg) == 0 {

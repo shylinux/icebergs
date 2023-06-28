@@ -15,8 +15,8 @@ import (
 
 func _cmd_file(m *ice.Message, arg ...string) bool {
 	switch p := path.Join(arg...); kit.Ext(p) {
-	case nfs.SHY:
-		web.RenderCmd(m, "web.wiki.word", p)
+	// case nfs.SHY:
+	// 	web.RenderCmd(m, "web.wiki.word", p)
 	case nfs.GO:
 		web.RenderCmd(m, ctx.GetFileCmd(p))
 	case nfs.JS:

@@ -1,7 +1,10 @@
 package chrome
 
 import (
+	"path"
+
 	"shylinux.com/x/ice"
+	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
 )
 
@@ -26,6 +29,10 @@ func (s style) Command(m *ice.Message, arg ...string) {
 	s.Zone.List(m, m.Option(web.DOMAIN)).Table(func(value ice.Maps) {
 		s.send(m, "1", m.Option(TID), m.CommandKey(), value[SELECTOR], value[PROPERTY])
 	})
+	style := m.Cmdx(nfs.CAT, path.Join("src/website", m.Option(web.DOMAIN), "dark.css"))
+	if style != "" {
+		s.send(m, "1", m.Option(TID), m.CommandKey(), "style", style)
+	}
 }
 func (s style) List(m *ice.Message, arg ...string) {
 	s.Zone.List(m, arg...)

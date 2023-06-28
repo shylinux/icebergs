@@ -44,7 +44,7 @@ func (f *Frame) prompt(m *ice.Message, arg ...string) *Frame {
 		case mdb.COUNT:
 			fmt.Fprintf(f.stdout, "%d", f.count)
 		case tcp.HOSTNAME:
-			fmt.Fprintf(f.stdout, "%s", kit.Slice(kit.Split(ice.Info.Hostname, " -/."), -1)[0])
+			fmt.Fprintf(f.stdout, ice.Info.NodeName)
 		case mdb.TIME:
 			fmt.Fprintf(f.stdout, kit.Slice(kit.Split(time.Now().Format(ice.MOD_TIME)), -1)[0])
 		case TARGET:

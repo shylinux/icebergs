@@ -7,7 +7,7 @@ import (
 
 type sync struct {
 	field  string `data:"time,id,type,name,link"`
-	insert string `name:"insert type name link" http:"/sync"`
+	insert string `name:"insert type name link" http:"sync"`
 	list   string `name:"list id auto" help:"同步流"`
 }
 

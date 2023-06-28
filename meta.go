@@ -145,7 +145,7 @@ func (m *Message) Push(key string, value Any, arg ...Any) *Message {
 				m.Add(MSG_APPEND, KEY, key).Add(MSG_APPEND, VALUE, kit.Format(value))
 			} else {
 				if m.ActionKey() == INPUTS && kit.IndexOf(m.meta[key], v) > -1 {
-					return
+					// return
 				}
 				m.Add(MSG_APPEND, key, v)
 			}

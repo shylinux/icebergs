@@ -9,7 +9,7 @@ type page struct {
 	daemon
 	style
 	field
-	list string `name:"list domain auto" help:"网页" http:"/page"`
+	list string `name:"list domain auto" help:"网页" http:""`
 }
 
 func (s page) Command(m *ice.Message, arg ...string) {

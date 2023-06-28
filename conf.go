@@ -156,6 +156,7 @@ const ( // DIR
 	SRC_WEBVIEW_GO = "src/webview.go"
 	SRC_VERSION_GO = "src/version.go"
 	SRC_BINPACK_GO = "src/binpack.go"
+	SRC_DOCUMENT   = "src/document/"
 	SRC_TEMPLATE   = "src/template/"
 	SRC_SCRIPT     = "src/script/"
 	README_MD      = "README.md"

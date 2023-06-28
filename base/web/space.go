@@ -49,7 +49,7 @@ func _space_fork(m *ice.Message) {
 	addr := kit.Select(m.R.RemoteAddr, m.R.Header.Get(ice.MSG_USERADDR))
 	name := kit.ReplaceAll(kit.Select(addr, m.Option(mdb.NAME)), "[", "_", "]", "_", nfs.DF, "_", nfs.PT, "_")
 	text := kit.Select(addr, m.Option(mdb.TEXT))
-	if kit.IsIn(m.Option(mdb.TYPE), CHROME) || !(ice.Info.Localhost && tcp.IsLocalHost(m, m.R.RemoteAddr) ||
+	if kit.IsIn(m.Option(mdb.TYPE), CHROME) && m.Option(mdb.NAME) != "chrome" || !(ice.Info.Localhost && tcp.IsLocalHost(m, m.R.RemoteAddr) ||
 		m.Option(TOKEN) != "" && m.Cmdv(TOKEN, m.Option(TOKEN), mdb.TIME) > m.Time()) {
 		name = kit.ReplaceAll(addr, "[", "_", "]", "_", nfs.DF, "_", nfs.PT, "_")
 		text = kit.Select(addr, m.Option(mdb.NAME), m.Option(mdb.TEXT))

@@ -129,7 +129,7 @@ func RenderCmds(m *ice.Message, list ...ice.Any) {
 	RenderTemplate(m.Options(nfs.VERSION, renderVersion(m), mdb.LIST, kit.Format(list)), "cmds.html")
 }
 func RenderPodCmd(m *ice.Message, pod, cmd string, arg ...ice.Any) {
-	msg := m.Cmd(Space(m, pod), ctx.COMMAND, kit.Select("web.wiki.word", cmd))
+	msg := m.Cmd(Space(m, pod), ctx.COMMAND, kit.Select(m.PrefixKey(), cmd))
 	RenderCmds(m, kit.Dict(msg.AppendSimple(mdb.NAME, mdb.HELP),
 		ctx.INDEX, msg.Append(ctx.INDEX), ctx.ARGS, kit.Simple(arg), ctx.DISPLAY, m.Option(ice.MSG_DISPLAY),
 		mdb.LIST, kit.UnMarshal(msg.Append(mdb.LIST)), mdb.META, kit.UnMarshal(msg.Append(mdb.META)),

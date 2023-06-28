@@ -600,3 +600,6 @@ func init() {
 	})
 }
 func ReposList(m *ice.Message) *ice.Message { return m.Cmd(REPOS, ice.OptionFields("repos,path")) }
+func ReposClone(m *ice.Message, arg ...string) *ice.Message {
+	return m.Cmdy("web.code.git.repos", "clone", arg)
+}

@@ -2,6 +2,7 @@ package wiki
 
 import (
 	"path"
+	"strings"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/lex"
@@ -12,8 +13,19 @@ import (
 )
 
 func _title_parse(m *ice.Message, text string) string {
-	return m.Cmdx(lex.SPLIT, "", "name,link", kit.Dict(nfs.CAT_CONTENT, text), func(ls []string) []string {
-		kit.If(!kit.HasPrefix(ls[1], nfs.PS, web.HTTP), func() { ls[1] = path.Join(path.Dir(m.Option(ice.MSG_SCRIPT)), ls[1]) })
+	deep, list := []int{}, []string{}
+	return m.Cmdx(lex.SPLIT, "", "name,link", kit.Dict(nfs.CAT_CONTENT, text), func(indent int, ls []string) []string {
+		for len(deep) > 0 && indent <= deep[len(deep)-1] {
+			deep = deep[:len(deep)-1]
+			list = list[:len(list)-1]
+		}
+		if len(ls) > 1 {
+			kit.If(!kit.HasPrefix(ls[1], nfs.PS, web.HTTP), func() {
+				ls[1] = path.Join(kit.Select(path.Dir(m.Option(ice.MSG_SCRIPT)), list, -1), ls[1]) + kit.Select("", nfs.PS, strings.HasSuffix(ls[1], nfs.PS))
+			})
+		}
+		deep = append(deep, indent)
+		list = append(list, kit.Select("", ls, 1))
 		return ls
 	})
 }

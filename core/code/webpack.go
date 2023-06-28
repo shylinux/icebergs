@@ -19,10 +19,11 @@ import (
 func _volcanos(m *ice.Message, p ...string) string { return ice.USR_VOLCANOS + path.Join(p...) }
 func _publish(m *ice.Message, p ...string) string  { return ice.USR_PUBLISH + path.Join(p...) }
 func _require(m *ice.Message, p string) string {
+	p = strings.Replace(p, ice.USR_MODULES, "/require/modules/", 1)
 	if kit.HasPrefix(p, "src/", "usr/") {
 		return path.Join("/require/", p)
 	}
-	return path.Join(nfs.PS, strings.TrimPrefix(strings.Replace(p, ice.USR_MODULES, "/require/modules/", 1), ice.USR_VOLCANOS))
+	return path.Join(nfs.PS, strings.TrimPrefix(p, ice.USR_VOLCANOS))
 }
 func _webpack_css(m *ice.Message, css, js io.Writer, p string) {
 	fmt.Fprintln(css, kit.Format("/* %s */", _require(m, p)))

@@ -11,6 +11,7 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/core/wiki"
+	"shylinux.com/x/icebergs/misc/git"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -22,15 +23,19 @@ const (
 type alpha struct {
 	ice.Zone
 	field string `data:"word,phonetic,translation,definition"`
-	store string `data:"usr/local/export/"`
+	repos string `data:"https://shylinux.com/x/word-dict"`
+	store string `data:"usr/local/alpha/"`
 	fsize string `data:"300000"`
 	limit string `data:"50000"`
 	least string `data:"1000"`
-	load  string `name:"load file=usr/word-dict/ecdict zone=ecdict"`
+	load  string `name:"load file*=usr/word-dict/ecdict zone*=ecdict"`
 	list  string `name:"list method=word,line word auto load" help:"词典"`
 }
 
 func (s alpha) Load(m *ice.Message, arg ...string) {
+	if !nfs.Exists(m, path.Dir(m.Option(nfs.FILE))) {
+		git.ReposClone(m.Message, mdb.Config(m, "repos"))
+	}
 	lib := kit.Select(path.Base(m.Option(nfs.FILE)), m.Option(mdb.ZONE))
 	m.Assert(nfs.RemoveAll(m, path.Join(mdb.Config(m, mdb.STORE), lib)))
 	s.Zone.Remove(m, mdb.ZONE, lib)

@@ -88,6 +88,9 @@ func MergeActions(arg ...Any) Actions {
 		return nil
 	}
 	list := arg[0].(Actions)
+	if list == nil {
+		list = Actions{}
+	}
 	for _, from := range arg[1:] {
 		switch from := from.(type) {
 		case Actions:

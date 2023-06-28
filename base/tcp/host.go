@@ -1,6 +1,7 @@
 package tcp
 
 import (
+	"fmt"
 	"net"
 	"strings"
 
@@ -87,3 +88,6 @@ func init() {
 
 func IsLocalHost(m *ice.Message, ip string) bool         { return m.Cmdx(HOST, ISLOCAL, ip) == ice.OK }
 func PublishLocalhost(m *ice.Message, url string) string { return m.Cmdx(HOST, PUBLISH, url) }
+func Address(host, port string) string {
+	return fmt.Sprintf("%s:%s", host, port)
+}

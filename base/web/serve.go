@@ -53,14 +53,19 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	} else {
 		r.Header.Set(ice.MSG_USERIP, strings.Split(r.RemoteAddr, nfs.DF)[0])
 	}
-	// kit.For(r.Header, func(k string, v []string) { m.Debug("what %v %v", k, v) })
-	kit.If(path.Join(r.URL.Path) == nfs.PS, func() { r.URL.Path = kit.Select(nfs.PS, mdb.Config(m, "main")) })
 	if m.Logs(r.Header.Get(ice.MSG_USERIP), r.Method, r.URL.String()); r.Method == http.MethodGet {
 		if msg := m.Spawn(w, r).Options(ice.MSG_USERUA, r.UserAgent()); path.Join(r.URL.Path) == nfs.PS {
+			if !msg.IsCliUA() {
+				if r.URL.Path = kit.Select(nfs.PS, mdb.Config(m, "main")); path.Join(r.URL.Path) != nfs.PS {
+					return true
+				}
+			}
 			return !Render(RenderMain(msg), msg.Option(ice.MSG_OUTPUT), kit.List(msg.Optionv(ice.MSG_ARGS))...)
 		} else if p := path.Join(kit.Select(ice.USR_VOLCANOS, ice.USR_INTSHELL, msg.IsCliUA()), r.URL.Path); nfs.Exists(msg, p) {
 			return !Render(msg, ice.RENDER_DOWNLOAD, p)
 		}
+	} else if r.Method == http.MethodPost && path.Join(r.URL.Path) == nfs.PS {
+		r.URL.Path = kit.Select(nfs.PS, mdb.Config(m, "main"))
 	}
 	return true
 }
@@ -185,7 +190,7 @@ func init() {
 		if strings.HasPrefix(sub, nfs.PS) {
 			kit.If(action.Hand == nil, func() { action.Hand = cmd.Hand })
 			sub = kit.Select(P(key, sub), PP(key, sub), strings.HasSuffix(sub, nfs.PS))
-			c.Commands[sub] = &ice.Command{Name: kit.Select(cmd.Name, action.Name), Actions: ctx.CmdAction(), Hand: func(m *ice.Message, arg ...string) {
+			c.Commands[sub] = &ice.Command{Name: kit.Select(cmd.Name, action.Name), Actions: ice.MergeActions(cmd.Actions, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 				msg := m.Spawn(c, key, cmd)
 				defer m.Copy(msg)
 				action.Hand(msg, arg...)

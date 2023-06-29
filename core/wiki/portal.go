@@ -19,7 +19,7 @@ func init() {
 		INDEX_SHY = "index.shy"
 	)
 	Index.MergeCommands(ice.Commands{
-		PORTAL: {Name: "portal path auto", Help: "门户", Actions: ice.MergeActions(ice.Actions{
+		PORTAL: {Name: "portal path auto", Help: "网站/门户", Actions: ice.MergeActions(ice.Actions{
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				mdb.IsSearchForEach(m, arg, func() []string { return []string{web.LINK, PORTAL, m.MergePodCmd("", "") + nfs.PS} })
 			}},

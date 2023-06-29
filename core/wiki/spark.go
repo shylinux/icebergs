@@ -80,6 +80,9 @@ func init() {
 				meta := kit.Dict()
 				kit.For(arg[2:], func(k, v string) { kit.Value(meta, k, v) })
 				m.Option(mdb.META, kit.Format(meta))
+				if arg[0] == "shell" && meta["with"] == "echo" {
+					m.Option("echo", m.Cmdx(cli.SYSTEM, kit.Split(arg[1])))
+				}
 				_spark_show(m, arg[0], strings.TrimSpace(arg[1]))
 			}
 		}},

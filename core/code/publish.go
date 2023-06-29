@@ -77,6 +77,14 @@ func init() {
 			mdb.INPUTS:   {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(nfs.DIR, arg[1:], nfs.DIR_CLI_FIELDS) }},
 			mdb.CREATE:   {Hand: func(m *ice.Message, arg ...string) { _publish_file(m, m.Option(nfs.PATH)) }},
 			nfs.TRASH:    {Hand: func(m *ice.Message, arg ...string) { nfs.Trash(m, path.Join(ice.USR_PUBLISH, m.Option(nfs.PATH))) }},
+			"binary": {Hand: func(m *ice.Message, arg ...string) {
+				m.Options(web.DOMAIN, web.UserHost(m), "binary", "ice.linux.amd64")
+				m.EchoScript(strings.TrimSpace(nfs.Template(m, kit.Keys("binary", SH))))
+			}},
+			"source": {Hand: func(m *ice.Message, arg ...string) {
+				m.Options(web.DOMAIN, web.UserHost(m), "source", ice.Info.Make.Remote)
+				m.EchoScript(strings.TrimSpace(nfs.Template(m, kit.Keys("source", SH))))
+			}},
 		}, ctx.ConfAction(mdb.FIELD, nfs.PATH), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
 			if m.Option(nfs.DIR_ROOT, ice.USR_PUBLISH); len(arg) == 0 {
 				_publish_list(m).Cmdy("", ice.CONTEXTS)

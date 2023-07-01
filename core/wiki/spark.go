@@ -75,6 +75,13 @@ func init() {
 				_spark_md(m, arg...)
 			} else if arg[0] == SHELL && kit.IsIn(kit.Select("", arg, 1), cli.ALPINE, cli.CENTOS, cli.LINUX, cli.MACOS, cli.DARWIN, cli.WINDOWS) {
 				_spark_tabs(m, arg...)
+			} else if arg[0] == "inner" {
+				if !strings.Contains(arg[1], lex.NL) && nfs.Exists(m, arg[1]) {
+					arg = append(arg, kit.Simple("args", kit.Join(nfs.SplitPath(m, arg[1]), " "))...)
+					arg[1] = m.Cmdx(nfs.CAT, arg[1])
+				}
+				m.Cmdy("field", "", "web.code.inner", "result", arg[1], "display", "/plugin/local/code/inner.js", "style", "output", arg[2:])
+
 			} else {
 				arg = _name(m, arg)
 				meta := kit.Dict()

@@ -1,6 +1,8 @@
-fieldset.web.wiki.portal>div.output>div.header { background-color: rgb(22 31 49); color:white; height:64px; }
+fieldset.web.wiki.portal { --code-bg-color:black; --code-fg-color:silver; }
+body.light fieldset.web.wiki.portal { --code-bg-color:black; --code-fg-color:white; }
+fieldset.web.wiki.portal>div.output>div.header { background-color:rgb(22 31 49); color:var(--code-fg-color); height:64px; }
 fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] { display:flex; justify-content:center; }
-fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.item { padding:20px; }
+fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.item { padding:20px; height:64px; }
 fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.item.space { padding:0px; margin:0 40px; }
 fieldset.web.wiki.portal>div.output>div.layout { display:flex; justify-content:center; }
 fieldset.web.wiki.portal>div.output>div.layout>div.nav { padding:40px 40px; border-right:lightgray solid 1px; width:240px; overflow:auto; --hover-bg-color:var(--plugin-bg-color); }
@@ -8,39 +10,40 @@ fieldset.web.wiki.portal>div.output>div.layout>div.nav div.story[data-name=navme
 fieldset.web.wiki.portal>div.output>div.layout>div.nav div.story[data-name=navmenu] div.list div.item { padding-left:40px; }
 fieldset.web.wiki.portal>div.output>div.layout>div.main { white-space:pre-wrap; padding:40px; height:600px; min-width:200px; max-width:1000px; overflow:auto; --hover-bg-color:var(--plugin-bg-color); }
 fieldset.web.wiki.portal>div.output>div.layout>div.main fieldset:not(.hide) { display:flex; flex-wrap:wrap; }
-fieldset.web.wiki.portal>div.output>div.layout>div.main fieldset>div.output { width:100%; }
-fieldset.web.wiki.portal>div.output>div.layout>div.main fieldset>div.status { width:100%; }
 fieldset.web.wiki.portal>div.output>div.layout>div.aside { padding:40px 20px; width:200px; overflow:auto; width:200px; --hover-bg-color:var(--plugin-bg-color); }
 fieldset.web.wiki.portal>div.output>div.layout>div.aside div.item { padding:5px; }
 fieldset.web.wiki.portal>div.output>div.layout>div.aside div.item.section { padding-left:20px; }
-body.dark fieldset.web.wiki.portal>div.output>div.header { color:silver; }
-body.dark fieldset.web.wiki.portal>div.output>div.layout { background-color:black; }
+body.dark fieldset.web.wiki.portal>div.output>div.header { color:var(--code-fg-color); }
+body.dark fieldset.web.wiki.portal>div.output>div.layout { background-color:var(--code-bg-color); }
 body.dark fieldset.web.wiki.portal>div.output>div.layout>div.nav { border-right:gray solid 1px; }
-body.light fieldset.web.wiki.portal>div.output>div.layout>div.main fieldset.inner.output div.content { background-color:black; color:white; }
+body.light fieldset.web.wiki.portal>div.output>div.layout>div.main fieldset.inner.output div.content { background-color:var(--code-bg-color); color:var(--code-fg-color); }
 
 fieldset.web.wiki.portal.home>div.output>div.layout>div.main>* { margin:auto; }
 fieldset.web.wiki.portal.home>div.output>div.layout>div.main { padding:0; max-width:100%; }
 fieldset.web.wiki.portal.home>div.output>div.layout>div.main h2 { text-align:center; max-width:1000px; margin:0 auto;}
+fieldset.web.wiki.portal.home>div.output>div.layout>div.main p { white-space:pre-wrap; }
 fieldset.web.wiki.portal.home>div.output>div.layout>div.main p { text-align:center; max-width:1000px; }
 fieldset.web.wiki.portal.home>div.output>div.layout>div.main div.story.flex { display:flex; justify-content:center; }
 fieldset.web.wiki.portal.home>div.output>div.layout>div.main>div.story.flex>* { padding:40px 40px; }
 
 fieldset.web.wiki.portal>div.output>div.layout>div.main h1 { margin:10px 0; }
-fieldset.web.wiki.portal>div.output>div.layout>div.main h2 { margin:0 auto; max-width:1000px; }
+fieldset.web.wiki.portal>div.output>div.layout>div.main h2 { margin:20px auto 0; max-width:1000px; }
+fieldset.web.wiki.portal>div.output>div.layout>div.main h3 { margin:10px auto 0; max-width:1000px; }
 fieldset.web.wiki.portal>div.output>div.layout>div.main ul>li { white-space:pre-wrap; }
-fieldset.web.wiki.portal>div.output>div.layout>div.main p { white-space:pre-wrap; }
+fieldset.web.wiki.portal>div.output>div.layout>div.main p { white-space:initial; }
 fieldset.web.wiki.portal>div.output>div.layout>div.main p { max-width:1000px; }
-fieldset.web.wiki.portal>div.output>div.layout>div.main div.story[data-type=spark][data-name=shell] { background-color:black; color:white; }
-fieldset.web.wiki.portal>div.output>div.layout>div.main input.story[type=button] { background-color:blue; color:white; font-family:system-ui; font-weight:bold; padding:20px 40px; margin:10px; height:60px; border-radius:0; }
+fieldset.web.wiki.portal>div.output>div.layout>div.main p code { background-color:black; color:white; padding:0 10px; }
+fieldset.web.wiki.portal>div.output>div.layout>div.main div.story[data-type=spark][data-name=shell] { background-color:var(--code-bg-color); color:var(--code-fg-color); }
+fieldset.web.wiki.portal>div.output>div.layout>div.main input.story[type=button] { background-color:blue; color:var(--code-fg-color); font-family:system-ui; font-weight:bold; padding:20px 40px; margin:10px; height:60px; border-radius:0; }
 fieldset.web.wiki.portal>div.output>div.layout>div.main iframe { height:50%; min-height:400px; width:100%; }
 fieldset.web.wiki.portal>div.output>div.layout>div.main fieldset.inner.output div.content { padding:20px; border-radius:10px; }
 fieldset.web.wiki.portal>div.output>div.layout>div.main fieldset.inner.output {
-	--code-comment:white;
+	--code-comment:silver;
 	--code-keyword:orange;
-	--code-package:white;
-	--code-datatype:white;
+	--code-package:silver;
+	--code-datatype:silver;
 	--code-function:cyan;
-	--code-constant:white;
-	--code-string:white;
-	--code-object:white;
+	--code-constant:silver;
+	--code-string:silver;
+	--code-object:silver;
 }

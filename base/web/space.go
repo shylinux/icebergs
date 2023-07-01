@@ -229,6 +229,9 @@ func init() {
 					m.PushButton(kit.Select(OPEN, LOGIN, value[mdb.TYPE] == LOGIN), mdb.REMOVE)
 				})
 				kit.If(len(arg) == 1, func() { m.EchoIFrame(m.MergePod(arg[0])) })
+				if !m.IsCliUA() {
+					m.Cmdy("web.code.publish", "contexts", "misc")
+				}
 			} else {
 				_space_send(m, arg[0], kit.Simple(kit.Split(arg[1]), arg[2:])...)
 			}

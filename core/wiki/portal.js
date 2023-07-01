@@ -13,7 +13,7 @@ Volcanos(chat.ONIMPORT, {
 		}
 		can.ui.layout(can.ConfHeight(), can.ConfWidth()), can.ConfHeight(can.ui.main.offsetHeight), can.ConfWidth(can.ui.main.offsetWidth)
 		can.page.Select(can, can._output, wiki.STORY_ITEM, function(target) { var meta = target.dataset||{}
-			can.core.CallFunc([can.onimport, can.onimport[meta.name]? meta.name: meta.type||target.tagName.toLowerCase()], [can, meta, target, can.ConfWidth()])
+			can.core.CallFunc([can.onimport, can.onimport[meta.name]? meta.name: meta.type||target.tagName.toLowerCase()], [can, meta, target])
 			meta.style && can.page.style(can, target, can.base.Obj(meta.style))
 		})
 		var file = nfs.SRC_DOCUMENT+can.db.current+(can.isCmdMode()? can.base.trimPrefix(location.hash, "#"): can.Option(nfs.FILE))
@@ -45,6 +45,10 @@ Volcanos(chat.ONIMPORT, {
 				can.core.CallFunc([can.onimport, can.onimport[meta.name]? meta.name: meta.type||target.tagName.toLowerCase()], [can, meta, target, can.ui.main.offsetWidth-80])
 				var _meta = can.base.Obj(meta.meta); _meta && _meta.style && can.page.style(can, target, can.base.Obj(_meta.style))
 				meta.style && can.page.style(can, target, can.base.Obj(meta.style))
+			})
+			can.page.Select(can, can.ui.main, "a", function(target) {
+				target.innerText = target.innerText || target.href || "http://localhost:9020"
+				target.href = target.href || target.innerText
 			})
 		})
 	},

@@ -29,6 +29,7 @@ fieldset.web.wiki.portal.home>div.output>div.layout>div.main>div.story.flex>* { 
 fieldset.web.wiki.portal>div.output>div.layout>div.main h1 { margin:10px 0; }
 fieldset.web.wiki.portal>div.output>div.layout>div.main h2 { margin:20px auto 0; max-width:1000px; }
 fieldset.web.wiki.portal>div.output>div.layout>div.main h3 { margin:10px auto 0; max-width:1000px; }
+fieldset.web.wiki.portal>div.output>div.layout>div.main ul { margin:0; }
 fieldset.web.wiki.portal>div.output>div.layout>div.main ul>li { white-space:pre-wrap; }
 fieldset.web.wiki.portal>div.output>div.layout>div.main p { white-space:initial; }
 fieldset.web.wiki.portal>div.output>div.layout>div.main p { max-width:1000px; }

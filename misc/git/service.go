@@ -127,7 +127,7 @@ func init() {
 				m.Cmd(nfs.DIR, ice.USR_LOCAL_REPOS, func(value ice.Maps) { _repos_insert(m, value[nfs.PATH]) })
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				mdb.IsSearchForEach(m, arg, func() []string { return []string{ice.CMD, m.PrefixKey()} })
+				mdb.IsSearchPreview(m, arg, func() []string { return []string{ice.CMD, m.PrefixKey()} })
 			}},
 			mdb.CREATE: {Name: "create name*=demo", Hand: func(m *ice.Message, arg ...string) {
 				_repos_init(m, _service_path(m, m.Option(mdb.NAME)))

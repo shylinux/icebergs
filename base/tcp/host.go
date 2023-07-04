@@ -57,7 +57,7 @@ func init() {
 				mdb.HashCreate(m, mdb.TYPE, m.ActionKey(), m.OptionSimple(mdb.NAME, mdb.TEXT))
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				if mdb.IsSearchForEach(m, arg, nil) {
+				if mdb.IsSearchPreview(m, arg, nil) {
 					ip := m.Cmdv(HOST, GATEWAY, aaa.IP)
 					m.PushSearch(mdb.TYPE, GATEWAY, mdb.NAME, ip, mdb.TEXT, "http://"+ip)
 				}

@@ -16,7 +16,7 @@ func init() {
 		return nil
 	})
 }
-func IsSearchForEach(m *ice.Message, arg []string, cb func() []string) bool {
+func IsSearchPreview(m *ice.Message, arg []string, cb func() []string) bool {
 	if arg[0] == FOREACH && arg[1] == "" {
 		if cb != nil {
 			if args := cb(); len(args) > 0 {

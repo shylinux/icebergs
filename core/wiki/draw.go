@@ -20,7 +20,7 @@ func init() {
 				m.Cmd(mdb.RENDER, mdb.CREATE, mdb.TYPE, nfs.SVG, mdb.NAME, m.PrefixKey())
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				mdb.IsSearchForEach(m, arg, func() []string { return []string{web.LINK, m.CommandKey(), m.MergePodCmd("", "")} })
+				mdb.IsSearchPreview(m, arg, func() []string { return []string{web.LINK, m.CommandKey(), m.MergePodCmd("", "")} })
 			}},
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
 				defer m.Echo("<html><body>").Echo("</body></html>")

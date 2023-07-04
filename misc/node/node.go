@@ -25,10 +25,10 @@ func (s node) Init(m *ice.Message) {
 }
 func (s node) Install(m *ice.Message, arg ...string) {
 	s.Code.Install(m, arg...)
-	s.Code.System(m, nfs.USR_INSTALL, nfs.TAR, "xf", path.Base(s.Code.Link(m)))
+	s.Code.System(m, ice.USR_INSTALL, nfs.TAR, "xf", path.Base(s.Code.Link(m)))
 }
 func (s node) List(m *ice.Message, arg ...string) {
-	s.Code.Source(m, path.Join(nfs.USR_INSTALL, kit.TrimExt(s.Code.Link(m), "tar.xz")), arg...)
+	s.Code.Source(m, path.Join(ice.USR_INSTALL, kit.TrimExt(s.Code.Link(m), "tar.xz")), arg...)
 }
 func (s node) Xterm(m *ice.Message, arg ...string) {
 	s.Code.Xterm(m, []string{mdb.TYPE, NODE}, arg...)

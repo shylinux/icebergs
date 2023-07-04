@@ -391,7 +391,7 @@ func init() {
 				_repos_insert(m, kit.Path(""))
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				mdb.IsSearchForEach(m, arg, func() []string { return []string{ice.CMD, m.PrefixKey()} })
+				mdb.IsSearchPreview(m, arg, func() []string { return []string{ice.CMD, m.PrefixKey()} })
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {

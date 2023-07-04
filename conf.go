@@ -108,7 +108,6 @@ const ( // DIR
 
 	ISH_PLUGED   = ".ish/pluged/"
 	USR_MODULES  = "usr/node_modules/"
-	USR_SCRIPT   = "usr/script/"
 	USR_INSTALL  = "usr/install/"
 	USR_REQUIRE  = "usr/require/"
 	USR_PUBLISH  = "usr/publish/"
@@ -118,6 +117,7 @@ const ( // DIR
 	USR_TOOLKITS = "usr/toolkits/"
 	USR_VOLCANOS = "usr/volcanos/"
 	USR_LEARNING = "usr/learning/"
+	USR_PORTAL   = "usr/portal/"
 
 	USR_LOCAL          = "usr/local/"
 	USR_LOCAL_GO       = "usr/local/go/"
@@ -146,9 +146,6 @@ const ( // DIR
 	ETC_EXIT_SHY   = "etc/exit.shy"
 	ETC_MISS_SH    = "etc/miss.sh"
 	ETC_PATH       = "etc/path"
-	SRC_HELP       = "src/help/"
-	SRC_DEBUG      = "src/debug/"
-	SRC_RELEASE    = "src/release/"
 	SRC_MAIN_SHY   = "src/main.shy"
 	SRC_MAIN_SH    = "src/main.sh"
 	SRC_MAIN_JS    = "src/main.js"
@@ -159,6 +156,7 @@ const ( // DIR
 	SRC_DOCUMENT   = "src/document/"
 	SRC_TEMPLATE   = "src/template/"
 	SRC_SCRIPT     = "src/script/"
+	USR_SCRIPT     = "usr/script/"
 	README_MD      = "README.md"
 	MAKEFILE       = "Makefile"
 	LICENSE        = "LICENSE"

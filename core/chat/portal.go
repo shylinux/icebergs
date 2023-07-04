@@ -13,7 +13,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		PORTAL: {Name: "portal path auto", Help: "门户", Actions: ice.MergeActions(ice.Actions{
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				mdb.IsSearchForEach(m, arg, func() []string { return []string{web.LINK, PORTAL, m.MergePodCmd("", "") + nfs.PS} })
+				mdb.IsSearchPreview(m, arg, func() []string { return []string{web.LINK, PORTAL, m.MergePodCmd("", "") + nfs.PS} })
 			}},
 			nfs.PS: {Hand: func(m *ice.Message, arg ...string) { web.RenderMain(m) }},
 		}), Hand: func(m *ice.Message, arg ...string) {}},

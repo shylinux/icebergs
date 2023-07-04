@@ -103,7 +103,7 @@ func init() {
 				if arg[0] == "shell" && meta["with"] == "echo" {
 					m.Option("echo", m.Cmdx(cli.SYSTEM, kit.Split(arg[1])))
 				}
-				_spark_show(m, arg[0], strings.TrimSpace(arg[1]))
+				_spark_show(m, arg[0], strings.TrimSpace(arg[1]), arg[2:]...)
 			}
 		}},
 	})

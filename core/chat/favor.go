@@ -64,7 +64,7 @@ func init() {
 			"scanQRCode":       {Name: "favor create", Help: "扫码"},
 			"record1":          {Name: "favor upload", Help: "截图"},
 			"record2":          {Name: "favor upload", Help: "录屏"},
-			mdb.CREATE: {Hand: func(m *ice.Message, arg ...string) {
+			mdb.CREATE: {Name: "create type name text*", Hand: func(m *ice.Message, arg ...string) {
 				if strings.HasPrefix(m.Option(mdb.TEXT), ice.HTTP) {
 					m.OptionDefault(mdb.TYPE, mdb.LINK, mdb.NAME, kit.ParseURL(m.Option(mdb.TEXT)).Host)
 				}

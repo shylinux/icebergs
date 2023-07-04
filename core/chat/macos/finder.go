@@ -12,7 +12,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		FINDER: {Name: "finder list", Actions: ice.MergeActions(ice.Actions{
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				mdb.IsSearchForEach(m, arg, func() []string { return []string{web.LINK, DESKTOP, m.MergePodCmd("", DESKTOP)} })
+				mdb.IsSearchPreview(m, arg, func() []string { return []string{web.LINK, DESKTOP, m.MergePodCmd("", DESKTOP)} })
 			}},
 		}, CmdHashAction(mdb.NAME))},
 	})

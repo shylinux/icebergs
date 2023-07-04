@@ -2,6 +2,7 @@ package macos
 
 import (
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/web"
 )
@@ -19,7 +20,7 @@ func init() {
 			}
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { mdb.HashExport(m) }},
-	}, CmdHashAction(), mdb.ImportantHashAction())}})
+	}, aaa.RoleAction(), CmdHashAction(), mdb.ImportantHashAction())}})
 }
 
 func DockAppend(m *ice.Message, name, index string, arg ...string) {

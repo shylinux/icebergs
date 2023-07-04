@@ -79,14 +79,14 @@ func init() {
 				kit.If(m.Cmd("").Length() == 0, func() { m.Cmd("", mdb.CREATE, mdb.TYPE, ISH) })
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				mdb.IsSearchForEach(m, arg, func() []string {
+				mdb.IsSearchPreview(m, arg, func() []string {
 					if nfs.Exists(m, "/bin/bash") {
 						return []string{ssh.SHELL, BASH, "/bin/bash"}
 					} else {
 						return []string{ssh.SHELL, SH, "/bin/sh"}
 					}
 				})
-				mdb.IsSearchForEach(m, arg, func() []string { return []string{ssh.SHELL, ISH, "/bin/ish"} })
+				mdb.IsSearchPreview(m, arg, func() []string { return []string{ssh.SHELL, ISH, "/bin/ish"} })
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch mdb.HashInputs(m, arg); arg[0] {

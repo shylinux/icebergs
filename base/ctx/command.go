@@ -54,6 +54,7 @@ const (
 	DISPLAY = "display"
 	ACTION  = "action"
 	SHIP    = "ship"
+	RUN     = "run"
 )
 const COMMAND = "command"
 

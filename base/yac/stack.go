@@ -576,6 +576,7 @@ func init() {
 			})
 		}},
 	})
+
 	loaded := kit.Dict()
 	ice.AddMergeAction(func(c *ice.Context, key string, cmd *ice.Command, sub string, action *ice.Action) (init ice.Handler) {
 		kit.IfNoKey(loaded, ice.SRC_SCRIPT+c.Prefix(key)+nfs.PS, func(p string) { kit.If(nfs.Exists(ice.Pulse, p), func() { init = StackHandler }) })

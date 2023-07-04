@@ -43,7 +43,7 @@ func init() {
 		COMPILE: {Name: "compile arch=amd64,386,arm,arm64,mipsle os=linux,darwin,windows src=src/main.go@key run binpack webpack devpack install", Help: "编译", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { cli.IsAlpine(m, GO, "go git") }},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				mdb.IsSearchForEach(m, arg, func() []string {
+				mdb.IsSearchPreview(m, arg, func() []string {
 					return []string{ice.CMD, m.CommandKey(), kit.Format(kit.Simple(runtime.GOARCH, runtime.GOOS))}
 				})
 			}},

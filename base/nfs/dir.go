@@ -132,9 +132,8 @@ const (
 	SRC          = "src/"
 	BIN          = "bin/"
 	USR          = "usr/"
-	USR_PORTAL   = "usr/portal/"
-	USR_INSTALL  = "usr/install/"
-	SRC_DOCUMENT = "src/document/"
+	USR_PORTAL   = ice.USR_PORTAL
+	SRC_DOCUMENT = ice.SRC_DOCUMENT
 	REQUIRE      = "/require/"
 
 	TYPE_ALL  = "all"
@@ -171,7 +170,7 @@ func init() {
 				aaa.Black(m, ice.USR_LOCAL)
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				if mdb.IsSearchForEach(m, arg, nil) && m.Cmdx("host", "islocal", m.Option(ice.MSG_USERIP)) == ice.OK {
+				if mdb.IsSearchPreview(m, arg, nil) && m.Cmdx("host", "islocal", m.Option(ice.MSG_USERIP)) == ice.OK {
 					return
 					kit.For([]string{"Desktop", "Documents", "Downloads", "Pictures"}, func(p string) {
 						p = kit.HomePath(p)

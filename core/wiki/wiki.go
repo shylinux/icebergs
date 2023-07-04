@@ -20,8 +20,12 @@ func _name(m *ice.Message, arg []string) []string {
 }
 func _option(m *ice.Message, kind, name, text string, arg ...string) *ice.Message {
 	extra := kit.Dict()
-	kit.For(arg, func(k, v string) { extra[k] = kit.Format(kit.Parse(nil, "", kit.Split(v)...)) })
-	return m.Options(mdb.TYPE, kind, mdb.NAME, name, mdb.TEXT, text, mdb.EXTRA, extra)
+	kit.For(arg, func(k, v string) {
+		kit.If(k == "fg", func() { k = "style.color" })
+		kit.If(k == "bg", func() { k = "style.background" })
+		kit.Value(extra, k, kit.Format(kit.Parse(nil, "", kit.Split(v)...)))
+	})
+	return m.Options(mdb.TYPE, kind, mdb.NAME, name, mdb.TEXT, text, mdb.EXTRA, kit.Format(extra))
 }
 func _wiki_path(m *ice.Message, arg ...string) string {
 	return path.Join(mdb.Config(m, nfs.PATH), path.Join(arg...))

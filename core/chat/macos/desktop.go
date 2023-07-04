@@ -2,6 +2,7 @@ package macos
 
 import (
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/web"
@@ -26,7 +27,7 @@ func init() {
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				kit.Switch(m.Option(mdb.TYPE), kit.Simple(web.SERVER, web.WORKER), func() { m.PushButton(kit.Dict(m.CommandKey(), "桌面")) })
 			}},
-		}, CmdHashAction(), mdb.ImportantHashAction())},
+		}, aaa.RoleAction(ctx.COMMAND, ctx.RUN), CmdHashAction(), mdb.ImportantHashAction())},
 	})
 }
 

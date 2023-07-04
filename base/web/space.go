@@ -191,7 +191,7 @@ func init() {
 				m.Cmd("", m.Option(mdb.NAME), ice.EXIT)
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				if mdb.IsSearchForEach(m, arg, nil) {
+				if mdb.IsSearchPreview(m, arg, nil) {
 					m.Cmds("", func(value ice.Maps) {
 						switch value[mdb.TYPE] {
 						case MASTER:

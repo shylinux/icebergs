@@ -23,7 +23,7 @@ type server struct {
 }
 
 func (s server) Search(m *ice.Message, arg ...string) {
-	if mdb.IsSearchForEach(m.Message, arg, nil) {
+	if mdb.IsSearchPreview(m.Message, arg, nil) {
 		s.Code.List(m.Spawn(kit.Dict(ice.MSG_FIELDS, "time,port,status,pid,cmd,dir")), "")
 		m.Table(func(value ice.Maps) {
 			m.PushSearch(mdb.TYPE, value[cli.STATUS], mdb.NAME, value[nfs.PATH], mdb.TEXT, value[mdb.LINK])

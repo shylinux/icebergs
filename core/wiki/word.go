@@ -35,7 +35,7 @@ func init() {
 				WordAlias(m, SEQUENCE, CHART, SEQUENCE)
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				mdb.IsSearchForEach(m, arg, func() []string { return []string{web.LINK, m.CommandKey(), m.MergePodCmd("", "")} })
+				mdb.IsSearchPreview(m, arg, func() []string { return []string{web.LINK, m.CommandKey(), m.MergePodCmd("", "")} })
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(git.REPOS, ice.OptionFields(nfs.PATH)).Table(func(value ice.Maps) {

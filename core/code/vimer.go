@@ -60,14 +60,14 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		VIMER: {Name: "vimer path=src/@key file=main.go line=1 list", Help: "编辑器", Meta: kit.Dict(ctx.STYLE, INNER), Actions: ice.MergeActions(ice.Actions{
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				if mdb.IsSearchForEach(m, arg, nil) {
+				if mdb.IsSearchPreview(m, arg, nil) {
 					m.PushSearch(mdb.TYPE, nfs.FILE, mdb.NAME, "main", mdb.TEXT, ice.SRC_MAIN_SH)
 					m.PushSearch(mdb.TYPE, nfs.FILE, mdb.NAME, "main", mdb.TEXT, ice.SRC_MAIN_SHY)
 					m.PushSearch(mdb.TYPE, nfs.FILE, mdb.NAME, "main", mdb.TEXT, ice.SRC_MAIN_GO)
 					m.PushSearch(mdb.TYPE, nfs.FILE, mdb.NAME, "main", mdb.TEXT, ice.SRC_MAIN_JS)
 					m.PushSearch(mdb.TYPE, web.LINK, mdb.NAME, "admin", mdb.TEXT, web.MergeURL2(m, nfs.PS))
 				}
-				mdb.IsSearchForEach(m, arg, func() []string { return []string{web.LINK, m.CommandKey(), m.MergePodCmd("", "")} })
+				mdb.IsSearchPreview(m, arg, func() []string { return []string{web.LINK, m.CommandKey(), m.MergePodCmd("", "")} })
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch m.Option(ctx.ACTION) {

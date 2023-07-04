@@ -67,7 +67,6 @@ func init() {
 				kit.Switch(m.Option(mdb.TYPE), kit.Simple(web.SERVER, web.WORKER), func() {
 					kit.If(cli.SystemFind(m, GO), func() {
 						kit.If(nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME), "src/main.go")), func() {
-
 							m.PushButton(kit.Dict(m.CommandKey(), "编译"))
 						})
 					})

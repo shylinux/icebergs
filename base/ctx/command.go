@@ -77,6 +77,7 @@ func init() {
 			if len(arg) == 0 {
 				m.Cmdy("", mdb.SEARCH, COMMAND, ice.OptionFields(INDEX))
 				DisplayStory(m.Options(nfs.DIR_ROOT, "ice."), "spide.js?split=.")
+				m.StatusTimeCount()
 				return
 			}
 			kit.If(len(arg) == 0, func() { arg = append(arg, "") })

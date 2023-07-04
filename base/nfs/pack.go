@@ -133,6 +133,12 @@ func Exists(m optionMessage, p string) bool {
 	}
 	return false
 }
+func ExistsFile(m optionMessage, p string) bool {
+	if s, e := OptionFiles(m).StatFile(p); e == nil && !s.IsDir() {
+		return true
+	}
+	return false
+}
 func NewReadCloser(r io.Reader) io.ReadCloser { return file.NewReadCloser(r) }
 func NewWriteCloser(w func([]byte) (int, error), c func() error) io.WriteCloser {
 	return file.NewWriteCloser(w, c)

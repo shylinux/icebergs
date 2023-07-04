@@ -1,6 +1,7 @@
 package code
 
 import (
+	"fmt"
 	"os"
 	"path"
 	"runtime"
@@ -37,6 +38,7 @@ func _publish_file(m *ice.Message, file string, arg ...string) string {
 }
 func _publish_contexts(m *ice.Message, arg ...string) {
 	m.Option(nfs.DIR_ROOT, "")
+	m.OptionDefault(ice.MSG_USERNAME, "demo")
 	for _, k := range kit.Default(arg, ice.MISC) {
 		m.Options(web.DOMAIN, web.UserHost(m), cli.CTX_ENV, kit.Select("", lex.SP+kit.JoinKV(mdb.EQ, lex.SP, cli.CTX_POD, m.Option(ice.MSG_USERPOD)), m.Option(ice.MSG_USERPOD) != ""))
 		switch k {
@@ -47,6 +49,12 @@ func _publish_contexts(m *ice.Message, arg ...string) {
 			m.Option(web.DOMAIN, m.Cmd(web.SPIDE, ice.SHY).Append(web.CLIENT_ORIGIN))
 		case ice.CORE:
 			m.Option(web.DOMAIN, m.Cmd(web.SPIDE, ice.DEV).Append(web.CLIENT_ORIGIN))
+		case nfs.SOURCE:
+			m.Options(nfs.SOURCE, ice.Info.Make.Remote)
+		case nfs.BINARY:
+		case "wget", "curl":
+		case "manual":
+			m.Options(nfs.BINARY, "ice.linux.amd64")
 		default:
 			// _publish_file(m, ice.ICE_BIN)
 		}
@@ -74,17 +82,28 @@ func init() {
 				_publish_list(m, kit.ExtReg(SH, VIM, CONF))
 			}},
 			ice.CONTEXTS: {Hand: func(m *ice.Message, arg ...string) { _publish_contexts(m, arg...) }},
-			mdb.INPUTS:   {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(nfs.DIR, arg[1:], nfs.DIR_CLI_FIELDS) }},
-			mdb.CREATE:   {Hand: func(m *ice.Message, arg ...string) { _publish_file(m, m.Option(nfs.PATH)) }},
-			nfs.TRASH:    {Hand: func(m *ice.Message, arg ...string) { nfs.Trash(m, path.Join(ice.USR_PUBLISH, m.Option(nfs.PATH))) }},
-			"binary": {Hand: func(m *ice.Message, arg ...string) {
-				m.Options(web.DOMAIN, web.UserHost(m), "binary", "ice.linux.amd64")
-				m.EchoScript(strings.TrimSpace(nfs.Template(m, kit.Keys("binary", SH))))
+			nfs.SOURCE:   {Hand: func(m *ice.Message, arg ...string) { _publish_contexts(m, nfs.SOURCE) }},
+			nfs.BINARY:   {Hand: func(m *ice.Message, arg ...string) { _publish_contexts(m, nfs.BINARY) }},
+			"manual":     {Hand: func(m *ice.Message, arg ...string) { _publish_contexts(m, "manual") }},
+			"wget":       {Hand: func(m *ice.Message, arg ...string) { _publish_contexts(m, "wget") }},
+			"curl":       {Hand: func(m *ice.Message, arg ...string) { _publish_contexts(m, "curl") }},
+			"version": {Hand: func(m *ice.Message, arg ...string) {
+				defer m.Echo("<table>").Echo("</table>")
+				for _, cpu := range []string{cli.AMD64, cli.X86, cli.ARM} {
+					m.Echo("<tr>")
+					for _, sys := range []string{cli.LINUX, cli.WINDOWS, cli.DARWIN} {
+						m.Echo("<td>")
+						if file := fmt.Sprintf("ice.%s.%s", sys, cpu); nfs.Exists(m, "usr/publish/"+file) {
+							m.EchoAnchor(file, "/publish/"+file)
+						}
+						m.Echo("</td>")
+					}
+					m.Echo("</tr>")
+				}
 			}},
-			"source": {Hand: func(m *ice.Message, arg ...string) {
-				m.Options(web.DOMAIN, web.UserHost(m), "source", ice.Info.Make.Remote)
-				m.EchoScript(strings.TrimSpace(nfs.Template(m, kit.Keys("source", SH))))
-			}},
+			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(nfs.DIR, arg[1:], nfs.DIR_CLI_FIELDS) }},
+			mdb.CREATE: {Hand: func(m *ice.Message, arg ...string) { _publish_file(m, m.Option(nfs.PATH)) }},
+			nfs.TRASH:  {Hand: func(m *ice.Message, arg ...string) { nfs.Trash(m, path.Join(ice.USR_PUBLISH, m.Option(nfs.PATH))) }},
 		}, ctx.ConfAction(mdb.FIELD, nfs.PATH), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
 			if m.Option(nfs.DIR_ROOT, ice.USR_PUBLISH); len(arg) == 0 {
 				_publish_list(m).Cmdy("", ice.CONTEXTS)

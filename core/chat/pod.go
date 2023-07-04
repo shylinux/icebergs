@@ -25,6 +25,8 @@ func init() {
 				m.RenderRedirect(m.Cmdv(web.SPACE, arg[0], "web.code.git.repos", nfs.REMOTE, nfs.REMOTE) + "/info/refs?service=" + m.Option("service"))
 			} else if m.Option(cli.GOOS) != "" && m.Option(cli.GOARCH) != "" {
 				m.RenderDownload(path.Join(ice.USR_LOCAL_WORK, arg[0], ice.USR_PUBLISH, kit.Keys(ice.ICE, m.Option(cli.GOOS), m.Option(cli.GOARCH))))
+			} else if m.IsCliUA() {
+				m.RenderDownload(path.Join(ice.USR_LOCAL_WORK, arg[0], ice.BIN_ICE_BIN))
 			} else if len(arg) == 1 {
 				if m.Cmd(web.SPACE, arg[0]).Length() == 0 && nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, arg[0])) {
 					m.Cmd(web.DREAM, cli.START, kit.Dict(mdb.NAME, arg[0]))

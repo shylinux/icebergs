@@ -47,7 +47,9 @@ func init() {
 				})
 				m.Cut("path,size,time")
 			}}, "play": {Help: "演示"},
-			ice.STORY: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(arg[0], ice.RUN, arg[2:]) }},
+			ice.STORY: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(arg[0], ice.RUN, arg[2:])
+			}},
 			code.COMPLETE: {Hand: func(m *ice.Message, arg ...string) {
 				ls := kit.Split(m.Option(mdb.TEXT))
 				kit.If(kit.IsIn(ls[0], IMAGE, VIDEO, AUDIO), func() { m.Cmdy(FEEL).CutTo(nfs.PATH, mdb.NAME) })

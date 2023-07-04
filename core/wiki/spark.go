@@ -1,10 +1,14 @@
 package wiki
 
 import (
+	"fmt"
+	"path"
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -46,16 +50,12 @@ func _spark_show(m *ice.Message, name, text string, arg ...string) *ice.Message 
 	return _wiki_template(m.Options(mdb.LIST, kit.SplitLine(text)), name, name, text, arg...)
 }
 func _spark_tabs(m *ice.Message, arg ...string) {
-	m.Echo(`<div class="story" data-type="spark_tabs">`)
-	{
-		m.Echo(`<div class="tabs">`)
-		{
-			kit.For(arg[1:], func(k, v string) { m.Echo(`<div class="item">%s</div>`, k) })
-		}
-		m.Echo(`</div>`)
-		kit.For(arg[1:], func(k, v string) { m.Cmdy("", arg[0], v) })
-	}
-	m.Echo(`</div>`)
+	defer m.Echo(`<div class="story" data-type="spark_tabs">`).Echo(`</div>`)
+	func() {
+		defer m.Echo(`<div class="tabs">`).Echo(`</div>`)
+		kit.For(arg[1:], func(k, v string) { m.Echo(`<div class="item">%s</div>`, k) })
+	}()
+	kit.For(arg[1:], func(k, v string) { m.Cmdy("", arg[0], v) })
 }
 
 const (
@@ -70,18 +70,31 @@ func init() {
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				ice.AddRender(ice.RENDER_SCRIPT, func(msg *ice.Message, args ...ice.Any) string { return m.Cmdx(SPARK, SHELL, args) })
 			}},
+			"inner": {Hand: func(m *ice.Message, arg ...string) {
+				if strings.Contains(arg[0], lex.NL) {
+
+				} else if nfs.Exists(m, arg[0]) {
+					arg = append(arg, kit.Simple(ctx.ARGS, kit.Join(nfs.SplitPath(m, arg[0]), lex.SP))...)
+					arg[0] = m.Cmdx(nfs.CAT, arg[0])
+				} else if p := path.Join(path.Dir(m.Option(ice.MSG_SCRIPT)), arg[0]); nfs.Exists(m, p) {
+					arg = append(arg, kit.Simple(ctx.ARGS, kit.Join(nfs.SplitPath(m, p), lex.SP))...)
+					arg[0] = m.Cmdx(nfs.CAT, p)
+				}
+				m.Cmdy(FIELD, "", "web.code.inner", ice.MSG_RESULT, arg[0], ctx.DISPLAY, "/plugin/local/code/inner.js", ctx.STYLE, "output", arg[1:])
+			}},
+			"demo": {Hand: func(m *ice.Message, arg ...string) {
+				if aaa.Right(m.Spawn(), arg[0]) {
+					m.Cmdy(FIELD, "", arg[0], arg[1:])
+				} else {
+					m.Cmdy(SPARK, fmt.Sprintf("<a>http://localhost:9020/chat/cmd/%s</a>", arg[0]), arg[1:])
+					m.Cmdy(IFRAME, fmt.Sprintf("http://localhost:9020/chat/cmd/%s", arg[0]), arg[1:])
+				}
+			}},
 		}), Hand: func(m *ice.Message, arg ...string) {
 			if kit.Ext(arg[0]) == "md" {
 				_spark_md(m, arg...)
 			} else if arg[0] == SHELL && kit.IsIn(kit.Select("", arg, 1), cli.ALPINE, cli.CENTOS, cli.LINUX, cli.MACOS, cli.DARWIN, cli.WINDOWS) {
 				_spark_tabs(m, arg...)
-			} else if arg[0] == "inner" {
-				if !strings.Contains(arg[1], lex.NL) && nfs.Exists(m, arg[1]) {
-					arg = append(arg, kit.Simple("args", kit.Join(nfs.SplitPath(m, arg[1]), " "))...)
-					arg[1] = m.Cmdx(nfs.CAT, arg[1])
-				}
-				m.Cmdy("field", "", "web.code.inner", "result", arg[1], "display", "/plugin/local/code/inner.js", "style", "output", arg[2:])
-
 			} else {
 				arg = _name(m, arg)
 				meta := kit.Dict()
@@ -91,14 +104,6 @@ func init() {
 					m.Option("echo", m.Cmdx(cli.SYSTEM, kit.Split(arg[1])))
 				}
 				_spark_show(m, arg[0], strings.TrimSpace(arg[1]))
-			}
-		}},
-		"style": {Hand: func(m *ice.Message, arg ...string) {
-			switch arg[0] {
-			case "end":
-				m.Echo("</div>")
-			default:
-				m.Echo(`<div class="%s %s">`, "story", arg[0])
 			}
 		}},
 	})

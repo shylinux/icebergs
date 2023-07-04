@@ -171,8 +171,12 @@ const SPACE = "space"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		SPACE: {Name: "space name cmds auto", Help: "空间站", Actions: ice.MergeActions(ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				aaa.White(m, "space", "main")
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { aaa.White(m, SPACE, ice.MAIN) }},
+			ice.MAIN: {Hand: func(m *ice.Message, arg ...string) {
+				kit.If(mdb.Config(m, ice.MAIN), func(cmd string) { RenderPodCmd(m, "", cmd) }, func() {
+					m.RenderResult(nfs.Template(m.Options(nfs.VERSION, renderVersion(m)), "main.html"))
+				})
+				m.Optionv(ice.MSG_ARGS, kit.Simple(m.Optionv(ice.MSG_ARGS)))
 			}},
 			tcp.DIAL: {Name: "dial dev=ops name", Hand: func(m *ice.Message, arg ...string) {
 				if strings.HasPrefix(m.Option(ice.DEV), HTTP) {
@@ -211,16 +215,14 @@ func init() {
 					ctx.ProcessOpen(m, m.MergePod(m.Option(mdb.NAME), arg))
 				}
 			}},
-			ice.MAIN: {Hand: func(m *ice.Message, arg ...string) {
-				kit.If(mdb.Config(m, ice.MAIN), func(cmd string) { RenderPodCmd(m, "", cmd) }, func() {
-					m.RenderResult(nfs.Template(m.Options(nfs.VERSION, renderVersion(m)), "main.html"))
-				})
-				m.Optionv(ice.MSG_ARGS, kit.Simple(m.Optionv(ice.MSG_ARGS)))
-			}},
 			nfs.PS: {Hand: func(m *ice.Message, arg ...string) { _space_fork(m) }},
 		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,type,name,text", ctx.ACTION, OPEN, REDIAL, kit.Dict("a", 3000, "b", 1000, "c", 1000)), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 {
-				mdb.HashSelect(m, arg...).Sort("").Table(func(value ice.Maps) {
+				mdb.HashSelect(m.Spawn(), arg...).Sort("").Table(func(index int, value ice.Maps, field []string) {
+					if kit.IsIn(value[mdb.TYPE], CHROME, "send") {
+						return
+					}
+					m.Push("", value, field)
 					if kit.IsIn(value[mdb.TYPE], SERVER, WORKER) {
 						m.Push(mdb.LINK, tcp.PublishLocalhost(m, m.MergePod(value[mdb.NAME])))
 					} else {
@@ -228,10 +230,8 @@ func init() {
 					}
 					m.PushButton(kit.Select(OPEN, LOGIN, value[mdb.TYPE] == LOGIN), mdb.REMOVE)
 				})
+				kit.If(!m.IsCliUA(), func() { m.Cmdy("web.code.publish", "contexts", "misc") })
 				kit.If(len(arg) == 1, func() { m.EchoIFrame(m.MergePod(arg[0])) })
-				if !m.IsCliUA() {
-					m.Cmdy("web.code.publish", "contexts", "misc")
-				}
 			} else {
 				_space_send(m, arg[0], kit.Simple(kit.Split(arg[1]), arg[2:])...)
 			}

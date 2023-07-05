@@ -30,6 +30,7 @@ func _header_share(m *ice.Message, arg ...string) {
 	m.Push(mdb.NAME, m.Option(mdb.LINK)).PushQRCode(mdb.TEXT, m.Option(mdb.LINK))
 }
 func _header_check(m *ice.Message, arg ...string) bool {
+	m.Option(ice.MAIN, mdb.Conf(m, "web.serve", "meta.main"))
 	if m.Option(ice.CMD) == aaa.OFFER && m.Option(mdb.HASH) != "" {
 		m.Cmd(aaa.OFFER, m.Option(mdb.HASH), func(value ice.Maps) {
 			aaa.SessAuth(m, kit.Dict(aaa.USERNAME, value[aaa.EMAIL], aaa.USERROLE, aaa.VOID))

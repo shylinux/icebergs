@@ -34,7 +34,7 @@ func init() {
 					m.Cmd(nfs.SAVE, p, kit.Dict(nfs.CONTENT, m.FormatMeta()))
 				}
 			}},
-		}, aaa.RoleAction(ctx.COMMAND, ctx.RUN), ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, aaa.WhiteAction(ctx.COMMAND, ctx.RUN), aaa.RoleAction(ctx.COMMAND, ctx.RUN), ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			if m.Push(HEADER, m.Cmdx(WORD, path.Join(nfs.SRC_DOCUMENT, INDEX_SHY))); len(arg) > 0 {
 				m.Push(NAV, m.Cmdx(WORD, path.Join(nfs.SRC_DOCUMENT, path.Join(arg...), INDEX_SHY)))
 			}

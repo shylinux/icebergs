@@ -1,14 +1,14 @@
 Volcanos(chat.ONIMPORT, {
 	_init: function(can, msg) { can.require(["/plugin/local/wiki/word.js"]), can.Conf(html.PADDING, 40)
-		can.db = {nav: {}}, can.sup.onexport.link = function() { return "/wiki/portal/" }
-		can.db.prefix = location.pathname.indexOf("/wiki/portal/") == 0? "/wiki/portal/": "/chat/cmd/web.wiki.portal/"
+		can.db = {nav: {}}, can.sup.onexport.link = function() { return can.db.prefix }
+		can.db.prefix = location.pathname.indexOf("/chat/cmd/web.wiki.portal/") == 0? "/chat/cmd/web.wiki.portal/": "/wiki/portal/"
 		can.db.current = can.isCmdMode()? can.base.trimPrefix(location.pathname, can.db.prefix): can.Option(nfs.PATH)
 		can.onmotion.clear(can)
 		can.ui = can.onappend.layout(can, [html.HEADER, [html.NAV, html.MAIN, html.ASIDE]], html.FLOW), can.onimport._scroll(can)
 		can.ui.header.innerHTML = msg.Append(html.HEADER), can.ui.nav.innerHTML = msg.Append(html.NAV)
 		if (msg.Append(html.NAV) == "") {
 			can.onmotion.hidden(can, can.ui.nav), can.onmotion.hidden(can, can.ui.aside)
-			can.db.current == "" && can.onappend.style(can, ice.HOME), can.onimport.content(can, "content.shy")
+			can.base.isIn(can.db.current, "", "/") && can.onappend.style(can, ice.HOME), can.onimport.content(can, "content.shy")
 		} else {
 			can.page.styleWidth(can, can.ui.nav, 240), can.page.styleWidth(can, can.ui.aside, 200)
 			can.page.ClassList.del(can, can._fields, ice.HOME)

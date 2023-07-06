@@ -148,6 +148,9 @@ func init() {
 	})
 }
 func Opens(m *ice.Message, arg ...string) {
+	if len(arg) == 0 || arg[0] == "" {
+		return
+	}
 	switch runtime.GOOS {
 	case DARWIN:
 		if kit.Ext(arg[0]) == "app" {

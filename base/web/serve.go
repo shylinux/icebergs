@@ -164,8 +164,12 @@ const SERVE = "serve"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
+		"/exit": {Hand: func(m *ice.Message, arg ...string) { m.Cmd(ice.EXIT) }},
 		SERVE: {Name: "serve name auto start", Help: "服务器", Actions: ice.MergeActions(ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { cli.NodeInfo(m, ice.Info.Pathname, WORKER) }},
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				cli.NodeInfo(m, ice.Info.Pathname, WORKER)
+				aaa.White(m, nfs.REQUIRE)
+			}},
 			DOMAIN: {Hand: func(m *ice.Message, arg ...string) {
 				kit.If(len(arg) > 0, func() { ice.Info.Domain, ice.Info.Localhost = arg[0], false })
 				m.Echo(ice.Info.Domain)
@@ -175,6 +179,7 @@ func init() {
 			}},
 			SERVE_START: {Hand: func(m *ice.Message, arg ...string) {
 				m.Go(func() {
+					cli.Opens(m, mdb.Config(m, cli.OPEN))
 					ssh.PrintQRCode(m, tcp.PublishLocalhost(m, _serve_address(m)))
 					return
 					opened := false

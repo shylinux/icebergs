@@ -47,7 +47,11 @@ func Render(m *Message, cmd string, args ...Any) string {
 	case RENDER_IMAGES:
 		return kit.Format(`<img src="%s" style="max-height:%spx; max-width:%spx">`, arg[0], m.Option(MSG_HEIGHT), m.Option(MSG_WIDTH))
 	case RENDER_VIDEOS:
-		return kit.Format(`<video src="%s" style="max-height:%spx; max-width:%spx" controls>`, arg[0], m.Option(MSG_HEIGHT), m.Option(MSG_WIDTH))
+		if kit.Int(m.Option(MSG_HEIGHT)) < kit.Int(m.Option(MSG_WIDTH)) {
+			return kit.Format(`<video src="%s" height="%s" style="max-height:%spx; max-width:%spx" controls autoplay>`, arg[0], m.Option(MSG_HEIGHT), m.Option(MSG_HEIGHT), m.Option(MSG_WIDTH))
+		} else {
+			return kit.Format(`<video src="%s" width="%s" style="max-height:%spx; max-width:%spx" controls autoplay>`, arg[0], m.Option(MSG_WIDTH), m.Option(MSG_HEIGHT), m.Option(MSG_WIDTH))
+		}
 	case RENDER_IFRAME:
 		return kit.Format(`<iframe src="%s"></iframe>`, arg[0])
 	case RENDER_SCRIPT:

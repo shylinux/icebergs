@@ -147,10 +147,14 @@ const RUNTIME = "runtime"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		RUNTIME: {Name: "runtime info=bootinfo,ifconfig,diskinfo,hostinfo,userinfo,procstat,procinfo,bootinfo,api,cli,cmd,mod,env,path,chain,routine auto", Help: "运行环境", Actions: ice.MergeActions(ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { _runtime_init(m) }},
-			IFCONFIG:     {Hand: func(m *ice.Message, arg ...string) { m.Cmdy("tcp.host") }},
-			DISKINFO:     {Hand: func(m *ice.Message, arg ...string) { _runtime_diskinfo(m) }},
-			HOSTINFO:     {Hand: func(m *ice.Message, arg ...string) { _runtime_hostinfo(m) }},
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				aaa.White(m, ice.ETC_PATH)
+				aaa.White(m, ice.LICENSE)
+				_runtime_init(m)
+			}},
+			IFCONFIG: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy("tcp.host") }},
+			DISKINFO: {Hand: func(m *ice.Message, arg ...string) { _runtime_diskinfo(m) }},
+			HOSTINFO: {Hand: func(m *ice.Message, arg ...string) { _runtime_hostinfo(m) }},
 			HOSTNAME: {Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) > 0 {
 					ice.Info.Hostname = mdb.Conf(m, RUNTIME, kit.Keys(NODE, mdb.NAME), mdb.Conf(m, RUNTIME, kit.Keys(BOOT, HOSTNAME), arg[0]))

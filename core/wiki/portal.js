@@ -13,6 +13,7 @@ Volcanos(chat.ONIMPORT, {
 			can.page.styleWidth(can, can.ui.nav, 240), can.page.styleWidth(can, can.ui.aside, 200)
 			can.page.ClassList.del(can, can._fields, ice.HOME)
 		}
+		can.isCmdMode() || can.onimport.layout(can, can.ConfHeight(), can.ConfWidth())
 		can.page.Select(can, can._output, wiki.STORY_ITEM, function(target) { var meta = target.dataset||{}
 			can.core.CallFunc([can.onimport, can.onimport[meta.name]? meta.name: meta.type||target.tagName.toLowerCase()], [can, meta, target])
 			meta.style && can.page.style(can, target, can.base.Obj(meta.style))
@@ -25,14 +26,14 @@ Volcanos(chat.ONIMPORT, {
 			select = target, can.onmotion.select(can, can.ui.aside, html.DIV_ITEM, target._menu)
 		} })
 	} },
-	navmenu: function(can, meta, target) {
+	navmenu: function(can, meta, target) { var link 
 		can.onimport.list(can, can.base.Obj(meta.data), function(event, item) {
 			can.page.Select(can, target, html.DIV_ITEM, function(target) { target != event.target && can.page.ClassList.del(can, target, html.SELECT) })
 			item.list && item.list.length > 0 || can.onaction.route(event, can, item.meta.link)
 		}, target, can.page.ClassList.has(can, target.parentNode, html.HEADER)? function(target, item) {
 			item.meta.link == nfs.SRC_DOCUMENT+can.db.current && can.onappend.style(can, html.SELECT, target)
 		}: function(target, item) { can.db.nav[can.base.trimPrefix(item.meta.link, nfs.SRC_DOCUMENT)] = target
-			location.hash || item.list && item.list.length > 0 || can.onaction.route({}, can, item.meta.link, true)
+			location.hash || item.list && item.list.length > 0 || link || (link = can.onaction.route({}, can, item.meta.link, true))
 		})
 	},
 	button: function(can, meta, target) { var item = can.base.Obj(meta.meta)
@@ -60,7 +61,8 @@ Volcanos(chat.ONACTION, {
 			if (link.indexOf(can.db.current) < 0 || link.endsWith(nfs.PS)) { return can.isCmdMode()? can.user.jumps(can.db.prefix+link+params): (can.Option(nfs.PATH, link), can.Update()) }
 		}
 		var file = can.base.trimPrefix(link, can.db.current); can.isCmdMode() && can.user.jumps("#"+file)
-		if (can.onmotion.cache(can, function(cache, key) { cache[key] = can._plugins, can._plugins = cache[file]||[]; return file }, can.ui.main, can.ui.aside)) { return }
+		if (can.onmotion.cache(can, function(cache, key) { cache[key] = can._plugins, can._plugins = cache[file]||[]; return file }, can.ui.main, can.ui.aside)) { return file }
 		can.onimport.content(can, file)
+		return link
 	},
 })

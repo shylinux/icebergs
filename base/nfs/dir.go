@@ -110,7 +110,7 @@ func _dir_list(m *ice.Message, root string, dir string, level int, deep bool, di
 					if m.IsCliUA() || m.Option(ice.MSG_USERROLE) == aaa.VOID {
 						break
 					}
-					m.PushButton(TRASH)
+					m.PushButton(mdb.SHOW, TRASH)
 				default:
 					m.Push(field, "")
 				}
@@ -183,6 +183,10 @@ func init() {
 				}
 			}}, mdb.UPLOAD: {},
 			TRASH: {Hand: func(m *ice.Message, arg ...string) { m.Cmd(TRASH, mdb.CREATE, m.Option(PATH)) }},
+			mdb.SHOW: {Hand: func(m *ice.Message, arg ...string) {
+				Show(m, m.Option(PATH))
+				m.ProcessInner()
+			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			root, dir := kit.Select(PWD, m.Option(DIR_ROOT)), kit.Select(PWD, arg, 0)
 			kit.If(strings.HasPrefix(dir, PS), func() { root = "" })
@@ -231,6 +235,17 @@ func Dir(m *ice.Message, field string) *ice.Message {
 	m.Copy(m.Cmd(DIR, PWD, kit.Dict(DIR_TYPE, TYPE_DIR)).Sort(field))
 	m.Copy(m.Cmd(DIR, PWD, kit.Dict(DIR_TYPE, TYPE_CAT)).Sort(field))
 	return m
+}
+func Show(m *ice.Message, file string) bool {
+	switch strings.ToLower(kit.Ext(file)) {
+	case "png", "jpg":
+		m.EchoImages("/share/local/" + file)
+	case "mp4", "mov":
+		m.EchoVideos("/share/local/" + file)
+	default:
+		return false
+	}
+	return true
 }
 func DirDeepAll(m *ice.Message, root, dir string, cb func(ice.Maps), arg ...string) *ice.Message {
 	m.Options(DIR_TYPE, CAT, DIR_ROOT, root, DIR_DEEP, ice.TRUE)

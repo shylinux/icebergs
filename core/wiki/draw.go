@@ -4,6 +4,7 @@ import (
 	"path"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -29,7 +30,7 @@ func init() {
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				kit.Switch(m.Option(mdb.TYPE), kit.Simple(web.SERVER, web.WORKER), func() { m.PushButton(kit.Dict(m.CommandKey(), "导图")) })
 			}},
-		}, ctx.CmdAction(), WikiAction("", nfs.SVG)), Hand: func(m *ice.Message, arg ...string) {
+		}, aaa.RoleAction(ctx.COMMAND, ctx.RUN), ctx.CmdAction(), WikiAction("", nfs.SVG)), Hand: func(m *ice.Message, arg ...string) {
 			kit.If(!_wiki_list(m, arg...), func() {
 				_wiki_show(m, arg[0])
 				kit.If(m.IsErr(), func() { m.Option(ice.MSG_OUTPUT, "") })

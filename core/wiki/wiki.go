@@ -35,10 +35,9 @@ func _wiki_link(m *ice.Message, text string) string {
 	return text
 }
 func _wiki_list(m *ice.Message, arg ...string) bool {
-	if m.Option(nfs.DIR_ROOT, _wiki_path(m)); len(arg) == 0 || kit.HasSuffix(arg[0], nfs.PS) {
+	if m.OptionDefault(nfs.DIR_ROOT, _wiki_path(m)); len(arg) == 0 || kit.HasSuffix(arg[0], nfs.PS) {
 		kit.If(m.Option(nfs.DIR_DEEP) != ice.TRUE, func() { m.Cmdy(nfs.DIR, kit.Slice(arg, 0, 1), kit.Dict(nfs.DIR_TYPE, nfs.DIR)) })
-		m.Cmdy(nfs.DIR, kit.Slice(arg, 0, 1), kit.Dict(nfs.DIR_TYPE, nfs.CAT, nfs.DIR_REG, mdb.Config(m, lex.REGEXP)))
-		m.SortStrR(mdb.TIME).StatusTimeCount()
+		m.Copy(m.Cmd(nfs.DIR, kit.Slice(arg, 0, 1), kit.Dict(nfs.DIR_TYPE, nfs.CAT, nfs.DIR_REG, mdb.Config(m, lex.REGEXP))).SortStr(nfs.PATH))
 		return true
 	} else {
 		ctx.DisplayLocal(m, path.Join(kit.PathName(2), kit.Keys(kit.FileName(2), nfs.JS)))

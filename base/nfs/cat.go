@@ -112,13 +112,19 @@ const CAT = "cat"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		CAT: {Name: "cat path auto", Help: "文件", Actions: ice.MergeActions(ice.Actions{ice.CTX_INIT: mdb.AutoConfig(SOURCE, kit.DictList(
-			HTML, CSS, JS, GO, SH, PY, SHY, CSV, JSON, CONFIGURE, PROTO, YAML, CONF, XML, YML, TXT, MD, strings.ToLower(ice.LICENSE), strings.ToLower(ice.MAKEFILE),
-		))}), Hand: func(m *ice.Message, arg ...string) {
+		CAT: {Name: "cat path auto", Help: "文件", Actions: ice.MergeActions(ice.Actions{
+			ice.CTX_INIT: mdb.AutoConfig(SOURCE, kit.DictList(
+				HTML, CSS, JS, GO, SH, PY, SHY, CSV, JSON, CONFIGURE, PROTO, YAML, CONF, XML, YML, TXT, MD, strings.ToLower(ice.LICENSE), strings.ToLower(ice.MAKEFILE),
+			)),
+		}), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 || strings.HasSuffix(arg[0], PS) {
 				m.Cmdy(DIR, arg)
 			} else {
-				_cat_list(m.Logs(FIND, m.OptionSimple(DIR_ROOT), FILE, arg[0]), arg[0])
+				if arg[0] == "action" {
+					m.Cmdy(DIR, arg)
+				} else if !Show(m, arg[0]) {
+					_cat_list(m.Logs(FIND, m.OptionSimple(DIR_ROOT), FILE, arg[0]), arg[0])
+				}
 			}
 		}},
 	})

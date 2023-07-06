@@ -49,7 +49,7 @@ const VIMER = "vimer"
 
 func init() {
 	web.Index.MergeCommands(ice.Commands{
-		ice.REQUIRE_SRC: {Actions: ice.MergeActions(ctx.CmdAction(), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) { web.ShareLocalFile(m, ice.SRC, path.Join(arg...)) }},
+		ice.REQUIRE_SRC: {Actions: ctx.CmdAction(), Hand: func(m *ice.Message, arg ...string) { web.ShareLocalFile(m, ice.SRC, path.Join(arg...)) }},
 		ice.REQUIRE_USR: {Hand: func(m *ice.Message, arg ...string) { web.ShareLocalFile(m, ice.USR, path.Join(arg...)) }},
 		ice.REQUIRE_MODULES: {Hand: func(m *ice.Message, arg ...string) {
 			p := path.Join(ice.USR_MODULES, path.Join(arg...))

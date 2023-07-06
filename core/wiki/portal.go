@@ -9,7 +9,6 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
-	kit "shylinux.com/x/toolkits"
 )
 
 const PORTAL = "portal"
@@ -31,7 +30,7 @@ func init() {
 					m.Copy(m.Spawn([]byte(m.Cmdx(nfs.CAT, p))))
 				} else {
 					ctx.Run(m, arg...)
-					m.Cmd(nfs.SAVE, p, kit.Dict(nfs.CONTENT, m.FormatMeta()))
+					m.Cmd(nfs.SAVE, p, ice.Maps{nfs.CONTENT: m.FormatMeta(), nfs.DIR_ROOT: ""})
 				}
 			}},
 		}, aaa.WhiteAction(ctx.COMMAND, ctx.RUN), aaa.RoleAction(ctx.COMMAND, ctx.RUN), ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {

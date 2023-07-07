@@ -98,8 +98,7 @@ func (m *Message) OptionTemplate() string {
 	add := func(pre, key string) {
 		kit.If(m.Option(key), func() { res = append(res, kit.Format(`%s%s=%q`, pre, key, html.EscapeString(m.Option(key)))) })
 	}
-	kit.For(kit.Split("type,name,text"), func(k string) { add("data-", k) })
-	kit.For(m.Optionv(mdb.EXTRA), func(k string, v string) { kit.If(!strings.Contains(k, "-"), func() { add("data-", k) }) })
+	kit.For(kit.Split("type,name,text,meta"), func(k string) { add("data-", k) })
 	kit.For(kit.Split(ctx.STYLE), func(k string) { add("", k) })
 	return kit.Join(res, lex.SP)
 }

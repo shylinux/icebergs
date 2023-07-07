@@ -97,10 +97,7 @@ func init() {
 				_spark_tabs(m, arg...)
 			} else {
 				arg = _name(m, arg)
-				meta := kit.Dict()
-				kit.For(arg[2:], func(k, v string) { kit.Value(meta, k, v) })
-				m.Option(mdb.META, kit.Format(meta))
-				if arg[0] == "shell" && meta["with"] == "echo" {
+				if arg[0] == "shell" && len(arg) > 3 && arg[2] == "with" && arg[3] == "echo" {
 					m.Option("echo", m.Cmdx(cli.SYSTEM, kit.Split(arg[1])))
 				}
 				_spark_show(m, arg[0], strings.TrimSpace(arg[1]), arg[2:]...)

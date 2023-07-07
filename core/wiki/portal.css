@@ -5,7 +5,7 @@ fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] { di
 fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.item { padding:20px; height:var(--portal-header-height); }
 fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.item.space { padding:0px; margin:0 40px; }
 fieldset.web.wiki.portal>div.output>div.layout { display:flex; justify-content:center; }
-fieldset.web.wiki.portal>div.output>div.layout>div.nav { padding:40px 40px; border-right:var(--plugin-border-color) solid 1px; min-width:240px; overflow:auto; }
+fieldset.web.wiki.portal>div.output>div.layout>div.nav { padding:40px 40px; border-right:var(--plugin-border-color) solid 1px; min-width:230px; overflow:auto; }
 fieldset.web.wiki.portal>div.output>div.layout>div.nav div.story[data-name=navmenu] div.item { padding:5px; }
 fieldset.web.wiki.portal>div.output>div.layout>div.nav div.story[data-name=navmenu] div.list { padding-left:20px; }
 fieldset.web.wiki.portal>div.output>div.layout>div.main { padding:40px; height:600px; min-width:400px; max-width:var(--portal-max-width); overflow:auto; }

@@ -10,7 +10,8 @@ Volcanos(chat.ONIMPORT, {
 			can.onmotion.hidden(can, can.ui.nav), can.onmotion.hidden(can, can.ui.aside)
 			can.base.isIn(can.db.current, "", "/") && can.onappend.style(can, ice.HOME), can.onimport.content(can, "content.shy")
 		} else {
-			can.page.styleWidth(can, can.ui.nav, 240), can.page.styleWidth(can, can.ui.aside, 200)
+			can.page.styleWidth(can, can.ui.nav, 230), can.page.styleWidth(can, can.ui.aside, 200)
+			if (can.ConfWidth() < 1000) { can.onmotion.hidden(can, can.ui.aside) }
 			can.page.ClassList.del(can, can._fields, ice.HOME)
 		}
 		can.isCmdMode() || can.onimport.layout(can, can.ConfHeight(), can.ConfWidth())

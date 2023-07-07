@@ -25,7 +25,8 @@ func _option(m *ice.Message, kind, name, text string, arg ...string) *ice.Messag
 		kit.If(k == "bg", func() { k = "style.background" })
 		kit.Value(extra, k, kit.Format(kit.Parse(nil, "", kit.Split(v)...)))
 	})
-	return m.Options(mdb.TYPE, kind, mdb.NAME, name, mdb.TEXT, text, mdb.EXTRA, kit.Format(extra))
+	m.OptionDefault(mdb.META, kit.Format(extra))
+	return m.Options(mdb.TYPE, kind, mdb.NAME, name, mdb.TEXT, text)
 }
 func _wiki_path(m *ice.Message, arg ...string) string {
 	return path.Join(mdb.Config(m, nfs.PATH), path.Join(arg...))

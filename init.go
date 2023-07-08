@@ -84,7 +84,7 @@ func Run(arg ...string) string {
 		} else {
 			arg = append(arg, FOREVER, START)
 		}
-	} else if arg[0] == FOREVER && !kit.IsIn(arg[1], "restart", "stop") && runtime.GOOS == "windows" {
+	} else if arg[0] == FOREVER && arg[1] == START && runtime.GOOS == "windows" {
 		arg[0] = SERVE
 	}
 	Pulse.meta[MSG_DETAIL] = arg

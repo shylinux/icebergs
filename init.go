@@ -80,10 +80,12 @@ func Run(arg ...string) string {
 	kit.If(len(arg) == 0 && len(os.Args) > 1, func() { arg = kit.Simple(os.Args[1:], kit.Split(kit.Env(CTX_ARG))) })
 	if len(arg) == 0 {
 		if runtime.GOOS == "windows" {
-			arg = append(arg, SERVE, START, DEV, DEV)
+			arg = append(arg, SERVE, START)
 		} else {
 			arg = append(arg, FOREVER, START)
 		}
+	} else if arg[0] == FOREVER && runtime.GOOS == "windows" {
+		arg[0] = SERVE
 	}
 	Pulse.meta[MSG_DETAIL] = arg
 	kit.For(kit.Sort(os.Environ()), func(env string) {

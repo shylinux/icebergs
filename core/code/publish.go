@@ -84,9 +84,16 @@ func init() {
 			ice.CONTEXTS: {Hand: func(m *ice.Message, arg ...string) { _publish_contexts(m, arg...) }},
 			nfs.SOURCE:   {Hand: func(m *ice.Message, arg ...string) { _publish_contexts(m, nfs.SOURCE) }},
 			nfs.BINARY:   {Hand: func(m *ice.Message, arg ...string) { _publish_contexts(m, nfs.BINARY) }},
-			"manual":     {Hand: func(m *ice.Message, arg ...string) { _publish_contexts(m, "manual") }},
-			"wget":       {Hand: func(m *ice.Message, arg ...string) { _publish_contexts(m, "wget") }},
-			"curl":       {Hand: func(m *ice.Message, arg ...string) { _publish_contexts(m, "curl") }},
+			"manual": {Hand: func(m *ice.Message, arg ...string) {
+				host := web.UserHost(m)
+				m.Cmdy("web.wiki.spark", "shell",
+					cli.LINUX, kit.Format(`curl -fSL -O %s/publish/ice.linux.amd64`, host),
+					cli.DARWIN, kit.Format(`curl -fSL -O %s/publish/ice.darwin.amd64`, host),
+					cli.WINDOWS, kit.Format(`curl -fSL -O %s/publish/ice.windows.amd64`, host),
+				)
+			}},
+			"wget": {Hand: func(m *ice.Message, arg ...string) { _publish_contexts(m, "wget") }},
+			"curl": {Hand: func(m *ice.Message, arg ...string) { _publish_contexts(m, "curl") }},
 			"version": {Hand: func(m *ice.Message, arg ...string) {
 				defer m.Echo("<table>").Echo("</table>")
 				for _, cpu := range []string{cli.AMD64, cli.X86, cli.ARM} {

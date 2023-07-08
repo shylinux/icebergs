@@ -48,7 +48,7 @@ func _spide_show(m *ice.Message, name string, arg ...string) {
 		return
 	}
 	mdb.HashSelectDetail(m, name, func(value ice.Map) { _spide_head(m, req, head, value) })
-	res, e := _spide_send(m, name, req, kit.Format(msg.Append(CLIENT_TIMEOUT)))
+	res, e := _spide_send(m, name, req, kit.Format(m.OptionDefault(CLIENT_TIMEOUT, msg.Append(CLIENT_TIMEOUT))))
 	if m.Warn(e, ice.ErrNotFound, uri) {
 		return
 	}

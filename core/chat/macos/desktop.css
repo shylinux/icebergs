@@ -2,7 +2,7 @@ fieldset.macos.desktop { background-size:cover; background-position:center; }
 fieldset.macos.desktop>div.output { overflow:hidden; }
 fieldset.macos.desktop>div.output>fieldset.macos { background-color:transparent; }
 fieldset.macos.desktop>div.output>fieldset.macos>div.output { background-color:transparent; }
-fieldset.macos.desktop>div.output>fieldset.macos.menu { font-family:monospace; line-height:25px; border-radius:0; height:25px; width:100%; position:absolute; top:0; overflow:hidden; }
+fieldset.macos.desktop>div.output>fieldset.macos.menu { line-height:25px; border-radius:0; height:25px; width:100%; position:absolute; top:0; overflow:hidden; }
 fieldset.macos.desktop>div.output>fieldset.macos.searchs { position:absolute; }
 fieldset.macos.desktop>div.output>fieldset.macos.searchs>form.option>div.item.icon.delete { display:none; }
 fieldset.macos.desktop>div.output>fieldset.macos.searchs>form.option>div.item.keyword input { width:320px; background-color:transparent; border:#404141 solid 1px; }

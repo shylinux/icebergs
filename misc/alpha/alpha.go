@@ -29,7 +29,7 @@ type alpha struct {
 	limit string `data:"50000"`
 	least string `data:"1000"`
 	load  string `name:"load file*=usr/word-dict/ecdict zone*=ecdict"`
-	list  string `name:"list method=word,line word auto load" help:"词典"`
+	list  string `name:"list method=word,line word auto" help:"词典"`
 }
 
 func (s alpha) Load(m *ice.Message, arg ...string) {

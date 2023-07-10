@@ -10,7 +10,6 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/ctx"
-	"shylinux.com/x/icebergs/base/log"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
@@ -137,10 +136,10 @@ func RenderPodCmd(m *ice.Message, pod, cmd string, arg ...ice.Any) {
 }
 func RenderCmd(m *ice.Message, cmd string, arg ...ice.Any) { RenderPodCmd(m, "", cmd, arg...) }
 func renderVersion(m *ice.Message) string {
-	if m.R != nil && strings.Contains(m.R.URL.RawQuery, "debug=true") || m.Option(log.DEBUG) == ice.TRUE {
-		return kit.Format("?_v=%v&_t=%d", ice.Info.Make.Version, time.Now().Unix())
+	if ice.Info.Make.Hash == "" {
+		return ""
 	}
-	return ""
+	return kit.Format("?_v=%s&_h=%s", ice.Info.Make.Version, ice.Info.Make.Hash[:8])
 }
 
 const (

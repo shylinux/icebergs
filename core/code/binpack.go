@@ -57,7 +57,9 @@ func _binpack_all(m *ice.Message) {
 		for _, p := range []string{ice.USR_VOLCANOS, ice.USR_INTSHELL, ice.SRC} {
 			_binpack_dir(m, w, p)
 		}
-		for _, p := range []string{ice.ETC_MISS_SH, ice.ETC_INIT_SHY, ice.ETC_LOCAL_SHY, ice.ETC_EXIT_SHY, ice.ETC_PATH, ice.README_MD, ice.MAKEFILE, ice.LICENSE} {
+		for _, p := range []string{ice.ETC_MISS_SH, ice.ETC_INIT_SHY, ice.ETC_LOCAL_SHY, ice.ETC_EXIT_SHY, ice.ETC_PATH,
+			ice.README_MD, ice.MAKEFILE, ice.LICENSE, ice.GO_MOD, ice.GO_SUM,
+		} {
 			_binpack_file(m, w, p)
 		}
 		list, cache := map[string]string{}, GoCache(m)

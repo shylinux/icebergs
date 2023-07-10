@@ -19,7 +19,7 @@ func init() {
 					h := mdb.HashCreate(m, m.OptionSimple(mdb.NAME, ice.CMD), mdb.STATUS, START)
 					defer func() {
 						if e := recover(); e == nil {
-							mdb.HashModify(m, mdb.HASH, h, mdb.STATUS, STOP)
+							mdb.HashRemove(m, mdb.HASH, h)
 						} else {
 							mdb.HashModify(m, mdb.HASH, h, mdb.STATUS, ERROR, ERROR, e)
 						}

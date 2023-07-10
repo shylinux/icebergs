@@ -11,6 +11,7 @@ import (
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -73,7 +74,13 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	return true
 }
 func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.ResponseWriter, r *http.Request) {
-	_log := func(level string, arg ...ice.Any) *ice.Message { return m.Logs(strings.Title(level), arg...) }
+	debug := strings.Contains(r.URL.String(), "debug=true") || strings.Contains(r.Header.Get(Referer), "debug=true")
+	_log := func(level string, arg ...ice.Any) *ice.Message {
+		if debug || arg[0] == "cmds" {
+			return m.Logs(strings.Title(level), arg...)
+		}
+		return m
+	}
 	if u, e := url.Parse(r.Header.Get(Referer)); e == nil {
 		add := func(k, v string) { _log(nfs.PATH, k, m.Option(k, v)) }
 		switch arg := strings.Split(strings.TrimPrefix(u.Path, nfs.PS), nfs.PS); arg[0] {
@@ -171,6 +178,7 @@ func init() {
 		SERVE: {Name: "serve name auto start", Help: "服务器", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				cli.NodeInfo(m, ice.Info.Pathname, WORKER)
+				gdb.Watch(m, SERVE_START)
 				aaa.White(m, nfs.REQUIRE)
 			}},
 			DOMAIN: {Hand: func(m *ice.Message, arg ...string) {
@@ -184,12 +192,6 @@ func init() {
 				m.Go(func() {
 					cli.Opens(m, mdb.Config(m, cli.OPEN))
 					ssh.PrintQRCode(m, tcp.PublishLocalhost(m, _serve_address(m)))
-					return
-					opened := false
-					for i := 0; i < 3 && !opened; i++ {
-						m.Sleep("1s").Cmd(SPACE, func(value ice.Maps) { kit.If(value[mdb.TYPE] == CHROME, func() { opened = true }) })
-					}
-					kit.If(!opened, func() { cli.Opens(m, _serve_address(m)) })
 				})
 			}},
 		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,status,name,proto,host,port"), mdb.ClearOnExitHashAction())},
@@ -198,7 +200,13 @@ func init() {
 		if strings.HasPrefix(sub, nfs.PS) {
 			kit.If(action.Hand == nil, func() { action.Hand = cmd.Hand })
 			sub = kit.Select(P(key, sub), PP(key, sub), strings.HasSuffix(sub, nfs.PS))
-			c.Commands[sub] = &ice.Command{Name: kit.Select(cmd.Name, action.Name), Actions: ice.MergeActions(cmd.Actions, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
+			actions := ice.Actions{}
+			for k, v := range cmd.Actions {
+				if !kit.IsIn(k, ice.CTX_INIT, ice.CTX_EXIT) {
+					actions[k] = v
+				}
+			}
+			c.Commands[sub] = &ice.Command{Name: kit.Select(cmd.Name, action.Name), Actions: ice.MergeActions(actions, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 				msg := m.Spawn(c, key, cmd)
 				defer m.Copy(msg)
 				action.Hand(msg, arg...)

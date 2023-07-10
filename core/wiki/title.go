@@ -66,12 +66,14 @@ func init() {
 		TITLE: {Name: "title type=navmenu,premenu,chapter,section,endmenu text", Help: "标题", Hand: func(m *ice.Message, arg ...string) {
 			switch arg[0] {
 			case NAVMENU: // navmenu text arg...
+				arg[1] = kit.Renders(arg[1], ice.Info)
 				_title_menu(m, arg[0], arg[1], arg[2:]...)
 			case PREMENU, ENDMENU: // premenu arg...
 				_title_menu(m, arg[0], "", arg[1:]...)
 			case CHAPTER, SECTION: // chapter text arg...
 				_title_show(m, arg[0], arg[1], arg[2:]...)
 			default: // title text arg...
+				arg[0] = kit.Renders(arg[0], ice.Info)
 				_title_show(m, "", arg[0], arg[1:]...)
 			}
 		}},

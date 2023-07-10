@@ -32,7 +32,6 @@ func _daemon_exec(m *ice.Message, cmd *exec.Cmd) {
 		m.OptionSimple(CMD_INPUT, CMD_OUTPUT, CMD_ERRPUT, mdb.CACHE_CLEAR_ONEXIT),
 	)
 	if e := cmd.Start(); m.Warn(e, ice.ErrNotStart, cmd.Args, err.String()) {
-		m.Debug("what %v", e)
 		mdb.HashModify(m, h, STATUS, ERROR, ERROR, e)
 		return
 	}
@@ -44,7 +43,6 @@ func _daemon_exec(m *ice.Message, cmd *exec.Cmd) {
 			m.Cost(CODE, "0", ctx.ARGS, cmd.Args)
 		} else {
 			mdb.HashSelectUpdate(m, h, func(value ice.Map) { value[STATUS], value[ERROR] = ERROR, e })
-			m.Debug("what %v", e)
 		}
 		switch status := mdb.HashSelectField(m.Sleep300ms(), h, STATUS); cb := m.OptionCB("").(type) {
 		case func(string) bool:

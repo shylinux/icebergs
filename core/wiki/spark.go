@@ -100,6 +100,7 @@ func init() {
 				if arg[0] == "shell" && len(arg) > 3 && arg[2] == "with" && arg[3] == "echo" {
 					m.Option("echo", m.Cmdx(cli.SYSTEM, kit.Split(arg[1])))
 				}
+				arg[1] = kit.Renders(arg[1], ice.Info)
 				_spark_show(m, arg[0], strings.TrimSpace(arg[1]), arg[2:]...)
 			}
 		}},

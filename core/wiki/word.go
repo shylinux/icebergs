@@ -54,9 +54,6 @@ func init() {
 				ls := kit.Split(m.Option(mdb.TEXT))
 				kit.If(kit.IsIn(ls[0], IMAGE, VIDEO, AUDIO), func() { m.Cmdy(FEEL).CutTo(nfs.PATH, mdb.NAME) })
 			}},
-			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
-				kit.Switch(m.Option(mdb.TYPE), kit.Simple(web.SERVER, web.WORKER), func() { m.PushButton(kit.Dict(m.CommandKey(), "文档")) })
-			}},
 		}, aaa.RoleAction("story.field"), ctx.CmdAction(), WikiAction("", nfs.SHY)), Hand: func(m *ice.Message, arg ...string) {
 			if m.Option(nfs.DIR_DEEP, ice.TRUE); len(arg) == 0 {
 				arg = append(arg, nfs.SRC)

@@ -175,11 +175,11 @@ func DreamAction() ice.Actions {
 func DreamProcess(m *ice.Message, args ice.Any, arg ...string) {
 	if kit.HasPrefixList(arg, ice.RUN) {
 		ctx.ProcessField(m, m.PrefixKey(), args, kit.Slice(arg, 1)...)
-	} else if kit.HasPrefixList(arg, ctx.ACTION, m.CommandKey()) {
+	} else if kit.HasPrefixList(arg, ctx.ACTION, m.PrefixKey()) || kit.HasPrefixList(arg, ctx.ACTION, m.CommandKey()) {
 		if arg = kit.Slice(arg, 2); kit.HasPrefixList(arg, DREAM) {
 			m.Cmdy(SPACE, m.Option(ice.MSG_USERPOD, arg[1]), m.PrefixKey(), ctx.ACTION, DREAM_ACTION, ice.RUN, arg[2:])
 		} else if dream := m.Option(mdb.NAME); dream != "" {
-			m.Cmdy(SPACE, dream, m.PrefixKey(), ctx.ACTION, DREAM_ACTION, ice.RUN, arg).Optionv(ice.FIELD_PREFIX, kit.Simple(ctx.ACTION, m.CommandKey(), DREAM, dream, ice.RUN))
+			m.Cmdy(SPACE, dream, m.PrefixKey(), ctx.ACTION, DREAM_ACTION, ice.RUN, arg).Optionv(ice.FIELD_PREFIX, kit.Simple(ctx.ACTION, m.PrefixKey(), DREAM, dream, ice.RUN))
 		}
 	}
 }

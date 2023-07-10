@@ -86,10 +86,14 @@ func init() {
 			nfs.BINARY:   {Hand: func(m *ice.Message, arg ...string) { _publish_contexts(m, nfs.BINARY) }},
 			"manual": {Hand: func(m *ice.Message, arg ...string) {
 				host := web.UserHost(m)
+				args := ""
+				if m.Option(ice.MSG_USERPOD) != "" {
+					args = "?pod=" + m.Option(ice.MSG_USERPOD)
+				}
 				m.Cmdy("web.wiki.spark", "shell",
-					cli.LINUX, kit.Format(`curl -fSL -O %s/publish/ice.linux.amd64`, host),
-					cli.DARWIN, kit.Format(`curl -fSL -O %s/publish/ice.darwin.amd64`, host),
-					cli.WINDOWS, kit.Format(`curl -fSL -O %s/publish/ice.windows.amd64`, host),
+					cli.LINUX, kit.Format(`curl -fSL -O "%s/publish/ice.linux.amd64%s"`, host, args),
+					cli.DARWIN, kit.Format(`curl -fSL -O "%s/publish/ice.darwin.amd64%s"`, host, args),
+					cli.WINDOWS, kit.Format(`curl -fSL -O "%s/publish/ice.windows.amd64%s"`, host, args),
 				)
 			}},
 			"wget": {Hand: func(m *ice.Message, arg ...string) { _publish_contexts(m, "wget") }},

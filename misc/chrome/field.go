@@ -13,7 +13,7 @@ type field struct {
 	daemon
 	short  string `data:"domain"`
 	field  string `data:"time,id,index,args,style,left,top,right,bottom,selection"`
-	insert string `name:"insert domain=golang.google.cn index=cli.system args=pwd"`
+	insert string `name:"insert domain*=golang.google.cn index*=web.wiki.alpha.alpha args selection=word"`
 	list   string `name:"list domain id auto insert" help:"插件"`
 }
 

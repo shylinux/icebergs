@@ -66,7 +66,7 @@ func init() {
 	web.Index.Register(Index, &web.Frame{},
 		TITLE, BRIEF, REFER, SPARK, PARSE, FIELD,
 		ORDER, TABLE, CHART, IMAGE, VIDEO, AUDIO,
-		WORD, DATA, DRAW, FEEL,
+		WORD, DATA, DRAW, FEEL, PORTAL,
 	)
 }
 func Prefix(arg ...string) string { return web.Prefix(WIKI, kit.Keys(arg)) }

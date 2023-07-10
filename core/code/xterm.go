@@ -60,9 +60,6 @@ func _xterm_get(m *ice.Message, h string) xterm.XTerm {
 }
 func _xterm_echo(m *ice.Message, h string, str string) {
 	m.Options(ice.MSG_DAEMON, mdb.HashSelectField(m, h, cli.DAEMON))
-	// m.Option(ice.LOG_DISABLE, ice.TRUE)
-	// m.Debug("what ---%o--- ---[%v]---", []byte(str), str)
-	m.Debug("what ---%o---", []byte(str))
 	web.PushNoticeGrow(m, h, str)
 }
 func _xterm_cmds(m *ice.Message, h string, cmd string, arg ...ice.Any) {
@@ -120,8 +117,6 @@ func init() {
 			}},
 			web.INPUT: {Hand: func(m *ice.Message, arg ...string) {
 				if b, e := base64.StdEncoding.DecodeString(strings.Join(arg, "")); !m.Warn(e) {
-					// m.Debug("what ---%o--- ---[%v]---", b, string(b))
-					m.Debug("what ---%o---", b)
 					_xterm_get(m, "").Write(b)
 				}
 			}},

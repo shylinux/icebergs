@@ -1,7 +1,11 @@
 Volcanos(chat.ONIMPORT, {
 	_init: function(can, msg) { can.require(["/plugin/local/wiki/word.js"]), can.Conf(html.PADDING, 40)
 		can.db = {nav: {}}, can.sup.onexport.link = function() { return can.db.prefix }
-		can.db.prefix = location.pathname.indexOf("/chat/cmd/web.wiki.portal/") == 0? "/chat/cmd/web.wiki.portal/": "/wiki/portal/"
+		can.db.prefix = location.pathname.indexOf("/chat/cmd/web.wiki.portal/") == 0? "/chat/cmd/web.wiki.portal/":
+			location.pathname.indexOf("/chat/cmd/web.wiki.portal") == 0? "/chat/cmd/web.wiki.portal": "/wiki/portal/"
+		if (location.pathname.indexOf("/chat/pod/") == 0) { var args = can.misc.ParseURL(can)
+			can.db.prefix = can.base.trimPrefix(can.misc.MergeURL(can, args)+"/", location.origin)
+		}
 		can.db.current = can.isCmdMode()? can.base.trimPrefix(location.pathname, can.db.prefix): can.Option(nfs.PATH)
 		can.onmotion.clear(can)
 		can.ui = can.onappend.layout(can, [html.HEADER, [html.NAV, html.MAIN, html.ASIDE]], html.FLOW), can.onimport._scroll(can)
@@ -59,7 +63,7 @@ Volcanos(chat.ONACTION, {
 		if (!internal) { var params = ""; (can.misc.Search(can, log.DEBUG) == ice.TRUE && (params = "?debug=true"))
 			if (link == nfs.PS) { return can.isCmdMode()? can.user.jumps(can.db.prefix+params): (can.Option(nfs.PATH, ""), can.Update()) }
 			if (can.base.beginWith(link, web.HTTP, nfs.PS)) { return can.user.opens(link) }
-			if (link.indexOf(can.db.current) < 0 || link.endsWith(nfs.PS)) { return can.isCmdMode()? can.user.jumps(can.db.prefix+link+params): (can.Option(nfs.PATH, link), can.Update()) }
+			if (link.indexOf(can.db.current) < 0 || link.endsWith(nfs.PS)) { return can.isCmdMode()? can.user.jumps(can.base.Path(can.db.prefix, link)+params): (can.Option(nfs.PATH, link), can.Update()) }
 		}
 		var file = can.base.trimPrefix(link, can.db.current); can.isCmdMode() && can.user.jumps("#"+file)
 		if (can.onmotion.cache(can, function(cache, key) { cache[key] = can._plugins, can._plugins = cache[file]||[]; return file }, can.ui.main, can.ui.aside)) { return file }

@@ -16,6 +16,8 @@ func init() {
 				mdb.IsSearchPreview(m, arg, func() []string { return []string{web.LINK, PORTAL, m.MergePodCmd("", "") + nfs.PS} })
 			}},
 			nfs.PS: {Hand: func(m *ice.Message, arg ...string) { web.RenderMain(m) }},
-		}), Hand: func(m *ice.Message, arg ...string) {}},
+		}), Hand: func(m *ice.Message, arg ...string) {
+			web.RenderMain(m)
+		}},
 	})
 }

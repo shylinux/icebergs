@@ -7,7 +7,6 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/ssh"
-	"shylinux.com/x/icebergs/base/web"
 	"shylinux.com/x/icebergs/core/code"
 	"shylinux.com/x/icebergs/misc/git"
 	kit "shylinux.com/x/toolkits"
@@ -34,9 +33,6 @@ func init() {
 				WordAlias(m, CHAIN, CHART, CHAIN)
 				WordAlias(m, SEQUENCE, CHART, SEQUENCE)
 			}},
-			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				mdb.IsSearchPreview(m, arg, func() []string { return []string{web.LINK, m.CommandKey(), m.MergePodCmd("", "")} })
-			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(git.REPOS, ice.OptionFields(nfs.PATH)).Table(func(value ice.Maps) {
 					if m.Option(nfs.DIR_DEEP, ice.TRUE); kit.Path(value[nfs.PATH]) == kit.Path("") {
@@ -47,14 +43,11 @@ func init() {
 				})
 				m.Cut("path,size,time")
 			}}, "play": {Help: "演示"},
-			ice.STORY: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(arg[0], ice.RUN, arg[2:])
-			}},
 			code.COMPLETE: {Hand: func(m *ice.Message, arg ...string) {
 				ls := kit.Split(m.Option(mdb.TEXT))
 				kit.If(kit.IsIn(ls[0], IMAGE, VIDEO, AUDIO), func() { m.Cmdy(FEEL).CutTo(nfs.PATH, mdb.NAME) })
 			}},
-		}, aaa.RoleAction("story.field"), ctx.CmdAction(), WikiAction("", nfs.SHY)), Hand: func(m *ice.Message, arg ...string) {
+		}, aaa.RoleAction(ctx.COMMAND, ctx.RUN), ctx.CmdAction(), WikiAction("", nfs.SHY)), Hand: func(m *ice.Message, arg ...string) {
 			if m.Option(nfs.DIR_DEEP, ice.TRUE); len(arg) == 0 {
 				arg = append(arg, nfs.SRC)
 			}

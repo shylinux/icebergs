@@ -101,7 +101,7 @@ func (m *Message) ProcessRefresh(arg ...string) {
 func (m *Message) ProcessRewrite(arg ...Any) { m.Process(PROCESS_REWRITE, arg...) }
 func (m *Message) ProcessDisplay(arg ...Any) { m.Process(PROCESS_DISPLAY).Option(MSG_DISPLAY, arg...) }
 func (m *Message) ProcessField(arg ...Any)   { m.Process(PROCESS_FIELD).Option(FIELD_PREFIX, arg...) }
-func (m *Message) ProcessInner()             { m.Process(PROCESS_INNER) }
+func (m *Message) ProcessInner() *Message    { return m.Process(PROCESS_INNER) }
 func (m *Message) ProcessAgain()             { m.Process(PROCESS_AGAIN) }
 func (m *Message) ProcessHold(text ...Any)   { m.Process(PROCESS_HOLD, text...) }
 func (m *Message) ProcessBack()              { m.Process(PROCESS_BACK) }

@@ -122,10 +122,12 @@ func RenderMain(m *ice.Message) *ice.Message {
 	if m.IsCliUA() {
 		return m.RenderDownload(path.Join(ice.USR_INTSHELL, ice.INDEX_SH))
 	}
-	return RenderTemplate(m.Options(nfs.VERSION, renderVersion(m)), "main.html")
+	m.OptionDefault(nfs.VERSION, RenderVersion(m))
+	return RenderTemplate(m, "main.html")
 }
 func RenderCmds(m *ice.Message, list ...ice.Any) {
-	RenderTemplate(m.Options(nfs.VERSION, renderVersion(m), mdb.LIST, kit.Format(list)), "cmds.html")
+	m.OptionDefault(nfs.VERSION, RenderVersion(m))
+	RenderTemplate(m.Options(mdb.LIST, kit.Format(list)), "cmds.html")
 }
 func RenderPodCmd(m *ice.Message, pod, cmd string, arg ...ice.Any) {
 	msg := m.Cmd(Space(m, pod), ctx.COMMAND, kit.Select(m.PrefixKey(), cmd))
@@ -135,7 +137,7 @@ func RenderPodCmd(m *ice.Message, pod, cmd string, arg ...ice.Any) {
 	))
 }
 func RenderCmd(m *ice.Message, cmd string, arg ...ice.Any) { RenderPodCmd(m, "", cmd, arg...) }
-func renderVersion(m *ice.Message) string {
+func RenderVersion(m *ice.Message) string {
 	if ice.Info.Make.Hash == "" {
 		return ""
 	}

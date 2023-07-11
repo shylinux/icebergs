@@ -22,9 +22,6 @@ func init() {
 	)
 	Index.MergeCommands(ice.Commands{
 		PORTAL: {Name: "portal path auto", Help: "网站门户", Actions: ice.MergeActions(ice.Actions{
-			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				mdb.IsSearchPreview(m, arg, func() []string { return []string{web.LINK, PORTAL, m.MergePodCmd("", "")} })
-			}},
 			nfs.PS: {Hand: func(m *ice.Message, arg ...string) { web.RenderCmd(m, "", arg) }},
 			ctx.RUN: {Hand: func(m *ice.Message, arg ...string) {
 				if p := path.Join(ice.USR_PORTAL, path.Join(arg...)); (m.Option(ice.DEBUG) == ice.TRUE || !nfs.ExistsFile(m, p)) && aaa.Right(m.Spawn(), arg) {

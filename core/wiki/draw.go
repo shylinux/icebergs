@@ -20,9 +20,6 @@ func init() {
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(mdb.RENDER, mdb.CREATE, mdb.TYPE, nfs.SVG, mdb.NAME, m.PrefixKey())
 			}},
-			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				mdb.IsSearchPreview(m, arg, func() []string { return []string{web.LINK, m.CommandKey(), m.MergePodCmd("", "")} })
-			}},
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
 				defer m.Echo("<html><body>").Echo("</body></html>")
 				m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1]))

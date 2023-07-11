@@ -175,7 +175,7 @@ const SERVE = "serve"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		"/exit": {Hand: func(m *ice.Message, arg ...string) { m.Cmd(ice.EXIT) }},
-		SERVE: {Name: "serve name auto start", Help: "服务器", Actions: ice.MergeActions(ice.Actions{
+		SERVE: {Name: "serve name auto start dark system", Help: "服务器", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				cli.NodeInfo(m, ice.Info.Pathname, WORKER)
 				gdb.Watch(m, SERVE_START)
@@ -193,6 +193,13 @@ func init() {
 					cli.Opens(m, mdb.Config(m, cli.OPEN))
 					ssh.PrintQRCode(m, tcp.PublishLocalhost(m, _serve_address(m)))
 				})
+			}},
+			"system": {Help: "系统", Hand: func(m *ice.Message, arg ...string) { cli.Opens(m, "System Settings.app") }},
+			"dark": {Help: "主题", Hand: func(m *ice.Message, arg ...string) {
+				if !tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) {
+					return
+				}
+				m.Cmd(cli.SYSTEM, "osascript", "-e", `tell app "System Events" to tell appearance preferences to set dark mode to not dark mode`)
 			}},
 		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,status,name,proto,host,port"), mdb.ClearOnExitHashAction())},
 	})

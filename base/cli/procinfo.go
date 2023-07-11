@@ -12,8 +12,11 @@ import (
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		PROCINFO: {Name: "procinfo PID auto filter:text", Help: "进程列表", Actions: ice.MergeActions(ice.Actions{
-			PROCKILL: {Help: "结束进程", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(gdb.SIGNAL, gdb.STOP, m.Option("PID")).ProcessRefresh() }},
+		PROCINFO: {Name: "procinfo PID auto filter:text docker monitor terminal", Help: "进程列表", Actions: ice.MergeActions(ice.Actions{
+			PROCKILL:   {Help: "结束进程", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(gdb.SIGNAL, gdb.STOP, m.Option("PID")).ProcessRefresh() }},
+			"terminal": {Help: "终端", Hand: func(m *ice.Message, arg ...string) { Opens(m, "Terminal.app") }},
+			"monitor":  {Help: "监控", Hand: func(m *ice.Message, arg ...string) { Opens(m, "Activity Monitor.app") }},
+			"docker":   {Help: "容器", Hand: func(m *ice.Message, arg ...string) { Opens(m, "Docker Desktop.app") }},
 		}), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 || arg[0] == "" {
 				m.Split(m.Cmdx(SYSTEM, "ps", "u")).PushAction(PROCKILL).Sort("COMMAND").StatusTimeCount(m.Cmd(RUNTIME, HOSTINFO).AppendSimple("nCPU,MemTotal,MemFree"))

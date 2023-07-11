@@ -164,29 +164,14 @@ const DIR = "dir"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		DIR: {Name: "dir path auto upload", Help: "目录", Actions: ice.Actions{
+		DIR: {Name: "dir path auto upload finder", Help: "目录", Actions: ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				aaa.White(m, ice.SRC, ice.BIN, ice.USR)
 				aaa.Black(m, ice.USR_LOCAL)
-			}},
-			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				if mdb.IsSearchPreview(m, arg, nil) && m.Cmdx("host", "islocal", m.Option(ice.MSG_USERIP)) == ice.OK {
-					return
-					kit.For([]string{"Desktop", "Documents", "Downloads", "Pictures"}, func(p string) {
-						p = kit.HomePath(p)
-						m.Cmd(DIR, PWD, mdb.NAME, mdb.TIME, kit.Dict(DIR_ROOT, p)).SortStrR(mdb.TIME).TablesLimit(5, func(value ice.Maps) {
-							name := value[mdb.NAME]
-							kit.If(len(kit.TrimExt(name)) > 30, func() { name = name[:10] + ".." + name[len(name)-10:] })
-							m.PushSearch(mdb.TYPE, OPENS, mdb.NAME, name, mdb.TEXT, path.Join(p, value[mdb.NAME]))
-						})
-					})
-				}
 			}}, mdb.UPLOAD: {},
-			TRASH: {Hand: func(m *ice.Message, arg ...string) { m.Cmd(TRASH, mdb.CREATE, m.Option(PATH)) }},
-			mdb.SHOW: {Hand: func(m *ice.Message, arg ...string) {
-				Show(m, m.Option(PATH))
-				m.ProcessInner()
-			}},
+			"finder": {Help: "本机", Hand: func(m *ice.Message, arg ...string) { m.Cmd("cli.system", "opens", "Finder.app") }},
+			TRASH:    {Hand: func(m *ice.Message, arg ...string) { m.Cmd(TRASH, mdb.CREATE, m.Option(PATH)) }},
+			mdb.SHOW: {Hand: func(m *ice.Message, arg ...string) { Show(m.ProcessInner(), m.Option(PATH)) }},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			root, dir := kit.Select(PWD, m.Option(DIR_ROOT)), kit.Select(PWD, arg, 0)
 			kit.If(strings.HasPrefix(dir, PS), func() { root = "" })

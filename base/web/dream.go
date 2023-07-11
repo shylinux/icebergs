@@ -138,7 +138,9 @@ func init() {
 					_dream_start(m, m.OptionDefault(mdb.NAME, path.Base(m.Option(nfs.REPOS))))
 				}
 			}},
-			cli.START: {Hand: func(m *ice.Message, arg ...string) { _dream_start(m, m.Option(mdb.NAME)) }},
+			cli.START: {Hand: func(m *ice.Message, arg ...string) {
+				_dream_start(m, m.Option(mdb.NAME))
+			}},
 			cli.STOP: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(SPACE, mdb.MODIFY, m.OptionSimple(mdb.NAME), mdb.STATUS, cli.STOP)
 				m.Go(func() { m.Cmd(SPACE, m.Option(mdb.NAME), ice.EXIT) })

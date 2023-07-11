@@ -88,11 +88,6 @@ func _space_handle(m *ice.Message, safe bool, name string, c *websocket.Conn) {
 				msg.Option(ice.MSG_USERROLE, aaa.VOID)
 			}
 			m.Go(func() { _space_exec(msg, source, target, c) }, strings.Join(kit.Simple(SPACE, name, msg.Detailv()), lex.SP))
-			// if msg.Option("_exec") == "go" {
-			// 	m.Go(func() { _space_exec(msg, source, target, c) }, strings.Join(kit.Simple(SPACE, name, msg.Detailv()), lex.SP))
-			// } else {
-			// 	_space_exec(msg, source, target, c)
-			// }
 		} else {
 			done := false
 			m.Warn(!mdb.HashSelectDetail(m, next, func(value ice.Map) {
@@ -174,7 +169,8 @@ func init() {
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { aaa.White(m, SPACE, ice.MAIN) }},
 			ice.MAIN: {Hand: func(m *ice.Message, arg ...string) {
 				kit.If(mdb.Config(m, ice.MAIN), func(cmd string) { RenderPodCmd(m, "", cmd) }, func() {
-					m.RenderResult(nfs.Template(m.Options(nfs.VERSION, renderVersion(m)), "main.html"))
+					m.OptionDefault(nfs.VERSION, RenderVersion(m))
+					m.RenderResult(nfs.Template(m, "main.html"))
 				})
 				m.Optionv(ice.MSG_ARGS, kit.Simple(m.Optionv(ice.MSG_ARGS)))
 			}},
@@ -222,16 +218,13 @@ func init() {
 					if kit.IsIn(value[mdb.TYPE], CHROME, "send") {
 						return
 					}
-					m.Push("", value, kit.Split("time,type,name,text"))
+					m.Push("", value, kit.Split("time,type,name,text,status"))
 					if kit.IsIn(value[mdb.TYPE], SERVER, WORKER) {
 						m.Push(mdb.LINK, tcp.PublishLocalhost(m, m.MergePod(value[mdb.NAME])))
 					} else {
 						m.Push(mdb.LINK, "")
 					}
-					m.Debug("what %v", kit.Select(OPEN, LOGIN, value[mdb.TYPE] == LOGIN))
-					m.Debug("what %v", value)
 					m.PushButton(kit.Select(OPEN, LOGIN, value[mdb.TYPE] == LOGIN), mdb.REMOVE)
-					m.Debug("what %v", m.FormatMeta())
 				})
 				kit.If(!m.IsCliUA(), func() { m.Cmdy("web.code.publish", "contexts", "misc") })
 				kit.If(len(arg) == 1, func() { m.EchoIFrame(m.MergePod(arg[0])) })

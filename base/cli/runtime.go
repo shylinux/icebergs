@@ -147,13 +147,13 @@ const RUNTIME = "runtime"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		RUNTIME: {Name: "runtime info=bootinfo,ifconfig,diskinfo,hostinfo,userinfo,procstat,procinfo,bootinfo,role,api,cli,cmd,mod,env,path,chain,routine auto dark system finder docker monitor terminal", Help: "运行环境", Actions: ice.MergeActions(ice.Actions{
+		RUNTIME: {Name: "runtime info=bootinfo,ifconfig,diskinfo,hostinfo,userinfo,procstat,procinfo,bootinfo,role,api,cli,cmd,mod,env,path,chain,routine auto", Help: "运行环境", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				aaa.White(m, ice.ETC_PATH)
 				aaa.White(m, ice.LICENSE)
 				_runtime_init(m)
 			}},
-			IFCONFIG: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy("tcp.host") }},
+			IFCONFIG: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(tcp.HOST) }},
 			DISKINFO: {Hand: func(m *ice.Message, arg ...string) { _runtime_diskinfo(m) }},
 			HOSTINFO: {Hand: func(m *ice.Message, arg ...string) { _runtime_hostinfo(m) }},
 			HOSTNAME: {Hand: func(m *ice.Message, arg ...string) {
@@ -197,9 +197,9 @@ func init() {
 				m.StatusTimeCount()
 			}},
 			"routine": {Hand: func(m *ice.Message, arg ...string) {
+				status := map[string]int{}
 				buf := make([]byte, 4096*4096)
 				runtime.Stack(buf, true)
-				status := map[string]int{}
 			outer:
 				for _, v := range bytes.Split(buf, []byte(lex.NL+lex.NL)) {
 					ls := bytes.Split(v, []byte(lex.NL))
@@ -234,17 +234,6 @@ func init() {
 			aaa.ROLE: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(aaa.ROLE, func(value ice.Maps) { m.Push(mdb.KEY, kit.Keys(value[aaa.ROLE], value[mdb.ZONE], value[mdb.KEY])) })
 				ctx.DisplayStorySpide(m.Options(nfs.DIR_ROOT, "ice."), mdb.FIELD, mdb.KEY, lex.SPLIT, nfs.PT)
-			}},
-			"terminal": {Help: "终端", Hand: func(m *ice.Message, arg ...string) { Opens(m, "Terminal.app") }},
-			"monitor":  {Help: "监控", Hand: func(m *ice.Message, arg ...string) { Opens(m, "Activity Monitor.app") }},
-			"docker":   {Help: "容器", Hand: func(m *ice.Message, arg ...string) { Opens(m, "Docker Desktop.app") }},
-			"finder":   {Help: "资源", Hand: func(m *ice.Message, arg ...string) { Opens(m, "Finder.app") }},
-			"system":   {Help: "系统", Hand: func(m *ice.Message, arg ...string) { Opens(m, "System Settings.app") }},
-			"dark": {Help: "主题", Hand: func(m *ice.Message, arg ...string) {
-				if !tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) {
-					return
-				}
-				m.Cmd(SYSTEM, "osascript", "-e", `tell app "System Events" to tell appearance preferences to set dark mode to not dark mode`)
 			}},
 		}, ctx.CmdAction(), ctx.ConfAction("")), Hand: func(m *ice.Message, arg ...string) {
 			kit.If(len(arg) > 0 && arg[0] == BOOTINFO, func() { arg = arg[1:] })

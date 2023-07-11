@@ -2,6 +2,7 @@ package code
 
 import (
 	"encoding/base64"
+	"os"
 	"path"
 	"strings"
 
@@ -76,13 +77,7 @@ func init() {
 				kit.If(m.Cmd("").Length() == 0, func() { m.Cmd("", mdb.CREATE, mdb.TYPE, ISH) })
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				mdb.IsSearchPreview(m, arg, func() []string {
-					if nfs.Exists(m, "/bin/bash") {
-						return []string{ssh.SHELL, BASH, "/bin/bash"}
-					} else {
-						return []string{ssh.SHELL, SH, "/bin/sh"}
-					}
-				})
+				mdb.IsSearchPreview(m, arg, func() []string { return []string{ssh.SHELL, SH, kit.Select("/bin/sh", os.Getenv("SHELL"))} })
 				mdb.IsSearchPreview(m, arg, func() []string { return []string{ssh.SHELL, ISH, "/bin/ish"} })
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {

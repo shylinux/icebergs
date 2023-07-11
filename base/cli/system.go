@@ -184,9 +184,8 @@ func init() {
 				}
 				m.Cmdy(nfs.CAT, ice.ETC_PATH)
 			}},
-			FIND: {Hand: func(m *ice.Message, arg ...string) {
-				m.Echo(_system_find(m, arg[0], arg[1:]...))
-			}},
+			OPENS: {Hand: func(m *ice.Message, arg ...string) { Opens(m, arg...) }},
+			FIND:  {Hand: func(m *ice.Message, arg ...string) { m.Echo(_system_find(m, arg[0], arg[1:]...)) }},
 			MAN: {Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) == 1 {
 					arg = append(arg, "")

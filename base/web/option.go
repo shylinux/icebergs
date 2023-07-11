@@ -99,6 +99,12 @@ func Toast(m *ice.Message, text string, arg ...ice.Any) { // [title [duration [p
 			}
 		}
 	}
+	if len(arg) == 0 {
+		arg = append(arg, m.PrefixKey())
+	}
+	if len(arg) > 0 {
+		arg[0] = kit.Select(m.PrefixKey(), arg[0])
+	}
 	PushNoticeToast(m, text, arg)
 }
 func ToastFailure(m *ice.Message, arg ...ice.Any) { Toast(m, ice.FAILURE, arg...) }

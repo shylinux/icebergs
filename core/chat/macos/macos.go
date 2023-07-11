@@ -18,7 +18,7 @@ var Index = &ice.Context{Name: MACOS, Commands: ice.Commands{ice.CTX_INIT: {Hand
 	ice.Info.Load(m).Cmd(FINDER, ice.CTX_INIT)
 }}}}
 
-func init() { chat.Index.Register(Index, nil, DESKTOP) }
+func init() { chat.Index.Register(Index, nil, DESKTOP, APPLICATIONS) }
 
 func Prefix(arg ...string) string { return chat.Prefix(MACOS, kit.Keys(arg)) }
 

@@ -143,6 +143,8 @@ func renderVersion(m *ice.Message) string {
 }
 
 const (
+	DARK    = "dark"
+	LIGHT   = "light"
 	BLACK   = "black"
 	DISPLAY = "display"
 	RESIZE  = "resize"

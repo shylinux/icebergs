@@ -123,16 +123,14 @@ func init() {
 			web.OUTPUT: {Help: "全屏", Hand: func(m *ice.Message, arg ...string) {
 				web.ProcessPodCmd(m, "", "", m.OptionSimple(mdb.HASH), ctx.STYLE, web.OUTPUT)
 			}},
-			web.DREAM_CREATE: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd("", mdb.CREATE, mdb.TYPE, BASH, m.OptionSimple(mdb.NAME), nfs.PATH, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME))+nfs.PS)
-			}},
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				kit.Switch(m.Option(mdb.TYPE), kit.Simple(web.SERVER, web.WORKER), func() { m.PushButton(kit.Dict(m.CommandKey(), "命令")) })
 			}},
+			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { web.DreamProcess(m, []string{}, arg...) }},
 			ctx.PROCESS: {Hand: func(m *ice.Message, arg ...string) {
 				ctx.ProcessField(m, m.PrefixKey(), func() string { return m.Cmdx("", mdb.CREATE, arg) }, arg...)
 			}},
-		}, ctx.CmdAction(), ctx.ProcessAction(), web.DreamAction(), mdb.ImportantHashAction(mdb.FIELD, "time,hash,type,name,text,path,theme,daemon")), Hand: func(m *ice.Message, arg ...string) {
+		}, ctx.CmdAction(), ctx.ProcessAction(), mdb.ImportantHashAction(mdb.FIELD, "time,hash,type,name,text,path,theme,daemon")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) == 0 {
 				if m.Length() == 0 {
 					m.Action(mdb.CREATE)

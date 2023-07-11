@@ -203,7 +203,7 @@ func init() {
 				}
 			}},
 			DOMAIN: {Hand: func(m *ice.Message, arg ...string) { m.Echo(_space_domain(m)) }},
-			LOGIN: {Hand: func(m *ice.Message, arg ...string) {
+			LOGIN: {Help: "授权", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(ice.MSG_USERUA, m.Cmdv("", kit.Select(m.Option(mdb.NAME), arg, 0), ice.MSG_USERUA))
 				m.Cmd("", kit.Select(m.Option(mdb.NAME), arg, 0), ice.MSG_SESSID, aaa.SessCreate(m, m.Option(ice.MSG_USERNAME)))
 			}},
@@ -222,13 +222,16 @@ func init() {
 					if kit.IsIn(value[mdb.TYPE], CHROME, "send") {
 						return
 					}
-					m.Push("", value, field)
+					m.Push("", value, kit.Split("time,type,name,text"))
 					if kit.IsIn(value[mdb.TYPE], SERVER, WORKER) {
 						m.Push(mdb.LINK, tcp.PublishLocalhost(m, m.MergePod(value[mdb.NAME])))
 					} else {
 						m.Push(mdb.LINK, "")
 					}
+					m.Debug("what %v", kit.Select(OPEN, LOGIN, value[mdb.TYPE] == LOGIN))
+					m.Debug("what %v", value)
 					m.PushButton(kit.Select(OPEN, LOGIN, value[mdb.TYPE] == LOGIN), mdb.REMOVE)
+					m.Debug("what %v", m.FormatMeta())
 				})
 				kit.If(!m.IsCliUA(), func() { m.Cmdy("web.code.publish", "contexts", "misc") })
 				kit.If(len(arg) == 1, func() { m.EchoIFrame(m.MergePod(arg[0])) })

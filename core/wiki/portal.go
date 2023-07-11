@@ -35,11 +35,10 @@ func init() {
 				}
 			}},
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
-				kit.Switch(m.Option(mdb.TYPE), kit.Simple(web.SERVER, web.WORKER), func() {
-					m.PushButton(ice.Maps{PORTAL: "官网"})
-				})
+				kit.Switch(m.Option(mdb.TYPE), kit.Simple(web.SERVER, web.WORKER), func() { m.PushButton(ice.Maps{PORTAL: "官网"}) })
 			}},
-		}, aaa.WhiteAction(ctx.COMMAND, ctx.RUN), aaa.RoleAction(ctx.COMMAND, ctx.RUN), web.DreamAction(), ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
+			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { web.DreamProcess(m, []string{}, arg...) }},
+		}, aaa.WhiteAction(ctx.COMMAND, ctx.RUN), aaa.RoleAction(ctx.COMMAND, ctx.RUN), ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			if m.Push(HEADER, m.Cmdx(WORD, path.Join(nfs.SRC_DOCUMENT, INDEX_SHY))); len(arg) > 0 {
 				m.Push(NAV, m.Cmdx(WORD, path.Join(nfs.SRC_DOCUMENT, path.Join(arg...), INDEX_SHY)))
 			}

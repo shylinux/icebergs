@@ -12,6 +12,7 @@ import (
 	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/tcp"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -146,6 +147,9 @@ func init() {
 	})
 }
 func Opens(m *ice.Message, arg ...string) {
+	if !tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) {
+		return
+	}
 	if len(arg) == 0 || arg[0] == "" {
 		return
 	}

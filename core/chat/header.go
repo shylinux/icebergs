@@ -3,11 +3,13 @@ package chat
 import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
+	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/base/web"
+	"shylinux.com/x/icebergs/base/web/html"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -76,6 +78,13 @@ func init() {
 			aaa.AVATAR:     {Hand: _header_users},
 			web.SHARE:      {Hand: _header_share},
 			"webpack":      {Hand: ctx.CmdHandler("webpack", "build")},
+			"theme": {Hand: func(m *ice.Message, arg ...string) {
+				if !tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) {
+					return
+				}
+				m.Cmd(cli.SYSTEM, "osascript", "-e", `tell app "System Events" to tell appearance preferences to set dark mode to `+
+					kit.Select(ice.FALSE, ice.TRUE, kit.IsIn(kit.Select(html.DARK, arg, 0), html.DARK, html.BLACK)))
+			}},
 		}, ctx.ConfAction(SSO, "", aaa.LANGUAGE, "zh")), Hand: func(m *ice.Message, arg ...string) {
 			if gdb.Event(m, HEADER_AGENT); !_header_check(m, arg...) {
 				return

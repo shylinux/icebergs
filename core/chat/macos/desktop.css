@@ -42,12 +42,10 @@ fieldset.macos.desktop>div.output>div.desktop>fieldset.web.code.compile>form.opt
 fieldset.macos.desktop>div.output>div.desktop>fieldset.web.chat.iframe>div.status { display:none; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset.web.chat.iframe>form.option>div.item.hash>input { width:360px; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset.web.chat.macos.finder>div.status { display:none; }
-/* fieldset.macos.desktop>div.output>div.desktop>fieldset>div.output>fieldset>form.option>div.item { margin-right:0px; } */
-/* fieldset.macos.desktop>div.output>div.desktop>fieldset>div.output>fieldset>div.action>div.item { margin-right:0px; } */
 fieldset.macos.menu>div.output>div.item { padding:0 5px; float:right; cursor:pointer; }
 fieldset.macos.menu>div.output>div.item.avatar>img { height:25px; }
 fieldset.macos.menu>div.output>div.menu { float:left; padding:0 20px; cursor:pointer; }
-fieldset.macos.menu>div.output>div.tabs { float:left; font-style:italic; }
+fieldset.macos.menu>div.output>div.tabs { float:left; font-style:italic; padding:0 10px; }
 fieldset.macos.menu>div.output>div.tabs.select { background-color:transparent; color:white; }
 fieldset.macos.dock>div.output { height:80px; display:flex; overflow:auto; }
 fieldset.macos.dock>div.output>div.space { background-color:#ececec36; margin:10px; height:calc(100% - 20px); width:2px; }

@@ -1,5 +1,5 @@
 Volcanos(chat.ONIMPORT, {
-	_init: function(can, msg) { can.require(["/plugin/local/wiki/word.js"]), can.Conf(html.PADDING, 40)
+	_init: function(can, msg) { can.require(["/plugin/local/wiki/word.js"]), can.Conf(html.PADDING, can.user.isMobile? 10: 40)
 		can.db = {nav: {}}, can.sup.onexport.link = function() { return can.db.prefix }
 		can.db.prefix = location.pathname.indexOf("/chat/cmd/web.wiki.portal/") == 0? "/chat/cmd/web.wiki.portal/":
 			location.pathname.indexOf("/chat/cmd/web.wiki.portal") == 0? "/chat/cmd/web.wiki.portal": "/wiki/portal/"
@@ -54,6 +54,10 @@ Volcanos(chat.ONIMPORT, {
 	layout: function(can, height, width) { can.onmotion.delay(can, function() { padding = can.Conf(html.PADDING)
 		if (can.isCmdMode()) { can.onappend.style(can, html.OUTPUT), can.ConfHeight(can.page.height()), can.ConfWidth(can.page.width()) }
 		can.ui.layout(height, width), can.ConfHeight(can.ui.main.offsetHeight), can.ConfWidth(can.ui.main.offsetWidth)
+		if (can.user.isMobile && can.isCmdMode()) {
+			can.page.style(can, can.ui.nav, html.HEIGHT, "", html.WIDTH, can.ConfWidth(can.page.width()))
+			can.page.style(can, can.ui.main, html.HEIGHT, "", html.WIDTH, can.ConfHeight(can.page.width()))
+		}
 		can.core.List(can._plugins, function(sub) { sub.onimport.size(sub, can.base.Min(can.ConfHeight()/2, 300, 600), sub.Conf("_width")||(can.ConfWidth()-2*padding), true) })
 	}, 100) },
 }, [""])
@@ -68,6 +72,7 @@ Volcanos(chat.ONACTION, {
 		var file = can.base.trimPrefix(link, can.db.current); can.isCmdMode() && can.user.jumps("#"+file)
 		if (can.onmotion.cache(can, function(cache, key) { cache[key] = can._plugins, can._plugins = cache[file]||[]; return file }, can.ui.main, can.ui.aside)) { return file }
 		can.onimport.content(can, file)
+		can.user.toast(can, "加载成功")
 		return link
 	},
 })

@@ -2,6 +2,7 @@ package ice
 
 import (
 	"net/http"
+	"path"
 	"strings"
 
 	kit "shylinux.com/x/toolkits"
@@ -210,15 +211,21 @@ func (m *Message) EchoDownload(arg ...string) *Message {
 	return m.Echo(Render(m, RENDER_DOWNLOAD, arg))
 }
 func (m *Message) Display(file string, arg ...Any) {
-	if file == "" {
-		file = strings.TrimPrefix(kit.FileLine(2, 100), Info.Make.Path)
-		file = strings.TrimPrefix(file, kit.Path("")+PS)
-		if strings.Contains(file, "/pkg/mod/") {
-			file = strings.Split(file, "/pkg/mod/")[1]
-		}
-	}
-	if !strings.HasPrefix(file, PS) && !strings.HasPrefix(file, HTTP) {
-		file = "/require/" + file
-	}
+	file = m.resource(file)
 	m.Option(MSG_DISPLAY, kit.MergeURL(kit.Select(kit.ExtChange(file, JS), file, strings.Contains(file, QS)), arg...))
+}
+func (m *Message) Resource(file string) string { return m.resource(file) }
+func (m *Message) resource(file string) string {
+	if strings.HasPrefix(file, PS) || strings.HasPrefix(file, HTTP) {
+		return file
+	}
+	p := strings.TrimPrefix(kit.FileLines(3), Info.Make.Path)
+	p = strings.TrimPrefix(p, kit.Path("")+PS)
+	if strings.Contains(p, "/pkg/mod/") {
+		p = strings.Split(p, "/pkg/mod/")[1]
+	}
+	if file != "" {
+		p = path.Join(path.Dir(p), file)
+	}
+	return "/require/" + p
 }

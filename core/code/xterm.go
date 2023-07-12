@@ -72,7 +72,7 @@ const XTERM = "xterm"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		XTERM: {Name: "xterm hash auto", Help: "命令行", Actions: ice.MergeActions(ice.Actions{
+		XTERM: {Name: "xterm hash auto terminal", Help: "命令行", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				kit.If(m.Cmd("").Length() == 0, func() { m.Cmd("", mdb.CREATE, mdb.TYPE, ISH) })
 			}},
@@ -83,7 +83,7 @@ func init() {
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch mdb.HashInputs(m, arg); arg[0] {
 				case mdb.TYPE:
-					m.Push(arg[0], ISH, SH)
+					m.Push(arg[0], "/bin/ish", kit.Select("/bin/sh", os.Getenv("SHELL")))
 					m.Cmd(mdb.SEARCH, mdb.FOREACH, ssh.SHELL, ice.OptionFields("type,name,text"), func(value ice.Maps) {
 						kit.If(value[mdb.TYPE] == ssh.SHELL, func() { m.Push(arg[0], value[mdb.TEXT]) })
 					})
@@ -125,6 +125,7 @@ func init() {
 			ctx.PROCESS: {Hand: func(m *ice.Message, arg ...string) {
 				ctx.ProcessField(m, m.PrefixKey(), func() string { return m.Cmdx("", mdb.CREATE, arg) }, arg...)
 			}},
+			"terminal": {Help: "本机", Hand: func(m *ice.Message, arg ...string) { m.Cmd("cli.system", "opens", "Terminal.app") }},
 		}, ctx.CmdAction(), ctx.ProcessAction(), mdb.ImportantHashAction(mdb.FIELD, "time,hash,type,name,text,path,theme,daemon")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) == 0 {
 				if m.Length() == 0 {

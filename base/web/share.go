@@ -72,7 +72,7 @@ func init() {
 				mdb.HashCreate(m, arg, m.OptionSimple(ice.CMD), aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERROLE, m.Option(ice.MSG_USERROLE))
 				m.Option(mdb.LINK, _share_link(m, P(SHARE, m.Result())))
 			}},
-			LOGIN: {Hand: func(m *ice.Message, arg ...string) {
+			LOGIN: {Help: "登录", Hand: func(m *ice.Message, arg ...string) {
 				m.EchoQRCode(m.Cmd(SHARE, mdb.CREATE, mdb.TYPE, LOGIN).Option(mdb.LINK)).ProcessInner()
 			}},
 			nfs.PS: {Hand: func(m *ice.Message, arg ...string) {

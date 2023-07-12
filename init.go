@@ -42,8 +42,8 @@ func (s *Frame) Close(m *Message, arg ...string) {
 
 const (
 	INIT = "init"
-	QUIT = "quit"
 	EXIT = "exit"
+	QUIT = "quit"
 )
 
 var Index = &Context{Name: ICE, Help: "冰山模块", Commands: Commands{

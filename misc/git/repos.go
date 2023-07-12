@@ -406,7 +406,7 @@ func init() {
 				git.PlainInit(m.Option(nfs.PATH), false)
 				_repos_insert(m, kit.Path(""))
 			}},
-			CLONE: {Name: "clone origin* branch name path", Hand: func(m *ice.Message, arg ...string) {
+			CLONE: {Name: "clone origin* branch name path", Help: "克隆", Hand: func(m *ice.Message, arg ...string) {
 				m.OptionDefault(mdb.NAME, path.Base(m.Option(ORIGIN)))
 				m.OptionDefault(nfs.PATH, path.Join(path.Join(nfs.USR, m.Option(mdb.NAME))))
 				if _, err := git.PlainClone(m.Option(nfs.PATH), false, &git.CloneOptions{URL: m.Option(ORIGIN)}); m.Warn(err) {
@@ -478,7 +478,7 @@ func init() {
 					m.Warn(err)
 				}
 			}},
-			STATUS: {Hand: func(m *ice.Message, arg ...string) {
+			STATUS: {Help: "状态", Hand: func(m *ice.Message, arg ...string) {
 				if repos := kit.Select(m.Option(REPOS), arg, 0); repos != "" {
 					_repos_status(m, repos, _repos_open(m, repos))
 				} else {

@@ -76,9 +76,8 @@ func init() {
 			}},
 		}, CmdAction(), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
-				m.Cmdy("", mdb.SEARCH, COMMAND, ice.OptionFields(INDEX))
+				m.Cmdy("", mdb.SEARCH, COMMAND, ice.OptionFields(INDEX)).StatusTimeCount()
 				DisplayStory(m.Options(nfs.DIR_ROOT, "ice."), "spide.js?split=.")
-				m.StatusTimeCount()
 				return
 			}
 			kit.If(len(arg) == 0, func() { arg = append(arg, "") })

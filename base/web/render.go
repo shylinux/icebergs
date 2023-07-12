@@ -141,7 +141,7 @@ func RenderVersion(m *ice.Message) string {
 	if ice.Info.Make.Hash == "" {
 		return ""
 	}
-	return kit.Format("?_v=%s&_h=%s", ice.Info.Make.Version, ice.Info.Make.Hash[:8])
+	return kit.Format("?_v=%s-%s", ice.Info.Make.Version, ice.Info.Make.Hash[:6])
 }
 
 const (

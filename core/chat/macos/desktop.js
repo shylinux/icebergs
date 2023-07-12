@@ -57,9 +57,9 @@ Volcanos(chat.ONIMPORT, {
 		if (can.ConfHeight() < 800) { item.top = 25, item.height = can.ConfHeight()-125, item.width = can.ConfWidth()-110 }
 		if (can.user.isMobile) { item.left = 0, item.top = 25, item.height = can.ConfHeight()-125, item.width = can.ConfWidth() }
 		can.onappend.plugin(can, item, function(sub) { can.ondetail.select(can, sub._target)
-			can.page.style(can, sub._target, html.MIN_WIDTH, 480)
+			// can.page.style(can, sub._target, html.MIN_WIDTH, 480)
 			var index = 0; can.core.Item({
-				"#f95f57": function(event) { sub.onaction.close(event, sub) },
+				"#f95f57": function(event) { sub.onaction._close(event, sub) },
 				"#fcbc2f": function(event) { var dock = can.page.Append(can, can.ui.dock._output, [{view: html.ITEM, list: [{view: html.ICON, list: [{img: can.misc.PathJoin(item.icon)}]}], onclick: function() {
 					can.onmotion.toggle(can, sub._target, true), can.page.Remove(can, dock)
 				}}])._target; sub.onmotion.hidden(sub, sub._target) },
@@ -68,12 +68,15 @@ Volcanos(chat.ONIMPORT, {
 			sub.onappend.desktop = function(item) { can.onimport._item(can, item) }
 			sub.onappend.dock = function(item) { can.ui.dock.runAction(can.request(event, item), mdb.CREATE, [], function() { can.ui.dock.Update() }) }
 			sub.onimport._open = function(sub, msg, arg) { can.onimport._window(can, {index: web.CHAT_IFRAME, args: [arg]}) }
-			sub.onexport.output = function() { if (item.index == "web.chat.macos.opens") { can.page.Remove(can, sub._target) } }
+			sub.onexport.output = function() {
+				if (item.index == "web.chat.macos.opens") { can.page.Remove(can, sub._target) }
+				sub.onimport.size(sub, item.height, can.base.Min(item.width, sub._target.offsetWidth), true)
+			}, sub.onimport.size(sub, item.height, can.base.Min(item.width, sub._target.offsetWidth), true)
 			sub.onexport.record = function(sub, value, key, item) { can.onimport._window(can, item) }
 			sub.onexport.marginTop = function() { return 25 }
+			sub.onexport.marginBottom = function() { return 100 }
 			sub.onexport.actionHeight = function(sub) { return can.page.ClassList.has(can, sub._target, html.OUTPUT)? 0: html.ACTION_HEIGHT+20 },
 			can.onmotion.move(can, sub._target, {"z-index": 10, top: item.top, left: item.left}), sub.onmotion.resize(can, sub._target, function(height, width) { sub.onimport.size(sub, height, width) }, 25)
-			sub.onimport.size(sub, item.height, item.width, true)
 			sub._target.onclick = function(event) { can.page.Select(can, sub._target.parentNode, html.FIELDSET, function(target) { can.page.style(can, target, "z-index", target == sub._target? "10": "9") }) }
 		}, can.ui.desktop)
 	},

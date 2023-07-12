@@ -49,6 +49,24 @@ func _repos_recent(m *ice.Message, repos *git.Repository) (r *plumbing.Reference
 	}
 	return
 }
+func _repos_forword(m *ice.Message, repos *git.Repository, version string) int {
+	if refer, err := repos.Head(); err == nil {
+		if commit, err := repos.CommitObject(refer.Hash()); err == nil {
+			n := 0
+			for {
+				if commit.Hash.String() == version {
+					break
+				}
+				if commit, err = commit.Parent(0); err != nil || commit == nil {
+					break
+				}
+				n++
+			}
+			return n
+		}
+	}
+	return 0
+}
 func _repos_insert(m *ice.Message, p string) {
 	if repos, err := git.PlainOpen(p); err == nil {
 		args := []string{REPOS, path.Base(p), nfs.PATH, p}
@@ -59,7 +77,11 @@ func _repos_insert(m *ice.Message, p string) {
 			}
 		}
 		if refer := _repos_recent(m, repos); refer != nil {
-			args = append(args, VERSION, refer.Name().Short())
+			if n := _repos_forword(m, repos, refer.Hash().String()); n > 0 {
+				args = append(args, VERSION, kit.Format("%s-%d", refer.Name().Short(), n))
+			} else {
+				args = append(args, VERSION, refer.Name().Short())
+			}
 		}
 		if remote, err := repos.Remote("origin"); err == nil {
 			args = append(args, ORIGIN, remote.Config().URLs[0])
@@ -507,16 +529,21 @@ func init() {
 				if _remote, err := repos.Remote(ORIGIN); err == nil {
 					m.Push(REMOTE, kit.Select("", _remote.Config().URLs, 0))
 				}
+				version := ""
+				if refer := _repos_recent(m, repos); refer != nil {
+					m.Push(nfs.VERSION, refer.Name().Short())
+					version = refer.Hash().String()
+				}
 				if refer, err := repos.Head(); err == nil {
 					m.Push(BRANCH, refer.Name().Short())
 					m.Push(mdb.HASH, refer.Hash().String())
-				}
-				if refer := _repos_recent(m, repos); refer != nil {
-					m.Push(nfs.VERSION, refer.Name().Short())
-				}
-				if cfg, err := config.LoadConfig(config.GlobalScope); err == nil {
-					m.Push(aaa.EMAIL, kit.Select(m.Option(ice.MSG_USERNAME)+"@163.com", cfg.User.Email))
-					m.Push(aaa.USERNAME, kit.Select(m.Option(ice.MSG_USERNAME), cfg.User.Name))
+					if commit, err := repos.CommitObject(refer.Hash()); err == nil {
+						m.Push(aaa.USERNAME, commit.Author.Name)
+						m.Push(aaa.EMAIL, commit.Author.Email)
+						m.Push("when", commit.Author.When)
+						m.Push("message", commit.Message)
+						m.Push("forword", _repos_forword(m, repos, version))
+					}
 				}
 			}},
 			TOTAL: {Hand: func(m *ice.Message, arg ...string) {

@@ -21,6 +21,9 @@ type MakeInfo struct {
 	Hostname string
 	Username string
 	Email    string
+	When     string
+	Message  string
+	Forword  string
 }
 
 var Info = struct {

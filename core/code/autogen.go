@@ -83,6 +83,7 @@ func _autogen_git(m *ice.Message, arg ...string) ice.Map {
 		mdb.TIME, m.Time(), nfs.PATH, kit.Path("")+nfs.PS, web.DOMAIN, tcp.PublishLocalhost(m, m.Option(ice.MSG_USERWEB)),
 		mdb.HASH, msg.Append(mdb.HASH), nfs.REMOTE, msg.Append(nfs.REMOTE), nfs.BRANCH, msg.Append(nfs.BRANCH), nfs.VERSION, msg.Append(nfs.VERSION),
 		aaa.EMAIL, msg.Append(aaa.EMAIL), aaa.USERNAME, msg.Append(aaa.USERNAME),
+		msg.AppendSimple("when,message,forword"),
 	)
 }
 func _autogen_mod(m *ice.Message, file string) (mod string) {

@@ -118,6 +118,7 @@ const ( // DIR
 	USR_VOLCANOS = "usr/volcanos/"
 	USR_LEARNING = "usr/learning/"
 	USR_PORTAL   = "usr/portal/"
+	USR_ICONS    = "usr/icons/"
 
 	USR_LOCAL          = "usr/local/"
 	USR_LOCAL_GO       = "usr/local/go/"

@@ -5,6 +5,7 @@ import (
 	"path"
 	"regexp"
 	"strings"
+	"time"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
@@ -22,7 +23,7 @@ func _dir_hash(m *ice.Message, p string) (h string) {
 	kit.If(len(list) > 0, func() { h = kit.Hashs(list) })
 	return ""
 }
-func _dir_list(m *ice.Message, root string, dir string, level int, deep bool, dir_type string, dir_reg *regexp.Regexp, fields []string) *ice.Message {
+func _dir_list(m *ice.Message, root string, dir string, level int, deep bool, dir_type string, dir_reg *regexp.Regexp, fields []string) (total int64, last time.Time) {
 	ls, _ := ReadDir(m, path.Join(root, dir))
 	if len(ls) == 0 {
 		if s, e := StatFile(m, path.Join(root, dir)); e == nil && !s.IsDir() {
@@ -49,6 +50,9 @@ func _dir_list(m *ice.Message, root string, dir string, level int, deep bool, di
 			default:
 				m.ErrorNotImplement(cb)
 			}
+			if s.ModTime().After(last) {
+				last = s.ModTime()
+			}
 			for _, field := range fields {
 				switch field {
 				case mdb.TIME:
@@ -74,6 +78,7 @@ func _dir_list(m *ice.Message, root string, dir string, level int, deep bool, di
 						m.Push(field, _dir_size(m, p))
 					} else {
 						m.Push(field, kit.FmtSize(s.Size()))
+						total += s.Size()
 					}
 				case LINE:
 					if isDir {
@@ -121,10 +126,13 @@ func _dir_list(m *ice.Message, root string, dir string, level int, deep bool, di
 			case "pluged":
 				continue
 			}
-			_dir_list(m, root, pp, level+1, deep, dir_type, dir_reg, fields)
+			_total, _last := _dir_list(m, root, pp, level+1, deep, dir_type, dir_reg, fields)
+			if total += _total; _last.After(last) {
+				last = _last
+			}
 		}
 	}
-	return m
+	return
 }
 
 const (
@@ -171,7 +179,9 @@ func init() {
 			}}, mdb.UPLOAD: {},
 			"finder": {Help: "本机", Hand: func(m *ice.Message, arg ...string) { m.Cmd("cli.system", "opens", "Finder.app") }},
 			TRASH:    {Hand: func(m *ice.Message, arg ...string) { m.Cmd(TRASH, mdb.CREATE, m.Option(PATH)) }},
-			mdb.SHOW: {Hand: func(m *ice.Message, arg ...string) { Show(m.ProcessInner(), m.Option(PATH)) }},
+			mdb.SHOW: {Hand: func(m *ice.Message, arg ...string) {
+				Show(m.ProcessInner(), path.Join(m.Option(DIR_ROOT), m.Option(PATH)))
+			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			root, dir := kit.Select(PWD, m.Option(DIR_ROOT)), kit.Select(PWD, arg, 0)
 			kit.If(strings.HasPrefix(dir, PS), func() { root = "" })
@@ -180,7 +190,8 @@ func init() {
 			}
 			m.Logs(FIND, DIR_ROOT, root, PATH, dir, DIR_TYPE, m.Option(DIR_TYPE))
 			fields := kit.Split(kit.Select(kit.Select(DIR_DEF_FIELDS, m.OptionFields()), kit.Join(kit.Slice(arg, 1))))
-			_dir_list(m, root, dir, 0, m.Option(DIR_DEEP) == ice.TRUE, kit.Select(TYPE_BOTH, m.Option(DIR_TYPE)), regexp.MustCompile(m.Option(DIR_REG)), fields).StatusTimeCount()
+			size, last := _dir_list(m, root, dir, 0, m.Option(DIR_DEEP) == ice.TRUE, kit.Select(TYPE_BOTH, m.Option(DIR_TYPE)), regexp.MustCompile(m.Option(DIR_REG)), fields)
+			m.Status(mdb.TIME, last, mdb.COUNT, kit.Split(m.FormatSize())[0], SIZE, kit.FmtSize(size), kit.MDB_COST, m.FormatCost())
 		}},
 	})
 }

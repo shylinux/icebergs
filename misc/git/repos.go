@@ -484,7 +484,7 @@ func init() {
 				}
 			}},
 			STASH: {Hand: func(m *ice.Message, arg ...string) { _repos_cmd(m, kit.Select(m.Option(REPOS), arg, 0), STASH) }},
-			COMMIT: {Name: "commit actions=add,opt,fix comment*=some", Help: "提交", Hand: func(m *ice.Message, arg ...string) {
+			COMMIT: {Name: "commit actions=add,fix,opt message*=some", Help: "提交", Hand: func(m *ice.Message, arg ...string) {
 				if work, err := _repos_open(m, m.Option(REPOS)).Worktree(); !m.Warn(err) {
 					opt := &git.CommitOptions{All: true}
 					if cfg, err := config.LoadConfig(config.GlobalScope); err == nil {
@@ -496,7 +496,7 @@ func init() {
 							}
 						}
 					}
-					_, err := work.Commit(m.Option("actions")+lex.SP+m.Option("comment"), opt)
+					_, err := work.Commit(m.Option("actions")+lex.SP+m.Option("message"), opt)
 					m.Warn(err)
 				}
 			}},

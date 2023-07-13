@@ -75,7 +75,7 @@ func _binpack_all(m *ice.Message) {
 		}
 		for _, k := range kit.SortedKey(list) {
 			v := kit.Select(k, list[k])
-			m.Cmd(nfs.DIR, nfs.PWD, nfs.PATH, kit.Dict(nfs.DIR_ROOT, v, nfs.DIR_REG, kit.ExtReg(SH, SHY, PY, JS, CSS, HTML))).Table(func(value ice.Maps) {
+			m.Cmd(nfs.DIR, nfs.PWD, nfs.PATH, kit.Dict(nfs.DIR_ROOT, v, nfs.DIR_REG, kit.ExtReg(kit.Split(mdb.Config(m, "extreg"))...))).Table(func(value ice.Maps) {
 				if ice.Info.Make.Remote != "https://shylinux.com/x/contexts" && kit.HasPrefix(k, ice.USR_ICEBERGS) {
 					return
 				}
@@ -90,7 +90,7 @@ func _binpack_all(m *ice.Message) {
 			}
 		})
 		m.Option(nfs.DIR_REG, kit.ExtReg(nfs.SHY))
-		if ice.Info.Make.Remote == "shylinux.com/x/contexts" {
+		if ice.Info.Make.Remote == "https://shylinux.com/x/contexts" {
 			_binpack_dir(m, w, "usr/release/")
 		}
 	}
@@ -103,7 +103,7 @@ func init() {
 		BINPACK: {Name: "binpack path auto create insert", Help: "打包", Actions: ice.MergeActions(ice.Actions{
 			mdb.CREATE: {Hand: func(m *ice.Message, arg ...string) { _binpack_all(m) }},
 			mdb.INSERT: {Name: "insert path*", Hand: func(m *ice.Message, arg ...string) { mdb.HashCreate(m, m.OptionSimple(nfs.PATH)) }},
-		}, mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path"))},
+		}, mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path", "extreg", "sh,shy,py,js,css,html,png,jpg"))},
 	})
 }
 func GoCache(m *ice.Message) string {

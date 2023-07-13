@@ -220,12 +220,9 @@ func (m *Message) resource(file string) string {
 		return file
 	}
 	p := strings.TrimPrefix(kit.FileLines(3), Info.Make.Path)
-	p = strings.TrimPrefix(p, kit.Path("")+PS)
-	if strings.Contains(p, "/pkg/mod/") {
+	if p = strings.TrimPrefix(p, kit.Path("")+PS); strings.Contains(p, "/pkg/mod/") {
 		p = strings.Split(p, "/pkg/mod/")[1]
 	}
-	if file != "" {
-		p = path.Join(path.Dir(p), file)
-	}
+	kit.If(file != "", func() { p = path.Join(path.Dir(p), file) })
 	return "/require/" + p
 }

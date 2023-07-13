@@ -38,7 +38,7 @@ func init() {
 					})
 				})
 			}},
-		}, ctx.ConfAction("skip", kit.DictList("go-git", "go-qrcode", "websocket"))), Hand: func(m *ice.Message, arg ...string) {
+		}, ctx.ConfAction("skip", kit.DictList("go-git", "go-qrcode", "websocket", "webview", "word-dict"))), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 {
 				ReposList(m).Table(func(value ice.Maps) {
 					kit.If(value[REPOS] == arg[0], func() { m.Cmdy("_sum", value[nfs.PATH], arg[1:]) })

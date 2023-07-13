@@ -81,7 +81,7 @@ func init() {
 			m.Options(cli.CMD_ENV, env).Cmd(AUTOGEN, VERSION)
 			defer m.StatusTime(VERSION, strings.TrimPrefix(m.Cmdx(cli.SYSTEM, GO, VERSION), "go version"))
 			kit.If(!strings.Contains(m.Cmdx(nfs.CAT, ice.GO_MOD), "shylinux.com/x/ice"), func() { m.Cmd(cli.SYSTEM, GO, "get", "shylinux.com/x/ice") })
-			if msg := m.Cmd(cli.SYSTEM, GO, cli.BUILD, "-o", file, main, ice.SRC_VERSION_GO, ice.SRC_BINPACK_GO); !cli.IsSuccess(msg) {
+			if msg := m.Cmd(cli.SYSTEM, GO, cli.BUILD, "-ldflags", "-w -s", "-o", file, main, ice.SRC_VERSION_GO, ice.SRC_BINPACK_GO); !cli.IsSuccess(msg) {
 				m.Copy(msg)
 				return
 			}

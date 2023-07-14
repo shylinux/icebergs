@@ -88,11 +88,10 @@ func _status_list(m *ice.Message) (files, adds, dels int, last string) {
 }
 
 const (
-	INSTEADOF = "insteadof"
-	OAUTH     = "oauth"
-	DIFF      = "diff"
-	OPT       = "opt"
-	FIX       = "fix"
+	OAUTH = "oauth"
+	DIFF  = "diff"
+	OPT   = "opt"
+	FIX   = "fix"
 
 	TAGS    = "tags"
 	VERSION = "version"
@@ -111,6 +110,10 @@ func init() {
 						m.Push(arg[0], kit.MergeURL2(ice.Info.Make.Remote, nfs.PS))
 					case nfs.TO:
 						m.Cmd(web.BROAD, func(value ice.Maps) { m.Push(arg[0], kit.Format("http://%s:%s/", value[tcp.HOST], value[tcp.PORT])) })
+					case REMOTE:
+						m.Cmd(web.BROAD, func(value ice.Maps) { m.Push(arg[0], kit.Format("http://%s:%s/x/", value[tcp.HOST], value[tcp.PORT])) })
+						m.Push(arg[0], "http://localhost:9020/x/")
+						m.Push(arg[0], "https://shylinux.com/x/")
 					}
 					return
 				}
@@ -123,12 +126,15 @@ func init() {
 					m.Cmdy(REPOS, mdb.INPUTS, arg)
 				}
 			}},
-			INSTEADOF: {Name: "insteadof from* to", Help: "代理", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(CONFIGS, func(value ice.Maps) {
-					kit.If(value[mdb.VALUE] == m.Option(nfs.FROM), func() { _configs_set(m, "--unset", value[mdb.NAME]) })
-				})
-				kit.If(m.Option(nfs.TO), func() { _git_cmd(m, CONFIG, "--global", "url."+m.Option(nfs.TO)+".insteadof", m.Option(nfs.FROM)) })
+			INSTEADOF: {Name: "insteadof remote", Help: "代理", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(REPOS, INSTEADOF, arg)
 			}},
+			// INSTEADOF: {Name: "insteadof from* to", Help: "代理", Hand: func(m *ice.Message, arg ...string) {
+			// 	m.Cmd(CONFIGS, func(value ice.Maps) {
+			// 		kit.If(value[mdb.VALUE] == m.Option(nfs.FROM), func() { _configs_set(m, "--unset", value[mdb.NAME]) })
+			// 	})
+			// 	kit.If(m.Option(nfs.TO), func() { _git_cmd(m, CONFIG, "--global", "url."+m.Option(nfs.TO)+".insteadof", m.Option(nfs.FROM)) })
+			// }},
 			CONFIGS: {Name: "configs email* username* token", Help: "配置", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.DEFS, kit.HomePath(".gitconfig"), nfs.Template(m, "gitconfig", m.Option(aaa.USERNAME), m.Option(aaa.EMAIL)))
 				mdb.Config(m, aaa.USERNAME, m.Option(aaa.USERNAME))
@@ -136,7 +142,7 @@ func init() {
 				kit.If(m.Option(TOKEN), func() { m.Cmd(TOKEN, "set") })
 			}},
 			OAUTH: {Help: "授权", Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessOpen(kit.MergeURL2(kit.Select(ice.Info.Make.Domain, _git_remote(m)), web.ChatCmdPath(Prefix(TOKEN), "gen"), tcp.HOST, m.Option(ice.MSG_USERWEB)))
+				m.ProcessOpen(kit.MergeURL2(kit.Select(ice.Info.Make.Domain, m.Cmdx(REPOS, "remoteURL")), web.ChatCmdPath(Prefix(TOKEN), "gen"), tcp.HOST, m.Option(ice.MSG_USERWEB)))
 			}},
 			cli.RESTART: {Hand: func(m *ice.Message, arg ...string) {
 				m.Go(func() { m.Cmd(ice.EXIT, "1") }).ProcessHold()
@@ -168,7 +174,7 @@ func init() {
 				m.Action(CONFIGS).Echo("please config email and name. ").EchoButton(CONFIGS)
 			} else if len(arg) == 0 {
 				kit.If(config != nil, func() { m.Option(aaa.EMAIL, kit.Select(mdb.Config(m, aaa.EMAIL), config.User.Email)) })
-				m.Cmdy(REPOS, STATUS).Action(PULL, PUSH, "oauth", CONFIGS, cli.RESTART)
+				m.Cmdy(REPOS, STATUS).Action(PULL, PUSH, "oauth", CONFIGS, INSTEADOF, cli.RESTART)
 			} else {
 				m.Cmdy(REPOS, arg[0], MASTER, INDEX, m.Cmdv(REPOS, arg[0], MASTER, INDEX, nfs.FILE))
 			}

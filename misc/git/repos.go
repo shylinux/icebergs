@@ -372,10 +372,11 @@ const (
 	COMMIT = "commit"
 	BRANCH = "branch"
 
-	REMOTE = "remote"
-	ORIGIN = "origin"
-	MASTER = "master"
-	INDEX  = "index"
+	REMOTE    = "remote"
+	ORIGIN    = "origin"
+	MASTER    = "master"
+	INDEX     = "index"
+	INSTEADOF = "insteadof"
 )
 const REPOS = "repos"
 
@@ -436,28 +437,50 @@ func init() {
 				}
 			}},
 			PULL: {Help: "下载", Hand: func(m *ice.Message, arg ...string) {
+				insteadof := mdb.Config(m, INSTEADOF)
 				_repos_each(m, "", func(repos *git.Repository, value ice.Maps) error {
 					if value[ORIGIN] == "" {
 						return nil
-					} else if work, err := repos.Worktree(); err != nil {
+					}
+					remote, err := repos.Remote("origin")
+					if err != nil {
+						return err
+					}
+					remoteURL := remote.Config().URLs[0]
+					if insteadof != "" {
+						remoteURL = insteadof + path.Base(remoteURL)
+					}
+					if work, err := repos.Worktree(); err != nil {
 						return err
 					} else {
-						return work.Pull(&git.PullOptions{})
+						return work.Pull(&git.PullOptions{RemoteURL: remoteURL})
 					}
 				})
 			}},
+			INSTEADOF: {Name: "insteadof remote", Help: "代理", Hand: func(m *ice.Message, arg ...string) {
+				mdb.Config(m, INSTEADOF, m.Option(REMOTE))
+			}},
 			PUSH: {Help: "上传", Hand: func(m *ice.Message, arg ...string) {
 				list := _repos_credentials(m)
+				insteadof := mdb.Config(m, INSTEADOF)
 				_repos_each(m, "", func(repos *git.Repository, value ice.Maps) error {
 					if value[ORIGIN] == "" {
 						return nil
+					}
+					remote, err := repos.Remote("origin")
+					if err != nil {
+						return err
+					}
+					remoteURL := remote.Config().URLs[0]
+					if insteadof != "" {
+						remoteURL = insteadof + path.Base(remoteURL)
 					}
 					if u, ok := list[kit.ParseURL(value[ORIGIN]).Host]; !ok {
 						return errors.New("not found userinfo")
 					} else if password, ok := u.User.Password(); !ok {
 						return errors.New("not found password")
 					} else {
-						return repos.Push(&git.PushOptions{Auth: &http.BasicAuth{Username: u.User.Username(), Password: password}})
+						return repos.Push(&git.PushOptions{RemoteURL: remoteURL, Auth: &http.BasicAuth{Username: u.User.Username(), Password: password}})
 					}
 				})
 			}},
@@ -518,6 +541,9 @@ func init() {
 						}
 						return _repos_status(m, value[REPOS], repos)
 					})
+					if insteadof := mdb.Config(m, INSTEADOF); insteadof != "" {
+						remote = insteadof + path.Base(remote)
+					}
 					if u, ok := list[kit.ParseURL(remote).Host]; ok {
 						password, _ = u.User.Password()
 					}
@@ -595,6 +621,13 @@ func init() {
 						m.PushButton(kit.Dict(m.CommandKey(), "源码"))
 					})
 				})
+			}},
+			"remoteURL": {Hand: func(m *ice.Message, arg ...string) {
+				remoteURL := _git_remote(m)
+				if insteadof := mdb.Config(m, INSTEADOF); insteadof != "" {
+					remoteURL = insteadof + path.Base(remoteURL)
+				}
+				m.Echo(remoteURL)
 			}},
 			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { web.DreamProcess(m, []string{}, arg...) }},
 			code.INNER:       {Hand: func(m *ice.Message, arg ...string) { _repos_inner(m, _repos_path, arg...) }},

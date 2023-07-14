@@ -1,10 +1,11 @@
 Volcanos(chat.ONIMPORT, {
 	_init: function(can, msg) { can.require(["/plugin/local/wiki/word.js"]), can.Conf(html.PADDING, can.user.isMobile? 10: 40)
-		can.db = {nav: {}}, can.sup.onexport.link = function() { return can.db.prefix }
+		can.db = {nav: {}}
 		var p = "/cmd/web.wiki.portal"
-		can.db.prefix = location.pathname.indexOf(p) > 0? location.pathname.split(p)[0]+p: "/wiki/portal"
+		can.db.prefix = location.pathname.indexOf(p) > 0? location.pathname.split(p)[0]+p: "/wiki/portal/"
 		can.db.current = can.isCmdMode()? can.base.trimPrefix(location.pathname, can.db.prefix+"/", can.db.prefix): can.Option(nfs.PATH)
 		can.onmotion.clear(can)
+			can.sup.onexport.link = function() { return can.db.prefix }
 		can.ui = can.onappend.layout(can, [html.HEADER, [html.NAV, html.MAIN, html.ASIDE]], html.FLOW), can.onimport._scroll(can)
 		can.ui.header.innerHTML = msg.Append(html.HEADER), can.ui.nav.innerHTML = msg.Append(html.NAV)
 		if (msg.Append(html.NAV) == "") {

@@ -190,6 +190,7 @@ func init() {
 			}},
 			SERVE_START: {Hand: func(m *ice.Message, arg ...string) {
 				m.Go(func() {
+					m.Option(ice.MSG_USERIP, "127.0.0.1")
 					cli.Opens(m, mdb.Config(m, cli.OPEN))
 					ssh.PrintQRCode(m, tcp.PublishLocalhost(m, _serve_address(m)))
 				})

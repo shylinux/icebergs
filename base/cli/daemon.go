@@ -147,12 +147,15 @@ func init() {
 	})
 }
 func Opens(m *ice.Message, arg ...string) {
+	m.Debug("what %v", arg)
 	if !tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) {
 		return
 	}
+	m.Debug("what %v", arg)
 	if len(arg) == 0 || arg[0] == "" {
 		return
 	}
+	m.Debug("what %v", arg)
 	switch runtime.GOOS {
 	case DARWIN:
 		if kit.Ext(arg[0]) == "app" {

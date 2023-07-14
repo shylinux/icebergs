@@ -475,7 +475,7 @@ func init() {
 					if insteadof != "" {
 						remoteURL = insteadof + path.Base(remoteURL)
 					}
-					if u, ok := list[kit.ParseURL(value[ORIGIN]).Host]; !ok {
+					if u, ok := list[kit.ParseURL(remoteURL).Host]; !ok {
 						return errors.New("not found userinfo")
 					} else if password, ok := u.User.Password(); !ok {
 						return errors.New("not found password")

@@ -3,6 +3,7 @@ package git
 import (
 	"compress/flate"
 	"compress/gzip"
+	"context"
 	"encoding/base64"
 	"fmt"
 	"io"
@@ -12,7 +13,12 @@ import (
 	"strings"
 
 	"shylinux.com/x/go-git/v5/plumbing"
+	"shylinux.com/x/go-git/v5/plumbing/protocol/packp"
+	"shylinux.com/x/go-git/v5/plumbing/transport"
 	"shylinux.com/x/go-git/v5/plumbing/transport/file"
+	"shylinux.com/x/go-git/v5/plumbing/transport/server"
+	"shylinux.com/x/go-git/v5/utils/ioutil"
+
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
@@ -48,7 +54,36 @@ func _service_param(m *ice.Message, arg ...string) (string, string) {
 	repos, service := arg[0], kit.Select(arg[len(arg)-1], m.Option(SERVICE))
 	return _service_path(m, repos), strings.TrimPrefix(service, "git-")
 }
+func _service_repos2(m *ice.Message, arg ...string) error {
+	repos, service := _service_param(m, arg...)
+	m.Logs(m.R.Method, service, repos)
+	info := false
+	if m.Option(cli.CMD_DIR, repos); strings.HasSuffix(path.Join(arg...), INFO_REFS) {
+		web.RenderType(m.W, "", kit.Format("application/x-git-%s-advertisement", service))
+		_service_writer(m, "# service=git-"+service+lex.NL)
+		info = true
+	} else {
+		web.RenderType(m.W, "", kit.Format("application/x-git-%s-result", service))
+	}
+
+	reader, err := _service_reader(m)
+	if err != nil {
+		return err
+	}
+	defer reader.Close()
+	out := nfs.NewWriteCloser(func(buf []byte) (int, error) { return m.W.Write(buf) }, func() error { return nil })
+	stream := ServerCommand{Stdin: reader, Stdout: out, Stderr: out}
+
+	if service == RECEIVE_PACK {
+		defer m.Cmd(Prefix(SERVICE), mdb.CREATE, mdb.NAME, path.Base(repos))
+		return ServeReceivePack(info, stream, repos)
+	} else {
+		return ServeUploadPack(info, stream, repos)
+	}
+}
 func _service_repos(m *ice.Message, arg ...string) error {
+	return _service_repos2(m, arg...)
+
 	repos, service := _service_param(m, arg...)
 	m.Logs(m.R.Method, service, repos)
 	if m.Option(cli.CMD_DIR, repos); strings.HasSuffix(path.Join(arg...), INFO_REFS) {
@@ -180,4 +215,82 @@ func init() {
 			}
 		}},
 	})
+}
+
+func ServeReceivePack(info bool, srvCmd ServerCommand, path string) error {
+	ep, err := transport.NewEndpoint(path)
+	if err != nil {
+		return err
+	}
+	s, err := server.DefaultServer.NewReceivePackSession(ep, nil)
+	if err != nil {
+		return fmt.Errorf("error creating session: %s", err)
+	}
+	return serveReceivePack(info, srvCmd, s)
+}
+func ServeUploadPack(info bool, srvCmd ServerCommand, path string) error {
+	ep, err := transport.NewEndpoint(path)
+	if err != nil {
+		return err
+	}
+	s, err := server.DefaultServer.NewUploadPackSession(ep, nil)
+	if err != nil {
+		return fmt.Errorf("error creating session: %s", err)
+	}
+	return serveUploadPack(info, srvCmd, s)
+}
+
+type ServerCommand struct {
+	Stderr io.Writer
+	Stdout io.WriteCloser
+	Stdin  io.Reader
+}
+
+func serveReceivePack(info bool, cmd ServerCommand, s transport.ReceivePackSession) error {
+	if info {
+		ar, err := s.AdvertisedReferences()
+		if err != nil {
+			return fmt.Errorf("internal error in advertised references: %s", err)
+		}
+		if err := ar.Encode(cmd.Stdout); err != nil {
+			return fmt.Errorf("error in advertised references encoding: %s", err)
+		}
+		return nil
+	}
+	req := packp.NewReferenceUpdateRequest()
+	if err := req.Decode(cmd.Stdin); err != nil {
+		return fmt.Errorf("error decoding: %s", err)
+	}
+	rs, err := s.ReceivePack(context.TODO(), req)
+	if rs != nil {
+		if err := rs.Encode(cmd.Stdout); err != nil {
+			return fmt.Errorf("error in encoding report status %s", err)
+		}
+	}
+	if err != nil {
+		return fmt.Errorf("error in receive pack: %s", err)
+	}
+	return nil
+}
+func serveUploadPack(info bool, cmd ServerCommand, s transport.UploadPackSession) (err error) {
+	ioutil.CheckClose(cmd.Stdout, &err)
+	if info {
+		ar, err := s.AdvertisedReferences()
+		if err != nil {
+			return err
+		}
+		if err := ar.Encode(cmd.Stdout); err != nil {
+			return err
+		}
+		return nil
+	}
+	req := packp.NewUploadPackRequest()
+	if err := req.Decode(cmd.Stdin); err != nil {
+		return err
+	}
+	resp, err := s.UploadPack(context.TODO(), req)
+	if err != nil {
+		return err
+	}
+	return resp.Encode(cmd.Stdout)
 }

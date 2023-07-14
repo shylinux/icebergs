@@ -111,9 +111,7 @@ func init() {
 					case nfs.TO:
 						m.Cmd(web.BROAD, func(value ice.Maps) { m.Push(arg[0], kit.Format("http://%s:%s/", value[tcp.HOST], value[tcp.PORT])) })
 					case REMOTE:
-						m.Cmd(web.BROAD, func(value ice.Maps) { m.Push(arg[0], kit.Format("http://%s:%s/x/", value[tcp.HOST], value[tcp.PORT])) })
-						m.Push(arg[0], "http://localhost:9020/x/")
-						m.Push(arg[0], "https://shylinux.com/x/")
+						m.Cmd("web.spide", func(value ice.Maps) { m.Push(arg[0], kit.ParseURLMap(value["client.url"])["origin"]+"/x/") })
 					}
 					return
 				}
@@ -174,7 +172,7 @@ func init() {
 				m.Action(CONFIGS).Echo("please config email and name. ").EchoButton(CONFIGS)
 			} else if len(arg) == 0 {
 				kit.If(config != nil, func() { m.Option(aaa.EMAIL, kit.Select(mdb.Config(m, aaa.EMAIL), config.User.Email)) })
-				m.Cmdy(REPOS, STATUS).Action(PULL, PUSH, "oauth", CONFIGS, INSTEADOF, cli.RESTART)
+				m.Cmdy(REPOS, STATUS).Action(PULL, PUSH, INSTEADOF, "oauth", CONFIGS, cli.RESTART)
 			} else {
 				m.Cmdy(REPOS, arg[0], MASTER, INDEX, m.Cmdv(REPOS, arg[0], MASTER, INDEX, nfs.FILE))
 			}

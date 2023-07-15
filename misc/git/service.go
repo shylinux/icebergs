@@ -151,6 +151,12 @@ func init() {
 			}
 
 		case UPLOAD_PACK:
+			if mdb.Conf(m, Prefix(SERVICE), kit.Keym("auth")) == "private" {
+				if err := _service_login(m); m.Warn(err, ice.ErrNotLogin) {
+					web.RenderHeader(m.W, "WWW-Authenticate", `Basic realm="git server"`)
+					return
+				}
+			}
 			if m.Warn(!nfs.Exists(m, repos), ice.ErrNotFound, arg[0]) {
 				return
 			}

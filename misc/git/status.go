@@ -124,15 +124,9 @@ func init() {
 					m.Cmdy(REPOS, mdb.INPUTS, arg)
 				}
 			}},
-			INSTEADOF: {Name: "insteadof remote", Help: "代理", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(REPOS, INSTEADOF, arg)
+			cli.RESTART: {Hand: func(m *ice.Message, arg ...string) {
+				m.Go(func() { m.Cmd(ice.EXIT, "1") }).ProcessHold()
 			}},
-			// INSTEADOF: {Name: "insteadof from* to", Help: "代理", Hand: func(m *ice.Message, arg ...string) {
-			// 	m.Cmd(CONFIGS, func(value ice.Maps) {
-			// 		kit.If(value[mdb.VALUE] == m.Option(nfs.FROM), func() { _configs_set(m, "--unset", value[mdb.NAME]) })
-			// 	})
-			// 	kit.If(m.Option(nfs.TO), func() { _git_cmd(m, CONFIG, "--global", "url."+m.Option(nfs.TO)+".insteadof", m.Option(nfs.FROM)) })
-			// }},
 			CONFIGS: {Name: "configs email* username* token", Help: "配置", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.DEFS, kit.HomePath(".gitconfig"), nfs.Template(m, "gitconfig", m.Option(aaa.USERNAME), m.Option(aaa.EMAIL)))
 				mdb.Config(m, aaa.USERNAME, m.Option(aaa.USERNAME))
@@ -142,14 +136,13 @@ func init() {
 			OAUTH: {Help: "授权", Hand: func(m *ice.Message, arg ...string) {
 				m.ProcessOpen(kit.MergeURL2(kit.Select(ice.Info.Make.Domain, m.Cmdx(REPOS, "remoteURL")), web.ChatCmdPath(Prefix(TOKEN), "gen"), tcp.HOST, m.Option(ice.MSG_USERWEB)))
 			}},
-			cli.RESTART: {Hand: func(m *ice.Message, arg ...string) {
-				m.Go(func() { m.Cmd(ice.EXIT, "1") }).ProcessHold()
+			INSTEADOF: {Name: "insteadof remote", Help: "代理", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(REPOS, INSTEADOF, arg)
 			}},
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
-				if m.Option(mdb.TYPE) != web.WORKER {
+				if !kit.IsIn(m.Option(mdb.TYPE), web.WORKER, web.SERVER) {
 					return
-				}
-				if !nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME), ".git")) {
+				} else if !nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME), ".git")) {
 					m.Push(mdb.TEXT, "")
 					return
 				}

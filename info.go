@@ -10,31 +10,38 @@ import (
 )
 
 type MakeInfo struct {
-	Hash     string
-	Time     string
-	Path     string
-	Module   string
-	Domain   string
-	Remote   string
-	Branch   string
-	Version  string
-	Hostname string
 	Username string
-	Email    string
-	When     string
-	Message  string
-	Forword  string
+	Hostname string
+	Path     string
+	Time     string
+	Git      string
+	Go       string
+
+	Remote  string
+	Branch  string
+	Version string
+	Forword string
+	Author  string
+	Email   string
+	Hash    string
+	When    string
+	Message string
+
+	Domain string
+	Module string
+	System string
 }
 
 var Info = struct {
 	Make MakeInfo
 
+	Username string
 	Hostname string
 	Pathname string
-	Username string
 	PidPath  string
 	Colors   bool
 
+	System    string
 	Domain    string
 	NodeType  string
 	NodeName  string

@@ -555,20 +555,18 @@ func init() {
 				if _remote, err := repos.Remote(ORIGIN); err == nil {
 					m.Push(REMOTE, kit.Select("", _remote.Config().URLs, 0))
 				}
-				version := ""
 				if refer := _repos_recent(m, repos); refer != nil {
 					m.Push(nfs.VERSION, refer.Name().Short())
-					version = refer.Hash().String()
+					m.Push("forword", _repos_forword(m, repos, refer.Hash().String()))
 				}
 				if refer, err := repos.Head(); err == nil {
 					m.Push(BRANCH, refer.Name().Short())
 					m.Push(mdb.HASH, refer.Hash().String())
 					if commit, err := repos.CommitObject(refer.Hash()); err == nil {
-						m.Push(aaa.USERNAME, commit.Author.Name)
 						m.Push(aaa.EMAIL, commit.Author.Email)
+						m.Push("author", commit.Author.Name)
 						m.Push("when", commit.Author.When)
 						m.Push("message", commit.Message)
-						m.Push("forword", _repos_forword(m, repos, version))
 					}
 				}
 			}},

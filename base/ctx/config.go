@@ -150,6 +150,9 @@ func _config_make(m *ice.Message, key string, arg ...string) {
 	msg := m.Spawn(m.Source())
 	if len(arg) > 1 {
 		kit.If(strings.HasPrefix(arg[1], mdb.AT), func() { arg[1] = msg.Cmdx(nfs.CAT, arg[1][1:]) })
+		if !kit.IsIn(strings.Split(arg[0], nfs.PT)[0], mdb.META, mdb.HASH, mdb.LIST) {
+			arg[0] = kit.Keys(mdb.META, arg[0])
+		}
 		mdb.Confv(msg, key, arg[0], kit.Parse(nil, "", arg[1:]...))
 	}
 	if len(arg) > 0 {

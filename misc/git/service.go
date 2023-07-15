@@ -54,7 +54,10 @@ func _service_param(m *ice.Message, arg ...string) (string, string) {
 	repos, service := arg[0], kit.Select(arg[len(arg)-1], m.Option(SERVICE))
 	return _service_path(m, repos), strings.TrimPrefix(service, "git-")
 }
-func _service_repos2(m *ice.Message, arg ...string) error {
+func _service_repos(m *ice.Message, arg ...string) error {
+	if mdb.Conf(m, "web.code.git.service", "meta.cmd") == "git" {
+		return _service_repos0(m, arg...)
+	}
 	repos, service := _service_param(m, arg...)
 	m.Logs(m.R.Method, service, repos)
 	info := false
@@ -81,9 +84,7 @@ func _service_repos2(m *ice.Message, arg ...string) error {
 		return ServeUploadPack(info, stream, repos)
 	}
 }
-func _service_repos(m *ice.Message, arg ...string) error {
-	return _service_repos2(m, arg...)
-
+func _service_repos0(m *ice.Message, arg ...string) error {
 	repos, service := _service_param(m, arg...)
 	m.Logs(m.R.Method, service, repos)
 	if m.Option(cli.CMD_DIR, repos); strings.HasSuffix(path.Join(arg...), INFO_REFS) {
@@ -191,6 +192,9 @@ func init() {
 				mdb.HashSelect(m, arg...).Table(func(value ice.Maps) {
 					m.PushScript(kit.Format("git clone %s", tcp.PublishLocalhost(m, kit.Split(web.MergeURL2(m, "/x/"+value[REPOS]+".git"), mdb.QS)[0])))
 				}).Sort(REPOS).Echo(strings.ReplaceAll(m.Cmdx("web.code.publish", ice.CONTEXTS), "app username", "dev username"))
+				m.Table(func(value ice.Maps) {
+					m.Push(nfs.SIZE, kit.Split(m.Cmdx(cli.SYSTEM, "du", "-sh", path.Join(ice.USR_LOCAL_REPOS, value[REPOS])))[0])
+				})
 			} else if len(arg) == 1 {
 				_repos_branch(m, _repos_open(m, arg[0]))
 				m.EchoScript(tcp.PublishLocalhost(m, kit.Split(web.MergeURL2(m, "/x/"+arg[0]), mdb.QS)[0]))

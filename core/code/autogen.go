@@ -63,7 +63,7 @@ func _autogen_version(m *ice.Message) string {
 	}
 	m.Cmd(nfs.DEFS, ".gitignore", nfs.Template(m, "gitignore"))
 	m.Cmd(nfs.DEFS, ice.SRC_BINPACK_GO, nfs.Template(m, ice.SRC_BINPACK_GO))
-	m.Cmd(nfs.SAVE, ice.SRC_VERSION_GO, kit.Format(nfs.Template(m, ice.SRC_VERSION_GO), _autogen_gits(m, nfs.MODULE, _autogen_mod(m, ice.GO_MOD), tcp.HOSTNAME, ice.Info.Hostname)))
+	m.Cmd(nfs.SAVE, ice.SRC_VERSION_GO, kit.Format(nfs.Template(m, ice.SRC_VERSION_GO), _autogen_gits(m)))
 	m.Cmd(cli.SYSTEM, "gofmt", "-w", ice.SRC_VERSION_GO)
 	m.Cmdy(nfs.DIR, ice.SRC_BINPACK_GO)
 	m.Cmdy(nfs.DIR, ice.SRC_VERSION_GO)
@@ -79,11 +79,12 @@ func _autogen_gits(m *ice.Message, arg ...string) string {
 }
 func _autogen_git(m *ice.Message, arg ...string) ice.Map {
 	msg := m.Cmd("web.code.git.repos", "remote")
-	return kit.Dict(arg,
-		mdb.TIME, m.Time(), nfs.PATH, kit.Path("")+nfs.PS, web.DOMAIN, tcp.PublishLocalhost(m, m.Option(ice.MSG_USERWEB)),
-		mdb.HASH, msg.Append(mdb.HASH), nfs.REMOTE, msg.Append(nfs.REMOTE), nfs.BRANCH, msg.Append(nfs.BRANCH), nfs.VERSION, msg.Append(nfs.VERSION),
-		aaa.EMAIL, msg.Append(aaa.EMAIL), aaa.USERNAME, msg.Append(aaa.USERNAME),
-		msg.AppendSimple("when,message,forword"),
+	return kit.Dict(arg, aaa.USERNAME, ice.Info.Username, tcp.HOSTNAME, ice.Info.Hostname, nfs.PATH, kit.Path("")+nfs.PS, mdb.TIME, m.Time(),
+		GIT, m.Cmdx(cli.SYSTEM, GIT, VERSION), GO, m.Cmdx(cli.SYSTEM, GO, VERSION),
+		msg.AppendSimple("remote,branch,version,forword,author,email,hash,when,message"),
+		web.DOMAIN, tcp.PublishLocalhost(m, m.Option(ice.MSG_USERWEB)),
+		nfs.MODULE, _autogen_mod(m, ice.GO_MOD),
+		cli.SYSTEM, ice.Info.System,
 	)
 }
 func _autogen_mod(m *ice.Message, file string) (mod string) {
@@ -100,12 +101,12 @@ func _autogen_mod(m *ice.Message, file string) (mod string) {
 	return
 }
 
+const (
+	VERSION = "version"
+)
 const AUTOGEN = "autogen"
 
 func init() {
-	const (
-		VERSION = "version"
-	)
 	Index.MergeCommands(ice.Commands{
 		AUTOGEN: {Name: "autogen path auto script module version", Help: "生成", Actions: ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {

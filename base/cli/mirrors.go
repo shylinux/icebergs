@@ -42,18 +42,18 @@ func init() {
 var _release = ""
 
 func release(m *ice.Message) string {
-	osid := runtime.GOOS
-	if osid != LINUX || !nfs.Exists(m, "/etc/os-release") {
-		return osid
+	list := []string{runtime.GOOS}
+	if list[0] != LINUX || !nfs.Exists(m, "/etc/os-release") {
+		return list[0]
 	}
 	m.Option(nfs.CAT_CONTENT, _release)
 	_release = m.Cmdx(nfs.CAT, "/etc/os-release", kit.Dict(ice.MSG_USERROLE, aaa.ROOT), func(text string, _ int) string {
 		if ls := kit.Split(text, mdb.EQ); len(ls) > 1 {
-			kit.Switch(ls[0], []string{"ID", "ID_LIKE"}, func() { osid = strings.TrimSpace(ls[1] + lex.SP + osid) })
+			kit.Switch(ls[0], []string{"ID", "ID_LIKE"}, func() { list = append(list, strings.TrimSpace(ls[1])) })
 		}
 		return text
 	})
-	return osid
+	return strings.Join(list, lex.SP)
 }
 func insert(m *ice.Message, sys, cmd string, arg ...string) bool {
 	if !strings.Contains(release(m), sys) {

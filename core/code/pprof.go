@@ -29,7 +29,7 @@ func init() {
 		http.DefaultServeMux.ServeHTTP(m.W, m.R)
 	}}})
 	Index.MergeCommands(ice.Commands{
-		PPROF: {Name: "pprof zone id auto", Help: "性能分析", Actions: ice.MergeActions(ice.Actions{
+		PPROF: {Name: "pprof zone id auto", Help: "优化", Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case BINNARY:

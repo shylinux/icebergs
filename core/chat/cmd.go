@@ -43,15 +43,15 @@ func init() {
 		), Hand: func(m *ice.Message, arg ...string) {
 			if _cmd_file(m, arg...) {
 				return
-			}
-			if len(arg[0]) == 0 || arg[0] == "" {
+			} else if len(arg[0]) == 0 || arg[0] == "" {
 				return
-			}
-			if m.IsCliUA() {
+			} else if m.IsCliUA() {
 				m.Cmdy(arg, m.Optionv(ice.ARG)).RenderResult()
 				return
 			}
-			if m.Cmdy(ctx.COMMAND, arg[0]); m.Length() > 0 {
+			if arg[0] == "web.chat.portal" {
+				web.RenderMain(m)
+			} else if m.Cmdy(ctx.COMMAND, arg[0]); m.Length() > 0 {
 				web.RenderCmd(m, m.Append(ctx.INDEX), arg[1:])
 			}
 		}},

@@ -57,7 +57,7 @@ const BENCH = "bench"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		BENCH: {Name: "bench zone id auto insert", Help: "性能压测", Actions: ice.MergeActions(ice.Actions{
+		BENCH: {Name: "bench zone id auto insert", Help: "压测", Actions: ice.MergeActions(ice.Actions{
 			mdb.INSERT: {Name: "insert zone*=demo type*=http,redis name=demo text*='http://localhost:9020/chat/cmd/run/web.chat.favor' nconn=10 nreqs=100"},
 			ice.RUN: {Hand: func(m *ice.Message, arg ...string) {
 				switch m.Option(mdb.TYPE) {

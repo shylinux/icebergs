@@ -71,14 +71,31 @@ func init() {
 				m.Cmd("", mdb.CREATE, kit.Dict(web.LINK, m.MergePod(m.Option(mdb.NAME))))
 			}},
 		}, mdb.HashAction(mdb.SHORT, web.LINK, mdb.FIELD, "time,hash,type,name,link"), FavorAction()), Hand: func(m *ice.Message, arg ...string) {
+			list := []string{m.MergePodCmd("", "web.wiki.portal")}
+			if m.Option(ice.MSG_USERPOD) == "" {
+				list = append(list, web.MergeLink(m, "/chat/portal/"))
+			} else {
+				list = append(list, web.MergeLink(m, "/chat/portal/", ice.POD, m.Option(ice.MSG_USERPOD)))
+			}
 			if mdb.HashSelect(m, arg...); len(arg) == 0 {
+				for _, link := range list {
+					m.Push("", kit.Dict(mdb.TIME, m.Time(), mdb.HASH, kit.Hashs(link), mdb.TYPE, web.LINK, web.LINK, link))
+				}
 				if m.Length() == 0 {
 					m.Action(mdb.CREATE)
 				} else {
 					m.PushAction(web.OPEN, mdb.REMOVE).Action(mdb.CREATE, mdb.PRUNES)
 				}
 			} else {
-				kit.If(m.Length() == 0, func() { m.Append(web.LINK, arg[0]) })
+				kit.If(m.Length() == 0, func() {
+					for _, link := range list {
+						if arg[0] == kit.Hashs(link) {
+							m.Append(web.LINK, link)
+							return
+						}
+					}
+					m.Append(web.LINK, arg[0])
+				})
 				m.Action(web.FULL, web.OPEN).StatusTime(m.AppendSimple(web.LINK))
 				ctx.DisplayLocal(m, "")
 			}

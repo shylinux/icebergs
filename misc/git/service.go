@@ -197,7 +197,7 @@ func init() {
 			if len(arg) == 0 {
 				mdb.HashSelect(m, arg...).Table(func(value ice.Maps) {
 					m.PushScript(kit.Format("git clone %s", tcp.PublishLocalhost(m, kit.Split(web.MergeURL2(m, "/x/"+value[REPOS]+".git"), mdb.QS)[0])))
-				}).Sort(REPOS).Echo(strings.ReplaceAll(m.Cmdx("web.code.publish", ice.CONTEXTS), "app username", "dev username"))
+				}).Sort(REPOS).Echo(strings.ReplaceAll(m.Cmdx("web.code.publish", ice.CONTEXTS, "dev"), "app username", "dev username"))
 				m.Table(func(value ice.Maps) {
 					m.Push(nfs.SIZE, kit.Split(m.Cmdx(cli.SYSTEM, "du", "-sh", path.Join(ice.USR_LOCAL_REPOS, value[REPOS])))[0])
 				})

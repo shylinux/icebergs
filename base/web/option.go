@@ -47,6 +47,9 @@ func MergeURL2(m Message, url string, arg ...ice.Any) string {
 	return kit.MergeURL2(m.Option(ice.MSG_USERWEB), url, arg...)
 }
 func MergeLink(m Message, url string, arg ...ice.Any) string {
+	if m.Option(log.DEBUG) == ice.TRUE {
+		arg = append(arg, log.DEBUG, ice.TRUE)
+	}
 	return kit.MergeURL(strings.Split(MergeURL2(m, url), mdb.QS)[0], arg...)
 }
 func ProcessPodCmd(m *ice.Message, pod, cmd string, arg ...ice.Any) {

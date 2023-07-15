@@ -49,9 +49,10 @@ func _publish_contexts(m *ice.Message, arg ...string) {
 			m.Option(web.DOMAIN, m.Cmd(web.SPIDE, ice.SHY).Append(web.CLIENT_ORIGIN))
 		case ice.CORE:
 			m.Option(web.DOMAIN, m.Cmd(web.SPIDE, ice.DEV).Append(web.CLIENT_ORIGIN))
-		case nfs.SOURCE:
+		case nfs.SOURCE, "dev":
 			m.Options(nfs.SOURCE, ice.Info.Make.Remote)
-		case nfs.BINARY:
+		case nfs.BINARY, "app":
+
 		case "wget", "curl":
 		case "manual":
 			m.Options(nfs.BINARY, "ice.linux.amd64")
@@ -117,7 +118,7 @@ func init() {
 			nfs.TRASH:  {Hand: func(m *ice.Message, arg ...string) { nfs.Trash(m, path.Join(ice.USR_PUBLISH, m.Option(nfs.PATH))) }},
 		}, ctx.ConfAction(mdb.FIELD, nfs.PATH), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
 			if m.Option(nfs.DIR_ROOT, ice.USR_PUBLISH); len(arg) == 0 {
-				_publish_list(m).Cmdy("", ice.CONTEXTS)
+				_publish_list(m).Cmdy("", ice.CONTEXTS, "app")
 			} else {
 				m.Cmdy(nfs.DIR, arg[0], "time,path,size,hash,link,action", ice.OptionFields(mdb.DETAIL))
 				web.PushImages(m, web.P(PUBLISH, arg[0]))

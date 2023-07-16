@@ -424,7 +424,7 @@ func init() {
 					if p = path.Join(ice.USR_REQUIRE, path.Join(arg...)); !nfs.Exists(m, p) {
 						ls := strings.SplitN(path.Join(arg[:3]...), mdb.AT, 2)
 						_, err := git.PlainClone(path.Join(ice.USR_REQUIRE, path.Join(arg[:3]...)), false, &git.CloneOptions{
-							URL: "https://" + ls[0], Depth: 1, ReferenceName: plumbing.NewTagReferenceName(kit.Select(ice.Info.Gomod[ls[0]], ls, 1)),
+							URL: "http://" + ls[0], Depth: 1, ReferenceName: plumbing.NewTagReferenceName(kit.Select(ice.Info.Gomod[ls[0]], ls, 1)),
 						})
 						m.Warn(err)
 					}
@@ -624,6 +624,9 @@ func init() {
 				kit.If(m.Option(REPOS), func(p string) {
 					p = strings.Split(p, mdb.QS)[0]
 					kit.If(!strings.Contains(p, "://"), func() { p = web.UserHost(m) + "/x/" + p })
+					if ice.Info.System == cli.LINUX {
+						p = strings.Replace(p, "https", "http", 1)
+					}
 					m.Cmd("", CLONE, ORIGIN, p, nfs.PATH, m.Option(cli.CMD_DIR), ice.Maps{cli.CMD_DIR: ""})
 				})
 			}},

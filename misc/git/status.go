@@ -125,9 +125,6 @@ func init() {
 					m.Cmdy(REPOS, mdb.INPUTS, arg)
 				}
 			}},
-			cli.RESTART: {Hand: func(m *ice.Message, arg ...string) {
-				m.Go(func() { m.Cmd(ice.EXIT, "1") }).ProcessHold()
-			}},
 			CONFIGS: {Name: "configs email* username* token", Help: "配置", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.DEFS, kit.HomePath(".gitconfig"), nfs.Template(m, "gitconfig", m.Option(aaa.USERNAME), m.Option(aaa.EMAIL)))
 				mdb.Config(m, aaa.USERNAME, m.Option(aaa.USERNAME))
@@ -166,7 +163,7 @@ func init() {
 				m.Action(CONFIGS).Echo("please config email and name. ").EchoButton(CONFIGS)
 			} else if len(arg) == 0 {
 				kit.If(config != nil, func() { m.Option(aaa.EMAIL, kit.Select(mdb.Config(m, aaa.EMAIL), config.User.Email)) })
-				m.Cmdy(REPOS, STATUS).Action(PULL, PUSH, INSTEADOF, "oauth", CONFIGS, cli.RESTART)
+				m.Cmdy(REPOS, STATUS).Action(PULL, PUSH, INSTEADOF, "oauth", CONFIGS)
 				m.Cmdy(code.PUBLISH, ice.CONTEXTS, "dev")
 			} else {
 				m.Cmdy(REPOS, arg[0], MASTER, INDEX, m.Cmdv(REPOS, arg[0], MASTER, INDEX, nfs.FILE))

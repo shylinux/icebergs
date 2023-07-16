@@ -1,8 +1,8 @@
-shylinux.com/x/go-git/v5 v5.6.5 h1:PCsK8F6RqBhlxP7b9/WRNlqZRNLdlzXIRW2wY+ZWU/8=
-shylinux.com/x/go-git/v5 v5.6.5/go.mod h1:ACsPql4xUpodEJLKmqYNi6w8LuOOL6IHDhlxV+HGKAM=
+shylinux.com/x/go-git/v5 v5.6.6 h1:olwtZk3AaZ/+0FRYw0OOIRvUuUyGLYC/M2mDYRoAihU=
+shylinux.com/x/go-git/v5 v5.6.6/go.mod h1:ZXj8baUZ1hGdxoYyjKoRG51kSc2i24Bpahj6P+x/jiw=
 shylinux.com/x/go-qrcode v0.0.3 h1:RMo+Vidbgq3HatLBj7DDXcTbTLFUwzis5K7TqBkD38U=
 shylinux.com/x/go-qrcode v0.0.3/go.mod h1:KAbtU+KwiiABMZ/CJ0zh9PI2AX82Uf9rRYcQ4ODm4po=
-shylinux.com/x/toolkits v0.7.7 h1:2wNIYDkngTcFDBKaMg9i91liQotnJgsbxjaN8sxnrno=
-shylinux.com/x/toolkits v0.7.7/go.mod h1:CHDJarGlDkg60kVsvMLYL/a5hAnRLEOShiEsMOuEp0Q=
+shylinux.com/x/toolkits v0.7.8 h1:mNE3KVmCv669OkH92ZsCELkeYlA9/3y9SDrWYbxPTMc=
+shylinux.com/x/toolkits v0.7.8/go.mod h1:CHDJarGlDkg60kVsvMLYL/a5hAnRLEOShiEsMOuEp0Q=
 shylinux.com/x/websocket v0.0.3 h1:edhLwCp0Mv1ITXqIwbVWdXdX2+vui/jRnS25K89k68I=
 shylinux.com/x/websocket v0.0.3/go.mod h1:3UGWkjTu3ie5NAZen7J+uLPBrO7DFeKloj6Jxo13Oiw=

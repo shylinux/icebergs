@@ -17,6 +17,7 @@ import (
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -422,8 +423,9 @@ func init() {
 				if p = path.Join(cache, path.Join(arg...)); !nfs.Exists(m, p) {
 					if p = path.Join(ice.USR_REQUIRE, path.Join(arg...)); !nfs.Exists(m, p) {
 						ls := strings.SplitN(path.Join(arg[:3]...), mdb.AT, 2)
-						to := path.Join(ice.USR_REQUIRE, path.Join(arg[:3]...))
-						_, err := git.PlainClone(to, false, &git.CloneOptions{URL: "https://" + ls[0], ReferenceName: plumbing.NewBranchReferenceName(kit.Select(ice.Info.Gomod[ls[0]], ls, 1))})
+						_, err := git.PlainClone(path.Join(ice.USR_REQUIRE, path.Join(arg[:3]...)), false, &git.CloneOptions{
+							URL: "https://" + ls[0], Depth: 1, ReferenceName: plumbing.NewTagReferenceName(kit.Select(ice.Info.Gomod[ls[0]], ls, 1)),
+						})
 						m.Warn(err)
 					}
 				}
@@ -635,7 +637,7 @@ func init() {
 			}},
 			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { web.DreamProcess(m, []string{}, arg...) }},
 			code.INNER:       {Hand: func(m *ice.Message, arg ...string) { _repos_inner(m, _repos_path, arg...) }},
-		}, aaa.RoleAction(REMOTE), mdb.ClearOnExitHashAction(), mdb.HashAction(mdb.SHORT, REPOS, mdb.FIELD, "time,repos,branch,version,comment,origin")), Hand: func(m *ice.Message, arg ...string) {
+		}, aaa.RoleAction(REMOTE), gdb.EventsAction(web.DREAM_CREATE), mdb.ClearOnExitHashAction(), mdb.HashAction(mdb.SHORT, REPOS, mdb.FIELD, "time,repos,branch,version,comment,origin")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				mdb.HashSelect(m, arg...).Sort(REPOS).PushAction(STATUS, mdb.REMOVE).Action(CLONE, PULL, PUSH, STATUS)
 			} else if len(arg) == 1 {

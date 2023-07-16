@@ -43,7 +43,7 @@ func _dream_list(m *ice.Message) *ice.Message {
 			stats[ice.INIT]++
 		}
 	})
-	return m.Sort("status,type,name", ice.STR, ice.STR, ice.STR_R).StatusTimeCount(stats)
+	return m.Sort("status,type,name", ice.STR, ice.STR, ice.STR).StatusTimeCount(stats)
 }
 func _dream_start(m *ice.Message, name string) {
 	if m.Warn(name == "", ice.ErrNotValid, mdb.NAME) {

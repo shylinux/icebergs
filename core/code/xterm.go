@@ -125,7 +125,20 @@ func init() {
 			ctx.PROCESS: {Hand: func(m *ice.Message, arg ...string) {
 				ctx.ProcessField(m, m.PrefixKey(), func() string { return m.Cmdx("", mdb.CREATE, arg) }, arg...)
 			}},
-			"terminal": {Help: "本机", Hand: func(m *ice.Message, arg ...string) { m.Cmd("cli.system", "opens", "Terminal.app") }},
+			"terminal": {Help: "本机", Hand: func(m *ice.Message, arg ...string) {
+				if h := kit.Select(m.Option(mdb.HASH), arg, 0); h == "" {
+					cli.Opens(m, "Terminal.app")
+				} else {
+					msg := m.Cmd("", h)
+					m.Cmd(cli.SYSTEM, "osascript", "-e", kit.Format(`
+tell application "Terminal"
+	do script "%s"
+	activate
+end tell
+`, msg.Append(mdb.TYPE)))
+				}
+				m.ProcessHold()
+			}},
 		}, ctx.CmdAction(), ctx.ProcessAction(), mdb.ImportantHashAction(mdb.FIELD, "time,hash,type,name,text,path,theme,daemon")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) == 0 {
 				if m.Length() == 0 {

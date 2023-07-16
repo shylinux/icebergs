@@ -32,6 +32,19 @@ type MakeInfo struct {
 	System string
 }
 
+func (s MakeInfo) Versions() string {
+	if s.Hash == "" {
+		return ""
+	}
+	if s.Version == "" {
+		return s.Hash[:6]
+	}
+	if kit.IsIn(s.Forword, "", "0") {
+		return s.Version
+	}
+	return kit.Format("%s-%s-%s", s.Version, s.Forword, s.Hash[:6])
+}
+
 var Info = struct {
 	Make MakeInfo
 

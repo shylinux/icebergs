@@ -36,6 +36,7 @@ const (
 	SHY = "shy"
 	COM = "com"
 	DEV = "dev"
+	APP = "app"
 	OPS = "ops"
 	ICE = "ice"
 	CAN = "can"

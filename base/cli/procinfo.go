@@ -12,7 +12,7 @@ import (
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		PROCINFO: {Name: "procinfo PID auto filter:text docker monitor terminal", Help: "进程列表", Actions: ice.MergeActions(ice.Actions{
+		PROCINFO: {Name: "procinfo PID auto filter:text monitor docker", Help: "进程列表", Actions: ice.MergeActions(ice.Actions{
 			PROCKILL:   {Help: "结束进程", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(gdb.SIGNAL, gdb.STOP, m.Option("PID")).ProcessRefresh() }},
 			"terminal": {Help: "终端", Hand: func(m *ice.Message, arg ...string) { Opens(m, "Terminal.app") }},
 			"monitor":  {Help: "监控", Hand: func(m *ice.Message, arg ...string) { Opens(m, "Activity Monitor.app") }},

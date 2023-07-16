@@ -2,6 +2,7 @@ package chat
 
 import (
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/web"
@@ -12,7 +13,7 @@ const IFRAME = "iframe"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		IFRAME: {Name: "iframe hash auto", Help: "浏览器", Actions: ice.MergeActions(ice.Actions{
+		IFRAME: {Name: "iframe hash auto safari", Help: "浏览器", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				if m.Cmd("").Length() == 0 {
 					m.Cmd(web.SPIDE, ice.OptionFields(web.CLIENT_NAME, web.CLIENT_ORIGIN), func(value ice.Maps) {
@@ -32,6 +33,7 @@ func init() {
 				case mdb.LINK:
 					m.Push(arg[0], m.Option(ice.MSG_USERWEB))
 					m.Push(arg[0], "http://localhost:20000")
+					m.Push(arg[0], "http://localhost:20001")
 					m.Copy(m.Cmd(web.SPIDE).CutTo(web.CLIENT_URL, arg[0]))
 				}
 			}},
@@ -69,6 +71,13 @@ func init() {
 			web.OPEN: {Hand: func(m *ice.Message, arg ...string) { ctx.ProcessOpen(m, m.Option(web.LINK)) }},
 			web.DREAM_CREATE: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd("", mdb.CREATE, kit.Dict(web.LINK, m.MergePod(m.Option(mdb.NAME))))
+			}},
+			"safari": {Help: "本机", Hand: func(m *ice.Message, arg ...string) {
+				if h := kit.Select(m.Option(mdb.HASH), arg, 0); h == "" {
+					cli.Opens(m, "Safari.app")
+				} else {
+					cli.Opens(m, m.Cmd("", h).Append(mdb.LINK))
+				}
 			}},
 		}, mdb.HashAction(mdb.SHORT, web.LINK, mdb.FIELD, "time,hash,type,name,link"), FavorAction()), Hand: func(m *ice.Message, arg ...string) {
 			list := []string{m.MergePodCmd("", "web.wiki.portal")}

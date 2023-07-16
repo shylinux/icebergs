@@ -196,11 +196,9 @@ func init() {
 		}, gdb.EventsAction(web.DREAM_INPUTS), mdb.HashAction(mdb.SHORT, REPOS, mdb.FIELD, "time,repos,branch,version,comment"), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				mdb.HashSelect(m, arg...).Table(func(value ice.Maps) {
-					m.PushScript(kit.Format("git clone %s", tcp.PublishLocalhost(m, kit.Split(web.MergeURL2(m, "/x/"+value[REPOS]+".git"), mdb.QS)[0])))
-				}).Sort(REPOS).Echo(strings.ReplaceAll(m.Cmdx("web.code.publish", ice.CONTEXTS, "dev"), "app username", "dev username"))
-				m.Table(func(value ice.Maps) {
 					m.Push(nfs.SIZE, kit.Split(m.Cmdx(cli.SYSTEM, "du", "-sh", path.Join(ice.USR_LOCAL_REPOS, value[REPOS])))[0])
-				})
+					m.PushScript(kit.Format("git clone %s", tcp.PublishLocalhost(m, kit.Split(web.MergeURL2(m, "/x/"+value[REPOS]+".git"), mdb.QS)[0])))
+				}).Sort(REPOS).Cmdy("web.code.publish", ice.CONTEXTS, "dev")
 			} else if len(arg) == 1 {
 				_repos_branch(m, _repos_open(m, arg[0]))
 				m.EchoScript(tcp.PublishLocalhost(m, kit.Split(web.MergeURL2(m, "/x/"+arg[0]), mdb.QS)[0]))

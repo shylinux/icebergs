@@ -26,7 +26,8 @@ func _space_qrcode(m *ice.Message, dev string) {
 	ssh.PrintQRCode(m, m.Cmdv(SPACE, dev, cli.PWD, mdb.LINK))
 }
 func _space_dial(m *ice.Message, dev, name string, arg ...string) {
-	u := kit.ParseURL(kit.MergeURL2(strings.Replace(m.Cmdv(SPIDE, dev, CLIENT_ORIGIN), HTTP, "ws", 1), PP(SPACE), mdb.TYPE, ice.Info.NodeType, mdb.NAME, name, arg))
+	u := kit.ParseURL(kit.MergeURL2(strings.Replace(m.Cmdv(SPIDE, dev, CLIENT_ORIGIN), HTTP, "ws", 1), PP(SPACE), mdb.TYPE, ice.Info.NodeType, mdb.NAME, name,
+		nfs.MODULE, ice.Info.Make.Module, nfs.VERSION, ice.Info.Make.Versions(), arg))
 	args := kit.SimpleKV("type,name,host,port", u.Scheme, dev, u.Hostname(), u.Port())
 	gdb.Go(m, func() {
 		once := sync.Once{}
@@ -54,7 +55,7 @@ func _space_fork(m *ice.Message) {
 		name = kit.ReplaceAll(addr, "[", "_", "]", "_", nfs.DF, "_", nfs.PT, "_")
 		text = kit.Select(addr, m.Option(mdb.NAME), m.Option(mdb.TEXT))
 	}
-	args := kit.Simple(mdb.TYPE, kit.Select(WORKER, m.Option(mdb.TYPE)), mdb.NAME, name, mdb.TEXT, text, m.OptionSimple(cli.DAEMON, ice.MSG_USERUA))
+	args := kit.Simple(mdb.TYPE, kit.Select(WORKER, m.Option(mdb.TYPE)), mdb.NAME, name, mdb.TEXT, text, m.OptionSimple(cli.DAEMON, ice.MSG_USERUA), m.OptionSimple(nfs.MODULE, nfs.VERSION))
 	if c, e := websocket.Upgrade(m.W, m.R); !m.Warn(e) {
 		gdb.Go(m, func() {
 			defer mdb.HashCreateDeferRemove(m, args, kit.Dict(mdb.TARGET, c))()
@@ -212,13 +213,16 @@ func init() {
 				}
 			}},
 			nfs.PS: {Hand: func(m *ice.Message, arg ...string) { _space_fork(m) }},
-		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,type,name,text", ctx.ACTION, OPEN, REDIAL, kit.Dict("a", 3000, "b", 1000, "c", 1000)), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,type,name,text,module,version", ctx.ACTION, OPEN, REDIAL, kit.Dict("a", 3000, "b", 1000, "c", 1000)), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 {
+				defer m.StatusTimeCount()
 				mdb.HashSelect(m.Spawn(), arg...).Sort("").Table(func(index int, value ice.Maps, field []string) {
 					if kit.IsIn(value[mdb.TYPE], CHROME, "send") {
 						return
 					}
-					m.Push("", value, kit.Split("time,type,name,text,status"))
+					if m.Push("", value, kit.Split(mdb.Config(m, mdb.FIELD))); len(arg) > 0 && arg[0] != "" {
+						m.Push(mdb.STATUS, value[mdb.STATUS])
+					}
 					if kit.IsIn(value[mdb.TYPE], SERVER, WORKER) {
 						m.Push(mdb.LINK, tcp.PublishLocalhost(m, m.MergePod(value[mdb.NAME])))
 					} else {
@@ -226,7 +230,7 @@ func init() {
 					}
 					m.PushButton(kit.Select(OPEN, LOGIN, value[mdb.TYPE] == LOGIN), mdb.REMOVE)
 				})
-				kit.If(!m.IsCliUA(), func() { m.Cmdy("web.code.publish", "contexts", "misc") })
+				kit.If(!m.IsCliUA(), func() { m.Cmdy("web.code.publish", "contexts", ice.APP) })
 				kit.If(len(arg) == 1, func() { m.EchoIFrame(m.MergePod(arg[0])) })
 			} else {
 				_space_send(m, arg[0], kit.Simple(kit.Split(arg[1]), arg[2:])...)

@@ -261,7 +261,7 @@ func _repos_status(m *ice.Message, p string, repos *git.Repository) error {
 					}
 				}
 			}
-			m.Push(REPOS, p).Push(STATUS, "??").Push(nfs.FILE, value[nfs.PATH]).PushButton(ADD)
+			m.Push(REPOS, p).Push(STATUS, "??").Push(nfs.FILE, value[nfs.PATH]).PushButton(ADD, nfs.TRASH)
 		})
 	}
 	return nil
@@ -529,7 +529,6 @@ func init() {
 							if commit, err := repos.CommitObject(refer.Hash()); err == nil {
 								_last := commit.Author.When.Format(ice.MOD_TIME)
 								kit.If(_last > last, func() { last = _last })
-
 							}
 						}
 						if _remote, err := repos.Remote(ORIGIN); err == nil && (remote == "" || remote == path.Base(kit.Path(""))) {
@@ -638,9 +637,7 @@ func init() {
 			code.INNER:       {Hand: func(m *ice.Message, arg ...string) { _repos_inner(m, _repos_path, arg...) }},
 		}, aaa.RoleAction(REMOTE), mdb.ClearOnExitHashAction(), mdb.HashAction(mdb.SHORT, REPOS, mdb.FIELD, "time,repos,branch,version,comment,origin")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
-				mdb.HashSelect(m, arg...).Sort(REPOS).Action(CLONE, PULL, PUSH, STATUS)
-				m.PushAction(STATUS, mdb.REMOVE)
-				m.Echo(strings.ReplaceAll(m.Cmdx(code.PUBLISH, ice.CONTEXTS), "app username", "dev username"))
+				mdb.HashSelect(m, arg...).Sort(REPOS).PushAction(STATUS, mdb.REMOVE).Action(CLONE, PULL, PUSH, STATUS)
 			} else if len(arg) == 1 {
 				_repos_branch(m, _repos_open(m, arg[0]))
 			} else if len(arg) == 2 {

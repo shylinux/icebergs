@@ -2,6 +2,7 @@ package ctx
 
 import (
 	"path"
+	"runtime"
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
@@ -121,6 +122,9 @@ func CmdList(m *ice.Message) *ice.Message {
 
 func IsOrderCmd(key string) bool { return key[0] == '/' || key[0] == '_' }
 func FileURI(dir string) string {
+	if runtime.GOOS == "windows" {
+		dir = strings.ReplaceAll(dir, "\\", "/")
+	}
 	if dir == "" {
 		return ""
 	} else if strings.Contains(dir, "/pkg/mod/") {
@@ -132,7 +136,12 @@ func FileURI(dir string) string {
 	}
 	return path.Join(nfs.PS, ice.REQUIRE, dir)
 }
-func FileCmd(dir string) string { return FileURI(kit.ExtChange(strings.Split(dir, nfs.DF)[0], nfs.GO)) }
+func FileCmd(dir string) string {
+	if strings.Index(dir, ":") == 1 {
+		return FileURI(kit.ExtChange(strings.Join(kit.Slice(strings.Split(dir, ":"), 0, 2), ":"), nfs.GO))
+	}
+	return FileURI(kit.ExtChange(strings.Split(dir, nfs.DF)[0], nfs.GO))
+}
 func AddFileCmd(dir, key string) {
 	ice.Info.File[FileCmd(dir)] = key
 	if ls := strings.SplitN(path.Join(kit.Slice(kit.Split(FileCmd(dir), nfs.PS), 1, 4)...), mdb.AT, 2); len(ls) > 1 {
@@ -168,6 +177,12 @@ func TravelCmd(m *ice.Message, cb func(key, file, line string)) *ice.Message {
 	m.Travel(func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
 		if IsOrderCmd(key) {
 			return
+		}
+		if runtime.GOOS == "windows" {
+			if ls := kit.Split(cmd.FileLine(), nfs.DF); len(ls) > 2 {
+				cb(kit.Keys(s.Prefix(), key), strings.TrimPrefix(strings.Join(kit.Slice(ls, 0, -1), nfs.DF), kit.Path("")+nfs.PS), kit.Select("1", ls, -1))
+				return
+			}
 		}
 		if ls := kit.Split(cmd.FileLine(), nfs.DF); len(ls) > 0 && cmd.Name != "" {
 			cb(kit.Keys(s.Prefix(), key), strings.TrimPrefix(ls[0], kit.Path("")+nfs.PS), kit.Select("1", ls, 1))

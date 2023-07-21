@@ -22,9 +22,9 @@ func _xterm_get(m *ice.Message, h string) xterm.XTerm {
 	h = kit.Select(m.Option(mdb.HASH), h)
 	m.Assert(h != "")
 	if m.Option(ice.MSG_USERPOD) == "" {
-		mdb.HashModify(m, mdb.TIME, m.Time(), cli.DAEMON, kit.Keys(m.Option("__target"), m.Option(ice.MSG_DAEMON)))
-	} else {
 		mdb.HashModify(m, mdb.TIME, m.Time(), cli.DAEMON, kit.Keys(m.Option(ice.MSG_DAEMON)))
+	} else {
+		mdb.HashModify(m, mdb.TIME, m.Time(), cli.DAEMON, kit.Keys(kit.Slice(kit.Simple(m.Optionv("__target")), 0, -1), m.Option(ice.MSG_DAEMON)))
 	}
 	return mdb.HashSelectTarget(m, h, func(value ice.Maps) ice.Any {
 		text := strings.Split(value[mdb.TEXT], lex.NL)
@@ -60,7 +60,7 @@ func _xterm_get(m *ice.Message, h string) xterm.XTerm {
 	}).(xterm.XTerm)
 }
 func _xterm_echo(m *ice.Message, h string, str string) {
-	m.Options(ice.MSG_DAEMON, mdb.HashSelectField(m, h, cli.DAEMON))
+	m.Options(ice.LOG_DISABLE, ice.TRUE, "__target", "", ice.MSG_DAEMON, mdb.HashSelectField(m, h, cli.DAEMON))
 	web.PushNoticeGrow(m, h, str)
 }
 func _xterm_cmds(m *ice.Message, h string, cmd string, arg ...ice.Any) {

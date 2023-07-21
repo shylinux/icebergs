@@ -11,6 +11,13 @@ const PROCESS = "process"
 var _process = map[string]ice.Any{}
 
 func AddProcess(key string, val ice.Any) { _process[key] = val }
+func ProcessAction() ice.Actions {
+	return ice.Actions{
+		ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { AddProcess(m.CommandKey(), m.PrefixKey()) }},
+		PROCESS:      {Hand: func(m *ice.Message, arg ...string) { ProcessField(m, m.PrefixKey(), arg, arg...) }},
+	}
+}
+
 func _process_args(m *ice.Message, args ice.Any) []string {
 	switch cb := args.(type) {
 	case func() string:
@@ -51,9 +58,6 @@ func ProcessField(m *ice.Message, cmd string, args ice.Any, arg ...string) *ice.
 	}
 	return m
 }
-func ProcessFloat(m *ice.Message, arg ...string) {
-	m.Cmdy(COMMAND, arg[0]).Options(ice.MSG_PROCESS, ice.PROCESS_FLOAT, ice.PROCESS_ARG, arg)
-}
 func ProcessCommand(m *ice.Message, cmd string, args []string, arg ...string) {
 	if !kit.HasPrefixList(arg, ice.RUN) {
 		m.Cmdy(COMMAND, cmd).Push(ice.ARG, kit.Format(args)).ProcessField(cmd, ice.RUN)
@@ -61,18 +65,8 @@ func ProcessCommand(m *ice.Message, cmd string, args []string, arg ...string) {
 		m.Cmdy(cmd, arg[1:])
 	}
 }
-func ProcessCmds(m *ice.Message, cmd string, arg ...string) {
-	m.Cmdy(COMMAND, cmd).Push(ice.ARG, kit.Format(arg)).ProcessField(ACTION, ice.RUN, cmd)
-}
 
 func ProcessRefresh(m *ice.Message, arg ...string)  { m.ProcessRefresh(arg...) }
 func ProcessRewrite(m *ice.Message, arg ...ice.Any) { m.ProcessRewrite(arg...) }
 func ProcessHold(m *ice.Message, text ...ice.Any)   { m.Process(ice.PROCESS_HOLD, text...) }
 func ProcessOpen(m *ice.Message, url string)        { m.Process(ice.PROCESS_OPEN, url) }
-
-func ProcessAction() ice.Actions {
-	return ice.Actions{
-		ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { AddProcess(m.CommandKey(), m.PrefixKey()) }},
-		PROCESS:      {Hand: func(m *ice.Message, arg ...string) { ProcessField(m, m.PrefixKey(), arg, arg...) }},
-	}
-}

@@ -23,6 +23,7 @@ fieldset.macos.desktop>div.output>div.desktop>div.item:hover { background-color:
 fieldset.macos.desktop>div.output>div.desktop>div.item img { width:80px; border-radius:80px; }
 fieldset.macos.desktop>div.output>div.desktop>div.item>div.name { font-size:12px; width:80px; overflow:hidden; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset { border-radius:10px; position:absolute; }
+fieldset.macos.desktop>div.output>div.desktop>fieldset input:not([type=button]) {width: 150px;}
 fieldset.macos.desktop>div.output>div.desktop>fieldset>div.output>table.content { width:100%; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>div.output>table.content th { padding:10px; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>div.output>table.content td { padding:10px; }

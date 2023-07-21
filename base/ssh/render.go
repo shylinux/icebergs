@@ -9,20 +9,20 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func Render(msg *ice.Message, cmd string, arg ...ice.Any) (res string) {
+func Render(m *ice.Message, cmd string, arg ...ice.Any) (res string) {
 	switch args := kit.Simple(arg...); cmd {
 	case ice.RENDER_RESULT:
-		kit.If(len(args) > 0, func() { msg.Resultv(args) })
-		res = msg.Result()
+		kit.If(len(args) > 0, func() { m.Resultv(args) })
+		res = m.Result()
 	case ice.RENDER_VOID:
 		return res
 	default:
-		if res = msg.Result(); res == "" {
-			res = msg.TableEcho().Result()
+		if res = m.Result(); res == "" {
+			res = m.TableEchoWithStatus().Result()
 		}
 	}
-	if fmt.Fprint(msg.O, res); !strings.HasSuffix(res, lex.NL) {
-		fmt.Fprint(msg.O, lex.NL)
+	if fmt.Fprint(m.O, res); !strings.HasSuffix(res, lex.NL) {
+		fmt.Fprint(m.O, lex.NL)
 	}
 	return res
 }

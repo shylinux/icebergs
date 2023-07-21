@@ -102,11 +102,11 @@ func (f *Frame) parse(m *ice.Message, h, line string) string {
 	return ""
 }
 func (f *Frame) scan(m *ice.Message, h, line string) *Frame {
-	// kit.If(f.source == STDIO, func() { m.Options(MESSAGE, m, ice.LOG_DISABLE, ice.TRUE) })
+	kit.If(f.source == STDIO, func() { m.Option(ice.LOG_DISABLE, ice.TRUE) })
 	f.ps1 = kit.Simple(mdb.Confv(m, PROMPT, kit.Keym(PS1)))
 	f.ps2 = kit.Simple(mdb.Confv(m, PROMPT, kit.Keym(PS2)))
-	m.I, m.O = f.stdin, f.stdout
 	ps, bio := f.ps1, bufio.NewScanner(f.stdin)
+	m.I, m.O = f.stdin, f.stdout
 	for f.prompt(m, ps...); f.stdin != nil && bio.Scan(); f.prompt(m, ps...) {
 		if len(bio.Text()) == 0 && h == STDIO {
 			continue
@@ -116,20 +116,16 @@ func (f *Frame) scan(m *ice.Message, h, line string) *Frame {
 			line += lex.NL
 			ps = f.ps2
 			continue
-		}
-		if len(bio.Text()) == 0 {
+		} else if len(bio.Text()) == 0 {
 			continue
-		}
-		if strings.HasSuffix(bio.Text(), "\\") {
+		} else if strings.HasSuffix(bio.Text(), "\\") {
 			line += bio.Text()[:len(bio.Text())-1]
 			ps = f.ps2
 			continue
-		}
-		if strings.HasPrefix(strings.TrimSpace(line), "#") {
+		} else if strings.HasPrefix(strings.TrimSpace(line), "#") {
 			line = ""
 			continue
-		}
-		if ps = f.ps1; f.stdout == os.Stdout && ice.Info.Colors {
+		} else if ps = f.ps1; f.stdout == os.Stdout && ice.Info.Colors {
 			f.printf(m, "\033[0m")
 		}
 		line = f.parse(m, h, line)
@@ -138,12 +134,7 @@ func (f *Frame) scan(m *ice.Message, h, line string) *Frame {
 }
 
 func (f *Frame) Begin(m *ice.Message, arg ...string) {
-	switch strings.Split(os.Getenv(cli.TERM), "-")[0] {
-	case "xterm", "screen":
-		ice.Info.Colors = true
-	default:
-		ice.Info.Colors = false
-	}
+	ice.Info.Colors = kit.IsIn(strings.Split(os.Getenv(cli.TERM), "-")[0], "xterm", "screen")
 }
 func (f *Frame) Start(m *ice.Message, arg ...string) {
 	m.Optionv(FRAME, f)

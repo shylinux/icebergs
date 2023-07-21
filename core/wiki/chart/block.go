@@ -79,7 +79,7 @@ func (b *Block) GetWidth(str ...string) int {
 	s := kit.Select(b.Text, str, 0)
 	cn := (len(s) - len([]rune(s))) / 2
 	en := len([]rune(s)) - cn
-	return cn*b.FontSize + en*b.FontSize*10/16 + b.Padding
+	return cn*b.FontSize + en*b.FontSize*12/16 + b.Padding
 }
 func (b *Block) GetWidths(str ...string) int {
 	return b.GetWidth(str...) + b.MarginX

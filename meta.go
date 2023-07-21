@@ -288,6 +288,17 @@ func (m *Message) TableEcho() *Message {
 	}
 	return m
 }
+func (m *Message) TableEchoWithStatus() *Message {
+	m.TableEcho()
+	list := []string{}
+	kit.For(kit.UnMarshal(m.Option(MSG_STATUS)), func(index int, value Map) {
+		list = append(list, kit.Format("%s: %s", value[NAME], value[VALUE]))
+	})
+	if len(list) > 0 {
+		m.Echo(strings.Join(list, SP)).Echo(NL)
+	}
+	return m
+}
 
 const (
 	STR   = "str"

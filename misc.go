@@ -33,18 +33,19 @@ func (m *Message) Split(str string, arg ...string) *Message {
 					}
 				}
 			}
+			kit.For(fields, func(i int, v string) { fields[i] = strings.TrimPrefix(strings.TrimSpace(v), "%") })
 			continue
 		}
 		if len(indexs) > 0 {
 			for i, v := range indexs {
 				if v >= len(l) {
-					m.Push(strings.TrimSpace(kit.Select(SP, fields, i)), "")
+					m.Push(kit.Select(SP, fields, i), "")
 					continue
 				}
 				if i == len(indexs)-1 {
-					m.Push(strings.TrimSpace(kit.Select(SP, fields, i)), strings.TrimSpace(l[v:]))
+					m.Push(kit.Select(SP, fields, i), strings.TrimSpace(l[v:]))
 				} else {
-					m.Push(strings.TrimSpace(kit.Select(SP, fields, i)), strings.TrimSpace(l[v:indexs[i+1]]))
+					m.Push(kit.Select(SP, fields, i), strings.TrimSpace(l[v:indexs[i+1]]))
 				}
 			}
 			continue

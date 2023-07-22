@@ -75,6 +75,13 @@ func init() {
 					m.Echo(`%s	%s	%s;" f`+lex.NL, value[mdb.NAME], value[nfs.FILE], value[nfs.LINE])
 				}).Cmd(nfs.SAVE, nfs.TAGS, m.Result())
 			}},
+			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
+				if len(arg) > 0 && arg[0] != "" {
+					m.Cmdy(arg).Search(arg[0], func(key string, cmd *ice.Command) {
+						m.Cut(kit.Format(kit.Value(cmd.List, kit.Format("%d.name", len(arg)-1))))
+					})
+				}
+			}},
 		}, CmdAction(), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				m.Cmdy("", mdb.SEARCH, COMMAND, ice.OptionFields(INDEX)).StatusTimeCount()

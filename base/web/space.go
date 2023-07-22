@@ -80,14 +80,14 @@ func _space_handle(m *ice.Message, safe bool, name string, c *websocket.Conn) {
 			break
 		}
 		msg := m.Spawn(b)
+		if safe { // 下行命令
+			msg.OptionDefault(ice.MSG_USERROLE, aaa.UserRole(msg, msg.Option(ice.MSG_USERNAME)))
+		} else { // 上行请求
+			msg.Option(ice.MSG_USERROLE, aaa.VOID)
+		}
 		source, target := kit.Simple(msg.Optionv(ice.MSG_SOURCE), name), kit.Simple(msg.Optionv(ice.MSG_TARGET))
 		msg.Log(tcp.RECV, "%v->%v %v %v", source, target, msg.Detailv(), msg.FormatsMeta(nil))
 		if next := msg.Option(ice.MSG_TARGET); next == "" || len(target) == 0 {
-			if safe { // 下行命令
-				msg.Option(ice.MSG_USERROLE, aaa.UserRole(msg, msg.Option(ice.MSG_USERNAME)))
-			} else { // 上行请求
-				msg.Option(ice.MSG_USERROLE, aaa.VOID)
-			}
 			m.Go(func() { _space_exec(msg, source, target, c) }, strings.Join(kit.Simple(SPACE, name, msg.Detailv()), lex.SP))
 		} else {
 			done := false
@@ -140,6 +140,7 @@ func _space_send(m *ice.Message, name string, arg ...string) (h string) {
 	h = mdb.HashCreate(m.Spawn(), mdb.TYPE, tcp.SEND, mdb.NAME, kit.Keys(name, m.Target().ID()), mdb.TEXT, kit.Join(arg, lex.SP), kit.Dict(mdb.TARGET, done))
 	if target := kit.Split(name, nfs.PT, nfs.PT); mdb.HashSelectDetail(m, target[0], func(value ice.Map) {
 		if c, ok := value[mdb.TARGET].(*websocket.Conn); !m.Warn(!ok, ice.ErrNotValid, mdb.TARGET) {
+			kit.For([]string{ice.MSG_USERROLE}, func(k string) { m.Optionv(k, m.Optionv(k)) })
 			kit.For(m.Optionv(ice.MSG_OPTS), func(k string) { m.Optionv(k, m.Optionv(k)) })
 			_space_echo(m.Set(ice.MSG_DETAIL, arg...), []string{h}, target, c)
 		}

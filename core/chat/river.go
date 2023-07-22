@@ -49,15 +49,11 @@ func init() {
 				case nfs.TEMPLATE:
 					m.Cmdy(TEMPLATE).CutTo(RIVER, arg[0])
 				case web.SPACE:
-					m.Cmd(web.SPACE, func(value ice.Maps) {
-						kit.If(kit.IsIn(value[mdb.TYPE], web.WORKER), func() { m.Push(arg[0], value[mdb.NAME]) })
-					})
+					m.Cmdy(web.SPACE).CutTo(mdb.NAME, arg[0])
 				case ctx.INDEX:
-					if m.Option(web.SPACE) == "" {
-						m.Cmdy(ctx.COMMAND)
-					} else {
-						m.Cmdy(web.SPACE, m.Option(web.SPACE), ctx.COMMAND)
-					}
+					m.Cmdy(web.Space(m, m.Option(web.SPACE)), ctx.COMMAND)
+				case ctx.ARGS:
+					m.Cmdy(web.Space(m, m.Option(web.SPACE)), ctx.COMMAND, mdb.INPUTS, m.Option(ctx.INDEX))
 				default:
 					mdb.HashInputs(m, arg)
 				}

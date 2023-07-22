@@ -33,7 +33,24 @@ func init() {
 				AppInstall(m, "", web.CODE_GIT_STATUS, mdb.ICON, "usr/icons/git.jpg")
 			}},
 			code.INSTALL: {Hand: func(m *ice.Message, arg ...string) { AppInstall(m, arg[0], arg[1], arg[2:]...) }},
-		}, CmdHashAction("index,args"))},
+			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
+				switch arg[0] {
+				case web.SPACE:
+					m.Cmdy(web.SPACE).CutTo(mdb.NAME, arg[0])
+				case ctx.INDEX:
+					m.Cmdy(web.Space(m, m.Option(web.SPACE)), ctx.COMMAND)
+				case ctx.ARGS:
+					m.Cmdy(web.Space(m, m.Option(web.SPACE)), ctx.COMMAND, mdb.INPUTS, m.Option(ctx.INDEX))
+				case mdb.ICON:
+					if m.Option(ctx.INDEX) != "" {
+						m.Cmd(web.Space(m, m.Option(web.SPACE)), m.Option(ctx.INDEX), mdb.INPUTS, arg[0]).Table(func(value ice.Maps) {
+							m.Push(arg[0], value[arg[0]]+"?pod="+kit.Keys(m.Option(ice.MSG_USERPOD), m.Option(web.SPACE)))
+						})
+					}
+					m.Cmd(nfs.DIR, USR_ICONS, func(value ice.Maps) { m.Push(arg[0], value[nfs.PATH]) })
+				}
+			}}, mdb.CREATE: {Name: "create space index args name icon"},
+		}, CmdHashAction("space,index,args"))},
 	})
 }
 func install(m *ice.Message, cmd, name, index string, arg ...string) {

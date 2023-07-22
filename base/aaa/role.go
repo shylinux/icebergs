@@ -57,6 +57,11 @@ const (
 	BLACK = "black"
 	RIGHT = "right"
 )
+const (
+	AUTH    = "auth"
+	PUBLIC  = "public"
+	PRIVATE = "private"
+)
 const ROLE = "role"
 
 func init() {

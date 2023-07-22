@@ -52,8 +52,7 @@ func _space_fork(m *ice.Message) {
 	text := kit.Select(addr, m.Option(mdb.TEXT))
 	if kit.IsIn(m.Option(mdb.TYPE), CHROME) && m.Option(mdb.NAME) != "chrome" || !(ice.Info.Localhost && tcp.IsLocalHost(m, m.R.RemoteAddr) ||
 		m.Option(TOKEN) != "" && m.Cmdv(TOKEN, m.Option(TOKEN), mdb.TIME) > m.Time()) {
-		name = kit.ReplaceAll(addr, "[", "_", "]", "_", nfs.DF, "_", nfs.PT, "_")
-		text = kit.Select(addr, m.Option(mdb.NAME), m.Option(mdb.TEXT))
+		name, text = kit.Hashs(name), kit.Select(addr, m.Option(mdb.NAME), m.Option(mdb.TEXT))
 	}
 	args := kit.Simple(mdb.TYPE, kit.Select(WORKER, m.Option(mdb.TYPE)), mdb.NAME, name, mdb.TEXT, text, m.OptionSimple(cli.DAEMON, ice.MSG_USERUA), m.OptionSimple(nfs.MODULE, nfs.VERSION))
 	if c, e := websocket.Upgrade(m.W, m.R); !m.Warn(e) {

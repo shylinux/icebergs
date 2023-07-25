@@ -124,29 +124,32 @@ func _repos_each(m *ice.Message, title string, cb func(*git.Repository, ice.Maps
 	})
 
 }
-func _repos_each_origin(m *ice.Message, title string, cb func(*git.Repository, string, *http.BasicAuth, ice.Maps) error) {
+func _repos_auth(m *ice.Message, origin string) *http.BasicAuth {
 	list := _repos_credentials(m)
-	insteadof := mdb.Config(m, INSTEADOF)
+	if insteadof := mdb.Config(m, INSTEADOF); insteadof != "" {
+		origin = insteadof + path.Base(origin)
+	}
+	if u, ok := list[kit.ParseURL(origin).Host]; !ok {
+		return nil
+	} else if password, ok := u.User.Password(); !ok {
+		return nil
+	} else {
+		return &http.BasicAuth{Username: u.User.Username(), Password: password}
+	}
+}
+func _repos_each_origin(m *ice.Message, title string, cb func(*git.Repository, string, *http.BasicAuth, ice.Maps) error) {
 	_repos_each(m, "", func(repos *git.Repository, value ice.Maps) error {
 		if value[ORIGIN] == "" {
 			return nil
-		}
-		remote, err := repos.Remote("origin")
-		if err != nil {
+		} else if remote, err := repos.Remote("origin"); err != nil {
 			return err
-		}
-		remoteURL := remote.Config().URLs[0]
-		if insteadof != "" {
-			remoteURL = insteadof + path.Base(remoteURL)
-		}
-		if u, ok := list[kit.ParseURL(remoteURL).Host]; !ok {
-			// return errors.New("not found userinfo")
-		} else if password, ok := u.User.Password(); !ok {
-			// return errors.New("not found password")
 		} else {
-			return cb(repos, remoteURL, &http.BasicAuth{Username: u.User.Username(), Password: password}, value)
+			remoteURL := remote.Config().URLs[0]
+			if insteadof := mdb.Config(m, INSTEADOF); insteadof != "" {
+				remoteURL = insteadof + path.Base(remoteURL)
+			}
+			return cb(repos, remoteURL, _repos_auth(m, remote.Config().URLs[0]), value)
 		}
-		return cb(repos, remoteURL, nil, value)
 	})
 }
 func _repos_branch(m *ice.Message, repos *git.Repository) error {
@@ -458,7 +461,7 @@ func init() {
 			CLONE: {Name: "clone origin* branch name path", Help: "克隆", Hand: func(m *ice.Message, arg ...string) {
 				m.OptionDefault(mdb.NAME, path.Base(m.Option(ORIGIN)))
 				m.OptionDefault(nfs.PATH, path.Join(path.Join(nfs.USR, m.Option(mdb.NAME))))
-				if _, err := git.PlainClone(m.Option(nfs.PATH), false, &git.CloneOptions{URL: m.Option(ORIGIN)}); m.Warn(err) {
+				if _, err := git.PlainClone(m.Option(nfs.PATH), false, &git.CloneOptions{URL: m.Option(ORIGIN), Auth: _repos_auth(m, m.Option(ORIGIN))}); m.Warn(err) {
 					_repos_insert(m, m.Option(nfs.PATH))
 				}
 			}},

@@ -3,13 +3,14 @@ Volcanos(chat.ONIMPORT, {
 		(!can.page.ClassList.has(can, document.body, cli.BLACK) || can.isCmdMode()) && can.onlayout.background(can, can.user.info.background||"/require/usr/icons/background.jpg", can._fields)
 		can.ui = {}, can.base.isFunc(cb) && cb(msg), can.onmotion.clear(can)
 		can.onimport._menu(can), can.onimport._dock(can), can.onimport._searchs(can), can.onimport._notifications(can), can.onimport.layout(can)
+		can.onkeymap._build(can)
 	},
-	_menu: function(can) { can.onappend.plugin(can, {index: "web.chat.macos.menu", style: html.OUTPUT}, function(sub) { can.ui.menu = sub
+	_menu: function(can) { can.onappend.plugin(can, {index: "web.chat.macos.menu", style: html.OUTPUT, _space: can.Conf("_space")}, function(sub) { can.ui.menu = sub
 		sub.onexport.record = function(_, value, key, item) { delete(can.onfigure._path)
 			switch (value) {
 				case "create": can.onaction.create(event, can); break
 				case "desktop": var carte = can.user.carte(event, can, {}, can.core.Item(can.onfigure), function(event, button, meta, carte) { can.onfigure[button](event, can, carte) }); break
-				case "searchs": can.onmotion.toggle(can, can.ui.searchs._target); break
+				case "searchs": can.onaction._search(can); break
 				case "notifications": can.ui.notifications._output.innerHTML && can.onmotion.toggle(can, can.ui.notifications._target); break
 				default: can.onimport._window(can, value)
 			}
@@ -29,6 +30,7 @@ Volcanos(chat.ONIMPORT, {
 			if (can.base.isIn(item.type, web.LINK, web.WORKER, web.SERVER, web.GATEWAY)) { can.onimport._window(can, {index: web.CHAT_IFRAME, args: [item.text]}), can.onkeymap.prevent(event) }
 			if (item.type == ssh.SHELL) { can.onimport._window(can, {index: web.CODE_XTERM, args: [item.text]}) }
 		}, can.ConfHeight() < 800 && can.onmotion.delay(can, function() { can.onmotion.hidden(can, sub._target) })
+		sub.onaction._close = function() { can.onmotion.hidden(can, sub._target) }
 		can.onmotion.hidden(can, sub._target)
 	}) },
 	_notifications: function(can) { can.onappend.plugin(can, {index: "web.chat.macos.notifications", style: html.OUTPUT}, function(sub) { can.ui.notifications = sub
@@ -90,8 +92,22 @@ Volcanos(chat.ONIMPORT, {
 	},
 }, [""])
 Volcanos(chat.ONACTION, {list: ["full"],
+	_search: function(can) {
+		if (can.onmotion.toggle(can, can.ui.searchs._target)) {
+			can.page.Select(can, can.ui.searchs._option, "input[name=keyword]", function(target) { can.onmotion.focus(can, target) })
+		}
+	},
 	create: function(event, can, button) { can.onimport._desktop(can) },
 	full: function(event, can) { document.body.requestFullscreen() },
+	onkeydown: function(event, can) {
+		can.db._key_list = can.onkeymap._parse(event, can, mdb.PLUGIN, can.db._key_list, can.ui.content)
+	},
+})
+Volcanos(chat.ONKEYMAP, {
+	_mode: {plugin: {
+		" ": function(event, can) { can.onkeymap.prevent(event), can.onaction._search(can) },
+		"Escape": function(event, can) { can.onmotion.hidden(can, can.ui.searchs._target) },
+	}}, _engine: {},
 })
 Volcanos(chat.ONDETAIL, {
 	select: function(can, target) { can.page.SelectChild(can, can.ui.desktop, html.FIELDSET, function(fieldset) {

@@ -22,6 +22,8 @@ fieldset.web.wiki.portal.home>div.output>div.layout>div.main p { white-space:pre
 fieldset.web.wiki.portal>div.output>div.layout>div.main>* { margin:20px auto; }
 fieldset.web.wiki.portal>div.output>div.layout>div.main h2 { margin-top:40px; }
 fieldset.web.wiki.portal>div.output>div.layout>div.main h3 { margin-top:20px; }
+fieldset.web.wiki.portal>div.output>div.layout>div.main ul { margin:20px 40px; }
+fieldset.web.wiki.portal>div.output>div.layout>div.main ol { margin:20px 40px; }
 fieldset.web.wiki.portal>div.output>div.layout>div.main p code {
 	background-color:var(--code-bg-color); color:var(--code-fg-color); padding:0 10px;
 }

@@ -17,7 +17,14 @@ import (
 
 func _inner_list(m *ice.Message, ext, file, dir string) {
 	kit.If(aaa.Right(m, dir, file), func() {
-		kit.If(nfs.IsSourceFile(m, ext), func() { m.Cmdy(nfs.CAT, path.Join(dir, file)) }, func() { _inner_show(m.RenderResult().SetResult(), ext, file, dir) })
+		kit.If(nfs.IsSourceFile(m, ext), func() {
+			m.Cmdy(nfs.CAT, path.Join(dir, file))
+		}, func() {
+			_inner_show(m.RenderResult().SetResult(), ext, file, dir)
+			if m.Result() == "" {
+				m.Cmdy(nfs.CAT, path.Join(dir, file))
+			}
+		})
 	})
 }
 func _inner_show(m *ice.Message, ext, file, dir string) {
@@ -62,6 +69,7 @@ const (
 	OPERATOR = lex.OPERATOR
 	PREFIX   = lex.PREFIX
 	SUFFIX   = lex.SUFFIX
+	INCLUDE  = "include"
 )
 const (
 	COMMENT  = "comment"
@@ -107,7 +115,12 @@ func init() {
 					m.Cmdy(FAVOR, mdb.INPUTS, arg)
 				}
 			}},
-			mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(mdb.PLUGIN, arg) }},
+			mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(mdb.PLUGIN, arg)
+				if m.Result() == "" {
+					m.Cmdy(mdb.PLUGIN, m.Option("parse", strings.ToLower(kit.Split(path.Base(arg[1]), ".")[0])), arg[1:])
+				}
+			}},
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _inner_show(m, arg[0], arg[1], arg[2]) }},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _inner_exec(m, arg[0], arg[1], arg[2]) }},
 			nfs.GREP:   {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(nfs.GREP, arg) }},

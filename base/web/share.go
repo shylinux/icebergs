@@ -69,7 +69,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		SHARE: {Name: "share hash auto login prunes", Help: "共享链", Actions: ice.MergeActions(ice.Actions{
 			mdb.CREATE: {Name: "create type name text", Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashCreate(m, arg, m.OptionSimple(ice.CMD), aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERROLE, m.Option(ice.MSG_USERROLE))
+				mdb.HashCreate(m, arg, m.OptionSimple(ice.POD, ice.CMD), aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERROLE, m.Option(ice.MSG_USERROLE))
 				m.Option(mdb.LINK, _share_link(m, P(SHARE, m.Result())))
 			}},
 			LOGIN: {Help: "登录", Hand: func(m *ice.Message, arg ...string) {
@@ -93,7 +93,8 @@ func init() {
 					}
 				default:
 					if msg.Append(ice.CMD) != "" {
-						RenderCmd(m, msg.Append(ice.CMD))
+						// RenderCmd(m, msg.Append(ice.CMD))
+						RenderPodCmd(m, msg.Append(ice.POD), msg.Append(ice.CMD))
 					} else {
 						RenderMain(m)
 					}

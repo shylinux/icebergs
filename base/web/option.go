@@ -63,12 +63,12 @@ func ProcessIframe(m *ice.Message, name, link string, arg ...string) {
 func PushPodCmd(m *ice.Message, cmd string, arg ...string) {
 	kit.If(m.Length() > 0 && len(m.Appendv(ice.POD)) == 0, func() { m.Table(func(value ice.Maps) { m.Push(ice.POD, m.Option(ice.MSG_USERPOD)) }) })
 	m.Cmds(SPACE, func(value ice.Maps) {
-		kit.Switch(value[mdb.TYPE], []string{SERVER, WORKER}, func() {
+		if kit.IsIn(value[mdb.TYPE], WORKER, SERVER) {
 			m.Cmd(SPACE, value[mdb.NAME], kit.Select(m.PrefixKey(), cmd), arg).Table(func(index int, val ice.Maps, head []string) {
 				val[ice.POD] = kit.Keys(value[mdb.NAME], val[ice.POD])
 				m.Push("", val, head)
 			})
-		})
+		}
 	})
 }
 func PushImages(m *ice.Message, name string) {

@@ -4,7 +4,7 @@ fieldset.macos.desktop>div.output>fieldset.macos { background-color:transparent;
 fieldset.macos.desktop>div.output>fieldset.macos>div.output { background-color:transparent; }
 fieldset.macos.desktop>div.output>fieldset.macos.menu { line-height:25px; border-radius:0; height:25px; width:100%; position:absolute; top:0; overflow:hidden; }
 fieldset.macos.desktop>div.output>fieldset.macos.searchs { position:absolute; z-index:100; }
-fieldset.macos.desktop>div.output>fieldset.macos.searchs>form.option>div.item.icon.delete { display:none; }
+// fieldset.macos.desktop>div.output>fieldset.macos.searchs>form.option>div.item.icon.delete { display:none; }
 fieldset.macos.desktop>div.output>fieldset.macos.searchs>form.option>div.item.keyword input { width:320px; background-color:transparent; border:#404141 solid 1px; }
 fieldset.macos.desktop>div.output>fieldset.macos.searchs>form.option>div.item.keyword:hover { background-color:transparent; }
 fieldset.macos.desktop>div.output>fieldset.macos.notifications { border-radius:0; height:calc(100% - 125px); width:250px; overflow:auto; position:absolute; top:25px; right:0; }
@@ -15,7 +15,7 @@ fieldset.macos.desktop>div.output>fieldset.macos.notifications div.item div.titl
 fieldset.macos.desktop>div.output>fieldset.macos.notifications div.item div.time { font-size:12px; margin-top:10px; width:48px; }
 fieldset.macos.desktop>div.output>fieldset.macos.notifications div.item div.content { width:180px; }
 fieldset.macos.desktop>div.output>fieldset.macos.dock { border:#ffffff3d solid 1px; border-radius:20px; position:absolute; bottom:10px; transition:margin-left 0.3s; }
-fieldset.macos.desktop.cmd>div.output>fieldset.macos.dock { z-index:101; }
+fieldset.macos.desktop.cmd>div.output>fieldset.macos.dock { z-index:11; }
 fieldset.macos.desktop>div.output>div.desktop { padding-top:25px; }
 fieldset.macos.desktop>div.output>div.desktop:not(.select) { display:none; }
 fieldset.macos.desktop>div.output>div.desktop>div.item { position:absolute; text-align:center; }
@@ -29,7 +29,7 @@ fieldset.macos.desktop>div.output>div.desktop>fieldset>div.output>table.content 
 fieldset.macos.desktop>div.output>div.desktop>fieldset>div.output>table.content td { padding:10px; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>div.output>table.content td>input { margin:5px; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>div.item.button { border-radius:20px; height:20px; width:20px; scale:0.7; position:absolute; top:16px; right:10px; }
-fieldset.macos.desktop>div.output>div.desktop>fieldset>legend { background-color:unset; padding-right:10px; margin:10px 0; }
+fieldset.macos.desktop>div.output>div.desktop>fieldset>legend { background-color:unset; padding-right:10px; margin:10px 0; box-shadow:none; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>*:not(.textarea) { margin:10px 0px 10px 10px; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>div.icon { margin-left:0; margin-top:10px; margin-bottom:8px; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>div.item.button>span.icon { font-size:26px; line-height:28px; }

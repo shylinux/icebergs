@@ -154,7 +154,7 @@ func init() {
 	ice.AddMergeAction(func(c *ice.Context, key string, cmd *ice.Command, sub string, action *ice.Action) {
 		switch sub {
 		case UPLOAD:
-			if c.Name == WEB && key == CACHE {
+			if kit.FileLines(action.Hand) == kit.FileLines(1) {
 				break
 			}
 			watch := action.Hand == nil

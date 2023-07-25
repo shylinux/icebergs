@@ -51,14 +51,15 @@ func _action_share(m *ice.Message, arg ...string) {
 		}
 		_action_exec(m, msg.Append(web.RIVER), msg.Append(web.STORM), arg[1], arg[2:]...)
 	case web.FIELD:
+		m.Option(ice.MSG_USERPOD, kit.Keys(m.Option(ice.MSG_USERPOD), msg.Append(ice.POD)))
 		if len(arg) == 1 {
 			m.Push(TITLE, msg.Append(TITLE))
 			m.Push(THEME, msg.Append(THEME))
 			m.Push(ctx.ARGS, msg.Append(mdb.TEXT))
-			m.Cmdy(ctx.COMMAND, msg.Append(mdb.NAME))
+			m.Cmdy(web.Space(m, msg.Append(ice.POD)), ctx.COMMAND, msg.Append(mdb.NAME))
 			break
 		}
-		m.Cmdy(msg.Append(mdb.NAME), arg[2:])
+		m.Cmdy(web.Space(m, msg.Append(ice.POD)), msg.Append(mdb.NAME), arg[2:])
 	}
 }
 

@@ -121,7 +121,7 @@ func _space_exec(m *ice.Message, source, target []string, c *websocket.Conn) {
 	case cli.PWD:
 		m.Push(mdb.LINK, m.MergePod(kit.Select("", source, -1)))
 	default:
-		m.Option("__target", kit.Reverse(kit.Simple(source)))
+		m.Options("__target", kit.Reverse(kit.Simple(source)), "_cmd_count", 0)
 		kit.If(aaa.Right(m, m.Detailv()), func() { m.TryCatch(m, true, func(_ *ice.Message) { m = m.Cmd() }) })
 	}
 	defer m.Cost(kit.Format("%v->%v %v %v", source, target, m.Detailv(), m.FormatSize()))

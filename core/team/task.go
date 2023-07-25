@@ -6,6 +6,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -22,6 +23,10 @@ func _task_action(m *ice.Message, status ice.Any, action ...string) string {
 	return kit.Join(action)
 }
 func _task_modify(m *ice.Message, field, value string, arg ...string) {
+	if space := m.Option(web.SPACE); space != "" {
+		m.Options(web.SPACE, "").Cmdy(web.SPACE, space, TASK, mdb.MODIFY, field, value, arg)
+		return
+	}
 	if field == STATUS {
 		switch value {
 		case PROCESS:
@@ -62,7 +67,17 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		TASK: {Name: "task zone id auto insert", Help: "任务", Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
+				if space := m.Option(web.SPACE); space != "" && arg[0] != web.SPACE {
+					m.Options(web.SPACE, "").Cmdy(web.SPACE, space, TASK, mdb.INPUTS, arg)
+					return
+				}
 				switch arg[0] = strings.TrimPrefix(arg[0], "extra."); arg[0] {
+				case web.SPACE:
+					m.Cmd(web.SPACE, func(value ice.Maps) {
+						if kit.IsIn(value[mdb.TYPE], web.WORKER, web.SERVER) {
+							m.Push(arg[0], value[mdb.NAME])
+						}
+					})
 				case mdb.STATUS:
 					m.Push(arg[0], PREPARE, PROCESS, CANCEL, FINISH)
 				case LEVEL, SCORE:
@@ -76,8 +91,12 @@ func init() {
 					mdb.ZoneInputs(m, arg)
 				}
 			}},
-			mdb.INSERT: {Name: "insert zone* type=once,step,week name* text begin_time@date close_time@date", Hand: func(m *ice.Message, arg ...string) {
-				mdb.ZoneInsert(m, arg[:2], BEGIN_TIME, m.Time(), STATUS, PREPARE, LEVEL, 3, SCORE, 3, arg[2:])
+			mdb.INSERT: {Name: "insert space zone* type=once,step,week name* text begin_time@date close_time@date", Hand: func(m *ice.Message, arg ...string) {
+				if space, arg := arg[1], arg[2:]; space != "" {
+					m.Cmdy(web.SPACE, space, TASK, mdb.INSERT, web.SPACE, "", arg)
+				} else {
+					mdb.ZoneInsert(m, arg[:2], BEGIN_TIME, m.Time(), STATUS, PREPARE, LEVEL, 3, SCORE, 3, arg[2:])
+				}
 			}},
 			mdb.MODIFY: {Hand: func(m *ice.Message, arg ...string) { _task_modify(m, arg[0], arg[1], arg[2:]...) }},
 			CANCEL:     {Hand: func(m *ice.Message, arg ...string) { _task_modify(m, STATUS, CANCEL) }},

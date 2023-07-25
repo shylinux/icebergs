@@ -169,7 +169,7 @@ func init() {
 			} else if arg[0] == ctx.ACTION {
 				gdb.Event(m, DREAM_ACTION, arg)
 			} else {
-				m.Cmdy(nfs.CAT, arg[1:], kit.Dict(nfs.DIR_ROOT, path.Join(ice.USR_LOCAL_WORK, arg[0])))
+				m.EchoIFrame(m.MergePod(arg[0]))
 			}
 		}},
 	})
@@ -188,6 +188,7 @@ func DreamProcess(m *ice.Message, args ice.Any, arg ...string) {
 			m.Cmdy(SPACE, m.Option(ice.MSG_USERPOD, arg[1]), m.PrefixKey(), ctx.ACTION, DREAM_ACTION, ice.RUN, arg[2:])
 		} else if dream := m.Option(mdb.NAME); dream != "" {
 			m.Cmdy(SPACE, dream, m.PrefixKey(), ctx.ACTION, DREAM_ACTION, ice.RUN, arg).Optionv(ice.FIELD_PREFIX, kit.Simple(ctx.ACTION, m.PrefixKey(), DREAM, dream, ice.RUN))
+			m.Push("_space", dream)
 		}
 	}
 }

@@ -27,6 +27,7 @@ func init() {
 				AppInstall(m, "Grapher", web.WIKI_DRAW)
 				AppInstall(m, "Photos", web.WIKI_FEEL)
 				AppInstall(m, "Books", web.WIKI_WORD)
+				AppInstall(m, "", cli.RUNTIME, mdb.ICON, "usr/icons/info.png")
 				AppInstall(m, "", web.DREAM, mdb.ICON, "usr/icons/Mission Control.png")
 				AppInstall(m, "", web.CODE_VIMER, mdb.ICON, "usr/icons/vimer.png")
 				AppInstall(m, "", web.CODE_COMPILE, mdb.ICON, "usr/icons/go.png")

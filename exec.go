@@ -20,7 +20,7 @@ func (m *Message) TryCatch(msg *Message, catch bool, cb ...func(msg *Message)) {
 		default:
 			fileline := m.FormatStack(2, 1)
 			m.Log(LOG_WARN, "catch: %s %s", e, fileline).Log("chain", msg.FormatChain())
-			m.Log(LOG_WARN, "catch: %s %s", e, kit.FileLine(4, 10)).Log("stack", m.FormatStack(2, 100))
+			m.Log(LOG_WARN, "catch: %s %s", e, kit.FileLine(4, 10)).Log("stack", m.FormatStack(2, 1000))
 			m.Log(LOG_WARN, "catch: %s %s", e, fileline).Result(ErrWarn, e, SP, m.FormatStack(2, 5))
 			if len(cb) > 1 {
 				m.TryCatch(msg, catch, cb[1:]...)
@@ -143,6 +143,7 @@ func (m *Message) _command(arg ...Any) *Message {
 			}
 		}
 	}
+	m.Assert(kit.Int(m.Option("_cmd_count", kit.Int(m.Option("_cmd_count"))+1)) < 300)
 	list := kit.Simple(args...)
 	kit.If(len(list) == 0, func() { list = m.meta[MSG_DETAIL] })
 	if len(list) == 0 {

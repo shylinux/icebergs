@@ -87,9 +87,6 @@ func init() {
 				m.Cmdy(DIR, arg)
 				return
 			}
-			defer func() {
-				m.Debug("waht %v", m.FormatMeta())
-			}()
 			if kit.Ext(arg[0]) == ZIP {
 				m.Cmdy(ZIP, arg)
 				return

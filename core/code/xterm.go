@@ -77,6 +77,9 @@ func init() {
 				kit.If(m.Cmd("").Length() == 0, func() { m.Cmd("", mdb.CREATE, mdb.TYPE, ISH) })
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
+				if arg[1] == "shell" {
+					m.PushSearch(mdb.TYPE, ssh.SHELL, mdb.NAME, SH, mdb.TEXT, "/bin/sh")
+				}
 				mdb.IsSearchPreview(m, arg, func() []string { return []string{ssh.SHELL, SH, kit.Select("/bin/sh", os.Getenv("SHELL"))} })
 				mdb.IsSearchPreview(m, arg, func() []string { return []string{ssh.SHELL, ISH, "/bin/ish"} })
 			}},
@@ -119,7 +122,7 @@ func init() {
 				web.ProcessPodCmd(m, "", "", m.OptionSimple(mdb.HASH), ctx.STYLE, web.OUTPUT)
 			}},
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
-				kit.Switch(m.Option(mdb.TYPE), kit.Simple(web.SERVER, web.WORKER), func() { m.PushButton(kit.Dict(m.CommandKey(), "命令")) })
+				kit.Switch(m.Option(mdb.TYPE), kit.Simple(web.SERVER, web.WORKER), func() { m.PushButton(kit.Dict(m.CommandKey(), "终端")) })
 			}},
 			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { web.DreamProcess(m, []string{}, arg...) }},
 			ctx.PROCESS: {Hand: func(m *ice.Message, arg ...string) {

@@ -53,6 +53,7 @@ func init() {
 				if runtime.GOOS == "windows" {
 					return
 				}
+				_signal_listen(m, 1, mdb.NAME, "挂起", ice.CMD, "runtime")
 				_signal_listen(m, 2, mdb.NAME, "重启", ice.CMD, "exit 1")
 				_signal_listen(m, 3, mdb.NAME, "退出", ice.CMD, "exit 0")
 			}},

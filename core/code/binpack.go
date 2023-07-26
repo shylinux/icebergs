@@ -64,14 +64,12 @@ func _binpack_all(m *ice.Message) {
 		}
 		list, cache := map[string]string{}, GoCache(m)
 		for k := range ice.Info.File {
-			m.Debug("what %v", k)
 			switch ls := kit.Split(k, nfs.PS); ls[1] {
 			case ice.SRC:
 			case ice.USR:
 				list[path.Join(kit.Slice(ls, 1, -1)...)] = ""
 			default:
 				p := path.Join(cache, path.Join(kit.Slice(ls, 1, -1)...))
-				m.Debug("what %v %v", ls, p)
 				list[path.Join(nfs.USR, strings.Split(ls[3], mdb.AT)[0], path.Join(kit.Slice(ls, 4)...))] = p
 			}
 		}

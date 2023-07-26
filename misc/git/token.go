@@ -37,6 +37,7 @@ func init() {
 			SET: {Hand: func(m *ice.Message, arg ...string) {
 				host, list := ice.Map{kit.ParseURL(m.Option(TOKEN)).Host: true}, []string{m.Option(TOKEN)}
 				m.Cmd(nfs.CAT, kit.HomePath(FILE), func(line string) {
+					line = strings.ReplaceAll(line, "%3a", ":")
 					kit.IfNoKey(host, kit.ParseURL(line).Host, func(p string) { list = append(list, line) })
 				}).Cmd(nfs.SAVE, kit.HomePath(FILE), strings.Join(list, lex.NL)+lex.NL)
 				m.ProcessClose()

@@ -75,7 +75,9 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 }
 func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.ResponseWriter, r *http.Request) {
 	debug := strings.Contains(r.URL.String(), "debug=true") || strings.Contains(r.Header.Get(Referer), "debug=true")
+	debug = true
 	_log := func(level string, arg ...ice.Any) *ice.Message {
+		return m.Logs(strings.Title(level), arg...)
 		if debug || arg[0] == "cmds" {
 			return m.Logs(strings.Title(level), arg...)
 		}

@@ -90,13 +90,9 @@ func _system_exec(m *ice.Message, cmd *exec.Cmd) {
 		cmd.Stdout, cmd.Stderr = out, err
 		defer func() {
 			m.Push(CMD_OUT, out.String()).Push(CMD_ERR, err.String())
-			// m.Echo(strings.TrimRight(out.String(), lex.NL))
-			m.Echo(out.String())
-			m.Echo(err.String())
-			if m.IsErr() {
+			if m.Echo(out.String()).Echo(err.String()); m.IsErr() {
 				m.Option(ice.MSG_ARGS, kit.Simple(http.StatusBadRequest, cmd.Args, err.String()))
 				m.Echo(strings.TrimRight(err.String(), lex.NL))
-				m.Debug("%s %s", err, out)
 			}
 		}()
 	}

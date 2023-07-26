@@ -5,6 +5,7 @@ import (
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/web"
 	"shylinux.com/x/icebergs/core/chat"
 	kit "shylinux.com/x/toolkits"
 )
@@ -22,6 +23,24 @@ func init() { chat.Index.Register(Index, nil, DESKTOP, APPLICATIONS) }
 
 func Prefix(arg ...string) string { return chat.Prefix(MACOS, kit.Keys(arg)) }
 
+func PodCmdAction(arg ...string) ice.Actions {
+	file := kit.FileLine(2, 100)
+	return ice.Actions{
+		mdb.SELECT: {Name: "list hash auto create", Hand: func(m *ice.Message, arg ...string) {
+			msg := m.Spawn()
+			mdb.HashSelect(msg, arg...).Sort(mdb.NAME)
+			web.PushPodCmd(msg, m.PrefixKey(), arg...)
+			has := map[string]bool{}
+			msg.Table(func(index int, value ice.Maps, head []string) {
+				if !has[value[ctx.INDEX]] {
+					m.Push("", value, head)
+					has[value[ctx.INDEX]] = true
+				}
+			})
+			m.Display(ctx.FileURI(file))
+		}},
+	}
+}
 func CmdHashAction(arg ...string) ice.Actions {
 	file := kit.FileLine(2, 100)
 	return ice.MergeActions(ice.Actions{

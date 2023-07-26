@@ -73,17 +73,17 @@ func _repos_insert(m *ice.Message, p string) {
 		if head, err := repos.Head(); err == nil {
 			args = append(args, BRANCH, head.Name().Short())
 			if commit, err := repos.CommitObject(head.Hash()); err == nil {
-				args = append(args, mdb.TIME, commit.Author.When.Format(ice.MOD_TIME), COMMENT, commit.Message)
+				args = append(args, mdb.TIME, commit.Author.When.Format(ice.MOD_TIME), COMMENT, strings.TrimSuffix(commit.Message, lex.NL))
 			}
 		}
 		if refer := _repos_recent(m, repos); refer != nil {
 			if n := _repos_forword(m, repos, refer.Hash().String()); n > 0 {
-				args = append(args, VERSION, kit.Format("%s-%d", refer.Name().Short(), n))
+				args = append(args, VERSION, kit.Format("%s-%d-%s", refer.Name().Short(), n, kit.Cut(refer.Hash().String(), 6)))
 			} else {
 				args = append(args, VERSION, refer.Name().Short())
 			}
 		}
-		if remote, err := repos.Remote("origin"); err == nil {
+		if remote, err := repos.Remote(ORIGIN); err == nil {
 			args = append(args, ORIGIN, remote.Config().URLs[0])
 		} else if remote, err := repos.Remotes(); err == nil && len(remote) > 0 {
 			args = append(args, ORIGIN, remote[0].Config().URLs[0])
@@ -95,7 +95,13 @@ func _repos_path(m *ice.Message, p string, arg ...string) string {
 	if p == path.Base(kit.Path("")) {
 		return kit.Path("", arg...)
 	}
-	return path.Join(nfs.USR, p, path.Join(arg...))
+	if nfs.Exists(m, path.Join(nfs.USR, p, ".git")) {
+		return path.Join(nfs.USR, p, path.Join(arg...))
+	}
+	if nfs.Exists(m, path.Join(nfs.USR_LOCAL_WORK, p, ".git")) {
+		return path.Join(nfs.USR_LOCAL_WORK, p, path.Join(arg...))
+	}
+	return p
 }
 func _repos_open(m *ice.Message, p string) *git.Repository {
 	return mdb.HashSelectTarget(m, p, nil).(*git.Repository)
@@ -141,7 +147,7 @@ func _repos_each_origin(m *ice.Message, title string, cb func(*git.Repository, s
 	_repos_each(m, "", func(repos *git.Repository, value ice.Maps) error {
 		if value[ORIGIN] == "" {
 			return nil
-		} else if remote, err := repos.Remote("origin"); err != nil {
+		} else if remote, err := repos.Remote(ORIGIN); err != nil {
 			return err
 		} else {
 			remoteURL := remote.Config().URLs[0]
@@ -439,6 +445,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		REPOS: {Name: "repos repos branch:text commit:text file:text auto", Help: "代码库", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(nfs.DIR, nfs.USR_LOCAL_WORK, func(value ice.Maps) { _repos_insert(m, value[nfs.PATH]) })
 				m.Cmd(nfs.DIR, nfs.USR, func(value ice.Maps) { _repos_insert(m, value[nfs.PATH]) })
 				_repos_insert(m, kit.Path(""))
 				m.Cmd(CONFIGS, func(value ice.Maps) {
@@ -466,7 +473,7 @@ func init() {
 				}
 			}},
 			INIT: {Name: "clone origin* branch name path", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(nfs.DEFS, kit.Path(".git/config"), nfs.Template(m, "config", m.Option("origin")))
+				m.Cmd(nfs.DEFS, kit.Path(".git/config"), nfs.Template(m, "config", m.Option(ORIGIN)))
 				git.PlainInit(m.Option(nfs.PATH), false)
 				_repos_insert(m, kit.Path(""))
 			}},
@@ -481,7 +488,7 @@ func init() {
 			}},
 			PUSH: {Help: "上传", Hand: func(m *ice.Message, arg ...string) {
 				_repos_each_origin(m, "", func(repos *git.Repository, remoteURL string, auth *http.BasicAuth, value ice.Maps) error {
-					m.Cmd(cli.SYSTEM, "git", "push", "--tags", kit.Dict(cli.CMD_DIR, path.Join(ice.USR_LOCAL_REPOS, value[REPOS])))
+					m.Cmd(cli.SYSTEM, GIT, PUSH, "--tags", kit.Dict(cli.CMD_DIR, path.Join(ice.USR_LOCAL_REPOS, value[REPOS])))
 					return repos.Push(&git.PushOptions{RemoteURL: remoteURL, Auth: auth, FollowTags: true})
 				})
 			}},
@@ -528,7 +535,7 @@ func init() {
 				if repos := kit.Select(m.Option(REPOS), arg, 0); repos != "" {
 					_repos_status(m, repos, _repos_open(m, repos))
 				} else {
-					last, remote, password, list := "", "", "", _repos_credentials(m)
+					last, password, list := "", "", _repos_credentials(m)
 					_repos_each(m, "", func(repos *git.Repository, value ice.Maps) error {
 						if refer, err := repos.Head(); err == nil {
 							if commit, err := repos.CommitObject(refer.Hash()); err == nil {
@@ -536,11 +543,9 @@ func init() {
 								kit.If(_last > last, func() { last = _last })
 							}
 						}
-						if _remote, err := repos.Remote(ORIGIN); err == nil && (remote == "" || remote == path.Base(kit.Path(""))) {
-							remote = kit.Select(remote, kit.Select("", _remote.Config().URLs, 0))
-						}
 						return _repos_status(m, value[REPOS], repos)
 					})
+					remote := ice.Info.Make.Remote
 					if insteadof := mdb.Config(m, INSTEADOF); insteadof != "" {
 						remote = insteadof + path.Base(remote)
 					}

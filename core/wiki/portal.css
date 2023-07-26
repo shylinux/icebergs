@@ -20,8 +20,8 @@ body.dark fieldset.web.wiki.portal>div.output>div.header div.story[data-name=nav
 body.dark fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.item:hover { background-color:var(--plugin-bg-color); }
 fieldset.web.wiki.portal.home>div.output>div.layout>div.main p { white-space:pre-wrap; text-align:center; }
 fieldset.web.wiki.portal>div.output>div.layout>div.main>* { margin:20px auto; }
-fieldset.web.wiki.portal>div.output>div.layout>div.main h2 { margin-top:40px; }
-fieldset.web.wiki.portal>div.output>div.layout>div.main h3 { margin-top:20px; }
+// fieldset.web.wiki.portal>div.output>div.layout>div.main h2 { margin-top:40px; }
+// fieldset.web.wiki.portal>div.output>div.layout>div.main h3 { margin-top:20px; }
 fieldset.web.wiki.portal>div.output>div.layout>div.main ul { margin:20px 40px; }
 fieldset.web.wiki.portal>div.output>div.layout>div.main ol { margin:20px 40px; }
 fieldset.web.wiki.portal>div.output>div.layout>div.main p code {
@@ -29,6 +29,7 @@ fieldset.web.wiki.portal>div.output>div.layout>div.main p code {
 }
 fieldset.web.wiki.portal>div.output>div.layout>div.main div.story[data-type=spark][data-name=shell] {
 	background-color:var(--code-bg-color); color:var(--code-fg-color); padding:10px; margin:10px auto;
+	box-shadow:var(--box-shadow);
 }
 fieldset.web.wiki.portal>div.output>div.layout>div.main div.story[data-type=spark][data-name=shell] kbd:hover {
 	background-color:white; color:black;

@@ -51,7 +51,7 @@ func init() {
 					m.Cmd(nfs.DIR, USR_ICONS, func(value ice.Maps) { m.Push(arg[0], value[nfs.PATH]) })
 				}
 			}}, mdb.CREATE: {Name: "create space index args name icon"},
-		}, CmdHashAction("space,index,args"))},
+		}, PodCmdAction(), CmdHashAction("space,index,args"))},
 	})
 }
 func install(m *ice.Message, cmd, name, index string, arg ...string) {

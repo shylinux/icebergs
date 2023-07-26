@@ -136,13 +136,14 @@ func _dir_list(m *ice.Message, root string, dir string, level int, deep bool, di
 }
 
 const (
-	PWD          = "./"
-	SRC          = "src/"
-	BIN          = "bin/"
-	USR          = "usr/"
-	USR_PORTAL   = ice.USR_PORTAL
-	SRC_DOCUMENT = ice.SRC_DOCUMENT
-	REQUIRE      = "/require/"
+	PWD            = "./"
+	SRC            = "src/"
+	BIN            = "bin/"
+	USR            = "usr/"
+	USR_PORTAL     = ice.USR_PORTAL
+	USR_LOCAL_WORK = ice.USR_LOCAL_WORK
+	SRC_DOCUMENT   = ice.SRC_DOCUMENT
+	REQUIRE        = "/require/"
 
 	TYPE_ALL  = "all"
 	TYPE_BIN  = "bin"

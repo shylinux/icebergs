@@ -28,7 +28,7 @@ func init() {
 				kit.Switch(m.Option(mdb.TYPE), kit.Simple(web.SERVER, web.WORKER), func() { m.PushButton(kit.Dict(m.CommandKey(), "桌面")) })
 			}},
 			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { web.DreamProcess(m, []string{}, arg...) }},
-		}, aaa.RoleAction(ctx.COMMAND, ctx.RUN), CmdHashAction(), mdb.ImportantHashAction())},
+		}, aaa.RoleAction(ctx.COMMAND, ctx.RUN), PodCmdAction(), CmdHashAction(), mdb.ImportantHashAction())},
 	})
 }
 

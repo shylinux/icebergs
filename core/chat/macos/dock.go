@@ -20,7 +20,7 @@ func init() {
 			}
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { mdb.HashExport(m) }},
-	}, aaa.RoleAction(), CmdHashAction(), mdb.ImportantHashAction())}})
+	}, aaa.RoleAction(), PodCmdAction(), CmdHashAction(), mdb.ImportantHashAction())}})
 }
 
 func DockAppend(m *ice.Message, name, index string, arg ...string) {

@@ -8,9 +8,13 @@ import (
 
 type spide struct {
 	cache
+	demo string `name:"demo" event:"serve.start"`
 	list string `name:"list wid tid url auto insert" help:"节点"`
 }
 
+func (s spide) Demo(m *ice.Message, arg ...string) {
+	m.Debug("what %v", arg)
+}
 func (s spide) Download(m *ice.Message, arg ...string) {
 	m.Cmdy(s.cache, s.Create, arg).ProcessHold()
 }

@@ -58,10 +58,12 @@ func _runtime_init(m *ice.Message) {
 }
 func _runtime_hostinfo(m *ice.Message) {
 	m.Push("nCPU", runtime.NumCPU())
-	for i, ls := range strings.Split(m.Cmdx(nfs.CAT, "/proc/meminfo"), lex.NL) {
-		if vs := kit.Split(ls, ": "); len(vs) > 1 {
-			if m.Push(strings.TrimSpace(vs[0]), kit.FmtSize(kit.Int64(strings.TrimSpace(vs[1]))*1024)); i > 1 {
-				break
+	if runtime.GOOS == LINUX {
+		for i, ls := range strings.Split(m.Cmdx(nfs.CAT, "/proc/meminfo"), lex.NL) {
+			if vs := kit.Split(ls, ": "); len(vs) > 1 {
+				if m.Push(strings.TrimSpace(vs[0]), kit.FmtSize(kit.Int64(strings.TrimSpace(vs[1]))*1024)); i > 1 {
+					break
+				}
 			}
 		}
 	}

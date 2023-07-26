@@ -17,8 +17,6 @@ type field struct {
 	list   string `name:"list domain id auto insert" help:"插件"`
 }
 
-func (s field) Init(m *ice.Message, arg ...string)   { s.Zone.Imports(m) }
-func (s field) Exit(m *ice.Message, arg ...string)   { s.Zone.Exports(m) }
 func (s field) Inputs(m *ice.Message, arg ...string) { s.daemon.Inputs(m, arg...) }
 func (s field) Command(m *ice.Message, arg ...string) {
 	s.Zone.List(m.Spawn(), kit.Simple(m.Option(web.DOMAIN), arg)...).Table(func(index int, value ice.Maps, head []string) {

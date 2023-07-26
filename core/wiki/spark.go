@@ -68,7 +68,10 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		SPARK: {Name: "spark type=inner,shell,redis,mysql text", Help: "段落", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				ice.AddRender(ice.RENDER_SCRIPT, func(msg *ice.Message, args ...ice.Any) string { return m.Cmdx(SPARK, SHELL, args) })
+				ice.AddRender(ice.RENDER_SCRIPT, func(msg *ice.Message, args ...ice.Any) string {
+					m.Option("_cmd_count", 0)
+					return m.Cmdx(SPARK, SHELL, args)
+				})
 			}},
 			"inner": {Hand: func(m *ice.Message, arg ...string) {
 				if strings.Contains(arg[0], lex.NL) {

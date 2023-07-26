@@ -55,10 +55,11 @@ func _service_param(m *ice.Message, arg ...string) (string, string) {
 	return _service_path(m, repos), strings.TrimPrefix(service, "git-")
 }
 func _service_repos(m *ice.Message, arg ...string) error {
+	repos, service := _service_param(m, arg...)
+	m.Cmd(web.COUNT, mdb.CREATE, service, strings.TrimPrefix(repos, kit.Path(ice.USR_LOCAL_REPOS)+nfs.PS), m.Option(ice.MSG_USERUA))
 	if mdb.Conf(m, "web.code.git.service", "meta.cmd") == "git" {
 		return _service_repos0(m, arg...)
 	}
-	repos, service := _service_param(m, arg...)
 	m.Logs(m.R.Method, service, repos)
 	info := false
 	if m.Option(cli.CMD_DIR, repos); strings.HasSuffix(path.Join(arg...), INFO_REFS) {
@@ -132,6 +133,9 @@ func init() {
 		m.RenderRedirect(kit.MergeURL(ice.Info.Make.Remote+"/info/refs", m.OptionSimple(SERVICE)))
 	}}})
 	web.Index.MergeCommands(ice.Commands{"/x/": {Actions: aaa.WhiteAction(), Hand: func(m *ice.Message, arg ...string) {
+		if len(arg) == 0 {
+			return
+		}
 		if arg[0] == ice.LIST {
 			m.Cmd(Prefix(SERVICE), func(value ice.Maps) { m.Push(nfs.REPOS, web.MergeLink(m, "/x/"+kit.Keys(value[nfs.REPOS], GIT))) })
 			m.Sort(nfs.REPOS)

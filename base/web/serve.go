@@ -155,6 +155,8 @@ func _serve_auth(m *ice.Message, key string, cmds []string, w http.ResponseWrite
 			m.Auth(aaa.USERNICK, m.Option(ice.MSG_USERNICK, ls[1]), aaa.USERNAME, m.Option(ice.MSG_USERNAME, ls[2]), aaa.USERROLE, m.Option(ice.MSG_USERROLE, ls[3]), CACHE, ls[0])
 		}
 	}
+	m.Cmd(COUNT, mdb.CREATE, aaa.IP, m.Option(ice.MSG_USERIP), m.Option(ice.MSG_USERUA))
+	m.Cmd(COUNT, mdb.CREATE, m.R.Method, m.R.URL.Path, kit.Join(kit.Simple(m.Optionv(ice.MSG_CMDS)), " "))
 	return cmds, aaa.Right(m, key, cmds)
 }
 

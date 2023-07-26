@@ -200,6 +200,9 @@ func (m *Message) FormatChain() string {
 		ms = append(ms, msg)
 	}
 	show := func(msg *Message, key string, arg ...string) string {
+		if _, ok := msg.data[key]; ok {
+			return kit.Format("%s%s:%s %v", kit.Select("", arg, 0), key, kit.Select("", arg, 1), msg.data[key])
+		}
 		if len(msg.meta[key]) == 0 || len(msg.meta[key]) == 1 && msg.meta[key][0] == "" {
 			return ""
 		}

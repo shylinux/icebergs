@@ -83,13 +83,17 @@ func _repos_insert(m *ice.Message, p string) {
 				args = append(args, VERSION, refer.Name().Short())
 			}
 		}
-		if remote, err := repos.Remote(ORIGIN); err == nil {
-			args = append(args, ORIGIN, remote.Config().URLs[0])
-		} else if remote, err := repos.Remotes(); err == nil && len(remote) > 0 {
-			args = append(args, ORIGIN, remote[0].Config().URLs[0])
-		}
+		args = append(args, ORIGIN, _repos_origin(m, repos))
 		mdb.HashCreate(m.Options(mdb.TARGET, repos), args)
 	}
+}
+func _repos_origin(m *ice.Message, repos *git.Repository) string {
+	if remote, err := repos.Remote(ORIGIN); err == nil {
+		return remote.Config().URLs[0]
+	} else if remote, err := repos.Remotes(); err == nil && len(remote) > 0 {
+		return remote[0].Config().URLs[0]
+	}
+	return ""
 }
 func _repos_path(m *ice.Message, p string, arg ...string) string {
 	if p == path.Base(kit.Path("")) {
@@ -111,8 +115,8 @@ func _repos_each(m *ice.Message, title string, cb func(*git.Repository, ice.Maps
 	if msg.Length() == 0 {
 		return
 	}
-	web.GoToast(m, kit.Select(m.CommandKey()+lex.SP+m.ActionKey(), title), func(toast func(string, int, int)) {
-		list, count, total := []string{}, 0, msg.Length()
+	web.GoToast(m, kit.Select(m.CommandKey()+lex.SP+m.ActionKey(), title), func(toast func(string, int, int)) (list []string) {
+		count, total := 0, msg.Length()
 		msg.Table(func(value ice.Maps) {
 			toast(value[REPOS], count, total)
 			if err := cb(_repos_open(m, value[REPOS]), value); err != nil && err != git.NoErrAlreadyUpToDate {
@@ -122,11 +126,7 @@ func _repos_each(m *ice.Message, title string, cb func(*git.Repository, ice.Maps
 			}
 			count++
 		})
-		if len(list) > 0 {
-			web.Toast(m, strings.Join(list, lex.NL), ice.FAILURE, "30s")
-		} else {
-			toast(ice.SUCCESS, count, total)
-		}
+		return
 	})
 
 }
@@ -476,6 +476,7 @@ func init() {
 				m.Cmd(nfs.DEFS, kit.Path(".git/config"), nfs.Template(m, "config", m.Option(ORIGIN)))
 				git.PlainInit(m.Option(nfs.PATH), false)
 				_repos_insert(m, kit.Path(""))
+				m.ProcessRefresh()
 			}},
 			PULL: {Help: "下载", Hand: func(m *ice.Message, arg ...string) {
 				_repos_each_origin(m, "", func(repos *git.Repository, remoteURL string, auth *http.BasicAuth, value ice.Maps) error {
@@ -546,6 +547,9 @@ func init() {
 						return _repos_status(m, value[REPOS], repos)
 					})
 					remote := ice.Info.Make.Remote
+					if repos, ok := mdb.HashSelectTarget(m, path.Base(kit.Path("")), nil).(*git.Repository); ok {
+						remote = kit.Select(remote, _repos_origin(m, repos))
+					}
 					if insteadof := mdb.Config(m, INSTEADOF); insteadof != "" {
 						remote = insteadof + path.Base(remote)
 					}
@@ -591,7 +595,10 @@ func init() {
 				}
 			}},
 			"remoteURL": {Hand: func(m *ice.Message, arg ...string) {
-				remoteURL := _git_remote(m)
+				remoteURL := ""
+				if repos, ok := mdb.HashSelectTarget(m, path.Base(kit.Path("")), nil).(*git.Repository); ok {
+					remoteURL = kit.Select(remoteURL, _repos_origin(m, repos))
+				}
 				if insteadof := mdb.Config(m, INSTEADOF); insteadof != "" {
 					remoteURL = insteadof + path.Base(remoteURL)
 				}
@@ -638,6 +645,9 @@ func init() {
 					m.Cmd("", CLONE, ORIGIN, p, nfs.PATH, m.Option(cli.CMD_DIR), ice.Maps{cli.CMD_DIR: ""})
 				})
 			}},
+			web.DREAM_TRASH: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd("", mdb.REMOVE, kit.Dict(REPOS, m.Option(mdb.NAME)))
+			}},
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				if !kit.IsIn(m.Option(mdb.TYPE), web.WORKER, web.SERVER) {
 					return
@@ -648,7 +658,7 @@ func init() {
 			}},
 			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { web.DreamProcess(m, []string{}, arg...) }},
 			code.INNER:       {Hand: func(m *ice.Message, arg ...string) { _repos_inner(m, _repos_path, arg...) }},
-		}, aaa.RoleAction(REMOTE), gdb.EventsAction(web.DREAM_CREATE), mdb.ClearOnExitHashAction(), mdb.HashAction(mdb.SHORT, REPOS, mdb.FIELD, "time,repos,branch,version,comment,origin")), Hand: func(m *ice.Message, arg ...string) {
+		}, aaa.RoleAction(REMOTE), gdb.EventsAction(web.DREAM_CREATE, web.DREAM_TRASH), mdb.ClearOnExitHashAction(), mdb.HashAction(mdb.SHORT, REPOS, mdb.FIELD, "time,repos,branch,version,comment,origin")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				mdb.HashSelect(m, arg...).Sort(REPOS).PushAction(STATUS, mdb.REMOVE).Action(CLONE, PULL, PUSH, STATUS)
 			} else if len(arg) == 1 {

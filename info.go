@@ -47,6 +47,8 @@ func (s MakeInfo) Versions() string {
 
 var Info = struct {
 	Make MakeInfo
+	Hash string
+	Size string
 
 	Username string
 	Hostname string

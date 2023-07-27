@@ -143,7 +143,10 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: ice.Commands
 	INPUTS: {Name: "inputs key sub type field value", Hand: func(m *ice.Message, arg ...string) {
 		switch arg[3] {
 		case "index":
-			m.Cmdy("command", SEARCH, "command", "", "", ice.OptionFields("index"))
+			m.Cmdy("command")
+			return
+		case "args":
+			m.Cmdy("command", INPUTS, m.Option("index"))
 			return
 		}
 		kit.Switch(arg[2],

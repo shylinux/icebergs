@@ -60,7 +60,7 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	if m.Logs(r.Header.Get(ice.MSG_USERIP), r.Method, r.URL.String()); r.Method == http.MethodGet {
 		if msg := m.Spawn(w, r).Options(ice.MSG_USERUA, r.UserAgent()); path.Join(r.URL.Path) == nfs.PS {
 			if !msg.IsCliUA() {
-				if r.URL.Path = kit.Select(nfs.PS, mdb.Config(m, "main")); path.Join(r.URL.Path) != nfs.PS {
+				if r.URL.Path = kit.Select(nfs.PS, mdb.Config(m, ice.MAIN)); path.Join(r.URL.Path) != nfs.PS {
 					return true
 				}
 			}
@@ -69,16 +69,14 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 			return !Render(msg, ice.RENDER_DOWNLOAD, p)
 		}
 	} else if r.Method == http.MethodPost && path.Join(r.URL.Path) == nfs.PS {
-		r.URL.Path = kit.Select(nfs.PS, mdb.Config(m, "main"))
+		r.URL.Path = kit.Select(nfs.PS, mdb.Config(m, ice.MAIN))
 	}
 	return true
 }
 func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.ResponseWriter, r *http.Request) {
 	debug := strings.Contains(r.URL.String(), "debug=true") || strings.Contains(r.Header.Get(Referer), "debug=true")
-	debug = true
 	_log := func(level string, arg ...ice.Any) *ice.Message {
-		return m.Logs(strings.Title(level), arg...)
-		if debug || arg[0] == "cmds" {
+		if debug || arg[0] == ice.MSG_CMDS {
 			return m.Logs(strings.Title(level), arg...)
 		}
 		return m
@@ -101,7 +99,7 @@ func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.Response
 		r.ParseMultipartForm(kit.Int64(kit.Select("4096", r.Header.Get(ContentLength))))
 		kit.For(r.PostForm, func(k string, v []string) { _log(FORM, k, kit.Join(v, lex.SP)).Optionv(k, v) })
 	}
-	m.Option("_cmd_count", 0)
+	m.Option(ice.MSG_COUNT, "0")
 	kit.For(r.Cookies(), func(k, v string) { m.Optionv(k, v) })
 	m.OptionDefault(ice.MSG_HEIGHT, "480", ice.MSG_WIDTH, "320")
 	m.Options(ice.MSG_USERWEB, _serve_domain(m), ice.MSG_USERPOD, m.Option(ice.POD))
@@ -157,8 +155,8 @@ func _serve_auth(m *ice.Message, key string, cmds []string, w http.ResponseWrite
 			m.Auth(aaa.USERNICK, m.Option(ice.MSG_USERNICK, ls[1]), aaa.USERNAME, m.Option(ice.MSG_USERNAME, ls[2]), aaa.USERROLE, m.Option(ice.MSG_USERROLE, ls[3]), CACHE, ls[0])
 		}
 	}
-	m.Cmd(COUNT, mdb.CREATE, aaa.IP, m.Option(ice.MSG_USERIP), m.Option(ice.MSG_USERUA))
-	m.Cmd(COUNT, mdb.CREATE, m.R.Method, m.R.URL.Path, kit.Join(kit.Simple(m.Optionv(ice.MSG_CMDS)), " "))
+	m.Cmd(COUNT, mdb.CREATE, aaa.IP, m.Option(ice.MSG_USERIP), m.Option(ice.MSG_USERUA), kit.Dict(ice.LOG_DISABLE, ice.TRUE))
+	m.Cmd(COUNT, mdb.CREATE, m.R.Method, m.R.URL.Path, kit.Join(kit.Simple(m.Optionv(ice.MSG_CMDS)), " "), kit.Dict(ice.LOG_DISABLE, ice.TRUE))
 	return cmds, aaa.Right(m, key, cmds)
 }
 

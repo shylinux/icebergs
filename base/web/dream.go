@@ -101,8 +101,12 @@ func _dream_template(m *ice.Message, p string) {
 
 const (
 	DREAM_CREATE = "dream.create"
+	DREAM_START  = "dream.start"
+	DREAM_STOP   = "dream.stop"
 	DREAM_OPEN   = "dream.open"
 	DREAM_CLOSE  = "dream.close"
+	DREAM_TRASH  = "dream.trash"
+	DREAM_REMOVE = "dream.remove"
 
 	DREAM_INPUTS = "dream.inputs"
 	DREAM_TABLES = "dream.tables"
@@ -139,14 +143,19 @@ func init() {
 				}
 			}},
 			cli.START: {Hand: func(m *ice.Message, arg ...string) {
+				gdb.Event(m, DREAM_START, arg)
 				_dream_start(m, m.Option(mdb.NAME))
 			}},
 			cli.STOP: {Hand: func(m *ice.Message, arg ...string) {
+				gdb.Event(m, DREAM_STOP, arg)
 				m.Cmd(SPACE, mdb.MODIFY, m.OptionSimple(mdb.NAME), mdb.STATUS, cli.STOP)
 				m.Go(func() { m.Cmd(SPACE, m.Option(mdb.NAME), ice.EXIT) })
 				m.Sleep30ms()
 			}},
-			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) { nfs.Trash(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME))) }},
+			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
+				gdb.Event(m, DREAM_TRASH, arg)
+				nfs.Trash(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME)))
+			}},
 			DREAM_CLOSE: {Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(cli.DAEMON) == ice.OPS && m.Cmdv(SPACE, m.Option(mdb.NAME), mdb.STATUS) != cli.STOP {
 					m.Go(func() { m.Sleep300ms(DREAM, cli.START, m.OptionSimple(mdb.NAME)) })

@@ -121,7 +121,7 @@ func _space_exec(m *ice.Message, source, target []string, c *websocket.Conn) {
 	case cli.PWD:
 		m.Push(mdb.LINK, m.MergePod(kit.Select("", source, -1)))
 	default:
-		m.Options("__target", kit.Reverse(kit.Simple(source)), "_cmd_count", 0)
+		m.Options("__target", kit.Reverse(kit.Simple(source))).OptionDefault(ice.MSG_COUNT, "0")
 		kit.If(aaa.Right(m, m.Detailv()), func() { m.TryCatch(m, true, func(_ *ice.Message) { m = m.Cmd() }) })
 	}
 	defer m.Cost(kit.Format("%v->%v %v %v", source, target, m.Detailv(), m.FormatSize()))
@@ -216,6 +216,7 @@ func init() {
 		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,type,name,text,module,version", ctx.ACTION, OPEN, REDIAL, kit.Dict("a", 3000, "b", 1000, "c", 1000)), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 {
 				defer m.StatusTimeCount()
+				m.Option(ice.MSG_USERWEB, tcp.PublishLocalhost(m, m.Option(ice.MSG_USERWEB)))
 				mdb.HashSelect(m.Spawn(), arg...).Sort("").Table(func(index int, value ice.Maps, field []string) {
 					if kit.IsIn(value[mdb.TYPE], CHROME, "send") {
 						return
@@ -224,7 +225,7 @@ func init() {
 						m.Push(mdb.STATUS, value[mdb.STATUS])
 					}
 					if kit.IsIn(value[mdb.TYPE], SERVER, WORKER) {
-						m.Push(mdb.LINK, tcp.PublishLocalhost(m, m.MergePod(value[mdb.NAME])))
+						m.Push(mdb.LINK, m.MergePod(value[mdb.NAME]))
 					} else {
 						m.Push(mdb.LINK, "")
 					}

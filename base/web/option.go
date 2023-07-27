@@ -9,6 +9,7 @@ import (
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/log"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/tcp"
@@ -61,7 +62,7 @@ func ProcessIframe(m *ice.Message, name, link string, arg ...string) {
 	}, arg...)
 }
 func PushPodCmd(m *ice.Message, cmd string, arg ...string) {
-	kit.If(m.Length() > 0 && len(m.Appendv(SPACE)) == 0, func() { m.Table(func(value ice.Maps) { m.Push(SPACE, m.Option(ice.MSG_USERPOD)) }) })
+	kit.If(m.Length() > 0 && len(m.Appendv(SPACE)) == 0, func() { m.Table(func(value ice.Maps) { m.Push(SPACE, "") }) })
 	m.Cmds(SPACE, func(value ice.Maps) {
 		if kit.IsIn(value[mdb.TYPE], WORKER, SERVER) {
 			m.Cmd(SPACE, value[mdb.NAME], kit.Select(m.PrefixKey(), cmd), arg).Table(func(index int, val ice.Maps, head []string) {
@@ -118,12 +119,19 @@ func ToastProcess(m *ice.Message, arg ...ice.Any) func() {
 	Toast(m, ice.PROCESS, arg...)
 	return func() { Toast(m, ice.SUCCESS) }
 }
-func GoToast(m *ice.Message, title string, cb func(toast func(string, int, int))) {
-	cb(func(name string, count, total int) {
+func GoToast(m *ice.Message, title string, cb func(toast func(string, int, int)) []string) {
+	_total := 0
+	toast := func(name string, count, total int) {
 		kit.If(total == 0, func() { total = 1 })
 		Toast(m,
 			kit.Format("%s %s/%s", name, strings.TrimSuffix(kit.FmtSize(int64(count)), "B"), strings.TrimSuffix(kit.FmtSize(int64(total)), "B")),
-			kit.Format("%s %d%%", title, count*100/total), kit.Select("1000", "30000", count < total), count*100/total,
+			kit.Format("%s %d%%", kit.Select(m.ActionKey(), title), count*100/total), kit.Select("1000", "30000", count < total), count*100/total,
 		)
-	})
+		_total = total
+	}
+	if list := cb(toast); len(list) > 0 {
+		Toast(m, strings.Join(list, lex.NL), ice.FAILURE, "30s")
+	} else {
+		toast(ice.SUCCESS, _total, _total)
+	}
 }

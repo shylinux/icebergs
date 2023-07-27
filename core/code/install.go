@@ -36,7 +36,7 @@ func _install_download(m *ice.Message) {
 		return
 	}
 	mdb.HashCreate(m.Cmd(nfs.SAVE, file, ""), mdb.NAME, name, nfs.PATH, file, web.LINK, link)
-	web.GoToast(m, name, func(toast func(string, int, int)) {
+	web.GoToast(m, name, func(toast func(string, int, int)) (list []string) {
 		defer nfs.TarExport(m, file)
 		begin := time.Now()
 		web.SpideSave(m, file, link, func(count, total, value int) {
@@ -44,6 +44,7 @@ func _install_download(m *ice.Message) {
 			mdb.HashSelectUpdate(m, name, func(value ice.Map) { value[mdb.COUNT], value[mdb.TOTAL], value[mdb.VALUE] = count, total, value })
 			toast(kit.FormatShow(nfs.FROM, begin.Format("15:04:05"), cli.COST, kit.FmtDuration(cost), cli.REST, kit.FmtDuration(cost*time.Duration(101)/time.Duration(value+1)-cost)), count, total)
 		})
+		return
 	})
 	if s, e := nfs.StatFile(m, file); e == nil && s.Size() > 0 {
 		m.Cmdy(nfs.DIR, file)

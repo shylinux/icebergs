@@ -143,7 +143,9 @@ func (m *Message) _command(arg ...Any) *Message {
 			}
 		}
 	}
-	m.Assert(kit.Int(m.Option("_cmd_count", kit.Int(m.Option("_cmd_count"))+1)) < 300)
+	if count := kit.Int(m.Option(MSG_COUNT, kit.Format(kit.Int(m.Option(MSG_COUNT))+1))); m.Warn(count > 300, ErrTooDeepCount) {
+		panic(count)
+	}
 	list := kit.Simple(args...)
 	kit.If(len(list) == 0, func() { list = m.meta[MSG_DETAIL] })
 	if len(list) == 0 {

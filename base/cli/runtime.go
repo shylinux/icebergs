@@ -51,23 +51,16 @@ func _runtime_init(m *ice.Message) {
 		m.Conf(RUNTIME, kit.Keys(BOOT, mdb.HASH), msg.Append(mdb.HASH))
 		m.Conf(RUNTIME, kit.Keys(BOOT, nfs.SIZE), msg.Append(nfs.SIZE))
 		m.Conf(RUNTIME, kit.Keys(BOOT, ice.BIN), msg.Append(nfs.PATH))
+		ice.Info.Hash = msg.Append(mdb.HASH)
+		ice.Info.Size = msg.Append(nfs.SIZE)
 	}
 	m.Conf(RUNTIME, kit.Keys(BOOT, mdb.COUNT), count+1)
 	m.Conf(RUNTIME, mdb.META, "")
 	m.Conf(RUNTIME, mdb.HASH, "")
 }
 func _runtime_hostinfo(m *ice.Message) {
+	m.Push("time", ice.Info.Make.Time)
 	m.Push("nCPU", runtime.NumCPU())
-	if runtime.GOOS == LINUX {
-		for i, ls := range strings.Split(m.Cmdx(nfs.CAT, "/proc/meminfo"), lex.NL) {
-			if vs := kit.Split(ls, ": "); len(vs) > 1 {
-				if m.Push(strings.TrimSpace(vs[0]), kit.FmtSize(kit.Int64(strings.TrimSpace(vs[1]))*1024)); i > 1 {
-					break
-				}
-			}
-		}
-	}
-	m.Push("uptime", kit.Split(m.Cmdx(SYSTEM, "uptime"), mdb.FS)[0])
 	m.Push("GOMAXPROCS", runtime.GOMAXPROCS(0))
 	m.Push("NumGoroutine", runtime.NumGoroutine())
 	var stats runtime.MemStats
@@ -77,6 +70,20 @@ func _runtime_hostinfo(m *ice.Message) {
 	m.Push("Objects", stats.HeapObjects)
 	m.Push("NumGC", stats.NumGC)
 	m.Push("LastGC", time.Unix(int64(stats.LastGC)/int64(time.Second), int64(stats.LastGC)%int64(time.Second)))
+	m.Push("uptime", kit.Split(m.Cmdx(SYSTEM, "uptime"), mdb.FS)[0])
+	if runtime.GOOS == LINUX {
+		for i, ls := range strings.Split(m.Cmdx(nfs.CAT, "/proc/meminfo"), lex.NL) {
+			if vs := kit.Split(ls, ": "); len(vs) > 1 {
+				if m.Push(strings.TrimSpace(vs[0]), kit.FmtSize(kit.Int64(strings.TrimSpace(vs[1]))*1024)); i > 1 {
+					break
+				}
+			}
+		}
+	} else {
+		m.Push("MemAvailable", "")
+		m.Push("MemTotal", "")
+		m.Push("MemFree", "")
+	}
 }
 func _runtime_diskinfo(m *ice.Message) {
 	m.Spawn().Split(kit.Replace(m.Cmdx(SYSTEM, "df", "-h"), "Mounted on", "Mountedon"), "", lex.SP, lex.NL).Table(func(index int, value ice.Maps, head []string) {
@@ -150,7 +157,7 @@ const RUNTIME = "runtime"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		RUNTIME: {Name: "runtime info=bootinfo,ifconfig,diskinfo,hostinfo,userinfo,procstat,procinfo,bootinfo,role,api,cli,cmd,mod,env,path,chain,routine auto", Help: "运行环境", Actions: ice.MergeActions(ice.Actions{
+		RUNTIME: {Name: "runtime info=bootinfo,ifconfig,diskinfo,hostinfo,userinfo,procstat,procinfo,bootinfo,role,api,cli,cmd,mod,env,path,chain,routine auto upgrade restart", Help: "运行环境", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				aaa.White(m, ice.ETC_PATH)
 				aaa.White(m, ice.LICENSE)
@@ -233,7 +240,9 @@ func init() {
 			nfs.PATH: {Hand: func(m *ice.Message, arg ...string) {
 				kit.For(_path_split(os.Getenv(PATH)), func(p string) { m.Push(nfs.PATH, p) })
 			}},
-			"chain": {Hand: func(m *ice.Message, arg ...string) { m.Echo(m.FormatChain()) }},
+			"chain":   {Hand: func(m *ice.Message, arg ...string) { m.Echo(m.FormatChain()) }},
+			"upgrade": {Hand: func(m *ice.Message, arg ...string) { m.Cmdy("web.code.upgrade") }},
+			RESTART:   {Hand: func(m *ice.Message, arg ...string) { m.Cmd(ice.EXIT, 1) }},
 			aaa.ROLE: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(aaa.ROLE, func(value ice.Maps) { m.Push(mdb.KEY, kit.Keys(value[aaa.ROLE], value[mdb.ZONE], value[mdb.KEY])) })
 				ctx.DisplayStorySpide(m.Options(nfs.DIR_ROOT, "ice."), mdb.FIELD, mdb.KEY, lex.SPLIT, nfs.PT)
@@ -242,6 +251,11 @@ func init() {
 			kit.If(len(arg) > 0 && arg[0] == BOOTINFO, func() { arg = arg[1:] })
 			m.Cmdy(ctx.CONFIG, RUNTIME, arg)
 			ctx.DisplayStoryJSON(m)
+			m.Status(mdb.TIME, ice.Info.Make.Time,
+				mdb.HASH, kit.Cut(ice.Info.Hash, 6), nfs.SIZE, ice.Info.Size,
+				ice.BIN, _system_find(m, os.Args[0]), mdb.NAME, ice.Info.NodeName,
+				nfs.REMOTE, ice.Info.Make.Remote, nfs.VERSION, ice.Info.Make.Versions(),
+			)
 		}},
 	})
 }

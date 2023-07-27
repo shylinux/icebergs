@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -32,7 +33,7 @@ func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
 		}
 	})
 	if bin == "" && nfs.Exists(m, ice.ETC_PATH) {
-		if text := m.Cmdx(nfs.CAT, ice.ETC_PATH); len(text) > 0 {
+		if text := m.Cmdx(nfs.CAT, ice.ETC_PATH, kit.Dict(aaa.UserRole, aaa.ROOT)); len(text) > 0 {
 			if bin = _system_find(m, arg[0], strings.Split(text, lex.NL)...); bin != "" {
 				m.Logs(FIND, "etcpath cmd", bin)
 			}

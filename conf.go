@@ -215,6 +215,7 @@ const ( // MSG
 	MSG_WIDTH   = "sess.width"
 	MSG_HEIGHT  = "sess.height"
 	MSG_DAEMON  = "sess.daemon"
+	MSG_COUNT   = "sess.count"
 	MSG_FILES   = "file.system"
 	YAC_STACK   = "yac.stack"
 	YAC_MESSAGE = "yac.message"
@@ -295,6 +296,7 @@ const ( // Err
 	ErrNotStart = "not start: "
 
 	ErrNotImplement = "not implement: "
+	ErrTooDeepCount = "too deep count: "
 )
 const ( // ctx
 	COMMAND = "command"

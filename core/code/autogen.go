@@ -57,9 +57,9 @@ func _autogen_import(m *ice.Message, main string, ctx string, mod string) {
 }
 func _autogen_version(m *ice.Message) string {
 	if mod := _autogen_mod(m, ice.GO_MOD); !nfs.Exists(m, ".git") {
-		m.Cmd(REPOS, "init", nfs.ORIGIN, strings.Split(kit.MergeURL2(kit.Select(m.Option(ice.MSG_USERWEB), ice.Info.Make.Remote, ice.Info.Make.Domain), "/x/"+path.Base(mod)), mdb.QS)[0], mdb.NAME, path.Base(mod), nfs.PATH, nfs.PWD)
+		m.Cmd(REPOS, "init", nfs.ORIGIN, strings.Split(kit.MergeURL2(kit.Select(m.Option(ice.MSG_USERWEB), ice.Info.Make.Remote), "/x/"+path.Base(mod)), mdb.QS)[0], mdb.NAME, path.Base(mod), nfs.PATH, nfs.PWD)
 		defer m.Cmd(REPOS, "add", kit.Dict(nfs.REPOS, path.Base(mod), nfs.FILE, nfs.SRC))
-		defer m.Cmd(REPOS, "add", kit.Dict(nfs.REPOS, path.Base(mod), nfs.FILE, "go.mod"))
+		defer m.Cmd(REPOS, "add", kit.Dict(nfs.REPOS, path.Base(mod), nfs.FILE, ice.GO_MOD))
 	}
 	m.Cmd(nfs.DEFS, ".gitignore", nfs.Template(m, "gitignore"))
 	m.Cmd(nfs.DEFS, ice.SRC_BINPACK_GO, nfs.Template(m, ice.SRC_BINPACK_GO))
@@ -88,7 +88,7 @@ func _autogen_git(m *ice.Message, arg ...string) ice.Map {
 	)
 }
 func _autogen_mod(m *ice.Message, file string) (mod string) {
-	host := kit.ParseURL(kit.Select(m.Option(ice.MSG_USERHOST), ice.Info.Make.Domain)).Hostname()
+	host := kit.ParseURL(kit.Select(m.Option(ice.MSG_USERHOST), ice.Info.Make.Remote, m.Cmdx("web.code.git.repos", "remoteURL"))).Hostname()
 	if host == "" {
 		host = path.Base(kit.Path(""))
 	} else {

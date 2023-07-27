@@ -17,6 +17,7 @@ func init() {
 				DockAppend(m, "Safari", web.CHAT_IFRAME)
 				DockAppend(m, "Terminal", web.CODE_XTERM)
 				DockAppend(m, "", web.CODE_VIMER)
+				DockAppend(m, "", web.CODE_GIT_STATUS, mdb.ICON, "usr/icons/git.jpg")
 			}
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { mdb.HashExport(m) }},

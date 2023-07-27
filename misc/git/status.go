@@ -105,6 +105,13 @@ func init() {
 		STATUS: {Name: "status repos:text auto", Help: "代码库", Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch m.Option(ctx.ACTION) {
+				case INIT:
+					switch arg[0] {
+					case ORIGIN:
+						m.Cmd("web.spide", func(value ice.Maps) {
+							m.Push(arg[0], kit.ParseURLMap(value[web.CLIENT_URL])[ORIGIN]+"/x/"+path.Base(kit.Path("")))
+						})
+					}
 				case INSTEADOF:
 					switch arg[0] {
 					case nfs.FROM:
@@ -112,7 +119,7 @@ func init() {
 					case nfs.TO:
 						m.Cmd(web.BROAD, func(value ice.Maps) { m.Push(arg[0], kit.Format("http://%s:%s/", value[tcp.HOST], value[tcp.PORT])) })
 					case REMOTE:
-						m.Cmd("web.spide", func(value ice.Maps) { m.Push(arg[0], kit.ParseURLMap(value["client.url"])["origin"]+"/x/") })
+						m.Cmd("web.spide", func(value ice.Maps) { m.Push(arg[0], kit.ParseURLMap(value[web.CLIENT_URL])[ORIGIN]+"/x/") })
 					}
 					return
 				}
@@ -124,6 +131,9 @@ func init() {
 				default:
 					m.Cmdy(REPOS, mdb.INPUTS, arg)
 				}
+			}},
+			INIT: {Name: "init origin", Help: "初始化", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(REPOS, INIT)
 			}},
 			CONFIGS: {Name: "configs email* username* token", Help: "配置", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.DEFS, kit.HomePath(".gitconfig"), nfs.Template(m, "gitconfig", m.Option(aaa.USERNAME), m.Option(aaa.EMAIL)))
@@ -161,6 +171,8 @@ func init() {
 				m.Cmdy(REPOS, arg)
 			} else if config, err := config.LoadConfig(config.GlobalScope); err == nil && config.User.Email == "" && mdb.Config(m, aaa.EMAIL) == "" {
 				m.Action(CONFIGS).Echo("please config email and name. ").EchoButton(CONFIGS)
+			} else if !nfs.Exists(m, ".git") {
+				m.Action("init").Echo("please init repos. ").EchoButton("init")
 			} else if len(arg) == 0 {
 				kit.If(config != nil, func() { m.Option(aaa.EMAIL, kit.Select(mdb.Config(m, aaa.EMAIL), config.User.Email)) })
 				m.Cmdy(REPOS, STATUS).Action(PULL, PUSH, INSTEADOF, "oauth", CONFIGS)

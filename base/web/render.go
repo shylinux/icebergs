@@ -170,6 +170,7 @@ const (
 	CODE_VIMER       = "web.code.vimer"
 	CODE_XTERM       = "web.code.xterm"
 	CODE_COMPILE     = "web.code.compile"
+	CODE_UPGRADE     = "web.code.upgrade"
 	CODE_GIT_SERVICE = "web.code.git.service"
 	CODE_GIT_STATUS  = "web.code.git.status"
 	CODE_GIT_REPOS   = "web.code.git.repos"

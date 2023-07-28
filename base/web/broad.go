@@ -40,7 +40,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		BROAD: {Name: "broad hash auto", Help: "广播", Actions: ice.MergeActions(ice.Actions{
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				if mdb.IsSearchPreview(m, arg, nil) {
+				if mdb.IsSearchPreview(m, arg) {
 					host, domain := m.Cmdv(tcp.HOST, aaa.IP), UserWeb(m).Hostname()
 					m.Cmds("", func(value ice.Maps) {
 						switch kit.If(value[tcp.HOST] == host, func() { value[tcp.HOST] = domain }); value[mdb.TYPE] {

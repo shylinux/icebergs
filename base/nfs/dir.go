@@ -144,6 +144,7 @@ const (
 	USR_LOCAL_WORK = ice.USR_LOCAL_WORK
 	SRC_DOCUMENT   = ice.SRC_DOCUMENT
 	REQUIRE        = "/require/"
+	PATHNAME       = "pathname"
 
 	TYPE_ALL  = "all"
 	TYPE_BIN  = "bin"

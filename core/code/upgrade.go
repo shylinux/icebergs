@@ -27,7 +27,7 @@ func init() {
 		), mdb.META, kit.Dict(mdb.FIELD, "type,file,path"))},
 	}, Commands: ice.Commands{
 		UPGRADE: {Name: "upgrade item=target,config,binary,source,compile run restart", Help: "升级", Actions: ice.MergeActions(ice.Actions{
-			cli.RESTART: {Hand: func(m *ice.Message, arg ...string) { m.Go(func() { m.Sleep300ms(ice.EXIT, 1) }) }},
+			cli.RESTART: {Hand: func(m *ice.Message, arg ...string) { m.Go(func() { m.Sleep30ms(ice.EXIT, 1) }) }},
 		}), Hand: func(m *ice.Message, arg ...string) {
 			mdb.ZoneSelect(m.Spawn(), kit.Select(nfs.TARGET, arg, 0)).Table(func(value ice.Maps) {
 				if kit.Select("", arg, 0) == COMPILE {

@@ -58,12 +58,20 @@ var Index = &Context{Name: ICE, Help: "冰山模块", Commands: Commands{
 		m.Cmd(SOURCE, ETC_INIT_SHY)
 		loadImportant(m)
 	}},
-	QUIT: {Hand: func(m *Message, arg ...string) { os.Exit(0) }},
+	QUIT: {Hand: func(m *Message, arg ...string) {
+		m.Go(func() {
+			m.Sleep("10ms")
+			os.Exit(0)
+		})
+	}},
 	EXIT: {Hand: func(m *Message, arg ...string) {
-		m.root.Option(EXIT, kit.Select("0", arg, 0))
-		m.Cmd(SOURCE, ETC_EXIT_SHY)
-		m.Cmd(CTX_EXIT)
-		removeImportant(m)
+		m.Go(func() {
+			m.Sleep("10ms")
+			m.root.Option(EXIT, kit.Select("0", arg, 0))
+			m.Cmd(SOURCE, ETC_EXIT_SHY)
+			m.Cmd(CTX_EXIT)
+			removeImportant(m)
+		})
 	}},
 	CTX_EXIT: {Hand: func(m *Message, arg ...string) {
 		defer m.Target().Close(m.Spawn(), arg...)

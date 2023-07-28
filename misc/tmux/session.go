@@ -10,7 +10,6 @@ import (
 	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
-	"shylinux.com/x/icebergs/base/ssh"
 	"shylinux.com/x/icebergs/base/web"
 	"shylinux.com/x/icebergs/core/code"
 	kit "shylinux.com/x/toolkits"
@@ -83,14 +82,6 @@ func init() {
 	}, Commands: ice.Commands{
 		SESSION: {Name: "session session window pane cmds auto", Help: "会话", Actions: ice.MergeActions(ice.Actions{
 			web.DREAM_CREATE: {Hand: func(m *ice.Message, arg ...string) { m.Cmd("", mdb.CREATE) }},
-			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				return
-				if mdb.IsSearchPreview(m, arg, nil) {
-					m.Cmd("", ice.OptionFields(""), func(value ice.Maps) {
-						m.PushSearch(mdb.TYPE, ssh.SHELL, mdb.NAME, value[SESSION], mdb.TEXT, "tmux attach -t "+value[SESSION], value)
-					})
-				}
-			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(ctx.ACTION) == SCRIPT {
 					m.Cmdy(SCRIPT, mdb.INPUTS, arg)

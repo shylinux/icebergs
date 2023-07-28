@@ -76,7 +76,7 @@ func init() {
 				}).Cmd(nfs.SAVE, nfs.TAGS, m.Result())
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
-				if len(arg) > 0 && arg[0] != "" {
+				if len(arg) > 0 && arg[0] != "" && arg[0] != ice.EXIT {
 					m.Cmdy(arg).Search(arg[0], func(key string, cmd *ice.Command) {
 						m.Cut(kit.Format(kit.Value(cmd.List, kit.Format("%d.name", len(arg)-1))))
 					})

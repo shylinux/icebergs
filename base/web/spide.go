@@ -256,7 +256,7 @@ func init() {
 				m.Cmd("", mdb.CREATE, ice.SHY, kit.Select(kit.Select("https://shylinux.com", ice.Info.Make.Remote), conf[cli.CTX_SHY]))
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				if mdb.IsSearchPreview(m, arg, nil) {
+				if mdb.IsSearchPreview(m, arg) {
 					m.PushSearch(mdb.TYPE, LINK, mdb.NAME, ice.DEV, mdb.TEXT, mdb.HashSelectField(m, ice.DEV, CLIENT_ORIGIN))
 					m.PushSearch(mdb.TYPE, LINK, mdb.NAME, ice.COM, mdb.TEXT, mdb.HashSelectField(m, ice.COM, CLIENT_ORIGIN))
 					m.PushSearch(mdb.TYPE, LINK, mdb.NAME, ice.SHY, mdb.TEXT, mdb.HashSelectField(m, ice.SHY, CLIENT_ORIGIN))

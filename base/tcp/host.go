@@ -57,7 +57,7 @@ func init() {
 				mdb.HashCreate(m, mdb.TYPE, m.ActionKey(), m.OptionSimple(mdb.NAME, mdb.TEXT))
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				if mdb.IsSearchPreview(m, arg, nil) {
+				if mdb.IsSearchPreview(m, arg) {
 					ip := m.Cmdv(HOST, GATEWAY, aaa.IP)
 					m.PushSearch(mdb.TYPE, GATEWAY, mdb.NAME, ip, mdb.TEXT, "http://"+ip)
 				}
@@ -86,8 +86,6 @@ func init() {
 	})
 }
 
+func Address(host, port string) string                   { return fmt.Sprintf("%s:%s", host, port) }
 func IsLocalHost(m *ice.Message, ip string) bool         { return m.Cmdx(HOST, ISLOCAL, ip) == ice.OK }
 func PublishLocalhost(m *ice.Message, url string) string { return m.Cmdx(HOST, PUBLISH, url) }
-func Address(host, port string) string {
-	return fmt.Sprintf("%s:%s", host, port)
-}

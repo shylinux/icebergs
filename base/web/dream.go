@@ -118,7 +118,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		DREAM: {Name: "dream name@key auto create", Help: "梦想家", Actions: ice.MergeActions(ice.Actions{
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				if mdb.IsSearchPreview(m, arg, nil) {
+				if mdb.IsSearchPreview(m, arg) {
 					m.Cmds("", func(value ice.Maps) { m.PushSearch(mdb.TEXT, m.MergePod(value[mdb.NAME]), value) })
 				}
 			}},

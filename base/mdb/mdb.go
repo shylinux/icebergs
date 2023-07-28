@@ -125,6 +125,7 @@ const (
 	NEXT = "next"
 	PREV = "prev"
 
+	SORT = "sort"
 	JSON = "json"
 	CSV  = "csv"
 	SUB  = "sub"

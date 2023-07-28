@@ -203,6 +203,7 @@ func HashSelect(m *ice.Message, arg ...string) *ice.Message {
 		m.Fields(len(kit.Slice(arg, 0, 1)), HashField(m))
 	}
 	m.Cmdy(SELECT, m.PrefixKey(), "", HASH, HashShort(m), arg, logs.FileLineMeta(-1))
+	kit.If(Config(m, SORT), func(sort string) { m.Sort(sort) })
 	if m.PushAction(Config(m, ACTION), REMOVE); !m.FieldsIsDetail() {
 		return m.StatusTimeCount()
 	}

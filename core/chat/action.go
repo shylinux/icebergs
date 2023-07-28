@@ -21,7 +21,11 @@ func _action_exec(m *ice.Message, river, storm, index string, arg ...string) {
 	}).Length() == 0, ice.ErrNotRight, index, arg) {
 		return
 	}
-	m.Cmd(web.COUNT, mdb.CREATE, ACTION, index, kit.Join(arg), kit.Dict(ice.LOG_DISABLE, ice.TRUE))
+	if len(arg) > 0 && arg[0] == ctx.ACTION {
+		m.Cmd(web.COUNT, mdb.CREATE, ACTION, index, "", kit.Dict(ice.LOG_DISABLE, ice.TRUE))
+	} else {
+		m.Cmd(web.COUNT, mdb.CREATE, ACTION, index, kit.Join(arg), kit.Dict(ice.LOG_DISABLE, ice.TRUE))
+	}
 	kit.If(!ctx.PodCmd(m, index, arg), func() { m.Cmdy(index, arg) })
 }
 func _action_auth(m *ice.Message, share string) *ice.Message {

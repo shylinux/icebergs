@@ -50,7 +50,7 @@ func _space_fork(m *ice.Message) {
 	addr := kit.Select(m.R.RemoteAddr, m.R.Header.Get(ice.MSG_USERADDR))
 	name := kit.ReplaceAll(kit.Select(addr, m.Option(mdb.NAME)), "[", "_", "]", "_", nfs.DF, "_", nfs.PT, "_")
 	text := kit.Select(addr, m.Option(mdb.TEXT))
-	if kit.IsIn(m.Option(mdb.TYPE), CHROME) && m.Option(mdb.NAME) != "chrome" || !(ice.Info.Localhost && tcp.IsLocalHost(m, m.R.RemoteAddr) ||
+	if kit.IsIn(m.Option(mdb.TYPE), CHROME) && m.Option(mdb.NAME) != CHROME || !(ice.Info.Localhost && tcp.IsLocalHost(m, m.R.RemoteAddr) ||
 		m.Option(TOKEN) != "" && m.Cmdv(TOKEN, m.Option(TOKEN), mdb.TIME) > m.Time()) {
 		name, text = kit.Hashs(name), kit.Select(addr, m.Option(mdb.NAME), m.Option(mdb.TEXT))
 	}
@@ -73,16 +73,17 @@ func _space_fork(m *ice.Message) {
 }
 func _space_handle(m *ice.Message, safe bool, name string, c *websocket.Conn) {
 	defer m.Cost(SPACE, name)
+	m.Option(ice.MSG_USERROLE, "")
 	for {
 		_, b, e := c.ReadMessage()
 		if e != nil {
 			break
 		}
 		msg := m.Spawn(b)
-		if safe { // 下行命令
+		if safe { // 下行权限
 			msg.OptionDefault(ice.MSG_USERROLE, aaa.UserRole(msg, msg.Option(ice.MSG_USERNAME)))
-		} else { // 上行请求
-			msg.Option(ice.MSG_USERROLE, aaa.VOID)
+		} else { // 上行权限
+			kit.If(msg.Option(ice.MSG_USERROLE), func() { msg.Option(ice.MSG_USERROLE, aaa.VOID) })
 		}
 		source, target := kit.Simple(msg.Optionv(ice.MSG_SOURCE), name), kit.Simple(msg.Optionv(ice.MSG_TARGET))
 		msg.Log(tcp.RECV, "%v->%v %v %v", source, target, msg.Detailv(), msg.FormatsMeta(nil))
@@ -188,7 +189,7 @@ func init() {
 				m.Cmd("", m.Option(mdb.NAME), ice.EXIT)
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				if mdb.IsSearchPreview(m, arg, nil) {
+				if mdb.IsSearchPreview(m, arg) {
 					m.Cmds("", func(value ice.Maps) {
 						switch value[mdb.TYPE] {
 						case MASTER:

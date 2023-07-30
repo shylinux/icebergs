@@ -51,7 +51,7 @@ func ProcessField(m *ice.Message, cmd string, args ice.Any, arg ...string) *ice.
 		m.Cmdy(COMMAND, cmd).Push(ARGS, kit.Format(_process_args(m, args))).Options(ice.MSG_INDEX, m.PrefixKey()).ProcessField(ACTION, m.ActionKey(), ice.RUN)
 	} else {
 		if pod := m.Option(ice.POD); pod != "" {
-			m.Options(ice.POD, "").Cmdy("web.space", pod, cmd, arg[1:])
+			m.Options(ice.POD, []string{}, ice.MSG_USERPOD, pod).Cmdy("web.space", pod, cmd, arg[1:])
 		} else {
 			kit.If(aaa.Right(m, cmd, arg[1:]), func() { m.Cmdy(cmd, arg[1:]) })
 		}

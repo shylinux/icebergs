@@ -76,6 +76,7 @@ func _hash_select_field(m *ice.Message, prefix, chain string, key string, field 
 }
 func _hash_prunes(m *ice.Message, prefix, chain string, arg ...string) {
 	fields := _hash_fields(m)
+	kit.If(kit.IndexOf(fields, HASH) == -1, func() { fields = append(fields, HASH) })
 	defer RLock(m, prefix, chain)()
 	Richs(m, prefix, chain, FOREACH, func(key string, value Map) {
 		switch value = kit.GetMeta(value); cb := m.OptionCB("").(type) {
@@ -173,7 +174,8 @@ func HashShort(m *ice.Message) string {
 	return kit.Select(HASH, Config(m, SHORT), Config(m, SHORT) != UNIQ)
 }
 func HashField(m *ice.Message) string {
-	return kit.Select(HASH_FIELD, Config(m, FIELD), Config(m, FIELDS))
+	return kit.Select(HASH_FIELD, Config(m, FIELD))
+	// return kit.Select(HASH_FIELD, Config(m, FIELD), Config(m, FIELDS))
 }
 func HashInputs(m *ice.Message, arg ...Any) *ice.Message {
 	return m.Cmdy(INPUTS, m.PrefixKey(), "", HASH, arg)

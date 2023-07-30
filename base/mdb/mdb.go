@@ -143,6 +143,8 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: ice.Commands
 	ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) {}},
 	INPUTS: {Name: "inputs key sub type field value", Hand: func(m *ice.Message, arg ...string) {
 		switch arg[3] {
+		case "space":
+			m.Cmdy("web.space").Cut(NAME)
 		case "index":
 			m.Cmdy("command")
 			return
@@ -246,7 +248,8 @@ func AutoConfig(arg ...Any) *ice.Action {
 				m.Design(INSERT, "添加", inputs...)
 			}
 			if inputs := []Any{}; cmd.Meta[CREATE] == nil {
-				kit.For(kit.Filters(kit.Split(kit.Select(Config(m, SHORT), Config(m, FIELDS))), TIME, HASH, COUNT), func(k string) { inputs = append(inputs, k) })
+				kit.For(kit.Filters(kit.Split(Config(m, SHORT)), TIME, HASH, COUNT), func(k string) { inputs = append(inputs, k) })
+				// kit.For(kit.Filters(kit.Split(kit.Select(Config(m, SHORT), Config(m, FIELDS))), TIME, HASH, COUNT), func(k string) { inputs = append(inputs, k) })
 				m.Design(CREATE, "创建", inputs...)
 			}
 		} else if cmd.Actions[CREATE] != nil {

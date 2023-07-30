@@ -1,0 +1,5 @@
+fieldset.web.flows>div.output>div.layout>div.layout>div.content svg text { dominant-baseline:middle; }
+fieldset.web.flows>div.output>div.layout>div.layout>div.content svg text.fail { stroke:red; fill:red; }
+fieldset.web.flows>div.output>div.layout>div.layout>div.content svg rect.fail { stroke:red; }
+fieldset.web.flows>div.output>div.layout>div.layout>div.content svg text.done { stroke:lightgreen; fill:lightgreen; }
+fieldset.web.flows>div.output>div.layout>div.layout>div.content svg rect.done { stroke:lightgreen; }

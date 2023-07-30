@@ -56,9 +56,18 @@ const ROUTE = "route"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		ROUTE: {Name: "route space:text cmds:text auto spide cmds build travel", Help: "路由表", Actions: ice.MergeActions(ice.Actions{
+		ROUTE: {Name: "route space:text cmds:text auto spide cmds build travel prunes", Help: "路由表", Actions: ice.MergeActions(ice.Actions{
 			ice.MAIN: {Help: "首页", Hand: func(m *ice.Message, arg ...string) {
 				ctx.ProcessField(m, CHAT_IFRAME, m.MergePod(kit.Select(m.Option(SPACE), arg, 0)), arg...)
+			}},
+			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
+				switch mdb.HashInputs(m, arg); arg[0] {
+				case SPACE:
+					list := map[string]bool{}
+					push := func(key string) { kit.If(!list[key], func() { m.Push(arg[0], key); list[key] = true }) }
+					mdb.HashSelect(m.Spawn()).Table(func(value ice.Maps) { push(kit.Format("=%s@", value[nfs.MODULE])) })
+					kit.For([]string{WORKER, SERVER}, func(key string) { push(kit.Format(":%s=", key)) })
+				}
 			}},
 			"spide": {Help: "导图", Hand: func(m *ice.Message, arg ...string) {
 				ctx.DisplayStorySpide(m.Cmdy(""), nfs.DIR_ROOT, ice.Info.NodeName, mdb.FIELD, SPACE, lex.SPLIT, nfs.PT, ctx.ACTION, ice.MAIN)
@@ -103,7 +112,8 @@ func init() {
 				})
 				PushPodCmd(m, "", m.ActionKey())
 				m.Table(func(value ice.Maps) { kit.If(value[SPACE], func() { mdb.HashCreate(m.Spawn(), kit.Simple(value)) }) })
-				m.StatusTimeCount()
+				m.ProcessRefresh()
+				// m.StatusTimeCount()
 			}},
 		}, ctx.CmdAction(), mdb.HashAction(mdb.SHORT, SPACE, mdb.FIELD, "time,space,type,module,version,md5,size,path,hostname", mdb.SORT, "type,space", mdb.ACTION, ice.MAIN)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 1 {

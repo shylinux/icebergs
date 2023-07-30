@@ -66,11 +66,7 @@ func (w WebView) Power() string {
 	}
 	return ""
 }
-func (w WebView) Close() {
-	if !w.Menu() {
-		w.WebView.Terminate()
-	}
-}
+func (w WebView) Close()     { kit.If(!w.Menu(), func() { w.WebView.Terminate() }) }
 func (w WebView) Terminate() { w.WebView.Terminate() }
 func (w WebView) navigate(url string) {
 	w.WebView.SetSize(1200, 800, webview.HintNone)
@@ -87,7 +83,5 @@ func Run(cb func(*WebView) ice.Any) {
 	} else {
 		kit.Reflect(cb(view), func(name string, value ice.Any) { w.Bind(name, value) })
 	}
-	if !view.Menu() {
-		view.navigate("http://localhost:9020")
-	}
+	kit.If(!view.Menu(), func() { view.navigate("http://localhost:9020") })
 }

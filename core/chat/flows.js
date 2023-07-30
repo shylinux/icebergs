@@ -96,8 +96,8 @@ Volcanos(chat.ONIMPORT, {
 			rect.Value(html.CLASS, item.status)
 			text.Value(html.CLASS, item.status)
 		}
-		if (can.ui._height < y+height) { can.ui._height = y+height, can.onimport.layout(can), rect.scrollIntoView() }
-		if (can.ui._width < x+width) { can.ui._width = x+width, can.onimport.layout(can), rect.scrollIntoView() }
+		if (can.ui._height < y+height) { can.ui._height = y+height, can.onimport.layout(can), can.isCmdMode() && rect.scrollIntoView() }
+		if (can.ui._width < x+width) { can.ui._width = x+width, can.onimport.layout(can), can.isCmdMode() && rect.scrollIntoView() }
 	},
 	layout: function(can) {
 		if (can.page.isDisplay(can.ui.profile)) { var profile = can._profile_plugin
@@ -124,7 +124,7 @@ Volcanos(chat.ONDETAIL, {
 				if (_class.indexOf(html.SELECT) > -1) { target.Value(html.CLASS, _class.filter(function(c) { return c != html.SELECT }).join(lex.SP).trim()) }
 			}
 		}), can.page.Select(can, item._tr.parentNode, "", function(target) { can.page.ClassList.set(can, target, html.SELECT, target == item._tr) })
-		item._rect.scrollIntoView()
+		can.isCmdMode() && item._rect.scrollIntoView()
 	},
 	onclick: function(event, can, _sub, item) { switch (_sub.svg.style.cursor) {
 		case "e-resize": can.Update(can.request(event, can.Action("direct") == "horizon"? {prev: item.hash}: {from: item.hash}), [ctx.ACTION, mdb.INSERT]); break

@@ -30,6 +30,7 @@ func init() {
 				AppInstall(m, "", cli.RUNTIME, mdb.ICON, "usr/icons/info.png")
 				AppInstall(m, "", web.DREAM, mdb.ICON, "usr/icons/Mission Control.png")
 				AppInstall(m, "", web.CODE_VIMER, mdb.ICON, "usr/icons/vimer.png")
+				AppInstall(m, "", web.CHAT_FLOWS, mdb.ICON, "usr/icons/flows.png")
 				AppInstall(m, "", web.CODE_COMPILE, mdb.ICON, "usr/icons/go.png")
 				AppInstall(m, "", web.CODE_GIT_STATUS, mdb.ICON, "usr/icons/git.jpg")
 			}},

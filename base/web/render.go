@@ -175,5 +175,6 @@ const (
 	CODE_GIT_STATUS  = "web.code.git.status"
 	CODE_GIT_REPOS   = "web.code.git.repos"
 	CHAT_FAVOR       = "web.chat.favor"
+	CHAT_FLOWS       = "web.chat.flows"
 	CHAT_IFRAME      = "web.chat.iframe"
 )

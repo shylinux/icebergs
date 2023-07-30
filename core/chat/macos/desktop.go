@@ -21,6 +21,7 @@ func init() {
 					DeskAppend(m, "Photos", web.WIKI_FEEL)
 					DeskAppend(m, "Grapher", web.WIKI_DRAW)
 					DeskAppend(m, "Calendar", web.TEAM_PLAN, ctx.ARGS, team.MONTH)
+					DeskAppend(m, "flows", web.CHAT_FLOWS)
 				}
 			}},
 			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { mdb.HashExport(m) }},

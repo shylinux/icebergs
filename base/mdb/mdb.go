@@ -124,6 +124,7 @@ const (
 	PAGE = "page"
 	NEXT = "next"
 	PREV = "prev"
+	PLAY = "play"
 
 	SORT = "sort"
 	JSON = "json"

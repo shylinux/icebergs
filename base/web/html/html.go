@@ -6,3 +6,7 @@ const (
 	WHITE = "white"
 	BLACK = "black"
 )
+
+const (
+	FLOAT = "float"
+)

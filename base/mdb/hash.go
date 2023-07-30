@@ -163,6 +163,12 @@ func StatusHashAction(arg ...Any) ice.Actions {
 func ClearOnExitHashAction() ice.Actions {
 	return ice.MergeActions(ice.Actions{ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { Conf(m, m.PrefixKey(), HASH, "") }}})
 }
+func ExportHashAction() ice.Actions {
+	return ice.Actions{
+		ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { HashImport(m, arg) }},
+		ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { HashExport(m, arg) }},
+	}
+}
 
 func HashKey(m *ice.Message) string {
 	if m.Option(HASH) != "" {

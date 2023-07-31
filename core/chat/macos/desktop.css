@@ -1,3 +1,4 @@
+body { --desktop-icon-size:80px; }
 fieldset.macos.desktop { background-size:cover; background-position:center; }
 fieldset.macos.desktop>div.output { overflow:hidden; }
 fieldset.macos.desktop>div.output>fieldset.macos { background-color:transparent; }
@@ -20,8 +21,8 @@ fieldset.macos.desktop>div.output>div.desktop { padding-top:25px; }
 fieldset.macos.desktop>div.output>div.desktop:not(.select) { display:none; }
 fieldset.macos.desktop>div.output>div.desktop>div.item { position:absolute; text-align:center; }
 fieldset.macos.desktop>div.output>div.desktop>div.item:hover { background-color:unset; }
-fieldset.macos.desktop>div.output>div.desktop>div.item img { width:80px; border-radius:80px; }
-fieldset.macos.desktop>div.output>div.desktop>div.item>div.name { font-size:12px; width:80px; overflow:hidden; }
+fieldset.macos.desktop>div.output>div.desktop>div.item img { width:var(--desktop-icon-size); height:var(--desktop-icon-size); border-radius:var(--desktop-icon-size); object-fit:contain; }
+fieldset.macos.desktop>div.output>div.desktop>div.item>div.name { font-size:12px; width:var(--desktop-icon-size); overflow:hidden; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset { border-radius:10px; position:absolute; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset input:not([type=button]) {width: 150px;}
 fieldset.macos.desktop>div.output>div.desktop>fieldset>div.output>table.content { width:100%; }
@@ -53,14 +54,14 @@ fieldset.macos.menu>div.output>div.item.avatar>img { height:25px; }
 fieldset.macos.menu>div.output>div.menu { float:left; padding:0 20px; cursor:pointer; }
 fieldset.macos.menu>div.output>div.tabs { float:left; font-style:italic; padding:0 10px; }
 fieldset.macos.menu>div.output>div.tabs.select { background-color:transparent; color:white; }
-fieldset.macos.dock>div.output { height:80px; display:flex; overflow:auto; }
+fieldset.macos.dock>div.output { height:var(--desktop-icon-size); display:flex; overflow:auto; }
 fieldset.macos.dock>div.output>div.space { background-color:#ececec36; margin:10px; height:calc(100% - 20px); width:2px; }
 fieldset.macos.dock>div.output>div.item { text-align:center; align-self:baseline; transition:margin-top 0.3s; }
 fieldset.macos.dock>div.output>div.item>div.name { display:none; }
-fieldset.macos.dock>div.output>div.item img { border-radius:80px; width:80px; transition:width 0.3s; }
+fieldset.macos.dock>div.output>div.item img { border-radius:var(--desktop-icon-size); width:var(--desktop-icon-size); min-height:var(--desktop-icon-size); transition:width 0.3s; object-fit:contain; }
 fieldset.macos.finder>div.output>div.project>div.item input { width:100%; }
 fieldset.macos.finder>div.output div.content>div.item { float:left; text-align:center; }
-fieldset.macos.finder>div.output div.content>div.item img { width:80px; border-radius:80px; }
+fieldset.macos.finder>div.output div.content>div.item img { width:var(--desktop-icon-size); height:var(--desktop-icon-size); border-radius:var(--desktop-icon-size); object-fit:contain; }
 fieldset.macos.finder>div.output div.content>div.item div.name { font-size:12px; text-align:center; }
 div.carte.macos.float { font-size:14px; padding:10px; border:#ffffff5e solid 1px; border-radius:8px; }
 div.carte.macos.float div.item { background:transparent; }

@@ -145,19 +145,24 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: ice.Commands
 	INPUTS: {Name: "inputs key sub type field value", Hand: func(m *ice.Message, arg ...string) {
 		switch arg[3] {
 		case "space":
-			m.Cmdy("web.space").Cut(NAME)
+			m.Cmd("space", func(value ice.Maps) {
+				kit.If(kit.IsIn(value[TYPE], "worker", "server"), func() { m.Push(arg[3], value[NAME]) })
+			})
 		case "index":
-			m.Cmdy("command")
-			return
+			if space := m.Option("space"); space != "" {
+				m.Options("space", []string{}).Cmdy("space", space, INPUTS, arg)
+			} else {
+				m.Cmdy("command")
+			}
 		case "args":
 			m.Cmdy("command", INPUTS, m.Option("index"))
-			return
+		default:
+			kit.Switch(arg[2],
+				HASH, func() { _hash_inputs(m, arg[0], arg[1], kit.Select(NAME, arg, 3), kit.Select("", arg, 4)) },
+				ZONE, func() { _zone_inputs(m, arg[0], arg[1], arg[3], kit.Select(NAME, arg, 4), kit.Select("", arg, 5)) },
+				LIST, func() { _list_inputs(m, arg[0], arg[1], kit.Select(NAME, arg, 3), kit.Select("", arg, 4)) },
+			)
 		}
-		kit.Switch(arg[2],
-			HASH, func() { _hash_inputs(m, arg[0], arg[1], kit.Select(NAME, arg, 3), kit.Select("", arg, 4)) },
-			ZONE, func() { _zone_inputs(m, arg[0], arg[1], arg[3], kit.Select(NAME, arg, 4), kit.Select("", arg, 5)) },
-			LIST, func() { _list_inputs(m, arg[0], arg[1], kit.Select(NAME, arg, 3), kit.Select("", arg, 4)) },
-		)
 	}},
 	INSERT: {Name: "insert key sub type arg...", Hand: func(m *ice.Message, arg ...string) {
 		kit.Switch(arg[2],

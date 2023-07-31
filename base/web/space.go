@@ -138,6 +138,7 @@ func _space_send(m *ice.Message, name string, arg ...string) (h string) {
 		m.Cost(kit.Format("%v->[%v] %v %v", m.Optionv(ice.MSG_SOURCE), name, m.Detailv(), msg.FormatSize())).Copy(msg)
 	})
 	h = mdb.HashCreate(m.Spawn(), mdb.TYPE, tcp.SEND, mdb.NAME, kit.Keys(name, m.Target().ID()), mdb.TEXT, kit.Join(arg, lex.SP), kit.Dict(mdb.TARGET, done))
+	defer mdb.HashRemove(m.Spawn(), mdb.HASH, h)
 	if target := kit.Split(name, nfs.PT, nfs.PT); mdb.HashSelectDetail(m, target[0], func(value ice.Map) {
 		if c, ok := value[mdb.TARGET].(*websocket.Conn); !m.Warn(!ok, ice.ErrNotValid, mdb.TARGET) {
 			kit.For([]string{ice.MSG_USERROLE}, func(k string) { m.Optionv(k, m.Optionv(k)) })
@@ -220,7 +221,7 @@ func init() {
 				m.Option(ice.MSG_USERWEB, tcp.PublishLocalhost(m, m.Option(ice.MSG_USERWEB)))
 				mdb.HashSelect(m.Spawn(), arg...).Sort("").Table(func(index int, value ice.Maps, field []string) {
 					if kit.IsIn(value[mdb.TYPE], CHROME, "send") {
-						return
+						// return
 					}
 					if m.Push("", value, kit.Split(mdb.Config(m, mdb.FIELD))); len(arg) > 0 && arg[0] != "" {
 						m.Push(mdb.STATUS, value[mdb.STATUS])

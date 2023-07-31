@@ -54,7 +54,7 @@ func _dream_start(m *ice.Message, name string) {
 	if pid := m.Cmdx(nfs.CAT, path.Join(p, ice.Info.PidPath), kit.Dict(ice.MSG_USERROLE, aaa.TECH)); pid != "" && nfs.Exists(m, "/proc/"+pid) {
 		m.Info("already exists %v", pid)
 		return
-	} else if m.Cmd(SPACE, name).Length() > 0 {
+	} else if msg := m.Cmd(SPACE, name); msg.Length() > 0 {
 		m.Info("already exists %v", name)
 		return
 	}

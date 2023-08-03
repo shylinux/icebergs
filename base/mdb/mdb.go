@@ -277,6 +277,9 @@ func ImportantHashAction(arg ...Any) ice.Actions {
 	}, HashAction(arg...))
 }
 func saveImportant(m *ice.Message, key, sub string, arg ...string) {
+	if m.Option("skip.important") == ice.TRUE {
+		return
+	}
 	kit.If(m.Conf(key, kit.Keys(META, "important")) == ice.TRUE, func() { ice.SaveImportant(m, arg...) })
 }
 func ToMaps(value Map) Maps {

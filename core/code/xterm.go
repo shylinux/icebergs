@@ -21,6 +21,7 @@ import (
 func _xterm_get(m *ice.Message, h string) xterm.XTerm {
 	h = kit.Select(m.Option(mdb.HASH), h)
 	m.Assert(h != "")
+	m.Option("skip.important", ice.TRUE)
 	if m.Option(ice.MSG_USERPOD) == "" {
 		mdb.HashModify(m, mdb.TIME, m.Time(), cli.DAEMON, kit.Keys(m.Option(ice.MSG_DAEMON)))
 	} else {
@@ -60,7 +61,7 @@ func _xterm_get(m *ice.Message, h string) xterm.XTerm {
 	}).(xterm.XTerm)
 }
 func _xterm_echo(m *ice.Message, h string, str string) {
-	m.Options(ice.LOG_DISABLE, ice.TRUE, "__target", "", ice.MSG_DAEMON, mdb.HashSelectField(m, h, cli.DAEMON))
+	m.Options(ice.MSG_COUNT, "0", ice.LOG_DISABLE, ice.TRUE, "__target", "", ice.MSG_DAEMON, mdb.HashSelectField(m, h, cli.DAEMON))
 	web.PushNoticeGrow(m, h, str)
 }
 func _xterm_cmds(m *ice.Message, h string, cmd string, arg ...ice.Any) {
@@ -126,7 +127,11 @@ func init() {
 			}},
 			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { web.DreamProcess(m, []string{}, arg...) }},
 			ctx.PROCESS: {Hand: func(m *ice.Message, arg ...string) {
-				ctx.ProcessField(m, m.PrefixKey(), func() string { return m.Cmdx("", mdb.CREATE, arg) }, arg...)
+				if len(arg) == 1 {
+					ctx.ProcessField(m, m.PrefixKey(), arg, arg...)
+				} else {
+					ctx.ProcessField(m, m.PrefixKey(), func() string { return m.Cmdx("", mdb.CREATE, arg) }, arg...)
+				}
 			}},
 			"terminal": {Help: "本机", Hand: func(m *ice.Message, arg ...string) {
 				if h := kit.Select(m.Option(mdb.HASH), arg, 0); h == "" {
@@ -162,5 +167,11 @@ end tell
 }
 
 func ProcessXterm(m *ice.Message, cmds, text string, arg ...string) {
-	ctx.Process(m, XTERM, []string{mdb.TYPE, cmds, mdb.NAME, kit.Select("", arg, 0), mdb.TEXT, text}, arg...)
+	ctx.Process(m, XTERM, func() []string {
+		if ls := kit.Simple(kit.UnMarshal(m.Option(ctx.ARGS))); len(ls) > 0 {
+			return ls
+		} else {
+			return []string{mdb.TYPE, cmds, mdb.NAME, kit.Select("", arg, 0), mdb.TEXT, text}
+		}
+	}, arg...)
 }

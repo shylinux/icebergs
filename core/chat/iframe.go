@@ -32,9 +32,11 @@ func init() {
 					m.Push(arg[0], web.UserWeb(m).Host)
 				case mdb.LINK:
 					m.Push(arg[0], m.Option(ice.MSG_USERWEB))
-					m.Push(arg[0], "http://localhost:20000")
-					m.Push(arg[0], "http://localhost:20001")
 					m.Copy(m.Cmd(web.SPIDE).CutTo(web.CLIENT_URL, arg[0]))
+				case mdb.HASH:
+					m.Cmd(mdb.SEARCH, mdb.FOREACH, "", "type,name,text", func(value ice.Maps) {
+						kit.If(value[mdb.TYPE] == "link", func() { m.Push(arg[0], value[mdb.TEXT]) })
+					})
 				}
 			}},
 			FAVOR_INPUTS: {Hand: func(m *ice.Message, arg ...string) {

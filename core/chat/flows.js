@@ -1,6 +1,8 @@
+(function() {
+const ACTION_STORE = "web.flows:action:"
 Volcanos(chat.ONIMPORT, {
 	_init: function(can, msg, cb) { can.onmotion.clear(can), can.ui = can.onappend.layout(can), can.onmotion.hidden(can, can.ui.profile), can.onmotion.hidden(can, can.ui.display)
-		cb && cb(msg), can.core.Item(can.Action(), function(key) { can.onaction[key] = can.onaction[key]||can.onaction.refresh, can.Action(key, can.misc.localStorage(can, "web.flows.action."+key)) }), can.onkeymap._build(can)
+		cb && cb(msg), can.core.Item(can.Action(), function(key) { can.onaction[key] = can.onaction[key]||can.onaction.refresh, can.Action(key, can.misc.localStorage(can, ACTION_STORE+key)) }), can.onkeymap._build(can)
 		if (can.Option(mdb.ZONE)) { return can.onmotion.hidden(can, can.ui.project), can.onimport._content(can, msg, can.Option(mdb.ZONE)) } can.onimport._project(can, msg)
 	},
 	_project: function(can, msg) { var target; msg.Table(function(value) {
@@ -122,7 +124,7 @@ Volcanos(chat.ONACTION, {
 		[html.MARGIN, 20, 40, 60],
 		["delay", 100, 200, 500, 1000],
 	], _trans: {play: "播放", prev: "上一步", next: "下一步"},
-	refresh: function(event, can, button) { can.misc.localStorage(can, "web.flows.action."+button, can.Action(button)), can.onimport._flows(can, can.db._content_plugin) },
+	refresh: function(event, can, button) { can.misc.localStorage(can, ACTION_STORE+button, can.Action(button)), can.onimport._flows(can, can.db._content_plugin) },
 	travel: function() {}, delay: function() {},
 	play: function(event, can) { var list = can.onexport.travel(can, can.db.root, true)
 		can.core.List(list, function(item) { item._line && item._line.Value(html.CLASS, ""), item._rect.Value(html.CLASS, ""), item._text.Value(html.CLASS, "") })
@@ -192,3 +194,4 @@ Volcanos(chat.ONKEYMAP, {
 		ArrowDown: shy("下一步", function(event, can) { can.db.current && can.db.current.to? can.ondetail._select(event, can, can.db.current.to): can.onaction.next(event, can) }),
 	}}, _engine: {},
 })
+})()

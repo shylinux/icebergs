@@ -33,14 +33,6 @@ const SH = nfs.SH
 func init() {
 	Index.MergeCommands(ice.Commands{
 		SH: {Name: "sh path auto", Help: "命令", Actions: ice.MergeActions(ice.Actions{
-			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				if arg[0] == mdb.FOREACH && arg[1] == ssh.SHELL {
-					return
-					m.Cmd(nfs.CAT, "/etc/shells", func(text string) {
-						kit.If(text != "" && !strings.HasPrefix(text, "#"), func() { m.PushSearch(mdb.TYPE, ssh.SHELL, mdb.NAME, path.Base(text), mdb.TEXT, path.Base(text)) })
-					})
-				}
-			}},
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
 				cmds, text := _sh_cmds(m, path.Join(arg[2], arg[1]))
 				ProcessXterm(m, cmds, text, path.Join(arg[2], arg[1]))

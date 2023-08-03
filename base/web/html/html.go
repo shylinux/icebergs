@@ -8,5 +8,6 @@ const (
 )
 
 const (
-	FLOAT = "float"
+	FLOAT  = "float"
+	OUTPUT = "output"
 )

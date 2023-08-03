@@ -77,8 +77,11 @@ func init() {
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) > 0 && arg[0] != "" && arg[0] != ice.EXIT {
-					m.Cmdy(arg).Search(arg[0], func(key string, cmd *ice.Command) {
-						m.Cut(kit.Format(kit.Value(cmd.List, kit.Format("%d.name", len(arg)-1))))
+					m.Search(arg[0], func(key string, cmd *ice.Command) {
+						field := kit.Format(kit.Value(cmd.List, kit.Format("%d.name", len(arg)-1)))
+						if m.Cmdy(arg[0], mdb.INPUTS, field); m.Length() == 0 {
+							m.Cmdy(arg).Cut(field)
+						}
 					})
 				}
 			}},

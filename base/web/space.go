@@ -90,17 +90,14 @@ func _space_handle(m *ice.Message, safe bool, name string, c *websocket.Conn) {
 		if next := msg.Option(ice.MSG_TARGET); next == "" || len(target) == 0 {
 			m.Go(func() { _space_exec(msg, source, target, c) }, strings.Join(kit.Simple(SPACE, name, msg.Detailv()), lex.SP))
 		} else {
-			done := false
 			m.Warn(!mdb.HashSelectDetail(m, next, func(value ice.Map) {
 				switch c := value[mdb.TARGET].(type) {
 				case (*websocket.Conn): // 转发报文
 					_space_echo(msg, source, target, c)
 				case ice.Handler: // 接收响应
-					done = true
-					c(msg)
+					m.Go(func() { c(msg) })
 				}
 			}), ice.ErrNotFound, next)
-			kit.If(done, func() { mdb.HashRemove(m, mdb.HASH, next) })
 		}
 	}
 }

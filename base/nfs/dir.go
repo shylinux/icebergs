@@ -123,7 +123,7 @@ func _dir_list(m *ice.Message, root string, dir string, level int, deep bool, di
 		}
 		if deep && isDir {
 			switch s.Name() {
-			case "pluged":
+			case "pluged", "node_modules":
 				continue
 			}
 			_total, _last := _dir_list(m, root, pp, level+1, deep, dir_type, dir_reg, fields)

@@ -89,7 +89,7 @@ func init() {
 					if msg.Append(ice.CMD) != "" {
 						m.RenderRedirect(m.MergePodCmd("", msg.Append(ice.CMD)), ice.MSG_SESSID, aaa.SessCreate(m, msg.Append(aaa.USERNAME)))
 					} else {
-						m.RenderRedirect(nfs.PS, ice.MSG_SESSID, aaa.SessCreate(m, msg.Append(aaa.USERNAME)))
+						m.RenderRedirect(nfs.PS+kit.Select("", "?debug=true", m.Option("debug") == "true"), ice.MSG_SESSID, aaa.SessCreate(m, msg.Append(aaa.USERNAME)))
 					}
 				default:
 					if msg.Append(ice.CMD) != "" {

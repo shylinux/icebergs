@@ -6,11 +6,13 @@ import (
 )
 
 func init() {
+	const ADMIN = "admin"
 	Index.MergeCommands(ice.Commands{
-		"admin": {Name: "admin", Help: "管理", Hand: func(m *ice.Message, arg ...string) {
+		ADMIN: {Name: ADMIN, Help: "管理", Hand: func(m *ice.Message, arg ...string) {
 			args := []string{}
+			kit.If(len(arg) == 0, func() { arg = append(arg, SPACE, DOMAIN) })
 			kit.For(arg[1:], func(v string) { args = append(args, ice.ARG, v) })
-			m.Cmdy(SPIDE, ice.OPS, SPIDE_RAW, "/chat/cmd/"+arg[0]+"?debug=true", SPIDE_FORM, args)
+			m.Cmdy(SPIDE, ice.OPS, SPIDE_RAW, CHAT_CMD+arg[0]+"?debug=true", SPIDE_FORM, args)
 		}},
 	})
 }

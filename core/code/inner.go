@@ -86,7 +86,7 @@ const INNER = "inner"
 func init() {
 	var bind = []string{"usr/icebergs/core/", "usr/volcanos/plugin/local/"}
 	Index.MergeCommands(ice.Commands{
-		INNER: {Name: "inner path=src/@key file=main.go@key line=1 auto exec", Help: "源代码", Actions: ice.MergeActions(ice.Actions{
+		INNER: {Name: "inner path=src/@key file=main.go@key line=1 auto show exec", Help: "源代码", Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch p := kit.Select(nfs.PWD, arg, 1); arg[0] {
 				case ice.CMD:
@@ -112,9 +112,8 @@ func init() {
 				}
 			}},
 			mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(mdb.PLUGIN, arg)
-				if m.Result() == "" {
-					m.Cmdy(mdb.PLUGIN, m.Option("parse", strings.ToLower(kit.Split(path.Base(arg[1]), ".")[0])), arg[1:])
+				if m.Cmdy(mdb.PLUGIN, arg); m.Result() == "" {
+					m.Cmdy(mdb.PLUGIN, m.Option("parse", strings.ToLower(kit.Split(path.Base(arg[1]), nfs.PT)[0])), arg[1:])
 				}
 			}},
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _inner_show(m, arg[0], arg[1], arg[2]) }},
@@ -132,6 +131,11 @@ func init() {
 			} else if len(arg) < 2 {
 				nfs.Dir(m, nfs.PATH)
 			} else {
+				if strings.Contains(arg[1], ":") {
+					ls := strings.Split(arg[1], ":")
+					m.ProcessRewrite(nfs.LINE, ls[0], nfs.FILE, ls[1])
+					return
+				}
 				arg[1] = strings.Split(arg[1], mdb.FS)[0]
 				_inner_list(m, kit.Ext(arg[1]), arg[1], arg[0])
 				ctx.DisplayLocal(m, "").Option(REPOS, kit.Join(m.Cmd(REPOS, ice.OptionFields(nfs.PATH)).Sort(nfs.PATH).Appendv(nfs.PATH)))

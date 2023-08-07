@@ -80,9 +80,16 @@ var Index = &Context{Name: ICE, Help: "冰山模块", Commands: Commands{
 		})
 	}},
 }, server: &Frame{}}
-var Pulse = &Message{time: time.Now(), meta: map[string][]string{}, data: Map{}, source: Index, target: Index}
+var Pulse = &Message{meta: map[string][]string{}, data: Map{}, source: Index, target: Index}
 
-func init() { Index.root, Pulse.root = Index, Pulse }
+func init() {
+	Index.root, Pulse.root = Index, Pulse
+	switch tz := os.Getenv("TZ"); tz {
+	case "", "Asia/Beijing", "Asia/Shanghai":
+		time.Local = time.FixedZone(tz, 28800)
+	}
+	Pulse.time = time.Now()
+}
 
 func Run(arg ...string) string {
 	kit.If(len(arg) == 0 && len(os.Args) > 1, func() { arg = kit.Simple(os.Args[1:], kit.Split(kit.Env(CTX_ARG))) })
@@ -102,8 +109,6 @@ func Run(arg ...string) string {
 		}
 	})
 	kit.If(Pulse._cmd == nil, func() { Pulse._cmd = &Command{RawHand: logs.FileLines(3)} })
-	time.Local = time.FixedZone("Beijing", 28800)
-	Pulse.time = time.Now()
 	switch Index.Merge(Index).Begin(Pulse, arg...); kit.Select("", arg, 0) {
 	case SERVE, SPACE:
 		Pulse.Go(func() { Index.Start(Pulse, arg...) })

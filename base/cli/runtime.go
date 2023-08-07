@@ -157,7 +157,7 @@ const RUNTIME = "runtime"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		RUNTIME: {Name: "runtime info=bootinfo,ifconfig,diskinfo,hostinfo,userinfo,procstat,procinfo,bootinfo,role,api,cli,cmd,mod,env,path,chain,routine auto upgrade restart", Help: "运行环境", Actions: ice.MergeActions(ice.Actions{
+		RUNTIME: {Name: "runtime info=bootinfo,ifconfig,diskinfo,hostinfo,userinfo,procstat,procinfo,bootinfo,role,api,cli,cmd,mod,env,path,chain,routine auto upgrade restart logs conf", Help: "运行环境", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				aaa.White(m, ice.ETC_PATH)
 				aaa.White(m, ice.LICENSE)
@@ -251,6 +251,12 @@ func init() {
 			RESTART: {Hand: func(m *ice.Message, arg ...string) {
 				m.Go(func() { m.Sleep("30ms", ice.EXIT, 1) })
 			}},
+			"logs": {Help: "日志", Hand: func(m *ice.Message, arg ...string) {
+				OpenCmds(m, kit.Format("cd %s", kit.Path("")), "tail -f var/log/bench.log")
+			}},
+			"conf": {Help: "配置", Hand: func(m *ice.Message, arg ...string) {
+				OpenCmds(m, kit.Format("cd %s", kit.Path("")), "vim etc/init.shy")
+			}},
 			aaa.ROLE: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(aaa.ROLE, func(value ice.Maps) { m.Push(mdb.KEY, kit.Keys(value[aaa.ROLE], value[mdb.ZONE], value[mdb.KEY])) })
 				ctx.DisplayStorySpide(m.Options(nfs.DIR_ROOT, "ice."), mdb.FIELD, mdb.KEY, lex.SPLIT, nfs.PT)
@@ -261,8 +267,7 @@ func init() {
 			ctx.DisplayStoryJSON(m)
 			m.Status(mdb.TIME, ice.Info.Make.Time,
 				mdb.HASH, kit.Cut(ice.Info.Hash, 6), nfs.SIZE, ice.Info.Size,
-				ice.BIN, _system_find(m, os.Args[0]), mdb.NAME, ice.Info.NodeName,
-				nfs.REMOTE, ice.Info.Make.Remote, nfs.VERSION, ice.Info.Make.Versions(),
+				mdb.NAME, ice.Info.NodeName, nfs.VERSION, ice.Info.Make.Versions(),
 			)
 		}},
 	})

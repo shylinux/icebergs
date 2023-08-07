@@ -42,7 +42,8 @@ func _vimer_make(m *ice.Message, dir string, msg *ice.Message) {
 			}
 		}
 	}
-	kit.If(m.Length() == 0, func() { m.Echo(msg.Append(cli.CMD_OUT)).Echo(msg.Append(cli.CMD_ERR)) })
+	// kit.If(m.Length() == 0, func() { m.Echo(msg.Append(cli.CMD_OUT)).Echo(msg.Append(cli.CMD_ERR)) })
+	m.Echo(msg.Append(cli.CMD_OUT)).Echo(msg.Append(cli.CMD_ERR))
 }
 
 const VIMER = "vimer"
@@ -58,7 +59,7 @@ func init() {
 		}},
 	})
 	Index.MergeCommands(ice.Commands{
-		VIMER: {Name: "vimer path=src/@key file=main.go line=1 list", Help: "编辑器", Meta: kit.Dict(ctx.STYLE, INNER), Actions: ice.MergeActions(ice.Actions{
+		VIMER: {Name: "vimer path=src/@key file=main.go@key line=1 list", Help: "编辑器", Meta: kit.Dict(ctx.STYLE, INNER), Actions: ice.MergeActions(ice.Actions{
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if mdb.IsSearchPreview(m, arg) {
 					m.PushSearch(mdb.TYPE, nfs.FILE, mdb.NAME, "main", mdb.TEXT, ice.SRC_MAIN_SH)

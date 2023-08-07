@@ -43,6 +43,7 @@ fieldset.macos.desktop>div.output>div.desktop>fieldset>div.action>div.item.icons
 fieldset.macos.desktop>div.output>div.desktop>fieldset>div.action>div.item:last-child { margin-right:120px; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset.web.wiki.feel>div.status { display:none; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset.web.code.vimer>div.status { display:none; }
+fieldset.macos.desktop>div.output>div.desktop>fieldset.web.code.vimer>div.action>div.tabs { display:none; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset.web.code.xterm>div.status { display:none; }
 fieldset.web.code.xterm>div.action>div.tabs:only-child { display:none; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset.web.code.compile>form.option>div.item:last-child { margin-right:120px; }

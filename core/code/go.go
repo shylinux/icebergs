@@ -134,7 +134,10 @@ func init() {
 				}
 			}},
 			TEMPLATE: {Hand: func(m *ice.Message, arg ...string) {
-				m.Echo(nfs.Template(m, "demo.go"), path.Base(path.Dir(path.Join(arg[2], arg[1]))))
+				m.Option("name", kit.TrimExt(path.Base(arg[1]), "go"))
+				m.Option("zone", path.Base(path.Dir(path.Join(arg[2], arg[1]))))
+				m.Option("key", kit.Keys("web.code", m.Option("zone"), m.Option("name")))
+				m.Echo(nfs.Template(m, "demo.go"))
 			}},
 			COMPLETE: {Hand: func(m *ice.Message, arg ...string) { _go_complete(m, arg...) }},
 			NAVIGATE: {Hand: func(m *ice.Message, arg ...string) {

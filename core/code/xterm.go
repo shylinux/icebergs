@@ -73,7 +73,7 @@ const XTERM = "xterm"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		XTERM: {Name: "xterm hash auto terminal", Help: "命令行", Actions: ice.MergeActions(ice.Actions{
+		XTERM: {Name: "xterm hash auto install terminal", Help: "命令行", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				kit.If(m.Cmd("").Length() == 0, func() { m.Cmd("", mdb.CREATE, mdb.TYPE, ISH) })
 			}},
@@ -133,17 +133,16 @@ func init() {
 					ctx.ProcessField(m, m.PrefixKey(), func() string { return m.Cmdx("", mdb.CREATE, arg) }, arg...)
 				}
 			}},
+			"install": {Help: "安装", Hand: func(m *ice.Message, arg ...string) {
+				_xterm_get(m, kit.Select("", arg, 0)).Write([]byte(m.Cmdx(PUBLISH, ice.CONTEXTS, ice.APP, kit.Dict("format", "raw")) + ice.NL))
+				ctx.ProcessHold(m)
+			}},
 			"terminal": {Help: "本机", Hand: func(m *ice.Message, arg ...string) {
 				if h := kit.Select(m.Option(mdb.HASH), arg, 0); h == "" {
 					cli.Opens(m, "Terminal.app")
 				} else {
 					msg := m.Cmd("", h)
-					m.Cmd(cli.SYSTEM, "osascript", "-e", kit.Format(`
-tell application "Terminal"
-	do script "%s"
-	activate
-end tell
-`, msg.Append(mdb.TYPE)))
+					cli.OpenCmds(m, msg.Append(mdb.TYPE))
 				}
 				m.ProcessHold()
 			}},

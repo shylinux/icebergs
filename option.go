@@ -87,7 +87,11 @@ func (m *Message) StatusTimeCountTotal(arg ...Any) *Message {
 }
 
 func (m *Message) Process(cmd string, arg ...Any) *Message {
-	return m.Options(MSG_PROCESS, cmd, PROCESS_ARG, kit.Simple(arg...))
+	if len(arg) == 0 {
+		return m.Options(MSG_PROCESS, cmd)
+	} else {
+		return m.Options(MSG_PROCESS, cmd, PROCESS_ARG, kit.Simple(arg...))
+	}
 }
 func (m *Message) ProcessLocation(arg ...Any) { m.Process(PROCESS_LOCATION, arg...) }
 func (m *Message) ProcessReplace(url string, arg ...Any) {

@@ -59,7 +59,11 @@ func _publish_contexts(m *ice.Message, arg ...string) {
 		default:
 			// _publish_file(m, ice.ICE_BIN)
 		}
-		m.EchoScript(strings.TrimSpace(nfs.Template(m, kit.Keys(k, SH))))
+		if m.Option("format") == "raw" {
+			m.Echo(strings.TrimSpace(nfs.Template(m, kit.Keys(k, SH))))
+		} else {
+			m.EchoScript(strings.TrimSpace(nfs.Template(m, kit.Keys(k, SH))))
+		}
 	}
 }
 

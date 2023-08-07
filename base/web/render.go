@@ -162,6 +162,9 @@ const (
 	VIEW    = "view"
 	CHAT    = "chat"
 
+	CHAT_POD = "/chat/pod/"
+	CHAT_CMD = "/chat/cmd/"
+
 	CODE_GIT_SERVICE = "web.code.git.service"
 	CODE_GIT_STATUS  = "web.code.git.status"
 	CODE_GIT_REPOS   = "web.code.git.repos"

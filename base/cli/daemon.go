@@ -5,6 +5,7 @@ import (
 	"io"
 	"os/exec"
 	"runtime"
+	"strings"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/ctx"
@@ -145,6 +146,21 @@ func init() {
 			}
 		}},
 	})
+}
+
+func OpenCmds(m *ice.Message, arg ...string) {
+	if !tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) {
+		return
+	}
+	if len(arg) == 0 || arg[0] == "" {
+		return
+	}
+	m.Cmd(SYSTEM, "osascript", "-e", kit.Format(`
+tell application "Terminal"
+	do script "%s"
+	activate
+end tell
+`, strings.Join(arg, "; ")))
 }
 func Opens(m *ice.Message, arg ...string) {
 	if !tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) {

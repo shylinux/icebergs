@@ -225,6 +225,8 @@ func init() {
 					}
 					if kit.IsIn(value[mdb.TYPE], SERVER, WORKER) {
 						m.Push(mdb.LINK, m.MergePod(value[mdb.NAME]))
+					} else if value[mdb.TYPE] == CHROME && value[mdb.NAME] != "chrome" {
+						m.Push(mdb.LINK, MergeURL2(m, value[mdb.TEXT]))
 					} else {
 						m.Push(mdb.LINK, "")
 					}

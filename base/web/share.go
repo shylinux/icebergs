@@ -69,7 +69,10 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		SHARE: {Name: "share hash auto login prunes", Help: "共享链", Actions: ice.MergeActions(ice.Actions{
 			mdb.CREATE: {Name: "create type name text", Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashCreate(m, arg, m.OptionSimple(ice.POD, ice.CMD), aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERROLE, m.Option(ice.MSG_USERROLE))
+				if m.Option(mdb.TYPE) == LOGIN {
+					arg = append(arg, mdb.TEXT, tcp.PublishLocalhost(m, m.Option(mdb.TEXT)))
+				}
+				mdb.HashCreate(m, arg, aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERROLE, m.Option(ice.MSG_USERROLE))
 				m.Option(mdb.LINK, _share_link(m, P(SHARE, m.Result())))
 			}},
 			LOGIN: {Help: "登录", Hand: func(m *ice.Message, arg ...string) {
@@ -86,24 +89,24 @@ func init() {
 				}
 				switch msg.Append(mdb.TYPE) {
 				case LOGIN:
-					if msg.Append(ice.CMD) != "" {
-						m.RenderRedirect(m.MergePodCmd("", msg.Append(ice.CMD)), ice.MSG_SESSID, aaa.SessCreate(m, msg.Append(aaa.USERNAME)))
-					} else {
-						m.RenderRedirect(nfs.PS+kit.Select("", "?debug=true", m.Option("debug") == "true"), ice.MSG_SESSID, aaa.SessCreate(m, msg.Append(aaa.USERNAME)))
-					}
+					m.RenderRedirect(msg.Append(mdb.TEXT), ice.MSG_SESSID, aaa.SessCreate(m, msg.Append(aaa.USERNAME)))
+				case FIELD:
+					RenderCmd(m, msg.Append(mdb.NAME), kit.UnMarshal(msg.Append(mdb.TEXT)))
 				default:
-					if msg.Append(ice.CMD) != "" {
-						// RenderCmd(m, msg.Append(ice.CMD))
-						RenderPodCmd(m, msg.Append(ice.POD), msg.Append(ice.CMD))
-					} else {
-						RenderMain(m)
-					}
+					RenderMain(m)
 				}
 			}},
-		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,river,storm,usernick,username,userrole", mdb.EXPIRE, mdb.DAYS), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {
-			if ctx.PodCmd(m, SHARE, arg) {
-				return
-			}
+			ctx.COMMAND: {Hand: func(m *ice.Message, arg ...string) {
+				if msg := mdb.HashSelect(m.Spawn(), m.Option(SHARE)); !IsNotValidFieldShare(m, msg) {
+					m.Cmdy(ctx.COMMAND, msg.Append(mdb.NAME))
+				}
+			}},
+			ctx.RUN: {Hand: func(m *ice.Message, arg ...string) {
+				if msg := mdb.HashSelect(m.Spawn(), m.Option(SHARE)); !IsNotValidFieldShare(m, msg) {
+					m.Cmdy(msg.Append(mdb.NAME), arg[1:])
+				}
+			}},
+		}, aaa.WhiteAction(ctx.COMMAND, ctx.RUN), mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,usernick,username,userrole", mdb.EXPIRE, mdb.DAYS)), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) > 0 {
 				link := _share_link(m, P(SHARE, arg[0]))
 				m.PushQRCode(cli.QRCODE, link)
@@ -121,6 +124,15 @@ func init() {
 }
 func IsNotValidShare(m *ice.Message, time string) bool {
 	return m.Warn(time < m.Time(), ice.ErrNotValid, m.Option(SHARE), time, m.Time(), logs.FileLineMeta(2))
+}
+func IsNotValidFieldShare(m *ice.Message, msg *ice.Message) bool {
+	if m.Warn(IsNotValidShare(m, msg.Append(mdb.TIME)), kit.Format("共享超时, 请联系 %s(%s), 重新分享 %s %s %s", msg.Append(aaa.USERNICK), msg.Append(aaa.USERNAME), msg.Append(mdb.TYPE), msg.Append(mdb.NAME), msg.Append(mdb.TEXT))) {
+		return true
+	}
+	if m.Warn(msg.Append(mdb.NAME) == "") {
+		return true
+	}
+	return false
 }
 func ShareLocalFile(m *ice.Message, arg ...string) {
 	p := path.Join(arg...)

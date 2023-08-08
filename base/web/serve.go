@@ -137,13 +137,7 @@ func _serve_auth(m *ice.Message, key string, cmds []string, w http.ResponseWrite
 		return cmds, true
 	}
 	defer func() { m.Options(ice.MSG_CMDS, "", ice.MSG_SESSID, "") }()
-	if aaa.SessCheck(m, m.Option(ice.MSG_SESSID)); m.Option(SHARE) != "" {
-		switch msg := m.Cmd(SHARE, m.Option(SHARE)); msg.Append(mdb.TYPE) {
-		case FIELD, STORM:
-			msg.Table(func(value ice.Maps) { aaa.SessAuth(m, value) })
-		}
-	}
-	if m.Option(ice.MSG_USERNAME) == "" && ice.Info.Localhost {
+	if aaa.SessCheck(m, m.Option(ice.MSG_SESSID)); m.Option(ice.MSG_USERNAME) == "" && ice.Info.Localhost {
 		ls := kit.Simple(mdb.Cache(m, m.Option(ice.MSG_USERIP), func() ice.Any {
 			if tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) {
 				aaa.UserRoot(m)
@@ -198,7 +192,7 @@ func init() {
 					ssh.PrintQRCode(m, tcp.PublishLocalhost(m, _serve_address(m)))
 				})
 			}},
-			"system": {Help: "系统", Hand: func(m *ice.Message, arg ...string) { cli.Opens(m, "System Settings.app") }},
+			cli.SYSTEM: {Help: "系统", Hand: func(m *ice.Message, arg ...string) { cli.Opens(m, "System Settings.app") }},
 			"dark": {Help: "主题", Hand: func(m *ice.Message, arg ...string) {
 				if !tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) {
 					return

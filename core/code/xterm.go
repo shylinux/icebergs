@@ -86,6 +86,8 @@ func init() {
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch mdb.HashInputs(m, arg); arg[0] {
+				case mdb.HASH:
+					fallthrough
 				case mdb.TYPE:
 					m.Push(arg[0], "/bin/ish", kit.Select("/bin/sh", os.Getenv("SHELL")))
 					m.Cmd(mdb.SEARCH, mdb.FOREACH, ssh.SHELL, ice.OptionFields("type,name,text"), func(value ice.Maps) {

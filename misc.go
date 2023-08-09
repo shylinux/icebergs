@@ -40,12 +40,10 @@ func (m *Message) Split(str string, arg ...string) *Message {
 			for i, v := range indexs {
 				if v >= len(l) {
 					m.Push(kit.Select(SP, fields, i), "")
-					continue
-				}
-				if i == len(indexs)-1 {
-					m.Push(kit.Select(SP, fields, i), strings.TrimSpace(l[v:]))
-				} else {
+				} else if i+1 < len(indexs) && indexs[i+1] < len(l) {
 					m.Push(kit.Select(SP, fields, i), strings.TrimSpace(l[v:indexs[i+1]]))
+				} else {
+					m.Push(kit.Select(SP, fields, i), strings.TrimSpace(l[v:]))
 				}
 			}
 			continue
@@ -63,6 +61,9 @@ func (m *Message) Split(str string, arg ...string) *Message {
 }
 func (m *Message) SplitIndex(str string, arg ...string) *Message {
 	return m.Split(str, kit.Simple(INDEX, arg)...)
+}
+func (m *Message) SplitIndexReplace(str string, arg ...string) *Message {
+	return m.SplitIndex(kit.Replace(str, arg...))
 }
 func (m *Message) SetAppend(arg ...string) *Message {
 	kit.If(len(arg) == 0, func() { m.OptionFields("") })

@@ -1,11 +1,11 @@
 body { --web-flows-done:lightgreen; --web-flows-fail:var(--danger-bg-color); }
 fieldset.web.flows>div.output>div.layout>div.layout>div.content svg line.fail { stroke:var(--web-flows-fail); }
 fieldset.web.flows>div.output>div.layout>div.layout>div.content svg line.done { stroke:var(--web-flows-done); }
-fieldset.web.flows>div.output>div.layout>div.layout>div.content svg line.select { stroke:var(--notice-fg-color); }
+fieldset.web.flows>div.output>div.layout>div.layout>div.content svg line.select { stroke:var(--notice-bg-color); }
 fieldset.web.flows>div.output>div.layout>div.layout>div.content svg rect.fail { stroke:var(--web-flows-fail); }
 fieldset.web.flows>div.output>div.layout>div.layout>div.content svg rect.done { stroke:var(--web-flows-done); }
-fieldset.web.flows>div.output>div.layout>div.layout>div.content svg rect.select { stroke:var(--notice-fg-color); }
+fieldset.web.flows>div.output>div.layout>div.layout>div.content svg rect.select { stroke:var(--notice-bg-color); }
 fieldset.web.flows>div.output>div.layout>div.layout>div.content svg text { dominant-baseline:middle; }
 fieldset.web.flows>div.output>div.layout>div.layout>div.content svg text.fail { stroke:var(--web-flows-fail); fill:var(--web-flows-fail); }
 fieldset.web.flows>div.output>div.layout>div.layout>div.content svg text.done { stroke:var(--web-flows-done); fill:var(--web-flows-done); }
-fieldset.web.flows>div.output>div.layout>div.layout>div.content svg text.select { stroke:var(--notice-fg-color); fill:var(--notice-fg-color); }
+fieldset.web.flows>div.output>div.layout>div.layout>div.content svg text.select { stroke:var(--notice-bg-color); fill:var(--notice-bg-color); }

@@ -73,7 +73,7 @@ func _space_fork(m *ice.Message) {
 }
 func _space_handle(m *ice.Message, safe bool, name string, c *websocket.Conn) {
 	defer m.Cost(SPACE, name)
-	m.Option(ice.MSG_USERROLE, "")
+	m.Options(ice.MSG_USERROLE, "", mdb.TYPE, "", mdb.NAME, "", cli.DAEMON, "")
 	for {
 		_, b, e := c.ReadMessage()
 		if e != nil {

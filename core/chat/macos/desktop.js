@@ -1,5 +1,5 @@
 Volcanos(chat.ONIMPORT, {
-	_init: function(can, msg, cb) { if (can.isCmdMode()) { can.onappend.style(can, html.OUTPUT), can.ConfHeight(can.page.height()) }
+	_init: function(can, msg, cb) { if (can.isCmdMode()) { can.onappend.style(can, html.OUTPUT), can.ConfHeight(can.page.height()||912), can.ConfWidth(can.page.width()||1690) }
 		(!can.page.ClassList.has(can, document.body, cli.BLACK) || can.isCmdMode()) && can.onlayout.background(can, can.user.info.background||"/require/usr/icons/background.jpg", can._fields)
 		can.ui = {}, can.base.isFunc(cb) && cb(msg), can.onmotion.clear(can)
 		can.onimport._menu(can), can.onimport._dock(can), can.onimport._searchs(can), can.onimport._notifications(can), can.onimport.layout(can)
@@ -88,7 +88,7 @@ Volcanos(chat.ONIMPORT, {
 	},
 	layout: function(can) {
 		can.page.style(can, can._output, html.HEIGHT, can.ConfHeight(), html.WIDTH, can.ConfWidth())
-		can.ui.dock && can.page.style(can, can.ui.dock._target, html.LEFT, can.base.Min((can.ConfWidth()-can.ui.dock._target.offsetWidth)/2, 0))
+		can.ui.dock && can.page.style(can, can.ui.dock._target, html.LEFT, can.base.Min((can.ConfWidth()-(can.ui.dock._target.offsetWidth||502))/2, 0))
 	},
 }, [""])
 Volcanos(chat.ONACTION, {list: ["full"],

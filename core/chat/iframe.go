@@ -13,7 +13,7 @@ const IFRAME = "iframe"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		IFRAME: {Name: "iframe hash auto safari", Help: "浏览器", Actions: ice.MergeActions(ice.Actions{
+		IFRAME: {Name: "iframe hash@key auto safari", Help: "浏览器", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				if m.Cmd("").Length() == 0 {
 					m.Cmd(web.SPIDE, ice.OptionFields(web.CLIENT_NAME, web.CLIENT_ORIGIN), func(value ice.Maps) {

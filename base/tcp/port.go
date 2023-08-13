@@ -49,6 +49,17 @@ func init() {
 				m.Assert(m.Option(PORT) != "")
 				nfs.Trash(m, path.Join(ice.USR_LOCAL_DAEMON, m.Option(PORT)))
 			}},
+			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
+				switch arg[0] {
+				case "server":
+					m.Cmd(PORT, "socket", func(value ice.Maps) {
+						switch value["status"] {
+						case "LISTEN":
+							m.Push(arg[0], strings.Replace(value["local"], "0.0.0.0", "127.0.0.1", 1))
+						}
+					})
+				}
+			}},
 			"socket": {Hand: func(m *ice.Message, arg ...string) {
 				parse := func(str string) int64 {
 					port, _ := strconv.ParseInt(str, 16, 32)

@@ -283,8 +283,8 @@ func (m *Message) Start(key string, arg ...string) *Message {
 	})
 }
 func (m *Message) Travel(cb Any) *Message {
-	target := m.target
-	defer func() { m.target = target }()
+	target, cmd, key := m.target, m._cmd, m._key
+	defer func() { m.target, m._cmd, m._key = target, cmd, key }()
 	list := []*Context{m.root.target}
 	for i := 0; i < len(list); i++ {
 		switch cb := cb.(type) {
@@ -292,7 +292,10 @@ func (m *Message) Travel(cb Any) *Message {
 			cb(list[i].context, list[i])
 		case func(*Context, *Context, string, *Command):
 			m.target = list[i]
-			kit.For(kit.SortedKey(list[i].Commands), func(k string) { cb(list[i].context, list[i], k, list[i].Commands[k]) })
+			kit.For(kit.SortedKey(list[i].Commands), func(k string) {
+				m._cmd, m._key = list[i].Commands[k], k
+				cb(list[i].context, list[i], k, list[i].Commands[k])
+			})
 		case func(*Context, *Context, string, *Config):
 			m.target = list[i]
 			kit.For(kit.SortedKey(list[i].Configs), func(k string) { cb(list[i].context, list[i], k, list[i].Configs[k]) })

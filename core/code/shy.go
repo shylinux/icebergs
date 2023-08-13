@@ -33,7 +33,8 @@ func init() {
 				}
 			}},
 			TEMPLATE: {Hand: func(m *ice.Message, arg ...string) {
-				m.Echo(nfs.Template(m, "demo.shy"), path.Base(path.Dir(path.Join(arg[2], arg[1]))))
+				m.Option(mdb.NAME, path.Base(path.Dir(path.Join(arg[2], arg[1]))))
+				m.Echo(nfs.Template(m, "demo.shy"))
 			}},
 			COMPLETE: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy("web.wiki.word", COMPLETE, arg) }},
 		}, PlugAction()), Hand: func(m *ice.Message, arg ...string) {

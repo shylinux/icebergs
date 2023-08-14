@@ -120,6 +120,8 @@ const (
 	USER  = "USER"
 	TERM  = "TERM"
 	SHELL = "SHELL"
+	LANG  = "LANG"
+	TZ    = "TZ"
 )
 const (
 	CTX_SHY = "ctx_shy"
@@ -135,7 +137,7 @@ const (
 	CTX_DAEMON = "ctx_daemon"
 )
 
-var ENV_LIST = []string{TERM, SHELL, CTX_SHY, CTX_COM, CTX_DEV, CTX_OPS, CTX_ARG, CTX_PID, CTX_DAEMON}
+var ENV_LIST = []string{TZ, LANG, TERM, SHELL, CTX_SHY, CTX_COM, CTX_DEV, CTX_OPS, CTX_ARG, CTX_PID, CTX_DAEMON}
 
 const (
 	HOSTNAME = "hostname"

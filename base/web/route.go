@@ -99,7 +99,7 @@ func init() {
 					case "md5":
 						m.Push(key, ice.Info.Hash)
 					case nfs.SIZE:
-						m.Push(key, kit.Format("%s/%s", ice.Info.Size, kit.Split(m.Cmdx(cli.SYSTEM, "du", "-sh"))[0]))
+						m.Push(key, kit.Format("%s/%s", ice.Info.Size, kit.Select("", kit.Split(m.Cmdx(cli.SYSTEM, "du", "-sh")), 0)))
 					case mdb.TYPE:
 						m.Push(key, ice.Info.NodeType)
 					case nfs.PATH:

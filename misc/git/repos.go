@@ -522,7 +522,7 @@ func init() {
 					if cfg, err := config.LoadConfig(config.GlobalScope); err == nil {
 						if cfg.Author.Email == "" || cfg.Author.Name == "" {
 							opt.Author = &object.Signature{
-								Email: kit.Select(m.Option(ice.MSG_USERNAME)+"@163.com", mdb.Config(m, aaa.EMAIL)),
+								Email: kit.Select(m.Option(ice.MSG_USERNAME)+"@shylinux.com", mdb.Config(m, aaa.EMAIL)),
 								Name:  kit.Select(m.Option(ice.MSG_USERNAME), mdb.Config(m, aaa.USERNAME)),
 								When:  time.Now(),
 							}

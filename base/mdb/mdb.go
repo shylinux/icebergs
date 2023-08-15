@@ -106,6 +106,8 @@ const (
 	PRUNES = "prunes"
 	EXPORT = "export"
 	IMPORT = "import"
+	PRUNE  = "prune"
+	RENAME = "rename"
 
 	DETAIL = "detail"
 	FIELDS = "fields"

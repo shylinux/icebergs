@@ -193,6 +193,9 @@ func init() {
 				})
 			}},
 			cli.SYSTEM: {Help: "系统", Hand: func(m *ice.Message, arg ...string) { cli.Opens(m, "System Settings.app") }},
+			"publicip": {Hand: func(m *ice.Message, arg ...string) {
+				m.Echo(kit.Formats(PublicIP(m)))
+			}},
 			"dark": {Help: "主题", Hand: func(m *ice.Message, arg ...string) {
 				if !tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) {
 					return

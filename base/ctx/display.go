@@ -41,6 +41,12 @@ func DisplayStoryJSON(m displayMessage, arg ...ice.Any) displayMessage {
 func DisplayStorySpide(m displayMessage, arg ...ice.Any) displayMessage {
 	return DisplayStory(m, "spide", arg...)
 }
+func DisplayStudio(m *ice.Message, cmd ...string) displayMessage {
+	for i, k := range cmd {
+		cmd[i] = m.Prefix(k)
+	}
+	return DisplayStory(m.Cmdy(COMMAND, cmd), "studio.js")
+}
 func DisplayLocal(m displayMessage, file string, arg ...ice.Any) displayMessage {
 	kit.If(file == "", func() { file = path.Join(kit.PathName(5), kit.Keys(kit.FileName(5), nfs.JS)) })
 	kit.If(isLocalFile(file), func() { file = path.Join(ice.PLUGIN_LOCAL, file) })

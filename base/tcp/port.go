@@ -58,6 +58,14 @@ func init() {
 							m.Push(arg[0], strings.Replace(value["local"], "0.0.0.0", "127.0.0.1", 1))
 						}
 					})
+				case "port":
+					m.Cmd(PORT, "socket", func(value ice.Maps) {
+						switch value["status"] {
+						case "LISTEN":
+							m.Push(arg[0], strings.TrimPrefix(value["local"], "0.0.0.0:"))
+							m.Push(mdb.NAME, "listen")
+						}
+					})
 				}
 			}},
 			"socket": {Hand: func(m *ice.Message, arg ...string) {

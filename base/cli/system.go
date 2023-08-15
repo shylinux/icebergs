@@ -142,6 +142,8 @@ const (
 	CMD_OUT = "cmd_out"
 
 	MAN   = "man"
+	RUN   = "run"
+	KILL  = "kill"
 	FIND  = "find"
 	GREP  = "grep"
 	EXEC  = "exec"

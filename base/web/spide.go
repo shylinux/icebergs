@@ -289,13 +289,19 @@ func init() {
 }
 
 func HostPort(m *ice.Message, host, port string, arg ...string) string {
-	if port == "443" {
-		return kit.Format("https://%s", host)
-	} else if port == "80" {
-		return kit.Format("http://%s", host)
-	} else {
-		return kit.Format("http://%s:%s", host, port)
+	if host == "" {
+		host = kit.ParseURL(UserHost(m)).Hostname()
 	}
+	if port == "80" {
+		return kit.Format("http://%s", host)
+	} else if port == "443" {
+		return kit.Format("https://%s", host)
+	} else {
+		return kit.Format("%s://%s:%s", kit.ParseURL(UserHost(m)).Scheme, host, port)
+	}
+}
+func PublicIP(m *ice.Message) ice.Any {
+	return SpideGet(m, "http://ip-api.com/json")
 }
 func SpideGet(m *ice.Message, arg ...ice.Any) ice.Any {
 	return kit.UnMarshal(m.Cmdx(http.MethodGet, arg))

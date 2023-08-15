@@ -119,13 +119,14 @@ func PodCmd(m *ice.Message, arg ...ice.Any) bool {
 func Run(m *ice.Message, arg ...string) {
 	kit.If(!PodCmd(m, arg) && aaa.Right(m, arg), func() { m.Cmdy(arg) })
 }
+func Command(m *ice.Message, arg ...string) {
+	kit.If(!PodCmd(m, COMMAND, arg), func() { m.Cmdy(COMMAND, arg) })
+}
 func CmdHandler(args ...ice.Any) ice.Handler {
 	return func(m *ice.Message, arg ...string) { m.Cmdy(args...) }
 }
 func CmdAction(args ...ice.Any) ice.Actions {
-	return ice.Actions{ice.CTX_INIT: mdb.AutoConfig(args...), ice.RUN: {Hand: Run},
-		COMMAND: {Hand: func(m *ice.Message, arg ...string) { kit.If(!PodCmd(m, COMMAND, arg), func() { m.Cmdy(COMMAND, arg) }) }},
-	}
+	return ice.Actions{ice.CTX_INIT: mdb.AutoConfig(args...), ice.RUN: {Hand: Run}, COMMAND: {Hand: Command}}
 }
 func CmdList(m *ice.Message) *ice.Message {
 	return m.Cmdy(COMMAND, mdb.SEARCH, COMMAND, ice.OptionFields(INDEX))

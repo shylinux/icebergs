@@ -29,11 +29,9 @@ func init() {
 				m.Echo("请授权 %s 代码权限\n", m.Option(tcp.HOST)).EchoButton(CONFIRM)
 			}},
 			CONFIRM: {Hand: func(m *ice.Message, arg ...string) {
-				msg := m.Cmd("", m.Option(ice.MSG_USERNAME))
-				if msg.Append(mdb.TIME) < m.Time() {
-					msg = m.Cmd("", mdb.CREATE, mdb.TYPE, Basic, mdb.NAME, m.Option(ice.MSG_USERNAME), mdb.TEXT, m.Option(tcp.HOST)).Cmd("", m.Option(ice.MSG_USERNAME))
-				}
-				m.ProcessReplace(kit.MergeURL2(m.Option(tcp.HOST), ChatCmdPath(m.PrefixKey(), SET), TOKEN, strings.Replace(UserHost(m), "://", kit.Format("://%s:%s@", m.Option(ice.MSG_USERNAME), msg.Append(TOKEN)), 1)))
+				msg := m.Cmd("", mdb.CREATE, mdb.TYPE, Basic, mdb.NAME, m.Option(ice.MSG_USERNAME), mdb.TEXT, m.Option(tcp.HOST))
+				m.ProcessReplace(kit.MergeURL2(m.Option(tcp.HOST), ChatCmdPath(m.PrefixKey(), SET),
+					TOKEN, strings.Replace(UserHost(m), "://", kit.Format("://%s:%s@", m.Option(ice.MSG_USERNAME), msg.Result()), 1)))
 			}},
 			SET: {Hand: func(m *ice.Message, arg ...string) {
 				host, list := ice.Map{kit.ParseURL(m.Option(TOKEN)).Host: true}, []string{m.Option(TOKEN)}

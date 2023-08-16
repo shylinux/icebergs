@@ -177,6 +177,7 @@ func init() {
 				cli.NodeInfo(m, ice.Info.Pathname, WORKER)
 				gdb.Watch(m, SERVE_START)
 				aaa.White(m, nfs.REQUIRE)
+				aaa.White(m, LOGIN)
 			}},
 			DOMAIN: {Hand: func(m *ice.Message, arg ...string) {
 				kit.If(len(arg) > 0, func() { ice.Info.Domain, ice.Info.Localhost = arg[0], false })

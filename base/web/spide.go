@@ -209,6 +209,7 @@ const (
 	SPIDE_JSON = "json"
 	SPIDE_RES  = "content_data"
 
+	Basic         = "Basic"
 	Bearer        = "Bearer"
 	Authorization = "Authorization"
 	ContentType   = "Content-Type"

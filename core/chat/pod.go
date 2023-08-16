@@ -27,13 +27,15 @@ func init() {
 				m.RenderDownload(path.Join(ice.USR_LOCAL_WORK, arg[0], ice.USR_PUBLISH, kit.Keys(ice.ICE, m.Option(cli.GOOS), m.Option(cli.GOARCH))))
 			} else if m.IsCliUA() {
 				m.RenderDownload(path.Join(ice.USR_LOCAL_WORK, arg[0], ice.BIN_ICE_BIN))
-			} else if len(arg) == 1 {
+			} else {
 				if m.Cmd(web.SPACE, arg[0]).Length() == 0 && nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, arg[0])) {
 					m.Cmd(web.DREAM, cli.START, kit.Dict(mdb.NAME, arg[0]))
 				}
-				m.Cmdy(web.SPACE, arg[0], web.SPACE, ice.MAIN, kit.Dict(nfs.VERSION, web.RenderVersion(m)))
-			} else if arg[1] == CMD {
-				web.RenderPodCmd(m, arg[0], arg[2], arg[3:])
+				if len(arg) == 1 {
+					m.Cmdy(web.SPACE, arg[0], web.SPACE, ice.MAIN, kit.Dict(nfs.VERSION, web.RenderVersion(m)))
+				} else if arg[1] == CMD {
+					web.RenderPodCmd(m, arg[0], arg[2], arg[3:])
+				}
 			}
 		}},
 	})

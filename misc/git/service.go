@@ -4,7 +4,6 @@ import (
 	"compress/flate"
 	"compress/gzip"
 	"context"
-	"encoding/base64"
 	"fmt"
 	"io"
 	"os"
@@ -32,21 +31,6 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _service_login(m *ice.Message) error {
-	if ice.Info.Localhost && tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) {
-		return nil
-	} else if auth := strings.SplitN(m.R.Header.Get(web.Authorization), lex.SP, 2); strings.ToLower(auth[0]) != "basic" {
-		return fmt.Errorf("Authentication type error")
-	} else if data, err := base64.StdEncoding.DecodeString(auth[1]); err != nil {
-		return err
-	} else if auth := strings.SplitN(string(data), nfs.DF, 2); m.Cmdv(Prefix(TOKEN), auth[0], TOKEN) != auth[1] {
-		return fmt.Errorf("username or password error")
-	} else if aaa.UserRole(m, auth[0]) == aaa.VOID {
-		return fmt.Errorf("userrole has no right")
-	} else {
-		return nil
-	}
-}
 func _service_path(m *ice.Message, p string, arg ...string) string {
 	return kit.Path(ice.USR_LOCAL_REPOS, kit.TrimExt(p, GIT), path.Join(arg...))
 }
@@ -147,17 +131,16 @@ func init() {
 		}
 		switch repos, service := _service_param(m, arg...); service {
 		case RECEIVE_PACK:
-			if err := _service_login(m); m.Warn(err, ice.ErrNotLogin) {
-				web.RenderHeader(m.W, "WWW-Authenticate", `Basic realm="git server"`)
+			if !web.BasicCheck(m, "git server") {
 				return
-			} else if !nfs.Exists(m, repos) {
+			}
+			if !nfs.Exists(m, repos) {
 				m.Cmd(Prefix(SERVICE), mdb.CREATE, mdb.NAME, path.Base(repos))
 			}
 
 		case UPLOAD_PACK:
 			if mdb.Conf(m, Prefix(SERVICE), kit.Keym(aaa.AUTH)) == aaa.PRIVATE {
-				if err := _service_login(m); m.Warn(err, ice.ErrNotLogin) {
-					web.RenderHeader(m.W, "WWW-Authenticate", `Basic realm="git server"`)
+				if !web.BasicCheck(m, "git server") {
 					return
 				}
 			}

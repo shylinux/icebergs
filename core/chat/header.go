@@ -1,12 +1,15 @@
 package chat
 
 import (
+	"path"
+
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/base/web"
 	"shylinux.com/x/icebergs/base/web/html"
@@ -85,14 +88,16 @@ func init() {
 				m.Cmd(cli.SYSTEM, "osascript", "-e", `tell app "System Events" to tell appearance preferences to set dark mode to `+
 					kit.Select(ice.FALSE, ice.TRUE, kit.IsIn(kit.Select(html.DARK, arg, 0), html.DARK, html.BLACK)))
 			}},
-		}, ctx.ConfAction(SSO, "", aaa.LANGUAGE, "zh")), Hand: func(m *ice.Message, arg ...string) {
+		}, ctx.ConfAction(SSO, "")), Hand: func(m *ice.Message, arg ...string) {
+			m.Option("language.list", m.Cmd(nfs.DIR, path.Join(ice.SRC_TEMPLATE, m.PrefixKey(), aaa.LANGUAGE), nfs.FILE).Appendv(nfs.FILE))
+			m.Option("theme.list", m.Cmd(nfs.DIR, path.Join(ice.SRC_TEMPLATE, m.PrefixKey(), aaa.THEME), nfs.FILE).Appendv(nfs.FILE))
 			if gdb.Event(m, HEADER_AGENT); !_header_check(m, arg...) {
 				return
 			}
 			msg := m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME))
 			kit.For([]string{aaa.USERNICK, aaa.LANGUAGE}, func(k string) { m.Option(k, msg.Append(k)) })
 			kit.For([]string{aaa.AVATAR, aaa.BACKGROUND}, func(k string) { m.Option(k, web.RequireFile(m, msg.Append(k))) })
-			kit.If(m.Option(aaa.LANGUAGE) == "", func() { m.Option(aaa.LANGUAGE, mdb.Config(m, aaa.LANGUAGE)) })
+			kit.If(m.Option(aaa.LANGUAGE) == "", func() { m.Option(aaa.LANGUAGE, kit.Split(m.R.Header.Get(web.AcceptLanguage), ",;")[0]) })
 			m.Echo(mdb.Config(m, TITLE)).Option(MENUS, mdb.Config(m, MENUS))
 		}},
 	})

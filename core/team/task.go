@@ -6,6 +6,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
@@ -89,6 +90,9 @@ func init() {
 					ctx.CmdInputs(m, arg...)
 				default:
 					mdb.ZoneInputs(m, arg)
+				}
+				if arg[0] == mdb.ZONE {
+					m.Push(arg[0], kit.Split(nfs.TemplateText(m, mdb.ZONE)))
 				}
 			}},
 			mdb.INSERT: {Name: "insert space zone* type=once,step,week name* text begin_time@date close_time@date", Hand: func(m *ice.Message, arg ...string) {

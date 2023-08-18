@@ -100,12 +100,13 @@ const ( // DIR
 	INDEX_SH  = "index.sh"
 
 	FAVICON_ICO     = "/favicon.ico"
-	PLUGIN_INPUT    = "/plugin/input/"
-	PLUGIN_LOCAL    = "/plugin/local/"
-	PLUGIN_STORY    = "/plugin/story/"
-	REQUIRE_SRC     = "/require/src/"
-	REQUIRE_USR     = "/require/usr/"
+	PLUGIN_INPUT    = "/volcanos/plugin/input/"
+	PLUGIN_LOCAL    = "/volcanos/plugin/local/"
+	PLUGIN_STORY    = "/volcanos/plugin/story/"
+	PLUGIN_TABLE_JS = "/volcanos/plugin/table.js"
 	REQUIRE_MODULES = "/require/modules/"
+	REQUIRE_USR     = "/require/usr/"
+	REQUIRE_SRC     = "/require/src/"
 
 	ISH_PLUGED   = ".ish/pluged/"
 	USR_MODULES  = "usr/node_modules/"

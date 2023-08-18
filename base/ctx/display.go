@@ -25,7 +25,7 @@ func Display(m displayMessage, file string, arg ...ice.Any) displayMessage {
 	return DisplayBase(m, file, arg...)
 }
 func DisplayTable(m displayMessage, arg ...ice.Any) displayMessage {
-	return DisplayBase(m, "/plugin/table.js", arg...)
+	return DisplayBase(m, ice.PLUGIN_TABLE_JS, arg...)
 }
 func DisplayTableCard(m displayMessage, arg ...ice.Any) displayMessage {
 	return DisplayTable(m, "style", "card")

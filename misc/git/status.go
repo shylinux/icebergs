@@ -142,7 +142,7 @@ func init() {
 				kit.If(m.Option(web.TOKEN), func() { m.Cmd(web.TOKEN, "set") })
 			}},
 			OAUTH: {Help: "授权", Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessOpen(kit.MergeURL2(kit.Select(ice.Info.Make.Domain, m.Cmdx(REPOS, "remoteURL")), web.ChatCmdPath(web.TOKEN, "gen"), tcp.HOST, m.Option(ice.MSG_USERWEB)))
+				m.ProcessOpen(kit.MergeURL2(kit.Select(ice.Info.Make.Domain, m.Cmdx(REPOS, "remoteURL")), web.ChatCmdPath(m, web.TOKEN, "gen"), tcp.HOST, m.Option(ice.MSG_USERWEB)))
 			}},
 			INSTEADOF: {Name: "insteadof remote", Help: "代理", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(REPOS, INSTEADOF, arg)

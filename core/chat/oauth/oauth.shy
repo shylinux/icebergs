@@ -1,18 +1,6 @@
-section "oauth"
+chapter "oauth"
 refer `
-官网 https://oauth.net/2/
-标准 http://www.rfcreader.com/#rfc6749
-博客 https://www.ruanyifeng.com/blog/2014/05/oauth_2_0.html
-服务 https://developers.google.com/identity/protocols/oauth2
-服务 https://docs.github.com/cn/developers/apps/building-oauth-apps/authorizing-oauth-apps
-应用 https://grafana.com/docs/grafana/latest/setup-grafana/configure-security/configure-authentication/github/
+https://oauth.net/2/
+https://datatracker.ietf.org/doc/html/rfc6749
+https://datatracker.ietf.org/doc/html/rfc5849
 `
-
-field web.chat.oauth.apply
-field web.chat.oauth.reply
-field web.chat.oauth.offer
-
-field web.chat.oauth.authorize
-field web.chat.oauth.token
-field web.chat.oauth.access
-

@@ -30,7 +30,7 @@ func init() {
 			}},
 			CONFIRM: {Hand: func(m *ice.Message, arg ...string) {
 				msg := m.Cmd("", mdb.CREATE, mdb.TYPE, Basic, mdb.NAME, m.Option(ice.MSG_USERNAME), mdb.TEXT, m.Option(tcp.HOST))
-				m.ProcessReplace(kit.MergeURL2(m.Option(tcp.HOST), ChatCmdPath(m.PrefixKey(), SET),
+				m.ProcessReplace(kit.MergeURL2(m.Option(tcp.HOST), ChatCmdPath(m, m.PrefixKey(), SET),
 					TOKEN, strings.Replace(UserHost(m), "://", kit.Format("://%s:%s@", m.Option(ice.MSG_USERNAME), msg.Result()), 1)))
 			}},
 			SET: {Hand: func(m *ice.Message, arg ...string) {

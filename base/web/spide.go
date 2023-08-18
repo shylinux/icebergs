@@ -61,7 +61,7 @@ func _spide_show(m *ice.Message, name string, arg ...string) {
 			m.Logs("response", v.Name, v.Value)
 		})
 	})
-	if m.Warn(res.StatusCode != http.StatusOK, ice.ErrNotValid, uri, cli.STATUS, res.Status) {
+	if m.Warn(res.StatusCode != http.StatusOK && res.StatusCode != http.StatusCreated, ice.ErrNotValid, uri, cli.STATUS, res.Status) {
 		switch res.StatusCode {
 		case http.StatusNotFound, http.StatusUnauthorized:
 			return
@@ -100,7 +100,9 @@ func _spide_body(m *ice.Message, method string, arg ...string) (io.Reader, ice.M
 	default:
 		data := ice.Map{}
 		kit.For(arg, func(k, v string) { kit.Value(data, k, v) })
-		head[ContentType], body = ApplicationJSON, bytes.NewBufferString(kit.Format(data))
+		_data := kit.Format(data)
+		m.Debug("post %v %v", len(_data), _data)
+		head[ContentType], body = ApplicationJSON, bytes.NewBufferString(_data)
 	}
 	return body, head, arg[:0]
 }
@@ -168,6 +170,7 @@ func _spide_send(m *ice.Message, name string, req *http.Request, timeout string)
 func _spide_save(m *ice.Message, action, file, uri string, res *http.Response) {
 	switch action {
 	case SPIDE_RAW:
+		m.SetResult()
 		if b, _ := ioutil.ReadAll(res.Body); strings.HasPrefix(res.Header.Get(ContentType), ApplicationJSON) {
 			m.Echo(kit.Formats(kit.UnMarshal(string(b))))
 		} else {
@@ -209,14 +212,15 @@ const (
 	SPIDE_JSON = "json"
 	SPIDE_RES  = "content_data"
 
-	Basic         = "Basic"
-	Bearer        = "Bearer"
-	Authorization = "Authorization"
-	ContentType   = "Content-Type"
-	ContentLength = "Content-Length"
-	UserAgent     = "User-Agent"
-	Referer       = "Referer"
-	Accept        = "Accept"
+	Basic          = "Basic"
+	Bearer         = "Bearer"
+	Authorization  = "Authorization"
+	AcceptLanguage = "Accept-Language"
+	ContentLength  = "Content-Length"
+	ContentType    = "Content-Type"
+	UserAgent      = "User-Agent"
+	Referer        = "Referer"
+	Accept         = "Accept"
 
 	ContentFORM = "application/x-www-form-urlencoded"
 	ContentPNG  = "image/png"
@@ -255,6 +259,9 @@ func init() {
 				m.Cmd("", mdb.CREATE, ice.DEV, kit.Select(kit.Select("https://contexts.com.cn", ice.Info.Make.Domain), conf[cli.CTX_DEV]))
 				m.Cmd("", mdb.CREATE, ice.COM, kit.Select("https://contexts.com.cn", conf[cli.CTX_COM]))
 				m.Cmd("", mdb.CREATE, ice.SHY, kit.Select(kit.Select("https://shylinux.com", ice.Info.Make.Remote), conf[cli.CTX_SHY]))
+			}},
+			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
+				mdb.HashSelectValue(m, func(value ice.Map) { m.Push(kit.Select(ORIGIN, arg, 0), value[ORIGIN]) })
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if mdb.IsSearchPreview(m, arg) {

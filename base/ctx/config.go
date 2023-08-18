@@ -224,6 +224,11 @@ func ConfigSimple(m *ice.Message, key ...string) (res []string) {
 	return
 }
 func ConfigFromOption(m *ice.Message, arg ...string) {
+	if len(arg) == 0 {
+		kit.For(m.Target().Commands[m.CommandKey()].Actions[m.ActionKey()].List, func(value ice.Any) {
+			arg = append(arg, kit.Format(kit.Value(value, mdb.NAME)))
+		})
+	}
 	kit.For(arg, func(k string) { mdb.Config(m, k, kit.Select(mdb.Config(m, k), m.Option(k))) })
 }
 func OptionFromConfig(m *ice.Message, arg ...string) string {

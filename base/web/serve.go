@@ -171,7 +171,9 @@ const SERVE = "serve"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		"/exit": {Hand: func(m *ice.Message, arg ...string) { m.Cmd(ice.EXIT) }},
+		P(ice.EXIT):      {Hand: func(m *ice.Message, arg ...string) { m.Cmd(ice.EXIT) }},
+		PP(ice.VOLCANOS): {Hand: func(m *ice.Message, arg ...string) { m.RenderDownload(path.Join(ice.USR_VOLCANOS, path.Join(arg...))) }},
+		PP(ice.INTSHELL): {Hand: func(m *ice.Message, arg ...string) { m.RenderDownload(path.Join(ice.USR_INTSHELL, path.Join(arg...))) }},
 		SERVE: {Name: "serve name auto start dark system", Help: "服务器", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				cli.NodeInfo(m, ice.Info.Pathname, WORKER)
@@ -227,7 +229,13 @@ func Domain(host, port string) string { return kit.Format("%s://%s:%s", HTTP, ho
 func Script(m *ice.Message, str string, arg ...ice.Any) string {
 	return ice.Render(m, ice.RENDER_SCRIPT, kit.Format(str, arg...))
 }
-func ChatCmdPath(arg ...string) string { return path.Join("/chat/cmd/", path.Join(arg...)) }
+func ChatCmdPath(m *ice.Message, arg ...string) string {
+	if p := m.Option(ice.MSG_USERPOD); p != "" {
+		return path.Join("/chat/pod/", p, "/cmd/", kit.Select(m.PrefixKey(), path.Join(arg...)))
+
+	}
+	return path.Join("/chat/cmd/", kit.Select(m.PrefixKey(), path.Join(arg...)))
+}
 func RequireFile(m *ice.Message, file string) string {
 	if strings.HasPrefix(file, nfs.PS) || strings.HasPrefix(file, ice.HTTP) {
 		return file

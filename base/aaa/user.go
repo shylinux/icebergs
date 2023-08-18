@@ -14,6 +14,7 @@ func _user_create(m *ice.Message, name string, arg ...string) {
 
 const (
 	BACKGROUND = "background"
+	AVATAR_URL = "avatar_url"
 	AVATAR     = "avatar"
 	GENDER     = "gender"
 	MOBILE     = "mobile"
@@ -22,6 +23,7 @@ const (
 	COUNTRY  = "country"
 	PROVINCE = "province"
 	LANGUAGE = "language"
+	THEME    = "theme"
 )
 const (
 	USERNICK = "usernick"
@@ -46,7 +48,7 @@ func init() {
 				}
 			}},
 			mdb.CREATE: {Name: "create usernick username* userrole=void,tech userzone background", Hand: func(m *ice.Message, arg ...string) {
-				_user_create(m, m.Option(USERNAME), m.OptionSimple(USERNICK, USERROLE, USERZONE, BACKGROUND)...)
+				_user_create(m, m.Option(USERNAME), m.OptionSimple(USERNICK, USERROLE, USERZONE, BACKGROUND, AVATAR, AVATAR_URL, EMAIL, LANGUAGE)...)
 			}},
 		}, mdb.ImportantHashAction(mdb.SHORT, USERNAME, mdb.FIELD, "time,usernick,username,userrole,userzone"))},
 	})

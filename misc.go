@@ -97,6 +97,14 @@ func (m *Message) RenameAppend(arg ...string) *Message {
 	})
 	return m
 }
+func (m *Message) RewriteAppend(cb func(value, key string, index int) string) *Message {
+	m.Table(func(index int, value Maps, head []string) {
+		for _, key := range head {
+			m.meta[key][index] = cb(value[key], key, index)
+		}
+	})
+	return m
+}
 func (m *Message) ToLowerAppend(arg ...string) *Message {
 	kit.For(m.meta[MSG_APPEND], func(k string) { m.RenameAppend(k, strings.ToLower(k)) })
 	return m

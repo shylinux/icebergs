@@ -178,6 +178,8 @@ func init() {
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				cli.NodeInfo(m, ice.Info.Pathname, WORKER)
 				gdb.Watch(m, SERVE_START)
+				aaa.White(m, ice.INTSHELL)
+				aaa.White(m, ice.VOLCANOS)
 				aaa.White(m, nfs.REQUIRE)
 				aaa.White(m, LOGIN)
 			}},

@@ -32,7 +32,7 @@ func _field_show(m *ice.Message, name, text string, arg ...string) {
 		}
 	})
 	meta[mdb.NAME], meta[mdb.INDEX] = name, text
-	_wiki_template(m.Options(mdb.META, kit.Format(meta)), "", name, text)
+	_wiki_template(m.Options(mdb.META, kit.Format(meta)), "", kit.Select(name, text, m.IsEnglish()), text)
 }
 
 const FIELD = "field"

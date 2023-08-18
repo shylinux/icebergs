@@ -6,6 +6,9 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
+func (m *Message) IsEnglish() bool {
+	return kit.IsIn(strings.ToLower(m.Option(MSG_LANGUAGE)), "en", "en-us")
+}
 func (m *Message) Split(str string, arg ...string) *Message {
 	m.Set(MSG_APPEND).Set(MSG_RESULT)
 	field := kit.Select("", arg, 0)

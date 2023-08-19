@@ -34,6 +34,7 @@ const (
 	MISC = "misc"
 
 	SHY = "shy"
+	HUB = "hub"
 	COM = "com"
 	DEV = "dev"
 	APP = "app"

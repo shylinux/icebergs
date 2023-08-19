@@ -91,6 +91,7 @@ func init() {
 		}, ctx.ConfAction(SSO, "")), Hand: func(m *ice.Message, arg ...string) {
 			m.Option("language.list", m.Cmd(nfs.DIR, path.Join(ice.SRC_TEMPLATE, m.PrefixKey(), aaa.LANGUAGE), nfs.FILE).Appendv(nfs.FILE))
 			m.Option("theme.list", m.Cmd(nfs.DIR, path.Join(ice.SRC_TEMPLATE, m.PrefixKey(), aaa.THEME), nfs.FILE).Appendv(nfs.FILE))
+			m.Option("spide.hub", m.Cmdv(web.SPIDE, ice.HUB, web.CLIENT_URL))
 			if gdb.Event(m, HEADER_AGENT); !_header_check(m, arg...) {
 				return
 			}

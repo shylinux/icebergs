@@ -105,7 +105,9 @@ func CmdInputs(m *ice.Message, arg ...string) {
 	case INDEX:
 		m.Cmdy(COMMAND, mdb.SEARCH, COMMAND, ice.OptionFields(INDEX))
 	case ARGS:
-		m.Cmdy(m.Option(INDEX))
+		if m.Cmdy(m.Option(INDEX), mdb.INPUTS, arg); m.Length() == 0 {
+			m.Cmdy(m.Option(INDEX))
+		}
 	}
 }
 func PodCmd(m *ice.Message, arg ...ice.Any) bool {

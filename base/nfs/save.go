@@ -121,6 +121,11 @@ func Append(m *ice.Message, p string, cb ice.Any) {
 	}
 }
 func Save(m *ice.Message, w io.Writer, s string, cb ice.Any) {
+	switch content := m.Optionv(CONTENT).(type) {
+	case io.Reader:
+		io.Copy(w, content)
+		return
+	}
 	if n, e := fmt.Fprint(w, s); !m.Warn(e) {
 		switch cb := cb.(type) {
 		case func(int):

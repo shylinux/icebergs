@@ -121,6 +121,8 @@ const (
 	RANDOM = "random"
 	OFFEND = "offend"
 	OFFSET = "offset"
+	SUBKEY = "subkey"
+	ORDER  = "order"
 
 	ICON = "icon"
 	PAGE = "page"

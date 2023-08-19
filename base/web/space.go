@@ -127,7 +127,7 @@ func _space_exec(m *ice.Message, source, target []string, c *websocket.Conn) {
 }
 func _space_echo(m *ice.Message, source, target []string, c *websocket.Conn) {
 	if m.Options(ice.MSG_SOURCE, source, ice.MSG_TARGET, target[1:]); !m.Warn(c.WriteMessage(1, []byte(m.FormatMeta()))) {
-		m.Log(tcp.SEND, "%v->%v %v %v", source, target, m.Detailv(), m.FormatsMeta(nil))
+		// m.Log(tcp.SEND, "%v->%v %v %v", source, target, m.Detailv(), m.FormatsMeta(nil))
 	}
 }
 func _space_send(m *ice.Message, name string, arg ...string) (h string) {

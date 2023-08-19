@@ -258,16 +258,17 @@ func init() {
 				m.Cmd("", mdb.CREATE, ice.OPS, kit.Select("http://127.0.0.1:9020", conf[cli.CTX_OPS]))
 				m.Cmd("", mdb.CREATE, ice.DEV, kit.Select(kit.Select("https://contexts.com.cn", ice.Info.Make.Domain), conf[cli.CTX_DEV]))
 				m.Cmd("", mdb.CREATE, ice.COM, kit.Select("https://contexts.com.cn", conf[cli.CTX_COM]))
+				m.Cmd("", mdb.CREATE, ice.HUB, kit.Select("https://repos.shylinux.com", conf[cli.CTX_HUB]))
 				m.Cmd("", mdb.CREATE, ice.SHY, kit.Select(kit.Select("https://shylinux.com", ice.Info.Make.Remote), conf[cli.CTX_SHY]))
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashSelectValue(m, func(value ice.Map) { m.Push(kit.Select(ORIGIN, arg, 0), value[ORIGIN]) })
+				mdb.HashSelectValue(m.Spawn(), func(value ice.Map) { m.Push(kit.Select(ORIGIN, arg, 0), kit.Value(value, CLIENT_ORIGIN)) })
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if mdb.IsSearchPreview(m, arg) {
-					m.PushSearch(mdb.TYPE, LINK, mdb.NAME, ice.DEV, mdb.TEXT, mdb.HashSelectField(m, ice.DEV, CLIENT_ORIGIN))
-					m.PushSearch(mdb.TYPE, LINK, mdb.NAME, ice.COM, mdb.TEXT, mdb.HashSelectField(m, ice.COM, CLIENT_ORIGIN))
-					m.PushSearch(mdb.TYPE, LINK, mdb.NAME, ice.SHY, mdb.TEXT, mdb.HashSelectField(m, ice.SHY, CLIENT_ORIGIN))
+					mdb.HashSelectValue(m.Spawn(), func(value ice.Map) {
+						m.PushSearch(mdb.TYPE, LINK, mdb.NAME, kit.Value(value, CLIENT_NAME), mdb.TEXT, kit.Value(value, CLIENT_ORIGIN), value)
+					})
 				}
 			}},
 			mdb.CREATE: {Name: "create name link", Hand: func(m *ice.Message, arg ...string) { _spide_create(m, m.Option(mdb.NAME), m.Option(LINK)) }},

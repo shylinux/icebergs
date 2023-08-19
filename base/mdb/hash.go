@@ -177,9 +177,15 @@ func HashKey(m *ice.Message) string {
 	return HashShort(m)
 }
 func HashShort(m *ice.Message) string {
+	if m.Option(SHORT) != "" {
+		return m.Option(SHORT)
+	}
 	return kit.Select(HASH, Config(m, SHORT), Config(m, SHORT) != UNIQ)
 }
 func HashField(m *ice.Message) string {
+	if m.Option(FIELD) != "" {
+		return m.Option(FIELD)
+	}
 	return kit.Select(HASH_FIELD, Config(m, FIELD))
 	// return kit.Select(HASH_FIELD, Config(m, FIELD), Config(m, FIELDS))
 }
@@ -210,7 +216,7 @@ func HashSelect(m *ice.Message, arg ...string) *ice.Message {
 	} else {
 		m.Fields(len(kit.Slice(arg, 0, 1)), HashField(m))
 	}
-	m.Cmdy(SELECT, m.PrefixKey(), "", HASH, HashShort(m), arg, logs.FileLineMeta(-1))
+	m.Cmdy(SELECT, m.PrefixKey(), m.Option(SUBKEY), HASH, HashShort(m), arg, logs.FileLineMeta(-1))
 	kit.If(Config(m, SORT), func(sort string) { m.Sort(sort) })
 	if m.PushAction(Config(m, ACTION), REMOVE); !m.FieldsIsDetail() {
 		return m.StatusTimeCount()

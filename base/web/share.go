@@ -152,6 +152,8 @@ func ShareLocalFile(m *ice.Message, arg ...string) {
 	} else if p := kit.Path(ice.USR_LOCAL_WORK, m.Option(ice.POD), p); nfs.Exists(m, p) {
 		m.RenderDownload(p)
 		return
+	} else {
+		m.Debug("what %v %v", p, nfs.Exists(m, p))
 	}
 	pp := path.Join(ice.VAR_PROXY, m.Option(ice.POD), p)
 	cache, size := time.Now().Add(-time.Hour*24), int64(0)

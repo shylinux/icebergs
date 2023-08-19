@@ -89,6 +89,7 @@ func _status_list(m *ice.Message) (files, adds, dels int, last string) {
 }
 
 const (
+	GITEA = "gitea"
 	OAUTH = "oauth"
 	DIFF  = "diff"
 	OPT   = "opt"
@@ -166,17 +167,18 @@ func init() {
 				}
 				m.Push(mdb.TEXT, strings.Join(text, ", "))
 			}},
+			GITEA: {Help: "资源", Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen(m.Cmdv("web.spide", ice.HUB, web.CLIENT_URL)) }},
 		}, aaa.RoleAction(), web.DreamAction(), Prefix(REPOS), mdb.ImportantHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 && arg[0] == ctx.ACTION {
 				m.Cmdy(REPOS, arg)
 			} else if config, err := config.LoadConfig(config.GlobalScope); err == nil && config.User.Email == "" && mdb.Config(m, aaa.EMAIL) == "" {
 				m.Action(CONFIGS).Echo("please config email and name. ").EchoButton(CONFIGS)
 			} else if !nfs.Exists(m, ".git") {
-				m.Action("init").Echo("please init repos. ").EchoButton("init")
+				m.Action(INIT).Echo("please init repos. ").EchoButton(INIT)
 			} else if len(arg) == 0 {
 				kit.If(config != nil, func() { m.Option(aaa.EMAIL, kit.Select(mdb.Config(m, aaa.EMAIL), config.User.Email)) })
-				m.Cmdy(REPOS, STATUS).Action(PULL, PUSH, INSTEADOF, "oauth", CONFIGS)
-				m.Cmdy(code.PUBLISH, ice.CONTEXTS, "dev")
+				m.Cmdy(REPOS, STATUS).Action(PULL, PUSH, INSTEADOF, OAUTH, CONFIGS, GITEA)
+				m.Cmdy(code.PUBLISH, ice.CONTEXTS, ice.DEV)
 			} else {
 				m.Cmdy(REPOS, arg[0], MASTER, INDEX, m.Cmdv(REPOS, arg[0], MASTER, INDEX, nfs.FILE))
 			}

@@ -50,9 +50,9 @@ func init() {
 					switch arg[0] {
 					case mdb.NAME:
 						m.Push(arg[0], web.UserWeb(m).Host)
-					case mdb.LINK:
+					case mdb.LINK, ctx.ARGS:
 						m.Push(arg[0], m.Option(ice.MSG_USERWEB))
-						m.Copy(m.Cmd(web.SPIDE).CutTo("client.url", arg[0]))
+						m.Copy(m.Cmd(web.SPIDE).CutTo(web.CLIENT_URL, arg[0]))
 					}
 				}
 			}},

@@ -24,7 +24,11 @@ func init() {
 		DF      = ": "
 	)
 	Index.MergeCommands(ice.Commands{
-		EMAIL: {Name: "email name auto create", Help: "邮件", Actions: ice.MergeActions(ice.Actions{
+		EMAIL: {Name: "email name auto create website", Help: "邮件", Actions: ice.MergeActions(ice.Actions{
+			"website": {Help: "邮箱", Hand: func(m *ice.Message, arg ...string) {
+				// m.ProcessOpen(m.Cmdv("web.spide", EMAIL, "client.url"))
+				m.EchoIFrame(m.Cmdv("web.spide", EMAIL, "client.url")).ProcessInner()
+			}},
 			SEND: {Name: "send to*='shylinux@163.com' subject*=hi content*:textarea=hello", Help: "发送", Hand: func(m *ice.Message, arg ...string) {
 				msg := m.Cmd("", m.OptionDefault(mdb.NAME, ADMIN))
 				if m.Warn(msg.Append(SERVICE) == "", ice.ErrNotValid, SERVICE) {

@@ -42,7 +42,7 @@ type Client struct {
 	user  string `name:"user" help:"用户"`
 	orgs  string `name:"orgs" help:"组织"`
 	repo  string `name:"repo" help:"源码"`
-	list  string `name:"list hash auto"`
+	list  string `name:"list hash auto" help:"授权"`
 }
 
 func (s Client) Init(m *ice.Message, arg ...string) {
@@ -74,7 +74,7 @@ func (s Client) Auth(m *ice.Message, arg ...string) {
 }
 func (s Client) User(m *ice.Message, arg ...string) {
 	if res := s.Get(m, m.Option(mdb.HASH), m.Option(USERS_URL)); res != nil {
-		m.Options(res).Cmd(aaa.USER, mdb.CREATE, aaa.USERNICK, m.Option("full_name"), m.OptionSimple(aaa.USERNAME),
+		m.Options(res).Cmd(aaa.USER, mdb.CREATE, aaa.USERNICK, m.Option("full_name"), m.OptionSimple(aaa.USERNAME), aaa.AVATAR, m.Option(aaa.AVATAR_URL),
 			aaa.USERROLE, kit.Select(aaa.VOID, aaa.TECH, m.Option("is_admin") == ice.TRUE), aaa.USERZONE, m.Option(web.DOMAIN),
 			m.OptionSimple(aaa.EMAIL, aaa.LANGUAGE, aaa.AVATAR_URL))
 	}

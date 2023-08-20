@@ -174,6 +174,12 @@ func init() {
 				})
 				m.Optionv(ice.MSG_ARGS, kit.Simple(m.Optionv(ice.MSG_ARGS)))
 			}},
+			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
+				switch arg[0] {
+				case SPACE:
+					m.Cmdy("").CutTo(mdb.NAME, arg[0])
+				}
+			}},
 			tcp.DIAL: {Name: "dial dev=ops name", Hand: func(m *ice.Message, arg ...string) {
 				if strings.HasPrefix(m.Option(ice.DEV), HTTP) {
 					m.Cmd(SPIDE, mdb.CREATE, m.OptionSimple(ice.DEV))

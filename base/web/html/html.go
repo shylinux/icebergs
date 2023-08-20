@@ -10,4 +10,6 @@ const (
 const (
 	FLOAT  = "float"
 	OUTPUT = "output"
+
+	TEXT_PLAIN = "text/plain"
 )

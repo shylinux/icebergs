@@ -82,6 +82,12 @@ func init() {
 					m.Cmdy(m.Option(ctx.ACTION), mdb.INPUTS, arg)
 				default:
 					switch arg[0] {
+					case web.SPACE:
+						m.Cmdy(web.SPACE, mdb.INPUTS, arg)
+					case ctx.INDEX:
+						m.Cmdy(web.Space(m, m.Option(web.SPACE)), ctx.COMMAND)
+					case ctx.ARGS:
+						m.Cmdy(web.Space(m, m.Option(web.SPACE)), ctx.COMMAND, mdb.INPUTS, m.Option(ctx.INDEX))
 					case nfs.FILE:
 						list := ice.Map{}
 						push := func(k, p string) {

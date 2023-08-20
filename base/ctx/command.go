@@ -116,6 +116,10 @@ func PodCmd(m *ice.Message, arg ...ice.Any) bool {
 		m.Options(ice.POD, []string{}, ice.MSG_USERPOD, pod).Cmdy(append(kit.List(ice.SPACE, pod), arg...)...)
 		return true
 	}
+	if pod := m.Option(ice.SPACE); pod != "" {
+		m.Options(ice.SPACE, []string{}, ice.MSG_USERPOD, pod).Cmdy(append(kit.List(ice.SPACE, pod), arg...)...)
+		return true
+	}
 	return false
 }
 func Run(m *ice.Message, arg ...string) {

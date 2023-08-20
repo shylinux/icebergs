@@ -51,12 +51,18 @@ func _dream_start(m *ice.Message, name string) {
 	}
 	defer m.ProcessOpen(m.MergePod(m.Option(mdb.NAME, name)))
 	p := path.Join(ice.USR_LOCAL_WORK, name)
-	if pid := m.Cmdx(nfs.CAT, path.Join(p, ice.Info.PidPath), kit.Dict(ice.MSG_USERROLE, aaa.TECH)); pid != "" && nfs.Exists(m, "/proc/"+pid) {
-		m.Info("already exists %v", pid)
-		return
-	} else if msg := m.Cmd(SPACE, name); msg.Length() > 0 {
-		m.Info("already exists %v", name)
-		return
+	if pid := m.Cmdx(nfs.CAT, path.Join(p, ice.Info.PidPath), kit.Dict(ice.MSG_USERROLE, aaa.TECH)); pid != "" {
+		if nfs.Exists(m, "/proc/"+pid) {
+			m.Info("already exists %v", pid)
+			return
+		}
+		for i := 0; i < 3; i++ {
+			if msg := m.Cmd(SPACE, name); msg.Length() > 0 {
+				m.Info("already exists %v", name)
+				return
+			}
+			m.Sleep("1s")
+		}
 	}
 	defer ToastProcess(m)()
 	defer m.Sleep("1s")

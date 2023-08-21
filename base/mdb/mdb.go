@@ -264,7 +264,13 @@ func AutoConfig(arg ...Any) *ice.Action {
 			}
 		} else if cmd.Actions[CREATE] != nil {
 			if inputs := []Any{}; cmd.Meta[CREATE] == nil {
-				kit.For(kit.Filters(kit.Split(HashField(m)), TIME, HASH), func(k string) { inputs = append(inputs, k) })
+				kit.For(kit.Filters(kit.Split(HashField(m)), TIME, HASH), func(k string) {
+					if kit.IsIn(k, kit.Split(Config(m, SHORT))...) {
+						inputs = append(inputs, k+"*")
+					} else {
+						inputs = append(inputs, k)
+					}
+				})
 				m.Design(CREATE, "创建", inputs...)
 			}
 		}

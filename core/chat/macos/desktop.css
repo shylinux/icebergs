@@ -5,7 +5,6 @@ fieldset.macos.desktop>div.output>fieldset.macos { background-color:transparent;
 fieldset.macos.desktop>div.output>fieldset.macos>div.output { background-color:transparent; }
 fieldset.macos.desktop>div.output>fieldset.macos.menu { line-height:25px; border-radius:0; height:25px; width:100%; position:absolute; top:0; overflow:hidden; }
 fieldset.macos.desktop>div.output>fieldset.macos.searchs { position:absolute; z-index:100; }
-// fieldset.macos.desktop>div.output>fieldset.macos.searchs>form.option>div.item.icon.delete { display:none; }
 fieldset.macos.desktop>div.output>fieldset.macos.searchs>form.option>div.item.keyword input { width:320px; background-color:transparent; border:#404141 solid 1px; }
 fieldset.macos.desktop>div.output>fieldset.macos.searchs>form.option>div.item.keyword:hover { background-color:transparent; }
 fieldset.macos.desktop>div.output>fieldset.macos.notifications { border-radius:0; height:calc(100% - 125px); width:250px; overflow:auto; position:absolute; top:25px; right:0; }
@@ -40,7 +39,6 @@ fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>div.item.icon
 fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>div.item:last-child { margin-right:20px; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>div.item:last-child { margin-right:80px; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>div.action>* { margin:10px 0px 10px 10px; }
-// fieldset.macos.desktop>div.output>div.desktop>fieldset>div.action>div.item.icons>span.icon { margin-top:10px; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>div.action>div.item:last-child { margin-right:120px; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset.web.wiki.feel>div.status { display:none; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset.web.code.vimer>div.status { display:none; }
@@ -75,7 +73,6 @@ body.light fieldset.macos.desktop>div.output>fieldset.macos.notifications { back
 body.light fieldset.macos.desktop>div.output>fieldset.macos.notifications div.item { background-color:#daefff99; }
 body.light fieldset.macos.desktop>div.output>div.desktop>fieldset { background-color:#dee1e6; }
 body.light fieldset.macos.desktop>div.output>div.desktop fieldset input:not(:hover) { background-color:white; }
-// body.light fieldset.macos.desktop>div.output>div.desktop fieldset input:not(:hover) { background-color:white; border:#e4e5e5 solid 1px; }
 body.light fieldset.macos.desktop>div.output>div.desktop fieldset table.content tbody tr:nth-child(odd) { background-color:#f4f5f5; }
 body.light fieldset.macos.desktop>div.output>div.desktop fieldset table.content tbody tr:nth-child(even) { background-color:white; }
 body.light fieldset.macos.desktop>div.output>div.desktop fieldset>div.output.card>div.item { border:#d3d4d4 solid 1px; }

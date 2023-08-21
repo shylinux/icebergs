@@ -81,6 +81,11 @@ func init() {
 			aaa.AVATAR:     {Hand: _header_users},
 			web.SHARE:      {Hand: _header_share},
 			"webpack":      {Hand: ctx.CmdHandler("webpack", "build")},
+			"email": {Name: "email to subject content", Hand: func(m *ice.Message, arg ...string) {
+				m.Options("volcano", web.UserHost(m), "version", web.RenderVersion(m))
+				m.Option(ice.MSG_USERWEB, kit.MergeURL(m.Option(ice.MSG_USERWEB), web.SHARE, m.Cmdx(web.SHARE, mdb.CREATE, mdb.TYPE, web.LOGIN)))
+				m.Cmdy(aaa.EMAIL, aaa.SEND, arg, aaa.CONTENT, nfs.Template(m, "email.html"))
+			}},
 			"theme": {Hand: func(m *ice.Message, arg ...string) {
 				if !tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) {
 					return
@@ -96,7 +101,7 @@ func init() {
 				return
 			}
 			msg := m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME))
-			kit.For([]string{aaa.USERNICK, aaa.LANGUAGE}, func(k string) { m.Option(k, msg.Append(k)) })
+			kit.For([]string{aaa.USERNICK, aaa.LANGUAGE, aaa.EMAIL}, func(k string) { m.Option(k, msg.Append(k)) })
 			kit.For([]string{aaa.AVATAR, aaa.BACKGROUND}, func(k string) { m.Option(k, web.RequireFile(m, msg.Append(k))) })
 			kit.If(m.Option(aaa.LANGUAGE) == "", func() { m.Option(aaa.LANGUAGE, kit.Split(m.R.Header.Get(web.AcceptLanguage), ",;")[0]) })
 			m.Echo(mdb.Config(m, TITLE)).Option(MENUS, mdb.Config(m, MENUS))

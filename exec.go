@@ -69,7 +69,7 @@ func (m *Message) Go(cb func(), arg ...Any) *Message {
 func (m *Message) Wait(cb ...Handler) (wait func(), done Handler) {
 	wg := sync.WaitGroup{}
 	wg.Add(1)
-	t := time.AfterFunc(kit.Duration("30s"), func() { wg.Done() })
+	t := time.AfterFunc(kit.Duration("180s"), func() { wg.Done() })
 	return func() { wg.Wait() }, func(msg *Message, arg ...string) {
 		defer wg.Done()
 		defer t.Stop()
@@ -90,7 +90,7 @@ func (m *Message) Cmdx(arg ...Any) string {
 }
 func (m *Message) Cmdy(arg ...Any) *Message { return m.Copy(m._command(arg...)) }
 func (m *Message) CmdHand(cmd *Command, key string, arg ...string) *Message {
-	if m._cmd, m._key = cmd, key; cmd == nil {
+	if m._cmd, m._key, m._sub = cmd, key, LIST; cmd == nil {
 		return m
 	}
 	if m._target = cmd.FileLines(); key == SELECT {
@@ -101,6 +101,7 @@ func (m *Message) CmdHand(cmd *Command, key string, arg ...string) *Message {
 	if cmd.Hand != nil {
 		cmd.Hand(m, arg...)
 	} else if cmd.Actions != nil && cmd.Actions[SELECT] != nil {
+		m._sub = SELECT
 		cmd.Actions[SELECT].Hand(m, arg...)
 	}
 	return m
@@ -175,7 +176,7 @@ func (m *Message) _command(arg ...Any) *Message {
 	return m
 }
 func (c *Context) _command(m *Message, cmd *Command, key string, arg ...string) *Message {
-	if m._cmd, m._key, m._sub = cmd, key, SELECT; cmd == nil {
+	if m._cmd, m._key = cmd, key; cmd == nil {
 		return m
 	}
 	if m.meta[MSG_DETAIL] = kit.Simple(m.PrefixKey(), arg); cmd.Actions != nil {

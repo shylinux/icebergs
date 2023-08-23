@@ -2,6 +2,7 @@ package aaa
 
 import (
 	"net/smtp"
+	"time"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/mdb"
@@ -10,6 +11,7 @@ import (
 
 const (
 	SEND    = "send"
+	DATE    = "date"
 	FROM    = "from"
 	TO      = "to"
 	CC      = "cc"
@@ -41,7 +43,7 @@ func init() {
 				if m.Warn(msg.Append(SERVICE) == "", ice.ErrNotValid, SERVICE) {
 					return
 				}
-				content := []byte(kit.JoinKV(DF, NL, kit.Simple(FROM, msg.Append(USERNAME), m.OptionSimple(TO, CC, SUBJECT), "Content-Type", "text/html; charset=UTF-8")...) + NL + NL + m.Option(CONTENT))
+				content := []byte(kit.JoinKV(DF, NL, kit.Simple(FROM, msg.Append(USERNAME), m.OptionSimple(TO, CC, SUBJECT), DATE, time.Now().Format(time.RFC1123Z), "Content-Type", "text/html; charset=UTF-8")...) + NL + NL + m.Option(CONTENT))
 				auth := smtp.PlainAuth("", msg.Append(USERNAME), msg.Append(PASSWORD), kit.Split(msg.Append(SERVICE), ice.DF)[0])
 				m.Logs(EMAIL, SEND, string(content)).Warn(smtp.SendMail(msg.Append(SERVICE), auth, msg.Append(USERNAME), kit.Split(m.Option(TO)), content))
 			}},

@@ -468,6 +468,11 @@ func init() {
 			CLONE: {Name: "clone origin* branch name path", Help: "克隆", Hand: func(m *ice.Message, arg ...string) {
 				m.OptionDefault(mdb.NAME, path.Base(m.Option(ORIGIN)))
 				m.OptionDefault(nfs.PATH, path.Join(path.Join(nfs.USR, m.Option(mdb.NAME))))
+				defer m.Cmdy(nfs.DIR, m.Option(nfs.PATH))
+				if nfs.Exists(m, m.Option(nfs.PATH)) {
+					return
+				}
+				defer web.ToastProcess(m)()
 				if _, err := git.PlainClone(m.Option(nfs.PATH), false, &git.CloneOptions{URL: m.Option(ORIGIN), Auth: _repos_auth(m, m.Option(ORIGIN))}); m.Warn(err) {
 					_repos_insert(m, m.Option(nfs.PATH))
 				}

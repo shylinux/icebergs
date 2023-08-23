@@ -22,6 +22,7 @@ import (
 	psh "shylinux.com/x/icebergs/base/ssh"
 	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/base/web"
+	"shylinux.com/x/icebergs/core/chat/macos"
 	"shylinux.com/x/icebergs/misc/xterm"
 	kit "shylinux.com/x/toolkits"
 )
@@ -147,6 +148,10 @@ func init() {
 	psh.Index.MergeCommands(ice.Commands{
 		SERVICE: {Name: "service port id auto listen prunes", Help: "服务", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				m.Go(func() {
+					m.Sleep("1s")
+					macos.AppInstall(m, "sshd", m.Prefix(SERVICE), mdb.ICON, "usr/icons/ssh.png")
+				})
 				mdb.HashSelect(m).Table(func(value ice.Maps) {
 					if value[mdb.STATUS] == tcp.OPEN {
 						m.Cmd(SERVICE, tcp.LISTEN, tcp.PORT, value[tcp.PORT], value)

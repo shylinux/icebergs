@@ -39,6 +39,16 @@ func _install_download(m *ice.Message) {
 	web.GoToast(m, name, func(toast func(string, int, int)) (list []string) {
 		defer nfs.TarExport(m, file)
 		begin := time.Now()
+		if mdb.Config(m, "repos") != "" {
+			web.SpideSave(m, file, mdb.Config(m, "repos")+path.Base(link), func(count, total, value int) {
+				cost := time.Now().Sub(begin)
+				mdb.HashSelectUpdate(m, name, func(value ice.Map) { value[mdb.COUNT], value[mdb.TOTAL], value[mdb.VALUE] = count, total, value })
+				toast(kit.FormatShow(nfs.FROM, begin.Format("15:04:05"), cli.COST, kit.FmtDuration(cost), cli.REST, kit.FmtDuration(cost*time.Duration(101)/time.Duration(value+1)-cost)), count, total)
+			})
+			if s, e := nfs.StatFile(m, file); e == nil && s.Size() > 0 {
+				return
+			}
+		}
 		web.SpideSave(m, file, link, func(count, total, value int) {
 			cost := time.Now().Sub(begin)
 			mdb.HashSelectUpdate(m, name, func(value ice.Map) { value[mdb.COUNT], value[mdb.TOTAL], value[mdb.VALUE] = count, total, value })
@@ -61,8 +71,10 @@ func _install_build(m *ice.Message, arg ...string) string {
 	case func(string):
 		cb(p)
 	case nil:
-		if msg := m.Cmd(cli.SYSTEM, "./configure", "--prefix="+pp, arg[1:]); !cli.IsSuccess(msg) {
-			return msg.Append(cli.CMD_ERR) + msg.Append(cli.CMD_OUT)
+		if nfs.Exists(m, path.Join(p, "./configure")) {
+			if msg := m.Cmd(cli.SYSTEM, "./configure", "--prefix="+pp, arg[1:]); !cli.IsSuccess(msg) {
+				return msg.Append(cli.CMD_ERR) + msg.Append(cli.CMD_OUT)
+			}
 		}
 	default:
 		return m.ErrorNotImplement(cb).Result()
@@ -138,7 +150,7 @@ func _install_trash(m *ice.Message, arg ...string) {
 }
 func _install_service(m *ice.Message, arg ...string) {
 	name := kit.Split(path.Base(arg[0]), "_-.")[0]
-	m.Fields(len(arg[1:]), "time,port,status,pid,cmd,dir")
+	m.Fields(len(kit.Slice(arg, 1)), "time,port,status,pid,cmd,dir")
 	m.Cmd(mdb.SELECT, cli.DAEMON, "", mdb.HASH, func(value ice.Maps) {
 		if strings.Contains(value[ice.CMD], path.Join(ice.BIN, name)) {
 			switch m.Push("", value, kit.Split(m.OptionFields())); value[mdb.STATUS] {

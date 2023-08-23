@@ -78,7 +78,9 @@ Volcanos(chat.ONIMPORT, {
 			sub.onexport.marginTop = function() { return 25 }
 			sub.onexport.marginBottom = function() { return 100 }
 			sub.onexport.actionHeight = function(sub) { return can.page.ClassList.has(can, sub._target, html.OUTPUT)? 0: html.ACTION_HEIGHT+20 },
-			can.onmotion.move(can, sub._target, {"z-index": 10, top: item.top, left: item.left}), sub.onmotion.resize(can, sub._target, function(height, width) { sub.onimport.size(sub, height, width) }, 25)
+			can.onmotion.move(can, sub._target, {"z-index": 10, top: item.top, left: item.left}), sub.onmotion.resize(can, sub._target, function(height, width) {
+				sub.onimport.size(sub, item.height = height, item.width = width)
+			}, 25)
 			sub._target.onclick = function(event) { can.ondetail.select(can, sub._target) }
 		}, can.ui.desktop)
 	},

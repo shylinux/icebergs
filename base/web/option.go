@@ -91,7 +91,7 @@ func PushNotice(m *ice.Message, arg ...ice.Any) {
 func PushNoticeToast(m *ice.Message, arg ...ice.Any) { PushNotice(m, kit.List("toast", arg)...) }
 func PushNoticeGrow(m *ice.Message, arg ...ice.Any)  { PushNotice(m, kit.List("grow", arg)...) }
 func PushStream(m *ice.Message) {
-	m.Options(cli.CMD_OUTPUT, file.NewWriteCloser(func(buf []byte) { PushNoticeGrow(m, string(buf)) }, func() { PushNoticeToast(m, "done") })).ProcessHold()
+	m.Options(cli.CMD_OUTPUT, file.NewWriteCloser(func(buf []byte) { PushNoticeGrow(m, string(buf)) }, nil)).ProcessHold(toastContent(m, ice.SUCCESS))
 }
 
 func Toast(m *ice.Message, text string, arg ...ice.Any) { // [title [duration [progress]]]
@@ -111,13 +111,16 @@ func Toast(m *ice.Message, text string, arg ...ice.Any) { // [title [duration [p
 	}
 	PushNoticeToast(m, text, arg)
 }
-func ToastFailure(m *ice.Message, arg ...ice.Any) { Toast(m, ice.FAILURE, arg...) }
-func ToastSuccess(m *ice.Message, arg ...ice.Any) { Toast(m, ice.SUCCESS, arg...) }
+func toastContent(m *ice.Message, state string) string {
+	return kit.Join([]string{map[string]string{ice.PROCESS: "🕑", ice.FAILURE: "❌", ice.SUCCESS: "✅"}[state], state, m.ActionKey()}, " ")
+}
+func ToastFailure(m *ice.Message, arg ...ice.Any) { Toast(m, toastContent(m, ice.FAILURE), arg...) }
+func ToastSuccess(m *ice.Message, arg ...ice.Any) { Toast(m, toastContent(m, ice.SUCCESS), arg...) }
 func ToastProcess(m *ice.Message, arg ...ice.Any) func() {
 	kit.If(len(arg) == 0, func() { arg = kit.List("", "-1") })
 	kit.If(len(arg) == 1, func() { arg = append(arg, "-1") })
-	Toast(m, ice.PROCESS, arg...)
-	return func() { Toast(m, ice.SUCCESS) }
+	Toast(m, toastContent(m, ice.PROCESS), arg...)
+	return func() { Toast(m, toastContent(m, ice.SUCCESS)) }
 }
 func GoToast(m *ice.Message, title string, cb func(toast func(string, int, int)) []string) {
 	_total := 0

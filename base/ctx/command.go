@@ -112,13 +112,11 @@ func CmdInputs(m *ice.Message, arg ...string) {
 }
 func PodCmd(m *ice.Message, arg ...ice.Any) bool {
 	Upload(m)
-	if pod := m.Option(ice.POD); pod != "" {
-		m.Options(ice.POD, []string{}, ice.MSG_USERPOD, pod).Cmdy(append(kit.List(ice.SPACE, pod), arg...)...)
-		return true
-	}
-	if pod := m.Option(ice.SPACE); pod != "" {
-		m.Options(ice.SPACE, []string{}, ice.MSG_USERPOD, pod).Cmdy(append(kit.List(ice.SPACE, pod), arg...)...)
-		return true
+	for _, key := range []string{ice.SPACE, ice.POD} {
+		if pod := m.Option(key); pod != "" {
+			m.Options(key, []string{}, ice.MSG_USERPOD, pod).Cmdy(append(kit.List(ice.SPACE, pod), arg...)...)
+			return true
+		}
 	}
 	return false
 }

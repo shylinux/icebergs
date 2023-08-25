@@ -72,7 +72,7 @@ body.light fieldset.macos.desktop>div.output>fieldset.macos { background-color:#
 body.light fieldset.macos.desktop>div.output>fieldset.macos.notifications { background-color:transparent; }
 body.light fieldset.macos.desktop>div.output>fieldset.macos.notifications div.item { background-color:#daefff99; }
 body.light fieldset.macos.desktop>div.output>div.desktop>fieldset { background-color:#dee1e6; }
-body.light fieldset.macos.desktop>div.output>div.desktop fieldset input:not(:hover) { background-color:white; }
+/* body.light fieldset.macos.desktop>div.output>div.desktop fieldset input:not(:hover) { background-color:white; } */
 body.light fieldset.macos.desktop>div.output>div.desktop fieldset table.content tbody tr:nth-child(odd) { background-color:#f4f5f5; }
 body.light fieldset.macos.desktop>div.output>div.desktop fieldset table.content tbody tr:nth-child(even) { background-color:white; }
 body.light fieldset.macos.desktop>div.output>div.desktop fieldset>div.output.card>div.item { border:#d3d4d4 solid 1px; }

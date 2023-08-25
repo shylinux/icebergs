@@ -42,6 +42,7 @@ func Command(m *ice.Message, dir string, cli string, arg ...string) (XTerm, erro
 	if path.Base(cli) == "ish" {
 		return NewITerm(m)
 	}
+	m.Debug("command %v %v", cli, arg)
 	cmd := exec.Command(cli, arg...)
 	cmd.Dir = nfs.MkdirAll(m, kit.Path(dir))
 	cmd.Env = append(cmd.Env, os.Environ()...)

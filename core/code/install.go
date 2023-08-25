@@ -110,7 +110,7 @@ func _install_spawn(m *ice.Message, arg ...string) {
 		m.Option(INSTALL, _INSTALL)
 	}
 	nfs.DirDeepAll(m.Spawn(), path.Join(source, m.Option(INSTALL)), "", func(value ice.Maps) {
-		m.Cmd(nfs.LINK, path.Join(target, value[nfs.PATH]), path.Join(source, m.Option(INSTALL), value[nfs.PATH]))
+		m.Cmd(nfs.LINK, path.Join(target, value[nfs.PATH]), path.Join(source, m.Option(INSTALL), value[nfs.PATH]), kit.Dict(ice.LOG_DISABLE, ice.TRUE))
 	})
 }
 func _install_start(m *ice.Message, arg ...string) {

@@ -31,7 +31,8 @@ func _xterm_get(m *ice.Message, h string) xterm.XTerm {
 		text := strings.Split(value[mdb.TEXT], lex.NL)
 		ls := kit.Split(strings.Split(kit.Select(ISH, value[mdb.TYPE]), " # ")[0])
 		kit.If(value[nfs.PATH] != "" && !strings.HasSuffix(value[nfs.PATH], nfs.PS), func() { value[nfs.PATH] = path.Dir(value[nfs.PATH]) })
-		term, e := xterm.Command(m, value[nfs.PATH], kit.Select(ls[0], cli.SystemFind(m, ls[0])), ls[1:]...)
+		m.Debug("command %v %v", ls, value)
+		term, e := xterm.Command(m, value[nfs.PATH], kit.Select(ls[0], cli.SystemFind(m, ls[0], value[nfs.PATH])), ls[1:]...)
 		if m.Warn(e) {
 			return nil
 		}

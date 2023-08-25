@@ -297,7 +297,7 @@ func init() {
 	})
 }
 
-func HostPort(m *ice.Message, host, port string, arg ...string) string {
+func HostPort(m *ice.Message, host, port string) string {
 	if host == "" {
 		host = kit.ParseURL(UserHost(m)).Hostname()
 	}
@@ -306,7 +306,7 @@ func HostPort(m *ice.Message, host, port string, arg ...string) string {
 	} else if port == "443" {
 		return kit.Format("https://%s", host)
 	} else {
-		return kit.Format("%s://%s:%s", kit.ParseURL(UserHost(m)).Scheme, host, port)
+		return kit.Format("http://%s:%s", host, port)
 	}
 }
 func PublicIP(m *ice.Message) ice.Any {

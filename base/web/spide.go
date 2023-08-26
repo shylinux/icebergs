@@ -53,12 +53,23 @@ func _spide_show(m *ice.Message, name string, arg ...string) {
 		return
 	}
 	defer res.Body.Close()
+	m.Push(mdb.TYPE, "status")
+	m.Push(mdb.NAME, res.StatusCode)
+	m.Push(mdb.VALUE, res.Status)
 	m.Cost(cli.STATUS, res.Status, nfs.SIZE, kit.FmtSize(kit.Int64(res.Header.Get(ContentLength))), mdb.TYPE, res.Header.Get(ContentType))
-	kit.For(res.Header, func(k string, v []string) { m.Logs("response", k, v) })
+	kit.For(res.Header, func(k string, v []string) {
+		m.Logs("response", k, v)
+		m.Push(mdb.TYPE, "header")
+		m.Push(mdb.NAME, k)
+		m.Push(mdb.VALUE, v[0])
+	})
 	mdb.HashSelectUpdate(m, name, func(value ice.Map) {
 		kit.For(res.Cookies(), func(v *http.Cookie) {
 			kit.Value(value, kit.Keys(SPIDE_COOKIE, v.Name), v.Value)
 			m.Logs("response", v.Name, v.Value)
+			m.Push(mdb.TYPE, "cookie")
+			m.Push(mdb.NAME, v.Name)
+			m.Push(mdb.VALUE, v.Value)
 		})
 	})
 	if m.Warn(res.StatusCode != http.StatusOK && res.StatusCode != http.StatusCreated, ice.ErrNotValid, uri, cli.STATUS, res.Status) {
@@ -168,9 +179,13 @@ func _spide_send(m *ice.Message, name string, req *http.Request, timeout string)
 	return client.Do(req)
 }
 func _spide_save(m *ice.Message, action, file, uri string, res *http.Response) {
+	if action == SPIDE_RAW {
+		m.SetResult()
+	} else {
+		m.SetAppend().SetResult()
+	}
 	switch action {
 	case SPIDE_RAW:
-		m.SetResult()
 		if b, _ := ioutil.ReadAll(res.Body); strings.HasPrefix(res.Header.Get(ContentType), ApplicationJSON) {
 			m.Echo(kit.Formats(kit.UnMarshal(string(b))))
 		} else {

@@ -108,7 +108,10 @@ func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.Response
 	kit.If(m.Optionv(ice.MSG_CMDS) == nil, func() {
 		kit.If(strings.TrimPrefix(r.URL.Path, key), func(p string) { m.Optionv(ice.MSG_CMDS, strings.Split(p, nfs.PS)) })
 	})
-	defer func() { Render(m, m.Option(ice.MSG_OUTPUT), kit.List(m.Optionv(ice.MSG_ARGS))...) }()
+	defer func() {
+		Render(m, m.Option(ice.MSG_OUTPUT), kit.List(m.Optionv(ice.MSG_ARGS))...)
+		m.Debug("what %v", m.FormatMeta())
+	}()
 	if cmds, ok := _serve_auth(m, key, kit.Simple(m.Optionv(ice.MSG_CMDS)), w, r); ok {
 		defer func() { m.Cost(kit.Format("%s: %s %v", r.Method, m.PrefixPath()+path.Join(cmds...), m.FormatSize())) }()
 		m.Option(ice.MSG_OPTS, kit.Simple(m.Optionv(ice.MSG_OPTION), func(k string) bool { return !strings.HasPrefix(k, ice.MSG_SESSID) }))

@@ -32,7 +32,7 @@ func init() {
 				AppInstall(m, "", web.CODE_VIMER, mdb.ICON, "usr/icons/vimer.png")
 				AppInstall(m, "", web.CHAT_FLOWS, mdb.ICON, "usr/icons/flows.png")
 				AppInstall(m, "", web.CODE_COMPILE, mdb.ICON, "usr/icons/go.png")
-				AppInstall(m, "", web.CODE_GIT_STATUS, mdb.ICON, "usr/icons/git.jpg")
+				AppInstall(m, "", web.CODE_GIT_STATUS, mdb.ICON, "usr/icons/git.png")
 			}},
 			code.INSTALL: {Hand: func(m *ice.Message, arg ...string) { AppInstall(m, arg[0], arg[1], arg[2:]...) }},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {

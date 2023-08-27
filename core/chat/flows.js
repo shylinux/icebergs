@@ -7,12 +7,13 @@ Volcanos(chat.ONIMPORT, {
 	},
 	_project: function(can, msg) { var target; msg.Table(function(value) {
 		var item = can.onimport.item(can, value, function(event) { can.Option(mdb.ZONE, value.zone)
-			if (can.onmotion.cache(can, function(data, old) {
-				if (old) { data[old] = {db: can.db, toggle: can.ui.toggle, _display_class: can.ui.display.className, _profile_class: can.ui.profile.className} }
-				var back = data[value.zone]||{}; can.db = back.db||{}, can.ui.toggle = back.toggle
-				can.ui.display.className = back._display_class||can.ui.display.className
-				can.ui.profile.className = back._profile_class||can.ui.profile.className
-				return value.zone
+			if (can.onmotion.cache(can, function(save, load) {
+				save({db: can.db, toggle: can.ui.toggle, _display_class: can.ui.display.className, _profile_class: can.ui.profile.className})
+				return load(value.zone, function(bak) {
+					can.db = bak.db, can.ui.toggle = bak.toggle
+					can.ui.display.className = bak._display_class||can.ui.display.className
+					can.ui.profile.className = bak._profile_class||can.ui.profile.className
+				})
 			}, can.ui.content, can.ui.display, can._status)) { return can.page.isDisplay(can.ui.profile) && can.onimport._profile(can, can.db.current), can.onimport.layout(can) }
 			can.run(event, [value.zone], function(msg) { can.onimport._content(can, msg, can.Option(mdb.ZONE)) })
 		}, null, can.ui.project); target = can.Option(mdb.ZONE) == value.zone? item: target||item

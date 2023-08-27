@@ -68,7 +68,9 @@ Volcanos(chat.ONACTION, {
 			if (link.indexOf(can.db.current) < 0 || link.endsWith(nfs.PS)) { return can.isCmdMode()? can.user.jumps(can.base.Path(can.db.prefix, link)+params): (can.Option(nfs.PATH, link), can.Update()) }
 		}
 		var file = can.base.trimPrefix(link, can.db.current); can.isCmdMode() && can.user.jumps("#"+file)
-		if (can.onmotion.cache(can, function(cache, key) { cache[key] = can._plugins, can._plugins = cache[file]||[]; return file }, can.ui.main, can.ui.aside)) { return file }
+		if (can.onmotion.cache(can, function(save, load) { save({plugins: can._plugins})
+			return load(file, function(bak) { can._plugins = bak.file })
+		}, can.ui.main, can.ui.aside)) { return file }
 		can.onimport.content(can, file)
 		can.user.toast(can, "加载成功")
 		return link

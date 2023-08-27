@@ -18,8 +18,11 @@ import (
 )
 
 const (
-	COOKIE = "cookie"
-	STATUS = "status"
+	STATUS   = "status"
+	HEADER   = "header"
+	COOKIE   = "cookie"
+	REQUEST  = "request"
+	RESPONSE = "response"
 )
 
 func Render(m *ice.Message, cmd string, args ...ice.Any) bool {

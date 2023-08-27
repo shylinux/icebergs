@@ -40,6 +40,7 @@ fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>div.item:last
 fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>div.item:last-child { margin-right:80px; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>div.action>* { margin:10px 0px 10px 10px; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>div.action>div.item:last-child { margin-right:120px; }
+fieldset.macos.desktop>div.output>div.desktop>fieldset>div.action>div.tabs { display:none; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset.web.wiki.feel>div.status { display:none; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset.web.code.vimer>div.status { display:none; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset.web.code.vimer>div.action>div.tabs { display:none; }

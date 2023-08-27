@@ -25,7 +25,7 @@ func _spide_create(m *ice.Message, name, link string) {
 		dir, file := path.Split(u.EscapedPath())
 		m.Logs(mdb.INSERT, SPIDE, name, LINK, link)
 		mdb.HashSelectUpdate(m, mdb.HashCreate(m, CLIENT_NAME, name), func(value ice.Map) {
-			value[SPIDE_CLIENT] = kit.Dict(mdb.NAME, name, SPIDE_METHOD, http.MethodPost, "url", link, ORIGIN, u.Scheme+"://"+u.Host,
+			value[SPIDE_CLIENT] = kit.Dict(mdb.NAME, name, SPIDE_METHOD, http.MethodGet, "url", link, ORIGIN, u.Scheme+"://"+u.Host,
 				tcp.PROTOCOL, u.Scheme, tcp.HOSTNAME, u.Hostname(), tcp.HOST, u.Host, nfs.PATH, dir, nfs.FILE, file, cli.TIMEOUT, "300s",
 			)
 		})
@@ -37,7 +37,7 @@ func _spide_show(m *ice.Message, name string, arg ...string) {
 	kit.If(action == SPIDE_SAVE, func() { file, arg = arg[0], arg[1:] })
 	msg := mdb.HashSelects(m.Spawn(), name)
 	method, arg := _spide_args(m, arg, http.MethodGet, http.MethodPut, http.MethodPost, http.MethodDelete)
-	method = kit.Select(http.MethodPost, msg.Append(CLIENT_METHOD), method)
+	method = kit.Select(http.MethodGet, msg.Append(CLIENT_METHOD), method)
 	uri, arg := arg[0], arg[1:]
 	body, head, arg := _spide_body(m, method, arg...)
 	if c, ok := body.(io.Closer); ok {
@@ -48,26 +48,27 @@ func _spide_show(m *ice.Message, name string, arg ...string) {
 		return
 	}
 	mdb.HashSelectDetail(m, name, func(value ice.Map) { _spide_head(m, req, head, value) })
+	kit.For(req.Header, func(k string, v []string) { m.Logs(REQUEST, k, v) })
 	res, e := _spide_send(m, name, req, kit.Format(m.OptionDefault(CLIENT_TIMEOUT, msg.Append(CLIENT_TIMEOUT))))
 	if m.Warn(e, ice.ErrNotFound, uri) {
 		return
 	}
 	defer res.Body.Close()
-	m.Push(mdb.TYPE, "status")
+	m.Push(mdb.TYPE, STATUS)
 	m.Push(mdb.NAME, res.StatusCode)
 	m.Push(mdb.VALUE, res.Status)
 	m.Cost(cli.STATUS, res.Status, nfs.SIZE, kit.FmtSize(kit.Int64(res.Header.Get(ContentLength))), mdb.TYPE, res.Header.Get(ContentType))
 	kit.For(res.Header, func(k string, v []string) {
-		m.Logs("response", k, v)
-		m.Push(mdb.TYPE, "header")
+		m.Logs(RESPONSE, k, v)
+		m.Push(mdb.TYPE, SPIDE_HEADER)
 		m.Push(mdb.NAME, k)
 		m.Push(mdb.VALUE, v[0])
 	})
 	mdb.HashSelectUpdate(m, name, func(value ice.Map) {
 		kit.For(res.Cookies(), func(v *http.Cookie) {
 			kit.Value(value, kit.Keys(SPIDE_COOKIE, v.Name), v.Value)
-			m.Logs("response", v.Name, v.Value)
-			m.Push(mdb.TYPE, "cookie")
+			m.Logs(RESPONSE, v.Name, v.Value)
+			m.Push(mdb.TYPE, COOKIE)
 			m.Push(mdb.NAME, v.Name)
 			m.Push(mdb.VALUE, v.Value)
 		})
@@ -256,12 +257,10 @@ const (
 	CLIENT_ORIGIN   = "client.origin"
 	CLIENT_URL      = "client.url"
 
-	OPEN     = "open"
-	FULL     = "full"
-	LINK     = "link"
-	MERGE    = "merge"
-	REQUEST  = "request"
-	RESPONSE = "response"
+	OPEN  = "open"
+	FULL  = "full"
+	LINK  = "link"
+	MERGE = "merge"
 )
 const SPIDE = "spide"
 

@@ -12,6 +12,7 @@ import (
 	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -124,6 +125,14 @@ func init() {
 				m.Cmdy(NAVIGATE, kit.Ext(m.Option(mdb.FILE)), m.Option(nfs.FILE), m.Option(nfs.PATH))
 			}},
 		}, ctx.CmdAction(), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
+			if kit.HasPrefix(arg[0], "/require/", "http") {
+				m.Echo(m.Cmdx(web.SPIDE, ice.DEV, web.SPIDE_RAW, arg[0]))
+				ctx.DisplayLocal(m, "")
+				u := kit.ParseURL(arg[0])
+				m.Options("mode", "simple", "parse", kit.Ext(u.Path))
+				// ctx.ProcessRewrite(m, nfs.PATH, path.Dir(u.Path)+nfs.PS, nfs.FILE, path.Base(u.Path))
+				return
+			}
 			if arg[0] = strings.Split(arg[0], mdb.FS)[0]; !strings.HasSuffix(arg[0], nfs.PS) && len(arg) == 1 {
 				arg[1] = kit.Slice(strings.Split(arg[0], nfs.PS), -1)[0]
 				arg[0] = strings.TrimSuffix(arg[0], arg[1])

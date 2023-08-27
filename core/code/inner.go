@@ -125,7 +125,7 @@ func init() {
 				m.Cmdy(NAVIGATE, kit.Ext(m.Option(mdb.FILE)), m.Option(nfs.FILE), m.Option(nfs.PATH))
 			}},
 		}, ctx.CmdAction(), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
-			if kit.HasPrefix(arg[0], "/require/", "http") {
+			if kit.HasPrefix(arg[0], "/volcanos/", "/require/", "http") {
 				m.Echo(m.Cmdx(web.SPIDE, ice.DEV, web.SPIDE_RAW, arg[0]))
 				ctx.DisplayLocal(m, "")
 				u := kit.ParseURL(arg[0])

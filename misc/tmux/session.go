@@ -81,7 +81,11 @@ func init() {
 		)},
 	}, Commands: ice.Commands{
 		SESSION: {Name: "session session window pane cmds auto", Help: "会话", Actions: ice.MergeActions(ice.Actions{
-			web.DREAM_CREATE: {Hand: func(m *ice.Message, arg ...string) { m.Cmd("", mdb.CREATE) }},
+			web.DREAM_CREATE: {Hand: func(m *ice.Message, arg ...string) {
+				if !m.Warn(!nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME))), ice.ErrNotFound) {
+					m.Cmd("", mdb.CREATE)
+				}
+			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(ctx.ACTION) == SCRIPT {
 					m.Cmdy(SCRIPT, mdb.INPUTS, arg)

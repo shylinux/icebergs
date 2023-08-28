@@ -1,46 +1,54 @@
+(function() {
 Volcanos(chat.ONIMPORT, {
-	_init: function(can, msg, cb) { if (can.isCmdMode()) { can.onappend.style(can, html.OUTPUT), can.ConfHeight(can.page.height()||912), can.ConfWidth(can.page.width()||1690) }
-		(!can.page.ClassList.has(can, document.body, cli.BLACK) || can.isCmdMode()) && can.onlayout.background(can, can.user.info.background||"/require/usr/icons/background.jpg", can._fields)
-		can.ui = {}, can.base.isFunc(cb) && cb(msg), can.onmotion.clear(can)
-		can.onimport._menu(can), can.onimport._dock(can), can.onimport._searchs(can), can.onimport._notifications(can), can.onimport.layout(can)
-		can.onkeymap._build(can)
+	_init: function(can, msg) { can.onmotion.clear(can), can.isCmdMode() && can.onappend.style(can, html.OUTPUT)
+		can.onlayout.background(can, can.user.info.background||"/require/usr/icons/background.jpg", can._fields)
+		can.onimport._menu(can), can.onimport._notifications(can), can.onimport._searchs(can), can.onimport._dock(can)
 	},
-	_menu: function(can) { can.onappend.plugin(can, {index: "web.chat.macos.menu", style: html.OUTPUT, _space: can.Conf("_space")}, function(sub) { can.ui.menu = sub
-		sub.onexport.record = function(_, value, key, item) { delete(can.onfigure._path)
+	_menu: function(can) { can.onappend.plugin(can, {index: "web.chat.macos.menu", style: html.OUTPUT}, function(sub) { can.ui.menu = sub
+		sub.onexport.output = function() { can.onimport._desktop(can, can._msg)
+			can.Conf("session") && can.runActionCommand(event, "session", [can.Conf("session")], function(msg) {
+				var item = msg.TableDetail(); can.onimport.session(can, can.base.Obj(item.args))
+			})
+		}
+		sub.onexport.record = function(sub, value, key, item) { delete(can.onfigure._path)
 			switch (value) {
 				case "create": can.onaction.create(event, can); break
 				case "desktop": var carte = can.user.carte(event, can, {}, can.core.Item(can.onfigure), function(event, button, meta, carte) { can.onfigure[button](event, can, carte) }); break
-				case "searchs": can.onaction._search(can); break
 				case "notifications": can.ui.notifications._output.innerHTML && can.onmotion.toggle(can, can.ui.notifications._target); break
+				case "searchs": can.onaction._search(can); break
 				default: can.onimport._window(can, value)
 			}
 		}
-		sub.onexport.output = function() { can.onimport._desktop(can, can._msg)
-			can.Conf("session") && can.runActionCommand(event, "session", [can.Conf("session")], function(msg) { var item = msg.TableDetail()
-				can.onimport.session(can, can.base.Obj(item.args))
-			})
-		}
+	}) },
+	_notifications: function(can) { can.onappend.plugin(can, {index: "web.chat.macos.notifications", style: html.OUTPUT}, function(sub) { can.ui.notifications = sub
+		sub.onaction._close = function() { can.onmotion.hidden(can, sub._target) }, can.onmotion.hidden(can, sub._target)
+		sub.onexport.record = function(sub, value, key, item) { can.onimport._window(can, item) }
 	}) },
 	_searchs: function(can) { can.onappend.plugin(can, {index: "web.chat.macos.searchs"}, function(sub) { can.ui.searchs = sub
 		can.page.style(can, sub._target, html.LEFT, can.ConfWidth()/4, html.TOP, can.ConfHeight()/4), sub.onimport.size(sub, can.ConfHeight()/2, can.ConfWidth()/2, true)
-		sub.onexport.record = function(sub, value, key, item, event) {
-			if (item.cmd == ctx.COMMAND) { can.onimport._window(can, {index: can.core.Keys(item.type, item.name.split(lex.SP)[0])}) }
-			if (item.type == nfs.FILE) { can.onimport._window(can, {index: web.CODE_VIMER, args: can.misc.SplitPath(can, item.text) }) }
-			if (item.type == ice.CMD) { can.onimport._window(can, {index: item.name, args: can.base.Obj(item.text) }) }
-			if (can.base.isIn(item.type, web.LINK, web.WORKER, web.SERVER, web.GATEWAY)) { can.onimport._window(can, {index: web.CHAT_IFRAME, args: [item.text]}), can.onkeymap.prevent(event) }
-			if (item.type == ssh.SHELL) { can.onimport._window(can, {index: web.CODE_XTERM, args: [item.text]}) }
-		}, can.ConfHeight() < 800 && can.onmotion.delay(can, function() { can.onmotion.hidden(can, sub._target) })
-		sub.onaction._close = function() { can.onmotion.hidden(can, sub._target) }
-		can.onmotion.hidden(can, sub._target)
-	}) },
-	_notifications: function(can) { can.onappend.plugin(can, {index: "web.chat.macos.notifications", style: html.OUTPUT}, function(sub) { can.ui.notifications = sub
-		can.ConfHeight() < 800 && can.onmotion.delay(can, function() { can.onmotion.hidden(can, sub._target) }), can.onmotion.hidden(can, sub._target)
-		sub.onexport.record = function(sub, value, key, item) { can.onimport._window(can, item) }
+		sub.onaction._close = function() { can.onmotion.hidden(can, sub._target) }, can.onmotion.hidden(can, sub._target)
+		sub.onexport.record = function(sub, value, key, item, event) { switch (item.type) {
+			case ice.CMD: can.onimport._window(can, {index: item.name, args: can.base.Obj(item.text) }); break
+			case nfs.FILE: can.onimport._window(can, {index: web.CODE_VIMER, args: can.misc.SplitPath(can, item.text) }); break
+			case ssh.SHELL: can.onimport._window(can, {index: web.CODE_XTERM, args: [item.text]}); break
+			case web.LINK:
+			case web.WORKER:
+			case web.SERVER:
+			case web.GATEWAY: can.onimport._window(can, {index: web.CHAT_IFRAME, args: [item.text]}), can.onkeymap.prevent(event); break
+			default: item.cmd == ctx.COMMAND && can.onimport._window(can, {index: can.core.Keys(item.type, item.name.split(lex.SP)[0])})
+		} }
 	}) },
 	_dock: function(can) { can.onappend.plugin(can, {index: "web.chat.macos.dock", style: html.OUTPUT}, function(sub) { can.ui.dock = sub
 		sub.onexport.output = function(sub, msg) { can.onimport.layout(can) }
 		sub.onexport.record = function(sub, value, key, item) { can.onimport._window(can, item) }
 	}) },
+	_desktop: function(can, msg, name) { var target = can.page.Append(can, can._output, [html.DESKTOP])._target; can.ui.desktop = target
+		target._tabs = can.onimport.tabs(can, [{name: name||"Desktop"+(can.page.Select(can, can._output, html.DIV_DESKTOP).length-1)}], function() {
+			can.onmotion.select(can, can._output, "div.desktop", target), can.ui.desktop = target
+		}, function() { can.page.Remove(can, target) }, can.ui.menu._output), target._tabs._desktop = target
+		target.ondragend = function() { can.onimport._item(can, window._drag_item) }
+		can.onimport.__item(can, msg, target)
+	},
 	_item: function(can, item) { can.runAction(can.request(event, item), mdb.CREATE, [], function() { can.run(event, [], function(msg) {
 		can.page.SelectChild(can, can.ui.desktop, html.DIV_ITEM, function(target) { can.page.Remove(can, target) }), can.onimport.__item(can, msg, can.ui.desktop)
 	}) }) },
@@ -50,15 +58,10 @@ Volcanos(chat.ONIMPORT, {
 			remove: function() { can.runAction(event, mdb.REMOVE, [item.hash]) },
 		}); can.page.style(can, carte._target, html.TOP, event.y) },
 	}) }) },
-	_desktop: function(can, msg, name) { var target = can.page.Append(can, can._output, [{view: html.DESKTOP}])._target; can.onimport.__item(can, msg, target), can.ui.desktop = target
-		target._tabs = can.onimport.tabs(can, [{name: name||"Desktop"+(can.page.Select(can, can._output, html.DIV_DESKTOP).length-1)}], function() { can.onmotion.select(can, can._output, "div.desktop", target), can.ui.desktop = target }, function() { can.page.Remove(can, target) }, can.ui.menu._output), target._tabs._desktop = target
-		target.ondragend = function() { can.onimport._item(can, window._drag_item) }
-	},
-	_window: function(can, item) { if (!item.index) { return }
+	_window: function(can, item) { if (!item.index) { return } item._space = can.ConfSpace()
 		item.left = 100, item.top = 125, item.height = can.base.Min(can.ConfHeight()-345, 480, 800), item.width = can.base.Min(can.ConfWidth()-360, 640, 1200)
 		if (can.ConfHeight() < 800) { item.top = 25, item.height = can.ConfHeight()-125, item.width = can.ConfWidth()-110 }
 		if (can.user.isMobile) { item.left = 0, item.top = 25, item.height = can.ConfHeight()-125, item.width = can.ConfWidth() }
-		item._space = can.ConfSpace()
 		can.onappend.plugin(can, item, function(sub) { can.ondetail.select(can, sub._target)
 			var index = 0; can.core.Item({
 				"#f95f57": function(event) { sub.onaction._close(event, sub) },
@@ -66,55 +69,56 @@ Volcanos(chat.ONIMPORT, {
 					can.onmotion.toggle(can, sub._target, true), can.page.Remove(can, dock)
 				}}])._target; sub.onmotion.hidden(sub, sub._target) },
 				"#32c840": function(event) { sub.onaction.full(event, sub) },
-			}, function(color, cb) { can.page.insertBefore(can, [{view: [[html.ITEM, html.BUTTON]], style: {"background-color": color, right: 10+20*index++}, onclick: cb}], sub._output) })
-			sub.onappend.desktop = function(item) { can.onimport._item(can, item) }
-			sub.onappend.dock = function(item) { can.ui.dock.runAction(can.request(event, item), mdb.CREATE, [], function() { can.ui.dock.Update() }) }
-			sub.onimport._open = function(sub, msg, arg) { can.onimport._window(can, {index: web.CHAT_IFRAME, args: [arg]}) }
-			sub.onexport.output = function() {
-				if (item.index == "web.chat.macos.opens") { can.page.Remove(can, sub._target) }
-				sub.onimport.size(sub, item.height, can.base.Min(item.width, sub._target.offsetWidth), true)
-			}, sub.onimport.size(sub, item.height, can.base.Min(item.width, sub._target.offsetWidth), true)
-			sub.onexport.record = function(sub, value, key, item) { can.onimport._window(can, item) }
+			}, function(color, cb) {
+				can.page.insertBefore(can, [{view: [[html.ITEM, html.BUTTON]], style: {"background-color": color, right: 10+20*index++}, onclick: cb}], sub._output)
+			})
 			sub.onexport.marginTop = function() { return 25 }
 			sub.onexport.marginBottom = function() { return 100 }
-			sub.onexport.actionHeight = function(sub) { return can.page.ClassList.has(can, sub._target, html.OUTPUT)? 0: html.ACTION_HEIGHT+20 },
-			can.onmotion.move(can, sub._target, {"z-index": 10, top: item.top, left: item.left}), sub.onmotion.resize(can, sub._target, function(height, width) {
-				sub.onimport.size(sub, item.height = height, item.width = width)
-			}, 25)
-			sub._target.onclick = function(event) { can.ondetail.select(can, sub._target) }
+			sub.onexport.actionHeight = function(sub) { return can.page.ClassList.has(can, sub._target, html.OUTPUT)? 0: html.ACTION_HEIGHT+20 }
+			sub.onexport.output = function() { item.index == "web.chat.macos.opens" && can.page.Remove(can, sub._target)
+				sub.onimport.size(sub, item.height, can.base.Min(sub._target.offsetWidth, item.width), true)
+			}, sub.onimport.size(sub, item.height, can.base.Min(sub._target.offsetWidth, item.width), true)
+			sub.onexport.record = function(sub, value, key, item) { can.onimport._window(can, item) }
+			sub.onimport._open = function(sub, msg, arg) { can.onimport._window(can, {index: web.CHAT_IFRAME, args: [arg]}) }
+			sub.onappend.desktop = function(item) { can.onimport._item(can, item) }
+			sub.onappend.dock = function(item) { can.ui.dock.runAction(can.request(event, item), mdb.CREATE, [], function() { can.ui.dock.Update() }) }
+			can.onmotion.move(can, sub._target, {top: item.top, left: item.left})
+			sub.onmotion.resize(can, sub._target, function(height, width) { sub.onimport.size(sub, item.height = height, item.width = width) }, 25)
+			sub._target.onclick = function(event) {
+				can.ondetail.select(can, sub._target)
+			}
 		}, can.ui.desktop)
 	},
 	session: function(can, list) { can.page.Select(can, can._output, html.DIV_DESKTOP, function(target) { can.page.Remove(can, target) })
 		can.page.Select(can, can.ui.menu._output, html.DIV_TABS, function(target) { can.page.Remove(can, target) })
 		can.core.List(list, function(item) { can.onimport._desktop(can, null, item.name), can.core.List(item.list, function(item) { can.onimport._window(can, item) }) })
 	},
-	layout: function(can) {
-		can.page.style(can, can._output, html.HEIGHT, can.ConfHeight(), html.WIDTH, can.ConfWidth())
+	layout: function(can) { can.page.style(can, can._output, html.HEIGHT, can.ConfHeight(), html.WIDTH, can.ConfWidth())
+		can.ui.notifications && can.page.style(can, can.ui.notifications._target, html.LEFT, can.ConfWidth()-250)
 		can.ui.dock && can.page.style(can, can.ui.dock._target, html.LEFT, can.base.Min((can.ConfWidth()-(can.ui.dock._target.offsetWidth||502))/2, 0))
 	},
 }, [""])
 Volcanos(chat.ONACTION, {list: ["full"],
-	_search: function(can) {
-		if (can.onmotion.toggle(can, can.ui.searchs._target)) {
-			can.page.Select(can, can.ui.searchs._option, "input[name=keyword]", function(target) { can.onmotion.focus(can, target) })
-		}
-	},
+	_search: function(can) { if (can.onmotion.toggle(can, can.ui.searchs._target)) {
+		can.page.Select(can, can.ui.searchs._option, "input[name=keyword]", function(target) { can.onmotion.focus(can, target) })
+	} },
 	create: function(event, can, button) { can.onimport._desktop(can) },
 	full: function(event, can) { document.body.requestFullscreen() },
-	onkeydown: function(event, can) {
-		can.db._key_list = can.onkeymap._parse(event, can, mdb.PLUGIN, can.db._key_list, can.ui.content)
-	},
+})
+Volcanos(chat.ONDETAIL, {
+	select: function(can, target) { can.onmotion.select(can, can.ui.desktop, html.FIELDSET, target) },
+})
+Volcanos(chat.ONEXPORT, {
+	position: function(can, index) { var top = 25, margin = 20, height = 100, width = 80
+		var n = parseInt((can.ConfHeight()-top)/(height+margin))
+		return {top: index%n*height+top+margin/2, left: parseInt(index/n)*(width+margin)+margin/2}
+	}
 })
 Volcanos(chat.ONKEYMAP, {
 	_mode: {plugin: {
-		" ": function(event, can) { can.onkeymap.prevent(event), can.onaction._search(can) },
+		" ": function(event, can) { can.onaction._search(can), can.onkeymap.prevent(event) },
 		"Escape": function(event, can) { can.onmotion.hidden(can, can.ui.searchs._target) },
 	}}, _engine: {},
-})
-Volcanos(chat.ONDETAIL, {
-	select: function(can, target) { can.page.SelectChild(can, can.ui.desktop, html.FIELDSET, function(fieldset) {
-		can.page.style(can, fieldset, "z-index", fieldset == target? "10": "9"), fieldset == target && can.onmotion.toggle(can, fieldset, true)
-	}) },
 })
 Volcanos(chat.ONFIGURE, {
 	"session\t>": function(event, can, carte) { can.runActionCommand(event, "session", [], function(msg) {
@@ -175,9 +179,4 @@ Volcanos(chat.ONFIGURE, {
 		}, [], function(event) {}, carte)
 	},
 })
-Volcanos(chat.ONEXPORT, {
-	position: function(can, index) { var top = 25, margin = 20, height = 100, width = 80
-		var n = parseInt((can.ConfHeight()-top)/(height+margin))
-		return {top: index%n*height+top+margin/2, left: parseInt(index/n)*(width+margin)+margin/2}
-	}
-})
+})()

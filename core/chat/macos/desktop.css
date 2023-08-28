@@ -6,10 +6,8 @@ fieldset.macos.desktop>div.output>fieldset.macos.menu { line-height:25px; border
 fieldset.macos.desktop>div.output>fieldset.macos.dock { border:var(--box-border); border-radius:20px; position:absolute; bottom:10px; transition:margin-left 0.3s; }
 fieldset.macos.desktop>div.output>fieldset.macos.searchs { position:absolute; z-index:100; }
 fieldset.macos.desktop>div.output>fieldset.macos.searchs>form.option>div.item.keyword input { background-color:transparent; width:320px; }
-fieldset.macos.desktop>div.output>fieldset.macos.notifications { border-radius:0; height:calc(100% - 125px); width:250px; overflow:auto; position:absolute; top:25px; right:0; }
-fieldset.macos.desktop>div.output>fieldset.macos.notifications>div.action>div.item { margin-top:10px; }
-fieldset.macos.desktop>div.output>fieldset.macos.notifications>div.action>div.item input { background-color:transparent; }
-fieldset.macos.desktop>div.output>fieldset.macos.notifications>div.output>div.item { margin-top:10px; margin-right:10px; min-height:60px; clear:both; }
+fieldset.macos.desktop>div.output>fieldset.macos.notifications { border-radius:0; height:calc(100% - 125px); width:250px; overflow:auto; position:absolute; top:25px; left:800px; }
+fieldset.macos.desktop>div.output>fieldset.macos.notifications>div.output>div.item { margin-top:10px; min-height:60px; clear:both; }
 fieldset.macos.desktop>div.output>fieldset.macos.notifications div.item div.title { margin-top:10px; width:132px; overflow:hidden; }
 fieldset.macos.desktop>div.output>fieldset.macos.notifications div.item div.time { font-size:var(--code-font-size); margin-top:10px; width:48px; }
 fieldset.macos.desktop>div.output>fieldset.macos.notifications div.item div.content { width:180px; }
@@ -17,6 +15,7 @@ fieldset.macos.desktop>div.output>div.desktop:not(.select) { display:none; }
 fieldset.macos.desktop>div.output>div.desktop>div.item { position:absolute; text-align:center; }
 fieldset.macos.desktop>div.output>div.desktop>div.item img { object-fit:contain; border-radius:var(--desktop-icon-size); height:var(--desktop-icon-size); width:var(--desktop-icon-size); }
 fieldset.macos.desktop>div.output>div.desktop>div.item>div.name { font-size:var(--code-font-size); width:var(--desktop-icon-size); overflow:hidden; }
+fieldset.macos.desktop>div.output>div.desktop>fieldset.select { z-index:1; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset { border-radius:10px; position:absolute; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>div.item.button { border-radius:20px; height:20px; width:20px; scale:0.7; position:absolute; top:16px; right:10px; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>legend { padding:0 10px; margin:10px; }

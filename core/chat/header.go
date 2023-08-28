@@ -91,7 +91,7 @@ func init() {
 					return
 				}
 				m.Cmd(cli.SYSTEM, "osascript", "-e", `tell app "System Events" to tell appearance preferences to set dark mode to `+
-					kit.Select(ice.FALSE, ice.TRUE, kit.IsIn(kit.Select(html.DARK, arg, 0), html.DARK, html.BLACK)))
+					kit.Select(ice.FALSE, ice.TRUE, kit.IsIn(kit.Select(html.DARK, arg, 0), html.DARK, html.BLACK, html.SILVER)))
 			}},
 		}, ctx.ConfAction(SSO, "")), Hand: func(m *ice.Message, arg ...string) {
 			m.Option("language.list", m.Cmd(nfs.DIR, path.Join(ice.SRC_TEMPLATE, m.PrefixKey(), aaa.LANGUAGE), nfs.FILE).Appendv(nfs.FILE))

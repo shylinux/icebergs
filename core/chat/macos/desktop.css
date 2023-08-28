@@ -33,7 +33,8 @@ fieldset.macos.desktop>div.output>div.desktop>fieldset>legend { padding-right:10
 fieldset.macos.desktop>div.output>div.desktop>fieldset>legend:not(:hover) { background-color:unset; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>*:not(.textarea) { margin:10px 0px 10px 10px; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>div.icon { margin-left:0; margin-top:10px; margin-bottom:8px; }
-fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>div.item.button>span.icon { font-size:26px; line-height:28px; }
+fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>div.item.button>span.icon { font-size:32px; line-height:32px; }
+fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>div.item.button.prunes>span.icon { font-size:20px; line-height:32px; }
 
 fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>div.item.icons { margin-left:0; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>div.item:last-child { margin-right:20px; }

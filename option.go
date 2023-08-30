@@ -46,6 +46,7 @@ func (m *Message) OptionCB(key string, cb ...Any) Any {
 func (m *Message) MergePod(pod string, arg ...Any) string {
 	ls := []string{"chat"}
 	kit.If(kit.Keys(m.Option(MSG_USERPOD), pod), func(p string) { ls = append(ls, POD, p) })
+	kit.If(len(ls) == 1, func() { ls = ls[:0] })
 	kit.If(m.Option(DEBUG) == TRUE, func() { arg = append([]Any{DEBUG, TRUE}, arg...) })
 	return kit.MergeURL2(strings.Split(kit.Select("http://localhost:9020", Info.Domain, m.Option(MSG_USERWEB)), QS)[0], PS+kit.Join(ls, PS), arg...)
 }

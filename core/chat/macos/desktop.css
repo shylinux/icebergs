@@ -13,7 +13,7 @@ fieldset.macos.desktop>div.output>fieldset.macos.notifications div.item div.time
 fieldset.macos.desktop>div.output>fieldset.macos.notifications div.item div.content { width:180px; }
 fieldset.macos.desktop>div.output>div.desktop:not(.select) { display:none; }
 fieldset.macos.desktop>div.output>div.desktop>div.item { position:absolute; text-align:center; }
-fieldset.macos.desktop>div.output>div.desktop>div.item img { object-fit:contain; border-radius:var(--desktop-icon-size); height:var(--desktop-icon-size); width:var(--desktop-icon-size); }
+fieldset.macos.desktop>div.output>div.desktop>div.item img { object-fit:contain; height:var(--desktop-icon-size); width:var(--desktop-icon-size); }
 fieldset.macos.desktop>div.output>div.desktop>div.item>div.name { font-size:var(--code-font-size); width:var(--desktop-icon-size); overflow:hidden; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset.select { z-index:1; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset { border-radius:10px; position:absolute; }
@@ -48,10 +48,10 @@ fieldset.macos.menu>div.output>div.tabs.select { background-color:var(--hover-bg
 fieldset.macos.dock>div.output { height:var(--desktop-icon-size); display:flex; overflow:auto; }
 fieldset.macos.dock>div.output>div.space { background-color:#ececec36; margin:10px; height:calc(100% - 20px); width:2px; }
 fieldset.macos.dock>div.output>div.item { text-align:center; align-self:baseline; transition:margin-top 0.3s; }
-fieldset.macos.dock>div.output>div.item img { object-fit:contain; border-radius:var(--desktop-icon-size); min-height:var(--desktop-icon-size); width:var(--desktop-icon-size); transition:width 0.3s; }
+fieldset.macos.dock>div.output>div.item img { object-fit:contain; min-height:var(--desktop-icon-size); width:var(--desktop-icon-size); transition:width 0.3s; }
 fieldset.macos.dock>div.output>div.item>div.name { display:none; }
 fieldset.macos.finder>div.output div.content>div.item { text-align:center; float:left; }
-fieldset.macos.finder>div.output div.content>div.item img { object-fit:contain; border-radius:var(--desktop-icon-size); height:var(--desktop-icon-size); width:var(--desktop-icon-size); }
+fieldset.macos.finder>div.output div.content>div.item img { object-fit:contain; height:var(--desktop-icon-size); width:var(--desktop-icon-size); }
 fieldset.macos.finder>div.output div.content>div.item div.name { font-size:var(--code-font-size); text-align:center; }
 body.dark fieldset.macos.desktop>div.output>fieldset.macos { background-color:#08234ad1; }
 body.dark fieldset.macos.desktop>div.output>div.desktop fieldset table.content tbody tr:nth-child(odd) { background-color:#282B2F; }

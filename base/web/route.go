@@ -58,7 +58,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		ROUTE: {Name: "route space:text cmds:text auto spide cmds build travel monitor prunes", Help: "路由表", Actions: ice.MergeActions(ice.Actions{
 			ice.MAIN: {Help: "首页", Hand: func(m *ice.Message, arg ...string) {
-				ctx.ProcessField(m, CHAT_IFRAME, m.MergePod(kit.Select(m.Option(SPACE), arg, 0)), arg...)
+				ctx.ProcessField(m, CHAT_IFRAME, m.MergePod(""), arg...)
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch mdb.HashInputs(m, arg); arg[0] {
@@ -77,6 +77,7 @@ func init() {
 			}},
 			"build": {Name: "build space", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
 				_route_toast(m, m.Option(SPACE), m.PrefixKey(), "_build")
+				m.Cmdy("", "travel")
 			}},
 			"_build": {Hand: func(m *ice.Message, arg ...string) {
 				if nfs.Exists(m, ".git") {
@@ -111,8 +112,9 @@ func init() {
 					}
 				})
 				PushPodCmd(m, "", m.ActionKey())
-				m.Table(func(value ice.Maps) { kit.If(value[SPACE], func() { mdb.HashCreate(m.Spawn(), kit.Simple(value)) }) })
+				ToastSuccess(m)
 				m.ProcessRefresh()
+				m.Table(func(value ice.Maps) { kit.If(value[SPACE], func() { mdb.HashCreate(m.Spawn(), kit.Simple(value)) }) })
 			}},
 			"monitor": {Help: "监控", Hand: func(m *ice.Message, arg ...string) {
 				m.ProcessOpen(m.Cmdv(SPIDE, "monitor", CLIENT_URL))

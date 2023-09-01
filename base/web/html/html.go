@@ -6,6 +6,11 @@ const (
 	WHITE  = "white"
 	BLACK  = "black"
 	SILVER = "silver"
+
+	PROJECT = "project"
+	CONTENT = "content"
+	PROFILE = "profile"
+	DISPLAY = "display"
 )
 
 const (

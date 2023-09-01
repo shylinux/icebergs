@@ -96,7 +96,9 @@ func _spide_body(m *ice.Message, method string, arg ...string) (io.Reader, ice.M
 	switch kit.If(len(arg) == 1, func() { arg = []string{SPIDE_DATA, arg[0]} }); arg[0] {
 	case SPIDE_FORM:
 		arg = kit.Simple(arg, func(v string) string { return url.QueryEscape(v) })
-		head[ContentType], body = ContentFORM, bytes.NewBufferString(kit.JoinKV("=", "&", arg[1:]...))
+		_data := kit.JoinKV("=", "&", arg[1:]...)
+		m.Debug("post %v %v", len(_data), _data)
+		head[ContentType], body = ContentFORM, bytes.NewBufferString(_data)
 	case SPIDE_PART:
 		head[ContentType], body = _spide_part(m, arg...)
 	case SPIDE_FILE:

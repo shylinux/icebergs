@@ -13,6 +13,6 @@ func init() {
 		MENU: {Actions: ice.MergeActions(aaa.RoleAction(), CmdHashAction(), mdb.ImportantHashAction())},
 	})
 }
-func MenuAppend(m *ice.Message, name, index string, arg ...string) {
-	install(m, MENU, name, index, arg...)
+func MenuAppend(m *ice.Message, icon, index string) {
+	install(m, MENU, icon, index)
 }

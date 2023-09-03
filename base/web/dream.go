@@ -126,7 +126,7 @@ const DREAM = "dream"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		DREAM: {Name: "dream name@key auto create startall stopall", Help: "梦想家", Actions: ice.MergeActions(ice.Actions{
+		DREAM: {Name: "dream name@key auto create origin startall stopall", Help: "梦想家", Actions: ice.MergeActions(ice.Actions{
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if mdb.IsSearchPreview(m, arg) {
 					m.Cmds("", func(value ice.Maps) { m.PushSearch(mdb.TEXT, m.MergePod(value[mdb.NAME]), value) })
@@ -175,6 +175,9 @@ func init() {
 				kit.Switch(m.Option(mdb.TYPE), []string{SERVER, WORKER}, func() { m.PushButton(OPEN) })
 			}},
 			OPEN: {Hand: func(m *ice.Message, arg ...string) { ctx.ProcessOpen(m, m.MergePod(m.Option(mdb.NAME))) }},
+			"origin": {Name: "origin", Help: "仓库", Hand: func(m *ice.Message, arg ...string) {
+				m.ProcessOpen(m.MergePodCmd("", "web.code.git.search", "repos", "repos"))
+			}},
 			"startall": {Name: "startall name", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
 				reg, err := regexp.Compile(m.Option(mdb.NAME))
 				if m.Warn(err) {
@@ -228,6 +231,14 @@ func init() {
 		}, ctx.CmdAction(), DreamAction(), mdb.ImportantHashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icon,repos,binary,template")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				_dream_list(m)
+				m.RewriteAppend(func(value, key string, index int) string {
+					if key == "icon" {
+						if !kit.HasPrefix(value, nfs.PS, HTTP) {
+							return kit.MergeURL("/require/"+value, ice.POD, m.Appendv(mdb.NAME)[index])
+						}
+					}
+					return value
+				})
 				ctx.DisplayTableCard(m)
 			} else if arg[0] == ctx.ACTION {
 				gdb.Event(m, DREAM_ACTION, arg)

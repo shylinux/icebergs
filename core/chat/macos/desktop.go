@@ -6,7 +6,6 @@ import (
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/web"
-	"shylinux.com/x/icebergs/core/team"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -17,11 +16,11 @@ func init() {
 		DESKTOP: {Help: "应用桌面", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				if mdb.HashImport(m); m.Cmd(DESKTOP).Length() == 0 {
-					DeskAppend(m, "Books", web.WIKI_WORD)
-					DeskAppend(m, "Photos", web.WIKI_FEEL)
-					DeskAppend(m, "Grapher", web.WIKI_DRAW)
-					DeskAppend(m, "Calendar", web.TEAM_PLAN, ctx.ARGS, team.MONTH)
-					DeskAppend(m, "flows", web.CHAT_FLOWS)
+					DeskAppend(m, "usr/icons/Books.png", web.WIKI_WORD)
+					DeskAppend(m, "usr/icons/Photos.png", web.WIKI_FEEL)
+					DeskAppend(m, "usr/icons/Grapher.png", web.WIKI_DRAW)
+					DeskAppend(m, "usr/icons/Calendar.png", web.TEAM_PLAN)
+					DeskAppend(m, "usr/icons/flows.png", web.CHAT_FLOWS)
 				}
 			}},
 			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { mdb.HashExport(m) }},
@@ -33,6 +32,6 @@ func init() {
 	})
 }
 
-func DeskAppend(m *ice.Message, name, index string, arg ...string) {
-	install(m, DESKTOP, name, index, arg...)
+func DeskAppend(m *ice.Message, icon, index string) {
+	install(m, DESKTOP, icon, index)
 }

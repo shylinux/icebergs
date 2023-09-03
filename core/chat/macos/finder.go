@@ -14,6 +14,6 @@ func init() {
 	}, CmdHashAction(mdb.NAME))}})
 }
 
-func FinderAppend(m *ice.Message, name, index string, arg ...string) {
-	install(m, FINDER, name, index, arg...)
+func FinderAppend(m *ice.Message, icon, index string) {
+	install(m, FINDER, icon, index)
 }

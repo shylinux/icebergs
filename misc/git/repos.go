@@ -140,6 +140,7 @@ func _repos_auth(m *ice.Message, origin string) *http.BasicAuth {
 	} else if password, ok := u.User.Password(); !ok {
 		return nil
 	} else {
+		m.Debug("auth %v:%v", u.User.Username(), password)
 		return &http.BasicAuth{Username: u.User.Username(), Password: password}
 	}
 }

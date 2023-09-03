@@ -61,18 +61,17 @@ func init() {
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			switch m.Option(ice.MSG_THEME) {
-			case "black":
-				m.Option(FG, kit.Select(CYAN, arg, 1))
-				m.Option(BG, kit.Select(BLACK, arg, 2))
+			case "light", "white":
+				m.Option(FG, kit.Select(BLACK, arg, 1))
+				m.Option(BG, kit.Select(WHITE, arg, 2))
 			default:
-				dark := kit.IndexOf([]string{BLACK, "dark"}, m.Option(ice.MSG_THEME)) > -1
-				m.Option(FG, kit.Select(kit.Select(BLACK, SILVER, dark), arg, 1))
-				m.Option(BG, kit.Select(kit.Select(WHITE, BLACK, dark), arg, 2))
+				m.Option(FG, kit.Select(kit.Select(BLACK, m.Option("--plugin-fg-color")), arg, 1))
+				m.Option(BG, kit.Select(kit.Select(WHITE, m.Option("--plugin-bg-color")), arg, 2))
 			}
 			if m.IsCliUA() {
 				_qrcode_cli(m, kit.Select(kit.Select(ice.Info.Make.Domain, ice.Info.Domain), arg, 0))
 			} else {
-				m.Option(SIZE, kit.Select(kit.Format(kit.Max(240, kit.Min(480, kit.Int(m.Option(ice.MSG_HEIGHT)), kit.Int(m.Option(ice.MSG_WIDTH))))), arg, 3))
+				m.OptionDefault(SIZE, "480")
 				m.StatusTime(mdb.LINK, _qrcode_web(m, tcp.PublishLocalhost(m, kit.Select(m.Option(ice.MSG_USERWEB), arg, 0))))
 			}
 		}},

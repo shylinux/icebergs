@@ -210,18 +210,16 @@ const ( // MSG
 	MSG_LANGUAGE = "user.lang"
 
 	MSG_MODE    = "sess.mode"
-	MSG_TITLE   = "sess.title"
 	MSG_THEME   = "sess.theme"
+	MSG_TITLE   = "sess.title"
 	MSG_RIVER   = "sess.river"
 	MSG_STORM   = "sess.storm"
-	MSG_WIDTH   = "sess.width"
-	MSG_HEIGHT  = "sess.height"
-	MSG_DAEMON  = "sess.daemon"
 	MSG_COUNT   = "sess.count"
+	MSG_DAEMON  = "sess.daemon"
 	MSG_FILES   = "file.system"
-	YAC_STACK   = "yac.stack"
-	YAC_MESSAGE = "yac.message"
 	LOG_DISABLE = "log.disable"
+	YAC_MESSAGE = "yac.message"
+	YAC_STACK   = "yac.stack"
 )
 const ( // RENDER
 	RENDER_BUTTON = "_button"

@@ -13,6 +13,10 @@ import (
 	"shylinux.com/x/webview"
 )
 
+const (
+	CONF_SIZE = "var/conf/webview.size"
+)
+
 type WebView struct {
 	webview.WebView
 	Source string
@@ -32,7 +36,7 @@ func (w WebView) Menu() bool {
 	if len(list) == 0 {
 		return false
 	} else if len(list) == 1 {
-		if ls := kit.Split(w.Cmdx(nfs.CAT, "etc/webview.size")); len(ls) > 1 {
+		if ls := kit.Split(w.Cmdx(nfs.CAT, CONF_SIZE)); len(ls) > 1 {
 			w.WebView.SetSize(kit.Int(ls[0]), kit.Int(ls[1])+28, webview.HintNone)
 		} else {
 			w.WebView.SetSize(1200, 800, webview.HintNone)
@@ -65,7 +69,7 @@ func (w WebView) OpenCmd(cmd string) {
 	cli.Opens(w.Message, "Terminal.app", "-n")
 }
 func (w WebView) SetSize(width, height int) {
-	w.Cmd(nfs.SAVE, "etc/webview.size", kit.Format("%v,%v", width, height))
+	w.Cmd(nfs.SAVE, CONF_SIZE, kit.Format("%v,%v", width, height))
 }
 func (w WebView) System(arg ...string) string { return w.Cmdx(cli.SYSTEM, arg) }
 func (w WebView) Power() string {

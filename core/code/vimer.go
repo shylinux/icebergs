@@ -143,6 +143,13 @@ func init() {
 					m.Cmd(cli.SYSTEM, "goimports", "-w", p)
 				}
 			}},
+			cli.MAKE: {Hand: func(m *ice.Message, arg ...string) {
+				web.PushStream(m)
+				defer web.ToastProcess(m)()
+				m.Cmd(cli.SYSTEM, "echo")
+				m.Cmd(cli.SYSTEM, "date")
+				m.Cmd(cli.SYSTEM, cli.MAKE, m.Option("target"), kit.Dict(cli.CMD_DIR, m.Option(nfs.PATH)))
+			}},
 			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) { nfs.Trash(m, arg[0]) }},
 			nfs.MODULE: {Name: "create name*=h2 help=示例 type*=Hash,Zone,Data,Code main*=main.go zone key", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(AUTOGEN, nfs.MODULE, arg)

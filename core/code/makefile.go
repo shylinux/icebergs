@@ -1,8 +1,11 @@
 package code
 
 import (
+	"path"
+
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web/html"
@@ -24,7 +27,14 @@ const MAKEFILE = "makefile"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		MAKEFILE: {Name: "makefile path auto", Help: "构建", Actions: ice.MergeActions(ice.Actions{
-			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _makefile_xterm(m, arg...) }},
+			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
+				m.Options(lex.SPLIT_BLOCK, ":")
+				m.Cmd(lex.SPLIT, path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)), func(indent int, text string, ls []string) {
+					if indent == 1 && ls[1] == ":" {
+						m.Push("target", ls[0]).Push("source", kit.Join(ls[2:])).PushButton("make")
+					}
+				})
+			}},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _makefile_xterm(m, arg...) }},
 		}, PlugAction())},
 	})

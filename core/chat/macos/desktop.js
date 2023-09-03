@@ -4,7 +4,7 @@ Volcanos(chat.ONIMPORT, {
 		can.onlayout.background(can, can.user.info.background||"/require/usr/icons/background.jpg", can._fields)
 		can.onimport._menu(can), can.onimport._notifications(can), can.onimport._searchs(can), can.onimport._dock(can)
 	},
-	_menu: function(can) { can.onappend.plugin(can, {index: "web.chat.macos.menu", style: html.OUTPUT}, function(sub) { can.ui.menu = sub
+	_menu: function(can) { can.onappend.plugin(can, {_space: can.ConfSpace(), index: "web.chat.macos.menu", style: html.OUTPUT}, function(sub) { can.ui.menu = sub
 		sub.onexport.output = function() { can.onimport._desktop(can, can._msg)
 			can.Conf("session") && can.runActionCommand(event, "session", [can.Conf("session")], function(msg) {
 				var item = msg.TableDetail(); can.onimport.session(can, can.base.Obj(item.args))
@@ -59,7 +59,8 @@ Volcanos(chat.ONIMPORT, {
 		}); can.page.style(can, carte._target, html.TOP, event.y) },
 	}) }) },
 	_window: function(can, item) { if (!item.index) { return } item._space = can.ConfSpace()
-		item.left = 100, item.top = 125, item.height = can.base.Min(can.ConfHeight()-345, 480, 800), item.width = can.base.Min(can.ConfWidth()-360, 640, 1200)
+		item.height = can.base.Min(can.ConfHeight()-200, 320, 800), item.width = can.base.Min(can.ConfWidth()-600, 640, 1600)
+		item.left = (can.ConfWidth()-item.width)/2, item.top = 50
 		if (can.ConfHeight() < 800) { item.top = 25, item.height = can.ConfHeight()-125, item.width = can.ConfWidth()-110 }
 		if (can.user.isMobile) { item.left = 0, item.top = 25, item.height = can.ConfHeight()-125, item.width = can.ConfWidth() }
 		can.onappend.plugin(can, item, function(sub) { can.ondetail.select(can, sub._target)

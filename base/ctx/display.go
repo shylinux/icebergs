@@ -43,7 +43,9 @@ func DisplayStorySpide(m displayMessage, arg ...ice.Any) displayMessage {
 }
 func DisplayStudio(m *ice.Message, cmd ...string) displayMessage {
 	for i, k := range cmd {
-		cmd[i] = m.Prefix(k)
+		if !strings.Contains(cmd[i], nfs.PT) {
+			cmd[i] = m.Prefix(k)
+		}
 	}
 	return DisplayStory(m.Cmdy(COMMAND, cmd), "studio.js")
 }

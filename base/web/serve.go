@@ -101,7 +101,6 @@ func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.Response
 	}
 	m.Option(ice.MSG_COUNT, "0")
 	kit.For(r.Cookies(), func(k, v string) { m.Optionv(k, v) })
-	m.OptionDefault(ice.MSG_HEIGHT, "480", ice.MSG_WIDTH, "320")
 	m.Options(ice.MSG_USERWEB, _serve_domain(m), ice.MSG_USERPOD, m.Option(ice.POD))
 	m.Options(ice.MSG_USERUA, r.Header.Get(UserAgent), ice.MSG_USERIP, r.Header.Get(ice.MSG_USERIP))
 	m.Options(ice.MSG_SESSID, kit.Select(m.Option(ice.MSG_SESSID), m.Option(CookieName(m.Option(ice.MSG_USERWEB)))))

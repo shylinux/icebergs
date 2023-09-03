@@ -162,6 +162,6 @@ func ShareLocalFile(m *ice.Message, arg ...string) {
 		cache, size = s.ModTime(), s.Size()
 	}
 	kit.If(p == ice.BIN_ICE_BIN, func() { m.Option(ice.MSG_USERROLE, aaa.TECH) })
-	m.Cmd(SPACE, m.Option(ice.POD), SPIDE, ice.DEV, SPIDE_RAW, MergeLink(m, PP(SHARE, PROXY)), SPIDE_PART, m.OptionSimple(ice.POD), nfs.PATH, p, nfs.SIZE, size, CACHE, cache.Format(ice.MOD_TIME), UPLOAD, mdb.AT+p)
+	m.Cmd(SPACE, m.Option(ice.POD), SPIDE, ice.DEV, SPIDE_RAW, http.MethodPost, MergeLink(m, PP(SHARE, PROXY)), SPIDE_PART, m.OptionSimple(ice.POD), nfs.PATH, p, nfs.SIZE, size, CACHE, cache.Format(ice.MOD_TIME), UPLOAD, mdb.AT+p)
 	m.RenderDownload(kit.Select(p, pp, file.ExistsFile(pp)))
 }

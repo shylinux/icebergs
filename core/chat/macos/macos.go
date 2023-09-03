@@ -33,8 +33,8 @@ func PodCmdAction(arg ...string) ice.Actions {
 			has := map[string]bool{}
 			msg.Table(func(index int, value ice.Maps, head []string) {
 				if !has[value[ctx.INDEX]] {
-					m.Push("", value, head)
 					has[value[ctx.INDEX]] = true
+					m.Push("", value, head)
 				}
 			})
 			m.Display(ctx.FileURI(file))

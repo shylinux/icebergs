@@ -3,6 +3,7 @@ package web
 import (
 	"os"
 	"path"
+	"regexp"
 	"runtime"
 	"strings"
 
@@ -24,18 +25,21 @@ func _dream_list(m *ice.Message) *ice.Message {
 	mdb.HashSelect(m).Table(func(value ice.Maps) {
 		if space, ok := list[value[mdb.NAME]]; ok {
 			msg := gdb.Event(m.Spawn(value, space), DREAM_TABLES).Copy(m.Spawn().PushButton(cli.STOP))
+			m.Push(nfs.VERSION, space[nfs.VERSION])
 			m.Push(mdb.TYPE, space[mdb.TYPE])
 			m.Push(cli.STATUS, cli.START)
 			m.Push(mdb.TEXT, msg.Append(mdb.TEXT))
 			m.PushButton(strings.Join(msg.Appendv(ctx.ACTION), ""))
 			stats[cli.START]++
 		} else if nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, value[mdb.NAME])) {
+			m.Push(nfs.VERSION, "")
 			m.Push(mdb.TYPE, WORKER)
 			m.Push(cli.STATUS, cli.STOP)
 			m.Push(mdb.TEXT, "")
 			m.PushButton(cli.START, nfs.TRASH)
 			stats[cli.STOP]++
 		} else {
+			m.Push(nfs.VERSION, "")
 			m.Push(mdb.TYPE, WORKER)
 			m.Push(cli.STATUS, cli.STOP)
 			m.Push(mdb.TEXT, "")
@@ -122,7 +126,7 @@ const DREAM = "dream"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		DREAM: {Name: "dream name@key auto create", Help: "梦想家", Actions: ice.MergeActions(ice.Actions{
+		DREAM: {Name: "dream name@key auto create startall stopall", Help: "梦想家", Actions: ice.MergeActions(ice.Actions{
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if mdb.IsSearchPreview(m, arg) {
 					m.Cmds("", func(value ice.Maps) { m.PushSearch(mdb.TEXT, m.MergePod(value[mdb.NAME]), value) })
@@ -171,13 +175,57 @@ func init() {
 				kit.Switch(m.Option(mdb.TYPE), []string{SERVER, WORKER}, func() { m.PushButton(OPEN) })
 			}},
 			OPEN: {Hand: func(m *ice.Message, arg ...string) { ctx.ProcessOpen(m, m.MergePod(m.Option(mdb.NAME))) }},
+			"startall": {Name: "startall name", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+				reg, err := regexp.Compile(m.Option(mdb.NAME))
+				if m.Warn(err) {
+					return
+				}
+				list := []string{}
+				m.Spawn().Cmds("").Table(func(value ice.Maps) {
+					if value[mdb.STATUS] == cli.STOP && reg.MatchString(value[mdb.NAME]) {
+						list = append(list, value[mdb.NAME])
+					}
+				})
+				if len(list) == 0 {
+					return
+				}
+				GoToast(m, "", func(toast func(string, int, int)) []string {
+					kit.For(list, func(index int, name string) {
+						toast(name, index, len(list))
+						m.Cmd("", cli.START, ice.Maps{mdb.NAME: name, ice.MSG_DAEMON: ""})
+					})
+					return nil
+				})
+			}},
+			"stopall": {Name: "stopall name", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
+				reg, err := regexp.Compile(m.Option(mdb.NAME))
+				if m.Warn(err) {
+					return
+				}
+				list := []string{}
+				m.Spawn().Cmds("").Table(func(value ice.Maps) {
+					if value[mdb.STATUS] == cli.START && reg.MatchString(value[mdb.NAME]) {
+						list = append(list, value[mdb.NAME])
+					}
+				})
+				if len(list) == 0 {
+					return
+				}
+				GoToast(m, "", func(toast func(string, int, int)) []string {
+					kit.For(list, func(index int, name string) {
+						toast(name, index, len(list))
+						m.Cmd("", cli.STOP, ice.Maps{mdb.NAME: name, ice.MSG_DAEMON: ""})
+					})
+					return nil
+				})
+			}},
 			"button": {Hand: func(m *ice.Message, arg ...string) {
 				for _, cmd := range kit.Reverse(arg) {
 					m.Cmd(gdb.EVENT, gdb.LISTEN, gdb.EVENT, DREAM_TABLES, ice.CMD, cmd)
 					m.Cmd(gdb.EVENT, gdb.LISTEN, gdb.EVENT, DREAM_ACTION, ice.CMD, cmd)
 				}
 			}},
-		}, ctx.CmdAction(), DreamAction(), mdb.ImportantHashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,repos,binary,template")), Hand: func(m *ice.Message, arg ...string) {
+		}, ctx.CmdAction(), DreamAction(), mdb.ImportantHashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icon,repos,binary,template")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				_dream_list(m)
 				ctx.DisplayTableCard(m)

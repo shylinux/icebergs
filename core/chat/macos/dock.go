@@ -18,11 +18,11 @@ func init() {
 				DockAppend(m, "Terminal", web.CODE_XTERM)
 				DockAppend(m, "", web.CODE_VIMER)
 				DockAppend(m, "", web.CODE_COMPILE, mdb.ICON, "usr/icons/go.png")
-				DockAppend(m, "", web.CODE_GIT_STATUS, mdb.ICON, "usr/icons/git.jpg")
+				DockAppend(m, "", web.CODE_GIT_STATUS, mdb.ICON, "usr/icons/git.png")
 			}
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { mdb.HashExport(m) }},
-	}, aaa.RoleAction(), PodCmdAction(), CmdHashAction(), mdb.ImportantHashAction())}})
+	}, aaa.RoleAction(), CmdHashAction(), mdb.ImportantHashAction())}})
 }
 
 func DockAppend(m *ice.Message, name, index string, arg ...string) {

@@ -65,6 +65,8 @@ func _split_list(m *ice.Message, file string, arg ...string) ice.Map {
 			cb(ls)
 		case func(string, []string):
 			cb(text, ls)
+		case func(int, string, []string):
+			cb(indent, text, ls)
 		case nil:
 		default:
 			m.ErrorNotImplement(cb)

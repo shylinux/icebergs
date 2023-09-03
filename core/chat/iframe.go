@@ -83,14 +83,12 @@ func init() {
 			}},
 		}, mdb.HashAction(mdb.SHORT, web.LINK, mdb.FIELD, "time,hash,type,name,link"), FavorAction()), Hand: func(m *ice.Message, arg ...string) {
 			list := []string{m.MergePodCmd("", "web.wiki.portal")}
-			if m.Option(ice.MSG_USERPOD) == "" {
-				list = append(list, web.MergeLink(m, "/chat/portal/"))
-			} else {
-				list = append(list, web.MergeLink(m, "/chat/portal/", ice.POD, m.Option(ice.MSG_USERPOD)))
-			}
+			list = append(list, web.MergeLink(m, "/chat/portal/", ice.POD, m.Option(ice.MSG_USERPOD)))
 			if mdb.HashSelect(m, arg...); len(arg) == 0 {
 				for _, link := range list {
-					m.Push("", kit.Dict(mdb.TIME, m.Time(), mdb.HASH, kit.Hashs(link), mdb.TYPE, web.LINK, web.LINK, link))
+					if u := kit.ParseURL(link); u != nil {
+						m.Push("", kit.Dict(mdb.TIME, m.Time(), mdb.HASH, kit.Hashs(link), mdb.TYPE, web.LINK, mdb.NAME, u.Path, web.LINK, link))
+					}
 				}
 				if m.Length() == 0 {
 					m.Action(mdb.CREATE)

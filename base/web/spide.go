@@ -275,6 +275,7 @@ func init() {
 				m.Cmd("", mdb.CREATE, ice.DEV, kit.Select(kit.Select("https://contexts.com.cn", ice.Info.Make.Domain), conf[cli.CTX_DEV]))
 				m.Cmd("", mdb.CREATE, ice.COM, kit.Select("https://contexts.com.cn", conf[cli.CTX_COM]))
 				m.Cmd("", mdb.CREATE, ice.HUB, kit.Select("https://repos.shylinux.com", conf[cli.CTX_HUB]))
+				m.Cmd("", mdb.CREATE, "repos", kit.Select("https://repos.shylinux.com", conf[cli.CTX_HUB]))
 				m.Cmd("", mdb.CREATE, ice.SHY, kit.Select(kit.Select("https://shylinux.com", ice.Info.Make.Remote), conf[cli.CTX_SHY]))
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {

@@ -5,8 +5,11 @@ import (
 	"time"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
 	"shylinux.com/x/icebergs/core/chat/macos"
 	kit "shylinux.com/x/toolkits"
@@ -14,56 +17,55 @@ import (
 
 func init() {
 	const SEARCH = "search"
+	const (
+		EXPLORE_REPOS = "/explore/repos"
+		REPOS_SEARCH  = "/api/v1/repos/search"
+	)
+	const (
+		WEB_SPIDE  = "web.spide"
+		UPDATED_AT = "updated_at"
+		CLONE_URL  = "clone_url"
+		HTML_URL   = "html_url"
+		WEBSITE    = "website"
+	)
 	Index.MergeCommands(ice.Commands{
 		SEARCH: {Name: "search repos keyword auto", Help: "代码源", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				macos.AppInstall(m, "usr/icons/gitea.png", m.PrefixKey(), ctx.ARGS, kit.Format([]string{"repos"}))
+				macos.AppInstall(m, "usr/icons/gitea.png", m.PrefixKey(), ctx.ARGS, kit.Format([]string{REPOS}))
 			}},
-			cli.START: {Name: "start name", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(web.DREAM, cli.START)
-			}},
-			CLONE: {Name: "clone name", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(REPOS, CLONE, m.Option(REPOS))
-			}},
-			cli.OPEN: {Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessOpen(m.Option("html_url"))
-			}},
-			"origin": {Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessOpen(m.Cmdv("web.spide", "repos", "client.origin") + "/explore/repos")
+			cli.START: {Name: "start name*", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(web.DREAM, cli.START) }},
+			CLONE:     {Name: "clone name*", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(REPOS, CLONE, m.Option(REPOS)) }},
+			HTML_URL:  {Help: "源码", Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen(m.Option(HTML_URL)) }},
+			WEBSITE:   {Help: "官网", Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen(m.Option(WEBSITE)) }},
+			ORIGIN: {Help: "平台", Hand: func(m *ice.Message, arg ...string) {
+				m.ProcessOpen(m.Cmdv(WEB_SPIDE, kit.Select(m.Option(REPOS), arg, 0), web.CLIENT_ORIGIN) + EXPLORE_REPOS)
 			}},
 		}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
-				m.Cmdy("web.spide").RenameAppend("client.name", "repos", "client.url", "origin").Cut("time,repos,origin")
+				m.Cmdy(WEB_SPIDE).RenameAppend(web.CLIENT_NAME, REPOS, web.CLIENT_URL, ORIGIN).Cut("time,repos,origin")
 				return
 			}
-			res := kit.UnMarshal(m.Cmdx("web.spide", REPOS, web.SPIDE_RAW, http.MethodGet, "/api/v1/repos/search",
+			res := kit.UnMarshal(m.Cmdx(WEB_SPIDE, arg[0], web.SPIDE_RAW, http.MethodGet, REPOS_SEARCH,
 				"q", kit.Select("", arg, 1), "sort", "updated", "order", "desc", "page", "1", "limit", "100",
 			))
-			kit.For(kit.Value(res, "data"), func(value ice.Map) {
-				value["size"] = kit.FmtSize(kit.Int(value["size"]) * 1000)
-				if t, e := time.Parse(time.RFC3339, kit.Format(value["updated_at"])); e == nil {
-					value["updated_at"] = t.Format("01-02 15:04")
+			kit.For(kit.Value(res, mdb.DATA), func(value ice.Map) {
+				value[nfs.SIZE] = kit.FmtSize(kit.Int(value[nfs.SIZE]) * 1000)
+				if t, e := time.Parse(time.RFC3339, kit.Format(value[UPDATED_AT])); e == nil {
+					value[UPDATED_AT] = t.Format("01-02 15:04")
 				}
 				m.Push("", value, []string{
-					"avatar_url",
-					"name",
-
-					"language",
-					"forks_count",
-					"stars_count",
-					"watchers_count",
-					"size", "updated_at",
-
-					"description",
-					"clone_url",
-					"html_url",
-					"website",
+					aaa.AVATAR_URL, mdb.NAME, aaa.LANGUAGE,
+					"forks_count", "stars_count", "watchers_count",
+					nfs.SIZE, UPDATED_AT, "description",
+					CLONE_URL, HTML_URL, WEBSITE,
 				})
-				m.PushButton(cli.START, CLONE, cli.OPEN)
+				button := []ice.Any{}
+				kit.If(!kit.IsIn(kit.Format(value[mdb.NAME]), ice.ICEBERGS, ice.VOLCANOS), func() { button = append(button, cli.START) })
+				button = append(button, CLONE)
+				kit.For([]string{HTML_URL, WEBSITE}, func(key string) { kit.If(kit.Format(value[key]), func() { button = append(button, key) }) })
+				m.PushButton(button...)
 			})
-			m.RenameAppend("clone_url", "repos").StatusTimeCount().Display("")
-			m.Action("origin")
-			// m.Echo("%v", kit.Formats(res))
+			m.RenameAppend(CLONE_URL, REPOS).StatusTimeCount().Display("").Action(ORIGIN)
 		}},
 	})
 }

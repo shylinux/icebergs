@@ -21,7 +21,7 @@ func init() {
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				Notify(m, cli.RUNTIME, "系统启动成功", ctx.INDEX, cli.RUNTIME)
 				FinderAppend(m, "Applications", m.PrefixKey())
-				AppInstall(m, "usr/icons/Finder.png", nfs.DIR)
+				AppInstall(m, "usr/icons/dir.png", nfs.DIR)
 				AppInstall(m, "usr/icons/Safari.png", web.CHAT_IFRAME)
 				AppInstall(m, "usr/icons/Terminal.png", web.CODE_XTERM)
 				AppInstall(m, "usr/icons/Calendar.png", web.TEAM_PLAN)

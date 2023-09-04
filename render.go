@@ -202,9 +202,10 @@ func (m *Message) EchoScript(arg ...string) *Message { return m.Echo(Render(m, R
 func (m *Message) EchoDownload(arg ...string) *Message {
 	return m.Echo(Render(m, RENDER_DOWNLOAD, arg))
 }
-func (m *Message) Display(file string, arg ...Any) {
+func (m *Message) Display(file string, arg ...Any) *Message {
 	file = m.resource(file)
 	m.Option(MSG_DISPLAY, kit.MergeURL(kit.Select(kit.ExtChange(file, JS), file, strings.Contains(file, QS)), arg...))
+	return m
 }
 func (m *Message) Resource(file string) string { return m.resource(file) }
 func (m *Message) resource(file string) string {

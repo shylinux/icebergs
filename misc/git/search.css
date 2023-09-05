@@ -1,5 +1,5 @@
 fieldset.web.code.git.search>div.output>div.item div.title { display:flex; }
-fieldset.web.code.git.search>div.output>div.item div.title>img { height:48px; margin-right:10px; }
+fieldset.web.code.git.search>div.output>div.item div.title>img { height:48px; width:48px; margin-right:10px; }
 fieldset.web.code.git.search>div.output>div.item div.title>div.name  { height:48px; }
 fieldset.web.code.git.search>div.output>div.item div.title span.name  { line-height:32px; }
 fieldset.web.code.git.search>div.output>div.item div.title div.label  { font-size:12px; font-weight:normal; }

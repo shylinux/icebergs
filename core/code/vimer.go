@@ -185,7 +185,7 @@ func init() {
 				}
 			}},
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
-				kit.Switch(m.Option(mdb.TYPE), kit.Simple(web.SERVER, web.WORKER), func() { m.PushButton(kit.Dict(m.CommandKey(), "编码")) })
+				kit.Switch(m.Option(mdb.TYPE), kit.Simple(web.SERVER, web.WORKER), func() { m.PushButton(kit.Dict(m.CommandKey(), "编程")) })
 			}},
 			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { web.DreamProcess(m, []string{}, arg...) }},
 		}, aaa.RoleAction(ctx.COMMAND), mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path")), Hand: func(m *ice.Message, arg ...string) {

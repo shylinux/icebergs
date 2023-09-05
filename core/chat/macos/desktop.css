@@ -18,13 +18,13 @@ fieldset.macos.desktop>div.output>div.desktop>div.item>div.name { font-size:var(
 fieldset.macos.desktop>div.output>div.desktop>fieldset.select { z-index:1; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset { border-radius:10px; position:absolute; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>div.item.button { border-radius:20px; height:20px; width:20px; scale:0.7; position:absolute; top:16px; right:10px; }
-fieldset.macos.desktop>div.output>div.desktop>fieldset>legend { padding:0 10px; margin:10px; }
+fieldset.macos.desktop>div.output>div.desktop>fieldset>legend { padding:0 10px; margin:10px; box-shadow:none; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>legend:not(:hover) { background-color:transparent; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>*:not(.textarea) { margin:10px 0px 10px 10px; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>div.icon { margin:12px 0 8px; }
-fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>div.item.button>span.icon { font-size:32px; line-height:30px; }
+fieldset.macos.desktop>div.output>div.desktop>fieldset:not(:hover)>form.option>div.icon { visibility:hidden; }
+fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>div.item.button:not(.select)>span.icon { font-size:32px; line-height:30px; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>div.item.button.prunes>span.icon { font-size:20px; line-height:32px; }
-/* fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>div.item.icons { margin-left:0; } */
 fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>div.item:last-child { margin-right:100px; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>div.action>* { margin:10px 0px 10px 10px; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>div.action>div.item:last-child { margin-right:100px; }

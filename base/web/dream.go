@@ -146,6 +146,7 @@ func init() {
 				}
 			}},
 			mdb.CREATE: {Name: "create name*=hi repos binary template", Hand: func(m *ice.Message, arg ...string) {
+				m.OptionDefault(mdb.ICON, "usr/icons/icebergs.jpeg")
 				m.Option(nfs.REPOS, kit.Select("", kit.Slice(kit.Split(m.Option(nfs.REPOS)), -1), 0))
 				kit.If(!strings.Contains(m.Option(mdb.NAME), "-") || !strings.HasPrefix(m.Option(mdb.NAME), "20"), func() { m.Option(mdb.NAME, m.Time("20060102-")+m.Option(mdb.NAME)) })
 				if mdb.HashCreate(m); !m.IsCliUA() {

@@ -57,6 +57,7 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	} else {
 		r.Header.Set(ice.MSG_USERIP, strings.Split(r.RemoteAddr, nfs.DF)[0])
 	}
+
 	if m.Logs(r.Header.Get(ice.MSG_USERIP), r.Method, r.URL.String()); r.Method == http.MethodGet {
 		if msg := m.Spawn(w, r).Options(ice.MSG_USERUA, r.UserAgent()); path.Join(r.URL.Path) == nfs.PS {
 			if !msg.IsCliUA() {
@@ -68,7 +69,7 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 		} else if p := path.Join(kit.Select(ice.USR_VOLCANOS, ice.USR_INTSHELL, msg.IsCliUA()), r.URL.Path); nfs.Exists(msg, p) {
 			return !Render(msg, ice.RENDER_DOWNLOAD, p)
 		}
-	} else if r.Method == http.MethodPost && path.Join(r.URL.Path) == nfs.PS {
+	} else if path.Join(r.URL.Path) == nfs.PS {
 		r.URL.Path = kit.Select(nfs.PS, mdb.Config(m, ice.MAIN))
 	}
 	return true

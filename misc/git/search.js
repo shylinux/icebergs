@@ -20,5 +20,5 @@ Volcanos(chat.ONIMPORT, {
 			]}
 		})), can.onappend.board(can, msg), can.onimport.layout(can)
 	},
-	layout: function(can) { can.onlayout.expand(can, can._output, 360) },
+	layout: function(can) { can.onlayout.expand(can, can._output, 380) },
 }, [""])

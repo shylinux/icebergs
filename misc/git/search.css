@@ -4,7 +4,7 @@ fieldset.web.code.git.search>div.output>div.item div.title>div.name  { height:48
 fieldset.web.code.git.search>div.output>div.item div.title span.name  { line-height:32px; }
 fieldset.web.code.git.search>div.output>div.item div.title div.label  { font-size:12px; font-weight:normal; }
 fieldset.web.code.git.search>div.output>div.item div.title div.label span { padding:5px; padding-right:10px; }
-fieldset.web.code.git.search>div.output>div.item div.content { height:100px; }
+fieldset.web.code.git.search>div.output>div.item div.content { height:90px; }
 fieldset.web.code.git.search.zone>div.output>div.item { display:flex; padding:5px; }
 fieldset.web.code.git.search.zone>div.output>div.item>img { margin-right:5px; }
 fieldset.web.code.git.search.zone>div.output>div.item>span { line-height:32px; }

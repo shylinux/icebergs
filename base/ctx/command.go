@@ -162,7 +162,8 @@ func FileCmd(dir string) string {
 func AddFileCmd(dir, key string) {
 	ice.Info.File[FileCmd(dir)] = key
 	if ls := strings.SplitN(path.Join(kit.Slice(kit.Split(FileCmd(dir), nfs.PS), 1, 4)...), mdb.AT, 2); len(ls) > 1 {
-		logs.Println("add file cmd %v %v", "/require/usr/"+strings.Split(FileCmd(dir), mdb.AT+ls[1]+nfs.PS)[1], key)
+		_ls := strings.Split(FileCmd(dir), mdb.AT+ls[1]+nfs.PS)
+		logs.Println("add file cmd %v %v", path.Join("/require/usr/", path.Base(_ls[0]), _ls[1]), key)
 		ice.Info.File["/require/usr/"+strings.Split(FileCmd(dir), mdb.AT+ls[1]+nfs.PS)[1]] = key
 		ice.Info.Gomod[ls[0]] = ls[1]
 	}

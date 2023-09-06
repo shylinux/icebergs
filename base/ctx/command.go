@@ -174,7 +174,7 @@ func GetFileCmd(dir string) string {
 		dir = path.Join(nfs.PS, ice.REQUIRE, strings.TrimPrefix(dir, ice.ISH_PLUGED))
 	}
 	for _, dir := range []string{dir, path.Join(nfs.PS, ice.REQUIRE, ice.Info.Make.Module, dir), path.Join(nfs.PS, ice.REQUIRE, ice.Info.Make.Module, ice.SRC, dir)} {
-		logs.Println("get file cmd %v %v", FileCmd(dir), key)
+		logs.Println("get file cmd %v %v", FileCmd(dir), dir)
 		if cmd, ok := ice.Info.File[FileCmd(dir)]; ok {
 			return cmd
 		}

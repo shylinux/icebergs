@@ -21,11 +21,12 @@ func init() {
 		REPOS_SEARCH  = "/api/v1/repos/search"
 	)
 	const (
-		WEB_SPIDE  = "web.spide"
-		UPDATED_AT = "updated_at"
-		CLONE_URL  = "clone_url"
-		HTML_URL   = "html_url"
-		WEBSITE    = "website"
+		WEB_SPIDE   = "web.spide"
+		DESCRIPTION = "description"
+		UPDATED_AT  = "updated_at"
+		CLONE_URL   = "clone_url"
+		HTML_URL    = "html_url"
+		WEBSITE     = "website"
 	)
 	const SEARCH = "search"
 	Index.MergeCommands(ice.Commands{
@@ -33,13 +34,10 @@ func init() {
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				macos.AppInstall(m, "usr/icons/gitea.png", m.PrefixKey(), ctx.ARGS, kit.Format([]string{REPOS}))
 			}},
-			cli.START: {Name: "start name*", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(web.DREAM, mdb.CREATE)
-				m.Cmdy(web.DREAM, cli.START)
-			}},
-			CLONE:    {Name: "clone name*", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(REPOS, CLONE, m.Option(REPOS)) }},
-			HTML_URL: {Help: "源码", Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen(m.Option(HTML_URL)) }},
-			WEBSITE:  {Help: "官网", Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen(m.Option(WEBSITE)) }},
+			cli.START: {Name: "start name*", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(web.DREAM, mdb.CREATE); m.Cmdy(web.DREAM, cli.START) }},
+			CLONE:     {Name: "clone name*", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(REPOS, CLONE, m.Option(REPOS)) }},
+			HTML_URL:  {Help: "源码", Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen(m.Option(HTML_URL)) }},
+			WEBSITE:   {Help: "官网", Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen(m.Option(WEBSITE)) }},
 			ORIGIN: {Help: "平台", Hand: func(m *ice.Message, arg ...string) {
 				m.ProcessOpen(m.Cmdv(WEB_SPIDE, kit.Select(m.Option(REPOS), arg, 0), web.CLIENT_ORIGIN) + EXPLORE_REPOS)
 			}},
@@ -48,9 +46,7 @@ func init() {
 				m.Cmdy(WEB_SPIDE).RenameAppend(web.CLIENT_NAME, REPOS, web.CLIENT_URL, ORIGIN).Cut("time,repos,origin")
 				return
 			}
-			res := kit.UnMarshal(m.Cmdx(WEB_SPIDE, arg[0], web.SPIDE_RAW, http.MethodGet, REPOS_SEARCH,
-				"q", kit.Select("", arg, 1), "sort", "updated", "order", "desc", "page", "1", "limit", "30",
-			))
+			res := kit.UnMarshal(m.Cmdx(WEB_SPIDE, arg[0], web.SPIDE_RAW, http.MethodGet, REPOS_SEARCH, "q", kit.Select("", arg, 1), "sort", "updated", "order", "desc", "page", "1", "limit", "30"))
 			kit.For(kit.Value(res, mdb.DATA), func(value ice.Map) {
 				value[nfs.SIZE] = kit.FmtSize(kit.Int(value[nfs.SIZE]) * 1000)
 				if t, e := time.Parse(time.RFC3339, kit.Format(value[UPDATED_AT])); e == nil {
@@ -59,7 +55,7 @@ func init() {
 				m.Push("", value, []string{
 					aaa.AVATAR_URL, mdb.NAME, aaa.LANGUAGE,
 					"forks_count", "stars_count", "watchers_count",
-					nfs.SIZE, UPDATED_AT, "description",
+					nfs.SIZE, UPDATED_AT, DESCRIPTION,
 					CLONE_URL, HTML_URL, WEBSITE,
 				})
 				button := []ice.Any{}

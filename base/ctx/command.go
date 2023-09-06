@@ -11,7 +11,6 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
-	"shylinux.com/x/toolkits/logs"
 )
 
 func _command_list(m *ice.Message, name string) *ice.Message {
@@ -163,7 +162,6 @@ func AddFileCmd(dir, key string) {
 	ice.Info.File[FileCmd(dir)] = key
 	if ls := strings.SplitN(path.Join(kit.Slice(kit.Split(FileCmd(dir), nfs.PS), 1, 4)...), mdb.AT, 2); len(ls) > 1 {
 		_ls := strings.Split(FileCmd(dir), mdb.AT+ls[1]+nfs.PS)
-		logs.Println("add file cmd %v %v", path.Join("/require/usr/", path.Base(_ls[0]), _ls[1]), key)
 		ice.Info.File[path.Join("/require/usr/", path.Base(_ls[0]), _ls[1])] = key
 		ice.Info.Gomod[ls[0]] = ls[1]
 	}
@@ -175,7 +173,6 @@ func GetFileCmd(dir string) string {
 		dir = path.Join(nfs.PS, ice.REQUIRE, strings.TrimPrefix(dir, ice.ISH_PLUGED))
 	}
 	for _, dir := range []string{dir, path.Join(nfs.PS, ice.REQUIRE, ice.Info.Make.Module, dir), path.Join(nfs.PS, ice.REQUIRE, ice.Info.Make.Module, ice.SRC, dir)} {
-		logs.Println("get file cmd %v %v", FileCmd(dir), dir)
 		if cmd, ok := ice.Info.File[FileCmd(dir)]; ok {
 			return cmd
 		}

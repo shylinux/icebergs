@@ -175,7 +175,7 @@ const DIR = "dir"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		DIR: {Name: "dir path auto upload finder", Help: "目录", Actions: ice.Actions{
+		DIR: {Name: "dir path auto upload finder", Icon: "usr/icons/dir.png", Help: "目录", Actions: ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				aaa.White(m, ice.SRC, ice.BIN, ice.USR)
 				aaa.Black(m, ice.USR_LOCAL)

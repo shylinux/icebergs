@@ -43,6 +43,7 @@ type Action struct {
 type Command struct {
 	Name    string
 	Help    string
+	Icon    string
 	Actions Actions
 	Hand    Handler
 	RawHand Any

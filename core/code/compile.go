@@ -40,7 +40,7 @@ func init() {
 		VERSION = "version"
 	)
 	Index.MergeCommands(ice.Commands{
-		COMPILE: {Name: "compile arch=amd64,386,arm,arm64,mipsle os=linux,darwin,windows src=src/main.go@key run binpack webpack devpack install", Help: "编译", Actions: ice.MergeActions(ice.Actions{
+		COMPILE: {Name: "compile arch=amd64,386,arm,arm64,mipsle os=linux,darwin,windows src=src/main.go@key run binpack webpack devpack install", Icon: "usr/icons/go.png", Help: "编译", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { cli.IsAlpine(m, GO, "go git") }},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				mdb.IsSearchPreview(m, arg, func() []string {

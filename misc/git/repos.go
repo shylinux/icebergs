@@ -246,10 +246,8 @@ func _repos_status(m *ice.Message, p string, repos *git.Repository) error {
 		switch v.Worktree {
 		case git.Untracked:
 			m.PushButton(ADD, nfs.TRASH)
-		case git.Modified:
-			m.PushButton(COMMIT)
 		default:
-			m.PushButton(COMMIT)
+			m.PushButton(COMMIT, CHECKOUT)
 		}
 	}
 	if p == path.Base(kit.Path("")) {
@@ -396,16 +394,17 @@ func _repos_credentials(m *ice.Message) map[string]*url.URL {
 }
 
 const (
-	INIT   = "init"
-	CLONE  = "clone"
-	PULL   = "pull"
-	PUSH   = "push"
-	LOG    = "log"
-	TAG    = "tag"
-	ADD    = "add"
-	STASH  = "stash"
-	COMMIT = "commit"
-	BRANCH = "branch"
+	INIT     = "init"
+	CLONE    = "clone"
+	PULL     = "pull"
+	PUSH     = "push"
+	LOG      = "log"
+	TAG      = "tag"
+	ADD      = "add"
+	STASH    = "stash"
+	COMMIT   = "commit"
+	BRANCH   = "branch"
+	CHECKOUT = "checkout"
 
 	REMOTE    = "remote"
 	ORIGIN    = "origin"
@@ -522,6 +521,9 @@ func init() {
 				}
 			}},
 			STASH: {Hand: func(m *ice.Message, arg ...string) { _repos_cmd(m, kit.Select(m.Option(REPOS), arg, 0), STASH) }},
+			CHECKOUT: {Help: "恢复", Hand: func(m *ice.Message, arg ...string) {
+				_git_cmd(m.Options(nfs.DIR_ROOT, mdb.HashSelectField(m, m.Option(REPOS), nfs.PATH)), CHECKOUT, m.Option(nfs.FILE))
+			}},
 			COMMIT: {Name: "commit actions=add,fix,opt message*=some", Help: "提交", Hand: func(m *ice.Message, arg ...string) {
 				if work, err := _repos_open(m, m.Option(REPOS)).Worktree(); !m.Warn(err) {
 					opt := &git.CommitOptions{All: true}

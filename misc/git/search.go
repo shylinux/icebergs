@@ -32,7 +32,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		SEARCH: {Name: "search repos@key keyword auto", Help: "代码源", Actions: ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				macos.AppInstall(m, "usr/icons/gitea.png", m.PrefixKey(), ctx.ARGS, kit.Format([]string{REPOS}))
+				macos.AppInstall(m, "usr/icons/App Store.png", m.PrefixKey(), ctx.ARGS, kit.Format([]string{REPOS}))
 			}},
 			cli.START: {Name: "start name*", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(web.DREAM, mdb.CREATE); m.Cmdy(web.DREAM, cli.START) }},
 			CLONE:     {Name: "clone name*", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(REPOS, CLONE, m.Option(REPOS)) }},

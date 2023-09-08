@@ -22,7 +22,7 @@ const FEEL = "feel"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		FEEL: {Name: "feel path auto prev next record1 record2 upload actions", Help: "影音媒体", Actions: ice.MergeActions(ice.Actions{
+		FEEL: {Name: "feel path auto prev next record1 record2 upload actions", Icon: "usr/icons/Photos.png", Help: "影音媒体", Actions: ice.MergeActions(ice.Actions{
 			"record1": {Help: "截图"}, "record2": {Help: "录屏"},
 			web.UPLOAD: {Hand: func(m *ice.Message, arg ...string) {
 				m.Option(nfs.PATH, _feel_path(m, m.Option(nfs.PATH)))

@@ -103,7 +103,7 @@ const STATUS = "status"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		STATUS: {Name: "status repos:text auto", Help: "代码库", Actions: ice.MergeActions(ice.Actions{
+		STATUS: {Name: "status repos:text auto", Icon: "usr/icons/git.png", Help: "代码库", Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch m.Option(ctx.ACTION) {
 				case INIT:

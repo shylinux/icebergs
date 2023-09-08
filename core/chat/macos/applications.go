@@ -19,23 +19,13 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		APPLICATIONS: {Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				Notify(m, cli.RUNTIME, "系统启动成功", ctx.INDEX, cli.RUNTIME)
 				FinderAppend(m, "Applications", m.PrefixKey())
-				AppInstall(m, "usr/icons/dir.png", nfs.DIR)
-				AppInstall(m, "usr/icons/Safari.png", web.CHAT_IFRAME)
-				AppInstall(m, "usr/icons/Terminal.png", web.CODE_XTERM)
-				AppInstall(m, "usr/icons/Calendar.png", web.TEAM_PLAN)
-				AppInstall(m, "usr/icons/Grapher.png", web.WIKI_DRAW)
-				AppInstall(m, "usr/icons/Photos.png", web.WIKI_FEEL)
-				AppInstall(m, "usr/icons/Books.png", web.WIKI_WORD)
-
-				AppInstall(m, "usr/icons/info.png", cli.RUNTIME)
-				AppInstall(m, "usr/icons/Mission Control.png", web.DREAM, mdb.NAME, web.DREAM)
-				AppInstall(m, "usr/icons/vimer.png", web.CODE_VIMER)
-				AppInstall(m, "usr/icons/flows.png", web.CHAT_FLOWS)
-				AppInstall(m, "usr/icons/go.png", web.CODE_COMPILE)
-				AppInstall(m, "usr/icons/git.png", web.CODE_GIT_STATUS)
+				m.Travel(func(p *ice.Context, c *ice.Context, key string, cmd *ice.Command) {
+					kit.If(cmd.Icon, func() { AppInstall(m, cmd.Icon, m.PrefixKey()) })
+				})
+				Notify(m, cli.RUNTIME, "系统启动成功", ctx.INDEX, cli.RUNTIME)
 			}},
+			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { mdb.Conf(m, m.PrefixKey(), mdb.HASH, "") }},
 			code.INSTALL: {Hand: func(m *ice.Message, arg ...string) { AppInstall(m, arg[0], arg[1]) }},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {

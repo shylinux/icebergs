@@ -5,9 +5,8 @@ Volcanos(chat.ONIMPORT, {
 		can.onimport._menu(can), can.onimport._notifications(can), can.onimport._searchs(can), can.onimport._dock(can)
 	},
 	_menu: function(can) { can.onappend.plugin(can, {_space: can.ConfSpace(), index: "web.chat.macos.menu", style: html.OUTPUT}, function(sub) { can.ui.menu = sub
-		sub.onexport.output = function() {
-			var cache = can.misc.sessionStorage(can, [can.ConfIndex(), "tabs"])
-			can.onimport._desktop(can, can._msg)
+		var cache = can.misc.sessionStorage(can, [can.ConfIndex(), "tabs"])
+		sub.onexport.output = function() { can.onimport._desktop(can, can._msg)
 			can.Conf("session") && can.runActionCommand(event, "session", [can.Conf("session")], function(msg) {
 				var item = msg.TableDetail(); can.onimport.session(can, can.base.Obj(item.args))
 			}), can.onimport.session(can, cache)
@@ -121,12 +120,14 @@ Volcanos(chat.ONACTION, {list: ["full"],
 	} },
 	create: function(event, can) { can.onimport._desktop(can) },
 	full: function(event, can) { document.body.requestFullscreen() },
+})
+Volcanos(chat.ONKEYMAP, {	
 	escape: function(event, can) { can.onmotion.hidden(can, can.ui.searchs._target) },
 	space: function(event, can) { can.onaction._search(can), can.onkeymap.prevent(event) },
 	enter: function(event, can) { can.page.Select(can, can.ui.desktop, "fieldset.select", function(target) { target._can.Update(event) }) },
 	ctrln: function(event, can) { can.onkeymap.selectCtrlN(event, can, can.ui.menu._output, html.DIV_TABS) },
-	tabs: function(event, can) { can.onaction.create(event, can) },
 	tabx: function(event, can) { can.page.Select(can, can.ui.menu._output, html.DIV_TABS_SELECT, function(target) { target._close() }) },
+	tabs: function(event, can) { can.onaction.create(event, can) },
 })
 Volcanos(chat.ONDETAIL, {
 	select: function(can, target) { can.onmotion.select(can, can.ui.desktop, html.FIELDSET, target) },

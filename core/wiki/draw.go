@@ -16,7 +16,7 @@ const DRAW = "draw"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		DRAW: {Name: "draw path=src/main.svg@key pid refresh save actions", Help: "思维导图", Actions: ice.MergeActions(ice.Actions{
+		DRAW: {Name: "draw path=src/main.svg@key pid refresh save actions", Icon: "usr/icons/Grapher.png", Help: "思维导图", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(mdb.RENDER, mdb.CREATE, mdb.TYPE, nfs.SVG, mdb.NAME, m.PrefixKey())
 			}},

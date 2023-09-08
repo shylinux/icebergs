@@ -11,7 +11,7 @@ const FLOWS = "flows"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		FLOWS: {Name: "flows zone hash auto", Help: "工作流", Actions: ice.MergeActions(ice.Actions{
+		FLOWS: {Name: "flows zone hash auto", Icon: "usr/icons/flows.png", Help: "工作流", Actions: ice.MergeActions(ice.Actions{
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if mdb.IsSearchPreview(m, arg) {
 					mdb.HashSelect(m.Spawn(ice.OptionFields(""))).Table(func(value ice.Maps) {

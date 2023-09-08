@@ -126,7 +126,7 @@ const DREAM = "dream"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		DREAM: {Name: "dream name@key auto create origin startall stopall", Help: "梦想家", Actions: ice.MergeActions(ice.Actions{
+		DREAM: {Name: "dream name@key auto create origin startall stopall cat cmd", Icon: "usr/icons/Launchpad.png", Help: "梦想家", Actions: ice.MergeActions(ice.Actions{
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if mdb.IsSearchPreview(m, arg) {
 					m.Cmds("", func(value ice.Maps) { m.PushSearch(mdb.TEXT, m.MergePod(value[mdb.NAME]), value) })
@@ -144,6 +144,25 @@ func init() {
 				default:
 					gdb.Event(m, DREAM_INPUTS, arg)
 				}
+			}},
+			nfs.CAT: {Name: "cat file*", Hand: func(m *ice.Message, arg ...string) {
+				mdb.HashSelect(m.Spawn()).Table(func(value ice.Maps) {
+					m.Push(mdb.NAME, value[mdb.NAME])
+					m.Push(mdb.TEXT, m.Cmdx(SPACE, value[mdb.NAME], nfs.CAT, m.Option(nfs.FILE)))
+				})
+				m.StatusTimeCount()
+			}},
+			ice.CMD: {Name: "cmd cmd*", Hand: func(m *ice.Message, arg ...string) {
+				GoToast(m, "", func(toast func(string, int, int)) []string {
+					msg := mdb.HashSelect(m.Spawn())
+					msg.Table(func(index int, value ice.Maps) {
+						toast(value[mdb.NAME], index, msg.Length())
+						m.Push(mdb.NAME, value[mdb.NAME])
+						m.Push(mdb.TEXT, m.Cmdx(SPACE, value[mdb.NAME], kit.Split(m.Option("cmd"))))
+					})
+					return nil
+				})
+				m.StatusTimeCount()
 			}},
 			mdb.CREATE: {Name: "create name*=hi repos binary template", Hand: func(m *ice.Message, arg ...string) {
 				m.OptionDefault(mdb.ICON, "usr/icons/icebergs.jpg")

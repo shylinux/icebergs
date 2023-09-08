@@ -126,7 +126,7 @@ const DREAM = "dream"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		DREAM: {Name: "dream name@key auto create origin startall stopall cat cmd", Icon: "usr/icons/Launchpad.png", Help: "梦想家", Actions: ice.MergeActions(ice.Actions{
+		DREAM: {Name: "dream name@key auto create origin startall stopall build cat cmd", Icon: "usr/icons/Launchpad.png", Help: "梦想家", Actions: ice.MergeActions(ice.Actions{
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if mdb.IsSearchPreview(m, arg) {
 					m.Cmds("", func(value ice.Maps) { m.PushSearch(mdb.TEXT, m.MergePod(value[mdb.NAME]), value) })
@@ -171,6 +171,22 @@ func init() {
 				if mdb.HashCreate(m); !m.IsCliUA() {
 					_dream_start(m, m.OptionDefault(mdb.NAME, path.Base(m.Option(nfs.REPOS))))
 				}
+			}},
+			cli.BUILD: {Hand: func(m *ice.Message, arg ...string) {
+				GoToast(m, "", func(toast func(string, int, int)) []string {
+					msg := mdb.HashSelect(m.Spawn())
+					msg.Table(func(index int, value ice.Maps) {
+						toast(value[mdb.NAME], index, msg.Length())
+						m.Push(mdb.NAME, value[mdb.NAME])
+						m.Push(mdb.TEXT, m.Cmdx(SPACE, value[mdb.NAME], "compile", "linux"))
+						m.Push(mdb.NAME, value[mdb.NAME])
+						m.Push(mdb.TEXT, m.Cmdx(SPACE, value[mdb.NAME], "compile", "darwin"))
+						m.Push(mdb.NAME, value[mdb.NAME])
+						m.Push(mdb.TEXT, m.Cmdx(SPACE, value[mdb.NAME], "compile", "windows"))
+					})
+					return nil
+				})
+				m.StatusTimeCount()
 			}},
 			cli.START: {Hand: func(m *ice.Message, arg ...string) {
 				gdb.Event(m, DREAM_START, arg)

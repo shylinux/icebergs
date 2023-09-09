@@ -112,7 +112,8 @@ func CmdInputs(m *ice.Message, arg ...string) {
 }
 func PodCmd(m *ice.Message, arg ...ice.Any) bool {
 	Upload(m)
-	for _, key := range []string{ice.SPACE, ice.POD} {
+	// for _, key := range []string{ice.SPACE, ice.POD} {
+	for _, key := range []string{ice.POD} {
 		if pod := m.Option(key); pod != "" {
 			m.Options(key, []string{}, ice.MSG_USERPOD, pod).Cmdy(append(kit.List(ice.SPACE, pod), arg...)...)
 			return true

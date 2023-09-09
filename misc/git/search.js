@@ -18,6 +18,7 @@ Volcanos(chat.ONIMPORT, {
 				{view: html.ACTION, inner: value.action, _init: function(target) { can.onappend.mores(can, target, value, 5) }},
 			]}
 		})), can.onappend.board(can, msg), can.onimport.layout(can)
+		can.onappend.scroll(can, can._output)
 	},
 	layout: function(can) { can.onlayout.expand(can, can._output, 380) },
 }, [""])

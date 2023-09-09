@@ -79,10 +79,14 @@ func (s Client) User(m *ice.Message, arg ...string) {
 			m.OptionSimple(aaa.EMAIL, aaa.LANGUAGE, aaa.AVATAR_URL))
 	}
 }
+func (s Client) Sso(m *ice.Message, arg ...string) {
+	mdb.Conf(m, "web.chat.header", kit.Keym("sso.gitea.url"), kit.MergeURL2(m.Option(web.DOMAIN), m.Option(OAUTH_URL), m.OptionSimple(CLIENT_ID), REDIRECT_URI, s.RedirectURI(m), RESPONSE_TYPE, CODE, STATE, m.Option(mdb.HASH)))
+	mdb.Conf(m, "web.chat.header", kit.Keym("sso.gitea.icon"), "usr/icons/gitea.png")
+}
 func (s Client) Orgs(m *ice.Message, arg ...string) {}
 func (s Client) Repo(m *ice.Message, arg ...string) {}
 func (s Client) List(m *ice.Message, arg ...string) {
-	if s.Hash.List(m, arg...).PushAction(s.User, s.Auth, s.Remove); len(arg) == 0 {
+	if s.Hash.List(m, arg...).PushAction(s.Sso, s.User, s.Auth, s.Remove); len(arg) == 0 {
 		m.EchoScript(s.RedirectURI(m))
 	} else {
 		m.EchoScript("config header sso " + kit.MergeURL2(m.Append(web.DOMAIN), m.Append(OAUTH_URL), m.AppendSimple(CLIENT_ID), REDIRECT_URI, s.RedirectURI(m), RESPONSE_TYPE, CODE, STATE, arg[0]))

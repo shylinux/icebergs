@@ -54,6 +54,7 @@ func _space_fork(m *ice.Message) {
 		m.Option(TOKEN) != "" && m.Cmdv(TOKEN, m.Option(TOKEN), mdb.TIME) > m.Time()) || mdb.HashSelect(m.Spawn(), name).Length() > 0 {
 		name, text = kit.Hashs(name), kit.Select(addr, m.Option(mdb.NAME), m.Option(mdb.TEXT))
 	}
+
 	args := kit.Simple(mdb.TYPE, kit.Select(WORKER, m.Option(mdb.TYPE)), mdb.NAME, name, mdb.TEXT, text, m.OptionSimple(cli.DAEMON, ice.MSG_USERUA), m.OptionSimple(nfs.MODULE, nfs.VERSION))
 	if c, e := websocket.Upgrade(m.W, m.R); !m.Warn(e) {
 		gdb.Go(m, func() {
@@ -65,8 +66,13 @@ func _space_fork(m *ice.Message) {
 			case CHROME:
 				m.Go(func() { m.Cmd(SPACE, name, cli.PWD, name) })
 			case LOGIN:
+				m.Debug("what %v", m.Option(ice.MSG_USERNAME))
+				if m.Option(ice.MSG_SESSID) != "" && m.Option(ice.MSG_USERNAME) != "" {
+					m.Cmd(SPACE, name, ice.MSG_SESSID, m.Option(ice.MSG_SESSID))
+				}
 				gdb.Event(m, SPACE_LOGIN, args)
 			}
+			m.Debug("what %v", m.Option(ice.MSG_USERNAME))
 			_space_handle(m, false, name, c)
 		}, kit.Join(kit.Simple(SPACE, name), lex.SP))
 	}

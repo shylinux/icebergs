@@ -77,7 +77,7 @@ func init() {
 			}},
 			"build": {Name: "build space", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
 				_route_toast(m, m.Option(SPACE), m.PrefixKey(), "_build")
-				m.Cmdy("", "travel")
+				m.Sleep("1s").Cmdy("", "travel")
 			}},
 			"_build": {Hand: func(m *ice.Message, arg ...string) {
 				if nfs.Exists(m, ".git") {

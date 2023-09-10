@@ -4,6 +4,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/log"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
@@ -82,8 +83,8 @@ func init() {
 				}
 			}},
 		}, mdb.HashAction(mdb.SHORT, web.LINK, mdb.FIELD, "time,hash,type,name,link"), FavorAction()), Hand: func(m *ice.Message, arg ...string) {
-			list := []string{m.MergePodCmd("", "web.wiki.portal")}
-			list = append(list, web.MergeLink(m, "/chat/portal/", ice.POD, m.Option(ice.MSG_USERPOD)))
+			list := []string{m.MergePodCmd("", "web.wiki.portal", log.DEBUG, m.Option(log.DEBUG))}
+			list = append(list, web.MergeLink(m, "/chat/portal/", ice.POD, m.Option(ice.MSG_USERPOD), log.DEBUG, m.Option(log.DEBUG)))
 			if mdb.HashSelect(m, arg...); len(arg) == 0 {
 				for _, link := range list {
 					if u := kit.ParseURL(link); u != nil {

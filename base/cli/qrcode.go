@@ -71,7 +71,7 @@ func init() {
 			if m.IsCliUA() {
 				_qrcode_cli(m, kit.Select(kit.Select(ice.Info.Make.Domain, ice.Info.Domain), arg, 0))
 			} else {
-				m.OptionDefault(SIZE, "480")
+				m.OptionDefault(SIZE, "360")
 				m.StatusTime(mdb.LINK, _qrcode_web(m, tcp.PublishLocalhost(m, kit.Select(m.Option(ice.MSG_USERWEB), arg, 0))))
 			}
 		}},

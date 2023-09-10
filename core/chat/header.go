@@ -35,7 +35,7 @@ func _header_share(m *ice.Message, arg ...string) {
 	m.Push(mdb.NAME, m.Option(mdb.LINK)).PushQRCode(mdb.TEXT, m.Option(mdb.LINK))
 }
 func _header_check(m *ice.Message, arg ...string) bool {
-	m.Option(ice.MAIN, mdb.Conf(m, "web.serve", "meta.main"))
+	m.Option(ice.MAIN, mdb.Conf(m, "web.serve", kit.Keym(ice.MAIN)))
 	if m.Option(ice.CMD) == aaa.OFFER && m.Option(mdb.HASH) != "" {
 		m.Cmd(aaa.OFFER, m.Option(mdb.HASH), func(value ice.Maps) {
 			aaa.SessAuth(m, kit.Dict(aaa.USERNAME, value[aaa.EMAIL], aaa.USERROLE, aaa.VOID))
@@ -85,8 +85,11 @@ func init() {
 				}
 			}},
 			aaa.EMAIL: {Name: "email to subject content", Hand: func(m *ice.Message, arg ...string) {
-				m.Options("volcano", web.UserHost(m), "version", web.RenderVersion(m))
-				m.Option(ice.MSG_USERWEB, kit.MergeURL(m.Option(ice.MSG_USERWEB), web.SHARE, m.Cmdx(web.SHARE, mdb.CREATE, mdb.TYPE, web.LOGIN)))
+				if m.Option("to") != aaa.UserEmail(m, "") && !aaa.Right(m, aaa.EMAIL, m.Option("to")) {
+					return
+				}
+				m.Options("volcano", web.UserHost(m), nfs.VERSION, web.RenderVersion(m))
+				m.Options(ice.MSG_USERWEB, kit.MergeURL(m.Option(ice.MSG_USERWEB), web.SHARE, m.Cmdx(web.SHARE, mdb.CREATE, mdb.TYPE, web.LOGIN)))
 				m.Cmdy(aaa.EMAIL, aaa.SEND, arg, aaa.CONTENT, nfs.Template(m, "email.html"))
 			}},
 			web.SHARE: {Hand: _header_share},
@@ -94,7 +97,7 @@ func init() {
 			"/": {Hand: func(m *ice.Message, arg ...string) {
 				m.Option("language.list", m.Cmd(nfs.DIR, path.Join(ice.SRC_TEMPLATE, m.PrefixKey(), aaa.LANGUAGE), nfs.FILE).Appendv(nfs.FILE))
 				m.Option("theme.list", m.Cmd(nfs.DIR, path.Join(ice.SRC_TEMPLATE, m.PrefixKey(), aaa.THEME), nfs.FILE).Appendv(nfs.FILE))
-				m.Option("spide.hub", m.Cmdv(web.SPIDE, ice.HUB, web.CLIENT_URL))
+				m.Option(nfs.REPOS, m.Cmdv(web.SPIDE, ice.HUB, web.CLIENT_URL))
 				if gdb.Event(m, HEADER_AGENT); !_header_check(m, arg...) {
 					return
 				}

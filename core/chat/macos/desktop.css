@@ -63,3 +63,4 @@ body:not(.mobile) fieldset.macos.dock>div.output { overflow:visible; }
 body:not(.mobile) fieldset.macos.dock>div.output>div.item:hover { background-color:unset; margin-top:-80px; transition:margin-top 0.3s; }
 body:not(.mobile) fieldset.macos.dock>div.output>div.item img:hover { width:160px; transition:width 0.3s; }
 body:not(.mobile) fieldset.macos.desktop>div.output>fieldset.macos.dock:hover { margin-left:-40px; transition:margin-left 0.3s; }
+body.mobile fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>div.item.text>input { width:60px; }

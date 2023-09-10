@@ -61,6 +61,7 @@ const (
 	AUTH    = "auth"
 	PUBLIC  = "public"
 	PRIVATE = "private"
+	CONFIRM = "confirm"
 )
 const ROLE = "role"
 

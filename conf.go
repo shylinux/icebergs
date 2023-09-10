@@ -293,6 +293,7 @@ const ( // Err
 	ErrNotRight = "not right: "
 	ErrNotValid = "not valid: "
 	ErrNotFound = "not found: "
+	ErrNotAllow = "not allow: "
 	ErrNotStart = "not start: "
 
 	ErrNotImplement = "not implement: "

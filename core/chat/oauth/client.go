@@ -43,28 +43,34 @@ type Client struct {
 	auth  string `name:"auth" help:"授权"`
 	user  string `name:"user" help:"用户"`
 	orgs  string `name:"orgs" help:"组织"`
-	repo  string `name:"repo" help:"源码"`
+	repo  string `name:"repo" help:"资源"`
 	list  string `name:"list hash auto" help:"授权"`
 	login string `name:"login" role:"void"`
+}
+
+var Inputs = []map[string]string{}
+
+func init() {
+	Inputs = append(Inputs, map[string]string{
+		OAUTH_URL:    "/login/oauth/authorize",
+		GRANT_URL:    "/login/oauth/access_token",
+		TOKEN_URL:    "/login/oauth/access_token",
+		USERS_URL:    "/api/v1/user",
+		API_PREFIX:   "/api/v1/",
+		TOKEN_PREFIX: "token",
+	})
 }
 
 func (s Client) Inputs(m *ice.Message, arg ...string) {
 	switch s.Hash.Inputs(m, arg...); arg[0] {
 	case web.DOMAIN:
 		m.Cmdy(web.SPIDE, mdb.INPUTS, arg)
-		m.Push(arg[0], "https://repos.shylinux.com")
-	case OAUTH_URL:
-		m.Push(arg[0], "/login/oauth/authorize")
-	case GRANT_URL:
-		m.Push(arg[0], "/login/oauth/access_token")
-	case TOKEN_URL:
-		m.Push(arg[0], "/login/oauth/access_token")
-	case USERS_URL:
-		m.Push(arg[0], "/api/v1/user")
-	case API_PREFIX:
-		m.Push(arg[0], "/api/v1/")
-	case TOKEN_PREFIX:
-		m.Push(arg[0], "token")
+	default:
+		for _, input := range Inputs {
+			if value, ok := input[arg[0]]; ok {
+				m.Push(arg[0], value)
+			}
+		}
 	}
 }
 func (s Client) Sso(m *ice.Message, arg ...string) {
@@ -128,6 +134,7 @@ func (s Client) request(m *ice.Message, hash, api string, arg ...string) []strin
 	kit.If(msg.Append(ACCESS_TOKEN), func(p string) {
 		m.Options(web.SPIDE_HEADER, ice.Maps{web.Authorization: msg.Append(TOKEN_PREFIX) + lex.SP + p})
 	})
-	kit.If(api == "", func() { api = path.Join(msg.Append(API_PREFIX), strings.ToLower(kit.FuncName(6))) })
+	kit.If(api == "", func() { api = path.Join(msg.Append(API_PREFIX), m.ActionKey()) })
+	// kit.If(api == "", func() { api = path.Join(msg.Append(API_PREFIX), strings.ToLower(kit.FuncName(6))) })
 	return kit.Simple(kit.MergeURL2(msg.Append(web.DOMAIN), api), arg)
 }

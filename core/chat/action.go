@@ -73,24 +73,25 @@ const ACTION = "action"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		web.P(ACTION): {Name: "/action", Help: "工作台", Actions: ice.MergeActions(ice.Actions{
+		ACTION: {Name: "action", Help: "工作台", Actions: ice.MergeActions(ice.Actions{
 			mdb.MODIFY: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(mdb.MODIFY, RIVER, _storm_key(m), mdb.LIST, m.OptionSimple(mdb.ID), arg)
 			}},
 			web.SHARE: {Hand: func(m *ice.Message, arg ...string) { _action_share(m, arg...) }},
-		}, ctx.CmdAction(), aaa.WhiteAction(web.SHARE, ctx.COMMAND, ice.RUN)), Hand: func(m *ice.Message, arg ...string) {
-			if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin, arg) {
-				return
-			}
-			if m.Option(ice.MSG_USERPOD) == "" && m.Warn(!_river_right(m, arg[0]), ice.ErrNotRight, arg) {
-				return
-			}
-			if len(arg) == 2 {
-				ctx.OptionFromConfig(m, MENUS)
-				_action_list(m, arg[0], arg[1])
-			} else {
-				_action_exec(m, arg[0], arg[1], arg[2], arg[3:]...)
-			}
-		}},
+			"/": {Hand: func(m *ice.Message, arg ...string) {
+				if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin, arg) {
+					return
+				}
+				if m.Option(ice.MSG_USERPOD) == "" && m.Warn(!_river_right(m, arg[0]), ice.ErrNotRight, arg) {
+					return
+				}
+				if len(arg) == 2 {
+					ctx.OptionFromConfig(m, MENUS)
+					_action_list(m, arg[0], arg[1])
+				} else {
+					_action_exec(m, arg[0], arg[1], arg[2], arg[3:]...)
+				}
+			}},
+		}, ctx.CmdAction(), aaa.WhiteAction(web.SHARE, ctx.COMMAND, ice.RUN))},
 	})
 }

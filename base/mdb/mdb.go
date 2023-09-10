@@ -160,6 +160,8 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: ice.Commands
 			}
 		case "args":
 			m.Cmdy("command", INPUTS, m.Option("index"))
+		case ICON:
+			m.Cmdy("nfs.dir", "usr/icons/", "path")
 		default:
 			kit.Switch(arg[2],
 				HASH, func() { _hash_inputs(m, arg[0], arg[1], kit.Select(NAME, arg, 3), kit.Select("", arg, 4)) },
@@ -243,12 +245,10 @@ func init() {
 
 func AutoConfig(arg ...Any) *ice.Action {
 	return &ice.Action{Hand: func(m *ice.Message, args ...string) {
-		if cs := m.Target().Configs; len(arg) > 0 {
-			if cs[m.CommandKey()] == nil {
-				cs[m.CommandKey()] = &ice.Config{Value: kit.Data(arg...)}
-			} else {
-				kit.For(kit.Dict(arg...), func(k string, v Any) { Config(m, k, v) })
-			}
+		if cs := m.Target().Configs; cs[m.CommandKey()] == nil {
+			cs[m.CommandKey()] = &ice.Config{Value: kit.Data(arg...)}
+		} else {
+			kit.For(kit.Dict(arg...), func(k string, v Any) { Config(m, k, v) })
 		}
 		if cmd := m.Target().Commands[m.CommandKey()]; cmd == nil {
 			return
@@ -259,7 +259,6 @@ func AutoConfig(arg ...Any) *ice.Action {
 			}
 			if inputs := []Any{}; cmd.Meta[CREATE] == nil {
 				kit.For(kit.Filters(kit.Split(Config(m, SHORT)), TIME, HASH, COUNT), func(k string) { inputs = append(inputs, k) })
-				// kit.For(kit.Filters(kit.Split(kit.Select(Config(m, SHORT), Config(m, FIELDS))), TIME, HASH, COUNT), func(k string) { inputs = append(inputs, k) })
 				m.Design(CREATE, "创建", inputs...)
 			}
 		} else if cmd.Actions[CREATE] != nil {

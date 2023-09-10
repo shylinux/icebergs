@@ -139,9 +139,15 @@ func _config_load(m *ice.Message, name string, arg ...string) {
 		data, msg := ice.Map{}, m.Spawn(m.Source())
 		json.NewDecoder(f).Decode(&data)
 		for k, v := range data {
+			if k == "web.chat.header" {
+				m.Debug("what %v", v)
+			}
 			msg.Search(k, func(p *ice.Context, s *ice.Context, key string, conf *ice.Config) {
 				kit.If(s.Configs[key] == nil, func() { s.Configs[key] = &ice.Config{} })
 				s.Configs[key].Value = v
+				if key == "header" {
+					m.Debug("what %v", v)
+				}
 			})
 		}
 	}
@@ -210,12 +216,12 @@ func init() {
 }
 func Save(m *ice.Message, arg ...string) *ice.Message {
 	kit.If(len(arg) == 0, func() { arg = kit.SortedKey(m.Target().Configs) })
-	kit.For(arg, func(i int, k string) { arg[i] = m.Prefix(k) })
+	kit.For(arg, func(i int, k string) { arg[i] = strings.Replace(m.Prefix(k), "/", "", 1) })
 	return m.Cmd(CONFIG, SAVE, m.Prefix(nfs.JSON), arg)
 }
 func Load(m *ice.Message, arg ...string) *ice.Message {
 	kit.If(len(arg) == 0, func() { arg = kit.SortedKey(m.Target().Configs) })
-	kit.For(arg, func(i int, k string) { arg[i] = m.Prefix(k) })
+	kit.For(arg, func(i int, k string) { arg[i] = strings.Replace(m.Prefix(k), "/", "", 1) })
 	return m.Cmd(CONFIG, LOAD, m.Prefix(nfs.JSON), arg)
 }
 func ConfAction(arg ...ice.Any) ice.Actions { return ice.Actions{ice.CTX_INIT: mdb.AutoConfig(arg...)} }

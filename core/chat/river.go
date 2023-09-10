@@ -41,7 +41,7 @@ const RIVER = "river"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		web.P(RIVER): {Name: "/river", Help: "群组", Actions: ice.MergeActions(ice.Actions{
+		RIVER: {Name: "river", Help: "群组", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { mdb.HashImport(m) }},
 			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { mdb.HashExport(m) }},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
@@ -66,16 +66,17 @@ func init() {
 				}
 				gdb.Event(m, RIVER_CREATE, RIVER, m.Option(ice.MSG_RIVER, h), arg)
 			}},
-		}, aaa.WhiteAction(), mdb.ImportantHashAction(mdb.FIELD, "time,hash,type,icon,name,text,template")), Hand: func(m *ice.Message, arg ...string) {
-			if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin) || !aaa.Right(m, RIVER, arg) {
-				return
-			} else if len(arg) == 0 {
-				_river_list(m)
-			} else if len(arg) > 1 && arg[1] == STORM {
-				m.Cmdy(arg[1], arg[2:], kit.Dict(ice.MSG_RIVER, arg[0]))
-			} else if len(arg) > 2 && arg[2] == STORM {
-				m.Cmdy(arg[2], arg[3:], kit.Dict(ice.MSG_RIVER, arg[0], ice.MSG_STORM, arg[1]))
-			}
-		}},
+			"/": {Hand: func(m *ice.Message, arg ...string) {
+				if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin) || !aaa.Right(m, RIVER, arg) {
+					return
+				} else if len(arg) == 0 {
+					_river_list(m)
+				} else if len(arg) > 1 && arg[1] == STORM {
+					m.Cmdy(arg[1], arg[2:], kit.Dict(ice.MSG_RIVER, arg[0]))
+				} else if len(arg) > 2 && arg[2] == STORM {
+					m.Cmdy(arg[2], arg[3:], kit.Dict(ice.MSG_RIVER, arg[0], ice.MSG_STORM, arg[1]))
+				}
+			}},
+		}, aaa.WhiteAction(), mdb.ImportantHashAction(mdb.FIELD, "time,hash,type,icon,name,text,template"))},
 	})
 }

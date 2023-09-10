@@ -157,6 +157,8 @@ func _serve_auth(m *ice.Message, key string, cmds []string, w http.ResponseWrite
 const (
 	SERVE_START = "serve.start"
 
+	SSO    = "sso"
+	URL    = "url"
 	HTTP   = "http"
 	HTTPS  = "https"
 	DOMAIN = "domain"
@@ -215,15 +217,13 @@ func init() {
 			sub = kit.Select(P(key, sub), PP(key, sub), strings.HasSuffix(sub, nfs.PS))
 			actions := ice.Actions{}
 			for k, v := range cmd.Actions {
-				if !kit.IsIn(k, ice.CTX_INIT, ice.CTX_EXIT) {
-					actions[k] = v
-				}
+				kit.If(!kit.IsIn(k, ice.CTX_INIT, ice.CTX_EXIT), func() { actions[k] = v })
 			}
 			c.Commands[sub] = &ice.Command{Name: kit.Select(cmd.Name, action.Name), Actions: ice.MergeActions(actions, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 				msg := m.Spawn(c, key, cmd)
 				defer m.Copy(msg)
 				action.Hand(msg, arg...)
-			}}
+			}, RawHand: action.Hand}
 		}
 	})
 }

@@ -66,13 +66,11 @@ func _space_fork(m *ice.Message) {
 			case CHROME:
 				m.Go(func() { m.Cmd(SPACE, name, cli.PWD, name) })
 			case LOGIN:
-				m.Debug("what %v", m.Option(ice.MSG_USERNAME))
 				if m.Option(ice.MSG_SESSID) != "" && m.Option(ice.MSG_USERNAME) != "" {
 					m.Cmd(SPACE, name, ice.MSG_SESSID, m.Option(ice.MSG_SESSID))
 				}
 				gdb.Event(m, SPACE_LOGIN, args)
 			}
-			m.Debug("what %v", m.Option(ice.MSG_USERNAME))
 			_space_handle(m, false, name, c)
 		}, kit.Join(kit.Simple(SPACE, name), lex.SP))
 	}

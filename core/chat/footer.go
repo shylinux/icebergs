@@ -15,7 +15,7 @@ const FOOTER = "footer"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		web.P(FOOTER): {Name: "/footer", Help: "状态栏", Actions: ice.MergeActions(ice.Actions{
+		FOOTER: {Name: "footer", Help: "状态栏", Actions: ice.MergeActions(ice.Actions{
 			ice.RUN: {Hand: func(m *ice.Message, arg ...string) {
 				if aaa.Right(m, arg) {
 					if m.Cmdy(arg); m.IsErrNotFound() {
@@ -37,8 +37,9 @@ func init() {
 			"help": {Hand: func(m *ice.Message, arg ...string) {
 				ctx.ProcessField(m, web.WIKI_WORD, []string{"src/document/" + arg[0] + "/list.shy"}, arg...)
 			}},
-		}, ctx.CmdAction(), aaa.WhiteAction(ctx.COMMAND, ice.RUN)), Hand: func(m *ice.Message, arg ...string) {
-			m.Result(kit.Select(mdb.Config(m, TITLE), ice.Info.Make.Email))
-		}},
+			"/": {Hand: func(m *ice.Message, arg ...string) {
+				m.Result(kit.Select(mdb.Config(m, TITLE), ice.Info.Make.Email))
+			}},
+		}, ctx.CmdAction(), aaa.WhiteAction(ctx.COMMAND, ice.RUN))},
 	})
 }

@@ -28,8 +28,9 @@ const (
 	GRANT_TYPE         = "grant_type"
 	STATE              = "state"
 	CODE               = "code"
-	API                = "api"
 
+	API_PREFIX   = "api_prefix"
+	TOKEN_PREFIX = "token_prefix"
 	ACCESS_TOKEN = "access_token"
 	EXPIRES_IN   = "expires_in"
 )
@@ -37,18 +38,16 @@ const (
 type Client struct {
 	ice.Hash
 	short string `data:"domain,client_id"`
-	field string `data:"time,hash,domain,client_id,client_secret,oauth_url,grant_url,token_url,users_url,api,prefix"`
+	field string `data:"time,hash,domain,client_id,client_secret,oauth_url,grant_url,token_url,users_url,api_prefix,token_prefix"`
+	sso   string `name:"sso name* icon*" help:"登录"`
 	auth  string `name:"auth" help:"授权"`
 	user  string `name:"user" help:"用户"`
 	orgs  string `name:"orgs" help:"组织"`
 	repo  string `name:"repo" help:"源码"`
 	list  string `name:"list hash auto" help:"授权"`
+	login string `name:"login" role:"void"`
 }
 
-func (s Client) Init(m *ice.Message, arg ...string) {
-	aaa.White(m.Message, m.PrefixKey(), ctx.ACTION, aaa.LOGIN)
-	s.Hash.Init(m, arg...)
-}
 func (s Client) Inputs(m *ice.Message, arg ...string) {
 	switch s.Hash.Inputs(m, arg...); arg[0] {
 	case web.DOMAIN:
@@ -62,11 +61,15 @@ func (s Client) Inputs(m *ice.Message, arg ...string) {
 		m.Push(arg[0], "/login/oauth/access_token")
 	case USERS_URL:
 		m.Push(arg[0], "/api/v1/user")
-	case lex.PREFIX:
-		m.Push(arg[0], "token")
-	case API:
+	case API_PREFIX:
 		m.Push(arg[0], "/api/v1/")
+	case TOKEN_PREFIX:
+		m.Push(arg[0], "token")
 	}
+}
+func (s Client) Sso(m *ice.Message, arg ...string) {
+	mdb.Conf(m, "web.chat.header", kit.Keym(web.SSO, m.Option(mdb.NAME), web.URL), kit.MergeURL2(m.Option(web.DOMAIN), m.Option(OAUTH_URL), m.OptionSimple(CLIENT_ID), REDIRECT_URI, s.RedirectURI(m), RESPONSE_TYPE, CODE, STATE, m.Option(mdb.HASH)))
+	mdb.Conf(m, "web.chat.header", kit.Keym(web.SSO, m.Option(mdb.NAME), mdb.ICON), m.Option(mdb.ICON))
 }
 func (s Client) Auth(m *ice.Message, arg ...string) {
 	m.Options(REDIRECT_URI, s.RedirectURI(m), RESPONSE_TYPE, CODE, STATE, m.Option(mdb.HASH))
@@ -79,18 +82,10 @@ func (s Client) User(m *ice.Message, arg ...string) {
 			m.OptionSimple(aaa.EMAIL, aaa.LANGUAGE, aaa.AVATAR_URL))
 	}
 }
-func (s Client) Sso(m *ice.Message, arg ...string) {
-	mdb.Conf(m, "web.chat.header", kit.Keym("sso.gitea.url"), kit.MergeURL2(m.Option(web.DOMAIN), m.Option(OAUTH_URL), m.OptionSimple(CLIENT_ID), REDIRECT_URI, s.RedirectURI(m), RESPONSE_TYPE, CODE, STATE, m.Option(mdb.HASH)))
-	mdb.Conf(m, "web.chat.header", kit.Keym("sso.gitea.icon"), "usr/icons/gitea.png")
-}
 func (s Client) Orgs(m *ice.Message, arg ...string) {}
 func (s Client) Repo(m *ice.Message, arg ...string) {}
 func (s Client) List(m *ice.Message, arg ...string) {
-	if s.Hash.List(m, arg...).PushAction(s.Sso, s.User, s.Auth, s.Remove); len(arg) == 0 {
-		m.EchoScript(s.RedirectURI(m))
-	} else {
-		m.EchoScript("config header sso " + kit.MergeURL2(m.Append(web.DOMAIN), m.Append(OAUTH_URL), m.AppendSimple(CLIENT_ID), REDIRECT_URI, s.RedirectURI(m), RESPONSE_TYPE, CODE, STATE, arg[0]))
-	}
+	s.Hash.List(m, arg...).PushAction(s.User, s.Auth, s.Sso, s.Remove).EchoScript(s.RedirectURI(m))
 }
 
 func init() { ice.ChatCtxCmd(Client{}) }
@@ -131,8 +126,8 @@ func (s Client) Delete(m *ice.Message, hash, api string, arg ...string) ice.Any 
 func (s Client) request(m *ice.Message, hash, api string, arg ...string) []string {
 	msg := s.Hash.List(m.Spawn(), hash)
 	kit.If(msg.Append(ACCESS_TOKEN), func(p string) {
-		m.Options(web.SPIDE_HEADER, ice.Maps{web.Authorization: msg.Append(lex.PREFIX) + lex.SP + p})
+		m.Options(web.SPIDE_HEADER, ice.Maps{web.Authorization: msg.Append(TOKEN_PREFIX) + lex.SP + p})
 	})
-	kit.If(api == "", func() { api = path.Join(msg.Append(API), strings.ToLower(kit.FuncName(6))) })
+	kit.If(api == "", func() { api = path.Join(msg.Append(API_PREFIX), strings.ToLower(kit.FuncName(6))) })
 	return kit.Simple(kit.MergeURL2(msg.Append(web.DOMAIN), api), arg)
 }

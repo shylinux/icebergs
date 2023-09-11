@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
+	"time"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
@@ -85,7 +86,14 @@ func _dream_binary(m *ice.Message, p string) {
 	if bin := path.Join(m.Option(cli.CMD_DIR), ice.BIN_ICE_BIN); nfs.Exists(m, bin) {
 
 	} else if kit.IsUrl(p) {
-		SpideSave(m, bin, kit.MergeURL(p, cli.GOOS, runtime.GOOS, cli.GOARCH, runtime.GOARCH), nil)
+		GoToast(m, "download", func(toast func(string, int, int)) (list []string) {
+			begin := time.Now()
+			SpideSave(m, bin, kit.MergeURL(p, cli.GOOS, runtime.GOOS, cli.GOARCH, runtime.GOARCH), func(count, total, value int) {
+				cost := time.Now().Sub(begin)
+				toast(kit.FormatShow(nfs.FROM, begin.Format("15:04:05"), cli.COST, kit.FmtDuration(cost), cli.REST, kit.FmtDuration(cost*time.Duration(101)/time.Duration(value+1)-cost)), count, total)
+			})
+			return nil
+		})
 		os.Chmod(bin, ice.MOD_DIR)
 	} else {
 		m.Cmd(nfs.LINK, bin, kit.Path(p))

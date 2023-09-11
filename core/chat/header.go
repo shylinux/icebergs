@@ -54,7 +54,7 @@ func _header_check(m *ice.Message, arg ...string) bool {
 	if m.Option(ice.MSG_USERNAME) != "" {
 		return true
 	} else if ctx.OptionFromConfig(m, SSO) == "" && ctx.OptionFromConfig(m, web.LOGIN) == "" {
-		m.Option(SSO, GetSSO(m))
+		m.Option(SSO, kit.Format(kit.Dict("serve.icon", "usr/icons/icebergs.jpg", "serve.url", GetSSO(m))))
 	}
 	return false
 }

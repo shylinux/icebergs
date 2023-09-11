@@ -647,9 +647,8 @@ func init() {
 				kit.If(m.Option(REPOS), func(p string) {
 					p = strings.Split(p, mdb.QS)[0]
 					kit.If(!strings.Contains(p, "://"), func() { p = web.UserHost(m) + "/x/" + p })
-					if ice.Info.System == cli.LINUX {
-						p = strings.Replace(p, "https", "http", 1)
-					}
+					kit.If(ice.Info.System == cli.LINUX, func() { p = strings.Replace(p, "https", "http", 1) })
+					web.Toast(m, "clone "+p)
 					m.Cmd("", CLONE, ORIGIN, p, nfs.PATH, m.Option(cli.CMD_DIR), ice.Maps{cli.CMD_DIR: ""})
 				})
 			}},

@@ -192,6 +192,7 @@ func init() {
 			if m.Cmdy(INNER, arg); arg[0] != ctx.ACTION {
 				kit.If(len(arg) > 1, func() { mdb.HashCreate(m.Spawn(), nfs.PATH, path.Join(kit.Slice(arg, 0, 2)...)) })
 				m.Action(nfs.SAVE, COMPILE, "show", "exec")
+				ctx.Toolkit(m, COMPILE, cli.RUNTIME)
 				ctx.DisplayLocal(m, "")
 			}
 		}},

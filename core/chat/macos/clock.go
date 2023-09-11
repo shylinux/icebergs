@@ -1,4 +1,4 @@
-package chat
+package macos
 
 import (
 	ice "shylinux.com/x/icebergs"
@@ -6,9 +6,9 @@ import (
 )
 
 func init() {
-	const CACULATOR = "caculator"
+	const CLOCK = "clock"
 	Index.MergeCommands(ice.Commands{
-		CACULATOR: {Name: "caculator refresh", Icon: "usr/icons/Caculator.png", Hand: func(m *ice.Message, arg ...string) {
+		CLOCK: {Name: "clock refresh", Icon: "usr/icons/Clock.png", Hand: func(m *ice.Message, arg ...string) {
 			ctx.DisplayLocal(m, "")
 		}},
 	})

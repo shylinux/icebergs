@@ -5,7 +5,6 @@ Volcanos(chat.ONIMPORT, {
 		can.sup.onexport.link = function() { return can.db.prefix }
 		can.require(["/plugin/local/wiki/word.js"]), can.Conf(html.PADDING, can.user.isMobile? 10: 40)
 		can.onmotion.clear(can), can.isCmdMode() && can.onappend.style(can, html.OUTPUT)
-		if (can.isCmdMode()) { can.ConfHeight(can.page.height()), can.ConfWidth(can.page.width()) }
 		can.ui = can.onappend.layout(can, [html.HEADER, [html.NAV, html.MAIN, html.ASIDE]], html.FLOW), can.onimport._scroll(can)
 		can.ui.header.innerHTML = msg.Append(html.HEADER), can.ui.nav.innerHTML = msg.Append(html.NAV)
 		if (msg.Append(html.NAV) == "") {
@@ -48,13 +47,14 @@ Volcanos(chat.ONIMPORT, {
 			can.onimport._display(can, can.ui.main, function(target, meta) {
 				meta.type == wiki.TITLE && can.onappend.style(can, meta.name, target._menu = can.onimport.item(can, {name: meta.text}, function(event) { target.scrollIntoView() }, function() {}, can.ui.aside))
 			}), can.onmotion.select(can, can.ui.aside, html.DIV_ITEM, 0)
+			can.sup.onimport.size(can.sup, can.sup.ConfHeight(), can.sup.ConfWidth())
 		})
 	},
 	layout: function(can, height, width) { can.onmotion.delay(can, function() { padding = can.Conf(html.PADDING)
 		can.ui.layout(height, width), can.ConfHeight(can.ui.main.offsetHeight), can.ConfWidth(can.ui.main.offsetWidth)
 		if (can.user.isMobile && can.isCmdMode()) {
-			can.page.style(can, can.ui.nav, html.HEIGHT, "", html.WIDTH, can.ConfWidth(can.page.width()))
-			can.page.style(can, can.ui.main, html.HEIGHT, "", html.WIDTH, can.ConfHeight(can.page.width()))
+			can.page.style(can, can.ui.nav, html.HEIGHT, "", html.WIDTH, can.page.width())
+			can.page.style(can, can.ui.main, html.HEIGHT, "", html.WIDTH, can.page.width())
 		}
 		can.core.List(can._plugins, function(sub) { sub.onimport.size(sub, can.base.Min(can.ConfHeight()/2, 300, 600), sub.Conf("_width")||(can.ConfWidth()-2*padding), true) })
 	}, 10) },

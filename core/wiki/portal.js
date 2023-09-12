@@ -1,11 +1,11 @@
 Volcanos(chat.ONIMPORT, {
-	_init: function(can, msg) { can.require(["/plugin/local/wiki/word.js"]), can.Conf(html.PADDING, can.user.isMobile? 10: 40)
-		can.db = {nav: {}}
-		var p = "/cmd/web.wiki.portal"
+	_init: function(can, msg) { var p = "/cmd/web.wiki.portal"
 		can.db.prefix = location.pathname.indexOf(p) > 0? location.pathname.split(p)[0]+p: "/wiki/portal/"
 		can.db.current = can.isCmdMode()? can.base.trimPrefix(location.pathname, can.db.prefix+"/", can.db.prefix): can.Option(nfs.PATH)
-		can.onmotion.clear(can)
-			can.sup.onexport.link = function() { return can.db.prefix }
+		can.sup.onexport.link = function() { return can.db.prefix }
+		can.require(["/plugin/local/wiki/word.js"]), can.Conf(html.PADDING, can.user.isMobile? 10: 40)
+		can.onmotion.clear(can), can.isCmdMode() && can.onappend.style(can, html.OUTPUT)
+		if (can.isCmdMode()) { can.ConfHeight(can.page.height()), can.ConfWidth(can.page.width()) }
 		can.ui = can.onappend.layout(can, [html.HEADER, [html.NAV, html.MAIN, html.ASIDE]], html.FLOW), can.onimport._scroll(can)
 		can.ui.header.innerHTML = msg.Append(html.HEADER), can.ui.nav.innerHTML = msg.Append(html.NAV)
 		if (msg.Append(html.NAV) == "") {
@@ -16,12 +16,13 @@ Volcanos(chat.ONIMPORT, {
 			if (can.ConfWidth() < 1000) { can.onmotion.hidden(can, can.ui.aside) }
 			can.page.ClassList.del(can, can._fields, ice.HOME)
 		}
-		can.isCmdMode() || can.onimport.layout(can, can.ConfHeight(), can.ConfWidth())
+		can.db.nav = {}
 		can.page.Select(can, can._output, wiki.STORY_ITEM, function(target) { var meta = target.dataset||{}
 			can.core.CallFunc([can.onimport, can.onimport[meta.name]? meta.name: meta.type||target.tagName.toLowerCase()], [can, meta, target])
 			meta.style && can.page.style(can, target, can.base.Obj(meta.style))
 		})
-		var file = can.db.current+(can.isCmdMode()? can.base.trimPrefix(location.hash, "#"): can.Option(nfs.FILE))
+		var file = can.isCmdMode()? can.base.trimPrefix(location.hash, "#"): can.Option(nfs.FILE)
+		can.base.beginWith(file, nfs.SRC, nfs.USR) || (file = can.db.current+file)
 		var nav = can.db.nav[file]; nav && nav.click()
 	},
 	_scroll: function(can) { can.ui.main.onscroll = function(event) { var top = can.ui.main.scrollTop, select
@@ -43,21 +44,20 @@ Volcanos(chat.ONIMPORT, {
 		target.onclick = function(event) { can.onaction.route(event, can, item.route) }
 	},
 	content: function(can, file) {
-		can.runActionCommand(event, web.WIKI_WORD, [nfs.SRC_DOCUMENT+can.db.current+file], function(msg) { can.ui.main.innerHTML = msg.Result(), can.onmotion.clear(can, can.ui.aside)
+		can.runActionCommand(event, web.WIKI_WORD, [(can.base.beginWith(file, "usr/", "src/")? "": nfs.SRC_DOCUMENT+can.db.current)+file], function(msg) { can.ui.main.innerHTML = msg.Result(), can.onmotion.clear(can, can.ui.aside)
 			can.onimport._display(can, can.ui.main, function(target, meta) {
 				meta.type == wiki.TITLE && can.onappend.style(can, meta.name, target._menu = can.onimport.item(can, {name: meta.text}, function(event) { target.scrollIntoView() }, function() {}, can.ui.aside))
 			}), can.onmotion.select(can, can.ui.aside, html.DIV_ITEM, 0)
 		})
 	},
 	layout: function(can, height, width) { can.onmotion.delay(can, function() { padding = can.Conf(html.PADDING)
-		if (can.isCmdMode()) { can.onappend.style(can, html.OUTPUT), can.ConfHeight(can.page.height()), can.ConfWidth(can.page.width()) }
 		can.ui.layout(height, width), can.ConfHeight(can.ui.main.offsetHeight), can.ConfWidth(can.ui.main.offsetWidth)
 		if (can.user.isMobile && can.isCmdMode()) {
 			can.page.style(can, can.ui.nav, html.HEIGHT, "", html.WIDTH, can.ConfWidth(can.page.width()))
 			can.page.style(can, can.ui.main, html.HEIGHT, "", html.WIDTH, can.ConfHeight(can.page.width()))
 		}
 		can.core.List(can._plugins, function(sub) { sub.onimport.size(sub, can.base.Min(can.ConfHeight()/2, 300, 600), sub.Conf("_width")||(can.ConfWidth()-2*padding), true) })
-	}, 100) },
+	}, 10) },
 }, [""])
 Volcanos(chat.ONACTION, {
 	route: function(event, can, route, internal) {
@@ -65,7 +65,11 @@ Volcanos(chat.ONACTION, {
 		if (!internal) { var params = ""; (can.misc.Search(can, log.DEBUG) == ice.TRUE && (params = "?debug=true"))
 			if (link == nfs.PS) { return can.isCmdMode()? can.user.jumps(can.db.prefix+params): (can.Option(nfs.PATH, ""), can.Update()) }
 			if (can.base.beginWith(link, web.HTTP, nfs.PS)) { return can.user.opens(link) }
-			if (link.indexOf(can.db.current) < 0 || link.endsWith(nfs.PS)) { return can.isCmdMode()? can.user.jumps(can.base.Path(can.db.prefix, link)+params): (can.Option(nfs.PATH, link), can.Update()) }
+			if (!can.base.beginWith(link, nfs.SRC, nfs.USR)) {
+				if (link.indexOf(can.db.current) < 0 || link.endsWith(nfs.PS)) {
+					return can.isCmdMode()? can.user.jumps(can.base.Path(can.db.prefix, link)+params): (can.Option(nfs.PATH, link), can.Update())
+				}
+			}
 		}
 		var file = can.base.trimPrefix(link, can.db.current); can.isCmdMode() && can.user.jumps("#"+file)
 		if (can.onmotion.cache(can, function(save, load) { save({plugins: can._plugins})

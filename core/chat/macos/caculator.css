@@ -1,0 +1,24 @@
+fieldset.web.chat.caculator>div.output>div.display {
+	text-align:right;
+   	height:80px;
+	width:100%;
+	font-size:50px;
+}
+fieldset.web.chat.caculator>div.output>table {
+	width:100%;
+}
+fieldset.web.chat.caculator>div.output>table td {
+	text-align:center;
+   	height:80px;
+   	width:80px;
+}
+fieldset.web.chat.caculator>div.output>table tr:first-child td {
+	background-color:#46504d; color:white;
+}
+fieldset.web.chat.caculator>div.output>table td:last-child {
+	background-color:#fb9f0d !important; color:white;
+}
+fieldset.web.chat.caculator>div.output>table td:hover {
+	background-color:var(--hover-bg-color) !important;
+	cursor:pointer;
+}

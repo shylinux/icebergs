@@ -1,0 +1,4 @@
+fieldset.web.chat.clock>div.output>svg g.number text { font-family:sans-serif; font-size:48px; }
+fieldset.web.chat.clock>div.output>svg g.hour line { stroke-width:8px; }
+fieldset.web.chat.clock>div.output>svg g.minute line { stroke-width:4px; }
+fieldset.web.chat.clock>div.output>svg g.second line { stroke-width:2px; stroke:red; }

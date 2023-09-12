@@ -65,7 +65,8 @@ func PushPodCmd(m *ice.Message, cmd string, arg ...string) {
 	kit.If(m.Length() > 0 && len(m.Appendv(SPACE)) == 0, func() { m.Table(func(value ice.Maps) { m.Push(SPACE, "") }) })
 	list := []string{}
 	m.Cmds(SPACE, func(value ice.Maps) {
-		kit.If(kit.IsIn(value[mdb.TYPE], WORKER, SERVER), func() { list = append(list, value[mdb.NAME]) })
+		// kit.If(kit.IsIn(value[mdb.TYPE], WORKER, SERVER), func() { list = append(list, value[mdb.NAME]) })
+		kit.If(kit.IsIn(value[mdb.TYPE], WORKER), func() { list = append(list, value[mdb.NAME]) })
 	})
 	if len(list) == 0 {
 		return

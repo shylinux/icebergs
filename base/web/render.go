@@ -32,7 +32,7 @@ func Render(m *ice.Message, cmd string, args ...ice.Any) bool {
 	arg := kit.Simple(args...)
 	kit.If(len(arg) == 0, func() { args = nil })
 	if cmd != "" {
-		if cmd != ice.RENDER_DOWNLOAD || !kit.HasPrefix(arg[0], ice.USR_VOLCANOS, ice.USR_INTSHELL) {
+		if cmd != ice.RENDER_DOWNLOAD || !kit.HasPrefix(arg[0], ice.USR_VOLCANOS, ice.USR_INTSHELL, "src/template/", "usr/icons/", "usr/node_modules/") {
 			defer func() { m.Logs("Render", cmd, args) }()
 		}
 	}
@@ -179,6 +179,7 @@ const (
 	WIKI_WORD        = "web.wiki.word"
 	WIKI_DRAW        = "web.wiki.draw"
 	WIKI_FEEL        = "web.wiki.feel"
+	CHAT_HEADER      = "web.chat.header"
 	CHAT_IFRAME      = "web.chat.iframe"
 	CHAT_FAVOR       = "web.chat.favor"
 	CHAT_FLOWS       = "web.chat.flows"

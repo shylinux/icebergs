@@ -12,7 +12,7 @@ fieldset.macos.desktop>div.output>fieldset.macos.notifications div.item div.titl
 fieldset.macos.desktop>div.output>fieldset.macos.notifications div.item div.time { font-size:var(--code-font-size); margin-top:10px; width:48px; }
 fieldset.macos.desktop>div.output>fieldset.macos.notifications div.item div.content { width:180px; }
 fieldset.macos.desktop>div.output>div.desktop:not(.select) { display:none; }
-fieldset.macos.desktop>div.output>div.desktop>div.item { position:absolute; text-align:center; }
+fieldset.macos.desktop>div.output>div.desktop>div.item { color:silver; position:absolute; text-align:center; }
 fieldset.macos.desktop>div.output>div.desktop>div.item img { object-fit:contain; height:var(--desktop-icon-size); width:var(--desktop-icon-size); }
 fieldset.macos.desktop>div.output>div.desktop>div.item>div.name { font-size:var(--code-font-size); width:var(--desktop-icon-size); overflow:hidden; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset.select { z-index:1; }

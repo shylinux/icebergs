@@ -74,8 +74,8 @@ func (s Client) Inputs(m *ice.Message, arg ...string) {
 	}
 }
 func (s Client) Sso(m *ice.Message, arg ...string) {
-	mdb.Conf(m, "web.chat.header", kit.Keym(web.SSO, m.Option(mdb.NAME), web.URL), kit.MergeURL2(m.Option(web.DOMAIN), m.Option(OAUTH_URL), m.OptionSimple(CLIENT_ID), REDIRECT_URI, s.RedirectURI(m), RESPONSE_TYPE, CODE, STATE, m.Option(mdb.HASH)))
-	mdb.Conf(m, "web.chat.header", kit.Keym(web.SSO, m.Option(mdb.NAME), mdb.ICON), m.Option(mdb.ICON))
+	mdb.Conf(m, web.CHAT_HEADER, kit.Keym(web.SSO, m.Option(mdb.NAME), web.URL), kit.MergeURL2(m.Option(web.DOMAIN), m.Option(OAUTH_URL), m.OptionSimple(CLIENT_ID), REDIRECT_URI, s.RedirectURI(m), RESPONSE_TYPE, CODE, STATE, m.Option(mdb.HASH)))
+	mdb.Conf(m, web.CHAT_HEADER, kit.Keym(web.SSO, m.Option(mdb.NAME), mdb.ICON), m.Option(mdb.ICON))
 }
 func (s Client) Auth(m *ice.Message, arg ...string) {
 	m.Options(REDIRECT_URI, s.RedirectURI(m), RESPONSE_TYPE, CODE, STATE, m.Option(mdb.HASH))
@@ -135,6 +135,5 @@ func (s Client) request(m *ice.Message, hash, api string, arg ...string) []strin
 		m.Options(web.SPIDE_HEADER, ice.Maps{web.Authorization: msg.Append(TOKEN_PREFIX) + lex.SP + p})
 	})
 	kit.If(api == "", func() { api = path.Join(msg.Append(API_PREFIX), m.ActionKey()) })
-	// kit.If(api == "", func() { api = path.Join(msg.Append(API_PREFIX), strings.ToLower(kit.FuncName(6))) })
 	return kit.Simple(kit.MergeURL2(msg.Append(web.DOMAIN), api), arg)
 }

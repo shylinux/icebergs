@@ -48,7 +48,7 @@ func _dream_list(m *ice.Message) *ice.Message {
 			stats[ice.INIT]++
 		}
 	})
-	return m.Sort("status,type,name", ice.STR, ice.STR, ice.STR).StatusTimeCount(stats)
+	return m.Sort("status,type,name", ice.STR, ice.STR, ice.STR_R).StatusTimeCount(stats)
 }
 func _dream_start(m *ice.Message, name string) {
 	if m.Warn(name == "", ice.ErrNotValid, mdb.NAME) {
@@ -153,14 +153,14 @@ func init() {
 					gdb.Event(m, DREAM_INPUTS, arg)
 				}
 			}},
-			nfs.CAT: {Name: "cat file*", Hand: func(m *ice.Message, arg ...string) {
+			nfs.CAT: {Name: "cat file*", Help: "文件", Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashSelect(m.Spawn()).Table(func(value ice.Maps) {
 					m.Push(mdb.NAME, value[mdb.NAME])
 					m.Push(mdb.TEXT, m.Cmdx(SPACE, value[mdb.NAME], nfs.CAT, m.Option(nfs.FILE)))
 				})
 				m.StatusTimeCount()
 			}},
-			ice.CMD: {Name: "cmd cmd*", Hand: func(m *ice.Message, arg ...string) {
+			ice.CMD: {Name: "cmd cmd*", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 				GoToast(m, "", func(toast func(string, int, int)) []string {
 					msg := mdb.HashSelect(m.Spawn())
 					msg.Table(func(index int, value ice.Maps) {

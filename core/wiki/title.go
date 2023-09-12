@@ -20,7 +20,7 @@ func _title_parse(m *ice.Message, text string) string {
 			list = list[:len(list)-1]
 		}
 		if len(ls) > 1 {
-			kit.If(!kit.HasPrefix(ls[1], nfs.PS, web.HTTP), func() {
+			kit.If(!kit.HasPrefix(ls[1], nfs.PS, web.HTTP, nfs.SRC, nfs.USR), func() {
 				ls[1] = path.Join(kit.Select(path.Dir(m.Option(ice.MSG_SCRIPT)), list, -1), ls[1]) + kit.Select("", nfs.PS, strings.HasSuffix(ls[1], nfs.PS))
 			})
 		}

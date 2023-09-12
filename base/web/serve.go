@@ -68,6 +68,12 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 			return !Render(RenderMain(msg), msg.Option(ice.MSG_OUTPUT), kit.List(msg.Optionv(ice.MSG_ARGS))...)
 		} else if p := path.Join(kit.Select(ice.USR_VOLCANOS, ice.USR_INTSHELL, msg.IsCliUA()), r.URL.Path); nfs.Exists(msg, p) {
 			return !Render(msg, ice.RENDER_DOWNLOAD, p)
+		} else if p = path.Join(nfs.USR, r.URL.Path); kit.HasPrefix(r.URL.Path, "/volcanos/", "/intshell/") && nfs.Exists(msg, p) {
+			return !Render(msg, ice.RENDER_DOWNLOAD, p)
+		} else if p = strings.TrimPrefix(r.URL.Path, "/require/"); kit.HasPrefix(r.URL.Path, "/require/src/", "/require/usr/icons/", "/require/usr/icebergs/") && nfs.Exists(msg, p) {
+			return !Render(msg, ice.RENDER_DOWNLOAD, p)
+		} else if p = path.Join("usr/node_modules/", strings.TrimPrefix(r.URL.Path, "/require/modules/")); kit.HasPrefix(r.URL.Path, "/require/modules/") && nfs.Exists(msg, p) {
+			return !Render(msg, ice.RENDER_DOWNLOAD, p)
 		}
 	} else if path.Join(r.URL.Path) == nfs.PS {
 		r.URL.Path = kit.Select(nfs.PS, mdb.Config(m, ice.MAIN))

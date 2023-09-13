@@ -263,6 +263,8 @@ const (
 	FULL  = "full"
 	LINK  = "link"
 	MERGE = "merge"
+
+	QS = "?"
 )
 const SPIDE = "spide"
 

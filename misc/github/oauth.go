@@ -59,7 +59,7 @@ func init() {
 				})
 				m.PushAction(mdb.DELETE)
 			}},
-			mdb.DELETE: {Name: "delete", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+			mdb.DELETE: {Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashSelect(m, m.Option(mdb.HASH))
 				web.SpideDelete(_oauth_header(m), API_GITHUB+"user/keys/"+m.Option(mdb.ID))
 			}},

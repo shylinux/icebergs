@@ -150,6 +150,8 @@ func FileURI(dir string) string {
 		dir = strings.TrimPrefix(dir, ice.Info.Make.Path)
 	} else if strings.HasPrefix(dir, kit.Path("")+nfs.PS) {
 		dir = strings.TrimPrefix(dir, kit.Path("")+nfs.PS)
+	} else if strings.HasPrefix(dir, ".ish/pluged/") {
+		dir = strings.TrimPrefix(dir, ".ish/pluged/")
 	}
 	return path.Join(nfs.PS, ice.REQUIRE, dir)
 }

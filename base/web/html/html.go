@@ -16,6 +16,7 @@ const (
 const (
 	FLOAT  = "float"
 	OUTPUT = "output"
+	CHROME = "chrome"
 
 	TEXT_PLAIN = "text/plain"
 )

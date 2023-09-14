@@ -18,6 +18,7 @@ import (
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/ssh"
 	"shylinux.com/x/icebergs/base/tcp"
+	"shylinux.com/x/icebergs/base/web/html"
 	"shylinux.com/x/icebergs/misc/websocket"
 	kit "shylinux.com/x/toolkits"
 )
@@ -50,11 +51,16 @@ func _space_fork(m *ice.Message) {
 	addr := kit.Select(m.R.RemoteAddr, m.R.Header.Get(ice.MSG_USERADDR))
 	name := kit.ReplaceAll(kit.Select(addr, m.Option(mdb.NAME)), "[", "_", "]", "_", nfs.DF, "_", nfs.PT, "_")
 	text := kit.Select(addr, m.Option(mdb.TEXT))
-	if kit.IsIn(m.Option(mdb.TYPE), CHROME) && m.Option(mdb.NAME) != CHROME || !(ice.Info.Localhost && tcp.IsLocalHost(m, m.R.RemoteAddr) ||
+	text = strings.ReplaceAll(text, "%2F", "/")
+	if kit.IsIn(m.Option(mdb.TYPE), PORTAL) && m.Option(mdb.NAME) != html.CHROME || !(ice.Info.Localhost && tcp.IsLocalHost(m, m.R.RemoteAddr) ||
 		m.Option(TOKEN) != "" && m.Cmdv(TOKEN, m.Option(TOKEN), mdb.TIME) > m.Time()) || mdb.HashSelect(m.Spawn(), name).Length() > 0 {
 		name, text = kit.Hashs(name), kit.Select(addr, m.Option(mdb.NAME), m.Option(mdb.TEXT))
 	}
-
+	if m.Option(mdb.TYPE) == WORKER {
+		if p := nfs.USR_LOCAL_WORK + m.Option(mdb.NAME); nfs.Exists(m, p) {
+			text = p
+		}
+	}
 	args := kit.Simple(mdb.TYPE, kit.Select(WORKER, m.Option(mdb.TYPE)), mdb.NAME, name, mdb.TEXT, text, m.OptionSimple(cli.DAEMON, ice.MSG_USERUA), m.OptionSimple(nfs.MODULE, nfs.VERSION))
 	if c, e := websocket.Upgrade(m.W, m.R); !m.Warn(e) {
 		gdb.Go(m, func() {
@@ -63,7 +69,7 @@ func _space_fork(m *ice.Message) {
 			case SERVER:
 			case WORKER:
 				defer gdb.EventDeferEvent(m, DREAM_OPEN, args)(DREAM_CLOSE, args)
-			case CHROME:
+			case PORTAL:
 				m.Go(func() { m.Cmd(SPACE, name, cli.PWD, name) })
 			case LOGIN:
 				if m.Option(ice.MSG_SESSID) != "" && m.Option(ice.MSG_USERNAME) != "" {
@@ -155,10 +161,10 @@ func _space_send(m *ice.Message, name string, arg ...string) (h string) {
 }
 
 const (
-	CHROME = "chrome"
-	MASTER = "master"
-	SERVER = "server"
+	PORTAL = "portal"
 	WORKER = "worker"
+	SERVER = "server"
+	MASTER = "master"
 
 	REDIAL = "redial"
 )
@@ -195,6 +201,7 @@ func init() {
 			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) {
 				defer mdb.HashModifyDeferRemove(m, m.OptionSimple(mdb.NAME), mdb.STATUS, cli.STOP)()
 				m.Cmd("", m.Option(mdb.NAME), ice.EXIT)
+				m.Sleep("1s")
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if mdb.IsSearchPreview(m, arg) {
@@ -227,22 +234,18 @@ func init() {
 				defer m.StatusTimeCount()
 				m.Option(ice.MSG_USERWEB, tcp.PublishLocalhost(m, m.Option(ice.MSG_USERWEB)))
 				mdb.HashSelect(m.Spawn(), arg...).Sort("").Table(func(index int, value ice.Maps, field []string) {
-					if kit.IsIn(value[mdb.TYPE], CHROME, "send") {
-						// return
-					}
 					if m.Push("", value, kit.Split(mdb.Config(m, mdb.FIELD))); len(arg) > 0 && arg[0] != "" {
 						m.Push(mdb.STATUS, value[mdb.STATUS])
 					}
-					if kit.IsIn(value[mdb.TYPE], SERVER, WORKER) {
+					if kit.IsIn(value[mdb.TYPE], WORKER, SERVER) {
 						m.Push(mdb.LINK, m.MergePod(value[mdb.NAME]))
-					} else if value[mdb.TYPE] == CHROME && value[mdb.NAME] != "chrome" {
+					} else if value[mdb.TYPE] == PORTAL && value[mdb.NAME] != html.CHROME {
 						m.Push(mdb.LINK, MergeURL2(m, value[mdb.TEXT]))
 					} else {
 						m.Push(mdb.LINK, "")
 					}
 					m.PushButton(kit.Select(OPEN, LOGIN, value[mdb.TYPE] == LOGIN), mdb.REMOVE)
 				})
-				kit.If(!m.IsCliUA(), func() { m.Cmdy("web.code.publish", "contexts", ice.APP) })
 				kit.If(len(arg) == 1, func() { m.EchoIFrame(m.MergePod(arg[0])) })
 			} else {
 				_space_send(m, arg[0], kit.Simple(kit.Split(arg[1]), arg[2:])...)

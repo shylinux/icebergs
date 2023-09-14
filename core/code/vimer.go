@@ -160,7 +160,6 @@ func init() {
 			nfs.REPOS: {Help: "仓库"}, web.SPACE: {Help: "空间"}, web.DREAM: {Help: "空间"}, FAVOR: {Help: "收藏"},
 			cli.OPENS:  {Hand: func(m *ice.Message, arg ...string) { cli.Opens(m, arg...) }},
 			"listTags": {Help: "生成索引", Hand: func(m *ice.Message, arg ...string) { m.Cmd("web.code.vim.tags", nfs.LOAD) }},
-
 			TEMPLATE: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(TEMPLATE, kit.Ext(m.Option(mdb.FILE)), m.Option(nfs.FILE), m.Option(nfs.PATH))
 			}},
@@ -168,6 +167,11 @@ func init() {
 				m.Cmdy(COMPLETE, kit.Ext(m.Option(mdb.FILE)), m.Option(nfs.FILE), m.Option(nfs.PATH))
 			}},
 			COMPILE: {Help: "编译", Hand: func(m *ice.Message, arg ...string) {
+				if nfs.ExistsFile(m, path.Join(m.Option(nfs.PATH), "Makefile")) {
+					web.PushStream(m)
+					m.Cmdy(cli.SYSTEM, cli.MAKE, kit.Dict(cli.CMD_DIR, m.Option(nfs.PATH)))
+					return
+				}
 				const app, _app = "usr/publish/Contexts.app", "Contents/MacOS/Contexts"
 				isWebview := func() bool { return strings.HasSuffix(os.Args[0], _app) }
 				cmds := []string{COMPILE, ice.SRC_MAIN_GO, ice.BIN_ICE_BIN}

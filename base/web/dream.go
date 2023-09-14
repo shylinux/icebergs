@@ -149,6 +149,8 @@ func init() {
 					m.Cmd(nfs.DIR, ice.USR_LOCAL_WORK, kit.Dict(nfs.DIR_TYPE, nfs.TYPE_BOTH), func(value ice.Maps) {
 						m.Cmdy(nfs.DIR, path.Join(value[nfs.PATH], ice.BIN), "path,size,time", kit.Dict(nfs.DIR_TYPE, nfs.TYPE_BIN))
 					})
+					m.RenameAppend(nfs.PATH, arg[0])
+					mdb.HashInputs(m, arg)
 				default:
 					gdb.Event(m, DREAM_INPUTS, arg)
 				}

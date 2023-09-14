@@ -21,7 +21,10 @@ func init() {
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				FinderAppend(m, "Applications", m.PrefixKey())
 				m.Travel(func(p *ice.Context, c *ice.Context, key string, cmd *ice.Command) {
-					kit.If(cmd.Icon, func() { AppInstall(m, cmd.Icon, m.PrefixKey()) })
+					kit.If(cmd.Icon, func() {
+						m.Debug("what %v", cmd.Icon)
+						AppInstall(m, cmd.Icon, m.PrefixKey())
+					})
 				})
 				Notify(m, cli.RUNTIME, "系统启动成功", ctx.INDEX, cli.RUNTIME)
 			}},

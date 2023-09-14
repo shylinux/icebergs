@@ -178,7 +178,14 @@ func init() {
 			}},
 			code.INNER: {Hand: func(m *ice.Message, arg ...string) { _repos_inner(m, _service_path, arg...) }},
 			web.DREAM_INPUTS: {Hand: func(m *ice.Message, arg ...string) {
-				kit.If(arg[0] == REPOS, func() { mdb.HashSelect(m).Sort(REPOS).Cut("repos,branch,commit,time") })
+				kit.If(arg[0] == REPOS, func() {
+					mdb.HashSelect(m).Sort(REPOS).Cut("repos,version,time")
+					m.Cmd(mdb.SEARCH, nfs.REPOS).Table(func(value ice.Maps) {
+						m.Push(nfs.REPOS, value["html_url"])
+						m.Push(nfs.VERSION, "")
+						m.Push(mdb.TIME, value["updated_at"])
+					})
+				})
 			}},
 		}, gdb.EventsAction(web.DREAM_INPUTS), mdb.HashAction(mdb.SHORT, REPOS, mdb.FIELD, "time,repos,branch,version,comment"), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {

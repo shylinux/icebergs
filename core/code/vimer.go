@@ -167,7 +167,7 @@ func init() {
 				m.Cmdy(COMPLETE, kit.Ext(m.Option(mdb.FILE)), m.Option(nfs.FILE), m.Option(nfs.PATH))
 			}},
 			COMPILE: {Help: "编译", Hand: func(m *ice.Message, arg ...string) {
-				if nfs.ExistsFile(m, path.Join(m.Option(nfs.PATH), "Makefile")) {
+				if m.Option(nfs.PATH) != "" && nfs.ExistsFile(m, path.Join(m.Option(nfs.PATH), "Makefile")) {
 					web.PushStream(m)
 					m.Cmdy(cli.SYSTEM, cli.MAKE, kit.Dict(cli.CMD_DIR, m.Option(nfs.PATH)))
 					return

@@ -183,10 +183,7 @@ func init() {
 					mdb.Config(m, ice.MAIN, m.Option(ctx.INDEX))
 					return
 				}
-				kit.If(mdb.Config(m, ice.MAIN), func(cmd string) { RenderPodCmd(m, "", cmd) }, func() {
-					m.OptionDefault(nfs.VERSION, RenderVersion(m))
-					m.RenderResult(nfs.Template(m, "main.html"))
-				})
+				kit.If(mdb.Config(m, ice.MAIN), func(cmd string) { RenderPodCmd(m, "", cmd) }, func() { RenderMain(m) })
 				m.Optionv(ice.MSG_ARGS, kit.Simple(m.Optionv(ice.MSG_ARGS)))
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {

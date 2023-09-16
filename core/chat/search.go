@@ -16,6 +16,8 @@ func init() {
 			"/": {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(web.Space(m, m.Option(ice.POD)), "mdb.search", arg).StatusTimeCount()
 			}},
-		}, ctx.CmdAction())},
+		}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
+			m.Cmdy("mdb.search", arg)
+		}},
 	})
 }

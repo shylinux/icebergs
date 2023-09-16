@@ -141,6 +141,10 @@ func init() {
 				}
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
+				if m.Option(ctx.ACTION) == ice.MAIN {
+					m.Cmdy(SPACE, m.Option(mdb.NAME), SPACE, mdb.INPUTS, arg)
+					return
+				}
 				switch arg[0] {
 				case mdb.NAME, nfs.TEMPLATE:
 					_dream_list(m).Cut("name,status,time")
@@ -218,7 +222,10 @@ func init() {
 				}
 			}},
 			DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
-				kit.Switch(m.Option(mdb.TYPE), []string{SERVER, WORKER}, func() { m.PushButton(OPEN) })
+				kit.Switch(m.Option(mdb.TYPE), []string{WORKER, SERVER}, func() { m.PushButton(OPEN, ice.MAIN) })
+			}},
+			ice.MAIN: {Name: "main index", Help: "首页", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(SPACE, m.Option(mdb.NAME), SPACE, ice.MAIN, m.Option(ctx.INDEX))
 			}},
 			OPEN: {Hand: func(m *ice.Message, arg ...string) { ctx.ProcessOpen(m, m.MergePod(m.Option(mdb.NAME))) }},
 			"origin": {Name: "origin", Help: "仓库", Hand: func(m *ice.Message, arg ...string) {

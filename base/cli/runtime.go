@@ -244,14 +244,14 @@ func init() {
 				kit.For(_path_split(os.Getenv(PATH)), func(p string) { m.Push(nfs.PATH, p) })
 			}},
 			"chain": {Hand: func(m *ice.Message, arg ...string) { m.Echo(m.FormatChain()) }},
-			"upgrade": {Hand: func(m *ice.Message, arg ...string) {
+			"upgrade": {Help: "升级", Hand: func(m *ice.Message, arg ...string) {
 				if nfs.Exists(m, ".git") {
 					m.Cmdy("web.code.compile")
 				} else {
 					m.Cmdy("web.code.upgrade")
 				}
 			}},
-			RESTART: {Hand: func(m *ice.Message, arg ...string) {
+			RESTART: {Help: "重启", Hand: func(m *ice.Message, arg ...string) {
 				m.Go(func() { m.Sleep("30ms", ice.EXIT, 1) })
 			}},
 			"logs": {Help: "日志", Hand: func(m *ice.Message, arg ...string) {

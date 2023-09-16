@@ -74,7 +74,7 @@ const XTERM = "xterm"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		XTERM: {Name: "xterm hash auto install terminal", Icon: "usr/icons/Terminal.png", Help: "命令行", Actions: ice.MergeActions(ice.Actions{
+		XTERM: {Name: "xterm hash auto", Icon: "usr/icons/Terminal.png", Help: "命令行", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				kit.If(m.Cmd("").Length() == 0, func() { m.Cmd("", mdb.CREATE, mdb.TYPE, ISH) })
 			}},
@@ -154,7 +154,7 @@ func init() {
 				if m.Length() == 0 {
 					m.Action(mdb.CREATE)
 				} else {
-					m.PushAction(web.OUTPUT, mdb.REMOVE).Action(mdb.CREATE, mdb.PRUNES)
+					m.PushAction(web.OUTPUT, mdb.REMOVE).Action(mdb.CREATE, mdb.PRUNES, "terminal")
 				}
 			} else {
 				if m.Length() == 0 {
@@ -163,6 +163,7 @@ func init() {
 				}
 				m.Push(mdb.HASH, arg[0])
 				ctx.DisplayLocal(m, "")
+				m.Action("terminal")
 			}
 		}},
 	})

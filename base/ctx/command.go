@@ -57,6 +57,7 @@ const (
 	DISPLAY = "display"
 	ACTION  = "action"
 	RUN     = "run"
+	TOOLS   = "tools"
 )
 const COMMAND = "command"
 

@@ -14,6 +14,8 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/log"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
@@ -48,7 +50,9 @@ func _spide_show(m *ice.Message, name string, arg ...string) {
 		return
 	}
 	mdb.HashSelectDetail(m, name, func(value ice.Map) { _spide_head(m, req, head, value) })
-	kit.For(req.Header, func(k string, v []string) { m.Logs(REQUEST, k, v) })
+	if m.Option(log.DEBUG) == ice.TRUE {
+		kit.For(req.Header, func(k string, v []string) { m.Logs(REQUEST, k, v) })
+	}
 	res, e := _spide_send(m, name, req, kit.Format(m.OptionDefault(CLIENT_TIMEOUT, msg.Append(CLIENT_TIMEOUT))))
 	if m.Warn(e, ice.ErrNotFound, uri) {
 		return
@@ -59,7 +63,9 @@ func _spide_show(m *ice.Message, name string, arg ...string) {
 	m.Push(mdb.VALUE, res.Status)
 	m.Cost(cli.STATUS, res.Status, nfs.SIZE, kit.FmtSize(kit.Int64(res.Header.Get(ContentLength))), mdb.TYPE, res.Header.Get(ContentType))
 	kit.For(res.Header, func(k string, v []string) {
-		m.Logs(RESPONSE, k, v)
+		if m.Option(log.DEBUG) == ice.TRUE {
+			m.Logs(RESPONSE, k, v)
+		}
 		m.Push(mdb.TYPE, SPIDE_HEADER)
 		m.Push(mdb.NAME, k)
 		m.Push(mdb.VALUE, v[0])
@@ -67,7 +73,9 @@ func _spide_show(m *ice.Message, name string, arg ...string) {
 	mdb.HashSelectUpdate(m, name, func(value ice.Map) {
 		kit.For(res.Cookies(), func(v *http.Cookie) {
 			kit.Value(value, kit.Keys(SPIDE_COOKIE, v.Name), v.Value)
-			m.Logs(RESPONSE, v.Name, v.Value)
+			if m.Option(log.DEBUG) == ice.TRUE {
+				m.Logs(RESPONSE, v.Name, v.Value)
+			}
 			m.Push(mdb.TYPE, COOKIE)
 			m.Push(mdb.NAME, v.Name)
 			m.Push(mdb.VALUE, v.Value)
@@ -155,26 +163,11 @@ func _spide_part(m *ice.Message, arg ...string) (string, io.Reader) {
 }
 func _spide_head(m *ice.Message, req *http.Request, head ice.Maps, value ice.Map) {
 	m.Logs(req.Method, req.URL.String())
-	kit.For(value[SPIDE_COOKIE], func(k string, v string) {
-		req.AddCookie(&http.Cookie{Name: k, Value: v})
-		m.Logs("Cookie", k, v)
-	})
-	kit.For(kit.Simple(m.Optionv(SPIDE_COOKIE)), func(k, v string) {
-		req.AddCookie(&http.Cookie{Name: k, Value: v})
-		m.Logs("Cookie", k, v)
-	})
-	kit.For(value[SPIDE_HEADER], func(k string, v string) {
-		req.Header.Set(k, v)
-		m.Logs("Header", k, v)
-	})
-	kit.For(kit.Simple(m.Optionv(SPIDE_HEADER)), func(k, v string) {
-		req.Header.Set(k, v)
-		m.Logs("Header", k, v)
-	})
-	kit.For(head, func(k, v string) {
-		req.Header.Set(k, v)
-		m.Logs("Header", k, v)
-	})
+	kit.For(head, func(k, v string) { req.Header.Set(k, v) })
+	kit.For(value[SPIDE_HEADER], func(k string, v string) { req.Header.Set(k, v) })
+	kit.For(value[SPIDE_COOKIE], func(k string, v string) { req.AddCookie(&http.Cookie{Name: k, Value: v}) })
+	kit.For(kit.Simple(m.Optionv(SPIDE_COOKIE)), func(k, v string) { req.AddCookie(&http.Cookie{Name: k, Value: v}) })
+	kit.For(kit.Simple(m.Optionv(SPIDE_HEADER)), func(k, v string) { req.Header.Set(k, v) })
 	kit.If(req.Method == http.MethodPost, func() { m.Logs(kit.Select(ice.AUTO, req.Header.Get(ContentLength)), req.Header.Get(ContentType)) })
 }
 func _spide_send(m *ice.Message, name string, req *http.Request, timeout string) (*http.Response, error) {
@@ -270,7 +263,8 @@ const SPIDE = "spide"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		SPIDE: {Name: "spide client.name action=raw,msg,save,cache method=GET,PUT,POST,DELETE url format=form,part,json,data,file arg run create", Help: "蜘蛛侠", Actions: ice.MergeActions(ice.Actions{
+		// SPIDE: {Name: "spide client.name action=raw,msg,save,cache method=GET,PUT,POST,DELETE url format=form,part,json,data,file arg run create", Help: "蜘蛛侠", Actions: ice.MergeActions(ice.Actions{
+		SPIDE: {Name: "spide client.name auto", Help: "蜘蛛侠", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				conf := mdb.Confm(m, cli.RUNTIME, cli.CONF)
 				m.Cmd("", mdb.CREATE, ice.OPS, kit.Select("http://127.0.0.1:9020", conf[cli.CTX_OPS]))
@@ -281,7 +275,26 @@ func init() {
 				m.Cmd("", mdb.CREATE, ice.SHY, kit.Select(kit.Select("https://shylinux.com", ice.Info.Make.Remote), conf[cli.CTX_SHY]))
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashSelectValue(m.Spawn(), func(value ice.Map) { m.Push(kit.Select(ORIGIN, arg, 0), kit.Value(value, CLIENT_ORIGIN)) })
+				switch m.Option(ctx.ACTION) {
+				case COOKIE:
+					switch arg[0] {
+					case mdb.KEY:
+						m.Push(arg[0], "sessid")
+					}
+				case HEADER:
+					switch arg[0] {
+					case mdb.KEY:
+						m.Push(arg[0], "Authorization")
+					}
+				default:
+					mdb.HashSelectValue(m.Spawn(), func(value ice.Map) { m.Push(kit.Select(ORIGIN, arg, 0), kit.Value(value, CLIENT_ORIGIN)) })
+				}
+			}},
+			HEADER: {Name: "header key* value", Hand: func(m *ice.Message, arg ...string) {
+				mdb.HashModify(m, m.OptionSimple(CLIENT_NAME), kit.Keys(HEADER, m.Option(mdb.KEY)), m.Option(mdb.VALUE))
+			}},
+			COOKIE: {Name: "cookie key* value", Hand: func(m *ice.Message, arg ...string) {
+				mdb.HashModify(m, m.OptionSimple(CLIENT_NAME), kit.Keys(COOKIE, m.Option(mdb.KEY)), m.Option(mdb.VALUE))
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if mdb.IsSearchPreview(m, arg) {
@@ -297,6 +310,9 @@ func init() {
 		}, mdb.HashAction(mdb.SHORT, CLIENT_NAME, mdb.FIELD, "time,client.name,client.url")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 || arg[0] == "" || (len(arg) > 3 && arg[3] == "") {
 				mdb.HashSelect(m, kit.Slice(arg, 0, 1)...).Sort(CLIENT_NAME)
+				if len(arg) > 0 && arg[0] != "" {
+					m.Action(COOKIE, HEADER)
+				}
 			} else {
 				_spide_show(m, arg[0], arg[1:]...)
 			}

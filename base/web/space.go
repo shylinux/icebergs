@@ -136,8 +136,9 @@ func _space_exec(m *ice.Message, source, target []string, c *websocket.Conn) {
 	_space_echo(m.Set(ice.MSG_OPTS).Options(log.DEBUG, m.Option(log.DEBUG)), []string{}, kit.Reverse(kit.Simple(source)), c)
 }
 func _space_echo(m *ice.Message, source, target []string, c *websocket.Conn) {
+	defer func() { m.Warn(recover()) }()
 	if m.Options(ice.MSG_SOURCE, source, ice.MSG_TARGET, target[1:]); !m.Warn(c.WriteMessage(1, []byte(m.FormatMeta()))) {
-		// m.Log(tcp.SEND, "%v->%v %v %v", source, target, m.Detailv(), m.FormatsMeta(nil))
+		m.Log(tcp.SEND, "%v->%v %v %v", source, target, m.Detailv(), m.FormatsMeta(nil))
 	}
 }
 func _space_send(m *ice.Message, name string, arg ...string) (h string) {
@@ -177,7 +178,11 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		SPACE: {Name: "space name cmds auto", Help: "空间站", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { aaa.White(m, SPACE, ice.MAIN) }},
-			ice.MAIN: {Hand: func(m *ice.Message, arg ...string) {
+			ice.MAIN: {Name: "main index", Hand: func(m *ice.Message, arg ...string) {
+				if len(arg) > 0 {
+					mdb.Config(m, ice.MAIN, m.Option(ctx.INDEX))
+					return
+				}
 				kit.If(mdb.Config(m, ice.MAIN), func(cmd string) { RenderPodCmd(m, "", cmd) }, func() {
 					m.OptionDefault(nfs.VERSION, RenderVersion(m))
 					m.RenderResult(nfs.Template(m, "main.html"))
@@ -188,6 +193,8 @@ func init() {
 				switch arg[0] {
 				case SPACE:
 					m.Cmdy("").CutTo(mdb.NAME, arg[0])
+				default:
+					mdb.HashInputs(m, arg)
 				}
 			}},
 			tcp.DIAL: {Name: "dial dev=ops name", Hand: func(m *ice.Message, arg ...string) {
@@ -231,7 +238,7 @@ func init() {
 			nfs.PS: {Hand: func(m *ice.Message, arg ...string) { _space_fork(m) }},
 		}, mdb.HashAction(mdb.LIMIT, 1000, mdb.LEAST, 1000, mdb.SHORT, mdb.NAME, mdb.FIELD, "time,type,name,text,module,version", ctx.ACTION, OPEN, REDIAL, kit.Dict("a", 3000, "b", 1000, "c", 1000)), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 {
-				defer m.StatusTimeCount()
+				defer m.StatusTimeCount(ice.MAIN, mdb.Config(m, ice.MAIN))
 				m.Option(ice.MSG_USERWEB, tcp.PublishLocalhost(m, m.Option(ice.MSG_USERWEB)))
 				mdb.HashSelect(m.Spawn(), arg...).Sort("").Table(func(index int, value ice.Maps, field []string) {
 					if m.Push("", value, kit.Split(mdb.Config(m, mdb.FIELD))); len(arg) > 0 && arg[0] != "" {
@@ -246,7 +253,7 @@ func init() {
 					}
 					m.PushButton(kit.Select(OPEN, LOGIN, value[mdb.TYPE] == LOGIN), mdb.REMOVE)
 				})
-				kit.If(len(arg) == 1, func() { m.EchoIFrame(m.MergePod(arg[0])) })
+				kit.If(len(arg) == 1, func() { m.EchoIFrame(m.MergePod(arg[0])) }, func() { m.Action(ice.MAIN) })
 			} else {
 				_space_send(m, arg[0], kit.Simple(kit.Split(arg[1]), arg[2:])...)
 			}

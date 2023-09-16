@@ -59,6 +59,7 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	}
 
 	if m.Logs(r.Header.Get(ice.MSG_USERIP), r.Method, r.URL.String()); r.Method == http.MethodGet {
+		ispod := kit.Contains(r.Header.Get("Referer"), "/chat/pod/", "pod=")
 		if msg := m.Spawn(w, r).Options(ice.MSG_USERUA, r.UserAgent()); path.Join(r.URL.Path) == nfs.PS {
 			if !msg.IsCliUA() {
 				if r.URL.Path = kit.Select(nfs.PS, mdb.Config(m, ice.MAIN)); path.Join(r.URL.Path) != nfs.PS {
@@ -70,7 +71,7 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 			return !Render(msg, ice.RENDER_DOWNLOAD, p)
 		} else if p = path.Join(nfs.USR, r.URL.Path); kit.HasPrefix(r.URL.Path, "/volcanos/", "/intshell/") && nfs.Exists(msg, p) {
 			return !Render(msg, ice.RENDER_DOWNLOAD, p)
-		} else if p = strings.TrimPrefix(r.URL.Path, "/require/"); kit.HasPrefix(r.URL.Path, "/require/src/", "/require/usr/icons/", "/require/usr/icebergs/") && nfs.Exists(msg, p) {
+		} else if p = strings.TrimPrefix(r.URL.Path, "/require/"); kit.HasPrefix(r.URL.Path, "/require/src/", "/require/usr/icons/", "/require/usr/icebergs/") && nfs.Exists(msg, p) && !ispod {
 			return !Render(msg, ice.RENDER_DOWNLOAD, p)
 		} else if p = path.Join("usr/node_modules/", strings.TrimPrefix(r.URL.Path, "/require/modules/")); kit.HasPrefix(r.URL.Path, "/require/modules/") && nfs.Exists(msg, p) {
 			return !Render(msg, ice.RENDER_DOWNLOAD, p)
@@ -182,7 +183,7 @@ func init() {
 		P(ice.EXIT):      {Hand: func(m *ice.Message, arg ...string) { m.Cmd(ice.EXIT) }},
 		PP(ice.VOLCANOS): {Hand: func(m *ice.Message, arg ...string) { m.RenderDownload(path.Join(ice.USR_VOLCANOS, path.Join(arg...))) }},
 		PP(ice.INTSHELL): {Hand: func(m *ice.Message, arg ...string) { m.RenderDownload(path.Join(ice.USR_INTSHELL, path.Join(arg...))) }},
-		SERVE: {Name: "serve name auto start dark system", Help: "服务器", Actions: ice.MergeActions(ice.Actions{
+		SERVE: {Name: "serve name auto start main dark system publicip", Help: "服务器", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				cli.NodeInfo(m, ice.Info.Pathname, WORKER)
 				gdb.Watch(m, SERVE_START)
@@ -206,16 +207,23 @@ func init() {
 				})
 			}},
 			cli.SYSTEM: {Help: "系统", Hand: func(m *ice.Message, arg ...string) { cli.Opens(m, "System Settings.app") }},
-			"publicip": {Hand: func(m *ice.Message, arg ...string) {
-				m.Echo(kit.Formats(PublicIP(m)))
-			}},
-			"dark": {Help: "主题", Hand: func(m *ice.Message, arg ...string) {
-				if !tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) {
-					return
+			ice.MAIN: {Name: "main index", Help: "首页", Hand: func(m *ice.Message, arg ...string) {
+				if m.Option(ctx.INDEX) == "" {
+					mdb.Config(m, ice.MAIN, "")
+				} else {
+					mdb.Config(m, ice.MAIN, CHAT_CMD+m.Option(ctx.INDEX)+"/")
 				}
-				m.Cmd(cli.SYSTEM, "osascript", "-e", `tell app "System Events" to tell appearance preferences to set dark mode to not dark mode`)
 			}},
-		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,status,name,proto,host,port"), mdb.ClearOnExitHashAction())},
+			"publicip": {Help: "公网", Hand: func(m *ice.Message, arg ...string) { m.Echo(kit.Formats(PublicIP(m))) }},
+			"dark": {Help: "主题", Hand: func(m *ice.Message, arg ...string) {
+				if tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) {
+					m.Cmd(cli.SYSTEM, "osascript", "-e", `tell app "System Events" to tell appearance preferences to set dark mode to not dark mode`)
+				}
+			}},
+		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,status,name,proto,host,port"), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
+			mdb.HashSelect(m, arg...)
+			m.StatusTimeCount(ice.MAIN, mdb.Config(m, ice.MAIN))
+		}},
 	})
 	ice.AddMergeAction(func(c *ice.Context, key string, cmd *ice.Command, sub string, action *ice.Action) {
 		if strings.HasPrefix(sub, nfs.PS) {
@@ -239,10 +247,10 @@ func Script(m *ice.Message, str string, arg ...ice.Any) string {
 }
 func ChatCmdPath(m *ice.Message, arg ...string) string {
 	if p := m.Option(ice.MSG_USERPOD); p != "" {
-		return path.Join("/chat/pod/", p, "/cmd/", kit.Select(m.PrefixKey(), path.Join(arg...)))
+		return path.Join(CHAT_POD, p, "/cmd/", kit.Select(m.PrefixKey(), path.Join(arg...)))
 
 	}
-	return path.Join("/chat/cmd/", kit.Select(m.PrefixKey(), path.Join(arg...)))
+	return path.Join(CHAT_CMD, kit.Select(m.PrefixKey(), path.Join(arg...)))
 }
 func RequireFile(m *ice.Message, file string) string {
 	if strings.HasPrefix(file, nfs.PS) || strings.HasPrefix(file, ice.HTTP) {

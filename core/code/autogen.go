@@ -82,7 +82,7 @@ func _autogen_git(m *ice.Message, arg ...string) ice.Map {
 	return kit.Dict(arg, aaa.USERNAME, ice.Info.Username, tcp.HOSTNAME, ice.Info.Hostname, nfs.PATH, kit.Path("")+nfs.PS, mdb.TIME, m.Time(),
 		GIT, m.Cmdx(cli.SYSTEM, GIT, VERSION), GO, m.Cmdx(cli.SYSTEM, GO, VERSION),
 		msg.AppendSimple("remote,branch,version,forword,author,email,hash,when,message"),
-		web.DOMAIN, tcp.PublishLocalhost(m, m.Option(ice.MSG_USERWEB)),
+		web.DOMAIN, strings.ReplaceAll(tcp.PublishLocalhost(m, m.Option(ice.MSG_USERWEB)), "%2F", "/"),
 		nfs.MODULE, _autogen_mod(m, ice.GO_MOD),
 		cli.SYSTEM, ice.Info.System,
 	)

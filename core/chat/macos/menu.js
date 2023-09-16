@@ -6,6 +6,6 @@ Volcanos(chat.ONIMPORT, {_init: function(can, msg, cb) {
 		return {view: [html.ITEM], list: [{img: can.page.drawText(can, item.name||item.index, 25, 0, 20)}], onclick: function(event) { can.sup.onexport.record(can, item) }}
 	}), [
 		{view: [html.MENU, "", can.ConfSpace()||can.misc.Search(can, ice.POD)||location.host], onclick: function(event) { can.sup.onexport.record(can, html.DESKTOP) }},
-		{view: [html.MENU, "", "+"], onclick: function(event) { can.sup.onexport.record(can, mdb.CREATE) }},
+		{view: [[html.MENU, mdb.CREATE], "", "+"], onclick: function(event) { can.sup.onexport.record(can, mdb.CREATE) }},
 	])), cb && cb(msg), can.page.style(can, can._output, html.MAX_WIDTH, "")
 }})

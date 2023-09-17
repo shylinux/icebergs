@@ -15,18 +15,22 @@ import (
 const (
 	CMD     = "cmd"
 	OSID    = "osid"
+	REPOS   = "repos"
 	UBUNTU  = "ubuntu"
 	CENTOS  = "centos"
 	ALPINE  = "alpine"
 	BUSYBOX = "busybox"
 	RELEASE = "release"
+
+	ETC_OS_RELEASE = "/etc/os-release"
+	ETC_APK_REPOS  = "/etc/apk/repositories"
 )
 
 const MIRRORS = "mirrors"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		MIRRORS: {Name: "mirrors cli auto", Help: "软件镜像", Actions: ice.MergeActions(ice.Actions{
+		MIRRORS: {Name: "mirrors cli auto repos", Help: "软件镜像", Actions: ice.MergeActions(ice.Actions{
 			mdb.INSERT: {Name: "insert cli* osid cmd*"},
 			CMD: {Name: "cmd cli osid", Hand: func(m *ice.Message, arg ...string) {
 				osid := kit.Select(mdb.Conf(m, RUNTIME, kit.Keys(HOST, OSID)), m.Option(OSID))
@@ -35,7 +39,37 @@ func init() {
 				})
 			}},
 			ALPINE: {Name: "alpine cli cmd", Hand: func(m *ice.Message, arg ...string) { IsAlpine(m, arg...) }},
-		}, mdb.ZoneAction(mdb.SHORT, CLI, mdb.FIELD, "time,id,osid,cmd"), mdb.ClearOnExitHashAction())},
+			REPOS: {Help: "镜像源", Hand: func(m *ice.Message, arg ...string) {
+				switch {
+				case strings.Contains(release(m.Spawn()), ALPINE):
+					m.Cmd(nfs.SAVE, ETC_APK_REPOS, strings.ReplaceAll(m.Cmdx(nfs.CAT, ETC_APK_REPOS), "dl-cdn.alpinelinux.org", "mirrors.tencent.com"))
+					m.Cmdy(SYSTEM, "apk", "update")
+					m.StatusTimeCount()
+				}
+			}},
+			"add": {Help: "安装", Hand: func(m *ice.Message, arg ...string) {
+				mdb.ZoneSelect(m, m.Option(CLI)).Table(func(value ice.Maps) {
+					m.Push("res", m.Cmdx(kit.Split(value[CMD])))
+				})
+			}},
+		}, mdb.ZoneAction(mdb.SHORT, CLI, mdb.FIELD, "time,id,osid,cmd"), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
+			if mdb.ZoneSelect(m, arg...); len(arg) == 0 {
+				m.Table(func(value ice.Maps) {
+					p := SystemFind(m, value[CLI])
+					m.Push("path", p)
+					if p == "" {
+						m.PushButton("add")
+					} else {
+						m.PushButton("")
+					}
+				})
+				m.StatusTimeCount("release", release(m.Spawn()))
+			}
+			switch {
+			case strings.Contains(release(m.Spawn()), ALPINE):
+				m.Cmdy(nfs.CAT, ETC_APK_REPOS)
+			}
+		}},
 	})
 }
 
@@ -43,11 +77,11 @@ var _release = ""
 
 func release(m *ice.Message) string {
 	list := []string{runtime.GOOS}
-	if list[0] != LINUX || !nfs.Exists(m, "/etc/os-release") {
+	if list[0] != LINUX || !nfs.Exists(m, ETC_OS_RELEASE) {
 		return list[0]
 	}
 	m.Option(nfs.CAT_CONTENT, _release)
-	_release = m.Cmdx(nfs.CAT, "/etc/os-release", kit.Dict(ice.MSG_USERROLE, aaa.ROOT), func(text string, _ int) string {
+	_release = m.Cmdx(nfs.CAT, ETC_OS_RELEASE, kit.Dict(ice.MSG_USERROLE, aaa.ROOT), func(text string, _ int) string {
 		if ls := kit.Split(text, mdb.EQ); len(ls) > 1 {
 			kit.Switch(ls[0], []string{"ID", "ID_LIKE"}, func() { list = append(list, strings.TrimSpace(ls[1])) })
 		}

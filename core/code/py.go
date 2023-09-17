@@ -28,6 +28,9 @@ func init() {
 				cli.IsAlpine(m, "python", "python2")
 				cli.IsAlpine(m, "python2")
 				cli.IsAlpine(m, "python3")
+				cli.IsCentos(m, "python", "python2")
+				cli.IsCentos(m, "python2")
+				cli.IsCentos(m, "python3")
 			}},
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { ProcessXterm(m, "python -i "+path.Join(arg[2], arg[1]), "") }},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _py_exec(m, path.Join(arg[2], arg[1])) }},

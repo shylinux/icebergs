@@ -22,6 +22,7 @@ type node struct {
 
 func (s node) Init(m *ice.Message) {
 	cli.IsAlpine(m.Message, NODE, "nodejs")
+	cli.IsCentos(m.Message, NODE, "nodejs")
 }
 func (s node) Install(m *ice.Message, arg ...string) {
 	s.Code.Install(m, arg...)

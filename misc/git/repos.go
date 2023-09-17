@@ -564,7 +564,13 @@ func init() {
 					if u, ok := list[kit.ParseURL(remote).Host]; ok {
 						password, _ = u.User.Password()
 					}
-					m.Sort("repos,status,file").Status(mdb.TIME, last, REMOTE, remote, kit.Select(aaa.TECH, aaa.VOID, password == ""), m.Option(aaa.EMAIL), kit.MDB_COUNT, kit.Split(m.FormatSize())[0], kit.MDB_COST, m.FormatCost())
+					m.Sort("repos,status,file").Status(
+						mdb.TIME, last,
+						REMOTE, remote, VERSION, ice.Info.Make.Versions(),
+						kit.Select(aaa.TECH, aaa.VOID, password == ""), m.Option(aaa.EMAIL),
+						kit.MDB_COUNT, kit.Split(m.FormatSize())[0],
+						kit.MDB_COST, m.FormatCost(),
+					)
 				}
 			}},
 			TOTAL: {Hand: func(m *ice.Message, arg ...string) {

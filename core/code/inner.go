@@ -148,6 +148,7 @@ func init() {
 				arg[1] = strings.Split(arg[1], mdb.FS)[0]
 				_inner_list(m, kit.Ext(arg[1]), arg[1], arg[0])
 				ctx.DisplayLocal(m, "").Option(REPOS, kit.Join(m.Cmd(REPOS, ice.OptionFields(nfs.PATH)).Sort(nfs.PATH).Appendv(nfs.PATH)))
+				m.Status(mdb.TIME, ice.Info.Make.Time, "file", arg[1], "line", kit.Select("1", arg, 2), "back", "0")
 			}
 		}},
 	})

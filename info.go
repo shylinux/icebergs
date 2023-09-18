@@ -69,12 +69,14 @@ var Info = struct {
 	Index Map
 	Stack map[string]func(m *Message, key string, arg ...Any) Any
 
-	merges   []Any
-	render   map[string]func(*Message, ...Any) string
-	OpenFile func(m *Message, p string) (io.ReadCloser, error)
-	Load     func(m *Message, key ...string) *Message
-	Save     func(m *Message, key ...string) *Message
-	Log      func(m *Message, p, l, s string)
+	merges     []Any
+	render     map[string]func(*Message, ...Any) string
+	OpenFile   func(m *Message, p string) (io.ReadCloser, error)
+	PushStream func(m *Message)
+	PushNotice func(m *Message, arg ...Any)
+	Load       func(m *Message, key ...string) *Message
+	Save       func(m *Message, key ...string) *Message
+	Log        func(m *Message, p, l, s string)
 }{
 	Localhost: true,
 
@@ -84,11 +86,13 @@ var Info = struct {
 	Index: Map{},
 	Stack: map[string]func(m *Message, key string, arg ...Any) Any{},
 
-	render:   map[string]func(*Message, ...Any) string{},
-	OpenFile: func(m *Message, p string) (io.ReadCloser, error) { return miss.OpenFile(p) },
-	Load:     func(m *Message, key ...string) *Message { return m },
-	Save:     func(m *Message, key ...string) *Message { return m },
-	Log:      func(m *Message, p, l, s string) {},
+	render:     map[string]func(*Message, ...Any) string{},
+	OpenFile:   func(m *Message, p string) (io.ReadCloser, error) { return miss.OpenFile(p) },
+	PushStream: func(m *Message) {},
+	PushNotice: func(m *Message, arg ...Any) {},
+	Load:       func(m *Message, key ...string) *Message { return m },
+	Save:       func(m *Message, key ...string) *Message { return m },
+	Log:        func(m *Message, p, l, s string) {},
 }
 
 func AddMergeAction(h ...Any) { Info.merges = append(Info.merges, h...) }

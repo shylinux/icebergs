@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"io"
 	"runtime"
 	"strings"
 
@@ -42,6 +43,9 @@ func init() {
 			REPOS: {Help: "镜像源", Hand: func(m *ice.Message, arg ...string) {
 				switch {
 				case strings.Contains(release(m.Spawn()), ALPINE):
+					ice.Info.PushStream(m)
+					m.Optionv(CMD_OUTPUT).(io.Writer).Write([]byte("\n"))
+					defer ice.Info.PushNotice(m, "toast", "success")
 					m.Cmd(nfs.SAVE, ETC_APK_REPOS, strings.ReplaceAll(m.Cmdx(nfs.CAT, ETC_APK_REPOS), "dl-cdn.alpinelinux.org", "mirrors.tencent.com"))
 					m.Cmdy(SYSTEM, "apk", "update")
 					m.StatusTimeCount()
@@ -49,6 +53,9 @@ func init() {
 			}},
 			"add": {Help: "安装", Hand: func(m *ice.Message, arg ...string) {
 				mdb.ZoneSelect(m, m.Option(CLI)).Table(func(value ice.Maps) {
+					ice.Info.PushStream(m)
+					ice.Info.PushNotice(m, "toast", "process", "", "-1")
+					defer ice.Info.PushNotice(m, "toast", "success")
 					m.Push("res", m.Cmdx(kit.Split(value[CMD])))
 				})
 			}},

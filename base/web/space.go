@@ -186,6 +186,18 @@ func init() {
 				kit.If(mdb.Config(m, ice.MAIN), func(cmd string) { RenderPodCmd(m, "", cmd) }, func() { RenderMain(m) })
 				m.Optionv(ice.MSG_ARGS, kit.Simple(m.Optionv(ice.MSG_ARGS)))
 			}},
+			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
+				if mdb.IsSearchPreview(m, arg) {
+					m.Cmds("", func(value ice.Maps) {
+						switch value[mdb.TYPE] {
+						case MASTER:
+							m.PushSearch(mdb.TEXT, m.Cmdv(SPIDE, value[mdb.NAME], CLIENT_ORIGIN), value)
+						case SERVER:
+							m.PushSearch(mdb.TEXT, m.MergePod(value[mdb.NAME]), value)
+						}
+					})
+				}
+			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case SPACE:
@@ -207,18 +219,6 @@ func init() {
 				m.Cmd("", m.Option(mdb.NAME), ice.EXIT)
 				m.Sleep("1s")
 			}},
-			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				if mdb.IsSearchPreview(m, arg) {
-					m.Cmds("", func(value ice.Maps) {
-						switch value[mdb.TYPE] {
-						case MASTER:
-							m.PushSearch(mdb.TEXT, m.Cmdv(SPIDE, value[mdb.NAME], CLIENT_ORIGIN), value)
-						case SERVER:
-							m.PushSearch(mdb.TEXT, m.MergePod(value[mdb.NAME]), value)
-						}
-					})
-				}
-			}},
 			DOMAIN: {Hand: func(m *ice.Message, arg ...string) { m.Echo(_space_domain(m)) }},
 			LOGIN: {Help: "授权", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(ice.MSG_USERUA, m.Cmdv("", kit.Select(m.Option(mdb.NAME), arg, 0), ice.MSG_USERUA))
@@ -233,7 +233,7 @@ func init() {
 				}
 			}},
 			nfs.PS: {Hand: func(m *ice.Message, arg ...string) { _space_fork(m) }},
-		}, mdb.HashAction(mdb.LIMIT, 1000, mdb.LEAST, 1000, mdb.SHORT, mdb.NAME, mdb.FIELD, "time,type,name,text,module,version", ctx.ACTION, OPEN, REDIAL, kit.Dict("a", 3000, "b", 1000, "c", 1000)), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.LIMIT, 1000, mdb.LEAST, 500, mdb.SHORT, mdb.NAME, mdb.FIELD, "time,type,name,text,module,version", ctx.ACTION, OPEN, REDIAL, kit.Dict("a", 3000, "b", 1000, "c", 1000)), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 {
 				defer m.StatusTimeCount(ice.MAIN, mdb.Config(m, ice.MAIN))
 				m.Option(ice.MSG_USERWEB, tcp.PublishLocalhost(m, m.Option(ice.MSG_USERWEB)))

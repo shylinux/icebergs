@@ -103,6 +103,8 @@ func PushNoticeGrow(m *ice.Message, arg ...ice.Any)  { PushNotice(m, kit.List("g
 func PushStream(m *ice.Message) {
 	m.Options(cli.CMD_OUTPUT, file.NewWriteCloser(func(buf []byte) { PushNoticeGrow(m, string(buf)) }, nil)).ProcessHold(toastContent(m, ice.SUCCESS))
 }
+func init() { ice.Info.PushStream = PushStream }
+func init() { ice.Info.PushNotice = PushNotice }
 
 func Toast(m *ice.Message, text string, arg ...ice.Any) { // [title [duration [progress]]]
 	if len(arg) > 1 {

@@ -56,7 +56,7 @@ const ROUTE = "route"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		ROUTE: {Name: "route space:text cmds:text auto spide cmds build travel monitor prunes", Icon: "usr/icons/route.png", Help: "路由表", Actions: ice.MergeActions(ice.Actions{
+		ROUTE: {Name: "route space:text cmds:text auto spide cmds build travel monitor prunes", Icon: "usr/icons/Podcasts.png", Help: "路由表", Actions: ice.MergeActions(ice.Actions{
 			ice.MAIN: {Help: "首页", Hand: func(m *ice.Message, arg ...string) {
 				ctx.ProcessField(m, CHAT_IFRAME, m.MergePod(""), arg...)
 			}},

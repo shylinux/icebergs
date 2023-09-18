@@ -42,6 +42,9 @@ func _spide_show(m *ice.Message, name string, arg ...string) {
 	method = kit.Select(http.MethodGet, msg.Append(CLIENT_METHOD), method)
 	uri, arg := arg[0], arg[1:]
 	body, head, arg := _spide_body(m, method, arg...)
+	if m.Option("_break") == ice.TRUE {
+		return
+	}
 	if c, ok := body.(io.Closer); ok {
 		defer c.Close()
 	}
@@ -141,15 +144,20 @@ func _spide_part(m *ice.Message, arg ...string) (string, io.Reader) {
 				cache = t
 			}
 		} else if strings.HasPrefix(arg[i+1], mdb.AT) {
-			if s, e := nfs.StatFile(m, arg[i+1][1:]); !m.Warn(e, ice.ErrNotValid) {
+			p := arg[i+1][1:]
+			if s, e := nfs.StatFile(m, p); !m.Warn(e, ice.ErrNotValid) {
 				if s.Size() == size && s.ModTime().Before(cache) {
+					m.Option("_break", ice.TRUE)
+					continue
+				} else if s.Size() == size && !nfs.Exists(m.Spawn(kit.Dict(ice.MSG_FILES, nfs.DiskFile)), p) {
+					m.Option("_break", ice.TRUE)
 					continue
 				}
 				m.Logs(nfs.FIND, LOCAL, s.ModTime(), nfs.SIZE, s.Size(), CACHE, cache, nfs.SIZE, size)
 			}
-			if f, e := nfs.OpenFile(m, arg[i+1][1:]); !m.Warn(e, ice.ErrNotValid, arg[i+1]) {
+			if f, e := nfs.OpenFile(m, p); !m.Warn(e, ice.ErrNotValid, arg[i+1]) {
 				defer f.Close()
-				if p, e := mp.CreateFormFile(arg[i], path.Base(arg[i+1][1:])); !m.Warn(e, ice.ErrNotValid, arg[i+1]) {
+				if p, e := mp.CreateFormFile(arg[i], path.Base(p)); !m.Warn(e, ice.ErrNotValid, arg[i+1]) {
 					if n, e := io.Copy(p, f); !m.Warn(e, ice.ErrNotValid, arg[i+1]) {
 						m.Logs(nfs.LOAD, nfs.FILE, arg[i+1], nfs.SIZE, n)
 					}
@@ -271,8 +279,15 @@ func init() {
 				m.Cmd("", mdb.CREATE, ice.DEV, kit.Select(kit.Select("https://contexts.com.cn", ice.Info.Make.Domain), conf[cli.CTX_DEV]))
 				m.Cmd("", mdb.CREATE, ice.COM, kit.Select("https://contexts.com.cn", conf[cli.CTX_COM]))
 				m.Cmd("", mdb.CREATE, ice.HUB, kit.Select("https://repos.shylinux.com", conf[cli.CTX_HUB]))
-				m.Cmd("", mdb.CREATE, "repos", kit.Select("https://repos.shylinux.com", conf[cli.CTX_HUB]))
+				m.Cmd("", mdb.CREATE, nfs.REPOS, kit.Select("https://repos.shylinux.com", conf[cli.CTX_HUB]))
 				m.Cmd("", mdb.CREATE, ice.SHY, kit.Select(kit.Select("https://shylinux.com", ice.Info.Make.Remote), conf[cli.CTX_SHY]))
+			}},
+			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
+				if mdb.IsSearchPreview(m, arg) {
+					mdb.HashSelectValue(m.Spawn(), func(value ice.Map) {
+						m.PushSearch(mdb.TYPE, LINK, mdb.NAME, kit.Value(value, CLIENT_NAME), mdb.TEXT, kit.Value(value, CLIENT_ORIGIN), value)
+					})
+				}
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch m.Option(ctx.ACTION) {
@@ -290,22 +305,18 @@ func init() {
 					mdb.HashSelectValue(m.Spawn(), func(value ice.Map) { m.Push(kit.Select(ORIGIN, arg, 0), kit.Value(value, CLIENT_ORIGIN)) })
 				}
 			}},
+			mdb.CREATE: {Name: "create name link", Hand: func(m *ice.Message, arg ...string) { _spide_create(m, m.Option(mdb.NAME), m.Option(LINK)) }},
 			HEADER: {Name: "header key* value", Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashModify(m, m.OptionSimple(CLIENT_NAME), kit.Keys(HEADER, m.Option(mdb.KEY)), m.Option(mdb.VALUE))
 			}},
 			COOKIE: {Name: "cookie key* value", Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashModify(m, m.OptionSimple(CLIENT_NAME), kit.Keys(COOKIE, m.Option(mdb.KEY)), m.Option(mdb.VALUE))
 			}},
-			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				if mdb.IsSearchPreview(m, arg) {
-					mdb.HashSelectValue(m.Spawn(), func(value ice.Map) {
-						m.PushSearch(mdb.TYPE, LINK, mdb.NAME, kit.Value(value, CLIENT_NAME), mdb.TEXT, kit.Value(value, CLIENT_ORIGIN), value)
-					})
-				}
-			}},
-			mdb.CREATE: {Name: "create name link", Hand: func(m *ice.Message, arg ...string) { _spide_create(m, m.Option(mdb.NAME), m.Option(LINK)) }},
 			MERGE: {Hand: func(m *ice.Message, arg ...string) {
 				m.Echo(kit.MergeURL2(m.Cmdv("", arg[0], CLIENT_URL), arg[1], arg[2:]))
+			}},
+			PROXY: {Name: "proxy url size cache upload", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(SPIDE, ice.DEV, SPIDE_RAW, http.MethodPost, m.Option("url"), SPIDE_PART, arg[2:])
 			}},
 		}, mdb.HashAction(mdb.SHORT, CLIENT_NAME, mdb.FIELD, "time,client.name,client.url")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 || arg[0] == "" || (len(arg) > 3 && arg[3] == "") {

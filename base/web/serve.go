@@ -58,7 +58,7 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 		r.Header.Set(ice.MSG_USERIP, strings.Split(r.RemoteAddr, nfs.DF)[0])
 	}
 	if m.Logs(r.Header.Get(ice.MSG_USERIP), r.Method, r.URL.String()); r.Method == http.MethodGet {
-		ispod := kit.Contains(r.Header.Get("Referer"), "/chat/pod/", "pod=")
+		ispod := kit.Contains(r.Header.Get("Referer"), "/chat/pod/", "pod=") || kit.Contains(r.URL.String(), "/chat/pod/", "pod=")
 		if msg := m.Spawn(w, r).Options(ice.MSG_USERUA, r.UserAgent()); path.Join(r.URL.Path) == nfs.PS {
 			if !msg.IsCliUA() {
 				if r.URL.Path = kit.Select(nfs.PS, mdb.Config(m, ice.MAIN)); path.Join(r.URL.Path) != nfs.PS {

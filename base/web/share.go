@@ -44,6 +44,12 @@ func _share_proxy(m *ice.Message) {
 	case http.MethodGet:
 		m.RenderDownload(p, m.Option(mdb.TYPE), m.Option(mdb.NAME))
 	case http.MethodPost:
+		msg := m.Cmd(SHARE, m.Option(SHARE))
+		defer m.Cmd(SHARE, mdb.REMOVE, mdb.HASH, m.Option(SHARE))
+		if m.Warn(msg.Append(mdb.TEXT) == "") {
+			break
+		}
+		p := path.Join(ice.VAR_PROXY, msg.Append(mdb.TEXT), msg.Append(mdb.NAME))
 		if _, _, e := m.R.FormFile(UPLOAD); e == nil {
 			m.Cmdy(CACHE, UPLOAD).Cmdy(CACHE, WATCH, m.Option(mdb.HASH), p)
 		}
@@ -157,11 +163,16 @@ func ShareLocalFile(m *ice.Message, arg ...string) {
 		return
 	}
 	pp := path.Join(ice.VAR_PROXY, m.Option(ice.POD), p)
-	cache, size := time.Now().Add(-time.Hour*24), int64(0)
+	size, cache := int64(0), time.Now().Add(-time.Hour*24)
 	if s, e := file.StatFile(pp); e == nil {
-		cache, size = s.ModTime(), s.Size()
+		size, cache = s.Size(), s.ModTime()
+	} else if s, e := file.StatFile(p); e == nil {
+		size, cache = s.Size(), s.ModTime()
 	}
 	kit.If(p == ice.BIN_ICE_BIN, func() { m.Option(ice.MSG_USERROLE, aaa.TECH) })
-	m.Cmd(SPACE, m.Option(ice.POD), SPIDE, ice.DEV, SPIDE_RAW, http.MethodPost, MergeLink(m, PP(SHARE, PROXY)), SPIDE_PART, m.OptionSimple(ice.POD), nfs.PATH, p, nfs.SIZE, size, CACHE, cache.Format(ice.MOD_TIME), UPLOAD, mdb.AT+p)
+	share := m.Cmdx(SHARE, mdb.CREATE, mdb.TYPE, PROXY, mdb.NAME, p, mdb.TEXT, m.Option(ice.POD))
+	defer m.Cmd(SHARE, mdb.REMOVE, mdb.HASH, share)
+	url := tcp.PublishLocalhost(m, MergeLink(m, PP(SHARE, PROXY), SHARE, share))
+	m.Cmd(SPACE, m.Option(ice.POD), SPIDE, PROXY, "url", url, nfs.SIZE, size, CACHE, cache.Format(ice.MOD_TIME), UPLOAD, mdb.AT+p)
 	m.RenderDownload(kit.Select(p, pp, file.ExistsFile(pp)))
 }

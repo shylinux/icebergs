@@ -24,7 +24,7 @@ func init() {
 					})
 				}
 			}},
-			mdb.CREATE: {Hand: func(m *ice.Message, arg ...string) {
+			mdb.CREATE: {Name: "create type name link", Hand: func(m *ice.Message, arg ...string) {
 				m.ProcessRewrite(mdb.HASH, mdb.HashCreate(m, mdb.TYPE, web.LINK, mdb.NAME, kit.ParseURL(m.Option(web.LINK)).Host, m.OptionSimple()))
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {

@@ -118,7 +118,7 @@ func init() {
 							nfs.DirDeepAll(m.Spawn(), nfs.PWD, p, func(value ice.Maps) { push("", value[nfs.PATH]) }, nfs.PATH)
 						}
 						m.Cmd(XTERM).Table(func(value ice.Maps) {
-							push(ctx.INDEX, kit.Join([]string{"web.code.xterm", value[mdb.HASH], kit.Select(value[mdb.TYPE], value[mdb.NAME])}))
+							push(ctx.INDEX, kit.Join([]string{web.CODE_XTERM, value[mdb.HASH], kit.Select(value[mdb.TYPE], value[mdb.NAME])}))
 						})
 						m.Cmd(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND, ice.OptionFields(ctx.INDEX)).Table(func(value ice.Maps) { push(ctx.INDEX, value[ctx.INDEX]) })
 						m.Cmd(mdb.SEARCH, cli.SYSTEM, cli.OPENS, ice.OptionFields("type,name,text")).Sort("type,name,text").Table(func(value ice.Maps) { push(cli.OPENS, value[nfs.NAME]) })

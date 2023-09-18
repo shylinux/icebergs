@@ -39,9 +39,7 @@ func EventsAction(arg ...string) ice.Actions {
 	list := kit.DictList(arg...)
 	return ice.Actions{ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 		for sub := range m.Target().Commands[m.CommandKey()].Actions {
-			kit.If(list[sub] == ice.TRUE, func() {
-				Watch(m, sub)
-			})
+			kit.If(list[sub] == ice.TRUE, func() { Watch(m, sub) })
 		}
 	}}}
 }

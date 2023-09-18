@@ -3,6 +3,7 @@ package nfs
 import (
 	"fmt"
 	"io"
+	"os"
 	"path"
 
 	ice "shylinux.com/x/icebergs"
@@ -10,7 +11,7 @@ import (
 )
 
 func _defs_file(m *ice.Message, name string, text ...string) {
-	if Exists(m, path.Join(m.Option(DIR_ROOT), name)) {
+	if s, e := os.Stat(path.Join(m.Option(DIR_ROOT), name)); e == nil && s.Size() > 0 {
 		return
 	}
 	for i, v := range text {

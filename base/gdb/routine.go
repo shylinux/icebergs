@@ -38,7 +38,7 @@ func init() {
 					}
 				}, m.Option(mdb.NAME))
 			}},
-		}, mdb.StatusHashAction(mdb.FIELD, "time,hash,status,name,cmd"), mdb.ClearOnExitHashAction())},
+		}, mdb.StatusHashAction(mdb.LIMIT, 1000, mdb.LEAST, 500, mdb.FIELD, "time,hash,status,name,cmd"), mdb.ClearOnExitHashAction())},
 	})
 }
 func Go(m *ice.Message, cb ice.Any, arg ...string) {

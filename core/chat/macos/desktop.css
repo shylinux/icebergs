@@ -10,9 +10,11 @@ fieldset.macos.desktop>div.output>fieldset.macos.dock { border:var(--box-border)
 fieldset.macos.desktop>div.output>fieldset.macos.searchs { position:absolute; z-index:100; }
 fieldset.macos.desktop>div.output>fieldset.macos.searchs>form.option>div.item.keyword input { background-color:transparent; width:320px; }
 fieldset.macos.desktop>div.output>fieldset.macos.notifications { border-radius:0; height:calc(100% - 125px); width:250px; overflow:auto; position:absolute; top:25px; left:800px; }
-fieldset.macos.desktop>div.output>fieldset.macos.notifications>div.output>div.item { margin-top:10px; min-height:60px; clear:both; }
-fieldset.macos.desktop>div.output>fieldset.macos.notifications div.item div.title { margin-top:10px; width:132px; overflow:hidden; }
-fieldset.macos.desktop>div.output>fieldset.macos.notifications div.item div.time { font-size:var(--code-font-size); margin-top:10px; width:48px; }
+fieldset.macos.desktop>div.output>fieldset.macos.notifications>div.output>div.item { min-height:60px; clear:both; }
+fieldset.macos.desktop>div.output>fieldset.macos.notifications>div.output>div.item.read { color:var(--disable-fg-color); }
+fieldset.macos.desktop>div.output>fieldset.macos.notifications div.item div.icon img { height:50px; margin:5px; }
+fieldset.macos.desktop>div.output>fieldset.macos.notifications div.item div.title { padding-top:10px; width:132px; overflow:hidden; }
+fieldset.macos.desktop>div.output>fieldset.macos.notifications div.item div.time { font-size:var(--code-font-size); text-align:right; padding-top:10px; width:48px; }
 fieldset.macos.desktop>div.output>fieldset.macos.notifications div.item div.content { width:180px; }
 fieldset.macos.desktop>div.output>div.desktop:not(.select) { display:none; }
 fieldset.macos.desktop>div.output>div.desktop>div.item { color:silver; position:absolute; text-align:center; }

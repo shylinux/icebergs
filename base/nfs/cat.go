@@ -131,6 +131,7 @@ func init() {
 }
 
 type templateMessage interface {
+	Optionv(key string, arg ...ice.Any) ice.Any
 	PrefixKey(...string) string
 	Cmdx(...ice.Any) string
 }
@@ -142,7 +143,11 @@ func TemplateText(m templateMessage, p string) string {
 	return m.Cmdx(CAT, path.Join(m.PrefixKey(), path.Base(p)), kit.Dict(DIR_ROOT, ice.SRC_TEMPLATE))
 }
 func TemplatePath(m templateMessage, arg ...string) string {
-	return path.Join(ice.SRC_TEMPLATE, m.PrefixKey(), path.Join(arg...))
+	if p := path.Join(ice.SRC_TEMPLATE, m.PrefixKey(), path.Join(arg...)); Exists(m, p) {
+		return p
+	} else {
+		return p
+	}
 }
 func IsSourceFile(m *ice.Message, ext string) bool {
 	return mdb.Conf(m, Prefix(CAT), kit.Keym(SOURCE, ext)) == ice.TRUE

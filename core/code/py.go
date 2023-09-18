@@ -25,8 +25,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		PY: {Name: "py path auto", Help: "脚本", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				cli.IsAlpine(m, "python", "python2")
-				cli.IsAlpine(m, "python2")
+				cli.IsAlpine(m, "python", "python3")
 				cli.IsAlpine(m, "python3")
 				cli.IsCentos(m, "python", "python2")
 				cli.IsCentos(m, "python2")

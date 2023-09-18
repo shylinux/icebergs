@@ -74,6 +74,7 @@ var Info = struct {
 	OpenFile   func(m *Message, p string) (io.ReadCloser, error)
 	PushStream func(m *Message)
 	PushNotice func(m *Message, arg ...Any)
+	Inputs     []func(m *Message, arg ...string)
 	Load       func(m *Message, key ...string) *Message
 	Save       func(m *Message, key ...string) *Message
 	Log        func(m *Message, p, l, s string)

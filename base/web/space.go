@@ -175,6 +175,28 @@ const (
 const SPACE = "space"
 
 func init() {
+	ice.Info.Inputs = append(ice.Info.Inputs, func(m *ice.Message, arg ...string) {
+		switch arg[0] {
+		case SPACE:
+			m.Cmd(SPACE, func(value ice.Maps) {
+				kit.If(kit.IsIn(value[mdb.TYPE], WORKER, SERVER), func() { m.Push(arg[0], value[mdb.NAME]) })
+			})
+		case mdb.ICON:
+			m.Cmdy(nfs.DIR, "usr/icons/", nfs.PATH)
+		case ctx.INDEX:
+			if space := m.Option(SPACE); space != "" {
+				m.Options(SPACE, []string{}).Cmdy(SPACE, space, mdb.INPUTS, arg)
+			} else {
+				m.Cmdy(ctx.COMMAND)
+			}
+		case ctx.ARGS:
+			if space := m.Option(SPACE); space != "" {
+				m.Options(SPACE, []string{}).Cmdy(SPACE, space, ctx.COMMAND, mdb.INPUTS, m.Option(ctx.INDEX))
+			} else {
+				m.Cmdy(ctx.COMMAND, mdb.INPUTS, m.Option(ctx.INDEX))
+			}
+		}
+	})
 	Index.MergeCommands(ice.Commands{
 		SPACE: {Name: "space name cmds auto", Help: "空间站", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { aaa.White(m, SPACE, ice.MAIN) }},

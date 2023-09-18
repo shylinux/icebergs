@@ -174,6 +174,7 @@ func (c *Context) Merge(s *Context) *Context {
 			kit.If(action.List == nil, func() { action.List = SplitCmd(action.Name, nil) })
 			kit.If(len(action.List) > 0, func() { cmd.Meta[sub] = action.List })
 		}
+		kit.If(cmd.Name == "", func() { cmd.Name = "list path auto" })
 		kit.If(strings.HasPrefix(cmd.Name, "list"), func() { cmd.Name = strings.Replace(cmd.Name, "list", key, 1) })
 		kit.If(cmd.List == nil, func() { cmd.List = SplitCmd(cmd.Name, cmd.Actions) })
 	}

@@ -3,7 +3,6 @@ package chat
 import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
-	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -48,12 +47,6 @@ func init() {
 				switch arg[0] {
 				case nfs.TEMPLATE:
 					m.Cmdy(TEMPLATE).CutTo(RIVER, arg[0])
-				case web.SPACE:
-					m.Cmdy(web.SPACE).CutTo(mdb.NAME, arg[0])
-				case ctx.INDEX:
-					m.Cmdy(web.Space(m, m.Option(web.SPACE)), ctx.COMMAND)
-				case ctx.ARGS:
-					m.Cmdy(web.Space(m, m.Option(web.SPACE)), ctx.COMMAND, mdb.INPUTS, m.Option(ctx.INDEX))
 				default:
 					mdb.HashInputs(m, arg)
 				}

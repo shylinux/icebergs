@@ -20,7 +20,6 @@ func init() {
 					DeskAppend(m, "usr/icons/Photos.png", web.WIKI_FEEL)
 					DeskAppend(m, "usr/icons/Grapher.png", web.WIKI_DRAW)
 					DeskAppend(m, "usr/icons/Calendar.png", web.TEAM_PLAN)
-					DeskAppend(m, "usr/icons/flows.png", web.CHAT_FLOWS)
 				}
 			}},
 			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { mdb.HashExport(m) }},

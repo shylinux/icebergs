@@ -14,19 +14,7 @@ const IFRAME = "iframe"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		IFRAME: {Name: "iframe hash@key auto safari", Icon: "usr/icons/Safari.png", Help: "浏览器", Actions: ice.MergeActions(ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				if m.Cmd("").Length() == 0 {
-					m.Cmd(web.SPIDE, ice.OptionFields(web.CLIENT_NAME, web.CLIENT_ORIGIN), func(value ice.Maps) {
-						if kit.IsIn(value[web.CLIENT_NAME], "ops", "dev", "com", "shy") {
-							m.Cmd("", mdb.CREATE, kit.Dict(mdb.NAME, value[web.CLIENT_NAME], web.LINK, value[web.CLIENT_ORIGIN]))
-						}
-					})
-				}
-			}},
-			mdb.CREATE: {Name: "create type name link", Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessRewrite(mdb.HASH, mdb.HashCreate(m, mdb.TYPE, web.LINK, mdb.NAME, kit.ParseURL(m.Option(web.LINK)).Host, m.OptionSimple()))
-			}},
+		IFRAME: {Name: "iframe hash@key auto safari", Help: "浏览器", Icon: "usr/icons/Safari.png", Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch mdb.HashInputs(m, arg); arg[0] {
 				case mdb.NAME:
@@ -37,11 +25,13 @@ func init() {
 				case mdb.HASH:
 					m.Cmd(mdb.SEARCH, mdb.FOREACH, "", "type,name,text", func(value ice.Maps) {
 						kit.If(value[mdb.TYPE] == web.LINK, func() {
-							m.Push(arg[0], value[mdb.TEXT])
-							m.Push(mdb.NAME, value[mdb.NAME])
+							m.Push(arg[0], value[mdb.TEXT]).Push(mdb.NAME, value[mdb.NAME])
 						})
 					})
 				}
+			}},
+			mdb.CREATE: {Name: "create type name link", Hand: func(m *ice.Message, arg ...string) {
+				m.ProcessRewrite(mdb.HASH, mdb.HashCreate(m, mdb.TYPE, web.LINK, mdb.NAME, kit.ParseURL(m.Option(web.LINK)).Host, m.OptionSimple()))
 			}},
 			FAVOR_INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
@@ -75,9 +65,6 @@ func init() {
 				}
 			}},
 			web.OPEN: {Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen(m.Option(web.LINK)) }},
-			web.DREAM_CREATE: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd("", mdb.CREATE, kit.Dict(web.LINK, m.MergePod(m.Option(mdb.NAME))))
-			}},
 			"safari": {Help: "本机", Hand: func(m *ice.Message, arg ...string) {
 				if h := kit.Select(m.Option(mdb.HASH), arg, 0); h == "" {
 					cli.Opens(m, "Safari.app")
@@ -85,8 +72,8 @@ func init() {
 					cli.Opens(m, m.Cmd("", h).Append(mdb.LINK))
 				}
 			}},
-		}, mdb.HashAction(mdb.SHORT, web.LINK, mdb.FIELD, "time,hash,type,name,link"), FavorAction()), Hand: func(m *ice.Message, arg ...string) {
-			list := []string{m.MergePodCmd("", "web.wiki.portal", log.DEBUG, m.Option(log.DEBUG))}
+		}, FavorAction(), mdb.HashAction(mdb.SHORT, web.LINK, mdb.FIELD, "time,hash,type,name,link")), Hand: func(m *ice.Message, arg ...string) {
+			list := []string{m.MergePodCmd("", web.WIKI_PORTAL, log.DEBUG, m.Option(log.DEBUG))}
 			list = append(list, web.MergeLink(m, "/chat/portal/", ice.POD, m.Option(ice.MSG_USERPOD), log.DEBUG, m.Option(log.DEBUG)))
 			if mdb.HashSelect(m, arg...); len(arg) == 0 {
 				for _, link := range list {

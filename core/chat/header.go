@@ -1,8 +1,6 @@
 package chat
 
 import (
-	"path"
-
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
@@ -21,8 +19,9 @@ func _header_users(m *ice.Message, arg ...string) {
 		return
 	} else if m.Warn(m.Option(web.SHARE) != "", ice.ErrNotRight, "没有权限") {
 		return
+	} else {
+		m.Cmdy(aaa.USER, mdb.MODIFY, aaa.USERNAME, m.Option(ice.MSG_USERNAME), m.ActionKey(), m.Option(m.ActionKey(), arg[0]))
 	}
-	m.Cmdy(aaa.USER, mdb.MODIFY, aaa.USERNAME, m.Option(ice.MSG_USERNAME), m.ActionKey(), m.Option(m.ActionKey(), arg[0]))
 }
 func _header_share(m *ice.Message, arg ...string) {
 	if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin, "没有登录") {
@@ -35,7 +34,7 @@ func _header_share(m *ice.Message, arg ...string) {
 	m.Push(mdb.NAME, m.Option(mdb.LINK)).PushQRCode(mdb.TEXT, m.Option(mdb.LINK))
 }
 func _header_check(m *ice.Message, arg ...string) bool {
-	m.Option(ice.MAIN, mdb.Conf(m, "web.serve", kit.Keym(ice.MAIN)))
+	m.Option(ice.MAIN, mdb.Conf(m, web.SERVE, kit.Keym(ice.MAIN)))
 	if m.Option(ice.CMD) == aaa.OFFER && m.Option(mdb.HASH) != "" {
 		m.Cmd(aaa.OFFER, m.Option(mdb.HASH), func(value ice.Maps) {
 			aaa.SessAuth(m, kit.Dict(aaa.USERNAME, value[aaa.EMAIL], aaa.USERROLE, aaa.VOID))
@@ -46,21 +45,22 @@ func _header_check(m *ice.Message, arg ...string) bool {
 				return
 			}
 			switch value[mdb.TYPE] {
-			case web.STORM, web.FIELD:
+			case web.FIELD, web.STORM:
 				aaa.SessAuth(m, kit.Dict(value))
 			}
 		})
 	}
 	if m.Option(ice.MSG_USERNAME) != "" {
 		return true
-	} else if ctx.OptionFromConfig(m, SSO) == "" && ctx.OptionFromConfig(m, web.LOGIN) == "" {
-		m.Option(SSO, kit.Format(kit.Dict("serve.icon", "usr/icons/icebergs.jpg", "serve.url", GetSSO(m))))
+	} else if ctx.OptionFromConfig(m, SSO) == "" {
+		m.Option(SSO, kit.Format(kit.Dict("serve.icon", nfs.USR_ICONS_ICEBERGS, "serve.url", GetSSO(m))))
 	}
 	return false
 }
 
 const (
 	TITLE = "title"
+	THEME = "theme"
 	MENUS = "menus"
 
 	HEADER_AGENT = "header.agent"
@@ -69,7 +69,7 @@ const HEADER = "header"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		HEADER: {Name: "header", Help: "标题栏", Actions: ice.Actions{
+		HEADER: {Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT:   {Hand: func(m *ice.Message, arg ...string) { aaa.White(m, HEADER) }},
 			aaa.LOGIN:      {Hand: func(m *ice.Message, arg ...string) {}},
 			aaa.LOGOUT:     {Hand: aaa.SessLogout},
@@ -85,7 +85,7 @@ func init() {
 				}
 			}},
 			aaa.EMAIL: {Name: "email to subject content", Hand: func(m *ice.Message, arg ...string) {
-				if m.Option("to") != aaa.UserEmail(m, "") && !aaa.Right(m, aaa.EMAIL, m.Option("to")) {
+				if m.Option(nfs.TO) != aaa.UserEmail(m, "") && !aaa.Right(m, aaa.EMAIL, m.Option(nfs.TO)) {
 					return
 				}
 				m.Options("volcano", web.UserHost(m), nfs.VERSION, web.RenderVersion(m))
@@ -93,22 +93,20 @@ func init() {
 				m.Cmdy(aaa.EMAIL, aaa.SEND, arg, aaa.CONTENT, nfs.Template(m, "email.html"))
 			}},
 			web.SHARE: {Hand: _header_share},
-			"webpack": {Hand: ctx.CmdHandler("webpack", "build")},
-			"/": {Hand: func(m *ice.Message, arg ...string) {
-				m.Option("language.list", m.Cmd(nfs.DIR, path.Join(ice.SRC_TEMPLATE, m.PrefixKey(), aaa.LANGUAGE), nfs.FILE).Appendv(nfs.FILE))
-				m.Option("theme.list", m.Cmd(nfs.DIR, path.Join(ice.SRC_TEMPLATE, m.PrefixKey(), aaa.THEME), nfs.FILE).Appendv(nfs.FILE))
-				m.Option(ICONS, mdb.Conf(m, "web.chat.icons", kit.Keym(nfs.PATH)))
-				m.Option(nfs.REPOS, m.Cmdv(web.SPIDE, ice.HUB, web.CLIENT_URL))
-				if gdb.Event(m, HEADER_AGENT); !_header_check(m, arg...) {
-					return
-				}
-				msg := m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME))
-				kit.For([]string{aaa.USERNICK, aaa.LANGUAGE, aaa.EMAIL}, func(k string) { m.Option(k, msg.Append(k)) })
-				kit.For([]string{aaa.AVATAR, aaa.BACKGROUND}, func(k string) { m.Option(k, web.RequireFile(m, msg.Append(k))) })
-				kit.If(m.Option(aaa.LANGUAGE) == "", func() { m.Option(aaa.LANGUAGE, kit.Split(m.R.Header.Get(web.AcceptLanguage), ",;")[0]) })
-				m.Option(MENUS, mdb.Config(m, MENUS))
-				m.Echo(mdb.Config(m, TITLE))
-			}},
+		}, web.ApiAction()), Hand: func(m *ice.Message, arg ...string) {
+			m.Option("language.list", m.Cmd(nfs.DIR, nfs.TemplatePath(m, aaa.LANGUAGE)+nfs.PS, nfs.FILE).Appendv(nfs.FILE))
+			m.Option("theme.list", m.Cmd(nfs.DIR, nfs.TemplatePath(m, aaa.THEME)+nfs.PS, nfs.FILE).Appendv(nfs.FILE))
+			m.Option(nfs.REPOS, m.Cmdv(web.SPIDE, nfs.REPOS, web.CLIENT_URL))
+			m.Option(ICONS, mdb.Conf(m, ICONS, kit.Keym(nfs.PATH)))
+			m.Option(MENUS, mdb.Config(m, MENUS))
+			m.Echo(mdb.Config(m, TITLE))
+			if gdb.Event(m, HEADER_AGENT); !_header_check(m, arg...) {
+				return
+			}
+			msg := m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME))
+			kit.For([]string{aaa.USERNICK, aaa.LANGUAGE, aaa.EMAIL}, func(k string) { m.Option(k, msg.Append(k)) })
+			kit.For([]string{aaa.AVATAR, aaa.BACKGROUND}, func(k string) { m.Option(k, web.RequireFile(m, msg.Append(k))) })
+			kit.If(m.Option(aaa.LANGUAGE) == "", func() { m.Option(aaa.LANGUAGE, kit.Split(m.R.Header.Get(web.AcceptLanguage), ",;")[0]) })
 		}},
 	})
 }

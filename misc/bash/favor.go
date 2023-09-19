@@ -17,7 +17,7 @@ func init() {
 		FAVOR: {Name: "favor zone id auto insert", Help: "收藏夹", Actions: ice.MergeActions(ice.Actions{
 			mdb.INSERT: {Name: "insert zone*=demo type=shell name=1 text=pwd pwd=/home"},
 			cli.SYSTEM: {Hand: func(m *ice.Message, arg ...string) {
-				if len(arg) > 0 && arg[0] == ice.RUN {
+				if len(arg) > 0 && arg[0] == ctx.RUN {
 					if msg := mdb.ZoneSelect(m.Spawn(), m.Option(mdb.ZONE), m.Option(mdb.ID)); nfs.Exists(m, msg.Append(cli.PWD)) {
 						m.Option(cli.CMD_DIR, msg.Append(cli.PWD))
 					}

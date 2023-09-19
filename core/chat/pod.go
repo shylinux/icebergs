@@ -18,11 +18,11 @@ const POD = "pod"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		POD: {Actions: ice.MergeActions(ctx.CmdAction(), web.ApiAction(), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {
-			if len(arg) == 0 || kit.Select("", arg, 0) == "" {
-				web.RenderCmd(m, web.SPACE)
+		POD: {Actions: ice.MergeActions(web.ApiAction(), aaa.WhiteAction(), ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
+			if len(arg) == 0 || arg[0] == "" {
+				web.RenderMain(m)
 			} else if strings.HasPrefix(m.Option(ice.MSG_USERUA), "git/") {
-				m.RenderRedirect(m.Cmdv(web.SPACE, arg[0], "web.code.git.repos", nfs.REMOTE, nfs.REMOTE) + "/info/refs?service=" + m.Option("service"))
+				m.RenderRedirect(kit.MergeURL2(m.Cmdv(web.SPACE, arg[0], web.CODE_GIT_REPOS, nfs.REMOTE, nfs.REMOTE), "/info/refs", m.OptionSimple("service")))
 			} else if m.Option(cli.GOOS) != "" && m.Option(cli.GOARCH) != "" {
 				m.RenderDownload(path.Join(ice.USR_LOCAL_WORK, arg[0], ice.USR_PUBLISH, kit.Keys(ice.ICE, m.Option(cli.GOOS), m.Option(cli.GOARCH))))
 			} else if m.IsCliUA() {

@@ -18,7 +18,7 @@ func init() {
 		ICONS: {Actions: ctx.ConfAction(nfs.PATH, "bootstrap-icons/font/bootstrap-icons.css"), Hand: func(m *ice.Message, arg ...string) {
 			m.Cmd(lex.SPLIT, ice.USR_MODULES+mdb.Config(m, nfs.PATH), kit.Dict(lex.SPLIT_SPACE, " {:;}"), func(text string, ls []string) {
 				if len(ls) > 2 && ls[2] == nfs.CONTENT {
-					name := "bi " + strings.TrimPrefix(ls[0], ".")
+					name := "bi " + strings.TrimPrefix(ls[0], nfs.PT)
 					m.Push(mdb.NAME, name).Push(mdb.ICON, kit.Format(`<i class="%s"></i>`, name))
 				}
 			})

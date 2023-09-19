@@ -47,13 +47,13 @@ func Process(m *ice.Message, key string, args ice.Any, arg ...string) {
 	}
 }
 func ProcessField(m *ice.Message, cmd string, args ice.Any, arg ...string) *ice.Message {
-	if cmd = kit.Select(m.ActionKey(), cmd); !kit.HasPrefixList(arg, ice.RUN) {
+	if cmd = kit.Select(m.ActionKey(), cmd); !kit.HasPrefixList(arg, RUN) {
 		if PodCmd(m, COMMAND, cmd) {
 			m.Push(ice.SPACE, m.Option(ice.MSG_USERPOD))
 		} else {
 			m.Cmdy(COMMAND, cmd)
 		}
-		m.Push(ARGS, kit.Format(_process_args(m, args))).Options(ice.MSG_INDEX, m.PrefixKey()).ProcessField(ACTION, m.ActionKey(), ice.RUN)
+		m.Push(ARGS, kit.Format(_process_args(m, args))).Options(ice.MSG_INDEX, m.PrefixKey()).ProcessField(ACTION, m.ActionKey(), RUN)
 	} else {
 		if !PodCmd(m, cmd, arg[1:]) {
 			kit.If(aaa.Right(m, cmd, arg[1:]), func() { m.Cmdy(cmd, arg[1:]) })
@@ -62,8 +62,8 @@ func ProcessField(m *ice.Message, cmd string, args ice.Any, arg ...string) *ice.
 	return m
 }
 func ProcessCommand(m *ice.Message, cmd string, args []string, arg ...string) {
-	if !kit.HasPrefixList(arg, ice.RUN) {
-		m.Cmdy(COMMAND, cmd).Push(ice.ARG, kit.Format(args)).ProcessField(cmd, ice.RUN)
+	if !kit.HasPrefixList(arg, RUN) {
+		m.Cmdy(COMMAND, cmd).Push(ice.ARG, kit.Format(args)).ProcessField(cmd, RUN)
 	} else {
 		m.Cmdy(cmd, arg[1:])
 	}

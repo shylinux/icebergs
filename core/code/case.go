@@ -3,6 +3,7 @@ package code
 import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
@@ -33,7 +34,7 @@ func init() {
 					m.StatusTimeCount(ice.SUCCESS, success)
 					return
 				}
-				if res := kit.UnMarshal(m.Cmdx("", ice.RUN)); m.Option(ice.RES) != "" {
+				if res := kit.UnMarshal(m.Cmdx("", ctx.RUN)); m.Option(ice.RES) != "" {
 					for k, v := range kit.KeyValue(nil, "", kit.UnMarshal(m.Option(ice.RES))) {
 						if v != kit.Value(res, k) {
 							m.Echo(kit.Formats(res))
@@ -43,7 +44,7 @@ func init() {
 				}
 				m.Echo(ice.OK)
 			}},
-			ice.RUN: {Hand: func(m *ice.Message, arg ...string) {
+			ctx.RUN: {Hand: func(m *ice.Message, arg ...string) {
 				m.Option(web.SPIDE_HEADER, web.ContentType, web.ApplicationJSON, web.UserAgent, "Mozilla/5.0")
 				m.Cmdy(web.SPIDE, m.Option(ice.DEV), web.SPIDE_RAW, m.Option(ice.CMD), m.Option(cli.API), web.SPIDE_DATA, m.Option(ice.ARG)).ProcessInner()
 				m.StatusTime(nfs.SCRIPT, `curl "`+kit.MergeURL2(m.Cmd(web.SPIDE, m.Option(ice.DEV)).Append(web.CLIENT_ORIGIN), m.Option(cli.API))+`" -H "Content-Type: application/json"`+` -d '`+m.Option(ice.ARG)+`'`)
@@ -52,7 +53,7 @@ func init() {
 			if len(arg) == 0 {
 				m.Cmdy(web.SPIDE).RenameAppend(web.CLIENT_NAME, ice.DEV, web.CLIENT_URL, "address")
 			} else if mdb.ZoneSelect(m, arg[1:]...); len(arg) > 1 {
-				m.PushAction(ice.RUN, cli.CHECK).Action(cli.CHECK)
+				m.PushAction(ctx.RUN, cli.CHECK).Action(cli.CHECK)
 			}
 		}},
 	})

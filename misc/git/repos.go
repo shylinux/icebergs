@@ -304,7 +304,7 @@ func _repos_total(m *ice.Message, p string, repos *git.Repository, stats map[str
 	return nil
 }
 func _repos_inner(m *ice.Message, _repos_path func(m *ice.Message, p string, arg ...string) string, arg ...string) {
-	if len(arg) == 0 || arg[0] != ice.RUN {
+	if len(arg) == 0 || arg[0] != ctx.RUN {
 		arg = []string{path.Join(arg[:3]...) + nfs.PS, kit.Select("README.md", arg, 3)}
 	} else if kit.Select("", arg, 1) != ctx.ACTION {
 		if ls := kit.Split(path.Join(m.Option(nfs.DIR_ROOT), arg[1]), nfs.PS); len(ls) < 2 || ls[2] == INDEX {

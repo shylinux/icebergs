@@ -30,7 +30,7 @@ func init() {
 				).ProcessHold()
 				web.ToastSuccess(m, SEND)
 			}},
-			ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
+			ctx.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(ice.POD, m.Option("_pod"))
 				m.Option(ice.MSG_USERPOD, m.Option("_pod"))
 				if aaa.Right(m, arg) && !ctx.PodCmd(m, arg) {

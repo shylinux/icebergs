@@ -79,7 +79,7 @@ func init() {
 					_run_action(m, cmd, m.Results(), arg...)
 				})
 			}},
-			ice.RUN: {Hand: func(m *ice.Message, arg ...string) {
+			ctx.RUN: {Hand: func(m *ice.Message, arg ...string) {
 				if !ctx.PodCmd(m, arg) && aaa.Right(m, arg) {
 					m.Cmdy(arg)
 				}

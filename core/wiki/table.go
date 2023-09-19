@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/ctx"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -50,7 +51,7 @@ const TABLE = "table"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		TABLE: {Name: "table text", Help: "表格", Actions: ice.MergeActions(ice.Actions{
-			ice.RUN: {Hand: func(m *ice.Message, arg ...string) { _table_run(m, arg...) }},
+			ctx.RUN: {Hand: func(m *ice.Message, arg ...string) { _table_run(m, arg...) }},
 		}), Hand: func(m *ice.Message, arg ...string) { _table_show(m, arg[0], arg[1:]...) }},
 	})
 }

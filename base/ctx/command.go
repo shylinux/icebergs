@@ -115,7 +115,7 @@ func Command(m *ice.Message, arg ...string) {
 	kit.If(!PodCmd(m, COMMAND, arg), func() { m.Cmdy(COMMAND, arg) })
 }
 func CmdAction(args ...ice.Any) ice.Actions {
-	return ice.Actions{ice.CTX_INIT: mdb.AutoConfig(args...), ice.RUN: {Hand: Run}, COMMAND: {Hand: Command}}
+	return ice.Actions{ice.CTX_INIT: mdb.AutoConfig(args...), RUN: {Hand: Run}, COMMAND: {Hand: Command}}
 }
 func CmdHandler(args ...ice.Any) ice.Handler {
 	return func(m *ice.Message, arg ...string) { m.Cmdy(args...) }
@@ -123,7 +123,7 @@ func CmdHandler(args ...ice.Any) ice.Handler {
 func CmdList(m *ice.Message) *ice.Message {
 	return m.Cmdy(COMMAND, mdb.SEARCH, COMMAND, ice.OptionFields(INDEX))
 }
-func CmdInputs(m *ice.Message, arg ...string) {
+func CmdInputs(m *ice.Message, arg ...string) *ice.Message {
 	switch arg[0] {
 	case INDEX:
 		m.Cmdy(COMMAND, mdb.SEARCH, COMMAND, ice.OptionFields(INDEX))
@@ -132,6 +132,7 @@ func CmdInputs(m *ice.Message, arg ...string) {
 			m.Cmdy(m.Option(INDEX))
 		}
 	}
+	return m
 }
 
 func IsOrderCmd(key string) bool { return key[0] == '/' || key[0] == '_' }

@@ -16,8 +16,8 @@ const SSO = "sso"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		web.P(SSO): {Name: "/sso", Help: "授权", Actions: aaa.WhiteAction(), Hand: func(m *ice.Message, arg ...string) {
-			if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin) || m.Warn(m.Option(cli.BACK) == "", ice.ErrNotValid) {
+		SSO: {Actions: ice.MergeActions(web.ApiAction(), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {
+			if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin) || m.Warn(m.Option(web.SPACE) == "", ice.ErrNotValid) || m.Warn(m.Option(cli.BACK) == "", ice.ErrNotValid) {
 				web.RenderMain(m)
 				return
 			}
@@ -34,5 +34,5 @@ func GetSSO(m *ice.Message) string {
 		return ""
 	}
 	ls := strings.Split(kit.ParseURL(link).Path, nfs.PS)
-	return kit.MergeURL2(link, web.P(CHAT, SSO), web.SPACE, kit.Select("", ls, 3), cli.BACK, m.R.Header.Get(web.Referer))
+	return kit.MergeURL2(link, web.PP(CHAT, SSO), web.SPACE, kit.Select("", ls, 3), cli.BACK, m.R.Header.Get(web.Referer))
 }

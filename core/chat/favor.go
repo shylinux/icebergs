@@ -35,11 +35,9 @@ const FAVOR = "favor"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		FAVOR: {Name: "favor hash auto create upload getClipboardData", Help: "收藏夹", Actions: ice.MergeActions(ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { mdb.HashImport(m) }},
-			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { mdb.HashExport(m) }},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				if arg[0] == mdb.FOREACH {
-					m.Cmd("", ice.OptionFields("")).Table(func(value ice.Maps) {
+				if mdb.IsSearchPreview(m, arg) {
+					m.Cmds("", func(value ice.Maps) {
 						if arg[1] == "" || arg[1] == value[mdb.TYPE] || strings.Contains(value[mdb.TEXT], arg[1]) {
 							m.PushSearch(value)
 						}
@@ -53,7 +51,7 @@ func init() {
 				case mdb.NAME:
 					switch m.Option(mdb.TYPE) {
 					case ctx.INDEX:
-						m.Copy(m.Cmd(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND, arg[1:], ice.OptionFields(ctx.INDEX)).RenameAppend(ctx.INDEX, arg[0]))
+						ctx.CmdInputs(m, m.Option(mdb.TYPE)).RenameAppend(ctx.INDEX, arg[0])
 						return
 					}
 				}
@@ -74,7 +72,7 @@ func init() {
 				m.Cmd("", mdb.CREATE, m.OptionSimple(mdb.TYPE, mdb.NAME, mdb.TEXT))
 			}},
 			web.DOWNLOAD: {Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessOpen(web.MergeURL2(m, web.SHARE_LOCAL+m.Option(mdb.TEXT), "filename", m.Option(mdb.NAME)))
+				m.ProcessOpen(web.MergeURL2(m, web.SHARE_LOCAL+m.Option(mdb.TEXT), nfs.FILENAME, m.Option(mdb.NAME)))
 			}},
 			ctx.DISPLAY: {Help: "预览", Hand: func(m *ice.Message, arg ...string) {
 				if link := web.SHARE_LOCAL + m.Option(mdb.TEXT); _favor_is_image(m, m.Option(mdb.NAME), m.Option(mdb.TYPE)) {
@@ -86,23 +84,23 @@ func init() {
 				}
 				m.ProcessInner()
 			}},
-			ctx.INDEX: {Help: "命令", Hand: func(m *ice.Message, arg ...string) {
-				msg := mdb.HashSelects(m.Spawn(), m.Option(mdb.HASH))
-				ls := kit.Split(msg.Option(mdb.TEXT))
-				ctx.ProcessField(m, ls[0], ls[1:], arg...)
-			}},
 			"vimer": {Help: "源码", Hand: func(m *ice.Message, arg ...string) {
 				ctx.Process(m, "", nfs.SplitPath(m, m.Option(mdb.TEXT)), arg...)
 			}},
 			"xterm": {Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 				ctx.Process(m, "", []string{mdb.TYPE, m.Option(mdb.TEXT), mdb.NAME, m.Option(mdb.NAME), mdb.TEXT, ""}, arg...)
 			}},
-			cli.OPENS: {Hand: func(m *ice.Message, arg ...string) { cli.Opens(m, m.Option(mdb.TEXT)) }},
-			ice.RUN: {Hand: func(m *ice.Message, arg ...string) {
+			ctx.INDEX: {Help: "命令", Hand: func(m *ice.Message, arg ...string) {
+				msg := mdb.HashSelects(m.Spawn(), m.Option(mdb.HASH))
+				ls := kit.Split(msg.Option(mdb.TEXT))
+				ctx.ProcessField(m, ls[0], ls[1:], arg...)
+			}},
+			ctx.RUN: {Hand: func(m *ice.Message, arg ...string) {
 				m.Option(mdb.TYPE, mdb.HashSelects(m.Spawn(), m.Option(mdb.HASH)).Append(mdb.TYPE))
 				ctx.Run(m, arg...)
 			}},
-		}, ctx.CmdAction(), mdb.ImportantHashAction()), Hand: func(m *ice.Message, arg ...string) {
+			cli.OPENS: {Hand: func(m *ice.Message, arg ...string) { cli.Opens(m, m.Option(mdb.TEXT)) }},
+		}, ctx.CmdAction(), mdb.ImportantHashAction(), mdb.ExportHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 && arg[0] == ctx.ACTION {
 				m.Option(mdb.TYPE, mdb.HashSelects(m.Spawn(), m.Option(mdb.HASH)).Append(mdb.TYPE))
 				gdb.Event(m, FAVOR_ACTION, arg)

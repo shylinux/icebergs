@@ -8,6 +8,7 @@ import (
 	"sync/atomic"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -59,7 +60,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		BENCH: {Name: "bench zone id auto insert", Help: "压测", Actions: ice.MergeActions(ice.Actions{
 			mdb.INSERT: {Name: "insert zone*=demo type*=http,redis name=demo text*='http://localhost:9020/chat/cmd/run/web.chat.favor' nconn=10 nreqs=100"},
-			ice.RUN: {Hand: func(m *ice.Message, arg ...string) {
+			ctx.RUN: {Hand: func(m *ice.Message, arg ...string) {
 				switch m.Option(mdb.TYPE) {
 				case HTTP:
 					_bench_http(m, m.Option(mdb.TEXT))
@@ -68,7 +69,7 @@ func init() {
 				}
 			}},
 		}, mdb.ZoneAction(mdb.FIELD, "time,id,type,name,text,nconn,nreqs")), Hand: func(m *ice.Message, arg ...string) {
-			mdb.ZoneSelect(m, arg...).PushAction(kit.Select(ice.RUN, mdb.REMOVE, len(arg) == 0))
+			mdb.ZoneSelect(m, arg...).PushAction(kit.Select(ctx.RUN, mdb.REMOVE, len(arg) == 0))
 		}},
 	})
 }

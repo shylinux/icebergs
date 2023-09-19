@@ -47,8 +47,7 @@ func _action_share(m *ice.Message, arg ...string) {
 	switch msg := _action_auth(m, arg[0]); msg.Append(mdb.TYPE) {
 	case web.STORM:
 		if len(arg) == 1 {
-			m.Push(TITLE, msg.Append(TITLE))
-			m.Push(THEME, msg.Append(THEME))
+			m.Push(TITLE, msg.Append(TITLE)).Push(THEME, msg.Append(THEME))
 			_action_list(m, msg.Append(web.RIVER), msg.Append(web.STORM))
 			break
 		}
@@ -56,42 +55,36 @@ func _action_share(m *ice.Message, arg ...string) {
 	case web.FIELD:
 		m.Option(ice.MSG_USERPOD, kit.Keys(m.Option(ice.MSG_USERPOD), msg.Append(ice.POD)))
 		if len(arg) == 1 {
-			m.Push(TITLE, msg.Append(TITLE))
-			m.Push(THEME, msg.Append(THEME))
-			m.Push(ctx.ARGS, msg.Append(mdb.TEXT))
+			m.Push(TITLE, msg.Append(TITLE)).Push(THEME, msg.Append(THEME))
 			m.Cmdy(web.Space(m, msg.Append(ice.POD)), ctx.COMMAND, msg.Append(mdb.NAME))
+			m.Push(ctx.ARGS, msg.Append(mdb.TEXT))
 			break
 		}
 		m.Cmdy(web.Space(m, msg.Append(ice.POD)), msg.Append(mdb.NAME), arg[2:])
 	}
 }
 
-const (
-	THEME = "theme"
-)
 const ACTION = "action"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		ACTION: {Name: "action", Help: "工作台", Actions: ice.MergeActions(ice.Actions{
+		ACTION: {Actions: ice.MergeActions(ice.Actions{
 			mdb.MODIFY: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(mdb.MODIFY, RIVER, _storm_key(m), mdb.LIST, m.OptionSimple(mdb.ID), arg)
 			}},
 			web.SHARE: {Hand: func(m *ice.Message, arg ...string) { _action_share(m, arg...) }},
-			"/": {Hand: func(m *ice.Message, arg ...string) {
-				if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin, arg) {
-					return
-				}
-				if m.Option(ice.MSG_USERPOD) == "" && m.Warn(!_river_right(m, arg[0]), ice.ErrNotRight, arg) {
-					return
-				}
-				if len(arg) == 2 {
-					ctx.OptionFromConfig(m, MENUS)
-					_action_list(m, arg[0], arg[1])
-				} else {
-					_action_exec(m, arg[0], arg[1], arg[2], arg[3:]...)
-				}
-			}},
-		}, ctx.CmdAction(), aaa.WhiteAction(web.SHARE, ctx.COMMAND, ice.RUN))},
+		}, web.ApiAction(), aaa.WhiteAction(web.SHARE, ctx.RUN, ctx.COMMAND), ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
+			if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin, arg) {
+				return
+			} else if m.Warn(!_river_right(m, arg[0]), ice.ErrNotRight, arg) {
+				return
+			}
+			if len(arg) == 2 {
+				ctx.OptionFromConfig(m, MENUS)
+				_action_list(m, arg[0], arg[1])
+			} else {
+				_action_exec(m, arg[0], arg[1], arg[2], arg[3:]...)
+			}
+		}},
 	})
 }

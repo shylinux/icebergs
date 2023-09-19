@@ -15,13 +15,9 @@ const FOOTER = "footer"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		FOOTER: {Name: "footer", Help: "状态栏", Actions: ice.MergeActions(ice.Actions{
-			ice.RUN: {Hand: func(m *ice.Message, arg ...string) {
-				if aaa.Right(m, arg) {
-					if m.Cmdy(arg); m.IsErrNotFound() {
-						m.RenderResult(m.Cmdx(cli.SYSTEM, arg))
-					}
-				}
+		FOOTER: {Actions: ice.MergeActions(ice.Actions{
+			ice.HELP: {Hand: func(m *ice.Message, arg ...string) {
+				ctx.ProcessField(m, web.WIKI_WORD, []string{ice.SRC_DOCUMENT + arg[0] + "/list.shy"}, arg...)
 			}},
 			nfs.SCRIPT: {Hand: func(m *ice.Message, arg ...string) {
 				ctx.ProcessField(m, web.CODE_VIMER, func() []string {
@@ -34,12 +30,15 @@ func init() {
 			ctx.CONFIG: {Hand: func(m *ice.Message, arg ...string) {
 				ctx.ProcessField(m, ctx.CONFIG, arg, arg...)
 			}},
-			"help": {Hand: func(m *ice.Message, arg ...string) {
-				ctx.ProcessField(m, web.WIKI_WORD, []string{"src/document/" + arg[0] + "/list.shy"}, arg...)
+			ctx.RUN: {Hand: func(m *ice.Message, arg ...string) {
+				if aaa.Right(m, arg) {
+					if m.Cmdy(arg); m.IsErrNotFound() {
+						m.RenderResult(m.Cmdx(cli.SYSTEM, arg))
+					}
+				}
 			}},
-			"/": {Hand: func(m *ice.Message, arg ...string) {
-				m.Result(kit.Select(mdb.Config(m, TITLE), ice.Info.Make.Email))
-			}},
-		}, ctx.CmdAction(), aaa.WhiteAction(ctx.COMMAND, ice.RUN))},
+		}, web.ApiAction(), aaa.WhiteAction(ctx.RUN, ctx.COMMAND), ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
+			m.Result(kit.Select(ice.Info.Make.Email, mdb.Config(m, TITLE)))
+		}},
 	})
 }

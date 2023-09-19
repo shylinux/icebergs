@@ -24,6 +24,7 @@ const (
 
 	HTTPS = "https"
 	HTTP  = "http"
+	HELP  = "help"
 	MAIN  = "main"
 	AUTO  = "auto"
 	LIST  = "list"
@@ -177,6 +178,7 @@ const ( // MSG
 	MSG_CMDS   = "cmds"
 	MSG_FIELDS = "fields"
 	MSG_SESSID = "sessid"
+	MSG_METHOD = "method"
 
 	MSG_DETAIL = "detail"
 	MSG_OPTION = "option"

@@ -26,7 +26,7 @@ func init() {
 		SYNC: {Name: "sync id auto page export import", Help: "同步流", Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(FAVOR, mdb.INPUTS, arg) }},
 			cli.SYSTEM: {Hand: func(m *ice.Message, arg ...string) {
-				if len(arg) > 0 && arg[0] == ice.RUN {
+				if len(arg) > 0 && arg[0] == ctx.RUN {
 					if msg := mdb.ListSelect(m.Spawn(), m.Option(mdb.ID)); nfs.Exists(m, msg.Append(cli.PWD)) {
 						m.Option(cli.CMD_DIR, msg.Append(cli.PWD))
 					}

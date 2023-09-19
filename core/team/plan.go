@@ -58,8 +58,8 @@ func init() {
 		PLAN: {Name: "plan scale=month,day,week,month,year,long begin_time@date list prev next", Icon: "usr/icons/Calendar.png", Help: "计划表", Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(TODO, mdb.INPUTS, arg) }},
 			mdb.PLUGIN: {Name: "plugin extra.index extra.args", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(TASK, mdb.MODIFY, arg) }},
-			ice.RUN: {Hand: func(m *ice.Message, arg ...string) {
-				if m.RenameOption(TASK_POD, ice.POD); ctx.PodCmd(m, m.PrefixKey(), ice.RUN, arg) {
+			ctx.RUN: {Hand: func(m *ice.Message, arg ...string) {
+				if m.RenameOption(TASK_POD, ice.POD); ctx.PodCmd(m, m.PrefixKey(), ctx.RUN, arg) {
 					return
 				}
 				if cmd := m.CmdAppend(TASK, kit.Slice(arg, 0, 2), ctx.INDEX); cmd != "" {

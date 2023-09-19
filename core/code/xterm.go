@@ -14,6 +14,7 @@ import (
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/ssh"
 	"shylinux.com/x/icebergs/base/web"
+	"shylinux.com/x/icebergs/base/web/html"
 	"shylinux.com/x/icebergs/misc/xterm"
 	kit "shylinux.com/x/toolkits"
 )
@@ -67,7 +68,7 @@ func _xterm_echo(m *ice.Message, h string, str string) {
 }
 func _xterm_cmds(m *ice.Message, h string, cmd string, arg ...ice.Any) {
 	kit.If(cmd != "", func() { _xterm_get(m, h).Writeln(cmd, arg...) })
-	ctx.ProcessHold(m)
+	m.ProcessHold()
 }
 
 const XTERM = "xterm"
@@ -103,7 +104,7 @@ func init() {
 				case nfs.FILE:
 					push := func(arg ...string) { m.Push(nfs.FILE, strings.Join(arg, nfs.DF)) }
 					m.Cmd("", func(value ice.Maps) {
-						kit.If(value[mdb.TYPE] == web.LAYOUT, func() { push(web.LAYOUT, value[mdb.HASH], value[mdb.NAME]) })
+						kit.If(value[mdb.TYPE] == html.LAYOUT, func() { push(html.LAYOUT, value[mdb.HASH], value[mdb.NAME]) })
 					})
 					m.Cmd("", mdb.INPUTS, mdb.TYPE, func(value ice.Maps) { push(ssh.SHELL, value[mdb.TYPE]) })
 					m.Cmd(nfs.CAT, kit.HomePath(".bash_history"), func(text string) { push(text) })
@@ -114,16 +115,16 @@ func init() {
 			mdb.CREATE: {Hand: func(m *ice.Message, arg ...string) {
 				m.ProcessRewrite(mdb.HASH, mdb.HashCreate(m, arg))
 			}},
-			web.RESIZE: {Hand: func(m *ice.Message, arg ...string) {
+			html.RESIZE: {Hand: func(m *ice.Message, arg ...string) {
 				_xterm_get(m, "").Setsize(m.OptionDefault("rows", "24"), m.OptionDefault("cols", "80"))
 			}},
-			web.INPUT: {Hand: func(m *ice.Message, arg ...string) {
+			html.INPUT: {Hand: func(m *ice.Message, arg ...string) {
 				if b, e := base64.StdEncoding.DecodeString(strings.Join(arg, "")); !m.Warn(e) {
 					_xterm_get(m, "").Write(b)
 				}
 			}},
-			web.OUTPUT: {Help: "全屏", Hand: func(m *ice.Message, arg ...string) {
-				web.ProcessPodCmd(m, "", "", m.OptionSimple(mdb.HASH), ctx.STYLE, web.OUTPUT)
+			html.OUTPUT: {Help: "全屏", Hand: func(m *ice.Message, arg ...string) {
+				web.ProcessPodCmd(m, "", "", m.OptionSimple(mdb.HASH), ctx.STYLE, html.OUTPUT)
 			}},
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				kit.Switch(m.Option(mdb.TYPE), kit.Simple(web.SERVER, web.WORKER), func() { m.PushButton(kit.Dict(m.CommandKey(), "终端")) })
@@ -138,7 +139,7 @@ func init() {
 			}},
 			"install": {Help: "安装", Hand: func(m *ice.Message, arg ...string) {
 				_xterm_get(m, kit.Select("", arg, 0)).Write([]byte(m.Cmdx(PUBLISH, ice.CONTEXTS, ice.APP, kit.Dict("format", "raw")) + ice.NL))
-				ctx.ProcessHold(m)
+				m.ProcessHold()
 			}},
 			"terminal": {Help: "本机", Hand: func(m *ice.Message, arg ...string) {
 				if h := kit.Select(m.Option(mdb.HASH), arg, 0); h == "" {
@@ -154,7 +155,7 @@ func init() {
 				if m.Length() == 0 {
 					m.Action(mdb.CREATE)
 				} else {
-					m.PushAction(web.OUTPUT, mdb.REMOVE).Action(mdb.CREATE, mdb.PRUNES, "terminal")
+					m.PushAction(html.OUTPUT, mdb.REMOVE).Action(mdb.CREATE, mdb.PRUNES, "terminal")
 				}
 			} else {
 				if m.Length() == 0 {

@@ -66,6 +66,8 @@ const (
 	YELLOW = "yellow"
 	RANDOM = "random"
 	GLASS  = "#0000"
+	LIGHT  = "light"
+	DARK   = "dark"
 )
 
 func Color(m *ice.Message, c string, str ice.Any) string {

@@ -112,7 +112,7 @@ const (
 	LINUX   = "linux"
 	MACOS   = "macos"
 	DARWIN  = "darwin"
-	WINDOWS = "windows"
+	WINDOWS = ice.WINDOWS
 )
 const (
 	PATH  = "PATH"
@@ -129,16 +129,13 @@ const (
 	CTX_HUB = "ctx_hub"
 	CTX_DEV = "ctx_dev"
 	CTX_OPS = "ctx_ops"
-	CTX_ARG = "ctx_arg"
 	CTX_PID = "ctx_pid"
 	CTX_LOG = "ctx_log"
 	CTX_POD = "ctx_pod"
 	CTX_ENV = "ctx_env"
-
-	CTX_DAEMON = "ctx_daemon"
 )
 
-var ENV_LIST = []string{TZ, LANG, TERM, SHELL, CTX_SHY, CTX_HUB, CTX_COM, CTX_DEV, CTX_OPS, CTX_ARG, CTX_PID, CTX_DAEMON}
+var ENV_LIST = []string{TZ, LANG, TERM, SHELL, CTX_SHY, CTX_HUB, CTX_COM, CTX_DEV, CTX_OPS, CTX_PID}
 
 const (
 	HOSTNAME = "hostname"
@@ -183,6 +180,10 @@ func init() {
 				kit.If(len(arg) > 0, func() { runtime.GOMAXPROCS(kit.Int(mdb.Conf(m, RUNTIME, kit.Keys(HOST, MAXPROCS), arg[0]))) })
 				m.Echo("%d", runtime.GOMAXPROCS(0))
 			}},
+			aaa.ROLE: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(aaa.ROLE, func(value ice.Maps) { m.Push(mdb.KEY, kit.Keys(value[aaa.ROLE], value[mdb.ZONE], value[mdb.KEY])) })
+				ctx.DisplayStorySpide(m.Options(nfs.DIR_ROOT, "ice."), mdb.FIELD, mdb.KEY, lex.SPLIT, nfs.PT)
+			}},
 			API: {Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) > 1 {
 					m.Cmdy(ctx.COMMAND, "web.code.inner").Push(ctx.ARGS, kit.Format(nfs.SplitPath(m, m.Option(nfs.FILE))))
@@ -205,10 +206,21 @@ func init() {
 				m.OptionFields(ctx.INDEX, mdb.NAME, mdb.HELP, nfs.FILE)
 				m.Cmdy(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND).StatusTimeCount()
 			}},
-			"mod": {Hand: func(m *ice.Message, arg ...string) {
+			MOD: {Hand: func(m *ice.Message, arg ...string) {
 				kit.For(ice.Info.Gomod, func(k string, v string) { m.Push(nfs.MODULE, k).Push(nfs.VERSION, v) })
 				m.StatusTimeCount()
 			}},
+			ENV: {Hand: func(m *ice.Message, arg ...string) {
+				kit.For(os.Environ(), func(v string) {
+					ls := strings.SplitN(v, mdb.EQ, 2)
+					m.Push(mdb.NAME, ls[0]).Push(mdb.VALUE, ls[1])
+				})
+				m.StatusTimeCount().Sort(mdb.NAME)
+			}},
+			nfs.PATH: {Hand: func(m *ice.Message, arg ...string) {
+				kit.For(_path_split(os.Getenv(PATH)), func(p string) { m.Push(nfs.PATH, p) })
+			}},
+			"chain": {Hand: func(m *ice.Message, arg ...string) { m.Echo(m.FormatChain()) }},
 			"routine": {Hand: func(m *ice.Message, arg ...string) {
 				status := map[string]int{}
 				buf := make([]byte, 4096*4096)
@@ -217,7 +229,7 @@ func init() {
 				for _, v := range bytes.Split(buf, []byte(lex.NL+lex.NL)) {
 					ls := bytes.Split(v, []byte(lex.NL))
 					if ls := strings.SplitN(string(ls[0]), " ", 3); len(ls) > 0 {
-						m.Push(mdb.ID, ls[1]).Push("status", ls[2])
+						m.Push(mdb.ID, ls[1]).Push(mdb.STATUS, ls[2])
 						status[kit.Split(string(ls[2]), " []:")[0]]++
 					}
 					for i := 1; i < len(ls); i += 2 {
@@ -233,17 +245,6 @@ func init() {
 				m.StatusTimeCount(status, "GOMAXPROCS", runtime.GOMAXPROCS(0), "NumGC", stats.NumGC, "Alloc", kit.FmtSize(int64(stats.Alloc)), "Sys", kit.FmtSize(int64(stats.Sys)))
 				m.Echo("%v", string(buf))
 			}},
-			ENV: {Hand: func(m *ice.Message, arg ...string) {
-				kit.For(os.Environ(), func(v string) {
-					ls := strings.SplitN(v, mdb.EQ, 2)
-					m.Push(mdb.NAME, ls[0]).Push(mdb.VALUE, ls[1])
-				})
-				m.StatusTimeCount().Sort(mdb.NAME)
-			}},
-			nfs.PATH: {Hand: func(m *ice.Message, arg ...string) {
-				kit.For(_path_split(os.Getenv(PATH)), func(p string) { m.Push(nfs.PATH, p) })
-			}},
-			"chain": {Hand: func(m *ice.Message, arg ...string) { m.Echo(m.FormatChain()) }},
 			"upgrade": {Help: "升级", Hand: func(m *ice.Message, arg ...string) {
 				if nfs.Exists(m, ".git") {
 					m.Cmdy("web.code.compile")
@@ -252,17 +253,13 @@ func init() {
 				}
 			}},
 			RESTART: {Help: "重启", Hand: func(m *ice.Message, arg ...string) {
-				m.Go(func() { m.Sleep("30ms", ice.EXIT, 1) })
+				m.Go(func() { m.Sleep30ms(ice.EXIT, 1) })
 			}},
 			"logs": {Help: "日志", Hand: func(m *ice.Message, arg ...string) {
 				OpenCmds(m, kit.Format("cd %s", kit.Path("")), "tail -f var/log/bench.log")
 			}},
 			"conf": {Help: "配置", Hand: func(m *ice.Message, arg ...string) {
 				OpenCmds(m, kit.Format("cd %s", kit.Path("")), "vim etc/init.shy")
-			}},
-			aaa.ROLE: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(aaa.ROLE, func(value ice.Maps) { m.Push(mdb.KEY, kit.Keys(value[aaa.ROLE], value[mdb.ZONE], value[mdb.KEY])) })
-				ctx.DisplayStorySpide(m.Options(nfs.DIR_ROOT, "ice."), mdb.FIELD, mdb.KEY, lex.SPLIT, nfs.PT)
 			}},
 		}, ctx.CmdAction(), ctx.ConfAction("")), Hand: func(m *ice.Message, arg ...string) {
 			kit.If(len(arg) > 0 && arg[0] == BOOTINFO, func() { arg = arg[1:] })

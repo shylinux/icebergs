@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os/exec"
 	"path"
-	"runtime"
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
@@ -14,7 +13,6 @@ import (
 	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
-	"shylinux.com/x/icebergs/base/tcp"
 	kit "shylinux.com/x/toolkits"
 	"shylinux.com/x/toolkits/file"
 )
@@ -156,15 +154,6 @@ const SYSTEM = "system"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		SYSTEM: {Name: "system cmd", Help: "系统命令", Actions: ice.MergeActions(ice.Actions{
-			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				if runtime.GOOS == DARWIN && tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) {
-					if arg[0] == m.CommandKey() && arg[1] == OPENS {
-						for _, p := range []string{"/Applications", "/System/Applications", "/System/Applications/Utilities"} {
-							m.Cmd(nfs.DIR, p, mdb.NAME, func(value ice.Maps) { m.PushSearch(mdb.TEXT, path.Join(p, value[mdb.NAME]), value) })
-						}
-					}
-				}
-			}},
 			nfs.PUSH: {Hand: func(m *ice.Message, arg ...string) {
 				for _, p := range arg {
 					if !strings.Contains(m.Cmdx(nfs.CAT, ice.ETC_PATH), p) {
@@ -173,20 +162,16 @@ func init() {
 				}
 				m.Cmdy(nfs.CAT, ice.ETC_PATH)
 			}},
-			OPENS: {Hand: func(m *ice.Message, arg ...string) { Opens(m, arg...) }},
-			FIND:  {Hand: func(m *ice.Message, arg ...string) { m.Echo(_system_find(m, arg[0], arg[1:]...)) }},
+			FIND: {Hand: func(m *ice.Message, arg ...string) { m.Echo(_system_find(m, arg[0], arg[1:]...)) }},
 			MAN: {Hand: func(m *ice.Message, arg ...string) {
-				if len(arg) == 1 {
-					arg = append(arg, "")
-				}
+				kit.If(len(arg) == 1, func() { arg = append(arg, "") })
 				m.Echo(SystemCmds(m, "man %s %s|col -b", kit.Select("", arg[1], arg[1] != "1"), arg[0]))
 			}},
-		}, mdb.HashAction(mdb.SHORT, "cmd", mdb.FIELD, "time,cmd,arg")), Hand: func(m *ice.Message, arg ...string) {
+			OPENS: {Hand: func(m *ice.Message, arg ...string) { Opens(m, arg...) }},
+		}, mdb.HashAction(mdb.SHORT, CMD, mdb.FIELD, "time,cmd,arg")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				mdb.HashSelect(m)
-				return
-			}
-			if _system_exec(m, _system_cmd(m, arg...)); IsSuccess(m) && m.Append(CMD_ERR) == "" {
+			} else if _system_exec(m, _system_cmd(m, arg...)); IsSuccess(m) && m.Append(CMD_ERR) == "" {
 				m.SetAppend()
 			}
 		}},

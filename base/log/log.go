@@ -13,12 +13,7 @@ import (
 	"shylinux.com/x/toolkits/logs"
 )
 
-type Log struct {
-	p string
-	l string
-	s string
-}
-
+type Log struct{ p, l, s string }
 type Frame struct{ p chan *Log }
 
 func (f *Frame) Begin(m *ice.Message, arg ...string) {

@@ -31,14 +31,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		EMAIL: {Name: "email name auto create mailbox", Help: "邮件", Actions: ice.MergeActions(ice.Actions{
 			MAILBOX: {Help: "邮箱", Hand: func(m *ice.Message, arg ...string) { m.EchoIFrame(mdb.Config(m, MAILBOX)).ProcessInner() }},
-			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashInputs(m, arg)
-				switch arg[0] {
-				case CONTENT:
-					m.Push(arg[0], m.Option(ice.MSG_USERWEB))
-				}
-			}},
-			SEND: {Name: "send to*='shylinux@163.com' cc subject*=hi content*:textarea=hello", Help: "发送", Hand: func(m *ice.Message, arg ...string) {
+			SEND: {Name: "send to*='shy@shylinux.com' cc subject*=hi content*:textarea=hello", Help: "发送", Hand: func(m *ice.Message, arg ...string) {
 				msg := m.Cmd("", m.OptionDefault(mdb.NAME, ADMIN))
 				if m.Warn(msg.Append(SERVICE) == "", ice.ErrNotValid, SERVICE) {
 					return

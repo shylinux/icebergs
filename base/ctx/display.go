@@ -28,7 +28,7 @@ func DisplayTable(m displayMessage, arg ...ice.Any) displayMessage {
 	return DisplayBase(m, ice.PLUGIN_TABLE_JS, arg...)
 }
 func DisplayTableCard(m displayMessage, arg ...ice.Any) displayMessage {
-	return DisplayTable(m, "style", "card")
+	return DisplayTable(m, STYLE, "card")
 }
 func DisplayStory(m displayMessage, file string, arg ...ice.Any) displayMessage {
 	kit.If(file == "", func() { file = kit.Keys(kit.FileName(5), nfs.JS) })
@@ -43,9 +43,7 @@ func DisplayStorySpide(m displayMessage, arg ...ice.Any) displayMessage {
 }
 func DisplayStudio(m *ice.Message, cmd ...string) displayMessage {
 	for i, k := range cmd {
-		if !strings.Contains(cmd[i], nfs.PT) {
-			cmd[i] = m.Prefix(k)
-		}
+		kit.If(!strings.Contains(cmd[i], nfs.PT), func() { cmd[i] = m.Prefix(k) })
 	}
 	return DisplayStory(m.Cmdy(COMMAND, cmd), "studio.js")
 }

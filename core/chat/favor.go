@@ -74,9 +74,9 @@ func init() {
 				m.Cmd("", mdb.CREATE, m.OptionSimple(mdb.TYPE, mdb.NAME, mdb.TEXT))
 			}},
 			web.DOWNLOAD: {Hand: func(m *ice.Message, arg ...string) {
-				ctx.ProcessOpen(m, web.MergeURL2(m, web.SHARE_LOCAL+m.Option(mdb.TEXT), "filename", m.Option(mdb.NAME)))
+				m.ProcessOpen(web.MergeURL2(m, web.SHARE_LOCAL+m.Option(mdb.TEXT), "filename", m.Option(mdb.NAME)))
 			}},
-			web.DISPLAY: {Help: "预览", Hand: func(m *ice.Message, arg ...string) {
+			ctx.DISPLAY: {Help: "预览", Hand: func(m *ice.Message, arg ...string) {
 				if link := web.SHARE_LOCAL + m.Option(mdb.TEXT); _favor_is_image(m, m.Option(mdb.NAME), m.Option(mdb.TYPE)) {
 					m.EchoImages(link)
 				} else if _favor_is_video(m, m.Option(mdb.NAME), m.Option(mdb.TYPE)) {
@@ -120,9 +120,9 @@ func init() {
 				if strings.HasPrefix(m.Append(mdb.TEXT), ice.VAR_FILE) {
 					text = web.SHARE_LOCAL + m.Append(mdb.TEXT)
 					if m.PushDownload(mdb.LINK, m.Append(mdb.NAME), text); len(arg) > 0 && _favor_is_image(m, m.Append(mdb.NAME), m.Append(mdb.TYPE)) {
-						m.PushImages(web.DISPLAY, text)
+						m.PushImages(ctx.DISPLAY, text)
 					} else if _favor_is_video(m, m.Append(mdb.NAME), m.Append(mdb.TYPE)) {
-						m.PushVideos(web.DISPLAY, text)
+						m.PushVideos(ctx.DISPLAY, text)
 					}
 					text = tcp.PublishLocalhost(m, web.MergeLink(m, text))
 				}
@@ -146,7 +146,7 @@ func init() {
 				default:
 					if strings.HasPrefix(value[mdb.TEXT], ice.VAR_FILE) {
 						if _favor_is_image(m, value[mdb.NAME], value[mdb.TYPE]) || _favor_is_video(m, value[mdb.NAME], value[mdb.TYPE]) || _favor_is_audio(m, value[mdb.NAME], value[mdb.TYPE]) {
-							m.PushButton(web.DISPLAY, web.DOWNLOAD, mdb.REMOVE)
+							m.PushButton(ctx.DISPLAY, web.DOWNLOAD, mdb.REMOVE)
 						} else {
 							m.PushButton(web.DOWNLOAD, mdb.REMOVE)
 						}

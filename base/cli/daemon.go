@@ -57,9 +57,7 @@ func _daemon_exec(m *ice.Message, cmd *exec.Cmd) {
 		default:
 			m.ErrorNotImplement(cb)
 		}
-		for _, p := range kit.Simple(CMD_INPUT, CMD_OUTPUT, CMD_ERRPUT) {
-			nfs.Close(m, m.Optionv(p))
-		}
+		kit.For(kit.Simple(CMD_INPUT, CMD_OUTPUT, CMD_ERRPUT), func(p string) { nfs.Close(m, m.Optionv(p)) })
 	})
 }
 
@@ -67,6 +65,7 @@ const (
 	DIR = "dir"
 	ENV = "env"
 	API = "api"
+	MOD = "mod"
 	PID = "pid"
 	PWD = "pwd"
 )

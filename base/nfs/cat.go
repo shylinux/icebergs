@@ -120,9 +120,10 @@ func init() {
 			if len(arg) == 0 || strings.HasSuffix(arg[0], PS) {
 				m.Cmdy(DIR, arg)
 			} else {
-				if arg[0] == "action" {
+				if arg[0] == ice.ACTION {
 					m.Cmdy(DIR, arg)
-				} else if !Show(m, arg[0]) {
+				} else {
+					// } else if !Show(m, arg[0]) {
 					_cat_list(m.Logs(FIND, m.OptionSimple(DIR_ROOT), FILE, arg[0]), arg[0])
 				}
 			}
@@ -132,8 +133,8 @@ func init() {
 
 type templateMessage interface {
 	Optionv(key string, arg ...ice.Any) ice.Any
-	PrefixKey(...string) string
 	Cmdx(...ice.Any) string
+	PrefixKey() string
 }
 
 func Template(m templateMessage, p string, arg ...ice.Any) string {
@@ -164,9 +165,7 @@ func Open(m *ice.Message, p string, cb ice.Any) {
 	if p == "" {
 		return
 	} else if strings.HasSuffix(p, PS) {
-		if p == PS {
-			p = ""
-		}
+		kit.If(p == PS, func() { p = "" })
 		if ls, e := ReadDir(m, p); !m.Warn(e) {
 			switch cb := cb.(type) {
 			case func([]os.FileInfo):
@@ -174,9 +173,7 @@ func Open(m *ice.Message, p string, cb ice.Any) {
 			case func(os.FileInfo):
 				kit.For(ls, cb)
 			case func(io.Reader, string):
-				kit.For(ls, func(s os.FileInfo) {
-					kit.If(!s.IsDir(), func() { Open(m, path.Join(p, s.Name()), cb) })
-				})
+				kit.For(ls, func(s os.FileInfo) { kit.If(!s.IsDir(), func() { Open(m, path.Join(p, s.Name()), cb) }) })
 			default:
 				m.ErrorNotImplement(cb)
 			}

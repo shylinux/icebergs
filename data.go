@@ -2,22 +2,16 @@ package ice
 
 import (
 	"os"
-	"path"
 	"strings"
 
 	kit "shylinux.com/x/toolkits"
 )
 
-func (m *Message) ActionKey() string  { return strings.TrimPrefix(strings.TrimSuffix(m._sub, PS), PS) }
-func (m *Message) CommandKey() string { return strings.TrimPrefix(strings.TrimSuffix(m._key, PS), PS) }
-func (m *Message) PrefixKey(arg ...string) string {
-	return kit.Keys(m.Prefix(m.CommandKey()), kit.Keys(arg))
-}
-func (m *Message) PrefixPath(arg ...Any) string {
-	return strings.TrimPrefix(path.Join(kit.ReplaceAll(m.Prefix(m._key, kit.Keys(arg...)), PT, PS)), WEB) + PS
-}
+func (m *Message) ActionKey() string           { return strings.TrimPrefix(strings.TrimSuffix(m._sub, PS), PS) }
+func (m *Message) CommandKey() string          { return strings.TrimPrefix(strings.TrimSuffix(m._key, PS), PS) }
+func (m *Message) PrefixKey() string           { return m.Prefix(m.CommandKey()) }
 func (m *Message) Prefix(arg ...string) string { return m.Target().Prefix(arg...) }
-func (m *Message) Confv(arg ...Any) (val Any) {
+func (m *Message) Confv(arg ...Any) (val Any) { // key sub value
 	run := func(conf *Config) {
 		if len(arg) == 1 {
 			val = conf.Value
@@ -54,9 +48,7 @@ func SaveImportant(m *Message, arg ...string) {
 func loadImportant(m *Message) {
 	if f, e := os.Open(VAR_DATA_IMPORTANT); e == nil {
 		defer f.Close()
-		kit.For(f, func(s string) {
-			kit.If(s != "" && !strings.HasPrefix(s, "# "), func() { m.Cmd(kit.Split(s)) })
-		})
+		kit.For(f, func(s string) { kit.If(s != "" && !strings.HasPrefix(s, "# "), func() { m.Cmd(kit.Split(s)) }) })
 	}
 	Info.Important = true
 }

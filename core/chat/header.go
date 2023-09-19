@@ -97,6 +97,7 @@ func init() {
 			"/": {Hand: func(m *ice.Message, arg ...string) {
 				m.Option("language.list", m.Cmd(nfs.DIR, path.Join(ice.SRC_TEMPLATE, m.PrefixKey(), aaa.LANGUAGE), nfs.FILE).Appendv(nfs.FILE))
 				m.Option("theme.list", m.Cmd(nfs.DIR, path.Join(ice.SRC_TEMPLATE, m.PrefixKey(), aaa.THEME), nfs.FILE).Appendv(nfs.FILE))
+				m.Option(ICONS, mdb.Conf(m, "web.chat.icons", kit.Keym(nfs.PATH)))
 				m.Option(nfs.REPOS, m.Cmdv(web.SPIDE, ice.HUB, web.CLIENT_URL))
 				if gdb.Event(m, HEADER_AGENT); !_header_check(m, arg...) {
 					return

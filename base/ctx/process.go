@@ -46,15 +46,6 @@ func Process(m *ice.Message, key string, args ice.Any, arg ...string) {
 		ProcessField(m, key, args, arg...)
 	}
 }
-func GetPod(m *ice.Message) string {
-	for _, key := range []string{ice.SPACE, ice.POD} {
-		if pod := m.Option(key); pod != "" {
-			m.Options(key, []string{}, ice.MSG_USERPOD, pod)
-			return pod
-		}
-	}
-	return ""
-}
 func ProcessField(m *ice.Message, cmd string, args ice.Any, arg ...string) *ice.Message {
 	if cmd = kit.Select(m.ActionKey(), cmd); !kit.HasPrefixList(arg, ice.RUN) {
 		if PodCmd(m, COMMAND, cmd) {
@@ -77,8 +68,3 @@ func ProcessCommand(m *ice.Message, cmd string, args []string, arg ...string) {
 		m.Cmdy(cmd, arg[1:])
 	}
 }
-
-func ProcessRefresh(m *ice.Message, arg ...string)  { m.ProcessRefresh(arg...) }
-func ProcessRewrite(m *ice.Message, arg ...ice.Any) { m.ProcessRewrite(arg...) }
-func ProcessHold(m *ice.Message, text ...ice.Any)   { m.Process(ice.PROCESS_HOLD, text...) }
-func ProcessOpen(m *ice.Message, url string)        { m.Process(ice.PROCESS_OPEN, url) }

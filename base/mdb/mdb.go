@@ -92,8 +92,9 @@ const (
 	FSIZE = kit.MDB_FSIZE
 	TOOLS = "tools"
 
-	SOURCE = "_source"
-	TARGET = "_target"
+	SOURCE    = "_source"
+	TARGET    = "_target"
+	IMPORTANT = "important"
 )
 const (
 	INPUTS = "inputs"
@@ -263,19 +264,19 @@ func AutoConfig(arg ...Any) *ice.Action {
 }
 func ImportantZoneAction(arg ...Any) ice.Actions {
 	return ice.MergeActions(ice.Actions{
-		ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { Config(m, "important", ice.TRUE) }},
+		ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { Config(m, IMPORTANT, ice.TRUE) }},
 	}, ZoneAction(arg...))
 }
 func ImportantHashAction(arg ...Any) ice.Actions {
 	return ice.MergeActions(ice.Actions{
-		ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { Config(m, "important", ice.TRUE) }},
+		ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { Config(m, IMPORTANT, ice.TRUE) }},
 	}, HashAction(arg...))
 }
 func saveImportant(m *ice.Message, key, sub string, arg ...string) {
 	if m.Option("skip.important") == ice.TRUE {
 		return
 	}
-	kit.If(m.Conf(key, kit.Keys(META, "important")) == ice.TRUE, func() { ice.SaveImportant(m, arg...) })
+	kit.If(m.Conf(key, kit.Keys(META, IMPORTANT)) == ice.TRUE, func() { ice.SaveImportant(m, arg...) })
 }
 func ToMaps(value Map) Maps {
 	res := Maps{}

@@ -156,25 +156,10 @@ func (m *Message) Push(key string, value Any, arg ...Any) *Message {
 func (m *Message) EchoLine(str string, arg ...Any) *Message {
 	return m.Echo(str, arg...).Echo(NL)
 }
-func PushNotice(m *Message, arg ...Any) bool {
-	if m.Option(MSG_DAEMON) == "" {
-		return false
-	} else if m.Option(MSG_USERPOD) == "" {
-		m.Cmd("web.space", m.Option(MSG_DAEMON), arg, Maps{MSG_OPTION: "", MSG_OPTS: ""})
-	} else {
-		// m.Cmd("web.spide", OPS, MergeURL2(m, "/share/toast/"+m.Option(MSG_DAEMON)), ARG, kit.Format(arg))
-	}
-	return true
-}
 func (m *Message) Echo(str string, arg ...Any) *Message {
 	if str == "" {
 		return m
 	}
-	// if m.Option("output.stream") == "grow" {
-	// 	if PushNotice(m, "grow", kit.Format(str, arg...)) {
-	// 		return m
-	// 	}
-	// }
 	return m.Add(MSG_RESULT, kit.Format(str, arg...))
 }
 func (m *Message) Copy(msg *Message, arg ...string) *Message {
@@ -292,11 +277,9 @@ func (m *Message) TableEchoWithStatus() *Message {
 	m.TableEcho()
 	list := []string{}
 	kit.For(kit.UnMarshal(m.Option(MSG_STATUS)), func(index int, value Map) {
-		list = append(list, kit.Format("%s: %s", value[NAME], value[VALUE]))
+		kit.If(value[VALUE] != nil, func() { list = append(list, kit.Format("%s: %s", value[NAME], value[VALUE])) })
 	})
-	if len(list) > 0 {
-		m.Echo(strings.Join(list, SP)).Echo(NL)
-	}
+	kit.If(len(list) > 0, func() { m.Echo(strings.Join(list, SP)).Echo(NL) })
 	return m
 }
 

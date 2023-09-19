@@ -136,7 +136,7 @@ func init() {
 			if arg[0] = strings.Split(arg[0], mdb.FS)[0]; !strings.HasSuffix(arg[0], nfs.PS) && len(arg) == 1 {
 				arg[1] = kit.Slice(strings.Split(arg[0], nfs.PS), -1)[0]
 				arg[0] = strings.TrimSuffix(arg[0], arg[1])
-				ctx.ProcessRewrite(m, nfs.PATH, arg[0], nfs.FILE, arg[1])
+				m.ProcessRewrite(nfs.PATH, arg[0], nfs.FILE, arg[1])
 			} else if len(arg) < 2 {
 				nfs.Dir(m, nfs.PATH)
 			} else {

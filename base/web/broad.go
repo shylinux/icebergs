@@ -5,7 +5,6 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
-	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -54,10 +53,8 @@ func init() {
 			}},
 			SERVE_START: {Hand: func(m *ice.Message, arg ...string) { gdb.Go(m, _broad_serve) }},
 			SERVE:       {Name: "serve port=9020 host", Hand: func(m *ice.Message, arg ...string) { gdb.Go(m, _broad_serve) }},
-			OPEN: {Hand: func(m *ice.Message, arg ...string) {
-				ctx.ProcessOpen(m, Domain(m.Option(tcp.HOST), m.Option(tcp.PORT)))
-			}},
-			tcp.SEND: {Hand: func(m *ice.Message, arg ...string) { _broad_send(m, "", "", "", "", arg...) }},
+			OPEN:        {Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen(Domain(m.Option(tcp.HOST), m.Option(tcp.PORT))) }},
+			tcp.SEND:    {Hand: func(m *ice.Message, arg ...string) { _broad_send(m, "", "", "", "", arg...) }},
 		}, mdb.HashAction(mdb.SHORT, "host,port", mdb.FIELD, "time,hash,type,name,host,port", mdb.ACTION, OPEN), mdb.ClearOnExitHashAction())},
 	})
 }

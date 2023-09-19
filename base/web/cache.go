@@ -112,13 +112,13 @@ const CACHE = "cache"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		CACHE: {Name: "cache hash auto write catch upload download", Help: "缓存池", Actions: ice.MergeActions(ice.Actions{
-			WATCH: {Name: "watch hash* path*", Help: "释放", Hand: func(m *ice.Message, arg ...string) {
+			WATCH: {Name: "watch hash* path*", Hand: func(m *ice.Message, arg ...string) {
 				_cache_watch(m, m.Option(mdb.HASH), m.Option(nfs.PATH))
 			}},
-			WRITE: {Name: "write type name* text*", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+			WRITE: {Name: "write type name* text*", Hand: func(m *ice.Message, arg ...string) {
 				_cache_save(m, m.Option(mdb.TYPE), m.Option(mdb.NAME), m.Option(mdb.TEXT))
 			}},
-			CATCH: {Name: "catch path* type", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+			CATCH: {Name: "catch path* type", Hand: func(m *ice.Message, arg ...string) {
 				file, size := _cache_catch(m, m.Option(nfs.PATH))
 				_cache_save(m, m.Option(mdb.TYPE), m.Option(nfs.PATH), "", file, size)
 			}},
@@ -133,7 +133,7 @@ func init() {
 				}
 			}},
 			ice.RENDER_DOWNLOAD: {Hand: func(m *ice.Message, arg ...string) {
-				m.Echo(_share_link(m, kit.Select(arg[0], arg, 1), ice.POD, m.Option(ice.MSG_USERPOD), "filename", kit.Select("", arg[0], len(arg) > 1)))
+				m.Echo(_share_link(m, kit.Select(arg[0], arg, 1), ice.POD, m.Option(ice.MSG_USERPOD), nfs.FILENAME, kit.Select("", arg[0], len(arg) > 1)))
 			}},
 			nfs.PS: {Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashSelectDetail(m, arg[0], func(value ice.Map) {

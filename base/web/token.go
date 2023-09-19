@@ -1,11 +1,10 @@
 package web
 
 import (
-	"encoding/base64"
+	"net/http"
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -29,6 +28,9 @@ func init() {
 				m.Echo("请授权 %s 代码权限\n", m.Option(tcp.HOST)).EchoButton(CONFIRM)
 			}},
 			CONFIRM: {Hand: func(m *ice.Message, arg ...string) {
+				if m.Warn(m.R.Method != http.MethodPost, ice.ErrNotAllow) {
+					return
+				}
 				msg := m.Cmd("", mdb.CREATE, mdb.TYPE, Basic, mdb.NAME, m.Option(ice.MSG_USERNAME), mdb.TEXT, m.Option(tcp.HOST))
 				m.ProcessReplace(kit.MergeURL2(m.Option(tcp.HOST), ChatCmdPath(m, m.PrefixKey(), SET),
 					TOKEN, strings.Replace(UserHost(m), "://", kit.Format("://%s:%s@", m.Option(ice.MSG_USERNAME), msg.Result()), 1)))
@@ -41,47 +43,6 @@ func init() {
 				}).Cmd(nfs.SAVE, kit.HomePath(FILE), strings.Join(list, lex.NL)+lex.NL)
 				m.ProcessClose()
 			}},
-		}, mdb.HashAction(mdb.EXPIRE, mdb.MONTH, mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,type,name,text")), Hand: func(m *ice.Message, arg ...string) {
-			if mdb.HashSelect(m, arg...); len(arg) > 0 {
-				return
-				u := kit.ParseURL(m.Option(ice.MSG_USERWEB))
-				p := tcp.PublishLocalhost(m, kit.Format("%s://%s:%s@%s", u.Scheme, m.Append(aaa.USERNAME), m.Append(TOKEN), u.Host))
-				m.EchoScript(p).EchoScript(kit.Format("echo '%s' >>~/.git-credentials", p))
-			}
-		}},
+		}, mdb.HashAction(mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,type,name,text", mdb.EXPIRE, mdb.MONTH))},
 	})
-	Index.MergeCommands(ice.Commands{
-		"/check": {Hand: func(m *ice.Message, arg ...string) {
-			kit.For(m.R.Header, func(key string, value []string) { m.Debug("what %v %v", key, value) })
-			if BasicSess(m); m.Option(ice.MSG_USERNAME) == "" {
-				BasicCheck(m, "请输入账号密码")
-			}
-		}},
-		"/login": {Hand: func(m *ice.Message, arg ...string) { RenderMain(m) }},
-		"/auths": {Hand: func(m *ice.Message, arg ...string) {
-			kit.If(m.R.URL.Query().Get(ice.MSG_SESSID), func(p string) { RenderCookie(m, m.Option(ice.MSG_SESSID, p)) })
-			RenderRedirect(m, m.R.URL.Query().Get("redirect_uri"))
-		}},
-	})
-}
-
-func BasicSess(m *ice.Message) {
-	m.Options(ice.MSG_USERWEB, _serve_domain(m))
-	m.Options(ice.MSG_SESSID, kit.Select(m.Option(ice.MSG_SESSID), m.Option(CookieName(m.Option(ice.MSG_USERWEB)))))
-	aaa.SessCheck(m, m.Option(ice.MSG_SESSID))
-}
-func BasicCheck(m *ice.Message, realm string) bool {
-	switch ls := kit.Split(m.R.Header.Get(Authorization)); kit.Select("", ls, 0) {
-	case Basic:
-		if buf, err := base64.StdEncoding.DecodeString(kit.Select("", ls, 1)); !m.Warn(err) {
-			if ls := strings.SplitN(string(buf), ":", 2); !m.Warn(len(ls) < 2) {
-				if msg := m.Cmd(TOKEN, ls[1]); !m.Warn(msg.Time() > msg.Append(mdb.TIME)) {
-					return true
-				}
-			}
-		}
-	}
-	m.W.Header().Add("WWW-Authenticate", kit.Format(`Basic realm="%s"`, realm))
-	m.RenderStatusUnauthorized()
-	return false
 }

@@ -11,7 +11,7 @@ const COUNT = "count"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		COUNT: &ice.Command{Name: "count hash auto", Help: "计数", Actions: ice.MergeActions(ice.Actions{
+		COUNT: &ice.Command{Name: "count hash auto prunes", Help: "计数", Actions: ice.MergeActions(ice.Actions{
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if mdb.IsSearchPreview(m, arg) {
 					count, limit, list := 0, 5, map[string]bool{}
@@ -46,7 +46,7 @@ func init() {
 				mdb.HashSelectUpdate(m, mdb.HashCreate(m), func(value ice.Map) { value[mdb.COUNT] = kit.Int(value[mdb.COUNT]) + 1 })
 			}},
 		}, ctx.CmdAction(), mdb.HashAction(mdb.LIMIT, 1000, mdb.LEAST, 500, mdb.SHORT, "type,name", mdb.FIELD, "time,hash,count,type,name,text")), Hand: func(m *ice.Message, arg ...string) {
-			mdb.HashSelect(m, arg...).Sort("type,name,text", "str", "str", "str")
+			mdb.HashSelect(m, arg...).Sort("type,name,text")
 		}},
 	})
 }

@@ -47,7 +47,7 @@ func init() {
 					m.Push(arg[0], m.Option(ice.MSG_USERNAME))
 				}
 			}},
-			mdb.CREATE: {Name: "create usernick username* userrole=void,tech userzone background", Hand: func(m *ice.Message, arg ...string) {
+			mdb.CREATE: {Name: "create usernick username* userrole=void,tech userzone", Hand: func(m *ice.Message, arg ...string) {
 				_user_create(m, m.Option(USERNAME), m.OptionSimple(USERNICK, USERROLE, USERZONE, BACKGROUND, AVATAR, AVATAR_URL, EMAIL, LANGUAGE)...)
 			}},
 		}, mdb.ImportantHashAction(mdb.SHORT, USERNAME, mdb.FIELD, "time,usernick,username,userrole,userzone"))},

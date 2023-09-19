@@ -107,9 +107,9 @@ func init() {
 		SPLIT: {Name: "split path key auto", Help: "分词", Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 || strings.HasSuffix(arg[0], nfs.PS) {
 				m.Cmdy(nfs.DIR, arg)
-				return
+			} else {
+				m.Echo(kit.Format(_split_list(m, arg[0], kit.Split(kit.Join(arg[1:]))...)))
 			}
-			m.Echo(kit.Format(_split_list(m, arg[0], kit.Split(kit.Join(arg[1:]))...)))
 		}},
 	})
 }

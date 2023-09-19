@@ -69,12 +69,12 @@ func init() {
 				}
 				switch kit.Select("", arg, 1) {
 				case web.OPEN:
-					ctx.ProcessOpen(m, m.Option(mdb.TEXT))
+					m.ProcessOpen(m.Option(mdb.TEXT))
 				default:
 					ctx.ProcessField(m, m.PrefixKey(), []string{m.Option(mdb.TEXT)}, arg...)
 				}
 			}},
-			web.OPEN: {Hand: func(m *ice.Message, arg ...string) { ctx.ProcessOpen(m, m.Option(web.LINK)) }},
+			web.OPEN: {Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen(m.Option(web.LINK)) }},
 			web.DREAM_CREATE: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd("", mdb.CREATE, kit.Dict(web.LINK, m.MergePod(m.Option(mdb.NAME))))
 			}},

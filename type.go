@@ -174,7 +174,7 @@ func (c *Context) Merge(s *Context) *Context {
 			kit.If(action.List == nil, func() { action.List = SplitCmd(action.Name, nil) })
 			kit.If(len(action.List) > 0, func() { cmd.Meta[sub] = action.List })
 		}
-		kit.If(cmd.Name == "", func() { cmd.Name = "list path auto" })
+		kit.If(cmd.Name == "", func() { cmd.Name = "list list" })
 		kit.If(strings.HasPrefix(cmd.Name, "list"), func() { cmd.Name = strings.Replace(cmd.Name, "list", key, 1) })
 		kit.If(cmd.List == nil, func() { cmd.List = SplitCmd(cmd.Name, cmd.Actions) })
 	}
@@ -400,9 +400,5 @@ func (m *Message) Design(action Any, help string, input ...Any) {
 		kit.Value(m._cmd.Meta, kit.Keys("_trans", k), help)
 	}
 }
-func (m *Message) Actions(key string) *Action {
-	return m._cmd.Actions[key]
-}
-func (m *Message) Commands(key string) *Command {
-	return m.Target().Commands[kit.Select(m._key, key)]
-}
+func (m *Message) Actions(key string) *Action   { return m._cmd.Actions[key] }
+func (m *Message) Commands(key string) *Command { return m.Target().Commands[kit.Select(m._key, key)] }

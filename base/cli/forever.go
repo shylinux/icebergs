@@ -25,9 +25,7 @@ func BinPath(arg ...string) string {
 			kit.If(strings.TrimSpace(l) != "" && !strings.HasPrefix(strings.TrimSpace(l), "#"), func() { push(kit.Path(p, l)) })
 		})
 	})
-	push("/usr/local/bin")
 	kit.For(strings.Split(kit.Env(PATH), _path_sep()), func(p string) { push(p) })
-
 	return kit.Join(list, _path_sep())
 }
 

@@ -13,62 +13,6 @@ import (
 	"shylinux.com/x/toolkits/miss"
 )
 
-func FormatPretty(v ice.Any, i, n int) string {
-	return kit.Formats(v)
-	switch v := v.(type) {
-	case map[string]ice.Any:
-		if n == 0 {
-			list := []string{"{"}
-			kit.For(v, func(k string, v ice.Any) {
-				list = append(list, kit.Format("%q", k), nfs.DF, FormatPretty(v, 0, 0), mdb.FS)
-			})
-			list = list[:len(list)-1]
-			list = append(list, "}")
-			return strings.Join(list, "")
-		}
-		list := []string{"{", lex.NL}
-		kit.For(v, func(k string, v ice.Any) {
-			list = append(list, strings.Repeat(lex.TB, i+1), kit.Format("%q", k), nfs.DF)
-			if i < n && !kit.IsIn(k, mdb.META) && !strings.HasPrefix(k, "_") {
-				list = append(list, FormatPretty(v, i+1, n))
-			} else {
-				list = append(list, FormatPretty(v, 0, 0))
-			}
-			list = append(list, mdb.FS, lex.NL)
-		})
-		list = append(list[:len(list)-2], lex.NL)
-		list = append(list, strings.Repeat(lex.TB, i), "}")
-		return strings.Join(list, "")
-	case []ice.Any:
-		if n == 0 {
-			list := []string{"["}
-			kit.For(v, func(k string, v ice.Any) {
-				list = append(list, FormatPretty(v, 0, 0), mdb.FS)
-			})
-			list = list[:len(list)-1]
-			list = append(list, "]")
-			return strings.Join(list, "")
-		}
-		list := []string{"[", lex.NL}
-		kit.For(v, func(v ice.Any) {
-			list = append(list, strings.Repeat(lex.TB, i+1))
-			if i < n {
-				list = append(list, FormatPretty(v, i+1, n))
-			} else {
-				list = append(list, FormatPretty(v, 0, 0))
-			}
-			list = append(list, mdb.FS, lex.NL)
-		})
-		list = append(list[:len(list)-2], lex.NL)
-		list = append(list, strings.Repeat(lex.TB, i), "]")
-		return strings.Join(list, "")
-	case string:
-		return kit.Format(v)
-		return kit.Format("%q", v)
-	default:
-		return kit.Format(v)
-	}
-}
 func _config_format_list(m *ice.Message, v ice.Any) string {
 	list := []string{"{", lex.NL}
 	kit.For(v, func(k string, v ice.Any) {
@@ -100,7 +44,7 @@ func _config_only(v ice.Any, arg ...string) bool {
 				continue
 			} else {
 				for k := range v {
-					if kit.IsIn(k, "important") && len(v) > 1 {
+					if kit.IsIn(k, mdb.IMPORTANT) && len(v) > 1 {
 						return false
 					}
 				}
@@ -139,15 +83,9 @@ func _config_load(m *ice.Message, name string, arg ...string) {
 		data, msg := ice.Map{}, m.Spawn(m.Source())
 		json.NewDecoder(f).Decode(&data)
 		for k, v := range data {
-			if k == "web.chat.header" {
-				m.Debug("what %v", v)
-			}
 			msg.Search(k, func(p *ice.Context, s *ice.Context, key string, conf *ice.Config) {
 				kit.If(s.Configs[key] == nil, func() { s.Configs[key] = &ice.Config{} })
 				s.Configs[key].Value = v
-				if key == "header" {
-					m.Debug("what %v", v)
-				}
 			})
 		}
 	}
@@ -216,12 +154,12 @@ func init() {
 }
 func Save(m *ice.Message, arg ...string) *ice.Message {
 	kit.If(len(arg) == 0, func() { arg = kit.SortedKey(m.Target().Configs) })
-	kit.For(arg, func(i int, k string) { arg[i] = strings.Replace(m.Prefix(k), "/", "", 1) })
+	kit.For(arg, func(i int, k string) { arg[i] = strings.Replace(m.Prefix(k), nfs.PS, "", 1) })
 	return m.Cmd(CONFIG, SAVE, m.Prefix(nfs.JSON), arg)
 }
 func Load(m *ice.Message, arg ...string) *ice.Message {
 	kit.If(len(arg) == 0, func() { arg = kit.SortedKey(m.Target().Configs) })
-	kit.For(arg, func(i int, k string) { arg[i] = strings.Replace(m.Prefix(k), "/", "", 1) })
+	kit.For(arg, func(i int, k string) { arg[i] = strings.Replace(m.Prefix(k), nfs.PS, "", 1) })
 	return m.Cmd(CONFIG, LOAD, m.Prefix(nfs.JSON), arg)
 }
 func ConfAction(arg ...ice.Any) ice.Actions { return ice.Actions{ice.CTX_INIT: mdb.AutoConfig(arg...)} }
@@ -240,4 +178,60 @@ func ConfigFromOption(m *ice.Message, arg ...string) {
 func OptionFromConfig(m *ice.Message, arg ...string) string {
 	kit.For(arg, func(k string) { m.Option(k, mdb.Config(m, k)) })
 	return m.Option(arg[0])
+}
+func FormatPretty(v ice.Any, i, n int) string {
+	return kit.Formats(v)
+	switch v := v.(type) {
+	case map[string]ice.Any:
+		if n == 0 {
+			list := []string{"{"}
+			kit.For(v, func(k string, v ice.Any) {
+				list = append(list, kit.Format("%q", k), nfs.DF, FormatPretty(v, 0, 0), mdb.FS)
+			})
+			list = list[:len(list)-1]
+			list = append(list, "}")
+			return strings.Join(list, "")
+		}
+		list := []string{"{", lex.NL}
+		kit.For(v, func(k string, v ice.Any) {
+			list = append(list, strings.Repeat(lex.TB, i+1), kit.Format("%q", k), nfs.DF)
+			if i < n && !kit.IsIn(k, mdb.META) && !strings.HasPrefix(k, "_") {
+				list = append(list, FormatPretty(v, i+1, n))
+			} else {
+				list = append(list, FormatPretty(v, 0, 0))
+			}
+			list = append(list, mdb.FS, lex.NL)
+		})
+		list = append(list[:len(list)-2], lex.NL)
+		list = append(list, strings.Repeat(lex.TB, i), "}")
+		return strings.Join(list, "")
+	case []ice.Any:
+		if n == 0 {
+			list := []string{"["}
+			kit.For(v, func(k string, v ice.Any) {
+				list = append(list, FormatPretty(v, 0, 0), mdb.FS)
+			})
+			list = list[:len(list)-1]
+			list = append(list, "]")
+			return strings.Join(list, "")
+		}
+		list := []string{"[", lex.NL}
+		kit.For(v, func(v ice.Any) {
+			list = append(list, strings.Repeat(lex.TB, i+1))
+			if i < n {
+				list = append(list, FormatPretty(v, i+1, n))
+			} else {
+				list = append(list, FormatPretty(v, 0, 0))
+			}
+			list = append(list, mdb.FS, lex.NL)
+		})
+		list = append(list[:len(list)-2], lex.NL)
+		list = append(list, strings.Repeat(lex.TB, i), "]")
+		return strings.Join(list, "")
+	case string:
+		return kit.Format(v)
+		return kit.Format("%q", v)
+	default:
+		return kit.Format(v)
+	}
 }

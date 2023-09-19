@@ -5,7 +5,6 @@ import (
 	"io"
 	"reflect"
 	"strings"
-	"sync"
 	"time"
 
 	kit "shylinux.com/x/toolkits"
@@ -13,23 +12,23 @@ import (
 	"shylinux.com/x/toolkits/task"
 )
 
-func (m *Message) TryCatch(msg *Message, catch bool, cb ...func(msg *Message)) {
+func (m *Message) TryCatch(catch bool, cb ...func(*Message)) {
 	defer func() {
 		switch e := recover(); e {
 		case io.EOF, nil:
 		default:
 			fileline := m.FormatStack(2, 1)
-			m.Log(LOG_WARN, "catch: %s %s", e, fileline).Log("chain", msg.FormatChain())
+			m.Log(LOG_WARN, "catch: %s %s", e, fileline).Log("chain", m.FormatChain())
 			m.Log(LOG_WARN, "catch: %s %s", e, kit.FileLine(4, 10)).Log("stack", m.FormatStack(2, 1000))
 			m.Log(LOG_WARN, "catch: %s %s", e, fileline).Result(ErrWarn, e, SP, m.FormatStack(2, 5))
 			if len(cb) > 1 {
-				m.TryCatch(msg, catch, cb[1:]...)
+				m.TryCatch(catch, cb[1:]...)
 			} else if !catch {
 				m.Assert(e)
 			}
 		}
 	}()
-	kit.If(len(cb) > 0, func() { cb[0](msg) })
+	kit.If(len(cb) > 0, func() { cb[0](m) })
 }
 func (m *Message) Assert(expr Any) bool {
 	switch e := expr.(type) {
@@ -63,16 +62,14 @@ func (m *Message) GoSleep(t string, arg ...Any) {
 }
 func (m *Message) Go(cb func(), arg ...Any) *Message {
 	kit.If(len(arg) == 0, func() { arg = append(arg, logs.FileLine(cb)) })
-	task.Put(arg[0], func(task *task.Task) { m.TryCatch(m, true, func(m *Message) { cb() }) })
+	task.Put(arg[0], func(task *task.Task) { m.TryCatch(true, func(m *Message) { cb() }) })
 	return m
 }
-func (m *Message) Wait(cb ...Handler) (wait func(), done Handler) {
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-	t := time.AfterFunc(kit.Duration("180s"), func() { wg.Done() })
-	return func() { wg.Wait() }, func(msg *Message, arg ...string) {
-		defer wg.Done()
-		defer t.Stop()
+func (m *Message) Wait(d string, cb ...Handler) (wait func() bool, done Handler) {
+	sync := make(chan bool, 2)
+	t := time.AfterFunc(kit.Duration(d), func() { sync <- false })
+	return func() bool { return <-sync }, func(msg *Message, arg ...string) {
+		defer func() { t.Stop(); sync <- true }()
 		kit.If(len(cb) > 0 && cb[0] != nil, func() { cb[0](msg, arg...) }, func() { m.Copy(msg) })
 	}
 }
@@ -89,6 +86,13 @@ func (m *Message) Cmdx(arg ...Any) string {
 	return kit.Select("", res, res != strings.TrimSpace(ErrWarn))
 }
 func (m *Message) Cmdy(arg ...Any) *Message { return m.Copy(m._command(arg...)) }
+func (m *Message) CmdList(arg ...string) []string {
+	msg, list := m._command(arg), []string{}
+	kit.For(msg._cmd.List, func(value Map) {
+		kit.If(!kit.IsIn(kit.Format(kit.Value(value, TYPE)), "button"), func() { list = append(list, kit.Format(kit.Value(value, NAME))) })
+	})
+	return msg.Appendv(kit.Select(kit.Select("", list, 0), list, len(arg)-1))
+}
 func (m *Message) CmdHand(cmd *Command, key string, arg ...string) *Message {
 	if m._cmd, m._key, m._sub = cmd, key, LIST; cmd == nil {
 		return m
@@ -105,13 +109,6 @@ func (m *Message) CmdHand(cmd *Command, key string, arg ...string) *Message {
 		cmd.Actions[SELECT].Hand(m, arg...)
 	}
 	return m
-}
-func (m *Message) CmdList(arg ...string) []string {
-	msg, list := m.Cmd(arg), []string{}
-	kit.For(msg._cmd.List, func(value Map) {
-		kit.If(!kit.IsIn(kit.Format(kit.Value(value, TYPE)), "button"), func() { list = append(list, kit.Format(kit.Value(value, NAME))) })
-	})
-	return msg.Appendv(kit.Select(kit.Select("", list, 0), list, len(arg)-1))
 }
 func (m *Message) ActionHand(cmd *Command, key, sub string, arg ...string) *Message {
 	if action, ok := cmd.Actions[sub]; !m.Warn(!ok, ErrNotFound, sub, cmd.FileLines()) {
@@ -146,7 +143,7 @@ func (m *Message) _command(arg ...Any) *Message {
 			}
 		}
 	}
-	if count := kit.Int(m.Option(MSG_COUNT, kit.Format(kit.Int(m.Option(MSG_COUNT))+1))); m.Warn(count > 30000, ErrTooDeepCount) {
+	if count := kit.Int(m.Option(MSG_COUNT, kit.Format(kit.Int(m.Option(MSG_COUNT))+1))); m.Warn(count > 3000, ErrTooDeepCount) {
 		panic(count)
 	}
 	list := kit.Simple(args...)
@@ -156,8 +153,7 @@ func (m *Message) _command(arg ...Any) *Message {
 	}
 	ok := false
 	run := func(msg *Message, ctx *Context, cmd *Command, key string, arg ...string) {
-		ok = true
-		msg._source = _source
+		ok, msg._source = true, _source
 		key = kit.Slice(strings.Split(key, PT), -1)[0]
 		kit.If(cbs, func() { msg.OptionCB(key, cbs) })
 		kit.For(opts, func(k string, v Any) { msg.Option(k, v) })

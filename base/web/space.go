@@ -49,11 +49,10 @@ func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 }
 func _space_fork(m *ice.Message) {
 	addr := kit.Select(m.R.RemoteAddr, m.R.Header.Get(ice.MSG_USERADDR))
+	text := strings.ReplaceAll(kit.Select(addr, m.Option(mdb.TEXT)), "%2F", nfs.PS)
 	name := kit.ReplaceAll(kit.Select(addr, m.Option(mdb.NAME)), "[", "_", "]", "_", nfs.DF, "_", nfs.PT, "_")
-	text := kit.Select(addr, m.Option(mdb.TEXT))
-	text = strings.ReplaceAll(text, "%2F", "/")
-	if kit.IsIn(m.Option(mdb.TYPE), PORTAL) && m.Option(mdb.NAME) != html.CHROME || !(ice.Info.Localhost && tcp.IsLocalHost(m, m.R.RemoteAddr) ||
-		m.Option(TOKEN) != "" && m.Cmdv(TOKEN, m.Option(TOKEN), mdb.TIME) > m.Time()) || mdb.HashSelect(m.Spawn(), name).Length() > 0 {
+	if kit.IsIn(m.Option(mdb.TYPE), PORTAL) && m.Option(mdb.NAME) != html.CHROME || mdb.HashSelect(m.Spawn(), name).Length() > 0 ||
+		!(IsLocalHost(m) || m.Option(TOKEN) != "" && m.Cmdv(TOKEN, m.Option(TOKEN), mdb.TIME) > m.Time()) {
 		name, text = kit.Hashs(name), kit.Select(addr, m.Option(mdb.NAME), m.Option(mdb.TEXT))
 	}
 	if m.Option(mdb.TYPE) == WORKER {
@@ -61,12 +60,11 @@ func _space_fork(m *ice.Message) {
 			text = p
 		}
 	}
-	args := kit.Simple(mdb.TYPE, kit.Select(WORKER, m.Option(mdb.TYPE)), mdb.NAME, name, mdb.TEXT, text, m.OptionSimple(cli.DAEMON, ice.MSG_USERUA), m.OptionSimple(nfs.MODULE, nfs.VERSION))
+	args := kit.Simple(mdb.TYPE, kit.Select(WORKER, m.Option(mdb.TYPE)), mdb.NAME, name, mdb.TEXT, text, m.OptionSimple(nfs.MODULE, nfs.VERSION, cli.DAEMON, ice.MSG_USERUA))
 	if c, e := websocket.Upgrade(m.W, m.R); !m.Warn(e) {
 		gdb.Go(m, func() {
 			defer mdb.HashCreateDeferRemove(m, args, kit.Dict(mdb.TARGET, c))()
 			switch m.Option(mdb.TYPE) {
-			case SERVER:
 			case WORKER:
 				defer gdb.EventDeferEvent(m, DREAM_OPEN, args)(DREAM_CLOSE, args)
 			case PORTAL:
@@ -130,7 +128,7 @@ func _space_exec(m *ice.Message, source, target []string, c *websocket.Conn) {
 		m.Push(mdb.LINK, m.MergePod(kit.Select("", source, -1)))
 	default:
 		m.Options("__target", kit.Reverse(kit.Simple(source))).OptionDefault(ice.MSG_COUNT, "0")
-		kit.If(aaa.Right(m, m.Detailv()), func() { m.TryCatch(m, true, func(_ *ice.Message) { m = m.Cmd() }) })
+		kit.If(aaa.Right(m, m.Detailv()), func() { m.TryCatch(true, func(_ *ice.Message) { m = m.Cmd() }) })
 	}
 	defer m.Cost(kit.Format("%v->%v %v %v", source, target, m.Detailv(), m.FormatSize()))
 	_space_echo(m.Set(ice.MSG_OPTS).Options(log.DEBUG, m.Option(log.DEBUG)), []string{}, kit.Reverse(kit.Simple(source)), c)
@@ -142,21 +140,21 @@ func _space_echo(m *ice.Message, source, target []string, c *websocket.Conn) {
 	}
 }
 func _space_send(m *ice.Message, name string, arg ...string) (h string) {
-	wait, done := m.Wait(func(msg *ice.Message, arg ...string) {
+	wait, done := m.Wait("180s", func(msg *ice.Message, arg ...string) {
 		m.Cost(kit.Format("%v->[%v] %v %v", m.Optionv(ice.MSG_SOURCE), name, m.Detailv(), msg.FormatSize())).Copy(msg)
 	})
 	h = mdb.HashCreate(m.Spawn(), mdb.TYPE, tcp.SEND, mdb.NAME, kit.Keys(name, m.Target().ID()), mdb.TEXT, kit.Join(arg, lex.SP), kit.Dict(mdb.TARGET, done))
 	defer mdb.HashRemove(m.Spawn(), mdb.HASH, h)
-	if target := kit.Split(name, nfs.PT, nfs.PT); mdb.HashSelectDetail(m, target[0], func(value ice.Map) {
+	if target := kit.Split(name, nfs.PT, nfs.PT); !mdb.HashSelectDetail(m, target[0], func(value ice.Map) {
 		if c, ok := value[mdb.TARGET].(*websocket.Conn); !m.Warn(!ok, ice.ErrNotValid, mdb.TARGET) {
 			kit.For([]string{ice.MSG_USERROLE}, func(k string) { m.Optionv(k, m.Optionv(k)) })
 			kit.For(m.Optionv(ice.MSG_OPTS), func(k string) { m.Optionv(k, m.Optionv(k)) })
 			_space_echo(m.Set(ice.MSG_DETAIL, arg...), []string{h}, target, c)
 		}
 	}) {
-		wait()
-	} else {
 		m.Warn(kit.IndexOf([]string{ice.OPS, ice.DEV}, target[0]) == -1, ice.ErrNotFound, SPACE, name)
+	} else {
+		m.Warn(!wait(), "time out")
 	}
 	return
 }
@@ -182,7 +180,7 @@ func init() {
 				kit.If(kit.IsIn(value[mdb.TYPE], WORKER, SERVER), func() { m.Push(arg[0], value[mdb.NAME]) })
 			})
 		case mdb.ICON:
-			m.Cmdy(nfs.DIR, "usr/icons/", nfs.PATH)
+			m.Cmdy(nfs.DIR, ice.USR_ICONS, nfs.PATH)
 		case ctx.INDEX:
 			if space := m.Option(SPACE); space != "" {
 				m.Options(SPACE, []string{}).Cmdy(SPACE, space, mdb.INPUTS, arg)
@@ -200,7 +198,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		SPACE: {Name: "space name cmds auto", Help: "空间站", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { aaa.White(m, SPACE, ice.MAIN) }},
-			ice.MAIN: {Name: "main index", Hand: func(m *ice.Message, arg ...string) {
+			ice.MAIN: {Name: "main index", Help: "首页", Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) > 0 {
 					mdb.Config(m, ice.MAIN, m.Option(ctx.INDEX))
 					return
@@ -212,22 +210,15 @@ func init() {
 				if mdb.IsSearchPreview(m, arg) {
 					m.Cmds("", func(value ice.Maps) {
 						switch value[mdb.TYPE] {
-						case MASTER:
-							m.PushSearch(mdb.TEXT, m.Cmdv(SPIDE, value[mdb.NAME], CLIENT_ORIGIN), value)
 						case SERVER:
 							m.PushSearch(mdb.TEXT, m.MergePod(value[mdb.NAME]), value)
+						case MASTER:
+							m.PushSearch(mdb.TEXT, m.Cmdv(SPIDE, value[mdb.NAME], CLIENT_ORIGIN), value)
 						}
 					})
 				}
 			}},
-			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
-				switch arg[0] {
-				case SPACE:
-					m.Cmdy("").CutTo(mdb.NAME, arg[0])
-				default:
-					mdb.HashInputs(m, arg)
-				}
-			}},
+			cli.START: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy("", tcp.DIAL, arg) }},
 			tcp.DIAL: {Name: "dial dev=ops name", Hand: func(m *ice.Message, arg ...string) {
 				if strings.HasPrefix(m.Option(ice.DEV), HTTP) {
 					m.Cmd(SPIDE, mdb.CREATE, m.OptionSimple(ice.DEV))
@@ -235,7 +226,6 @@ func init() {
 				}
 				_space_dial(m, m.Option(ice.DEV), kit.Select(ice.Info.NodeName, m.Option(mdb.NAME)), arg...)
 			}},
-			cli.START: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy("", tcp.DIAL, arg) }},
 			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) {
 				defer mdb.HashModifyDeferRemove(m, m.OptionSimple(mdb.NAME), mdb.STATUS, cli.STOP)()
 				m.Cmd("", m.Option(mdb.NAME), ice.EXIT)
@@ -249,9 +239,9 @@ func init() {
 			OPEN: {Hand: func(m *ice.Message, arg ...string) {
 				switch m.Option(mdb.TYPE) {
 				case MASTER:
-					ctx.ProcessOpen(m, m.Cmdv(SPIDE, m.Option(mdb.NAME), CLIENT_ORIGIN))
+					m.ProcessOpen(m.Cmdv(SPIDE, m.Option(mdb.NAME), CLIENT_ORIGIN))
 				default:
-					ctx.ProcessOpen(m, m.MergePod(m.Option(mdb.NAME), arg))
+					m.ProcessOpen(m.MergePod(m.Option(mdb.NAME), arg))
 				}
 			}},
 			nfs.PS: {Hand: func(m *ice.Message, arg ...string) { _space_fork(m) }},

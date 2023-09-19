@@ -20,14 +20,14 @@ const (
 	SUCCESS = "success"
 	FAILURE = "failure"
 	PROCESS = "process"
+	WINDOWS = "windows"
 
 	HTTPS = "https"
 	HTTP  = "http"
+	MAIN  = "main"
 	AUTO  = "auto"
-	VIEW  = "view"
 	LIST  = "list"
 	BACK  = "back"
-	MAIN  = "main"
 
 	BASE = "base"
 	CORE = "core"
@@ -37,15 +37,14 @@ const (
 	HUB = "hub"
 	COM = "com"
 	DEV = "dev"
-	APP = "app"
 	OPS = "ops"
+	APP = "app"
 	ICE = "ice"
 	CAN = "can"
 
 	POD = "pod"
 	CMD = "cmd"
 	ARG = "arg"
-
 	ENV = "env"
 	RUN = "run"
 	RES = "res"
@@ -53,16 +52,20 @@ const (
 )
 const ( // REPOS
 	CONTEXTS = "contexts"
+	LEARNING = "learning"
+	RELEASE  = "release"
+	ICONS    = "icons"
+	VOLCANOS = "volcanos"
 	INTSHELL = "intshell"
 	ICEBERGS = "icebergs"
 	TOOLKITS = "toolkits"
-	VOLCANOS = "volcanos"
-	LEARNING = "learning"
+	MATRIX   = "matrix"
 
 	INSTALL = "install"
 	REQUIRE = "require"
 	PUBLISH = "publish"
-	RELEASE = "release"
+	PORTAL  = "portal"
+	LOCAL   = "local"
 )
 const ( // MOD
 	MOD_DIR   = 0750
@@ -96,34 +99,35 @@ const ( // DIR
 	STORY  = "story"
 
 	INDEX_CSS = "index.css"
+	CONST_JS  = "const.js"
 	PROTO_JS  = "proto.js"
 	FRAME_JS  = "frame.js"
 	INDEX_SH  = "index.sh"
 
 	FAVICON_ICO     = "/favicon.ico"
-	PLUGIN_INPUT    = "/volcanos/plugin/input/"
-	PLUGIN_LOCAL    = "/volcanos/plugin/local/"
-	PLUGIN_STORY    = "/volcanos/plugin/story/"
-	PLUGIN_TABLE_JS = "/volcanos/plugin/table.js"
+	PLUGIN_INPUT    = "/plugin/input/"
+	PLUGIN_LOCAL    = "/plugin/local/"
+	PLUGIN_STORY    = "/plugin/story/"
+	PLUGIN_TABLE_JS = "/plugin/table.js"
 	REQUIRE_MODULES = "/require/modules/"
 	REQUIRE_USR     = "/require/usr/"
 	REQUIRE_SRC     = "/require/src/"
 
 	ISH_PLUGED   = ".ish/pluged/"
 	USR_MODULES  = "usr/node_modules/"
-	USR_INSTALL  = "usr/install/"
-	USR_REQUIRE  = "usr/require/"
-	USR_PUBLISH  = "usr/publish/"
 	USR_RELEASE  = "usr/release/"
+	USR_LEARNING = "usr/learning/"
+	USR_VOLCANOS = "usr/volcanos/"
 	USR_INTSHELL = "usr/intshell/"
 	USR_ICEBERGS = "usr/icebergs/"
 	USR_TOOLKITS = "usr/toolkits/"
-	USR_VOLCANOS = "usr/volcanos/"
-	USR_LEARNING = "usr/learning/"
+	USR_INSTALL  = "usr/install/"
+	USR_REQUIRE  = "usr/require/"
+	USR_PUBLISH  = "usr/publish/"
 	USR_PORTAL   = "usr/portal/"
+	USR_LOCAL    = "usr/local/"
 	USR_ICONS    = "usr/icons/"
 
-	USR_LOCAL          = "usr/local/"
 	USR_LOCAL_GO       = "usr/local/go/"
 	USR_LOCAL_GO_BIN   = "usr/local/go/bin/"
 	USR_LOCAL_BIN      = "usr/local/bin/"
@@ -265,8 +269,6 @@ const ( // PROCESS
 	FIELDS_DETAIL = "detail"
 )
 const ( // CTX
-	CTX_ARG    = "ctx_arg"
-	CTX_DAEMON = "ctx_daemon"
 	CTX_FOLLOW = "follow"
 
 	CTX_BEGIN = "begin"
@@ -291,9 +293,9 @@ const ( // Err
 
 	ErrNotLogin = "not login: "
 	ErrNotRight = "not right: "
+	ErrNotAllow = "not allow: "
 	ErrNotValid = "not valid: "
 	ErrNotFound = "not found: "
-	ErrNotAllow = "not allow: "
 	ErrNotStart = "not start: "
 
 	ErrNotImplement = "not implement: "
@@ -316,8 +318,8 @@ const ( // mdb
 	VALUE = "value"
 	EXTRA = "extra"
 	META  = "meta"
-	HASH  = "hash"
 	TIME  = "time"
+	HASH  = "hash"
 	TYPE  = "type"
 	NAME  = "name"
 	TEXT  = "text"
@@ -327,8 +329,8 @@ const ( // web
 	SERVE = "serve"
 	SPACE = "space"
 
-	TITLE = "title"
 	THEME = "theme"
+	TITLE = "title"
 )
 const ( // gdb
 	EVENT   = "event"

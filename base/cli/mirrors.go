@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"io"
 	"runtime"
 	"strings"
 
@@ -15,6 +14,7 @@ import (
 
 const (
 	CMD     = "cmd"
+	ADD     = "add"
 	OSID    = "osid"
 	REPOS   = "repos"
 	UBUNTU  = "ubuntu"
@@ -39,41 +39,44 @@ func init() {
 					kit.If(strings.Contains(osid, kit.Format(value[OSID])), func() { m.Cmdy(kit.Split(kit.Format(value[CMD]))) })
 				})
 			}},
-			ALPINE: {Name: "alpine cli cmd", Hand: func(m *ice.Message, arg ...string) { IsAlpine(m, arg...) }},
-			REPOS: {Help: "镜像源", Hand: func(m *ice.Message, arg ...string) {
-				switch {
-				case strings.Contains(release(m.Spawn()), ALPINE):
-					ice.Info.PushStream(m)
-					m.Optionv(CMD_OUTPUT).(io.Writer).Write([]byte("\n"))
-					defer ice.Info.PushNotice(m, "toast", "success")
-					m.Cmd(nfs.SAVE, ETC_APK_REPOS, strings.ReplaceAll(m.Cmdx(nfs.CAT, ETC_APK_REPOS), "dl-cdn.alpinelinux.org", "mirrors.tencent.com"))
-					m.Cmdy(SYSTEM, "apk", "update")
-					m.StatusTimeCount()
-				}
-			}},
-			"add": {Help: "安装", Hand: func(m *ice.Message, arg ...string) {
+			ADD: {Help: "安装", Hand: func(m *ice.Message, arg ...string) {
 				mdb.ZoneSelect(m, m.Option(CLI)).Table(func(value ice.Maps) {
 					ice.Info.PushStream(m)
-					ice.Info.PushNotice(m, "toast", "process", "", "-1")
-					defer ice.Info.PushNotice(m, "toast", "success")
-					m.Push("res", m.Cmdx(kit.Split(value[CMD])))
+					m.Toast(ice.PROCESS, "", "-1")
+					if msg := m.Cmd(kit.Split(value[CMD])); IsSuccess(msg) {
+						m.Toast(ice.SUCCESS)
+					} else {
+						m.Toast(ice.FAILURE)
+					}
 				})
 			}},
+			REPOS: {Name: "repos proxy=mirrors.tencent.com", Help: "镜像", Hand: func(m *ice.Message, arg ...string) {
+				switch {
+				case strings.Contains(_release, ALPINE):
+					m.Toast(ice.PROCESS, "", "-1")
+					defer m.Toast(ice.SUCCESS)
+					ice.Info.PushStream(m)
+					kit.If(m.Option("proxy"), func(p string) {
+						m.Cmd(nfs.SAVE, ETC_APK_REPOS, strings.ReplaceAll(m.Cmdx(nfs.CAT, ETC_APK_REPOS), "dl-cdn.alpinelinux.org", p))
+					})
+					m.Cmdy(SYSTEM, "apk", "update").StatusTime()
+				}
+			}},
+			ALPINE: {Name: "alpine cli cmd", Hand: func(m *ice.Message, arg ...string) { IsAlpine(m, arg...) }},
 		}, mdb.ZoneAction(mdb.SHORT, CLI, mdb.FIELD, "time,id,osid,cmd"), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.ZoneSelect(m, arg...); len(arg) == 0 {
 				m.Table(func(value ice.Maps) {
 					p := SystemFind(m, value[CLI])
-					m.Push("path", p)
-					if p == "" {
-						m.PushButton("add")
+					if m.Push(nfs.PATH, p); p == "" {
+						m.PushButton(ADD)
 					} else {
 						m.PushButton("")
 					}
 				})
-				m.StatusTimeCount("release", release(m.Spawn()))
+				m.StatusTimeCount("release", _release)
 			}
 			switch {
-			case strings.Contains(release(m.Spawn()), ALPINE):
+			case strings.Contains(_release, ALPINE):
 				m.Cmdy(nfs.CAT, ETC_APK_REPOS)
 			}
 		}},
@@ -87,17 +90,17 @@ func release(m *ice.Message) string {
 	if list[0] != LINUX || !nfs.Exists(m, ETC_OS_RELEASE) {
 		return list[0]
 	}
-	m.Option(nfs.CAT_CONTENT, _release)
-	_release = m.Cmdx(nfs.CAT, ETC_OS_RELEASE, kit.Dict(ice.MSG_USERROLE, aaa.ROOT), func(text string, _ int) string {
+	m.Cmd(nfs.CAT, ETC_OS_RELEASE, kit.Dict(ice.MSG_USERROLE, aaa.ROOT), func(text string, _ int) string {
 		if ls := kit.Split(text, mdb.EQ); len(ls) > 1 {
 			kit.Switch(ls[0], []string{"ID", "ID_LIKE"}, func() { list = append(list, strings.TrimSpace(ls[1])) })
 		}
 		return text
 	})
-	return strings.Join(list, lex.SP)
+	_release = strings.Join(list, lex.SP)
+	return _release
 }
 func insert(m *ice.Message, sys, cmd string, arg ...string) bool {
-	if !strings.Contains(release(m), sys) {
+	if !strings.Contains(_release, sys) {
 		return false
 	}
 	if len(arg) > 0 {

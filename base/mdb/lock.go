@@ -10,7 +10,7 @@ import (
 
 type configMessage interface {
 	Option(key string, arg ...Any) string
-	PrefixKey(...string) string
+	PrefixKey() string
 	Confv(...Any) Any
 }
 
@@ -21,10 +21,7 @@ func getLock(m configMessage, arg ...string) *task.Lock {
 	key := kit.Select(m.PrefixKey(), kit.Keys(arg))
 	defer _lock.Lock()()
 	l, ok := _locks[key]
-	if !ok {
-		l = &task.Lock{}
-		_locks[key] = l
-	}
+	kit.If(!ok, func() { l = &task.Lock{}; _locks[key] = l })
 	return l
 }
 func Lock(m configMessage, arg ...string) func()  { return getLock(m, arg...).Lock() }
@@ -34,9 +31,7 @@ func Config(m configMessage, key string, arg ...Any) string {
 	return kit.Format(Configv(m, key, arg...))
 }
 func Configv(m configMessage, key string, arg ...Any) Any {
-	if len(arg) > 0 {
-		Confv(m, m.PrefixKey(), kit.Keym(key), arg[0])
-	}
+	kit.If(len(arg) > 0, func() { Confv(m, m.PrefixKey(), kit.Keym(key), arg[0]) })
 	return Confv(m, m.PrefixKey(), kit.Keym(key))
 }
 func Confv(m configMessage, arg ...Any) Any {
@@ -56,9 +51,7 @@ func Conf(m configMessage, arg ...Any) string {
 }
 func Confm(m configMessage, key string, sub Any, cbs ...Any) Map {
 	val := m.Confv(key, sub)
-	if len(cbs) > 0 {
-		kit.For(val, cbs[0])
-	}
+	kit.If(len(cbs) > 0, func() { kit.For(val, cbs[0]) })
 	value, _ := val.(Map)
 	return value
 }
@@ -66,7 +59,7 @@ func Confm(m configMessage, key string, sub Any, cbs ...Any) Map {
 var cache = sync.Map{}
 
 func Cache(m *ice.Message, key string, add func() Any) Any {
-	if key = m.PrefixKey(key); add == nil {
+	if key = kit.Keys(m.PrefixKey(), key); add == nil {
 		cache.Delete(key)
 		return nil
 	}

@@ -24,7 +24,7 @@ func _signal_process(m *ice.Message, p string, s os.Signal) {
 	if p == "" {
 		b, _ := file.ReadFile(ice.Info.PidPath)
 		p = string(b)
-		if runtime.GOOS == "windows" {
+		if runtime.GOOS == ice.WINDOWS {
 			return
 		}
 	}
@@ -50,26 +50,26 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		SIGNAL: {Name: "signal signal auto listen", Help: "信号量", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				if runtime.GOOS == "windows" {
+				if runtime.GOOS == ice.WINDOWS {
 					return
 				}
-				_signal_listen(m, 1, mdb.NAME, "挂起", ice.CMD, "runtime")
-				_signal_listen(m, 2, mdb.NAME, "重启", ice.CMD, "exit 1")
-				_signal_listen(m, 3, mdb.NAME, "退出", ice.CMD, "exit 0")
+				_signal_listen(m, 1, mdb.NAME, START, ice.CMD, "runtime")
+				_signal_listen(m, 2, mdb.NAME, RESTART, ice.CMD, "exit 1")
+				_signal_listen(m, 3, mdb.NAME, STOP, ice.CMD, "exit 0")
 			}},
-			LISTEN: {Name: "listen signal name cmd", Help: "监听", Hand: func(m *ice.Message, arg ...string) {
+			LISTEN: {Name: "listen signal name cmd", Hand: func(m *ice.Message, arg ...string) {
 				_signal_listen(m, kit.Int(m.Option(SIGNAL)), arg...)
 			}},
 			HAPPEN: {Name: "happen signal", Help: "触发", Hand: func(m *ice.Message, arg ...string) {
 				_signal_action(m, m.Option(SIGNAL))
 			}},
-			RESTART: {Name: "restart pid", Help: "重启", Hand: func(m *ice.Message, arg ...string) {
+			RESTART: {Name: "restart pid", Hand: func(m *ice.Message, arg ...string) {
 				_signal_process(m, m.Option(PID), syscall.SIGINT)
 			}},
-			STOP: {Name: "stop pid", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
+			STOP: {Name: "stop pid", Hand: func(m *ice.Message, arg ...string) {
 				_signal_process(m, m.Option(PID), syscall.SIGQUIT)
 			}},
-			KILL: {Name: "kill pid signal", Help: "结束", Hand: func(m *ice.Message, arg ...string) {
+			KILL: {Name: "kill pid signal", Hand: func(m *ice.Message, arg ...string) {
 				_signal_process(m, m.Option(PID), syscall.Signal(kit.Int(kit.Select("9", m.Option(SIGNAL)))))
 			}},
 		}, mdb.HashAction(mdb.SHORT, SIGNAL, mdb.FIELD, "time,signal,name,cmd", mdb.ACTION, HAPPEN), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {

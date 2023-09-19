@@ -11,11 +11,16 @@ const (
 	CONTENT = "content"
 	PROFILE = "profile"
 	DISPLAY = "display"
+
+	VIEW   = "view"
+	INPUT  = "input"
+	OUTPUT = "output"
+	LAYOUT = "layout"
+	RESIZE = "resize"
 )
 
 const (
 	FLOAT  = "float"
-	OUTPUT = "output"
 	CHROME = "chrome"
 
 	TEXT_PLAIN = "text/plain"

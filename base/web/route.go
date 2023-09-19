@@ -45,6 +45,9 @@ func _route_toast(m *ice.Message, space string, args ...string) {
 			toast(value[SPACE], count, total)
 			if msg := _route_push(m, value[SPACE], m.Cmd(SPACE, value[SPACE], args, ice.Maps{ice.MSG_DAEMON: ""})); msg.IsErr() || !cli.IsSuccess(msg) {
 				list = append(list, value[SPACE]+": "+msg.Result())
+			} else {
+				kit.If(msg.Result() == "", func() { msg.TableEcho() })
+				m.Push(SPACE, value[SPACE]).Push(ice.RES, msg.Result())
 			}
 		})
 		m.StatusTimeCount(ice.CMD, kit.Join(args, lex.SP), ice.SUCCESS, kit.Format("%d/%d", total-len(list), total))
@@ -56,7 +59,7 @@ const ROUTE = "route"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		ROUTE: {Name: "route space:text cmds:text auto spide cmds build travel monitor prunes", Icon: "usr/icons/Podcasts.png", Help: "路由表", Actions: ice.MergeActions(ice.Actions{
+		ROUTE: {Name: "route space:text cmds:text auto spide cmds build travel prunes", Icon: "usr/icons/Podcasts.png", Help: "路由表", Actions: ice.MergeActions(ice.Actions{
 			ice.MAIN: {Help: "首页", Hand: func(m *ice.Message, arg ...string) {
 				ctx.ProcessField(m, CHAT_IFRAME, m.MergePod(""), arg...)
 			}},
@@ -75,7 +78,7 @@ func init() {
 			"cmds": {Name: "cmds space index* args", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 				_route_toast(m, m.Option(SPACE), append([]string{m.Option(ctx.INDEX)}, kit.Split(m.Option(ctx.ARGS))...)...)
 			}},
-			"build": {Name: "build space", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
+			cli.BUILD: {Name: "build space", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
 				_route_toast(m, m.Option(SPACE), m.PrefixKey(), "_build")
 				m.Sleep("1s").Cmdy("", "travel")
 			}},
@@ -111,13 +114,9 @@ func init() {
 						m.Push(key, "")
 					}
 				})
+				defer m.ProcessRefresh()
 				PushPodCmd(m, "", m.ActionKey())
-				ToastSuccess(m)
-				m.ProcessRefresh()
 				m.Table(func(value ice.Maps) { kit.If(value[SPACE], func() { mdb.HashCreate(m.Spawn(), kit.Simple(value)) }) })
-			}},
-			"monitor": {Help: "监控", Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessOpen(m.Cmdv(SPIDE, "monitor", CLIENT_URL))
 			}},
 		}, ctx.CmdAction(), mdb.HashAction(mdb.SHORT, SPACE, mdb.FIELD, "time,space,type,module,version,md5,size,path,hostname", mdb.SORT, "type,space", mdb.ACTION, ice.MAIN)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 1 {

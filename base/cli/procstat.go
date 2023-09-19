@@ -89,7 +89,7 @@ func init() {
 		}, mdb.PageListAction(mdb.FIELD, "time,id,utime,vmrss,user,idle,free,rx,tx,established,time_wait")), Hand: func(m *ice.Message, arg ...string) {
 			m.OptionDefault(mdb.CACHE_LIMIT, mdb.Config(m, mdb.LEAST))
 			if mdb.PageListSelect(m, arg...); (len(arg) == 0 || arg[0] == "") && m.Length() > 0 {
-				m.SortInt(mdb.ID).Display("/plugin/story/trend.js", ice.VIEW, "折线图", "min", "0", "max", "1000", COLOR, "yellow,cyan,red,green,blue,purple,purple")
+				m.SortInt(mdb.ID).Display("/plugin/story/trend.js", "view", "折线图", "min", "0", "max", "1000", COLOR, "yellow,cyan,red,green,blue,purple,purple")
 				m.Status("from", m.Append(mdb.TIME), "span", kit.FmtDuration(time.Duration(kit.Time(m.Time())-kit.Time(m.Append(mdb.TIME)))), m.AppendSimple(mdb.Config(m, mdb.FIELD)), "cursor", "0")
 			}
 		}},

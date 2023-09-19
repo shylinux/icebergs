@@ -216,6 +216,6 @@ func (m *Message) resource(file string) string {
 	if p = strings.TrimPrefix(p, kit.Path("")+PS); strings.Contains(p, "/pkg/mod/") {
 		p = strings.Split(p, "/pkg/mod/")[1]
 	}
-	kit.If(file == "", func() { p = kit.ExtChange(p, "js") }, func() { p = path.Join(path.Dir(p), file) })
+	kit.If(file == "", func() { p = kit.ExtChange(p, JS) }, func() { p = path.Join(path.Dir(p), file) })
 	return kit.MergeURL("/require/"+p, POD, m.Option(MSG_USERPOD))
 }

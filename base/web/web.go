@@ -37,7 +37,7 @@ func (f *Frame) Start(m *ice.Message, arg ...string) {
 		msg := m.Spawn(c)
 		if pf, ok := p.Server().(*Frame); ok && pf.ServeMux != nil {
 			route := nfs.PS + c.Name + nfs.PS
-			msg.Log("route", "%s <= %s", p.Name, route)
+			msg.Log(ROUTE, "%s <= %s", p.Name, route)
 			pf.Handle(route, http.StripPrefix(path.Dir(route), f))
 			list[c] = path.Join(list[p], route)
 		}
@@ -46,9 +46,9 @@ func (f *Frame) Start(m *ice.Message, arg ...string) {
 				continue
 			}
 			func(key string, cmd *ice.Command) {
-				msg.Log("route", "%s <- %s", c.Name, key)
+				msg.Log(ROUTE, "%s <- %s", c.Name, key)
 				f.HandleFunc(key, func(w http.ResponseWriter, r *http.Request) {
-					m.TryCatch(m.Spawn(key, cmd, c, w, r), true, func(msg *ice.Message) { _serve_handle(key, cmd, msg, w, r) })
+					m.Spawn(key, cmd, c, w, r).TryCatch(true, func(msg *ice.Message) { _serve_handle(key, cmd, msg, w, r) })
 				})
 				ice.Info.Route[path.Join(list[c], key)+kit.Select("", nfs.PS, strings.HasSuffix(key, nfs.PS))] = ctx.FileURI(cmd.FileLine())
 			}(key, cmd)
@@ -63,11 +63,7 @@ func (f *Frame) Start(m *ice.Message, arg ...string) {
 			gdb.Event(m, SERVE_START, arg)
 			m.Warn(f.Server.Serve(l))
 		})
-		if m.IsErr() {
-			fmt.Println()
-			fmt.Println(m.Result())
-			m.Cmd(ice.QUIT)
-		}
+		kit.If(m.IsErr(), func() { fmt.Println(); fmt.Println(m.Result()); m.Cmd(ice.QUIT) })
 	}
 }
 func (f *Frame) Close(m *ice.Message, arg ...string) {}

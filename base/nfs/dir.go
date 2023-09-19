@@ -145,7 +145,12 @@ const (
 	USR_LOCAL_WORK = ice.USR_LOCAL_WORK
 	SRC_DOCUMENT   = ice.SRC_DOCUMENT
 	REQUIRE        = "/require/"
+	VOLCANOS       = "/volcanos/"
+	INTSHELL       = "/intshell/"
 	PATHNAME       = "pathname"
+	FILENAME       = "filename"
+
+	USR_ICONS_ICEBERGS = "usr/icons/icebergs.jpg"
 
 	TYPE_ALL  = "all"
 	TYPE_BIN  = "bin"
@@ -175,16 +180,16 @@ const DIR = "dir"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		DIR: {Name: "dir path auto upload finder", Icon: "usr/icons/dir.png", Help: "目录", Actions: ice.Actions{
+		DIR: {Name: "dir path auto upload app", Icon: "usr/icons/dir.png", Help: "目录", Actions: ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				aaa.White(m, ice.SRC, ice.BIN, ice.USR)
 				aaa.Black(m, ice.USR_LOCAL)
-			}}, mdb.UPLOAD: {},
-			"finder": {Help: "本机", Hand: func(m *ice.Message, arg ...string) { m.Cmd("cli.system", "opens", "Finder.app") }},
-			TRASH:    {Hand: func(m *ice.Message, arg ...string) { m.Cmd(TRASH, mdb.CREATE, m.Option(PATH)) }},
+			}},
+			ice.APP: {Help: "本机", Hand: func(m *ice.Message, arg ...string) { m.Cmd("cli.system", "opens", "Finder.app") }},
+			TRASH:   {Hand: func(m *ice.Message, arg ...string) { m.Cmd(TRASH, mdb.CREATE, m.Option(PATH)) }},
 			mdb.SHOW: {Help: "预览", Hand: func(m *ice.Message, arg ...string) {
 				Show(m.ProcessInner(), path.Join(m.Option(DIR_ROOT), m.Option(PATH)))
-			}},
+			}}, mdb.UPLOAD: {},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			root, dir := kit.Select(PWD, m.Option(DIR_ROOT)), kit.Select(PWD, arg, 0)
 			kit.If(strings.HasPrefix(dir, PS), func() { root = "" })
@@ -235,17 +240,6 @@ func Dir(m *ice.Message, field string) *ice.Message {
 	m.Copy(m.Cmd(DIR, PWD, kit.Dict(DIR_TYPE, TYPE_CAT)).Sort(field))
 	return m
 }
-func Show(m *ice.Message, file string) bool {
-	switch strings.ToLower(kit.Ext(file)) {
-	case "png", "jpg":
-		m.EchoImages("/share/local/" + file)
-	case "mp4", "mov":
-		m.EchoVideos("/share/local/" + file)
-	default:
-		return false
-	}
-	return true
-}
 func DirDeepAll(m *ice.Message, root, dir string, cb func(ice.Maps), arg ...string) *ice.Message {
 	m.Options(DIR_TYPE, CAT, DIR_ROOT, root, DIR_DEEP, ice.TRUE)
 	defer m.Options(DIR_TYPE, "", DIR_ROOT, "", DIR_DEEP, "")
@@ -254,4 +248,19 @@ func DirDeepAll(m *ice.Message, root, dir string, cb func(ice.Maps), arg ...stri
 	} else {
 		return msg.Table(cb)
 	}
+}
+func Show(m *ice.Message, file string) bool {
+	switch strings.ToLower(kit.Ext(file)) {
+	case "png", "jpg":
+		m.EchoImages("/share/local/" + file)
+	case "mp4", "mov":
+		m.EchoVideos("/share/local/" + file)
+	default:
+		if IsSourceFile(m, kit.Ext(file)) {
+			m.Cmdy(CAT, file)
+		} else {
+			return false
+		}
+	}
+	return true
 }

@@ -27,7 +27,7 @@ func _spide_create(m *ice.Message, name, link string) {
 		dir, file := path.Split(u.EscapedPath())
 		m.Logs(mdb.INSERT, SPIDE, name, LINK, link)
 		mdb.HashSelectUpdate(m, mdb.HashCreate(m, CLIENT_NAME, name), func(value ice.Map) {
-			value[SPIDE_CLIENT] = kit.Dict(mdb.NAME, name, SPIDE_METHOD, http.MethodGet, "url", link, ORIGIN, u.Scheme+"://"+u.Host,
+			value[SPIDE_CLIENT] = kit.Dict(mdb.NAME, name, SPIDE_METHOD, http.MethodGet, URL, link, ORIGIN, u.Scheme+"://"+u.Host,
 				tcp.PROTOCOL, u.Scheme, tcp.HOSTNAME, u.Hostname(), tcp.HOST, u.Host, nfs.PATH, dir, nfs.FILE, file, cli.TIMEOUT, "300s",
 			)
 		})
@@ -35,7 +35,7 @@ func _spide_create(m *ice.Message, name, link string) {
 }
 func _spide_show(m *ice.Message, name string, arg ...string) {
 	file := ""
-	action, arg := _spide_args(m, arg, SPIDE_RAW, SPIDE_MSG, SPIDE_CACHE, SPIDE_SAVE)
+	action, arg := _spide_args(m, arg, SPIDE_RAW, SPIDE_MSG, SPIDE_SAVE, SPIDE_CACHE)
 	kit.If(action == SPIDE_SAVE, func() { file, arg = arg[0], arg[1:] })
 	msg := mdb.HashSelects(m.Spawn(), name)
 	method, arg := _spide_args(m, arg, http.MethodGet, http.MethodPut, http.MethodPost, http.MethodDelete)
@@ -61,17 +61,13 @@ func _spide_show(m *ice.Message, name string, arg ...string) {
 		return
 	}
 	defer res.Body.Close()
-	m.Push(mdb.TYPE, STATUS)
-	m.Push(mdb.NAME, res.StatusCode)
-	m.Push(mdb.VALUE, res.Status)
 	m.Cost(cli.STATUS, res.Status, nfs.SIZE, kit.FmtSize(kit.Int64(res.Header.Get(ContentLength))), mdb.TYPE, res.Header.Get(ContentType))
+	m.Push(mdb.TYPE, STATUS).Push(mdb.NAME, res.StatusCode).Push(mdb.VALUE, res.Status)
 	kit.For(res.Header, func(k string, v []string) {
 		if m.Option(log.DEBUG) == ice.TRUE {
 			m.Logs(RESPONSE, k, v)
 		}
-		m.Push(mdb.TYPE, SPIDE_HEADER)
-		m.Push(mdb.NAME, k)
-		m.Push(mdb.VALUE, v[0])
+		m.Push(mdb.TYPE, SPIDE_HEADER).Push(mdb.NAME, k).Push(mdb.VALUE, v[0])
 	})
 	mdb.HashSelectUpdate(m, name, func(value ice.Map) {
 		kit.For(res.Cookies(), func(v *http.Cookie) {
@@ -79,9 +75,7 @@ func _spide_show(m *ice.Message, name string, arg ...string) {
 			if m.Option(log.DEBUG) == ice.TRUE {
 				m.Logs(RESPONSE, v.Name, v.Value)
 			}
-			m.Push(mdb.TYPE, COOKIE)
-			m.Push(mdb.NAME, v.Name)
-			m.Push(mdb.VALUE, v.Value)
+			m.Push(mdb.TYPE, COOKIE).Push(mdb.NAME, v.Name).Push(mdb.VALUE, v.Value)
 		})
 	})
 	if m.Warn(res.StatusCode != http.StatusOK && res.StatusCode != http.StatusCreated, ice.ErrNotValid, uri, cli.STATUS, res.Status) {
@@ -108,8 +102,7 @@ func _spide_body(m *ice.Message, method string, arg ...string) (io.Reader, ice.M
 	case SPIDE_FORM:
 		arg = kit.Simple(arg, func(v string) string { return url.QueryEscape(v) })
 		_data := kit.JoinKV("=", "&", arg[1:]...)
-		m.Debug("post %v %v", len(_data), _data)
-		head[ContentType], body = ContentFORM, bytes.NewBufferString(_data)
+		head[ContentType], body = ApplicationForm, bytes.NewBufferString(_data)
 	case SPIDE_PART:
 		head[ContentType], body = _spide_part(m, arg...)
 	case SPIDE_FILE:
@@ -126,7 +119,6 @@ func _spide_body(m *ice.Message, method string, arg ...string) (io.Reader, ice.M
 		data := ice.Map{}
 		kit.For(arg, func(k, v string) { kit.Value(data, k, v) })
 		_data := kit.Format(data)
-		m.Debug("post %v %v", len(_data), _data)
 		head[ContentType], body = ApplicationJSON, bytes.NewBufferString(_data)
 	}
 	return body, head, arg[:0]
@@ -186,7 +178,7 @@ func _spide_save(m *ice.Message, action, file, uri string, res *http.Response) {
 	if action == SPIDE_RAW {
 		m.SetResult()
 	} else {
-		m.SetAppend().SetResult()
+		m.SetResult().SetAppend()
 	}
 	switch action {
 	case SPIDE_RAW:
@@ -220,8 +212,8 @@ func _spide_save(m *ice.Message, action, file, uri string, res *http.Response) {
 const (
 	SPIDE_RAW   = "raw"
 	SPIDE_MSG   = "msg"
-	SPIDE_CACHE = "cache"
 	SPIDE_SAVE  = "save"
+	SPIDE_CACHE = "cache"
 
 	SPIDE_BODY = "body"
 	SPIDE_FORM = "form"
@@ -241,10 +233,13 @@ const (
 	Referer        = "Referer"
 	Accept         = "Accept"
 
-	ContentFORM = "application/x-www-form-urlencoded"
-	ContentPNG  = "image/png"
-	ContentHTML = "text/html"
-	ContentCSS  = "text/css"
+	ApplicationForm  = "application/x-www-form-urlencoded"
+	ApplicationOctet = "application/octet-stream"
+	ApplicationJSON  = "application/json"
+
+	IMAGE_PNG = "image/png"
+	TEXT_HTML = "text/html"
+	TEXT_CSS  = "text/css"
 )
 const (
 	SPIDE_CLIENT = "client"
@@ -294,36 +289,34 @@ func init() {
 				case COOKIE:
 					switch arg[0] {
 					case mdb.KEY:
-						m.Push(arg[0], "sessid")
+						m.Push(arg[0], ice.MSG_SESSID)
 					}
 				case HEADER:
 					switch arg[0] {
 					case mdb.KEY:
-						m.Push(arg[0], "Authorization")
+						m.Push(arg[0], Authorization)
 					}
 				default:
 					mdb.HashSelectValue(m.Spawn(), func(value ice.Map) { m.Push(kit.Select(ORIGIN, arg, 0), kit.Value(value, CLIENT_ORIGIN)) })
 				}
 			}},
 			mdb.CREATE: {Name: "create name link", Hand: func(m *ice.Message, arg ...string) { _spide_create(m, m.Option(mdb.NAME), m.Option(LINK)) }},
-			HEADER: {Name: "header key* value", Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashModify(m, m.OptionSimple(CLIENT_NAME), kit.Keys(HEADER, m.Option(mdb.KEY)), m.Option(mdb.VALUE))
-			}},
 			COOKIE: {Name: "cookie key* value", Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashModify(m, m.OptionSimple(CLIENT_NAME), kit.Keys(COOKIE, m.Option(mdb.KEY)), m.Option(mdb.VALUE))
+			}},
+			HEADER: {Name: "header key* value", Hand: func(m *ice.Message, arg ...string) {
+				mdb.HashModify(m, m.OptionSimple(CLIENT_NAME), kit.Keys(HEADER, m.Option(mdb.KEY)), m.Option(mdb.VALUE))
 			}},
 			MERGE: {Hand: func(m *ice.Message, arg ...string) {
 				m.Echo(kit.MergeURL2(m.Cmdv("", arg[0], CLIENT_URL), arg[1], arg[2:]))
 			}},
 			PROXY: {Name: "proxy url size cache upload", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(SPIDE, ice.DEV, SPIDE_RAW, http.MethodPost, m.Option("url"), SPIDE_PART, arg[2:])
+				m.Cmdy(SPIDE, ice.DEV, SPIDE_RAW, http.MethodPost, m.Option(URL), SPIDE_PART, arg[2:])
 			}},
 		}, mdb.HashAction(mdb.SHORT, CLIENT_NAME, mdb.FIELD, "time,client.name,client.url")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 || arg[0] == "" || (len(arg) > 3 && arg[3] == "") {
 				mdb.HashSelect(m, kit.Slice(arg, 0, 1)...).Sort(CLIENT_NAME)
-				if len(arg) > 0 && arg[0] != "" {
-					m.Action(COOKIE, HEADER)
-				}
+				kit.If(len(arg) > 0 && arg[0] != "", func() { m.Action(COOKIE, HEADER) })
 			} else {
 				_spide_show(m, arg[0], arg[1:]...)
 			}

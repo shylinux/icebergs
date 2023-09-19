@@ -65,7 +65,6 @@ func (m *Message) log(level string, str string, arg ...Any) *Message {
 			prefix, suffix = "\033[31m", "\033[0m"
 		}
 	}
-	kit.If(level == LOG_INFO && len(str) > 4096, func() { str = str[:4096] })
 	logs.Infof(str, append(arg, logs.PrefixMeta(kit.Format("%02d %4s->%-4s %s%s ", m.code, m.source.Name, m.target.Name, prefix, level)), logs.SuffixMeta(suffix), _source)...)
 	return m
 }
@@ -114,8 +113,9 @@ func (m *Message) Warn(err Any, arg ...Any) bool {
 		kit.If(map[string]int{
 			ErrNotLogin: http.StatusUnauthorized,
 			ErrNotRight: http.StatusForbidden,
-			ErrNotFound: http.StatusNotFound,
+			ErrNotAllow: http.StatusMethodNotAllowed,
 			ErrNotValid: http.StatusBadRequest,
+			ErrNotFound: http.StatusNotFound,
 		}[kit.Format(arg[0])], func(s int) { m.Render(RENDER_STATUS, s, str) })
 	}
 	return true
@@ -147,9 +147,7 @@ func (m *Message) IsOk() bool { return m.Result() == OK }
 func (m *Message) IsErr(arg ...string) bool {
 	return len(arg) == 0 && kit.Select("", m.meta[MSG_RESULT], 0) == ErrWarn || len(arg) > 0 && kit.Select("", m.meta[MSG_RESULT], 1) == arg[0]
 }
-func (m *Message) IsErrNotFound() bool {
-	return m.IsErr(ErrNotFound)
-}
+func (m *Message) IsErrNotFound() bool { return m.IsErr(ErrNotFound) }
 func (m *Message) Debug(str string, arg ...Any) {
 	kit.Format(str == "", func() { str = m.FormatMeta() })
 	m.log(LOG_DEBUG, str, arg...)

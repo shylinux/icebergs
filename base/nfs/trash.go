@@ -30,15 +30,15 @@ const TRASH = "trash"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		TRASH: {Name: "trash hash auto prunes", Help: "回收站", Actions: ice.MergeActions(ice.Actions{
-			mdb.REVERT: {Hand: func(m *ice.Message, arg ...string) {
-				Rename(m, m.Option(FILE), m.Option(FROM))
-				mdb.HashRemove(m, m.OptionSimple(mdb.HASH))
-			}},
 			mdb.CREATE: {Hand: func(m *ice.Message, arg ...string) {
 				_trash_create(m, kit.Paths(m.Option(FROM)))
 			}},
 			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) {
 				Remove(m, m.Option(FILE))
+				mdb.HashRemove(m, m.OptionSimple(mdb.HASH))
+			}},
+			mdb.REVERT: {Hand: func(m *ice.Message, arg ...string) {
+				Rename(m, m.Option(FILE), m.Option(FROM))
 				mdb.HashRemove(m, m.OptionSimple(mdb.HASH))
 			}},
 			mdb.PRUNES: {Hand: func(m *ice.Message, arg ...string) {

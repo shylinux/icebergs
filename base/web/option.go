@@ -19,7 +19,7 @@ import (
 
 type Message interface {
 	Option(key string, arg ...ice.Any) string
-	PrefixKey(...string) string
+	PrefixKey() string
 }
 
 func UserWeb(m Message) *url.URL { return kit.ParseURL(m.Option(ice.MSG_USERWEB)) }
@@ -39,19 +39,15 @@ func AgentIs(m Message, arg ...string) bool {
 	return false
 }
 func MergeURL2(m Message, url string, arg ...ice.Any) string {
-	if m.Option(log.DEBUG) == ice.TRUE {
-		arg = append([]ice.Any{log.DEBUG, ice.TRUE}, arg)
-	}
-	if m.Option(ice.MSG_USERWEB) == "" {
-		return kit.MergeURL2(Domain(ice.Pulse.Cmdv(tcp.HOST, aaa.IP), ice.Pulse.Cmdv(SERVE, tcp.PORT)), url, arg...)
-	}
+	kit.If(m.Option(log.DEBUG) == ice.TRUE, func() { arg = append(arg, log.DEBUG, ice.TRUE) })
+	kit.If(m.Option(ice.MSG_USERWEB) == "", func() {
+		m.Option(ice.MSG_USERWEB, Domain(ice.Pulse.Cmdv(tcp.HOST, aaa.IP), ice.Pulse.Cmdv(SERVE, tcp.PORT)))
+	})
 	return kit.MergeURL2(m.Option(ice.MSG_USERWEB), url, arg...)
 }
 func MergeLink(m Message, url string, arg ...ice.Any) string {
-	if m.Option(log.DEBUG) == ice.TRUE {
-		arg = append(arg, log.DEBUG, ice.TRUE)
-	}
-	return kit.MergeURL(strings.Split(MergeURL2(m, url), mdb.QS)[0], arg...)
+	kit.If(m.Option(log.DEBUG) == ice.TRUE, func() { arg = append(arg, log.DEBUG, ice.TRUE) })
+	return kit.MergeURL(strings.Split(MergeURL2(m, url), QS)[0], arg...)
 }
 func ProcessPodCmd(m *ice.Message, pod, cmd string, arg ...ice.Any) {
 	m.ProcessOpen(m.MergePodCmd(pod, cmd, arg...))
@@ -62,15 +58,15 @@ func ProcessIframe(m *ice.Message, name, link string, arg ...string) {
 	}, arg...)
 }
 func PushPodCmd(m *ice.Message, cmd string, arg ...string) {
-	kit.If(m.Length() > 0 && len(m.Appendv(SPACE)) == 0, func() { m.Table(func(value ice.Maps) { m.Push(SPACE, "") }) })
 	list := []string{}
 	m.Cmds(SPACE, func(value ice.Maps) {
-		// kit.If(kit.IsIn(value[mdb.TYPE], WORKER, SERVER), func() { list = append(list, value[mdb.NAME]) })
 		kit.If(kit.IsIn(value[mdb.TYPE], WORKER), func() { list = append(list, value[mdb.NAME]) })
+		// kit.If(kit.IsIn(value[mdb.TYPE], WORKER, SERVER), func() { list = append(list, value[mdb.NAME]) })
 	})
 	if len(list) == 0 {
 		return
 	}
+	kit.If(m.Length() > 0 && len(m.Appendv(SPACE)) == 0, func() { m.Table(func(value ice.Maps) { m.Push(SPACE, "") }) })
 	GoToast(m, "", func(toast func(string, int, int)) []string {
 		kit.For(list, func(index int, space string) {
 			toast(space, index, len(list))
@@ -126,8 +122,8 @@ func Toast(m *ice.Message, text string, arg ...ice.Any) { // [title [duration [p
 func toastContent(m *ice.Message, state string) string {
 	return kit.Join([]string{map[string]string{ice.PROCESS: "🕑", ice.FAILURE: "❌", ice.SUCCESS: "✅"}[state], state, m.ActionKey()}, " ")
 }
-func ToastFailure(m *ice.Message, arg ...ice.Any) { Toast(m, toastContent(m, ice.FAILURE), arg...) }
 func ToastSuccess(m *ice.Message, arg ...ice.Any) { Toast(m, toastContent(m, ice.SUCCESS), arg...) }
+func ToastFailure(m *ice.Message, arg ...ice.Any) { Toast(m, toastContent(m, ice.FAILURE), arg...) }
 func ToastProcess(m *ice.Message, arg ...ice.Any) func() {
 	kit.If(len(arg) == 0, func() { arg = kit.List("", "-1") })
 	kit.If(len(arg) == 1, func() { arg = append(arg, "-1") })

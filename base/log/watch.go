@@ -20,10 +20,11 @@ func init() {
 			m.Cmd(nfs.CAT, path.Join(ice.VAR_LOG, "watch.log"), func(text string) {
 				ls := kit.Split(text)
 				m.Push(mdb.TIME, ls[0]+lex.SP+ls[1]).Push(mdb.ID, ls[2]).Push(nfs.SOURCE, kit.Slice(ls, -1)[0])
-				m.Push(ctx.SHIP, ls[3]).Push(ctx.ACTION, ls[4]).Push(nfs.CONTENT, kit.Join(kit.Slice(ls, 5, -1), lex.SP))
+				m.Push(ctx.SHIP, ls[3]).Push("operate", ls[4]).Push(nfs.CONTENT, kit.Join(kit.Slice(ls, 5, -1), lex.SP))
 				stats[ls[4]]++
 			})
 			m.StatusTimeCount(stats)
+			m.Action("filter:text")
 		}},
 	})
 }

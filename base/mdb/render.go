@@ -11,10 +11,7 @@ func init() { Index.MergeCommands(ice.Commands{RENDER: {Help: "渲染", Actions:
 
 func RenderAction(arg ...ice.Any) ice.Actions {
 	return ice.MergeActions(ice.Actions{ice.CTX_INIT: AutoConfig(SHORT, TYPE, FIELD, "time,type,name,text", arg),
-		CREATE: {Name: "create type name text", Hand: func(m *ice.Message, arg ...string) {
-			Config(m, SHORT, TYPE)
-			HashCreate(m)
-		}},
+		CREATE: {Name: "create type name text", Hand: func(m *ice.Message, arg ...string) { Config(m, SHORT, TYPE); HashCreate(m) }},
 		SELECT: {Name: "select type name text auto create", Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 || arg[0] == "" {
 				HashSelect(m, arg...)

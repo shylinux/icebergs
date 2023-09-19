@@ -25,10 +25,11 @@ func (s *Frame) Begin(m *Message, arg ...string) {
 }
 func (s *Frame) Start(m *Message, arg ...string) {
 	m.Cmd(INIT, arg)
-	kit.For(kit.Split(kit.Select(kit.Join([]string{LOG, GDB, SSH}), os.Getenv(CTX_DAEMON))), func(k string) { m.Sleep("10ms").Start(k) })
-	m.Sleep("10ms").Cmd(arg)
+	kit.For([]string{LOG, GDB, SSH}, func(k string) { m.Sleep30ms().Start(k) })
+	m.Sleep30ms().Cmd(arg)
 }
 func (s *Frame) Close(m *Message, arg ...string) {
+	defer conf.Close()
 	list := map[*Context]*Message{m.target: m}
 	m.Travel(func(p *Context, s *Context) {
 		if msg, ok := list[p]; ok && msg != nil {
@@ -36,8 +37,7 @@ func (s *Frame) Close(m *Message, arg ...string) {
 			s.Close(list[s], arg...)
 		}
 	})
-	conf.Close()
-	go func() { os.Exit(kit.Int(Pulse.Sleep30ms().Option(EXIT))) }()
+	go func() { os.Exit(kit.Int(Pulse.Sleep300ms().Option(EXIT))) }()
 }
 
 const (
@@ -59,14 +59,11 @@ var Index = &Context{Name: ICE, Help: "冰山模块", Commands: Commands{
 		loadImportant(m)
 	}},
 	QUIT: {Hand: func(m *Message, arg ...string) {
-		m.Go(func() {
-			m.Sleep("10ms")
-			os.Exit(0)
-		})
+		m.Go(func() { m.Sleep30ms(); os.Exit(0) })
 	}},
 	EXIT: {Hand: func(m *Message, arg ...string) {
 		m.Go(func() {
-			m.Sleep("10ms")
+			m.Sleep30ms()
 			m.root.Option(EXIT, kit.Select("0", arg, 0))
 			m.Cmd(SOURCE, ETC_EXIT_SHY)
 			m.Cmd(CTX_EXIT)
@@ -83,23 +80,22 @@ var Index = &Context{Name: ICE, Help: "冰山模块", Commands: Commands{
 var Pulse = &Message{meta: map[string][]string{}, data: Map{}, source: Index, target: Index}
 
 func init() {
-	Index.root, Pulse.root = Index, Pulse
 	switch tz := os.Getenv("TZ"); tz {
 	case "", "Asia/Beijing", "Asia/Shanghai":
 		time.Local = time.FixedZone(tz, 28800)
 	}
-	Pulse.time = time.Now()
+	Index.root, Pulse.root, Pulse.time = Index, Pulse, time.Now()
 }
 
 func Run(arg ...string) string {
-	kit.If(len(arg) == 0 && len(os.Args) > 1, func() { arg = kit.Simple(os.Args[1:], kit.Split(kit.Env(CTX_ARG))) })
+	kit.If(len(arg) == 0 && len(os.Args) > 1, func() { arg = os.Args[1:] })
 	if len(arg) == 0 {
-		if runtime.GOOS == "windows" {
+		if runtime.GOOS == WINDOWS {
 			arg = append(arg, SERVE, START)
 		} else {
 			arg = append(arg, FOREVER, START)
 		}
-	} else if arg[0] == FOREVER && arg[1] == START && runtime.GOOS == "windows" {
+	} else if arg[0] == FOREVER && arg[1] == START && runtime.GOOS == WINDOWS {
 		arg[0] = SERVE
 	}
 	Pulse.meta[MSG_DETAIL] = arg

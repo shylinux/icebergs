@@ -17,13 +17,6 @@ const PACK = "pack"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		PACK: {Name: "pack path auto upload create", Help: "文件系统", Actions: ice.Actions{
-			mdb.CREATE: {Name: "create path*=src/hi/hi.txt text*=hello", Hand: func(m *ice.Message, arg ...string) {
-				OptionFiles(m, PackFile)
-				Create(m, m.Option(PATH), func(w io.Writer, p string) {
-					Save(m, w, m.Option(mdb.TEXT), func(n int) { m.Logs(LOAD, FILE, p, SIZE, n) })
-				})
-			}},
-			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) { PackFile.Remove(path.Clean(m.Option(PATH))) }},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == mdb.FOREACH && arg[1] != "" {
 					m.Cmd(DIR, SRC, PATH, kit.Dict(DIR_REG, arg[1], DIR_DEEP, ice.TRUE, DIR_TYPE, CAT), func(value ice.Maps) {
@@ -38,6 +31,13 @@ func init() {
 					})
 				}
 			}},
+			mdb.CREATE: {Name: "create path*=src/hi/hi.txt text*=hello", Hand: func(m *ice.Message, arg ...string) {
+				OptionFiles(m, PackFile)
+				Create(m, m.Option(PATH), func(w io.Writer, p string) {
+					Save(m, w, m.Option(mdb.TEXT), func(n int) { m.Logs(LOAD, FILE, p, SIZE, n) })
+				})
+			}},
+			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) { PackFile.Remove(path.Clean(m.Option(PATH))) }},
 			mdb.IMPORT: {Hand: func(m *ice.Message, arg ...string) {
 				OptionFiles(m, DiskFile)
 				Open(m, path.Join(m.Option(PATH), m.Option(FILE)), func(r io.Reader, p string) {
@@ -68,11 +68,11 @@ func init() {
 	})
 }
 
-var PackFile = file.NewPackFile()
 var DiskFile = file.NewDiskFile()
+var PackFile = file.NewPackFile()
 
 func init() { file.Init(OptionFiles(ice.Pulse, DiskFile, PackFile)) }
-func init() { ice.Info.OpenFile = OpenFile }
+func init() { ice.Info.Open = OpenFile }
 
 type optionMessage interface {
 	Optionv(key string, arg ...ice.Any) ice.Any

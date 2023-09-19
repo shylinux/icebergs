@@ -32,7 +32,7 @@ func Render(m *ice.Message, cmd string, args ...ice.Any) bool {
 	arg := kit.Simple(args...)
 	kit.If(len(arg) == 0, func() { args = nil })
 	if cmd != "" {
-		if cmd != ice.RENDER_DOWNLOAD || !kit.HasPrefix(arg[0], ice.USR_VOLCANOS, ice.USR_INTSHELL, "src/template/", "usr/icons/", "usr/node_modules/") {
+		if cmd != ice.RENDER_DOWNLOAD || !kit.HasPrefix(arg[0], ice.USR_VOLCANOS, ice.USR_INTSHELL, ice.SRC_TEMPLATE, ice.USR_ICONS, "usr/node_modules/") {
 			defer func() { m.Logs("Render", cmd, args) }()
 		}
 	}
@@ -60,18 +60,14 @@ func Render(m *ice.Message, cmd string, args ...ice.Any) bool {
 		if len(arg) > 0 { // [str [arg...]]
 			m.W.Write([]byte(kit.Format(arg[0], args[1:]...)))
 		} else {
-			if m.Result() == "" && m.Length() > 0 {
-				m.TableEcho()
-			}
+			kit.If(m.Result() == "" && m.Length() > 0, func() { m.TableEcho() })
 			m.W.Write([]byte(m.Result()))
 		}
 	case ice.RENDER_JSON:
 		RenderType(m.W, nfs.JSON, "")
 		m.W.Write([]byte(arg[0]))
 	default:
-		if cmd != "" && cmd != ice.RENDER_RAW {
-			m.Echo(kit.Format(cmd, args...))
-		}
+		kit.If(cmd != "" && cmd != ice.RENDER_RAW, func() { m.Echo(kit.Format(cmd, args...)) })
 		RenderType(m.W, nfs.JSON, "")
 		m.FormatsMeta(m.W)
 	}
@@ -154,21 +150,12 @@ func RenderVersion(m *ice.Message) string {
 }
 
 const (
-	DARK    = "dark"
-	LIGHT   = "light"
-	BLACK   = "black"
-	DISPLAY = "display"
-	RESIZE  = "resize"
-	LAYOUT  = "layout"
-	OUTPUT  = "output"
-	INPUT   = "input"
-	VIEW    = "view"
-	CHAT    = "chat"
-
+	CHAT     = "chat"
 	CHAT_POD = "/chat/pod/"
 	CHAT_CMD = "/chat/cmd/"
 
 	CODE_GIT_SERVICE = "web.code.git.service"
+	CODE_GIT_SEARCH  = "web.code.git.search"
 	CODE_GIT_STATUS  = "web.code.git.status"
 	CODE_GIT_REPOS   = "web.code.git.repos"
 	CODE_COMPILE     = "web.code.compile"

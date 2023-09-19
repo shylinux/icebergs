@@ -11,7 +11,6 @@ import (
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
-	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -23,14 +22,11 @@ import (
 func _serve_address(m *ice.Message) string { return Domain(tcp.LOCALHOST, m.Option(tcp.PORT)) }
 func _serve_start(m *ice.Message) {
 	defer kit.For(kit.Split(m.Option(ice.DEV)), func(v string) {
-		m.Sleep("10ms").Cmd(SPACE, tcp.DIAL, ice.DEV, v, mdb.NAME, ice.Info.NodeName, TOKEN, m.Option(TOKEN))
+		m.Sleep30ms().Cmd(SPACE, tcp.DIAL, ice.DEV, v, mdb.NAME, ice.Info.NodeName, m.OptionSimple(TOKEN))
 	})
-	kit.If(m.Option(aaa.USERNAME), func() { aaa.UserRoot(m, m.Option(aaa.USERNICK), m.Option(aaa.USERNAME)) })
 	kit.If(m.Option(tcp.PORT) == tcp.RANDOM, func() { m.Option(tcp.PORT, m.Cmdx(tcp.PORT, aaa.RIGHT)) })
-	// kit.If(cli.IsWindows(), func() {
-	m.Go(func() { m.Cmd(SPIDE, ice.OPS, _serve_address(m)+"/exit", ice.Maps{CLIENT_TIMEOUT: "30ms"}) })
-	m.Sleep("30ms")
-	// })
+	kit.If(m.Option(aaa.USERNAME), func() { aaa.UserRoot(m, m.Option(aaa.USERNICK), m.Option(aaa.USERNAME)) })
+	m.Go(func() { m.Cmd(SPIDE, ice.OPS, _serve_address(m)+"/exit", ice.Maps{CLIENT_TIMEOUT: "30ms"}) }).Sleep30ms()
 	cli.NodeInfo(m, kit.Select(ice.Info.Hostname, m.Option(tcp.NODENAME)), SERVER)
 	m.Start("", m.OptionSimple(tcp.HOST, tcp.PORT)...)
 }
@@ -58,7 +54,7 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 		r.Header.Set(ice.MSG_USERIP, strings.Split(r.RemoteAddr, nfs.DF)[0])
 	}
 	if m.Logs(r.Header.Get(ice.MSG_USERIP), r.Method, r.URL.String()); r.Method == http.MethodGet {
-		ispod := kit.Contains(r.Header.Get("Referer"), "/chat/pod/", "pod=") || kit.Contains(r.URL.String(), "/chat/pod/", "pod=")
+		ispod := kit.Contains(r.URL.String(), CHAT_POD, "pod=") || kit.Contains(r.Header.Get(Referer), CHAT_POD, "pod=")
 		if msg := m.Spawn(w, r).Options(ice.MSG_USERUA, r.UserAgent()); path.Join(r.URL.Path) == nfs.PS {
 			if !msg.IsCliUA() {
 				if r.URL.Path = kit.Select(nfs.PS, mdb.Config(m, ice.MAIN)); path.Join(r.URL.Path) != nfs.PS {
@@ -68,11 +64,13 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 			return !Render(RenderMain(msg), msg.Option(ice.MSG_OUTPUT), kit.List(msg.Optionv(ice.MSG_ARGS))...)
 		} else if p := path.Join(kit.Select(ice.USR_VOLCANOS, ice.USR_INTSHELL, msg.IsCliUA()), r.URL.Path); nfs.Exists(msg, p) {
 			return !Render(msg, ice.RENDER_DOWNLOAD, p)
-		} else if p = path.Join(nfs.USR, r.URL.Path); kit.HasPrefix(r.URL.Path, "/volcanos/", "/intshell/") && nfs.Exists(msg, p) {
+		} else if p = path.Join(nfs.USR, r.URL.Path); kit.HasPrefix(r.URL.Path, nfs.VOLCANOS, nfs.INTSHELL) && nfs.Exists(msg, p) {
 			return !Render(msg, ice.RENDER_DOWNLOAD, p)
-		} else if p = strings.TrimPrefix(r.URL.Path, "/require/"); kit.HasPrefix(r.URL.Path, "/require/src/", "/require/usr/icons/", "/require/usr/icebergs/") && nfs.Exists(msg, p) && !ispod {
-			return !Render(msg, ice.RENDER_DOWNLOAD, p)
-		} else if p = path.Join("usr/node_modules/", strings.TrimPrefix(r.URL.Path, "/require/modules/")); kit.HasPrefix(r.URL.Path, "/require/modules/") && nfs.Exists(msg, p) {
+		} else if p = strings.TrimPrefix(r.URL.Path, nfs.REQUIRE); kit.HasPrefix(r.URL.Path, ice.REQUIRE_SRC, nfs.REQUIRE+ice.USR_ICONS, nfs.REQUIRE+ice.USR_ICEBERGS) && nfs.Exists(msg, p) {
+			if !ispod {
+				return !Render(msg, ice.RENDER_DOWNLOAD, p)
+			}
+		} else if p = path.Join(ice.USR_MODULES, strings.TrimPrefix(r.URL.Path, ice.REQUIRE_MODULES)); kit.HasPrefix(r.URL.Path, ice.REQUIRE_MODULES) && nfs.Exists(msg, p) {
 			return !Render(msg, ice.RENDER_DOWNLOAD, p)
 		}
 	} else if path.Join(r.URL.Path) == nfs.PS {
@@ -106,8 +104,8 @@ func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.Response
 		r.ParseMultipartForm(kit.Int64(kit.Select("4096", r.Header.Get(ContentLength))))
 		kit.For(r.PostForm, func(k string, v []string) { _log(FORM, k, kit.Join(v, lex.SP)).Optionv(k, v) })
 	}
-	m.Option(ice.MSG_COUNT, "0")
 	kit.For(r.Cookies(), func(k, v string) { m.Optionv(k, v) })
+	m.Options(ice.MSG_COUNT, "0")
 	m.Options(ice.MSG_USERWEB, _serve_domain(m), ice.MSG_USERPOD, m.Option(ice.POD))
 	m.Options(ice.MSG_USERUA, r.Header.Get(UserAgent), ice.MSG_USERIP, r.Header.Get(ice.MSG_USERIP))
 	m.Options(ice.MSG_SESSID, kit.Select(m.Option(ice.MSG_SESSID), m.Option(CookieName(m.Option(ice.MSG_USERWEB)))))
@@ -116,9 +114,14 @@ func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.Response
 	})
 	defer func() { Render(m, m.Option(ice.MSG_OUTPUT), kit.List(m.Optionv(ice.MSG_ARGS))...) }()
 	if cmds, ok := _serve_auth(m, key, kit.Simple(m.Optionv(ice.MSG_CMDS)), w, r); ok {
-		defer func() { m.Cost(kit.Format("%s: %s %v", r.Method, m.PrefixPath()+path.Join(cmds...), m.FormatSize())) }()
+		defer func() {
+			m.Cost(kit.Format("%s: %s/%s %v", r.Method, m.PrefixKey(), path.Join(cmds...), m.FormatSize()))
+		}()
 		m.Option(ice.MSG_OPTS, kit.Simple(m.Optionv(ice.MSG_OPTION), func(k string) bool { return !strings.HasPrefix(k, ice.MSG_SESSID) }))
 		if m.Detailv(m.PrefixKey(), cmds); len(cmds) > 1 && cmds[0] == ctx.ACTION {
+			if !kit.IsIn(cmds[1], ctx.RUN, ctx.COMMAND) && m.Warn(r.Method == http.MethodGet, ice.ErrNotAllow) {
+				return
+			}
 			m.ActionHand(cmd, key, cmds[1], cmds[2:]...)
 		} else {
 			m.CmdHand(cmd, key, cmds...)
@@ -143,9 +146,9 @@ func _serve_auth(m *ice.Message, key string, cmds []string, w http.ResponseWrite
 		return cmds, true
 	}
 	defer func() { m.Options(ice.MSG_CMDS, "", ice.MSG_SESSID, "") }()
-	if aaa.SessCheck(m, m.Option(ice.MSG_SESSID)); m.Option(ice.MSG_USERNAME) == "" && ice.Info.Localhost {
+	if aaa.SessCheck(m, m.Option(ice.MSG_SESSID)); m.Option(ice.MSG_USERNAME) == "" {
 		ls := kit.Simple(mdb.Cache(m, m.Option(ice.MSG_USERIP), func() ice.Any {
-			if tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) {
+			if IsLocalHost(m) {
 				aaa.UserRoot(m)
 				return kit.Simple(m.Time(), m.OptionSplit(ice.MSG_USERNICK, ice.MSG_USERNAME, ice.MSG_USERROLE))
 			}
@@ -161,8 +164,6 @@ func _serve_auth(m *ice.Message, key string, cmds []string, w http.ResponseWrite
 }
 
 const (
-	SERVE_START = "serve.start"
-
 	SSO    = "sso"
 	URL    = "url"
 	HTTP   = "http"
@@ -172,70 +173,52 @@ const (
 	FORM   = "form"
 	BODY   = "body"
 
-	ApplicationJSON  = "application/json"
-	ApplicationOctet = "application/octet-stream"
+	SERVE_START = "serve.start"
 )
 const SERVE = "serve"
 
 func init() {
-	Index.MergeCommands(ice.Commands{
-		P(ice.EXIT):      {Hand: func(m *ice.Message, arg ...string) { m.Cmd(ice.EXIT) }},
-		PP(ice.VOLCANOS): {Hand: func(m *ice.Message, arg ...string) { m.RenderDownload(path.Join(ice.USR_VOLCANOS, path.Join(arg...))) }},
-		PP(ice.INTSHELL): {Hand: func(m *ice.Message, arg ...string) { m.RenderDownload(path.Join(ice.USR_INTSHELL, path.Join(arg...))) }},
-		SERVE: {Name: "serve name auto start main dark system publicip", Help: "服务器", Actions: ice.MergeActions(ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				cli.NodeInfo(m, ice.Info.Pathname, WORKER)
-				gdb.Watch(m, SERVE_START)
-				aaa.White(m, ice.INTSHELL)
-				aaa.White(m, ice.VOLCANOS)
-				aaa.White(m, nfs.REQUIRE)
-				aaa.White(m, LOGIN)
-			}},
-			DOMAIN: {Hand: func(m *ice.Message, arg ...string) {
-				kit.If(len(arg) > 0, func() { ice.Info.Domain, ice.Info.Localhost = arg[0], false })
-				m.Echo(ice.Info.Domain)
-			}},
-			cli.START: {Name: "start dev proto host port=9020 nodename username usernick", Hand: func(m *ice.Message, arg ...string) {
-				_serve_start(m)
-			}},
-			SERVE_START: {Hand: func(m *ice.Message, arg ...string) {
-				m.Go(func() {
-					m.Option(ice.MSG_USERIP, "127.0.0.1")
-					cli.Opens(m, mdb.Config(m, cli.OPEN))
-					ssh.PrintQRCode(m, tcp.PublishLocalhost(m, _serve_address(m)))
-				})
-			}},
-			cli.SYSTEM: {Help: "系统", Hand: func(m *ice.Message, arg ...string) { cli.Opens(m, "System Settings.app") }},
+	Index.MergeCommands(ice.Commands{P(ice.EXIT): {Hand: func(m *ice.Message, arg ...string) { m.Cmd(ice.EXIT) }},
+		SERVE: {Name: "serve name auto main host dark system", Help: "服务器", Actions: ice.MergeActions(ice.Actions{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { cli.NodeInfo(m, ice.Info.Pathname, WORKER) }},
 			ice.MAIN: {Name: "main index", Help: "首页", Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(ctx.INDEX) == "" {
 					mdb.Config(m, ice.MAIN, "")
 				} else {
-					mdb.Config(m, ice.MAIN, CHAT_CMD+m.Option(ctx.INDEX)+"/")
+					mdb.Config(m, ice.MAIN, CHAT_CMD+m.Option(ctx.INDEX)+nfs.PS)
 				}
 			}},
-			"publicip": {Help: "公网", Hand: func(m *ice.Message, arg ...string) { m.Echo(kit.Formats(PublicIP(m))) }},
-			"dark": {Help: "主题", Hand: func(m *ice.Message, arg ...string) {
+			tcp.HOST: {Help: "公网", Hand: func(m *ice.Message, arg ...string) { m.Echo(kit.Formats(PublicIP(m))) }},
+			cli.DARK: {Help: "主题", Hand: func(m *ice.Message, arg ...string) {
 				if tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) {
 					m.Cmd(cli.SYSTEM, "osascript", "-e", `tell app "System Events" to tell appearance preferences to set dark mode to not dark mode`)
 				}
 			}},
+			cli.SYSTEM: {Help: "系统", Hand: func(m *ice.Message, arg ...string) { cli.Opens(m, "System Settings.app") }},
+			cli.START:  {Name: "start dev proto host port=9020 nodename username usernick", Hand: func(m *ice.Message, arg ...string) { _serve_start(m) }},
+			SERVE_START: {Hand: func(m *ice.Message, arg ...string) {
+				m.Go(func() {
+					m.Option(ice.MSG_USERIP, "127.0.0.1")
+					ssh.PrintQRCode(m, tcp.PublishLocalhost(m, _serve_address(m)))
+					cli.Opens(m, mdb.Config(m, cli.OPEN))
+				})
+			}},
 		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,status,name,proto,host,port"), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
-			mdb.HashSelect(m, arg...)
-			m.StatusTimeCount(ice.MAIN, mdb.Config(m, ice.MAIN))
+			mdb.HashSelect(m, arg...).StatusTimeCount(ice.MAIN, mdb.Config(m, ice.MAIN))
 		}},
 	})
 	ice.AddMergeAction(func(c *ice.Context, key string, cmd *ice.Command, sub string, action *ice.Action) {
 		if strings.HasPrefix(sub, nfs.PS) {
-			kit.If(action.Hand == nil, func() { action.Hand = cmd.Hand })
-			sub = kit.Select(P(key, sub), PP(key, sub), strings.HasSuffix(sub, nfs.PS))
 			actions := ice.Actions{}
 			for k, v := range cmd.Actions {
 				kit.If(!kit.IsIn(k, ice.CTX_INIT, ice.CTX_EXIT), func() { actions[k] = v })
 			}
+			kit.If(action.Hand == nil, func() { action.Hand = cmd.Hand })
+			sub = kit.Select(P(key, sub), PP(key, sub), strings.HasSuffix(sub, nfs.PS))
 			c.Commands[sub] = &ice.Command{Name: kit.Select(cmd.Name, action.Name), Actions: ice.MergeActions(actions, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 				msg := m.Spawn(c, key, cmd)
-				defer m.Copy(msg)
 				action.Hand(msg, arg...)
+				m.Copy(msg)
 			}, RawHand: action.Hand}
 		}
 	})
@@ -247,7 +230,6 @@ func Script(m *ice.Message, str string, arg ...ice.Any) string {
 func ChatCmdPath(m *ice.Message, arg ...string) string {
 	if p := m.Option(ice.MSG_USERPOD); p != "" {
 		return path.Join(CHAT_POD, p, "/cmd/", kit.Select(m.PrefixKey(), path.Join(arg...)))
-
 	}
 	return path.Join(CHAT_CMD, kit.Select(m.PrefixKey(), path.Join(arg...)))
 }
@@ -255,7 +237,10 @@ func RequireFile(m *ice.Message, file string) string {
 	if strings.HasPrefix(file, nfs.PS) || strings.HasPrefix(file, ice.HTTP) {
 		return file
 	} else if file != "" {
-		return "/require/" + file
+		return nfs.REQUIRE + file
 	}
 	return ""
+}
+func IsLocalHost(m *ice.Message) bool {
+	return m.R.Header.Get("X-Forwarded-For") == "" && tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP))
 }

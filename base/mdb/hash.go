@@ -111,7 +111,7 @@ func _hash_export(m *ice.Message, prefix, chain, file string) {
 }
 func _hash_import(m *ice.Message, prefix, chain, file string) {
 	defer Lock(m, prefix, chain)()
-	f, e := ice.Info.OpenFile(m, kit.Keys(file, JSON))
+	f, e := ice.Info.Open(m, kit.Keys(file, JSON))
 	if os.IsNotExist(e) {
 		return
 	}
@@ -140,7 +140,8 @@ const (
 const HASH = "hash"
 
 func HashAction(arg ...Any) ice.Actions {
-	return ice.Actions{ice.CTX_INIT: AutoConfig(append(kit.List(FIELD, HASH_FIELD), arg...)...),
+	return ice.Actions{
+		ice.CTX_INIT: AutoConfig(append(kit.List(FIELD, HASH_FIELD), arg...)...),
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { HashSelectClose(m) }},
 
 		INPUTS: {Hand: func(m *ice.Message, arg ...string) { HashInputs(m, arg) }},
@@ -165,8 +166,8 @@ func ClearOnExitHashAction() ice.Actions {
 }
 func ExportHashAction() ice.Actions {
 	return ice.Actions{
-		ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { HashImport(m, arg) }},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { HashExport(m, arg) }},
+		ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { HashImport(m, arg) }},
 	}
 }
 
@@ -187,7 +188,6 @@ func HashField(m *ice.Message) string {
 		return m.Option(FIELD)
 	}
 	return kit.Select(HASH_FIELD, Config(m, FIELD))
-	// return kit.Select(HASH_FIELD, Config(m, FIELD), Config(m, FIELDS))
 }
 func HashInputs(m *ice.Message, arg ...Any) *ice.Message {
 	return m.Cmdy(INPUTS, m.PrefixKey(), "", HASH, arg)
@@ -252,17 +252,12 @@ func HashSelectUpdate(m *ice.Message, key string, cb Any) *ice.Message {
 }
 func HashSelectDetail(m *ice.Message, key string, cb Any) (has bool) {
 	defer RLock(m, m.PrefixKey())()
-	Richs(m, m.PrefixKey(), nil, key, func(key string, value Map) {
-		_mdb_select(m, cb, key, value, nil, nil)
-		has = true
-	})
+	Richs(m, m.PrefixKey(), nil, key, func(key string, value Map) { _mdb_select(m, cb, key, value, nil, nil); has = true })
 	return
 }
 func HashSelectDetails(m *ice.Message, key string, cb func(Map) bool) Map {
 	val := kit.Dict()
-	HashSelectDetail(m, key, func(value Map) {
-		kit.If(cb(value), func() { kit.For(value, func(k string, v Any) { val[k] = v }) })
-	})
+	HashSelectDetail(m, key, func(value Map) { kit.If(cb(value), func() { kit.For(value, func(k string, v Any) { val[k] = v }) }) })
 	return val
 }
 func HashSelectField(m *ice.Message, key string, field string) (value string) {
@@ -329,9 +324,6 @@ func Richs(m *ice.Message, prefix string, chain Any, raw Any, cb Any) (res Map) 
 }
 func Rich(m *ice.Message, prefix string, chain Any, data Any) string {
 	cache := Confm(m, prefix, chain)
-	if cache == nil {
-		cache = kit.Data()
-		m.Confv(prefix, chain, cache)
-	}
+	kit.If(cache == nil, func() { cache = kit.Data(); m.Confv(prefix, chain, cache) })
 	return miss.Rich(path.Join(prefix, kit.Keys(chain)), cache, data)
 }

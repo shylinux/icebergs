@@ -1,14 +1,12 @@
 package web
 
 import (
-	"net/http"
 	"path"
 	"strings"
 	"time"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
-	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -25,36 +23,26 @@ func _share_link(m *ice.Message, p string, arg ...ice.Any) string {
 	return tcp.PublishLocalhost(m, MergeLink(m, kit.Select("", PP(SHARE, LOCAL), !strings.HasPrefix(p, nfs.PS) && !strings.HasPrefix(p, HTTP))+p, arg...))
 }
 func _share_cache(m *ice.Message, arg ...string) {
-	if pod := m.Option(ice.POD); ctx.PodCmd(m, CACHE, arg[0]) {
-		if m.Append(nfs.FILE) == "" {
-			m.RenderResult(m.Append(mdb.TEXT))
-		} else {
-			ShareLocalFile(m.Options(ice.POD, pod), m.Append(nfs.FILE))
-		}
+	if m.Cmdy(CACHE, arg[0]); m.Append(nfs.FILE) == "" {
+		m.RenderResult(m.Append(mdb.TEXT))
 	} else {
-		if m.Cmdy(CACHE, arg[0]); m.Append(nfs.FILE) == "" {
-			m.RenderResult(m.Append(mdb.TEXT))
-		} else {
-			m.RenderDownload(m.Append(nfs.FILE), m.Append(mdb.TYPE), m.Append(mdb.NAME))
-		}
+		m.RenderDownload(m.Append(nfs.FILE), m.Append(mdb.TYPE), m.Append(mdb.NAME))
 	}
 }
 func _share_proxy(m *ice.Message) {
-	switch p := path.Join(ice.VAR_PROXY, m.Option(ice.POD), m.Option(nfs.PATH)); m.R.Method {
-	case http.MethodGet:
-		m.RenderDownload(p, m.Option(mdb.TYPE), m.Option(mdb.NAME))
-	case http.MethodPost:
-		msg := m.Cmd(SHARE, m.Option(SHARE))
-		defer m.Cmd(SHARE, mdb.REMOVE, mdb.HASH, m.Option(SHARE))
-		if m.Warn(msg.Append(mdb.TEXT) == "") {
-			break
-		}
-		p := path.Join(ice.VAR_PROXY, msg.Append(mdb.TEXT), msg.Append(mdb.NAME))
-		if _, _, e := m.R.FormFile(UPLOAD); e == nil {
-			m.Cmdy(CACHE, UPLOAD).Cmdy(CACHE, WATCH, m.Option(mdb.HASH), p)
-		}
-		m.RenderResult(m.Option(nfs.PATH))
+	if m.Warn(m.Option(SHARE) == "", ice.ErrNotValid) {
+		return
 	}
+	msg := m.Cmd(SHARE, m.Option(SHARE))
+	defer m.Cmd(SHARE, mdb.REMOVE, mdb.HASH, m.Option(SHARE))
+	if m.Warn(msg.Append(mdb.TEXT) == "", ice.ErrNotValid) {
+		return
+	}
+	p := path.Join(ice.VAR_PROXY, msg.Append(mdb.TEXT), msg.Append(mdb.NAME))
+	if _, _, e := m.R.FormFile(UPLOAD); e == nil {
+		m.Cmdy(CACHE, UPLOAD).Cmdy(CACHE, WATCH, m.Option(mdb.HASH), p)
+	}
+	m.RenderResult(m.Option(nfs.PATH))
 }
 
 const (
@@ -75,9 +63,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		SHARE: {Name: "share hash auto login prunes", Help: "共享链", Actions: ice.MergeActions(ice.Actions{
 			mdb.CREATE: {Name: "create type name text", Hand: func(m *ice.Message, arg ...string) {
-				if m.Option(mdb.TYPE) == LOGIN {
-					arg = append(arg, mdb.TEXT, tcp.PublishLocalhost(m, m.Option(mdb.TEXT)))
-				}
+				kit.If(m.Option(mdb.TYPE) == LOGIN, func() { arg = append(arg, mdb.TEXT, tcp.PublishLocalhost(m, m.Option(mdb.TEXT))) })
 				mdb.HashCreate(m, arg, aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERROLE, m.Option(ice.MSG_USERROLE))
 				m.Option(mdb.LINK, _share_link(m, P(SHARE, m.Result())))
 			}},
@@ -113,11 +99,8 @@ func init() {
 				}
 			}},
 		}, aaa.WhiteAction(ctx.COMMAND, ctx.RUN), mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,usernick,username,userrole", mdb.EXPIRE, mdb.DAYS)), Hand: func(m *ice.Message, arg ...string) {
-			if mdb.HashSelect(m, arg...); len(arg) > 0 {
-				link := _share_link(m, P(SHARE, arg[0]))
-				m.PushQRCode(cli.QRCODE, link)
-				m.PushScript(nfs.SCRIPT, link)
-				m.PushAnchor(link)
+			if kit.IsIn(m.Option(ice.MSG_USERROLE), aaa.ROOT, aaa.TECH) || len(arg) > 0 && arg[0] != "" {
+				mdb.HashSelect(m, arg...)
 			}
 		}},
 		PP(SHARE, CACHE): {Hand: func(m *ice.Message, arg ...string) { _share_cache(m, arg...) }},
@@ -173,6 +156,6 @@ func ShareLocalFile(m *ice.Message, arg ...string) {
 	share := m.Cmdx(SHARE, mdb.CREATE, mdb.TYPE, PROXY, mdb.NAME, p, mdb.TEXT, m.Option(ice.POD))
 	defer m.Cmd(SHARE, mdb.REMOVE, mdb.HASH, share)
 	url := tcp.PublishLocalhost(m, MergeLink(m, PP(SHARE, PROXY), SHARE, share))
-	m.Cmd(SPACE, m.Option(ice.POD), SPIDE, PROXY, "url", url, nfs.SIZE, size, CACHE, cache.Format(ice.MOD_TIME), UPLOAD, mdb.AT+p)
+	m.Cmd(SPACE, m.Option(ice.POD), SPIDE, PROXY, URL, url, nfs.SIZE, size, CACHE, cache.Format(ice.MOD_TIME), UPLOAD, mdb.AT+p)
 	m.RenderDownload(kit.Select(p, pp, file.ExistsFile(pp)))
 }

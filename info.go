@@ -27,9 +27,9 @@ type MakeInfo struct {
 	When    string
 	Message string
 
-	Domain string
 	Module string
 	System string
+	Domain string
 }
 
 func (s MakeInfo) Versions() string {
@@ -67,16 +67,17 @@ var Info = struct {
 	Gomod Maps
 	Route Maps
 	Index Map
-	Stack map[string]func(m *Message, key string, arg ...Any) Any
 
-	merges     []Any
-	render     map[string]func(*Message, ...Any) string
-	OpenFile   func(m *Message, p string) (io.ReadCloser, error)
+	merges []Any
+	render map[string]func(*Message, ...Any) string
+	Stack  map[string]func(m *Message, key string, arg ...Any) Any
+	Inputs []func(m *Message, arg ...string)
+
 	PushStream func(m *Message)
 	PushNotice func(m *Message, arg ...Any)
-	Inputs     []func(m *Message, arg ...string)
-	Load       func(m *Message, key ...string) *Message
 	Save       func(m *Message, key ...string) *Message
+	Load       func(m *Message, key ...string) *Message
+	Open       func(m *Message, p string) (io.ReadCloser, error)
 	Log        func(m *Message, p, l, s string)
 }{
 	Localhost: true,
@@ -85,19 +86,21 @@ var Info = struct {
 	Gomod: Maps{},
 	Route: Maps{},
 	Index: Map{},
-	Stack: map[string]func(m *Message, key string, arg ...Any) Any{},
 
-	render:     map[string]func(*Message, ...Any) string{},
-	OpenFile:   func(m *Message, p string) (io.ReadCloser, error) { return miss.OpenFile(p) },
+	render: map[string]func(*Message, ...Any) string{},
+	Stack:  map[string]func(m *Message, key string, arg ...Any) Any{},
+
 	PushStream: func(m *Message) {},
 	PushNotice: func(m *Message, arg ...Any) {},
-	Load:       func(m *Message, key ...string) *Message { return m },
 	Save:       func(m *Message, key ...string) *Message { return m },
+	Load:       func(m *Message, key ...string) *Message { return m },
+	Open:       func(m *Message, p string) (io.ReadCloser, error) { return miss.OpenFile(p) },
 	Log:        func(m *Message, p, l, s string) {},
 }
 
-func AddMergeAction(h ...Any) { Info.merges = append(Info.merges, h...) }
-
+func AddMergeAction(h ...Any) {
+	Info.merges = append(Info.merges, h...)
+}
 func MergeHand(hand ...Handler) Handler {
 	if len(hand) == 0 {
 		return nil
@@ -118,9 +121,7 @@ func MergeActions(arg ...Any) Actions {
 		return nil
 	}
 	list := arg[0].(Actions)
-	if list == nil {
-		list = Actions{}
-	}
+	kit.If(list == nil, func() { list = Actions{} })
 	for _, from := range arg[1:] {
 		switch from := from.(type) {
 		case Actions:
@@ -137,10 +138,7 @@ func MergeActions(arg ...Any) Actions {
 			}
 		case string:
 			h := list[CTX_INIT]
-			if h == nil {
-				list[CTX_INIT] = &Action{}
-				h = list[CTX_INIT]
-			}
+			kit.If(h == nil, func() { list[CTX_INIT] = &Action{}; h = list[CTX_INIT] })
 			h.Hand = MergeHand(h.Hand, func(m *Message, arg ...string) {
 				_cmd := m._cmd
 				m.Search(from, func(p *Context, s *Context, key string, cmd *Command) {

@@ -36,14 +36,14 @@ func init() {
 			mdb.PRUNES: {Hand: func(m *ice.Message, arg ...string) { mdb.HashPrunesValue(m, mdb.COUNT, "0") }},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch mdb.HashInputs(m, arg); arg[0] {
-				case "count":
+				case mdb.COUNT:
 					m.Push(arg[0], "-1")
-				case "cmd":
+				case ice.CMD:
 					m.Push(arg[0], "cli.procstat insert")
 				}
 			}},
 			HAPPEN:  {Hand: func(m *ice.Message, arg ...string) { _timer_action(m, time.Now(), arg...) }},
 			RESTART: {Name: "restart count=3", Hand: func(m *ice.Message, arg ...string) { mdb.HashModify(m, m.OptionSimple(mdb.HashShort(m)), arg) }},
-		}, mdb.HashAction(mdb.SHORT, "name", mdb.FIELD, "time,hash,name,delay,interval,count,cmd", TICK, "1s"))},
+		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,hash,name,delay,interval,count,cmd", TICK, "1s"))},
 	})
 }

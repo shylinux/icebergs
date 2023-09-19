@@ -61,7 +61,7 @@ func init() {
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			switch m.Option(ice.MSG_THEME) {
-			case "light", "white":
+			case LIGHT, WHITE:
 				m.Option(FG, kit.Select(BLACK, arg, 1))
 				m.Option(BG, kit.Select(WHITE, arg, 2))
 			default:

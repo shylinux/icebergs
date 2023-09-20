@@ -37,6 +37,7 @@ type Config struct {
 type Action struct {
 	Name string
 	Help string
+	Icon string
 	Hand Handler
 	List List
 }
@@ -168,14 +169,15 @@ func (c *Context) Merge(s *Context) *Context {
 					kit.Value(cmd.Meta, kit.Keys("_title", sub), help[1])
 				}
 			}
+			kit.Value(cmd.Meta, kit.Keys("_icons", sub), action.Icon)
 			if action.Hand == nil {
 				continue
 			}
 			kit.If(action.List == nil, func() { action.List = SplitCmd(action.Name, nil) })
 			kit.If(len(action.List) > 0, func() { cmd.Meta[sub] = action.List })
 		}
-		kit.If(cmd.Name == "", func() { cmd.Name = "list auto" })
-		kit.If(strings.HasPrefix(cmd.Name, "list"), func() { cmd.Name = strings.Replace(cmd.Name, "list", key, 1) })
+		kit.If(cmd.Name == "", func() { cmd.Name = "list list" })
+		kit.If(strings.HasPrefix(cmd.Name, LIST), func() { cmd.Name = strings.Replace(cmd.Name, LIST, key, 1) })
 		kit.If(cmd.List == nil, func() { cmd.List = SplitCmd(cmd.Name, cmd.Actions) })
 	}
 	kit.If(c.Configs == nil, func() { c.Configs = Configs{} })

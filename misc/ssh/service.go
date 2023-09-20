@@ -145,7 +145,7 @@ const SERVICE = "service"
 
 func init() {
 	psh.Index.MergeCommands(ice.Commands{
-		SERVICE: {Name: "service port id auto listen prunes", Icon: "usr/icons/ssh.png", Help: "服务", Actions: ice.MergeActions(ice.Actions{
+		SERVICE: {Name: "service port id auto listen prunes", Icon: "ssh.png", Help: "服务", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashSelect(m).Table(func(value ice.Maps) {
 					if value[mdb.STATUS] == tcp.OPEN {

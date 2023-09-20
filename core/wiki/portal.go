@@ -85,7 +85,7 @@ func init() {
 				kit.Switch(m.Option(mdb.TYPE), kit.Simple(web.SERVER, web.WORKER), func() { m.PushButton(ice.Maps{PORTAL: "官网"}) })
 			}},
 			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { web.DreamProcess(m, []string{}, arg...) }},
-		}, aaa.WhiteAction(ctx.COMMAND, ctx.RUN), aaa.RoleAction(ctx.COMMAND, ctx.RUN), ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, aaa.WhiteAction(), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
 			if m.Push(HEADER, m.Cmdx(WORD, path.Join(nfs.SRC_DOCUMENT, INDEX_SHY))); len(arg) > 0 {
 				kit.If(path.Join(arg...) == "commands", func() { _portal_commands(m, arg...) })
 				m.Push(NAV, m.Cmdx(WORD, path.Join(nfs.SRC_DOCUMENT, path.Join(arg...), INDEX_SHY)))

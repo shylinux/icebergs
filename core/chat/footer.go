@@ -37,7 +37,7 @@ func init() {
 					}
 				}
 			}},
-		}, web.ApiAction(), aaa.WhiteAction(ctx.RUN, ctx.COMMAND), ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, web.ApiWhiteAction()), Hand: func(m *ice.Message, arg ...string) {
 			m.Result(kit.Select(ice.Info.Make.Email, mdb.Config(m, TITLE)))
 		}},
 	})

@@ -100,7 +100,7 @@ func init() {
 				ctx.Run(m, arg...)
 			}},
 			cli.OPENS: {Hand: func(m *ice.Message, arg ...string) { cli.Opens(m, m.Option(mdb.TEXT)) }},
-		}, ctx.CmdAction(), mdb.ImportantHashAction(), mdb.ExportHashAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.ImportantHashAction(), mdb.ExportHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 && arg[0] == ctx.ACTION {
 				m.Option(mdb.TYPE, mdb.HashSelects(m.Spawn(), m.Option(mdb.HASH)).Append(mdb.TYPE))
 				gdb.Event(m, FAVOR_ACTION, arg)

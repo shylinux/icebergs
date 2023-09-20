@@ -38,7 +38,8 @@ func init() {
 				mdb.HashRemove(m, m.OptionSimple(mdb.HASH))
 			}},
 			mdb.REVERT: {Hand: func(m *ice.Message, arg ...string) {
-				Rename(m, m.Option(FILE), m.Option(FROM))
+				msg := mdb.HashSelect(m.Spawn(), m.Option(mdb.HASH))
+				Rename(m, msg.Append(FILE), msg.Append(FROM))
 				mdb.HashRemove(m, m.OptionSimple(mdb.HASH))
 			}},
 			mdb.PRUNES: {Hand: func(m *ice.Message, arg ...string) {

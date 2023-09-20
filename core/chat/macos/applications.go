@@ -21,7 +21,17 @@ func init() {
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				FinderAppend(m, "Applications", m.PrefixKey())
 				m.Travel(func(p *ice.Context, c *ice.Context, key string, cmd *ice.Command) {
-					kit.If(cmd.Icon, func() { AppInstall(m, cmd.Icon, m.PrefixKey()) })
+					kit.If(cmd.Icon, func() {
+						if !kit.HasPrefix(cmd.Icon, nfs.PS, web.HTTP) {
+							if !nfs.Exists(m, cmd.Icon) {
+								nfs.Exists(m, ice.USR_ICONS+cmd.Icon, func(p string) { cmd.Icon = p })
+							}
+							if !nfs.Exists(m, cmd.Icon) {
+								nfs.Exists(m, ctx.GetCmdFile(m, m.PrefixKey()), func(p string) { cmd.Icon = path.Join(path.Dir(p), cmd.Icon) })
+							}
+						}
+						AppInstall(m, cmd.Icon, m.PrefixKey())
+					})
 				})
 				Notify(m, "usr/icons/Infomation.png", cli.RUNTIME, "系统启动成功", ctx.INDEX, cli.RUNTIME)
 			}},

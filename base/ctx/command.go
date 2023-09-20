@@ -64,6 +64,17 @@ func init() {
 		COMMAND: {Name: "command key auto", Help: "命令", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				TravelCmd(m, func(key, file, line string) { AddFileCmd(file, key) })
+				m.Travel(func(p *ice.Context, c *ice.Context, key string, cmd *ice.Command) {
+					if cmd.Actions == nil {
+						return
+					}
+					if _, ok := cmd.Actions[COMMAND]; !ok {
+						cmd.Actions[COMMAND] = &ice.Action{Hand: Command}
+					}
+					if _, ok := cmd.Actions[RUN]; !ok {
+						cmd.Actions[RUN] = &ice.Action{Hand: Run}
+					}
+				})
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == m.CommandKey() || len(arg) > 1 && arg[1] != "" {
@@ -85,7 +96,7 @@ func init() {
 					m.Echo(`%s	%s	%s;" f`+lex.NL, value[mdb.NAME], value[nfs.FILE], value[nfs.LINE])
 				}).Cmd(nfs.SAVE, nfs.TAGS, m.Result())
 			}},
-		}, CmdAction(), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				m.Cmdy("", mdb.SEARCH, COMMAND, ice.OptionFields(INDEX)).StatusTimeCount()
 				DisplayStory(m.Options(nfs.DIR_ROOT, "ice."), "spide.js?split=.")
@@ -96,18 +107,8 @@ func init() {
 	})
 }
 
-var Upload = func(*ice.Message) []string { return nil }
+var PodCmd = func(m *ice.Message, arg ...ice.Any) bool { return false }
 
-func PodCmd(m *ice.Message, arg ...ice.Any) bool {
-	Upload(m)
-	for _, key := range []string{ice.POD} {
-		if pod := m.Option(key); pod != "" {
-			m.Options(key, []string{}, ice.MSG_USERPOD, pod).Cmdy(append(kit.List(ice.SPACE, pod), arg...)...)
-			return true
-		}
-	}
-	return false
-}
 func Run(m *ice.Message, arg ...string) {
 	kit.If(!PodCmd(m, arg) && aaa.Right(m, arg), func() { m.Cmdy(arg) })
 }

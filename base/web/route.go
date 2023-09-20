@@ -59,7 +59,7 @@ const ROUTE = "route"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		ROUTE: {Name: "route space:text cmds:text auto spide cmds build travel prunes", Icon: "usr/icons/Podcasts.png", Help: "路由表", Actions: ice.MergeActions(ice.Actions{
+		ROUTE: {Name: "route space:text cmds:text auto spide cmds build travel prunes", Icon: "Podcasts.png", Help: "路由表", Actions: ice.MergeActions(ice.Actions{
 			ice.MAIN: {Help: "首页", Hand: func(m *ice.Message, arg ...string) {
 				ctx.ProcessField(m, CHAT_IFRAME, m.MergePod(""), arg...)
 			}},
@@ -118,7 +118,7 @@ func init() {
 				PushPodCmd(m, "", m.ActionKey())
 				m.Table(func(value ice.Maps) { kit.If(value[SPACE], func() { mdb.HashCreate(m.Spawn(), kit.Simple(value)) }) })
 			}},
-		}, ctx.CmdAction(), mdb.HashAction(mdb.SHORT, SPACE, mdb.FIELD, "time,space,type,module,version,md5,size,path,hostname", mdb.SORT, "type,space", mdb.ACTION, ice.MAIN)), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.SHORT, SPACE, mdb.FIELD, "time,space,type,module,version,md5,size,path,hostname", mdb.SORT, "type,space", mdb.ACTION, ice.MAIN)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 1 {
 				_route_match(m, arg[0], func(value ice.Maps, i int, list []ice.Maps) {
 					_route_push(m, value[SPACE], m.Cmd(SPACE, value[SPACE], arg[1:]))

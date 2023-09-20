@@ -180,7 +180,7 @@ const DIR = "dir"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		DIR: {Name: "dir path auto upload app", Icon: "usr/icons/dir.png", Help: "目录", Actions: ice.Actions{
+		DIR: {Name: "dir path auto upload app", Icon: "dir.png", Help: "目录", Actions: ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				aaa.White(m, ice.SRC, ice.BIN, ice.USR)
 				aaa.Black(m, ice.USR_LOCAL)
@@ -250,11 +250,13 @@ func DirDeepAll(m *ice.Message, root, dir string, cb func(ice.Maps), arg ...stri
 	}
 }
 func Show(m *ice.Message, file string) bool {
+	p := "/share/local/" + file
+	kit.If(m.Option(ice.MSG_USERPOD), func(pod string) { p += "?pod=" + pod })
 	switch strings.ToLower(kit.Ext(file)) {
 	case "png", "jpg":
-		m.EchoImages("/share/local/" + file)
+		m.EchoImages(p)
 	case "mp4", "mov":
-		m.EchoVideos("/share/local/" + file)
+		m.EchoVideos(p)
 	default:
 		if IsSourceFile(m, kit.Ext(file)) {
 			m.Cmdy(CAT, file)

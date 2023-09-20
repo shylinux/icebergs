@@ -46,7 +46,7 @@ func init() {
 				kit.If(m.Option(mdb.TYPE) == aaa.VOID, func() { m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, kit.Keys(RIVER, h)) })
 				gdb.Event(m, RIVER_CREATE, RIVER, m.Option(ice.MSG_RIVER, h), arg)
 			}},
-		}, web.ApiAction(), aaa.WhiteAction(), mdb.ImportantHashAction(mdb.FIELD, "time,hash,type,icon,name,text,template"), mdb.ExportHashAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, web.ApiWhiteAction(), mdb.ImportantHashAction(mdb.FIELD, "time,hash,type,icon,name,text,template"), mdb.ExportHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin) || !aaa.Right(m, RIVER, arg) {
 				return
 			} else if len(arg) == 0 {

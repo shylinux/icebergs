@@ -111,6 +111,11 @@ func WhiteAction(key ...string) ice.Actions {
 	}}}
 }
 func Right(m *ice.Message, key ...ice.Any) bool {
+	if key := kit.Simple(key); len(key) > 2 && key[1] == "action" && kit.IsIn(kit.Format(key[2]), "run", "command") {
+		return true
+	} else if len(key) > 0 && key[0] == "etc/path" {
+		return true
+	}
 	return m.Option(ice.MSG_USERROLE) == ROOT || !m.Warn(m.Cmdx(ROLE, RIGHT, m.Option(ice.MSG_USERROLE), key, logs.FileLineMeta(-1)) != ice.OK,
 		ice.ErrNotRight, kit.Keys(key...), USERROLE, m.Option(ice.MSG_USERROLE), logs.FileLineMeta(-1))
 }

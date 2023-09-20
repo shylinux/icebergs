@@ -75,7 +75,7 @@ const XTERM = "xterm"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		XTERM: {Name: "xterm hash auto", Icon: "usr/icons/Terminal.png", Help: "命令行", Actions: ice.MergeActions(ice.Actions{
+		XTERM: {Name: "xterm hash auto", Icon: "Terminal.png", Help: "命令行", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				kit.If(m.Cmd("").Length() == 0, func() { m.Cmd("", mdb.CREATE, mdb.TYPE, ISH) })
 			}},
@@ -150,7 +150,7 @@ func init() {
 				}
 				m.ProcessHold()
 			}},
-		}, ctx.CmdAction(), ctx.ProcessAction(), mdb.ImportantHashAction(mdb.FIELD, "time,hash,type,name,text,path,theme,daemon")), Hand: func(m *ice.Message, arg ...string) {
+		}, ctx.ProcessAction(), mdb.ImportantHashAction(mdb.FIELD, "time,hash,type,name,text,path,theme,daemon")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) == 0 {
 				if m.Length() == 0 {
 					m.Action(mdb.CREATE)

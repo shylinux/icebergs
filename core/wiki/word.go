@@ -3,7 +3,6 @@ package wiki
 import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
-	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/ssh"
@@ -21,7 +20,7 @@ const WORD = "word"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		WORD: {Name: "word path=src/main.shy@key auto play", Icon: "usr/icons/Books.png", Help: "上下文", Actions: ice.MergeActions(ice.Actions{
+		WORD: {Name: "word path=src/main.shy@key auto play", Icon: "Books.png", Help: "上下文", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				WordAlias(m, NAVMENU, TITLE, NAVMENU)
 				WordAlias(m, PREMENU, TITLE, PREMENU)
@@ -47,7 +46,7 @@ func init() {
 				ls := kit.Split(m.Option(mdb.TEXT))
 				kit.If(kit.IsIn(ls[0], IMAGE, VIDEO, AUDIO), func() { m.Cmdy(FEEL).CutTo(nfs.PATH, mdb.NAME) })
 			}},
-		}, aaa.RoleAction(ctx.COMMAND, ctx.RUN), ctx.CmdAction(), WikiAction("", nfs.SHY)), Hand: func(m *ice.Message, arg ...string) {
+		}, aaa.RoleAction(), WikiAction("", nfs.SHY)), Hand: func(m *ice.Message, arg ...string) {
 			if m.Option(nfs.DIR_DEEP, ice.TRUE); len(arg) == 0 {
 				arg = append(arg, nfs.SRC)
 			}

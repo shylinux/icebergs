@@ -56,6 +56,7 @@ const (
 	TOAST = "toast"
 
 	SHARE_LOCAL = "/share/local/"
+	SHARE_CACHE = "/share/cache/"
 )
 const SHARE = "share"
 
@@ -69,6 +70,16 @@ func init() {
 			}},
 			LOGIN: {Help: "登录", Hand: func(m *ice.Message, arg ...string) {
 				m.EchoQRCode(m.Cmd(SHARE, mdb.CREATE, mdb.TYPE, LOGIN).Option(mdb.LINK)).ProcessInner()
+			}},
+			ctx.COMMAND: {Hand: func(m *ice.Message, arg ...string) {
+				if msg := mdb.HashSelect(m.Spawn(), m.Option(SHARE)); !IsNotValidFieldShare(m, msg) {
+					m.Cmdy(ctx.COMMAND, msg.Append(mdb.NAME))
+				}
+			}},
+			ctx.RUN: {Hand: func(m *ice.Message, arg ...string) {
+				if msg := mdb.HashSelect(m.Spawn(), m.Option(SHARE)); !IsNotValidFieldShare(m, msg) {
+					m.Cmdy(msg.Append(mdb.NAME), arg[1:])
+				}
 			}},
 			nfs.PS: {Hand: func(m *ice.Message, arg ...string) {
 				if m.Warn(len(arg) == 0 || arg[0] == "", ice.ErrNotValid, SHARE) {
@@ -84,21 +95,13 @@ func init() {
 					m.RenderRedirect(msg.Append(mdb.TEXT), ice.MSG_SESSID, aaa.SessCreate(m, msg.Append(aaa.USERNAME)))
 				case FIELD:
 					RenderCmd(m, msg.Append(mdb.NAME), kit.UnMarshal(msg.Append(mdb.TEXT)))
+				case DOWNLOAD:
+					m.RenderDownload(msg.Append(mdb.TEXT))
 				default:
 					RenderMain(m)
 				}
 			}},
-			ctx.COMMAND: {Hand: func(m *ice.Message, arg ...string) {
-				if msg := mdb.HashSelect(m.Spawn(), m.Option(SHARE)); !IsNotValidFieldShare(m, msg) {
-					m.Cmdy(ctx.COMMAND, msg.Append(mdb.NAME))
-				}
-			}},
-			ctx.RUN: {Hand: func(m *ice.Message, arg ...string) {
-				if msg := mdb.HashSelect(m.Spawn(), m.Option(SHARE)); !IsNotValidFieldShare(m, msg) {
-					m.Cmdy(msg.Append(mdb.NAME), arg[1:])
-				}
-			}},
-		}, aaa.WhiteAction(ctx.COMMAND, ctx.RUN), mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,usernick,username,userrole", mdb.EXPIRE, mdb.DAYS)), Hand: func(m *ice.Message, arg ...string) {
+		}, aaa.WhiteAction(), mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,usernick,username,userrole", mdb.EXPIRE, mdb.DAYS)), Hand: func(m *ice.Message, arg ...string) {
 			if kit.IsIn(m.Option(ice.MSG_USERROLE), aaa.ROOT, aaa.TECH) || len(arg) > 0 && arg[0] != "" {
 				mdb.HashSelect(m, arg...)
 			}
@@ -137,15 +140,16 @@ func ShareLocalFile(m *ice.Message, arg ...string) {
 	}
 	if m.Option(ice.POD) == "" {
 		m.RenderDownload(p)
-		return
 	} else if pp := kit.Path(ice.USR_LOCAL_WORK, m.Option(ice.POD), p); nfs.Exists(m, pp) {
 		m.RenderDownload(pp)
-		return
 	} else if pp := kit.Path(ice.USR_LOCAL_WORK, m.Option(ice.POD)); nfs.Exists(m, pp) {
 		m.RenderDownload(p)
-		return
+	} else {
+		m.RenderDownload(ProxyUpload(m, m.Option(ice.POD), p))
 	}
-	pp := path.Join(ice.VAR_PROXY, m.Option(ice.POD), p)
+}
+func ProxyUpload(m *ice.Message, pod string, p string) string {
+	pp := path.Join(ice.VAR_PROXY, pod, p)
 	size, cache := int64(0), time.Now().Add(-time.Hour*24)
 	if s, e := file.StatFile(pp); e == nil {
 		size, cache = s.Size(), s.ModTime()
@@ -153,9 +157,9 @@ func ShareLocalFile(m *ice.Message, arg ...string) {
 		size, cache = s.Size(), s.ModTime()
 	}
 	kit.If(p == ice.BIN_ICE_BIN, func() { m.Option(ice.MSG_USERROLE, aaa.TECH) })
-	share := m.Cmdx(SHARE, mdb.CREATE, mdb.TYPE, PROXY, mdb.NAME, p, mdb.TEXT, m.Option(ice.POD))
+	share := m.Cmdx(SHARE, mdb.CREATE, mdb.TYPE, PROXY, mdb.NAME, p, mdb.TEXT, pod)
 	defer m.Cmd(SHARE, mdb.REMOVE, mdb.HASH, share)
 	url := tcp.PublishLocalhost(m, MergeLink(m, PP(SHARE, PROXY), SHARE, share))
-	m.Cmd(SPACE, m.Option(ice.POD), SPIDE, PROXY, URL, url, nfs.SIZE, size, CACHE, cache.Format(ice.MOD_TIME), UPLOAD, mdb.AT+p)
-	m.RenderDownload(kit.Select(p, pp, file.ExistsFile(pp)))
+	m.Cmd(SPACE, pod, SPIDE, PROXY, URL, url, nfs.SIZE, size, CACHE, cache.Format(ice.MOD_TIME), UPLOAD, mdb.AT+p)
+	return kit.Select(p, pp, file.ExistsFile(pp))
 }

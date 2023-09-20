@@ -195,6 +195,19 @@ func init() {
 			}
 		}
 	})
+	ctx.PodCmd = func(m *ice.Message, arg ...ice.Any) bool {
+		Upload(m)
+		for _, key := range []string{ice.POD} {
+			if pod := m.Option(key); pod != "" {
+				if ls := kit.Simple(m.Optionv(ice.MSG_UPLOAD)); len(ls) > 1 {
+					m.Cmd(SPACE, pod, SPIDE, ice.DEV, CACHE, SHARE_CACHE+ls[0])
+				}
+				m.Options(key, []string{}, ice.MSG_USERPOD, pod).Cmdy(append(kit.List(ice.SPACE, pod), arg...)...)
+				return true
+			}
+		}
+		return false
+	}
 	Index.MergeCommands(ice.Commands{
 		SPACE: {Name: "space name cmds auto", Help: "空间站", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { aaa.White(m, SPACE, ice.MAIN) }},

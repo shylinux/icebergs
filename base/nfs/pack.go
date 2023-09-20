@@ -127,8 +127,11 @@ func Link(m optionMessage, oldname string, newname string) error {
 	return OptionFiles(m).Link(oldname, newname)
 }
 
-func Exists(m optionMessage, p string) bool {
+func Exists(m optionMessage, p string, cb ...func(string)) bool {
 	if _, e := OptionFiles(m).StatFile(p); e == nil {
+		for _, cb := range cb {
+			cb(p)
+		}
 		return true
 	}
 	return false

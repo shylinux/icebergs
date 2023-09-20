@@ -55,7 +55,7 @@ const PLAN = "plan"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		PLAN: {Name: "plan scale=month,day,week,month,year,long begin_time@date list prev next", Icon: "usr/icons/Calendar.png", Help: "计划表", Actions: ice.MergeActions(ice.Actions{
+		PLAN: {Name: "plan scale=month,day,week,month,year,long begin_time@date list prev next", Icon: "Calendar.png", Help: "计划表", Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(TODO, mdb.INPUTS, arg) }},
 			mdb.PLUGIN: {Name: "plugin extra.index extra.args", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(TASK, mdb.MODIFY, arg) }},
 			ctx.RUN: {Hand: func(m *ice.Message, arg ...string) {
@@ -71,7 +71,7 @@ func init() {
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				kit.Switch(m.Option(mdb.TYPE), kit.Simple(web.SERVER, web.WORKER), func() { m.PushButton(kit.Dict(m.CommandKey(), "计划")) })
 			}},
-		}, aaa.RoleAction(ctx.COMMAND), ctx.CmdAction(), TASK), Hand: func(m *ice.Message, arg ...string) {
+		}, aaa.RoleAction(), TASK), Hand: func(m *ice.Message, arg ...string) {
 			begin_time, end_time := _plan_scope(m, kit.Slice(arg, 0, 2)...)
 			_plan_list(m, begin_time.Format(ice.MOD_TIME), end_time.Format(ice.MOD_TIME))
 			web.PushPodCmd(m, "", arg...)

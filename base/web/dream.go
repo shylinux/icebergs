@@ -134,7 +134,7 @@ const DREAM = "dream"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		DREAM: {Name: "dream name@key auto create repos startall stopall build cmd cat", Icon: "usr/icons/Launchpad.png", Help: "梦想家", Actions: ice.MergeActions(ice.Actions{
+		DREAM: {Name: "dream name@key auto create repos startall stopall build cmd cat", Icon: "Launchpad.png", Help: "梦想家", Actions: ice.MergeActions(ice.Actions{
 			ctx.CONFIG: {Hand: func(m *ice.Message, arg ...string) {
 				for _, cmd := range kit.Reverse(arg) {
 					m.Cmd(gdb.EVENT, gdb.LISTEN, gdb.EVENT, DREAM_TABLES, ice.CMD, cmd)
@@ -165,7 +165,7 @@ func init() {
 					gdb.Event(m, DREAM_INPUTS, arg)
 				}
 			}},
-			mdb.CREATE: {Name: "create name*=hi repos binary template", Hand: func(m *ice.Message, arg ...string) {
+			mdb.CREATE: {Name: "create name*=hi icon@icon repos binary template", Hand: func(m *ice.Message, arg ...string) {
 				m.OptionDefault(mdb.ICON, nfs.USR_ICONS_ICEBERGS)
 				m.Option(nfs.REPOS, kit.Select("", kit.Slice(kit.Split(m.Option(nfs.REPOS)), -1), 0))
 				kit.If(!strings.Contains(m.Option(mdb.NAME), "-") || !strings.HasPrefix(m.Option(mdb.NAME), "20"), func() { m.Option(mdb.NAME, m.Time("20060102-")+m.Option(mdb.NAME)) })
@@ -281,7 +281,7 @@ func init() {
 			DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				kit.Switch(m.Option(mdb.TYPE), []string{WORKER, SERVER}, func() { m.PushButton(OPEN, ice.MAIN) })
 			}},
-		}, DreamAction(), ctx.CmdAction(), mdb.ImportantHashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icon,repos,binary,template")), Hand: func(m *ice.Message, arg ...string) {
+		}, DreamAction(), mdb.ImportantHashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icon,repos,binary,template")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				_dream_list(m)
 				m.RewriteAppend(func(value, key string, index int) string {

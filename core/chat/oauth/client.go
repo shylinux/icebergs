@@ -39,7 +39,7 @@ type Client struct {
 	ice.Hash
 	short string `data:"domain,client_id"`
 	field string `data:"time,hash,domain,client_id,client_secret,oauth_url,grant_url,token_url,users_url,api_prefix,token_prefix"`
-	sso   string `name:"sso name* icon*" help:"登录"`
+	sso   string `name:"sso name* icon*@icons" help:"登录"`
 	auth  string `name:"auth" help:"授权"`
 	user  string `name:"user" help:"用户"`
 	orgs  string `name:"orgs" help:"组织"`
@@ -62,6 +62,13 @@ func init() {
 }
 
 func (s Client) Inputs(m *ice.Message, arg ...string) {
+	switch m.Option(ctx.ACTION) {
+	case web.SSO:
+		switch arg[0] {
+		case mdb.NAME:
+		case mdb.ICON:
+		}
+	}
 	switch s.Hash.Inputs(m, arg...); arg[0] {
 	case web.DOMAIN:
 		m.Cmdy(web.SPIDE, mdb.INPUTS, arg)

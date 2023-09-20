@@ -122,7 +122,7 @@ func init() {
 			nfs.TRASH:  {Hand: func(m *ice.Message, arg ...string) { nfs.Trash(m, path.Join(ice.USR_PUBLISH, m.Option(nfs.PATH))) }},
 		}, ctx.ConfAction(mdb.FIELD, nfs.PATH), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
 			if m.Option(nfs.DIR_ROOT, ice.USR_PUBLISH); len(arg) == 0 {
-				_publish_list(m).Cmdy("", ice.CONTEXTS, "app")
+				_publish_list(m).Cmdy("", ice.CONTEXTS, ice.APP)
 			} else {
 				m.Cmdy(nfs.DIR, arg[0], "time,path,size,hash,link,action", ice.OptionFields(mdb.DETAIL))
 				web.PushImages(m, web.P(PUBLISH, arg[0]))

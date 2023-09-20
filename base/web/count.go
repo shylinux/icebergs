@@ -45,7 +45,7 @@ func init() {
 			mdb.CREATE: {Name: "create type name text", Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashSelectUpdate(m, mdb.HashCreate(m), func(value ice.Map) { value[mdb.COUNT] = kit.Int(value[mdb.COUNT]) + 1 })
 			}},
-		}, ctx.CmdAction(), mdb.HashAction(mdb.LIMIT, 1000, mdb.LEAST, 500, mdb.SHORT, "type,name", mdb.FIELD, "time,hash,count,type,name,text")), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.LIMIT, 1000, mdb.LEAST, 500, mdb.SHORT, "type,name", mdb.FIELD, "time,hash,count,type,name,text")), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, arg...).Sort("type,name,text")
 		}},
 	})

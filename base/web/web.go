@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/gdb"
@@ -80,6 +81,9 @@ func init() {
 }
 
 func ApiAction(arg ...string) ice.Actions { return ice.Actions{kit.Select(nfs.PS, arg, 0): {}} }
+func ApiWhiteAction() ice.Actions {
+	return ice.MergeActions(ApiAction(), aaa.WhiteAction())
+}
 func Prefix(arg ...string) string {
 	for i, k := range arg {
 		switch k {

@@ -13,7 +13,7 @@ const TREND = "trend"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		TREND: {Name: "trend repos@key begin_time@date auto", Help: "趋势图", Actions: ice.MergeActions(ice.Actions{
+		TREND: {Name: "trend repos@key begin_time@date auto", Help: "趋势图", Actions: ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(REPOS, ice.OptionFields("repos,time")) }},
 			mdb.DETAIL: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy("", code.INNER, m.Option(REPOS), MASTER, m.Option(mdb.HASH), m.Cmdv(REPOS, m.Option(REPOS), MASTER, m.Option(mdb.HASH), nfs.FILE))
@@ -22,7 +22,7 @@ func init() {
 				m.Cmdy(REPOS, code.INNER, arg)
 				ctx.DisplayLocal(m, "code/inner.js", "style", "float")
 			}},
-		}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				m.Cmdy(REPOS)
 			} else {

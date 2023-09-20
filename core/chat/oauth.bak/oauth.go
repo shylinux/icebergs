@@ -8,7 +8,6 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
-	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -84,7 +83,7 @@ var Index = &ice.Context{Name: OAUTH, Help: "认证授权", Commands: ice.Comman
 	REPLY: {Name: "reply hash auto create prunes", Help: "授权", Actions: mdb.HashAction(mdb.EXPIRE, mdb.MONTH, mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,username,scope,offer")},
 	OFFER: {Name: "offer hash auto create prunes", Help: "访问", Actions: mdb.HashAction(mdb.EXPIRE, mdb.MONTH, mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,username,scope,redirect_uri")},
 
-	web.P(APPLY): {Name: "/apply scope redirect_uri", Help: "申请", Actions: ctx.CmdAction(), Hand: func(m *ice.Message, arg ...string) {
+	web.P(APPLY): {Name: "/apply scope redirect_uri", Help: "申请", Hand: func(m *ice.Message, arg ...string) {
 		if m.Option(REDIRECT_URI) == "" {
 			m.RenderStatusBadRequest() // 参数错误
 
@@ -92,7 +91,7 @@ var Index = &ice.Context{Name: OAUTH, Help: "认证授权", Commands: ice.Comman
 			web.RenderCmd(m, m.Prefix(OAUTH), APPLY)
 		}
 	}},
-	web.P(REPLY): {Name: "/reply scope offer", Help: "授权", Actions: ctx.CmdAction(), Hand: func(m *ice.Message, arg ...string) {
+	web.P(REPLY): {Name: "/reply scope offer", Help: "授权", Hand: func(m *ice.Message, arg ...string) {
 		if m.Option(OFFER) == "" {
 			m.RenderStatusBadRequest() // 参数错误
 

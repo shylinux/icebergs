@@ -9,8 +9,6 @@ const PORTAL = "portal"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		PORTAL: {Actions: web.ApiAction(), Hand: func(m *ice.Message, arg ...string) {
-			web.RenderMain(m)
-		}},
+		PORTAL: {Actions: web.ApiAction(), Hand: func(m *ice.Message, arg ...string) { web.RenderMain(m) }},
 	})
 }

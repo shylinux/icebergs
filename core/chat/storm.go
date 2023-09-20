@@ -16,7 +16,7 @@ const STORM = "storm"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		STORM: {Name: "storm hash id auto insert create", Help: "应用", Actions: ice.Actions{
+		STORM: {Name: "storm hash id auto", Help: "应用", Actions: ice.Actions{
 			mdb.CREATE: {Name: "create name=hi text=hello", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(mdb.INSERT, RIVER, _river_key(m), mdb.HASH, arg)
 			}},
@@ -39,8 +39,10 @@ func init() {
 		}, Hand: func(m *ice.Message, arg ...string) {
 			if m.Option(ice.MSG_STORM) == "" {
 				m.Cmdy(mdb.SELECT, RIVER, _river_key(m), mdb.HASH, ice.OptionFields("time,hash,icon,name,text,count"))
+				m.Action(mdb.CREATE)
 			} else if len(arg) == 0 || kit.Int(arg[0]) > 0 {
 				m.Cmdy(mdb.SELECT, RIVER, _storm_key(m), mdb.LIST, mdb.ID, arg, ice.OptionFields("time,id,space,icon,index,args,style,display,deleted")).SortInt(mdb.ID)
+				m.Action(mdb.INSERT)
 			} else if aaa.Right(m, arg) {
 				m.Push(ctx.INDEX, arg[0])
 			}

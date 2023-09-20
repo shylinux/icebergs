@@ -157,7 +157,7 @@ const RUNTIME = "runtime"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		RUNTIME: {Name: "runtime info=bootinfo,ifconfig,diskinfo,hostinfo,userinfo,procstat,procinfo,bootinfo,role,api,cli,cmd,mod,env,path,chain,routine auto upgrade restart logs conf", Icon: "usr/icons/Infomation.png", Help: "运行环境", Actions: ice.MergeActions(ice.Actions{
+		RUNTIME: {Name: "runtime info=bootinfo,ifconfig,diskinfo,hostinfo,userinfo,procstat,procinfo,bootinfo,role,api,cli,cmd,mod,env,path,chain,routine auto upgrade restart logs conf", Icon: "Infomation.png", Help: "运行环境", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				aaa.White(m, ice.ETC_PATH)
 				aaa.White(m, ice.LICENSE)
@@ -261,7 +261,7 @@ func init() {
 			"conf": {Help: "配置", Hand: func(m *ice.Message, arg ...string) {
 				OpenCmds(m, kit.Format("cd %s", kit.Path("")), "vim etc/init.shy")
 			}},
-		}, ctx.CmdAction(), ctx.ConfAction("")), Hand: func(m *ice.Message, arg ...string) {
+		}, ctx.ConfAction("")), Hand: func(m *ice.Message, arg ...string) {
 			kit.If(len(arg) > 0 && arg[0] == BOOTINFO, func() { arg = arg[1:] })
 			m.Cmdy(ctx.CONFIG, RUNTIME, arg)
 			ctx.DisplayStoryJSON(m)

@@ -50,7 +50,7 @@ const VIMER = "vimer"
 
 func init() {
 	web.Index.MergeCommands(ice.Commands{ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { aaa.White(m, nfs.REQUIRE) }},
-		ice.REQUIRE_SRC: {Actions: ctx.CmdAction(), Hand: func(m *ice.Message, arg ...string) { web.ShareLocalFile(m, ice.SRC, path.Join(arg...)) }},
+		ice.REQUIRE_SRC: {Hand: func(m *ice.Message, arg ...string) { web.ShareLocalFile(m, ice.SRC, path.Join(arg...)) }},
 		ice.REQUIRE_USR: {Hand: func(m *ice.Message, arg ...string) { web.ShareLocalFile(m, ice.USR, path.Join(arg...)) }},
 		ice.REQUIRE_MODULES: {Hand: func(m *ice.Message, arg ...string) {
 			p := path.Join(ice.USR_MODULES, path.Join(arg...))
@@ -59,7 +59,7 @@ func init() {
 		}},
 	})
 	Index.MergeCommands(ice.Commands{
-		VIMER: {Name: "vimer path=src/@key file=main.go@key line=1 list", Icon: "usr/icons/vimer.png", Help: "编辑器", Meta: kit.Dict(ctx.STYLE, INNER), Actions: ice.MergeActions(ice.Actions{
+		VIMER: {Name: "vimer path=src/@key file=main.go@key line=1 list", Icon: "vimer.png", Help: "编辑器", Meta: kit.Dict(ctx.STYLE, INNER), Actions: ice.MergeActions(ice.Actions{
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if mdb.IsSearchPreview(m, arg) {
 					m.PushSearch(mdb.TYPE, nfs.FILE, mdb.NAME, "main", mdb.TEXT, ice.SRC_MAIN_SH)
@@ -192,7 +192,7 @@ func init() {
 				kit.Switch(m.Option(mdb.TYPE), kit.Simple(web.SERVER, web.WORKER), func() { m.PushButton(kit.Dict(m.CommandKey(), "编程")) })
 			}},
 			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { web.DreamProcess(m, []string{}, arg...) }},
-		}, aaa.RoleAction(ctx.COMMAND), mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path", ctx.TOOLS, "xterm,compile,runtime")), Hand: func(m *ice.Message, arg ...string) {
+		}, aaa.RoleAction(), mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path", ctx.TOOLS, "xterm,compile,runtime")), Hand: func(m *ice.Message, arg ...string) {
 			if m.Cmdy(INNER, arg); arg[0] != ctx.ACTION {
 				kit.If(len(arg) > 1, func() { mdb.HashCreate(m.Spawn(), nfs.PATH, path.Join(kit.Slice(arg, 0, 2)...)) })
 				m.Action(nfs.SAVE, COMPILE, "show", "exec")

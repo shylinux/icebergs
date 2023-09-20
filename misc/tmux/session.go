@@ -80,7 +80,7 @@ func init() {
 			FIELDS, "id,tag,pane,tty,height,width,cmd",
 		)},
 	}, Commands: ice.Commands{
-		SESSION: {Name: "session session window pane cmds auto", Help: "会话", Actions: ice.MergeActions(ice.Actions{
+		SESSION: {Name: "session session window pane cmds auto", Help: "会话", Actions: ice.Actions{
 			web.DREAM_CREATE: {Hand: func(m *ice.Message, arg ...string) {
 				if !m.Warn(!nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME))), ice.ErrNotFound) {
 					m.Cmd("", mdb.CREATE)
@@ -165,7 +165,7 @@ func init() {
 					})
 				}).Sleep30ms()
 			}},
-		}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			if m.Action(SCRIPT); len(arg) > 3 {
 				m.Cmd(CMD, _tmux_key(arg[0], arg[1], arg[2]), arg[3:])
 			}

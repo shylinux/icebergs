@@ -119,7 +119,7 @@ func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.Response
 		}()
 		m.Option(ice.MSG_OPTS, kit.Simple(m.Optionv(ice.MSG_OPTION), func(k string) bool { return !strings.HasPrefix(k, ice.MSG_SESSID) }))
 		if m.Detailv(m.PrefixKey(), cmds); len(cmds) > 1 && cmds[0] == ctx.ACTION {
-			if !kit.IsIn(cmds[1], ctx.RUN, ctx.COMMAND) && m.Warn(r.Method == http.MethodGet, ice.ErrNotAllow) {
+			if !kit.IsIn(cmds[1], aaa.LOGIN, ctx.RUN, ctx.COMMAND) && m.Warn(r.Method == http.MethodGet, ice.ErrNotAllow) {
 				return
 			}
 			m.ActionHand(cmd, key, cmds[1], cmds[2:]...)
@@ -215,7 +215,7 @@ func init() {
 			}
 			kit.If(action.Hand == nil, func() { action.Hand = cmd.Hand })
 			sub = kit.Select(P(key, sub), PP(key, sub), strings.HasSuffix(sub, nfs.PS))
-			c.Commands[sub] = &ice.Command{Name: kit.Select(cmd.Name, action.Name), Actions: ice.MergeActions(actions, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
+			c.Commands[sub] = &ice.Command{Name: kit.Select(cmd.Name, action.Name), Actions: actions, Hand: func(m *ice.Message, arg ...string) {
 				msg := m.Spawn(c, key, cmd)
 				action.Hand(msg, arg...)
 				m.Copy(msg)

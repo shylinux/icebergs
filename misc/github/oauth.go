@@ -70,7 +70,7 @@ func init() {
 				}
 			}
 		}},
-		web.P(OAUTH): {Name: "/oauth", Help: "授权", Actions: ice.MergeActions(ice.Actions{}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
+		web.P(OAUTH): {Name: "/oauth", Help: "授权", Hand: func(m *ice.Message, arg ...string) {
 			if m.Warn(m.Option(CODE) == "", ice.ErrNotValid) {
 				return
 			}

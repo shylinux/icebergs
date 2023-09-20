@@ -72,7 +72,7 @@ func init() {
 			"district": {Name: "district", Help: "地区", Hand: func(m *ice.Message, arg ...string) {
 				m.Echo(get(m, "district/v1/getchildren", m.OptionSimple(mdb.ID)))
 			}},
-		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,latitude,longitude,extra"), ctx.CmdAction(), FavorAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, FavorAction(), mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,latitude,longitude,extra")), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, kit.Slice(arg, 0, 1)...)
 			ctx.DisplayLocal(m, "", ctx.ConfigSimple(m, aaa.TOKEN))
 			m.Option(LOCATION, get(m, "location/v1/ip", aaa.IP, m.Option(ice.MSG_USERIP)))

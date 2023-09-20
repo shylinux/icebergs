@@ -21,35 +21,28 @@ func init() {
 		TO   = "to"
 	)
 	Index.MergeCommands(ice.Commands{
-		TRANS: {Name: "trans from to auto", Help: "传输", Actions: ice.MergeActions(ice.Actions{
-			SEND: {Name: "send", Help: "发送", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(web.SPACE, m.Option(TO), web.SPIDE, ice.DEV, web.SPIDE_SAVE, kit.Select(nfs.PWD, m.Option("to_path")),
-					web.MergeURL2(m, path.Join(web.SHARE_LOCAL, m.Option("from_path")), ice.POD, m.Option(FROM),
-						web.SHARE, m.Cmdx(web.SHARE, mdb.CREATE, mdb.TYPE, web.LOGIN),
-					),
-				).ProcessHold()
-				web.ToastSuccess(m, SEND)
+		TRANS: {Name: "trans from@key to@key auto", Help: "传输", Icon: "Migration.png", Actions: ice.Actions{
+			SEND: {Hand: func(m *ice.Message, arg ...string) {
+				defer web.ToastProcess(m)()
+				p := web.ProxyUpload(m, m.Option(FROM), m.Option(nfs.PATH))
+				h := m.Cmdx(web.SHARE, mdb.CREATE, mdb.TYPE, web.DOWNLOAD, mdb.TEXT, p)
+				defer m.Cmd(web.SHARE, mdb.REMOVE, mdb.HASH, h)
+				m.Cmdy(web.SPACE, m.Option(TO), web.SPIDE, ice.DEV, web.SPIDE_SAVE, path.Join(m.Option("to_path"), path.Base(m.Option(nfs.PATH))), web.MergeLink(m, "/share/"+h))
 			}},
-			ctx.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
-				m.Option(ice.POD, m.Option("_pod"))
-				m.Option(ice.MSG_USERPOD, m.Option("_pod"))
-				if aaa.Right(m, arg) && !ctx.PodCmd(m, arg) {
-					m.Cmdy(arg)
-				}
-				if arg[0] == nfs.DIR && m.Length() > 0 {
-					m.PushAction(SEND, nfs.TRASH)
-				}
+			ctx.RUN: {Hand: func(m *ice.Message, arg ...string) {
+				m.Options(ice.MSG_USERPOD, m.Option(FROM), ice.POD, m.Option(FROM))
+				kit.If(!ctx.PodCmd(m, arg) && aaa.Right(m, arg), func() { m.Cmdy(arg) })
+				kit.If(arg[0] == nfs.DIR && len(arg) < 3, func() { m.PushAction(SEND, mdb.SHOW, nfs.TRASH) })
 			}},
-		}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
+			defer m.Options(ice.MSG_ACTION, "")
 			if len(arg) == 0 {
-				m.Cmdy(web.SPACE).RenameAppend(mdb.NAME, FROM)
-				return
+				m.Cmdy(web.SPACE).RenameAppend(mdb.NAME, FROM).Toast("请选择空间1")
+			} else if len(arg) == 1 {
+				m.Cmdy(web.SPACE).RenameAppend(mdb.NAME, TO).Toast("请选择空间2")
+			} else {
+				ctx.DisplayLocal(m, "")
 			}
-			if len(arg) == 1 {
-				m.Cmdy(web.SPACE).RenameAppend(mdb.NAME, TO)
-				return
-			}
-			ctx.DisplayLocal(m, "")
 		}},
 	})
 }

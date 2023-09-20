@@ -14,7 +14,7 @@ const IFRAME = "iframe"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		IFRAME: {Name: "iframe hash@key auto safari", Help: "浏览器", Icon: "usr/icons/Safari.png", Actions: ice.MergeActions(ice.Actions{
+		IFRAME: {Name: "iframe hash@key auto app", Help: "浏览器", Icon: "Safari.png", Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch mdb.HashInputs(m, arg); arg[0] {
 				case mdb.NAME:
@@ -32,6 +32,15 @@ func init() {
 			}},
 			mdb.CREATE: {Name: "create type name link", Hand: func(m *ice.Message, arg ...string) {
 				m.ProcessRewrite(mdb.HASH, mdb.HashCreate(m, mdb.TYPE, web.LINK, mdb.NAME, kit.ParseURL(m.Option(web.LINK)).Host, m.OptionSimple()))
+			}},
+			web.OPEN: {Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen(m.Option(web.LINK)) }},
+			ice.APP: {Help: "本机", Icon: "bi bi-browser-chrome", Hand: func(m *ice.Message, arg ...string) {
+				defer m.ProcessHold()
+				if h := kit.Select(m.Option(mdb.HASH), arg, 0); h != "" {
+					cli.Opens(m, m.Cmd("", h).Append(mdb.LINK))
+				} else {
+					cli.Opens(m, "Safari.app")
+				}
 			}},
 			FAVOR_INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
@@ -64,14 +73,6 @@ func init() {
 					ctx.ProcessField(m, m.PrefixKey(), []string{m.Option(mdb.TEXT)}, arg...)
 				}
 			}},
-			web.OPEN: {Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen(m.Option(web.LINK)) }},
-			"safari": {Help: "本机", Hand: func(m *ice.Message, arg ...string) {
-				if h := kit.Select(m.Option(mdb.HASH), arg, 0); h == "" {
-					cli.Opens(m, "Safari.app")
-				} else {
-					cli.Opens(m, m.Cmd("", h).Append(mdb.LINK))
-				}
-			}},
 		}, FavorAction(), mdb.HashAction(mdb.SHORT, web.LINK, mdb.FIELD, "time,hash,type,name,link")), Hand: func(m *ice.Message, arg ...string) {
 			list := []string{m.MergePodCmd("", web.WIKI_PORTAL, log.DEBUG, m.Option(log.DEBUG))}
 			list = append(list, web.MergeLink(m, "/chat/portal/", ice.POD, m.Option(ice.MSG_USERPOD), log.DEBUG, m.Option(log.DEBUG)))
@@ -82,9 +83,9 @@ func init() {
 					}
 				}
 				if m.Length() == 0 {
-					m.Action(mdb.CREATE)
+					m.Action(mdb.CREATE, ice.APP)
 				} else {
-					m.PushAction(web.OPEN, mdb.REMOVE).Action(mdb.CREATE, mdb.PRUNES)
+					m.PushAction(web.OPEN, mdb.REMOVE).Action(mdb.CREATE, mdb.PRUNES, ice.APP)
 				}
 			} else {
 				kit.If(m.Length() == 0, func() {
@@ -96,7 +97,7 @@ func init() {
 					}
 					m.Append(web.LINK, arg[0])
 				})
-				m.Action(web.FULL, web.OPEN).StatusTime(m.AppendSimple(web.LINK))
+				m.Action(web.FULL, web.OPEN, ice.APP).StatusTime(m.AppendSimple(web.LINK))
 				ctx.DisplayLocal(m, "")
 			}
 		}},

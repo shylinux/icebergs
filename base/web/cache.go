@@ -168,7 +168,6 @@ func init() {
 			}, action.Hand)
 		}
 	})
-	ctx.Upload = Upload
 }
 func Upload(m *ice.Message) []string {
 	if up := kit.Simple(m.Optionv(ice.MSG_UPLOAD)); len(up) == 1 {

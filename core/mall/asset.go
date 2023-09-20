@@ -2,7 +2,6 @@ package mall
 
 import (
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
@@ -92,7 +91,7 @@ func init() {
 				}
 				web.Toast(m, "核算成功")
 			}},
-		}, mdb.ZoneAction(), ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.ZoneAction()), Hand: func(m *ice.Message, arg ...string) {
 			m.Fields(len(arg), "time,account,amount,count", mdb.ZoneField(m))
 			amount, count := 0, 0
 			if mdb.ZoneSelect(m, arg...); len(arg) == 0 {

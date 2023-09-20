@@ -16,7 +16,7 @@ const SSO = "sso"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		SSO: {Actions: ice.MergeActions(web.ApiAction(), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {
+		SSO: {Actions: web.ApiWhiteAction(), Hand: func(m *ice.Message, arg ...string) {
 			if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin) || m.Warn(m.Option(web.SPACE) == "", ice.ErrNotValid) || m.Warn(m.Option(cli.BACK) == "", ice.ErrNotValid) {
 				web.RenderMain(m)
 				return

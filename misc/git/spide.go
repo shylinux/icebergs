@@ -13,7 +13,7 @@ const SPIDE = "spide"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		SPIDE: {Name: "spide repos auto", Help: "构架图", Actions: ctx.CmdAction(), Hand: func(m *ice.Message, arg ...string) {
+		SPIDE: {Name: "spide repos auto", Help: "构架图", Hand: func(m *ice.Message, arg ...string) {
 			if len(kit.Slice(arg, 0, 1)) == 0 {
 				m.Cmdy(REPOS)
 			} else if len(arg) == 1 {

@@ -5,9 +5,7 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
-	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
@@ -18,7 +16,7 @@ const POD = "pod"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		POD: {Actions: ice.MergeActions(web.ApiAction(), aaa.WhiteAction(), ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
+		POD: {Actions: web.ApiWhiteAction(), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 || arg[0] == "" {
 				web.RenderMain(m)
 			} else if strings.HasPrefix(m.Option(ice.MSG_USERUA), "git/") {

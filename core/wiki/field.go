@@ -39,7 +39,7 @@ const FIELD = "field"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		FIELD: {Name: "field name cmd", Help: "插件", Actions: ctx.CmdAction(), Hand: func(m *ice.Message, arg ...string) {
+		FIELD: {Name: "field name cmd", Help: "插件", Hand: func(m *ice.Message, arg ...string) {
 			kit.If(kit.IsIn(kit.Select("", arg, 1), ctx.ARGS, ice.MSG_RESULT), func() { arg = kit.Simple("", arg) })
 			if arg = _name(m, arg); arg[0] == "inner" {
 				arg = append([]string{"", web.CODE_INNER, ctx.ARGS, "src/ main.go", ice.MSG_RESULT, arg[1], "meta.display", "/plugin/local/code/inner.js", ctx.STYLE, "output"}, arg[2:]...)

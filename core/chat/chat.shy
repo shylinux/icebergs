@@ -8,6 +8,7 @@ action.go
 search.go
 portal.go
 iframe.go
+trans.go
 icons.go
 
 pod.go
@@ -17,7 +18,6 @@ grant.go
 oauth
 
 macos
-trans.go
 favor.go
 flows.go
 flows.js

@@ -24,7 +24,14 @@ const (
 func init() {
 	Index.MergeCommands(ice.Commands{
 		BUFFER: {Name: "buffer name value auto", Help: "缓存", Actions: ice.Actions{
-			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {}},
+			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
+				mdb.IsSearchPreview(m, arg, func() []string {
+					if text := _tmux_cmds(m, SHOW_BUFFER); text != "" {
+						return []string{mdb.TEXT, "", text}
+					}
+					return nil
+				})
+			}},
 			mdb.CREATE: {Name: "create value*", Hand: func(m *ice.Message, arg ...string) { _tmux_cmd(m, SET_BUFFER, m.Option(mdb.VALUE)) }},
 			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) { _tmux_cmd(m, DELETE_BUFFER, "-b", m.Option(mdb.NAME)) }},
 			mdb.MODIFY: {Hand: func(m *ice.Message, arg ...string) {

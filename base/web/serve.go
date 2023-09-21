@@ -97,6 +97,9 @@ func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.Response
 		kit.For(u.Query(), func(k string, v []string) { _log(ctx.ARGS, k, v).Optionv(k, v) })
 	}
 	kit.For(kit.ParseQuery(r.URL.RawQuery), func(k string, v []string) { m.Optionv(k, v) })
+	if r.Method == http.MethodGet && m.Option(ice.MSG_CMDS) != "" {
+		_log(ctx.ARGS, ice.MSG_CMDS, m.Optionv(ice.MSG_CMDS))
+	}
 	switch r.Header.Get(ContentType) {
 	case ApplicationJSON:
 		kit.For(kit.UnMarshal(r.Body), func(k string, v ice.Any) { m.Optionv(k, v) })
@@ -115,7 +118,7 @@ func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.Response
 	defer func() { Render(m, m.Option(ice.MSG_OUTPUT), kit.List(m.Optionv(ice.MSG_ARGS))...) }()
 	if cmds, ok := _serve_auth(m, key, kit.Simple(m.Optionv(ice.MSG_CMDS)), w, r); ok {
 		defer func() {
-			m.Cost(kit.Format("%s: %s/%s %v", r.Method, m.PrefixKey(), path.Join(cmds...), m.FormatSize()))
+			m.Cost(kit.Format("%s: /chat/cmd/%s/%s %v %s", r.Method, m.Option(ice.MSG_INDEX), path.Join(cmds...), m.FormatSize(), kit.FmtSize(len(m.Result()))))
 		}()
 		m.Option(ice.MSG_OPTS, kit.Simple(m.Optionv(ice.MSG_OPTION), func(k string) bool { return !strings.HasPrefix(k, ice.MSG_SESSID) }))
 		if m.Detailv(m.PrefixKey(), cmds); len(cmds) > 1 && cmds[0] == ctx.ACTION {

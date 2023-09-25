@@ -49,6 +49,8 @@ func Render(m *Message, cmd string, args ...Any) string {
 		return kit.Format(`<img src="%s">`, arg[0])
 	case RENDER_VIDEOS:
 		return kit.Format(`<video src="%s" controls autoplay>`, arg[0])
+	case RENDER_AUDIOS:
+		return kit.Format(`<audio src="%s" controls autoplay>`, arg[0])
 	case RENDER_IFRAME:
 		return kit.Format(`<iframe src="%s"></iframe>`, arg[0])
 	case RENDER_SCRIPT:
@@ -197,6 +199,7 @@ func (m *Message) EchoAnchor(arg ...string) *Message { return m.Echo(Render(m, R
 func (m *Message) EchoQRCode(src string) *Message    { return m.Echo(Render(m, RENDER_QRCODE, src)) }
 func (m *Message) EchoImages(src string) *Message    { return m.Echo(Render(m, RENDER_IMAGES, src)) }
 func (m *Message) EchoVideos(src string) *Message    { return m.Echo(Render(m, RENDER_VIDEOS, src)) }
+func (m *Message) EchoAudios(src string) *Message    { return m.Echo(Render(m, RENDER_AUDIOS, src)) }
 func (m *Message) EchoIFrame(src string) *Message    { return m.Echo(Render(m, RENDER_IFRAME, src)) }
 func (m *Message) EchoScript(arg ...string) *Message { return m.Echo(Render(m, RENDER_SCRIPT, arg)) }
 func (m *Message) EchoDownload(arg ...string) *Message {

@@ -1,17 +1,24 @@
 package wiki
 
 import (
+	"net/http"
+	"strings"
+
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/ssh"
+	"shylinux.com/x/icebergs/base/web"
 	"shylinux.com/x/icebergs/core/code"
 	"shylinux.com/x/icebergs/misc/git"
 	kit "shylinux.com/x/toolkits"
 )
 
 func _word_show(m *ice.Message, name string, arg ...string) {
+	if strings.HasPrefix(name, "/require/") {
+		m.Option(nfs.CAT_CONTENT, m.Cmdx(web.SPIDE, ice.OPS, web.SPIDE_RAW, http.MethodGet, name))
+	}
 	m.Options(ice.MSG_ALIAS, mdb.Configv(m, mdb.ALIAS), TITLE, map[string]int{})
 	m.Cmdy(ssh.SOURCE, name, kit.Dict(nfs.DIR_ROOT, _wiki_path(m)))
 }

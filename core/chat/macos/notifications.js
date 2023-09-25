@@ -3,16 +3,13 @@ Volcanos(chat.ONIMPORT, {_init: function(can, msg) {
 		var ui = can.onappend.layout(can, [html.ICON, [[wiki.TITLE, mdb.TIME], wiki.CONTENT]], "", target)
 		can.page.Append(can, ui.icon, [{img: can.misc.PathJoin(item.icon||can.page.drawText(can, item.name||item.index, 60))}])
 		ui.title.innerHTML = item.name||"", ui.content.innerHTML = item.text||"", ui.time.innerHTML = item.time.split(lex.SP).pop().split(nfs.DF).slice(0, 2).join(nfs.DF)
-		target.onclick = function(event) { can.sup.onexport.record(can.sup, item.index, ctx.INDEX, item),
-			can.runAction(can.request(event, item), "read", [], function() {
-				can.onappend.style(can, "read", target)
-				return
-				can.page.Remove(can, target) }) }
+		target.onclick = function(event) { can.sup.onexport.record(can.sup, item.index, ctx.INDEX, item)
+			can.runAction(can.request(event, item), "read", [], function() { can.onappend.style(can, "read", target) })
+		}
 	}} })), msg.Length() == 0 && can.onmotion.hidden(can, can._fields), can.onappend._action(can), can.page.style(can, can._action, html.DISPLAY, html.BLOCK)
 }})
 Volcanos(chat.ONACTION, {
-	list: [web.REFRESH, mdb.PRUNES, html.TOGGLE],
-	_trans: {refresh: "刷新", toggle: "隐藏"},
-	refresh: function(event, can, button) { can.Update(event) },
+	list: [web.REFRESH, mdb.PRUNES, html.TOGGLE], _trans: {refresh: "刷新", toggle: "隐藏"},
 	toggle: function(event, can, button) { can.onmotion.hidden(can, can._fields) },
+	refresh: function(event, can, button) { can.Update(event) },
 })

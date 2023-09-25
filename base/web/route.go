@@ -55,6 +55,10 @@ func _route_toast(m *ice.Message, space string, args ...string) {
 	})
 }
 
+const (
+	ONLINE  = "online"
+	OFFLINE = "offline"
+)
 const ROUTE = "route"
 
 func init() {
@@ -125,6 +129,19 @@ func init() {
 				})
 			} else if mdb.HashSelect(m, arg...); len(arg) > 0 {
 				m.EchoIFrame(m.MergePod(arg[0]))
+			} else {
+				stat := map[string]int{}
+				list := m.CmdMap(SPACE, mdb.NAME)
+				m.Table(func(value ice.Maps) {
+					if _, ok := list[value[SPACE]]; ok {
+						m.Push(mdb.STATUS, ONLINE)
+						stat[ONLINE]++
+					} else {
+						m.Push(mdb.STATUS, OFFLINE)
+						stat[OFFLINE]++
+					}
+				})
+				m.StatusTimeCount(stat)
 			}
 		}},
 	})

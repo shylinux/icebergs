@@ -180,7 +180,7 @@ func init() {
 				kit.If(kit.IsIn(value[mdb.TYPE], WORKER, SERVER), func() { m.Push(arg[0], value[mdb.NAME]) })
 			})
 		case mdb.ICON:
-			m.Cmdy(nfs.DIR, ice.USR_ICONS, nfs.PATH)
+			m.Cmdy(nfs.DIR, ice.USR_ICONS, nfs.PATH).CutTo(nfs.PATH, arg[0])
 		case ctx.INDEX:
 			if space := m.Option(SPACE); space != "" {
 				m.Options(SPACE, []string{}).Cmdy(SPACE, space, mdb.INPUTS, arg)

@@ -15,6 +15,7 @@ import (
 	"shylinux.com/x/icebergs/base/ssh"
 	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/base/web"
+	"shylinux.com/x/icebergs/core/chat"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -189,10 +190,32 @@ func init() {
 				}
 			}},
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
-				kit.Switch(m.Option(mdb.TYPE), kit.Simple(web.SERVER, web.WORKER), func() { m.PushButton(kit.Dict(m.CommandKey(), "编程")) })
+				kit.Switch(m.Option(mdb.TYPE), kit.Simple(web.WORKER, web.SERVER), func() {
+					m.PushButton(kit.Dict(m.CommandKey(), "编程"))
+				})
 			}},
 			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { web.DreamProcess(m, []string{}, arg...) }},
-		}, aaa.RoleAction(), mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path", ctx.TOOLS, "xterm,compile,runtime")), Hand: func(m *ice.Message, arg ...string) {
+			chat.FAVOR_INPUTS: {Hand: func(m *ice.Message, arg ...string) {
+				switch arg[0] {
+				case mdb.TYPE:
+					m.Push(arg[0], nfs.FILE)
+				case mdb.TEXT:
+					if m.Option(mdb.TYPE) == nfs.FILE {
+						m.Push(arg[0], "src/main.go", "src/main.shy")
+					}
+				}
+			}},
+			chat.FAVOR_TABLES: {Hand: func(m *ice.Message, arg ...string) {
+				kit.If(m.Option(mdb.TYPE) == nfs.FILE, func() {
+					m.PushButton(kit.Dict(m.CommandKey(), "源码"))
+				})
+			}},
+			chat.FAVOR_ACTION: {Hand: func(m *ice.Message, arg ...string) {
+				if m.Option(mdb.TYPE) == nfs.FILE {
+					ctx.ProcessField(m, m.PrefixKey(), nfs.SplitPath(m, m.Option(mdb.TEXT)))
+				}
+			}},
+		}, chat.FavorAction(), aaa.RoleAction(), mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path", ctx.TOOLS, "xterm,compile,runtime")), Hand: func(m *ice.Message, arg ...string) {
 			if m.Cmdy(INNER, arg); arg[0] != ctx.ACTION {
 				kit.If(len(arg) > 1, func() { mdb.HashCreate(m.Spawn(), nfs.PATH, path.Join(kit.Slice(arg, 0, 2)...)) })
 				m.Action(nfs.SAVE, COMPILE, "show", "exec")

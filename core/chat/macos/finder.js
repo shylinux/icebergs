@@ -1,8 +1,9 @@
-Volcanos(chat.ONIMPORT, { _init: function(can, msg) { can.onmotion.clear(can), can.ui = can.onappend.layout(can), msg.Table(function(value, index) {
+Volcanos(chat.ONIMPORT, {
+	_init: function(can, msg) { can.ui = can.onappend.layout(can), msg.Table(function(value, index) {
 		var item = can.onimport.item(can, value, function(event) { if (can.onmotion.cache(can, function() { return value.name }, can.ui.content)) { return }
 			can.runActionCommand(event, value.index, [], function(msg) {
 				switch (value.name) {
-					case "Applications": can.onimport.icons(can, msg, can.ui.content); break
+					case "applications": can.onimport.icons(can, msg, can.ui.content); break
 					default: can.onappend.table(can, msg, null, can.ui.content)
 				} can.onimport.layout(can)
 			})

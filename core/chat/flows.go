@@ -27,7 +27,7 @@ func init() {
 			mdb.MODIFY: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(mdb.MODIFY, m.PrefixKey(), kit.KeyHash(m.Option(mdb.ZONE)), mdb.HASH, m.OptionSimple(mdb.HASH), arg)
 			}},
-		}, mdb.HashAction(mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,zone", mdb.FIELDS, "time,hash,name,space,index,args,prev,from,status"), mdb.ExportHashAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.ExportHashAction(mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,zone", mdb.FIELDS, "time,hash,name,space,index,args,prev,from,status")), Hand: func(m *ice.Message, arg ...string) {
 			if arg = kit.Slice(arg, 0, 2); len(arg) == 0 || arg[0] == "" {
 				mdb.HashSelect(m)
 			} else {

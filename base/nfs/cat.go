@@ -123,7 +123,6 @@ func init() {
 				if arg[0] == ice.ACTION {
 					m.Cmdy(DIR, arg)
 				} else {
-					// } else if !Show(m, arg[0]) {
 					_cat_list(m.Logs(FIND, m.OptionSimple(DIR_ROOT), FILE, arg[0]), arg[0])
 				}
 			}

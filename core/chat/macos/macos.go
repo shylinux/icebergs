@@ -10,14 +10,11 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-const (
-	USR_ICONS = "usr/icons/"
-)
 const MACOS = "macos"
 
-var Index = &ice.Context{Name: MACOS, Commands: ice.Commands{ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-	ice.Info.Load(m).Cmd(FINDER, ice.CTX_INIT)
-}}}}
+var Index = &ice.Context{Name: MACOS, Commands: ice.Commands{
+	ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { ice.Info.Load(m).Cmd(FINDER, ice.CTX_INIT) }},
+}}
 
 func init() { chat.Index.Register(Index, nil, DESKTOP, APPLICATIONS) }
 
@@ -27,17 +24,13 @@ func PodCmdAction(arg ...string) ice.Actions {
 	file := kit.FileLine(2, 100)
 	return ice.Actions{
 		mdb.SELECT: {Name: "list hash auto create", Hand: func(m *ice.Message, arg ...string) {
-			msg := m.Spawn()
-			mdb.HashSelect(msg, arg...).Sort(mdb.NAME)
+			defer m.Display(ctx.FileURI(file))
+			msg := mdb.HashSelect(m.Spawn(), arg...).Sort(mdb.NAME)
 			web.PushPodCmd(msg, m.PrefixKey(), arg...)
 			has := map[string]bool{}
 			msg.Table(func(index int, value ice.Maps, head []string) {
-				if !has[value[ctx.INDEX]] {
-					has[value[ctx.INDEX]] = true
-					m.Push("", value, head)
-				}
+				kit.If(!has[value[ctx.INDEX]], func() { has[value[ctx.INDEX]] = true; m.Push("", value, head) })
 			})
-			m.Display(ctx.FileURI(file))
 		}},
 	}
 }
@@ -46,10 +39,10 @@ func CmdHashAction(arg ...string) ice.Actions {
 	return ice.MergeActions(ice.Actions{
 		mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 			switch mdb.HashInputs(m, arg); arg[0] {
-			case mdb.NAME:
-				m.Cmd(nfs.DIR, USR_ICONS, func(value ice.Maps) { m.Push(arg[0], kit.TrimExt(value[nfs.PATH], nfs.PNG)) })
 			case mdb.ICON:
-				m.Cmd(nfs.DIR, USR_ICONS, func(value ice.Maps) { m.Push(arg[0], value[nfs.PATH]) })
+				m.Cmd(nfs.DIR, ice.USR_ICONS, func(value ice.Maps) { m.Push(arg[0], value[nfs.PATH]) })
+			case mdb.NAME:
+				m.Cmd(nfs.DIR, ice.USR_ICONS, func(value ice.Maps) { m.Push(arg[0], kit.TrimExt(value[nfs.PATH], nfs.PNG)) })
 			}
 		}},
 		mdb.SELECT: {Name: "list hash auto create", Hand: func(m *ice.Message, arg ...string) {

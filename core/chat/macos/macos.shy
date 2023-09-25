@@ -1,17 +1,23 @@
 title "MacOS"
 chain `
-desktop
-	menu
-		notifications
-		searchs
-		session
-		desktop
-		window
-		layout
-	dock
-		Finder
-			Applications
-			Pictures
-		Safari
-		Terminal
+desktop.go
+	menu.go
+		notifications.go
+		searchs.go
+		session.go
+	dock.go
+		finder.go
+		applications.go
+			caculator.go
+			clock.go
 `
+chain `
+desktop.js
+	menu.js
+		notifications.js
+	dock.js
+		finder.js
+		caculator.js
+		clock.js
+`
+

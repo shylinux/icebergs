@@ -47,31 +47,22 @@ func init() {
 				case mdb.TYPE:
 					m.Push(arg[0], web.LINK)
 				default:
-					if m.Option(mdb.TYPE) != "" && m.Option(mdb.TYPE) != web.LINK {
-						return
-					}
-					switch arg[0] {
-					case mdb.NAME:
-						m.Push(arg[0], web.UserWeb(m).Host)
-					case mdb.LINK, ctx.ARGS:
-						m.Push(arg[0], m.Option(ice.MSG_USERWEB))
-						m.Copy(m.Cmd(web.SPIDE).CutTo(web.CLIENT_URL, arg[0]))
+					if m.Option(mdb.TYPE) == web.LINK {
+						switch arg[0] {
+						case mdb.NAME:
+							m.Push(arg[0], web.UserWeb(m).Host)
+						case mdb.TEXT:
+							m.Push(arg[0], m.Option(ice.MSG_USERWEB))
+							m.Copy(m.Cmd(web.SPIDE).CutTo(web.CLIENT_URL, arg[0]))
+						}
 					}
 				}
 			}},
 			FAVOR_TABLES: {Hand: func(m *ice.Message, arg ...string) {
-				kit.If(arg[1] == web.LINK, func() { m.PushButton(IFRAME, mdb.REMOVE) })
+				kit.If(m.Option(mdb.TYPE) == web.LINK, func() { m.PushButton(kit.Dict(m.CommandKey(), "网页")) })
 			}},
 			FAVOR_ACTION: {Hand: func(m *ice.Message, arg ...string) {
-				if m.Option(mdb.TYPE) != web.LINK {
-					return
-				}
-				switch kit.Select("", arg, 1) {
-				case web.OPEN:
-					m.ProcessOpen(m.Option(mdb.TEXT))
-				default:
-					ctx.ProcessField(m, m.PrefixKey(), []string{m.Option(mdb.TEXT)}, arg...)
-				}
+				kit.If(m.Option(mdb.TYPE) == web.LINK, func() { ctx.ProcessField(m, m.PrefixKey(), m.Option(mdb.TEXT)) })
 			}},
 		}, FavorAction(), mdb.HashAction(mdb.SHORT, web.LINK, mdb.FIELD, "time,hash,type,name,link")), Hand: func(m *ice.Message, arg ...string) {
 			list := []string{m.MergePodCmd("", web.WIKI_PORTAL, log.DEBUG, m.Option(log.DEBUG))}

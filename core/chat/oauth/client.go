@@ -44,7 +44,7 @@ type Client struct {
 	user  string `name:"user" help:"用户"`
 	orgs  string `name:"orgs" help:"组织"`
 	repo  string `name:"repo" help:"资源"`
-	list  string `name:"list hash auto" help:"授权"`
+	list  string `name:"list hash auto" help:"授权" icon:"oauth.png"`
 	login string `name:"login" role:"void"`
 }
 

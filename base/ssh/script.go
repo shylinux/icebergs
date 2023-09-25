@@ -158,6 +158,7 @@ func (f *Frame) Start(m *ice.Message, arg ...string) {
 		if msg := m.Cmd(nfs.CAT, m.Option(ice.MSG_SCRIPT, f.source)); msg.IsErr() {
 			return
 		} else {
+			kit.If(m.Option(nfs.CAT_CONTENT), func() { m.Option(nfs.CAT_CONTENT, "") })
 			buf := bytes.NewBuffer(make([]byte, 0, ice.MOD_BUFS))
 			f.stdin, f.stdout = bytes.NewBufferString(msg.Result()), buf
 			defer func() { m.Echo(buf.String()) }()

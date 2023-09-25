@@ -45,7 +45,7 @@ func init() {
 				kit.If(arg[0] == mdb.TYPE, func() { m.Push(arg[0], LOCATION) })
 			}},
 			FAVOR_TABLES: {Hand: func(m *ice.Message, arg ...string) {
-				kit.If(arg[1] == LOCATION, func() { m.PushButton(LOCATION, mdb.REMOVE) })
+				kit.If(m.Option(mdb.TYPE) == LOCATION, func() { m.PushButton(LOCATION) })
 			}},
 			FAVOR_ACTION: {Hand: func(m *ice.Message, arg ...string) {
 				kit.If(m.Option(mdb.TYPE) == LOCATION, func() { ctx.ProcessField(m, m.PrefixKey(), []string{m.Option(mdb.TEXT)}, arg...) })

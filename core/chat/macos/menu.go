@@ -10,9 +10,8 @@ const MENU = "menu"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		MENU: {Actions: ice.MergeActions(aaa.RoleAction(), CmdHashAction(), mdb.ImportantHashAction())},
+		MENU: {Actions: ice.MergeActions(aaa.RoleAction(), CmdHashAction(), mdb.ClearOnExitHashAction())},
 	})
 }
-func MenuAppend(m *ice.Message, icon, index string) {
-	install(m, MENU, icon, index)
-}
+
+func MenuAppend(m *ice.Message, icon, index string) { install(m, MENU, icon, index) }

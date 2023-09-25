@@ -32,9 +32,6 @@ func init() {
 		}, mdb.ZoneAction(mdb.SHORT, EVENT, mdb.FIELD, "time,id,cmd"), mdb.ClearOnExitHashAction())},
 	})
 }
-func EventAction(arg ...string) ice.Actions {
-	return ice.Actions{ice.CTX_INIT: {Hand: func(m *ice.Message, _ ...string) { kit.For(arg, func(k string) { Watch(m, k) }) }}}
-}
 func EventsAction(arg ...string) ice.Actions {
 	list := kit.DictList(arg...)
 	return ice.Actions{ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
@@ -48,10 +45,10 @@ func Watch(m *ice.Message, key string, arg ...string) *ice.Message {
 	return m.Cmd(EVENT, LISTEN, EVENT, key, ice.CMD, kit.Join(arg, ice.SP))
 }
 func Event(m *ice.Message, key string, arg ...ice.Any) *ice.Message {
-	if list[key] == 0 {
+	if key = kit.Select(kit.Keys(m.CommandKey(), m.ActionKey()), key); list[key] == 0 {
 		return m
 	}
-	return m.Cmdy(EVENT, HAPPEN, EVENT, kit.Select(kit.Keys(m.CommandKey(), m.ActionKey()), key), arg, logs.FileLineMeta(-1))
+	return m.Cmdy(EVENT, HAPPEN, EVENT, key, arg, logs.FileLineMeta(-1))
 }
 func EventDeferEvent(m *ice.Message, key string, arg ...ice.Any) func(string, ...ice.Any) {
 	Event(m, key, arg...)

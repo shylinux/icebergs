@@ -37,7 +37,7 @@ func init() {
 					m.ProcessLocation(web.MergeURL2(m, msg.Append(mdb.TEXT)))
 				}
 			}},
-		}, aaa.RoleAction(aaa.CONFIRM), gdb.EventAction(web.SPACE_LOGIN)), Hand: func(m *ice.Message, arg ...string) {
+		}, aaa.RoleAction(aaa.CONFIRM), gdb.EventsAction(web.SPACE_LOGIN)), Hand: func(m *ice.Message, arg ...string) {
 			m.Echo("请授权: %s 访问设备: %s", arg[0], ice.Info.Hostname).Echo(lex.NL).EchoButton(aaa.CONFIRM)
 		}},
 	})

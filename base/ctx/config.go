@@ -103,6 +103,7 @@ func _config_make(m *ice.Message, key string, arg ...string) {
 		m.Echo(FormatPretty(mdb.Confv(msg, key, arg[0]), 0, 1))
 	} else {
 		m.Echo(FormatPretty(mdb.Confv(msg, key), 0, 1))
+		m.StatusTime(mdb.COUNT, kit.Length(mdb.Confv(msg, key, mdb.HASH)))
 	}
 }
 func _config_list(m *ice.Message) {

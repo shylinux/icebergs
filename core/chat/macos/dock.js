@@ -1,4 +1,4 @@
-Volcanos(chat.ONIMPORT, {_init: function(can, msg) { can.onmotion.clear(can), can.page.style(can, can._output, html.MAX_WIDTH, can.page.width())
+Volcanos(chat.ONIMPORT, {_init: function(can, msg) { can.page.style(can, can._output, html.MAX_WIDTH, can.page.width())
 	can.onimport.icon(can, msg = msg||can._msg, can._output, function(target, item) { can.page.Modify(can, target, {
 		onclick: function(event) { can.sup.onexport.record(can, item.name, mdb.NAME, item) },
 		oncontextmenu: function(event) { var carte = can.user.carte(event, can, {

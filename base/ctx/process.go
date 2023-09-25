@@ -53,7 +53,8 @@ func ProcessField(m *ice.Message, cmd string, args ice.Any, arg ...string) *ice.
 		} else {
 			m.Cmdy(COMMAND, cmd)
 		}
-		m.Push(ARGS, kit.Format(_process_args(m, args))).Options(ice.MSG_INDEX, m.PrefixKey()).ProcessField(ACTION, m.ActionKey(), RUN)
+		m.Push(ARGS, kit.Format(_process_args(m, args))).Options(ice.MSG_INDEX, m.PrefixKey())
+		m.ProcessField(ACTION, m.ActionKey(), RUN)
 	} else {
 		if !PodCmd(m, cmd, arg[1:]) {
 			kit.If(aaa.Right(m, cmd, arg[1:]), func() { m.Cmdy(cmd, arg[1:]) })

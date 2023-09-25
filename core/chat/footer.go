@@ -2,8 +2,6 @@ package chat
 
 import (
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/aaa"
-	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -17,7 +15,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		FOOTER: {Actions: ice.MergeActions(ice.Actions{
 			ice.HELP: {Hand: func(m *ice.Message, arg ...string) {
-				ctx.ProcessField(m, web.WIKI_WORD, []string{ice.SRC_DOCUMENT + arg[0] + "/list.shy"}, arg...)
+				ctx.ProcessField(m, web.WIKI_WORD, []string{ctx.FileURI(kit.ExtChange(ctx.GetCmdFile(m, arg[0]), nfs.SHY))}, arg...)
 			}},
 			nfs.SCRIPT: {Hand: func(m *ice.Message, arg ...string) {
 				ctx.ProcessField(m, web.CODE_VIMER, func() []string {
@@ -27,16 +25,7 @@ func init() {
 			nfs.SOURCE: {Hand: func(m *ice.Message, arg ...string) {
 				ctx.ProcessField(m, web.CODE_VIMER, func() []string { return nfs.SplitPath(m, ctx.GetCmdFile(m, arg[0])) }, arg...)
 			}},
-			ctx.CONFIG: {Hand: func(m *ice.Message, arg ...string) {
-				ctx.ProcessField(m, ctx.CONFIG, arg, arg...)
-			}},
-			ctx.RUN: {Hand: func(m *ice.Message, arg ...string) {
-				if aaa.Right(m, arg) {
-					if m.Cmdy(arg); m.IsErrNotFound() {
-						m.RenderResult(m.Cmdx(cli.SYSTEM, arg))
-					}
-				}
-			}},
+			ctx.CONFIG: {Hand: func(m *ice.Message, arg ...string) { ctx.ProcessField(m, ctx.CONFIG, arg, arg...) }},
 		}, web.ApiWhiteAction()), Hand: func(m *ice.Message, arg ...string) {
 			m.Result(kit.Select(ice.Info.Make.Email, mdb.Config(m, TITLE)))
 		}},

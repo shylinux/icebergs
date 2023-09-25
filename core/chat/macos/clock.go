@@ -4,9 +4,10 @@ import (
 	ice "shylinux.com/x/icebergs"
 )
 
+const CLOCK = "clock"
+
 func init() {
-	const CLOCK = "clock"
 	Index.MergeCommands(ice.Commands{
-		CLOCK: {Name: "clock refresh", Icon: "Clock.png", Hand: func(m *ice.Message, arg ...string) { m.Display("") }},
+		CLOCK: {Icon: "Clock.png", Hand: func(m *ice.Message, arg ...string) { m.Display("") }},
 	})
 }

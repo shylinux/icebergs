@@ -21,7 +21,7 @@ func init() {
 		TO   = "to"
 	)
 	Index.MergeCommands(ice.Commands{
-		TRANS: {Name: "trans from@key to@key auto", Help: "传输", Icon: "Migration.png", Actions: ice.Actions{
+		TRANS: {Name: "trans from@key to@key auto", Help: "文件传输", Icon: "Migration.png", Actions: ice.Actions{
 			SEND: {Hand: func(m *ice.Message, arg ...string) {
 				defer web.ToastProcess(m)()
 				p := web.ProxyUpload(m, m.Option(FROM), m.Option(nfs.PATH))

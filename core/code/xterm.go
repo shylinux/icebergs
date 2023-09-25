@@ -15,6 +15,7 @@ import (
 	"shylinux.com/x/icebergs/base/ssh"
 	"shylinux.com/x/icebergs/base/web"
 	"shylinux.com/x/icebergs/base/web/html"
+	"shylinux.com/x/icebergs/core/chat"
 	"shylinux.com/x/icebergs/misc/xterm"
 	kit "shylinux.com/x/toolkits"
 )
@@ -71,6 +72,9 @@ func _xterm_cmds(m *ice.Message, h string, cmd string, arg ...ice.Any) {
 	m.ProcessHold()
 }
 
+const (
+	SHELL = "shell"
+)
 const XTERM = "xterm"
 
 func init() {
@@ -80,7 +84,7 @@ func init() {
 				kit.If(m.Cmd("").Length() == 0, func() { m.Cmd("", mdb.CREATE, mdb.TYPE, ISH) })
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				if arg[1] == "shell" {
+				if arg[0] == SHELL {
 					m.PushSearch(mdb.TYPE, ssh.SHELL, mdb.NAME, SH, mdb.TEXT, "/bin/sh")
 				}
 				mdb.IsSearchPreview(m, arg, func() []string { return []string{ssh.SHELL, SH, kit.Select("/bin/sh", os.Getenv("SHELL"))} })
@@ -150,7 +154,27 @@ func init() {
 				}
 				m.ProcessHold()
 			}},
-		}, ctx.ProcessAction(), mdb.ImportantHashAction(mdb.FIELD, "time,hash,type,name,text,path,theme,daemon")), Hand: func(m *ice.Message, arg ...string) {
+			chat.FAVOR_INPUTS: {Hand: func(m *ice.Message, arg ...string) {
+				switch arg[0] {
+				case mdb.TYPE:
+					m.Push(arg[0], SHELL)
+				case mdb.TEXT:
+					if m.Option(mdb.TYPE) == SHELL {
+						m.Push(arg[0], "/bin/ish", kit.Select("/bin/sh", os.Getenv("SHELL")))
+					}
+				}
+			}},
+			chat.FAVOR_TABLES: {Hand: func(m *ice.Message, arg ...string) {
+				kit.If(m.Option(mdb.TYPE) == SHELL, func() {
+					m.PushButton(kit.Dict(m.CommandKey(), "终端"))
+				})
+			}},
+			chat.FAVOR_ACTION: {Hand: func(m *ice.Message, arg ...string) {
+				if m.Option(mdb.TYPE) == SHELL {
+					ctx.ProcessField(m, m.PrefixKey(), m.Cmdx("", mdb.CREATE, mdb.TYPE, m.Option(mdb.TEXT), mdb.NAME, m.Option(mdb.NAME), mdb.TEXT, ""))
+				}
+			}},
+		}, chat.FavorAction(), ctx.ProcessAction(), mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,path,theme,daemon")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) == 0 {
 				if m.Length() == 0 {
 					m.Action(mdb.CREATE)

@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	kit "shylinux.com/x/toolkits"
+	"shylinux.com/x/toolkits/task"
 )
 
 func (m *Message) ActionKey() string           { return strings.TrimPrefix(strings.TrimSuffix(m._sub, PS), PS) }
@@ -38,11 +39,14 @@ func (m *Message) Confv(arg ...Any) (val Any) { // key sub value
 }
 func (m *Message) Conf(arg ...Any) string { return kit.Format(m.Confv(arg...)) }
 
+var _important = task.Lock{}
+
 func SaveImportant(m *Message, arg ...string) {
 	if Info.Important != true {
 		return
 	}
 	kit.For(arg, func(i int, v string) { kit.If(v == "" || strings.Contains(v, SP), func() { arg[i] = "\"" + v + "\"" }) })
+	defer _important.Lock()()
 	m.Cmd("nfs.push", VAR_DATA_IMPORTANT, kit.Join(arg, SP), NL)
 }
 func loadImportant(m *Message) {

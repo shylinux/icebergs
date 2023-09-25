@@ -32,7 +32,7 @@ func _hash_inputs(m *ice.Message, prefix, chain string, field, value string) {
 func _hash_insert(m *ice.Message, prefix, chain string, arg ...string) string {
 	m.Logs(INSERT, KEY, path.Join(prefix, chain), arg)
 	defer Lock(m, prefix, chain)()
-	if expire := m.Conf(prefix, kit.Keys(chain, kit.Keym(EXPIRE))); expire != "" {
+	if expire := m.Conf(prefix, kit.Keys(chain, kit.Keym(EXPIRE))); expire != "" && arg[0] != HASH {
 		arg = kit.Simple(TIME, m.Time(expire), arg)
 	}
 	if arg[0] == HASH {

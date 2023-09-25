@@ -130,8 +130,9 @@ func init() {
 			} else if mdb.HashSelect(m, arg...); len(arg) > 0 {
 				m.EchoIFrame(m.MergePod(arg[0]))
 			} else {
-				stat := map[string]int{}
+				m.OptionFields("")
 				list := m.CmdMap(SPACE, mdb.NAME)
+				stat := map[string]int{}
 				m.Table(func(value ice.Maps) {
 					if _, ok := list[value[SPACE]]; ok {
 						m.Push(mdb.STATUS, ONLINE)
@@ -141,7 +142,7 @@ func init() {
 						stat[OFFLINE]++
 					}
 				})
-				m.StatusTimeCount(stat)
+				m.Sort("status,space", ice.STR_R, ice.STR).StatusTimeCount(stat)
 			}
 		}},
 	})

@@ -68,11 +68,12 @@ const (
 	DATA = kit.MDB_DATA
 	VIEW = kit.MDB_VIEW
 
-	LINK = kit.MDB_LINK
 	FILE = kit.MDB_FILE
+	LINK = kit.MDB_LINK
 	SCAN = kit.MDB_SCAN
 	SHOW = kit.MDB_SHOW
 	HELP = kit.MDB_HELP
+	ICON = kit.MDB_ICON
 
 	INDEX  = kit.MDB_INDEX
 	VALUE  = kit.MDB_VALUE
@@ -90,8 +91,8 @@ const (
 	LEAST = kit.MDB_LEAST
 	STORE = kit.MDB_STORE
 	FSIZE = kit.MDB_FSIZE
-	TOOLS = "tools"
 
+	TOOLS     = "tools"
 	SOURCE    = "_source"
 	TARGET    = "_target"
 	IMPORTANT = "important"
@@ -107,25 +108,24 @@ const (
 	PRUNES = "prunes"
 	EXPORT = "export"
 	IMPORT = "import"
-	PRUNE  = "prune"
-	RENAME = "rename"
 
 	DETAIL = "detail"
 	FIELDS = "fields"
 	PARAMS = "params"
+	OFFEND = "offend"
+	OFFSET = "offset"
+	RANDOM = "random"
+	SUBKEY = "subkey"
 
 	ACTION = "action"
 	UPLOAD = "upload"
 	RECENT = "recent"
 	REPEAT = "repeat"
 	REVERT = "revert"
-	RANDOM = "random"
-	OFFEND = "offend"
-	OFFSET = "offset"
-	SUBKEY = "subkey"
+	RENAME = "rename"
 	ORDER  = "order"
+	PRUNE  = "prune"
 
-	ICON = "icon"
 	PAGE = "page"
 	NEXT = "next"
 	PREV = "prev"

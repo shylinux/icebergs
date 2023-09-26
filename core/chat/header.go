@@ -50,12 +50,7 @@ func _header_check(m *ice.Message, arg ...string) bool {
 			}
 		})
 	}
-	if m.Option(ice.MSG_USERNAME) != "" {
-		return true
-	} else if ctx.OptionFromConfig(m, SSO) == "" {
-		m.Option(SSO, kit.Format(kit.Dict("serve.icon", nfs.USR_ICONS_ICEBERGS, "serve.url", GetSSO(m))))
-	}
-	return false
+	return m.Option(ice.MSG_USERNAME) != ""
 }
 
 const (
@@ -70,7 +65,12 @@ const HEADER = "header"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		HEADER: {Actions: ice.MergeActions(ice.Actions{
-			ice.CTX_INIT:   {Hand: func(m *ice.Message, arg ...string) { aaa.White(m, HEADER) }},
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				aaa.White(m, HEADER)
+				aaa.Black(m, kit.Keys(HEADER, ctx.ACTION, mdb.CREATE))
+				aaa.Black(m, kit.Keys(HEADER, ctx.ACTION, mdb.REMOVE))
+			}},
+			web.SHARE:      {Hand: _header_share},
 			aaa.LOGIN:      {Hand: func(m *ice.Message, arg ...string) {}},
 			aaa.LOGOUT:     {Hand: aaa.SessLogout},
 			aaa.PASSWORD:   {Hand: _header_users},
@@ -92,14 +92,20 @@ func init() {
 				m.Options(ice.MSG_USERWEB, kit.MergeURL(m.Option(ice.MSG_USERWEB), web.SHARE, m.Cmdx(web.SHARE, mdb.CREATE, mdb.TYPE, web.LOGIN)))
 				m.Cmdy(aaa.EMAIL, aaa.SEND, arg, aaa.CONTENT, nfs.Template(m, "email.html"))
 			}},
-			web.SHARE: {Hand: _header_share},
-		}, web.ApiAction()), Hand: func(m *ice.Message, arg ...string) {
+			mdb.CREATE: {Name: "create name icon url", Hand: func(m *ice.Message, arg ...string) { mdb.HashCreate(m, m.OptionSimple()) }},
+			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) { mdb.HashRemove(m, m.OptionSimple(mdb.NAME)) }},
+		}, web.ApiAction(), ctx.ConfAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icon,url")), Hand: func(m *ice.Message, arg ...string) {
 			m.Option("language.list", m.Cmd(nfs.DIR, nfs.TemplatePath(m, aaa.LANGUAGE)+nfs.PS, nfs.FILE).Appendv(nfs.FILE))
 			m.Option("theme.list", m.Cmd(nfs.DIR, nfs.TemplatePath(m, aaa.THEME)+nfs.PS, nfs.FILE).Appendv(nfs.FILE))
 			m.Option(nfs.REPOS, m.Cmdv(web.SPIDE, nfs.REPOS, web.CLIENT_URL))
 			m.Option(ICONS, mdb.Conf(m, ICONS, kit.Keym(nfs.PATH)))
 			m.Option(MENUS, mdb.Config(m, MENUS))
 			m.Echo(mdb.Config(m, TITLE))
+			if mdb.HashSelect(m); m.Length() == 0 {
+				kit.If(GetSSO(m), func(p string) {
+					m.Push(mdb.TIME, m.Time()).Push(mdb.NAME, web.SERVE).Push(mdb.ICON, nfs.USR_ICONS_ICEBERGS).Push(web.URL, p)
+				})
+			}
 			if gdb.Event(m, HEADER_AGENT); !_header_check(m, arg...) {
 				return
 			}

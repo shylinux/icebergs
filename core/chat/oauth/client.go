@@ -81,8 +81,7 @@ func (s Client) Inputs(m *ice.Message, arg ...string) {
 	}
 }
 func (s Client) Sso(m *ice.Message, arg ...string) {
-	mdb.Conf(m, web.CHAT_HEADER, kit.Keym(web.SSO, m.Option(mdb.NAME), web.URL), kit.MergeURL2(m.Option(web.DOMAIN), m.Option(OAUTH_URL), m.OptionSimple(CLIENT_ID), REDIRECT_URI, s.RedirectURI(m), RESPONSE_TYPE, CODE, STATE, m.Option(mdb.HASH)))
-	mdb.Conf(m, web.CHAT_HEADER, kit.Keym(web.SSO, m.Option(mdb.NAME), mdb.ICON), m.Option(mdb.ICON))
+	m.Cmd(web.CHAT_HEADER, mdb.CREATE, m.Option(mdb.NAME), m.Option(mdb.ICON), kit.MergeURL2(m.Option(web.DOMAIN), m.Option(OAUTH_URL), m.OptionSimple(CLIENT_ID), REDIRECT_URI, s.RedirectURI(m), RESPONSE_TYPE, CODE, STATE, m.Option(mdb.HASH)))
 }
 func (s Client) Auth(m *ice.Message, arg ...string) {
 	m.Options(REDIRECT_URI, s.RedirectURI(m), RESPONSE_TYPE, CODE, STATE, m.Option(mdb.HASH))

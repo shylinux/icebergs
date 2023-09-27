@@ -81,22 +81,22 @@ const (
 	STATUS  = "status"
 	ERROR   = "error"
 	CLEAR   = "clear"
+	DELAY   = "delay"
 	RELOAD  = "reload"
 	RESTART = "restart"
 
-	DELAY = "delay"
 	BEGIN = "begin"
+	END   = "end"
 	START = "start"
+	STOP  = "stop"
 	OPEN  = "open"
 	CLOSE = "close"
-	STOP  = "stop"
-	END   = "end"
 
 	MAIN = "main"
 	CODE = "code"
 	COST = "cost"
-	BACK = "back"
 	FROM = "from"
+	BACK = "back"
 )
 
 const DAEMON = "daemon"
@@ -147,20 +147,6 @@ func init() {
 	})
 }
 
-func OpenCmds(m *ice.Message, arg ...string) {
-	if !tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) {
-		return
-	}
-	if len(arg) == 0 || arg[0] == "" {
-		return
-	}
-	m.Cmd(SYSTEM, "osascript", "-e", kit.Format(`
-tell application "Terminal"
-	do script "%s"
-	activate
-end tell
-`, strings.Join(arg, "; ")))
-}
 func Opens(m *ice.Message, arg ...string) {
 	if !tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) {
 		return
@@ -182,4 +168,18 @@ func Opens(m *ice.Message, arg ...string) {
 			m.Cmd(SYSTEM, "explorer", arg[0])
 		}
 	}
+}
+func OpenCmds(m *ice.Message, arg ...string) {
+	if !tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) {
+		return
+	}
+	if len(arg) == 0 || arg[0] == "" {
+		return
+	}
+	m.Cmd(SYSTEM, "osascript", "-e", kit.Format(`
+tell application "Terminal"
+	do script "%s"
+	activate
+end tell
+`, strings.Join(arg, "; ")))
 }

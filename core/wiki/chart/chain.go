@@ -93,7 +93,7 @@ func init() {
 		m.OptionDefault(wiki.MARGINX, "60")
 		m.OptionDefault(wiki.MARGINY, "16")
 		m.OptionDefault(wiki.PADDING, "10")
-		wiki.AddGroupOption(m, SHIP, wiki.FILL, cli.GLASS)
+		wiki.AddGroupOption(m, SHIP, wiki.FILL, cli.TRANS)
 		return &Chain{}
 	})
 }

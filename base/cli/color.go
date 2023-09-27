@@ -65,7 +65,7 @@ const (
 	PURPLE = "purple"
 	YELLOW = "yellow"
 	RANDOM = "random"
-	GLASS  = "#0000"
+	TRANS  = "#0000"
 	LIGHT  = "light"
 	DARK   = "dark"
 )

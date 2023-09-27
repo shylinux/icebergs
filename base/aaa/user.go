@@ -38,7 +38,7 @@ const USER = "user"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		USER: {Name: "user username auto create", Help: "用户", Actions: ice.MergeActions(ice.Actions{
+		USER: {Name: "user username auto", Help: "用户", Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch mdb.HashInputs(m, arg); arg[0] {
 				case USERNICK:
@@ -48,7 +48,7 @@ func init() {
 				}
 			}},
 			mdb.CREATE: {Name: "create usernick username* userrole=void,tech userzone", Hand: func(m *ice.Message, arg ...string) {
-				_user_create(m, m.Option(USERNAME), m.OptionSimple(USERNICK, USERROLE, USERZONE, BACKGROUND, AVATAR, AVATAR_URL, EMAIL, LANGUAGE)...)
+				_user_create(m, m.Option(USERNAME), m.OptionSimple(USERNICK, USERROLE, USERZONE, BACKGROUND, AVATAR, AVATAR_URL, LANGUAGE, EMAIL)...)
 			}},
 		}, mdb.ImportantHashAction(mdb.SHORT, USERNAME, mdb.FIELD, "time,usernick,username,userrole,userzone"))},
 	})

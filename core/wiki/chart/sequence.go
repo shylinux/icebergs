@@ -150,7 +150,7 @@ func init() {
 		wiki.AddGroupOption(m, PREV, wiki.STROKE_DASHARRAY, "10 2")
 		wiki.AddGroupOption(m, TEXT, wiki.FONT_SIZE, "16")
 		wiki.AddGroupOption(m, ECHO, wiki.FONT_SIZE, "12")
-		wiki.AddGroupOption(m, ARROW, wiki.HEIGHT, "6", wiki.WIDTH, "12", wiki.FILL, cli.GLASS)
+		wiki.AddGroupOption(m, ARROW, wiki.HEIGHT, "6", wiki.WIDTH, "12", wiki.FILL, cli.TRANS)
 		return &Sequence{}
 	})
 }

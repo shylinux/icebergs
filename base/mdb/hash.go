@@ -222,6 +222,7 @@ func HashSelect(m *ice.Message, arg ...string) *ice.Message {
 	m.Cmdy(SELECT, m.PrefixKey(), m.Option(SUBKEY), HASH, HashShort(m), arg, logs.FileLineMeta(-1))
 	kit.If(Config(m, SORT), func(sort string) { m.Sort(sort) })
 	if m.PushAction(Config(m, ACTION), REMOVE); !m.FieldsIsDetail() {
+		m.Action(CREATE, PRUNES)
 		return m.StatusTimeCount()
 	}
 	return m.StatusTime()

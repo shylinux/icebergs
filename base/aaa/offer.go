@@ -34,7 +34,7 @@ func init() {
 			}},
 		}, RoleAction(ACCEPT), mdb.ImportantHashAction(mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,status,invite,email,title,content")), Hand: func(m *ice.Message, arg ...string) {
 			if !m.Warn(len(arg) == 0 && m.Option(ice.MSG_USERROLE) == VOID, ice.ErrNotRight) {
-				kit.If(mdb.HashSelect(m, arg...).FieldsIsDetail(), func() { m.PushAction(ACCEPT) }, func() { m.Action(mdb.CREATE) })
+				kit.If(mdb.HashSelect(m, arg...).FieldsIsDetail(), func() { m.PushAction(ACCEPT) })
 			}
 		}},
 	})

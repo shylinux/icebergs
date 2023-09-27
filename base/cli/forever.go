@@ -14,26 +14,12 @@ import (
 )
 
 func _path_sep() string { return kit.Select(nfs.DF, ";", strings.Contains(os.Getenv(PATH), ";")) }
-func BinPath(arg ...string) string {
-	list := []string{}
-	push := func(p string) {
-		kit.If(kit.IndexOf(list, p) == -1, func() { list = append(list, kit.ReplaceAll(p, "\\", nfs.PS)) })
-	}
-	kit.For(arg, func(p string) {
-		list = append(list, kit.Path(p, ice.BIN), kit.Path(p, ice.USR_PUBLISH), kit.Path(p, ice.USR_LOCAL_BIN), kit.Path(p, ice.USR_LOCAL_GO_BIN))
-		kit.For(kit.Reverse(strings.Split(ice.Pulse.Cmdx(nfs.CAT, kit.Path(p, ice.ETC_PATH)), lex.NL)), func(l string) {
-			kit.If(strings.TrimSpace(l) != "" && !strings.HasPrefix(strings.TrimSpace(l), "#"), func() { push(kit.Path(p, l)) })
-		})
-	})
-	kit.For(strings.Split(kit.Env(PATH), _path_sep()), func(p string) { push(p) })
-	return kit.Join(list, _path_sep())
-}
 
 const FOREVER = "forever"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		FOREVER: {Name: "forever auto", Help: "启动", Actions: ice.Actions{
+		FOREVER: {Help: "启动", Actions: ice.Actions{
 			START: {Hand: func(m *ice.Message, arg ...string) {
 				env := []string{PATH, BinPath(""), HOME, kit.Select(kit.Path(""), os.Getenv(HOME))}
 				kit.For(ENV_LIST, func(k string) { kit.If(kit.Env(k) != "", func() { env = append(env, k, kit.Env(k)) }) })
@@ -69,4 +55,19 @@ func init() {
 			}
 		}},
 	})
+}
+
+func BinPath(arg ...string) string {
+	list := []string{}
+	push := func(p string) {
+		kit.If(kit.IndexOf(list, p) == -1, func() { list = append(list, kit.ReplaceAll(p, "\\", nfs.PS)) })
+	}
+	kit.For(arg, func(p string) {
+		list = append(list, kit.Path(p, ice.BIN), kit.Path(p, ice.USR_PUBLISH), kit.Path(p, ice.USR_LOCAL_BIN), kit.Path(p, ice.USR_LOCAL_GO_BIN))
+		kit.For(kit.Reverse(strings.Split(ice.Pulse.Cmdx(nfs.CAT, kit.Path(p, ice.ETC_PATH)), lex.NL)), func(l string) {
+			kit.If(strings.TrimSpace(l) != "" && !strings.HasPrefix(strings.TrimSpace(l), "#"), func() { push(kit.Path(p, l)) })
+		})
+	})
+	kit.For(strings.Split(kit.Env(PATH), _path_sep()), func(p string) { push(p) })
+	return kit.Join(list, _path_sep())
 }

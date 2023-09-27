@@ -46,7 +46,7 @@ func init() {
 		SECRET = "secret"
 	)
 	Index.MergeCommands(ice.Commands{
-		TOTP: {Name: "totp name auto create", Help: "令牌", Actions: ice.MergeActions(ice.Actions{
+		TOTP: {Name: "totp name auto", Help: "令牌", Actions: ice.MergeActions(ice.Actions{
 			mdb.CREATE: {Name: "create name*=hi number*=6 period*=30 secret", Hand: func(m *ice.Message, arg ...string) {
 				kit.If(m.Option(SECRET) == "", func() { m.Option(SECRET, _totp_gen(kit.Int64(m.Option(PERIOD)))) })
 				mdb.HashCreate(m, m.OptionSimple(mdb.NAME, NUMBER, PERIOD, SECRET))
@@ -61,10 +61,11 @@ func init() {
 				if len(arg) > 0 {
 					m.PushQRCode(mdb.SCAN, kit.Format(mdb.Config(m, mdb.LINK), value[mdb.NAME], value[SECRET]))
 					m.Echo(m.Append(mdb.VALUE))
-				} else {
-					m.PushAction(mdb.REMOVE).StatusTimeCount()
 				}
 			})
+			if len(arg) == 0 {
+				m.PushAction(mdb.REMOVE).Action(mdb.CREATE, mdb.PRUNES).StatusTimeCount()
+			}
 		}},
 	})
 }

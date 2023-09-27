@@ -16,7 +16,7 @@ func _role_keys(key ...string) string {
 			key[0] = _key
 		}
 	}
-	return strings.TrimPrefix(strings.TrimPrefix(strings.TrimSuffix(strings.Replace(path.Join(strings.Replace(kit.Keys(key), ice.PT, ice.PS, -1)), ice.PS, ice.PT, -1), ice.PT), ice.PT), "web.")
+	return strings.TrimPrefix(strings.TrimPrefix(strings.TrimSuffix(strings.ReplaceAll(path.Join(strings.ReplaceAll(kit.Keys(key), ice.PT, ice.PS)), ice.PS, ice.PT), ice.PT), ice.PT), "web.")
 }
 func _role_set(m *ice.Message, role, zone, key string, status bool) {
 	m.Logs(mdb.INSERT, mdb.KEY, ROLE, ROLE, role, zone, key)
@@ -68,6 +68,12 @@ const ROLE = "role"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		ROLE: {Name: "role role auto insert filter:text", Help: "角色", Actions: ice.MergeActions(ice.Actions{
+			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
+				switch arg[0] {
+				case mdb.KEY:
+					mdb.HashInputs(m, ice.INDEX).CutTo(ice.INDEX, arg[0])
+				}
+			}},
 			mdb.CREATE: {Hand: func(m *ice.Message, arg ...string) {
 				kit.For(arg, func(role string) {
 					mdb.Rich(m, ROLE, nil, kit.Dict(mdb.NAME, role, BLACK, kit.Dict(), WHITE, kit.Dict()))
@@ -110,6 +116,12 @@ func WhiteAction(key ...string) ice.Actions {
 		kit.For(key, func(key string) { m.Cmd(ROLE, WHITE, VOID, m.CommandKey(), ice.ACTION, key) })
 	}}}
 }
+func White(m *ice.Message, key ...string) {
+	kit.For(key, func(key string) { m.Cmd(ROLE, WHITE, VOID, key) })
+}
+func Black(m *ice.Message, key ...string) {
+	kit.For(key, func(key string) { m.Cmd(ROLE, BLACK, VOID, key) })
+}
 func Right(m *ice.Message, key ...ice.Any) bool {
 	if key := kit.Simple(key); len(key) > 2 && key[1] == ice.ACTION && kit.IsIn(kit.Format(key[2]), ice.RUN, ice.COMMAND) {
 		return true
@@ -118,10 +130,4 @@ func Right(m *ice.Message, key ...ice.Any) bool {
 	}
 	return m.Option(ice.MSG_USERROLE) == ROOT || !m.Warn(m.Cmdx(ROLE, RIGHT, m.Option(ice.MSG_USERROLE), key, logs.FileLineMeta(-1)) != ice.OK,
 		ice.ErrNotRight, kit.Keys(key...), USERROLE, m.Option(ice.MSG_USERROLE), logs.FileLineMeta(-1))
-}
-func White(m *ice.Message, key ...string) {
-	kit.For(key, func(key string) { m.Cmd(ROLE, WHITE, VOID, key) })
-}
-func Black(m *ice.Message, key ...string) {
-	kit.For(key, func(key string) { m.Cmd(ROLE, BLACK, VOID, key) })
 }

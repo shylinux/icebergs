@@ -103,7 +103,7 @@ func (s Client) List(m *ice.Message, arg ...string) {
 func init() { ice.ChatCtxCmd(Client{}) }
 
 func (s Client) RedirectURI(m *ice.Message) string {
-	return strings.Split(web.MergeURL2(m, web.ChatCmdPath(m.Message, m.PrefixKey(), ctx.ACTION, aaa.LOGIN)), web.QS)[0]
+	return strings.Split(web.MergeURL2(m.Message, web.ChatCmdPath(m.Message, m.PrefixKey(), ctx.ACTION, aaa.LOGIN)), web.QS)[0]
 }
 func (s Client) Login(m *ice.Message, arg ...string) {
 	if state, code := m.Option(STATE), m.Option(CODE); !m.Warn(state == "" || code == "") {

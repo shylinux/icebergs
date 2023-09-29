@@ -137,7 +137,7 @@ func init() {
 				m.Cmdy(REPOS, INIT)
 			}},
 			CONFIGS: {Name: "configs email* username* token", Help: "配置", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(nfs.DEFS, kit.HomePath(".gitconfig"), nfs.Template(m, "gitconfig", m.Option(aaa.USERNAME), m.Option(aaa.EMAIL)))
+				m.Cmd(nfs.DEFS, kit.HomePath(".gitconfig"), kit.Format(nfs.Template(m, "gitconfig"), m.Option(aaa.USERNAME), m.Option(aaa.EMAIL)))
 				mdb.Config(m, aaa.USERNAME, m.Option(aaa.USERNAME))
 				mdb.Config(m, aaa.EMAIL, m.Option(aaa.EMAIL))
 				kit.If(m.Option(web.TOKEN), func() { m.Cmd(web.TOKEN, "set") })

@@ -3,6 +3,7 @@ package chrome
 import (
 	"shylinux.com/x/ice"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
@@ -30,8 +31,8 @@ func (s daemon) Inputs(m *ice.Message, arg ...string) {
 				}
 			})
 		}).Sort(arg[0])
-	case ctx.INDEX:
-		ctx.CmdList(m.Message)
+	case ctx.INDEX, ctx.ARGS:
+		mdb.HashInputs(m.Message, arg)
 	}
 }
 func (s daemon) List(m *ice.Message, arg ...string) {

@@ -265,9 +265,37 @@ const (
 const SPIDE = "spide"
 
 func init() {
+	nfs.TemplatePath = func(m *ice.Message, arg ...string) string {
+		if p := path.Join(ice.SRC_TEMPLATE, m.PrefixKey(), path.Join(arg...)); nfs.Exists(m, p) {
+			return p + kit.Select("", nfs.PS, len(arg) == 0)
+		} else {
+			return path.Join(path.Dir(ctx.GetCmdFile(m, m.PrefixKey())), path.Join(arg...)) + kit.Select("", nfs.PS, len(arg) == 0)
+		}
+	}
+	nfs.TemplateText = func(m *ice.Message, p string) string {
+		if p := nfs.TemplatePath(m, path.Base(p)); kit.HasPrefix(p, "/require/", ice.HTTP) {
+			return m.Cmdx(SPIDE, ice.DEV, SPIDE_RAW, http.MethodGet, p)
+		} else {
+			return m.Cmdx(nfs.CAT, p)
+		}
+	}
+	nfs.DocumentPath = func(m *ice.Message, arg ...string) string {
+		if p := path.Join(ice.SRC_DOCUMENT, m.PrefixKey(), path.Join(arg...)); nfs.Exists(m, p) {
+			return p + kit.Select("", nfs.PS, len(arg) == 0)
+		} else {
+			return path.Join(path.Dir(ctx.GetCmdFile(m, m.PrefixKey())), path.Join(arg...)) + kit.Select("", nfs.PS, len(arg) == 0)
+		}
+	}
+	nfs.DocumentText = func(m *ice.Message, p string) string {
+		if p := nfs.DocumentPath(m, path.Base(p)); kit.HasPrefix(p, "/require/", ice.HTTP) {
+			return m.Cmdx(SPIDE, ice.DEV, SPIDE_RAW, http.MethodGet, p)
+		} else {
+			return m.Cmdx(nfs.CAT, p)
+		}
+	}
 	Index.MergeCommands(ice.Commands{
 		// SPIDE: {Name: "spide client.name action=raw,msg,save,cache method=GET,PUT,POST,DELETE url format=form,part,json,data,file arg run create", Help: "蜘蛛侠", Actions: ice.MergeActions(ice.Actions{
-		SPIDE: {Name: "spide client.name auto", Help: "蜘蛛侠", Actions: ice.MergeActions(ice.Actions{
+		SPIDE: {Help: "蜘蛛侠", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				conf := mdb.Confm(m, cli.RUNTIME, cli.CONF)
 				m.Cmd("", mdb.CREATE, ice.OPS, kit.Select("http://127.0.0.1:9020", conf[cli.CTX_OPS]))

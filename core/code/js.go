@@ -15,11 +15,11 @@ import (
 func _js_show(m *ice.Message, arg ...string) {
 	if arg[2] == ice.USR_VOLCANOS {
 		if strings.HasPrefix(arg[1], "plugin/local/") {
-			ctx.ProcessCommand(m, kit.Select(ice.CAN_PLUGIN, "web."+strings.Replace(strings.TrimSuffix(strings.TrimPrefix(arg[1], "plugin/local/"), nfs.PT+JS), nfs.PS, nfs.PT, -1)), kit.Simple())
+			ctx.ProcessField(m, kit.Select(ice.CAN_PLUGIN, "web."+strings.Replace(strings.TrimSuffix(strings.TrimPrefix(arg[1], "plugin/local/"), nfs.PT+JS), nfs.PS, nfs.PT, -1)), kit.Simple())
 		}
 	} else {
 		ctx.DisplayBase(m, require(arg[2], arg[1]))
-		ctx.ProcessCommand(m, kit.Select(ice.CAN_PLUGIN, ctx.GetFileCmd(kit.ExtChange(path.Join(arg[2], arg[1]), GO))), kit.Simple())
+		ctx.ProcessField(m, kit.Select(ice.CAN_PLUGIN, ctx.GetFileCmd(kit.ExtChange(path.Join(arg[2], arg[1]), GO))), kit.Simple())
 	}
 
 }
@@ -31,7 +31,7 @@ func init() {
 		JS: {Name: "js path auto", Help: "前端", Actions: ice.MergeActions(ice.Actions{
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[1] == "main.js" {
-					ctx.ProcessCommand(m, "web.chat.iframe", kit.Simple(web.UserHost(m)))
+					ctx.ProcessField(m, "web.chat.iframe", kit.Simple(web.UserHost(m)))
 				} else {
 					_js_show(m, arg...)
 				}

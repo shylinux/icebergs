@@ -23,7 +23,7 @@ func init() {
 		LOCAL   = "http://localhost:9020"
 	)
 	Index.MergeCommands(ice.Commands{
-		TOKEN: {Name: "token hash auto prunes", Help: "令牌", Actions: ice.MergeActions(ice.Actions{
+		TOKEN: {Help: "令牌", Actions: ice.MergeActions(ice.Actions{
 			GEN: {Hand: func(m *ice.Message, arg ...string) {
 				m.Echo("请授权 %s 代码权限\n", m.Option(tcp.HOST)).EchoButton(CONFIRM)
 			}},

@@ -239,25 +239,36 @@ func AutoConfig(arg ...Any) *ice.Action {
 		}
 		if cmd := m.Target().Commands[m.CommandKey()]; cmd == nil {
 			return
-		} else if cmd.Actions[INSERT] != nil {
-			if inputs := []Any{}; cmd.Meta[INSERT] == nil {
-				kit.For(kit.Filters(kit.Simple(Config(m, SHORT), kit.Split(ListField(m))), "", TIME, ID), func(k string) { inputs = append(inputs, k) })
-				m.Design(INSERT, "添加", inputs...)
-			}
-			if inputs := []Any{}; cmd.Meta[CREATE] == nil {
-				kit.For(kit.Filters(kit.Split(Config(m, SHORT)), TIME, HASH, COUNT), func(k string) { inputs = append(inputs, k) })
-				m.Design(CREATE, "创建", inputs...)
-			}
-		} else if cmd.Actions[CREATE] != nil {
-			if inputs := []Any{}; cmd.Meta[CREATE] == nil {
-				kit.For(kit.Filters(kit.Split(HashField(m)), TIME, HASH), func(k string) {
-					if kit.IsIn(k, kit.Split(Config(m, SHORT))...) {
-						inputs = append(inputs, k+"*")
-					} else {
-						inputs = append(inputs, k)
-					}
+		} else {
+			if cmd.Name == "" {
+				kit.If(Config(m, SHORT), func(s string) {
+					kit.If(s == UNIQ || strings.Contains(s, ","), func() { s = HASH })
+					cmd.Name = kit.Format("%s %s auto", m.CommandKey(), s)
+				}, func() {
+					cmd.Name = kit.Format("%s %s auto", m.CommandKey(), HASH)
 				})
-				m.Design(CREATE, "创建", inputs...)
+				cmd.List = ice.SplitCmd(cmd.Name, cmd.Actions)
+			}
+			if cmd.Actions[INSERT] != nil {
+				if inputs := []Any{}; cmd.Meta[INSERT] == nil {
+					kit.For(kit.Filters(kit.Simple(Config(m, SHORT), kit.Split(ListField(m))), "", TIME, ID), func(k string) { inputs = append(inputs, k) })
+					m.Design(INSERT, "添加", inputs...)
+				}
+				if inputs := []Any{}; cmd.Meta[CREATE] == nil {
+					kit.For(kit.Filters(kit.Split(Config(m, SHORT)), TIME, HASH, COUNT), func(k string) { inputs = append(inputs, k) })
+					m.Design(CREATE, "创建", inputs...)
+				}
+			} else if cmd.Actions[CREATE] != nil {
+				if inputs := []Any{}; cmd.Meta[CREATE] == nil {
+					kit.For(kit.Filters(kit.Split(HashField(m)), TIME, HASH), func(k string) {
+						if kit.IsIn(k, kit.Split(Config(m, SHORT))...) {
+							inputs = append(inputs, k+"*")
+						} else {
+							inputs = append(inputs, k)
+						}
+					})
+					m.Design(CREATE, "创建", inputs...)
+				}
 			}
 		}
 	}}

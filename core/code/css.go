@@ -55,10 +55,10 @@ func _css_show(m *ice.Message, arg ...string) {
 func _css_exec(m *ice.Message, arg ...string) {
 	if arg[2] == ice.USR_VOLCANOS {
 		if strings.HasPrefix(arg[1], ice.PLUGIN_LOCAL) {
-			ctx.ProcessCommand(m, kit.Select(ice.CAN_PLUGIN, "web."+strings.Replace(kit.TrimExt(strings.TrimPrefix(arg[1], ice.PLUGIN_LOCAL), JS), nfs.PS, nfs.PT, -1)), kit.Simple())
+			ctx.ProcessField(m, kit.Select(ice.CAN_PLUGIN, "web."+strings.Replace(kit.TrimExt(strings.TrimPrefix(arg[1], ice.PLUGIN_LOCAL), JS), nfs.PS, nfs.PT, -1)), kit.Simple())
 		}
 	} else {
-		ctx.ProcessCommand(m, kit.Select(ice.CAN_PLUGIN, ctx.GetFileCmd(kit.ExtChange(path.Join(arg[2], arg[1]), GO))), kit.Simple())
+		ctx.ProcessField(m, kit.Select(ice.CAN_PLUGIN, ctx.GetFileCmd(kit.ExtChange(path.Join(arg[2], arg[1]), GO))), kit.Simple())
 		m.Push(ctx.STYLE, require(arg[2], arg[1]))
 	}
 }

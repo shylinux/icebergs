@@ -22,7 +22,9 @@ type Message interface {
 	PrefixKey() string
 }
 
-func UserWeb(m Message) *url.URL { return kit.ParseURL(m.Option(ice.MSG_USERWEB)) }
+func UserWeb(m Message) *url.URL {
+	return kit.ParseURL(m.Option(ice.MSG_USERWEB))
+}
 func UserHost(m *ice.Message) string {
 	if u := UserWeb(m); strings.Contains(u.Host, tcp.LOCALHOST) {
 		return m.Option(ice.MSG_USERHOST, tcp.PublishLocalhost(m, u.Scheme+"://"+u.Host))
@@ -38,14 +40,16 @@ func AgentIs(m Message, arg ...string) bool {
 	}
 	return false
 }
-func MergeURL2(m Message, url string, arg ...ice.Any) string {
+func MergeURL2(m *ice.Message, url string, arg ...ice.Any) string {
 	kit.If(m.Option(log.DEBUG) == ice.TRUE, func() { arg = append(arg, log.DEBUG, ice.TRUE) })
 	kit.If(m.Option(ice.MSG_USERWEB) == "", func() {
+		m.Debug("what %v", 123)
 		m.Option(ice.MSG_USERWEB, Domain(ice.Pulse.Cmdv(tcp.HOST, aaa.IP), ice.Pulse.Cmdv(SERVE, tcp.PORT)))
+		m.Debug("what %v", 123)
 	})
 	return kit.MergeURL2(m.Option(ice.MSG_USERWEB), url, arg...)
 }
-func MergeLink(m Message, url string, arg ...ice.Any) string {
+func MergeLink(m *ice.Message, url string, arg ...ice.Any) string {
 	kit.If(m.Option(log.DEBUG) == ice.TRUE, func() { arg = append(arg, log.DEBUG, ice.TRUE) })
 	return kit.MergeURL(strings.Split(MergeURL2(m, url), QS)[0], arg...)
 }
@@ -61,7 +65,6 @@ func PushPodCmd(m *ice.Message, cmd string, arg ...string) {
 	list := []string{}
 	m.Cmds(SPACE, func(value ice.Maps) {
 		kit.If(kit.IsIn(value[mdb.TYPE], WORKER), func() { list = append(list, value[mdb.NAME]) })
-		// kit.If(kit.IsIn(value[mdb.TYPE], WORKER, SERVER), func() { list = append(list, value[mdb.NAME]) })
 	})
 	if len(list) == 0 {
 		return
@@ -111,12 +114,8 @@ func Toast(m *ice.Message, text string, arg ...ice.Any) { // [title [duration [p
 			}
 		}
 	}
-	if len(arg) == 0 {
-		arg = append(arg, m.PrefixKey())
-	}
-	if len(arg) > 0 {
-		arg[0] = kit.Select(m.PrefixKey(), arg[0])
-	}
+	kit.If(len(arg) == 0, func() { arg = append(arg, m.PrefixKey()) })
+	kit.If(len(arg) > 0, func() { arg[0] = kit.Select(m.PrefixKey(), arg[0]) })
 	PushNoticeToast(m, text, arg)
 }
 func toastContent(m *ice.Message, state string) string {

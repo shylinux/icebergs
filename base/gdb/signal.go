@@ -48,7 +48,7 @@ const SIGNAL = "signal"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		SIGNAL: {Name: "signal signal auto listen", Help: "信号量", Actions: ice.MergeActions(ice.Actions{
+		SIGNAL: {Help: "信号量", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				if runtime.GOOS == ice.WINDOWS {
 					return
@@ -57,7 +57,7 @@ func init() {
 				_signal_listen(m, 2, mdb.NAME, RESTART, ice.CMD, "exit 1")
 				_signal_listen(m, 3, mdb.NAME, STOP, ice.CMD, "exit 0")
 			}},
-			LISTEN: {Name: "listen signal name cmd", Hand: func(m *ice.Message, arg ...string) {
+			LISTEN: {Name: "listen signal name cmd", Help: "监听", Hand: func(m *ice.Message, arg ...string) {
 				_signal_listen(m, kit.Int(m.Option(SIGNAL)), arg...)
 			}},
 			HAPPEN: {Name: "happen signal", Help: "触发", Hand: func(m *ice.Message, arg ...string) {
@@ -73,7 +73,8 @@ func init() {
 				_signal_process(m, m.Option(PID), syscall.Signal(kit.Int(kit.Select("9", m.Option(SIGNAL)))))
 			}},
 		}, mdb.HashAction(mdb.SHORT, SIGNAL, mdb.FIELD, "time,signal,name,cmd", mdb.ACTION, HAPPEN), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
-			mdb.HashSelect(m, arg...).Sort(SIGNAL)
+			defer kit.If(len(arg) == 0, func() { m.Action(LISTEN) })
+			mdb.HashSelect(m, arg...)
 		}},
 	})
 }

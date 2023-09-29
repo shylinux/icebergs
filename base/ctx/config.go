@@ -124,7 +124,7 @@ const CONFIG = "config"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		CONFIG: {Name: "config key auto export import trash", Help: "配置", Actions: ice.Actions{
+		CONFIG: {Name: "config key auto", Help: "配置", Actions: ice.Actions{
 			SAVE:       {Hand: func(m *ice.Message, arg ...string) { _config_save(m, arg[0], arg[1:]...) }},
 			LOAD:       {Hand: func(m *ice.Message, arg ...string) { _config_load(m, arg[0], arg[1:]...) }},
 			mdb.EXPORT: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(mdb.EXPORT, arg[0], "", mdb.HASH) }},
@@ -145,14 +145,12 @@ func init() {
 				_config_list(m)
 			} else {
 				_config_make(m, arg[0], arg[1:]...)
+				m.Action(mdb.EXPORT, mdb.IMPORT, nfs.TRASH)
 			}
 		}},
 	})
 }
-func init() {
-	ice.Info.Save = Save
-	ice.Info.Load = Load
-}
+func init() { ice.Info.Save = Save; ice.Info.Load = Load }
 func Save(m *ice.Message, arg ...string) *ice.Message {
 	kit.If(len(arg) == 0, func() { arg = kit.SortedKey(m.Target().Configs) })
 	kit.For(arg, func(i int, k string) { arg[i] = strings.Replace(m.Prefix(k), nfs.PS, "", 1) })

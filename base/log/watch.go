@@ -15,7 +15,7 @@ const WATCH = "watch"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		WATCH: {Name: "watch auto", Help: "记录", Hand: func(m *ice.Message, arg ...string) {
+		WATCH: {Help: "记录", Hand: func(m *ice.Message, arg ...string) {
 			stats := map[string]int{}
 			m.Cmd(nfs.CAT, path.Join(ice.VAR_LOG, "watch.log"), func(text string) {
 				ls := kit.Split(text)
@@ -23,8 +23,7 @@ func init() {
 				m.Push(ctx.SHIP, ls[3]).Push("operate", ls[4]).Push(nfs.CONTENT, kit.Join(kit.Slice(ls, 5, -1), lex.SP))
 				stats[ls[4]]++
 			})
-			m.StatusTimeCount(stats)
-			m.Action("filter:text")
+			m.Action("filter:text").StatusTimeCount(stats)
 		}},
 	})
 }

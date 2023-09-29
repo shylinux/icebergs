@@ -143,6 +143,7 @@ func init() {
 					}
 				})
 				m.Sort("status,space", ice.STR_R, ice.STR).StatusTimeCount(stat)
+				m.Option(ice.MSG_ACTION, "")
 			}
 		}},
 	})

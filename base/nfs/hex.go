@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"io"
 	"os"
-	"strings"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/mdb"
@@ -17,8 +16,7 @@ const HEX = "hex"
 
 func init() {
 	Index.MergeCommands(ice.Commands{HEX: {Name: "hex path compress=raw,gzip,zlib size auto", Help: "二进制", Hand: func(m *ice.Message, arg ...string) {
-		if len(arg) == 0 || arg[0] == "" || strings.HasSuffix(arg[0], PS) {
-			m.Cmdy(DIR, kit.Slice(arg, 0, 1))
+		if DirList(m, arg...) {
 			return
 		}
 		Open(m, arg[0], func(r io.Reader, s os.FileInfo) {

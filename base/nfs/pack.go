@@ -16,7 +16,7 @@ const PACK = "pack"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		PACK: {Name: "pack path auto upload create", Help: "文件系统", Actions: ice.Actions{
+		PACK: {Name: "pack path auto create upload", Help: "文件系统", Actions: ice.Actions{
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == mdb.FOREACH && arg[1] != "" {
 					m.Cmd(DIR, SRC, PATH, kit.Dict(DIR_REG, arg[1], DIR_DEEP, ice.TRUE, DIR_TYPE, CAT), func(value ice.Maps) {
@@ -38,17 +38,17 @@ func init() {
 				})
 			}},
 			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) { PackFile.Remove(path.Clean(m.Option(PATH))) }},
-			mdb.IMPORT: {Hand: func(m *ice.Message, arg ...string) {
-				OptionFiles(m, DiskFile)
-				Open(m, path.Join(m.Option(PATH), m.Option(FILE)), func(r io.Reader, p string) {
-					OptionFiles(m, PackFile)
-					Create(m, p, func(w io.Writer) { Copy(m, w, r, func(n int) { m.Logs(LOAD, FILE, p, SIZE, n) }) })
-				})
-			}},
 			mdb.EXPORT: {Hand: func(m *ice.Message, arg ...string) {
 				OptionFiles(m, PackFile)
 				Open(m, path.Join(m.Option(PATH), m.Option(FILE)), func(r io.Reader, p string) {
 					OptionFiles(m, DiskFile)
+					Create(m, p, func(w io.Writer) { Copy(m, w, r, func(n int) { m.Logs(LOAD, FILE, p, SIZE, n) }) })
+				})
+			}},
+			mdb.IMPORT: {Hand: func(m *ice.Message, arg ...string) {
+				OptionFiles(m, DiskFile)
+				Open(m, path.Join(m.Option(PATH), m.Option(FILE)), func(r io.Reader, p string) {
+					OptionFiles(m, PackFile)
 					Create(m, p, func(w io.Writer) { Copy(m, w, r, func(n int) { m.Logs(LOAD, FILE, p, SIZE, n) }) })
 				})
 			}},

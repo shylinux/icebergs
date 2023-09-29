@@ -478,7 +478,7 @@ func init() {
 				}
 			}},
 			INIT: {Name: "clone origin* branch name path", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(nfs.DEFS, kit.Path(".git/config"), nfs.Template(m, "config", m.Option(ORIGIN)))
+				m.Cmd(nfs.DEFS, kit.Path(".git/config"), kit.Format(nfs.Template(m, "config"), m.Option(ORIGIN)))
 				git.PlainInit(m.Option(nfs.PATH), false)
 				_repos_insert(m, kit.Path(""))
 				m.ProcessRefresh()

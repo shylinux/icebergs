@@ -45,7 +45,7 @@ func CmdHashAction(arg ...string) ice.Actions {
 				m.Cmd(nfs.DIR, ice.USR_ICONS, func(value ice.Maps) { m.Push(arg[0], kit.TrimExt(value[nfs.PATH], nfs.PNG)) })
 			}
 		}},
-		mdb.SELECT: {Name: "list hash auto create", Hand: func(m *ice.Message, arg ...string) {
+		mdb.SELECT: {Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, arg...).Sort(mdb.NAME).Display(ctx.FileURI(file))
 		}},
 	}, mdb.HashAction(mdb.SHORT, kit.Select("", arg, 0), mdb.FIELD, kit.Select("time,hash,icon,name,text,space,index,args", arg, 1), kit.Slice(arg, 2)))

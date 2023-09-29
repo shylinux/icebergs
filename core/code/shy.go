@@ -19,17 +19,17 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		SHY: {Name: "shy path auto", Help: "笔记", Actions: ice.MergeActions(ice.Actions{
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
-				ctx.ProcessCommand(m, web.WIKI_WORD, kit.Simple(path.Join(arg[2], arg[1])))
+				ctx.ProcessField(m, web.WIKI_WORD, kit.Simple(path.Join(arg[2], arg[1])))
 				return
-				ctx.ProcessCommand(m, yac.STACK, kit.Simple(path.Join(arg[2], arg[1])))
+				ctx.ProcessField(m, yac.STACK, kit.Simple(path.Join(arg[2], arg[1])))
 			}},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
-				ctx.ProcessCommand(m, web.WIKI_WORD, kit.Simple(path.Join(arg[2], arg[1])))
+				ctx.ProcessField(m, web.WIKI_WORD, kit.Simple(path.Join(arg[2], arg[1])))
 				return
 				if msg := m.Cmd(yac.STACK, path.Join(arg[2], arg[1])); msg.Option("__index") != "" {
-					ctx.ProcessCommand(m, msg.Option("__index"), kit.Simple())
+					ctx.ProcessField(m, msg.Option("__index"), kit.Simple())
 				} else {
-					ctx.ProcessCommand(m, yac.STACK, kit.Simple(path.Join(arg[2], arg[1])))
+					ctx.ProcessField(m, yac.STACK, kit.Simple(path.Join(arg[2], arg[1])))
 				}
 			}},
 			TEMPLATE: {Hand: func(m *ice.Message, arg ...string) {

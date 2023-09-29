@@ -198,7 +198,9 @@ func init() {
 				}
 			}},
 			cli.SYSTEM: {Help: "系统", Hand: func(m *ice.Message, arg ...string) { cli.Opens(m, "System Settings.app") }},
-			cli.START:  {Name: "start dev proto host port=9020 nodename username usernick", Hand: func(m *ice.Message, arg ...string) { _serve_start(m) }},
+			cli.START: {Name: "start dev proto host port=9020 nodename username usernick", Hand: func(m *ice.Message, arg ...string) {
+				_serve_start(m)
+			}},
 			SERVE_START: {Hand: func(m *ice.Message, arg ...string) {
 				m.Go(func() {
 					m.Option(ice.MSG_USERIP, "127.0.0.1")
@@ -207,7 +209,7 @@ func init() {
 				})
 			}},
 		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,status,name,proto,host,port"), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
-			mdb.HashSelect(m, arg...).StatusTimeCount(ice.MAIN, mdb.Config(m, ice.MAIN))
+			mdb.HashSelect(m, arg...).Options(ice.MSG_ACTION, "").StatusTimeCount(kit.Dict(ice.MAIN, mdb.Config(m, ice.MAIN)))
 		}},
 	})
 	ice.AddMergeAction(func(c *ice.Context, key string, cmd *ice.Command, sub string, action *ice.Action) {

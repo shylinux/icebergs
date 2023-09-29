@@ -21,8 +21,8 @@ import (
 )
 
 func _dream_list(m *ice.Message) *ice.Message {
-	list := m.CmdMap(SPACE, mdb.NAME)
 	stats := map[string]int{}
+	list := m.CmdMap(SPACE, mdb.NAME)
 	mdb.HashSelect(m).Table(func(value ice.Maps) {
 		if space, ok := list[value[mdb.NAME]]; ok {
 			msg := gdb.Event(m.Spawn(value, space), DREAM_TABLES).Copy(m.Spawn().PushButton(cli.STOP))
@@ -32,23 +32,22 @@ func _dream_list(m *ice.Message) *ice.Message {
 			m.Push(mdb.TEXT, msg.Append(mdb.TEXT))
 			m.PushButton(strings.Join(msg.Appendv(ctx.ACTION), ""))
 			stats[cli.START]++
-		} else if nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, value[mdb.NAME])) {
-			m.Push(nfs.VERSION, "")
-			m.Push(mdb.TYPE, WORKER)
-			m.Push(cli.STATUS, cli.STOP)
-			m.Push(mdb.TEXT, "")
-			m.PushButton(cli.START, nfs.TRASH)
-			stats[cli.STOP]++
 		} else {
 			m.Push(nfs.VERSION, "")
 			m.Push(mdb.TYPE, WORKER)
 			m.Push(cli.STATUS, cli.STOP)
 			m.Push(mdb.TEXT, "")
-			m.PushButton(cli.START, mdb.REMOVE)
-			stats[ice.INIT]++
+			if nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, value[mdb.NAME])) {
+				m.PushButton(cli.START, nfs.TRASH)
+				stats[cli.STOP]++
+			} else {
+				m.PushButton(cli.START, mdb.REMOVE)
+				stats[ice.INIT]++
+			}
 		}
 	})
 	return m.Sort("status,type,name", ice.STR, ice.STR, ice.STR_R).StatusTimeCount(stats)
+
 }
 func _dream_start(m *ice.Message, name string) {
 	if m.Warn(name == "", ice.ErrNotValid, mdb.NAME) {
@@ -283,13 +282,12 @@ func init() {
 			}},
 		}, DreamAction(), mdb.ImportantHashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icon,repos,binary,template")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
-				_dream_list(m)
-				m.RewriteAppend(func(value, key string, index int) string {
+				_dream_list(m).RewriteAppend(func(value, key string, index int) string {
 					if key == mdb.ICON {
 						return kit.MergeURL(ctx.FileURI(value), ice.POD, m.Appendv(mdb.NAME)[index])
 					}
 					return value
-				})
+				}).Option(ice.MSG_ACTION, "")
 				ctx.DisplayTableCard(m)
 			} else if arg[0] == ctx.ACTION {
 				gdb.Event(m, DREAM_ACTION, arg)

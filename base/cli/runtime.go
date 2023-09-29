@@ -263,12 +263,11 @@ func init() {
 			}},
 		}, ctx.ConfAction("")), Hand: func(m *ice.Message, arg ...string) {
 			kit.If(len(arg) > 0 && arg[0] == BOOTINFO, func() { arg = arg[1:] })
-			m.Cmdy(ctx.CONFIG, RUNTIME, arg)
-			ctx.DisplayStoryJSON(m)
-			m.Status(mdb.TIME, ice.Info.Make.Time,
+			m.Cmdy(ctx.CONFIG, RUNTIME, arg).Status(mdb.TIME, ice.Info.Make.Time,
 				mdb.HASH, kit.Cut(ice.Info.Hash, 6), nfs.SIZE, ice.Info.Size,
 				mdb.NAME, ice.Info.NodeName, nfs.VERSION, ice.Info.Make.Versions(),
 			)
+			ctx.DisplayStoryJSON(m)
 		}},
 	})
 }

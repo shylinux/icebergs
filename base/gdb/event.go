@@ -13,8 +13,6 @@ const (
 )
 const EVENT = "event"
 
-var list map[string]int = map[string]int{}
-
 func init() {
 	Index.MergeCommands(ice.Commands{
 		EVENT: {Name: "event event id auto listen happen", Help: "事件流", Actions: ice.MergeActions(ice.Actions{
@@ -32,6 +30,7 @@ func init() {
 		}, mdb.ZoneAction(mdb.SHORT, EVENT, mdb.FIELD, "time,id,cmd"), mdb.ClearOnExitHashAction())},
 	})
 }
+
 func EventsAction(arg ...string) ice.Actions {
 	list := kit.DictList(arg...)
 	return ice.Actions{ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
@@ -40,6 +39,9 @@ func EventsAction(arg ...string) ice.Actions {
 		}
 	}}}
 }
+
+var list map[string]int = map[string]int{}
+
 func Watch(m *ice.Message, key string, arg ...string) *ice.Message {
 	kit.If(len(arg) == 0, func() { arg = append(arg, m.PrefixKey()) })
 	return m.Cmd(EVENT, LISTEN, EVENT, key, ice.CMD, kit.Join(arg, ice.SP))

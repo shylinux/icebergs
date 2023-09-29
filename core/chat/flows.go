@@ -29,7 +29,7 @@ func init() {
 			}},
 		}, mdb.ExportHashAction(mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,zone", mdb.FIELDS, "time,hash,name,space,index,args,prev,from,status")), Hand: func(m *ice.Message, arg ...string) {
 			if arg = kit.Slice(arg, 0, 2); len(arg) == 0 || arg[0] == "" {
-				mdb.HashSelect(m)
+				mdb.HashSelect(m).Option(ice.MSG_ACTION, "")
 			} else {
 				m.Fields(len(arg)-1, mdb.Config(m, mdb.FIELDS), mdb.DETAIL)
 				m.Cmdy(mdb.SELECT, m.PrefixKey(), kit.KeyHash(arg[0]), mdb.HASH, arg[1:])

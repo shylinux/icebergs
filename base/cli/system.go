@@ -99,6 +99,7 @@ func _system_exec(m *ice.Message, cmd *exec.Cmd) {
 		m.Cost(CODE, _system_code(cmd), EXEC, cmd.Args)
 	}
 	m.Push(mdb.TIME, m.Time()).Push(CODE, _system_code(cmd))
+	m.StatusTime()
 }
 func _system_code(cmd *exec.Cmd) string {
 	return kit.Select("1", "0", cmd.ProcessState != nil && cmd.ProcessState.Success())

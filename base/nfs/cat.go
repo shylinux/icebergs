@@ -61,7 +61,6 @@ func _cat_list(m *ice.Message, p string) {
 const (
 	CAT_CONTENT = "cat_content"
 	CONFIGURE   = "configure"
-	TEMPLATE    = "template"
 	STDIO       = "stdio"
 
 	TAGS   = "tags"
@@ -101,6 +100,7 @@ const (
 	PNG = "png"
 	JPG = "jpg"
 	MP4 = "mp4"
+	MOV = "mov"
 	PDF = "pdf"
 
 	DF = ice.DF
@@ -116,39 +116,22 @@ func init() {
 			ice.CTX_INIT: mdb.AutoConfig(SOURCE, kit.DictList(
 				HTML, CSS, JS, GO, SH, PY, SHY, CSV, JSON, CONFIGURE, PROTO, YAML, CONF, XML, YML, TXT, MD, strings.ToLower(ice.LICENSE), strings.ToLower(ice.MAKEFILE),
 			)),
-		}), Hand: func(m *ice.Message, arg ...string) {
-			if len(arg) == 0 || strings.HasSuffix(arg[0], PS) {
-				m.Cmdy(DIR, arg)
-			} else {
-				if arg[0] == ice.ACTION {
-					m.Cmdy(DIR, arg)
-				} else {
-					_cat_list(m.Logs(FIND, m.OptionSimple(DIR_ROOT), FILE, arg[0]), arg[0])
-				}
+		}, DIR), Hand: func(m *ice.Message, arg ...string) {
+			if !DirList(m, arg...) {
+				_cat_list(m.Logs(FIND, m.OptionSimple(DIR_ROOT), FILE, arg[0]), arg[0])
 			}
 		}},
 	})
 }
 
-type templateMessage interface {
-	Optionv(key string, arg ...ice.Any) ice.Any
-	Cmdx(...ice.Any) string
-	PrefixKey() string
+func DirList(m *ice.Message, arg ...string) bool {
+	if len(arg) == 0 || strings.HasSuffix(arg[0], PS) {
+		m.Cmdy(DIR, kit.Slice(arg, 0, 1))
+		return true
+	}
+	return false
 }
 
-func Template(m templateMessage, p string, arg ...ice.Any) string {
-	return kit.Renders(kit.Format(TemplateText(m, p), arg...), m)
-}
-func TemplateText(m templateMessage, p string) string {
-	return m.Cmdx(CAT, path.Join(m.PrefixKey(), path.Base(p)), kit.Dict(DIR_ROOT, ice.SRC_TEMPLATE))
-}
-func TemplatePath(m templateMessage, arg ...string) string {
-	if p := path.Join(ice.SRC_TEMPLATE, m.PrefixKey(), path.Join(arg...)); Exists(m, p) {
-		return p
-	} else {
-		return p
-	}
-}
 func IsSourceFile(m *ice.Message, ext string) bool {
 	return mdb.Conf(m, Prefix(CAT), kit.Keym(SOURCE, ext)) == ice.TRUE
 }

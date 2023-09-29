@@ -13,9 +13,9 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-const DEBUG = "debug"
-
 func _debug_file(k string) string { return ice.VAR_LOG + k + ".log" }
+
+const DEBUG = "debug"
 
 func init() {
 	const (

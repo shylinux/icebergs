@@ -20,7 +20,7 @@ func _broad_send(m *ice.Message, to_host, to_port string, host, port string, arg
 	})
 }
 func _broad_serve(m *ice.Message) {
-	m.GoSleep("10ms", tcp.HOST, func(value ice.Maps) {
+	m.GoSleep("30ms", tcp.HOST, func(value ice.Maps) {
 		_broad_send(m, "", "", value[aaa.IP], m.Option(tcp.PORT), gdb.EVENT, tcp.LISTEN, mdb.NAME, ice.Info.NodeName, mdb.TYPE, ice.Info.NodeType)
 	})
 	m.Cmd(tcp.SERVER, tcp.LISTEN, mdb.TYPE, tcp.UDP4, mdb.NAME, logs.FileLine(1), m.OptionSimple(tcp.HOST, tcp.PORT), func(from *net.UDPAddr, buf []byte) {
@@ -37,7 +37,7 @@ const BROAD = "broad"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		BROAD: {Name: "broad hash auto", Help: "广播", Actions: ice.MergeActions(ice.Actions{
+		BROAD: {Help: "广播", Actions: ice.MergeActions(ice.Actions{
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if mdb.IsSearchPreview(m, arg) {
 					host, domain := m.Cmdv(tcp.HOST, aaa.IP), UserWeb(m).Hostname()

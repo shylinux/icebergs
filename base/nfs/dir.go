@@ -144,6 +144,7 @@ const (
 	USR_PUBLISH    = ice.USR_PUBLISH
 	USR_LOCAL_WORK = ice.USR_LOCAL_WORK
 	SRC_DOCUMENT   = ice.SRC_DOCUMENT
+	SRC_TEMPLATE   = ice.SRC_TEMPLATE
 	REQUIRE        = "/require/"
 	VOLCANOS       = "/volcanos/"
 	INTSHELL       = "/intshell/"
@@ -186,10 +187,10 @@ func init() {
 				aaa.Black(m, ice.USR_LOCAL)
 			}},
 			ice.APP: {Help: "本机", Hand: func(m *ice.Message, arg ...string) { m.Cmd("cli.system", "opens", "Finder.app") }},
-			TRASH:   {Hand: func(m *ice.Message, arg ...string) { m.Cmd(TRASH, mdb.CREATE, m.Option(PATH)) }},
 			mdb.SHOW: {Help: "预览", Hand: func(m *ice.Message, arg ...string) {
 				Show(m.ProcessInner(), path.Join(m.Option(DIR_ROOT), m.Option(PATH)))
 			}}, mdb.UPLOAD: {},
+			TRASH: {Hand: func(m *ice.Message, arg ...string) { m.Cmd(TRASH, mdb.CREATE, m.Option(PATH)) }},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			root, dir := kit.Select(PWD, m.Option(DIR_ROOT)), kit.Select(PWD, arg, 0)
 			kit.If(strings.HasPrefix(dir, PS), func() { root = "" })
@@ -255,9 +256,9 @@ func Show(m *ice.Message, file string) bool {
 	p := "/share/local/" + file
 	kit.If(m.Option(ice.MSG_USERPOD), func(pod string) { p += "?pod=" + pod })
 	switch strings.ToLower(kit.Ext(file)) {
-	case "png", "jpg":
+	case PNG, JPG:
 		m.EchoImages(p)
-	case "mp4", "mov":
+	case MP4, MOV:
 		m.EchoVideos(p)
 	default:
 		if IsSourceFile(m, kit.Ext(file)) {

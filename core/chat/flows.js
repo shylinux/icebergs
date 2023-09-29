@@ -2,7 +2,7 @@
 Volcanos(chat.ONIMPORT, {
 	_init: function(can, msg, cb) { can.ui = can.onappend.layout(can), cb && cb(msg)
 		can.core.Item(can.Action(), function(key) { can.onaction[key] = can.onaction[key]||can.onaction.refresh, can.Action(key, can.misc.localStorage(can, ACTION_STORE+key)) })
-		if (can.Option(mdb.ZONE)) { return can.onmotion.hidden(can, can.ui.project), can.onimport._content(can, msg, can.Option(mdb.ZONE)) } can.onimport._project(can, msg)
+		if (can.Option(mdb.ZONE)) { can.onmotion.hidden(can, can.ui.project), can.onimport._content(can, msg, can.Option(mdb.ZONE)) } else { can.onimport._project(can, msg) }
 	},
 	_project: function(can, msg) { var target; msg.Table(function(value) {
 		var item = can.onimport.item(can, value, function(event) { can.Option(mdb.ZONE, value.zone)

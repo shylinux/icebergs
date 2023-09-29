@@ -62,10 +62,3 @@ func ProcessField(m *ice.Message, cmd string, args ice.Any, arg ...string) *ice.
 	}
 	return m
 }
-func ProcessCommand(m *ice.Message, cmd string, args []string, arg ...string) {
-	if !kit.HasPrefixList(arg, RUN) {
-		m.Cmdy(COMMAND, cmd).Push(ice.ARG, kit.Format(args)).ProcessField(cmd, RUN)
-	} else {
-		m.Cmdy(cmd, arg[1:])
-	}
-}

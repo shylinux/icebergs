@@ -14,15 +14,6 @@ import (
 )
 
 func _command_list(m *ice.Message, name string) *ice.Message {
-	if name == "" {
-		for k, v := range m.Source().Commands {
-			if IsOrderCmd(k) {
-				continue
-			}
-			m.Push(mdb.KEY, k).Push(mdb.NAME, v.Name).Push(mdb.HELP, v.Help)
-		}
-		return m.Sort(mdb.KEY)
-	}
 	if strings.HasPrefix(name, "can.") {
 		return m.Push(mdb.INDEX, name).Push(mdb.NAME, name).Push(mdb.HELP, "").Push(mdb.META, "").Push(mdb.LIST, "")
 	}
@@ -40,8 +31,14 @@ func _command_search(m *ice.Message, kind, name, text string) {
 		if IsOrderCmd(key) || !strings.Contains(s.Prefix(key), name) {
 			return
 		}
-		m.PushSearch(ice.CTX, kit.PathName(1), ice.CMD, kit.FileName(1), kit.SimpleKV("", s.Prefix(), cmd.Name, cmd.Help),
-			CONTEXT, s.Prefix(), COMMAND, key, INDEX, kit.Keys(s.Prefix(), key), mdb.HELP, cmd.Help, nfs.FILE, FileURI(cmd.FileLine()))
+		m.PushSearch(ice.CTX, kit.PathName(1),
+			ice.CMD, kit.FileName(1),
+			kit.SimpleKV("", s.Prefix(), kit.Select(key, cmd.Name), cmd.Help),
+			CONTEXT, s.Prefix(),
+			COMMAND, key,
+			INDEX, kit.Keys(s.Prefix(), key),
+			mdb.HELP, cmd.Help,
+			nfs.FILE, FileURI(cmd.FileLine()))
 	})
 	m.Sort(m.OptionFields())
 }
@@ -65,9 +62,7 @@ func init() {
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				TravelCmd(m, func(key, file, line string) { AddFileCmd(file, key) })
 				m.Travel(func(p *ice.Context, c *ice.Context, key string, cmd *ice.Command) {
-					if cmd.Actions == nil {
-						return
-					}
+					kit.If(cmd.Actions == nil, func() { cmd.Actions = ice.Actions{} })
 					if _, ok := cmd.Actions[COMMAND]; !ok {
 						cmd.Actions[COMMAND] = &ice.Action{Hand: Command}
 					}
@@ -98,7 +93,7 @@ func init() {
 			}},
 		}, aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
-				m.Cmdy("", mdb.SEARCH, COMMAND, ice.OptionFields(INDEX)).StatusTimeCount()
+				m.Cmdy("", mdb.SEARCH, COMMAND, ice.OptionFields(INDEX)).Action(mdb.EXPORT).StatusTimeCount()
 				DisplayStory(m.Options(nfs.DIR_ROOT, "ice."), "spide.js?split=.")
 			} else {
 				kit.For(arg, func(k string) { _command_list(m, k) })
@@ -115,28 +110,7 @@ func Run(m *ice.Message, arg ...string) {
 func Command(m *ice.Message, arg ...string) {
 	kit.If(!PodCmd(m, COMMAND, arg), func() { m.Cmdy(COMMAND, arg) })
 }
-func CmdAction(args ...ice.Any) ice.Actions {
-	return ice.Actions{ice.CTX_INIT: mdb.AutoConfig(args...), RUN: {Hand: Run}, COMMAND: {Hand: Command}}
-}
-func CmdHandler(args ...ice.Any) ice.Handler {
-	return func(m *ice.Message, arg ...string) { m.Cmdy(args...) }
-}
-func CmdList(m *ice.Message) *ice.Message {
-	return m.Cmdy(COMMAND, mdb.SEARCH, COMMAND, ice.OptionFields(INDEX))
-}
-func CmdInputs(m *ice.Message, arg ...string) *ice.Message {
-	switch arg[0] {
-	case INDEX:
-		m.Cmdy(COMMAND, mdb.SEARCH, COMMAND, ice.OptionFields(INDEX))
-	case ARGS:
-		if m.Cmdy(m.Option(INDEX), mdb.INPUTS, arg); m.Length() == 0 {
-			m.Cmdy(m.Option(INDEX))
-		}
-	}
-	return m
-}
 
-func IsOrderCmd(key string) bool { return key[0] == '/' || key[0] == '_' }
 func FileURI(dir string) string {
 	kit.If(runtime.GOOS == ice.WINDOWS, func() { dir = strings.ReplaceAll(dir, "\\", nfs.PS) })
 	if dir == "" {
@@ -204,9 +178,10 @@ func TravelCmd(m *ice.Message, cb func(key, file, line string)) *ice.Message {
 				return
 			}
 		}
-		if ls := kit.Split(cmd.FileLine(), nfs.DF); len(ls) > 0 && cmd.Name != "" {
+		if ls := kit.Split(cmd.FileLine(), nfs.DF); len(ls) > 0 {
 			cb(kit.Keys(s.Prefix(), key), strings.TrimPrefix(ls[0], kit.Path("")+nfs.PS), kit.Select("1", ls, 1))
 		}
 	})
 	return m
 }
+func IsOrderCmd(key string) bool { return key[0] == '/' || key[0] == '_' }

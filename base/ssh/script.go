@@ -102,7 +102,7 @@ func (f *Frame) parse(m *ice.Message, h, line string) string {
 	return ""
 }
 func (f *Frame) scan(m *ice.Message, h, line string) *Frame {
-	kit.If(f.source == STDIO, func() { m.Option(ice.LOG_DISABLE, ice.TRUE) })
+	// kit.If(f.source == STDIO, func() { m.Option(ice.LOG_DISABLE, ice.TRUE) })
 	f.ps1 = kit.Simple(mdb.Confv(m, PROMPT, kit.Keym(PS1)))
 	f.ps2 = kit.Simple(mdb.Confv(m, PROMPT, kit.Keym(PS2)))
 	ps, bio := f.ps1, bufio.NewScanner(f.stdin)

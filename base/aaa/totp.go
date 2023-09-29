@@ -46,7 +46,7 @@ func init() {
 		SECRET = "secret"
 	)
 	Index.MergeCommands(ice.Commands{
-		TOTP: {Name: "totp name auto", Help: "令牌", Actions: ice.MergeActions(ice.Actions{
+		TOTP: {Help: "令牌", Actions: ice.MergeActions(ice.Actions{
 			mdb.CREATE: {Name: "create name*=hi number*=6 period*=30 secret", Hand: func(m *ice.Message, arg ...string) {
 				kit.If(m.Option(SECRET) == "", func() { m.Option(SECRET, _totp_gen(kit.Int64(m.Option(PERIOD)))) })
 				mdb.HashCreate(m, m.OptionSimple(mdb.NAME, NUMBER, PERIOD, SECRET))

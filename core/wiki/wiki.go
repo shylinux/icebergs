@@ -55,7 +55,11 @@ func _wiki_upload(m *ice.Message, dir string) {
 	m.Cmdy(web.CACHE, web.WATCH, m.Option(ice.MSG_UPLOAD), _wiki_path(m, dir, m.Option(mdb.NAME)))
 }
 func _wiki_template(m *ice.Message, file, name, text string, arg ...string) *ice.Message {
-	return m.Echo(nfs.Template(&Message{_option(m, m.CommandKey(), name, strings.TrimSpace(text), arg...)}, kit.Keys(kit.Select(m.CommandKey(), file), nfs.HTML)))
+	msg := _option(m, m.CommandKey(), name, strings.TrimSpace(text), arg...)
+	return m.Echo(nfs.Template(msg,
+		kit.Keys(kit.Select(m.CommandKey(), file), nfs.HTML),
+		&Message{msg},
+	))
 }
 
 const WIKI = "wiki"
@@ -66,7 +70,7 @@ func init() {
 	web.Index.Register(Index, &web.Frame{},
 		TITLE, BRIEF, REFER, SPARK, PARSE, FIELD,
 		ORDER, TABLE, CHART, IMAGE, VIDEO, AUDIO,
-		WORD, DATA, DRAW, FEEL, PORTAL,
+		WORD, DATA, DRAW, FEEL, STYLE, PORTAL,
 	)
 }
 func Prefix(arg ...string) string { return web.Prefix(WIKI, kit.Keys(arg)) }

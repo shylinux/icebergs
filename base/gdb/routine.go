@@ -11,7 +11,7 @@ const ROUTINE = "routine"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		ROUTINE: {Name: "routine hash auto prunes", Help: "协程池", Actions: ice.MergeActions(ice.Actions{
+		ROUTINE: {Help: "协程池", Actions: ice.MergeActions(ice.Actions{
 			mdb.CREATE: {Name: "create name cmd", Hand: func(m *ice.Message, arg ...string) {
 				m.Go(func() {
 					cb := m.OptionCB("")

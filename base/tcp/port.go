@@ -33,6 +33,7 @@ func _port_right(m *ice.Message, arg ...string) string {
 }
 
 const (
+	SOCKET  = "socket"
 	BEGIN   = "begin"
 	CURRENT = "current"
 	RANDOM  = "random"
@@ -43,24 +44,18 @@ const PORT = "port"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		PORT: {Name: "port port path auto socket", Help: "端口", Actions: ice.MergeActions(ice.Actions{
-			CURRENT:   {Hand: func(m *ice.Message, arg ...string) { m.Echo(mdb.Config(m, CURRENT)) }},
-			aaa.RIGHT: {Hand: func(m *ice.Message, arg ...string) { m.Echo(_port_right(m, arg...)) }},
-			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
-				m.Assert(m.Option(PORT) != "")
-				nfs.Trash(m, path.Join(ice.USR_LOCAL_DAEMON, m.Option(PORT)))
-			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
-				case "server":
-					m.Cmd(PORT, "socket", func(value ice.Maps) {
-						switch value["status"] {
+				case SERVER:
+					m.Cmd(PORT, SOCKET, func(value ice.Maps) {
+						switch value[mdb.STATUS] {
 						case "LISTEN":
 							m.Push(arg[0], strings.Replace(value["local"], "0.0.0.0", "127.0.0.1", 1))
 						}
 					})
-				case "port":
-					m.Cmd(PORT, "socket", func(value ice.Maps) {
-						switch value["status"] {
+				case PORT:
+					m.Cmd(PORT, SOCKET, func(value ice.Maps) {
+						switch value[mdb.STATUS] {
 						case "LISTEN":
 							m.Push(arg[0], strings.TrimPrefix(value["local"], "0.0.0.0:"))
 							m.Push(mdb.NAME, "listen")
@@ -68,7 +63,7 @@ func init() {
 					})
 				}
 			}},
-			"socket": {Hand: func(m *ice.Message, arg ...string) {
+			SOCKET: {Hand: func(m *ice.Message, arg ...string) {
 				parse := func(str string) int64 {
 					port, _ := strconv.ParseInt(str, 16, 32)
 					return port
@@ -88,7 +83,7 @@ func init() {
 				stats := map[string]int{}
 				m.Spawn().Split(m.Cmdx(nfs.CAT, "/proc/net/tcp")).Table(func(value ice.Maps) {
 					stats[trans(value["st"])]++
-					m.Push("status", trans(value["st"]))
+					m.Push(mdb.STATUS, trans(value["st"]))
 					ls := kit.Split(value["local_address"], ":")
 					m.Push("local", kit.Format("%d.%d.%d.%d:%d", parse(ls[0][6:8]), parse(ls[0][4:6]), parse(ls[0][2:4]), parse(ls[0][:2]), parse(ls[1])))
 					ls = kit.Split(value["rem_address"], ":")
@@ -96,7 +91,7 @@ func init() {
 				})
 				m.Spawn().Split(m.Cmdx(nfs.CAT, "/proc/net/tcp6")).Table(func(value ice.Maps) {
 					stats[trans(value["st"])]++
-					m.Push("status", trans(value["st"]))
+					m.Push(mdb.STATUS, trans(value["st"]))
 					ls := kit.Split(value["local_address"], ":")
 					m.Push("local", kit.Format("%d.%d.%d.%d:%d", parse(ls[0][30:32]), parse(ls[0][28:30]), parse(ls[0][26:28]), parse(ls[0][24:26]), parse(ls[1])))
 					ls = kit.Split(value["remote_address"], ":")
@@ -104,6 +99,12 @@ func init() {
 				})
 				m.Sort("status,local").StatusTimeCount(stats)
 			}},
+			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
+				m.Assert(m.Option(PORT) != "")
+				nfs.Trash(m, path.Join(ice.USR_LOCAL_DAEMON, m.Option(PORT)))
+			}},
+			aaa.RIGHT: {Hand: func(m *ice.Message, arg ...string) { m.Echo(_port_right(m, arg...)) }},
+			CURRENT:   {Hand: func(m *ice.Message, arg ...string) { m.Echo(mdb.Config(m, CURRENT)) }},
 		}, mdb.HashAction(BEGIN, 10000, CURRENT, 10000, END, 20000)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 {
 				m.Cmdy(nfs.DIR, arg[1:], kit.Dict(nfs.DIR_ROOT, path.Join(ice.USR_LOCAL_DAEMON, arg[0])))

@@ -31,7 +31,7 @@ const MIRRORS = "mirrors"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		MIRRORS: {Name: "mirrors cli auto repos", Help: "软件镜像", Actions: ice.MergeActions(ice.Actions{
+		MIRRORS: {Help: "软件镜像", Actions: ice.MergeActions(ice.Actions{
 			mdb.INSERT: {Name: "insert cli* osid cmd*"},
 			CMD: {Name: "cmd cli osid", Hand: func(m *ice.Message, arg ...string) {
 				osid := kit.Select(mdb.Conf(m, RUNTIME, kit.Keys(HOST, OSID)), m.Option(OSID))
@@ -72,8 +72,7 @@ func init() {
 					} else {
 						m.PushButton("")
 					}
-				})
-				m.StatusTimeCount("release", _release)
+				}).Action(REPOS).StatusTimeCount("release", _release)
 			}
 			switch {
 			case strings.Contains(_release, ALPINE):

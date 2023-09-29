@@ -29,7 +29,7 @@ func init() {
 		DF      = ": "
 	)
 	Index.MergeCommands(ice.Commands{
-		EMAIL: {Name: "email name auto", Help: "邮件", Actions: ice.MergeActions(ice.Actions{
+		EMAIL: {Help: "邮件", Actions: ice.MergeActions(ice.Actions{
 			MAILBOX: {Help: "邮箱", Hand: func(m *ice.Message, arg ...string) { m.EchoIFrame(mdb.Config(m, MAILBOX)).ProcessInner() }},
 			SEND: {Name: "send to*='shy@shylinux.com' cc subject*=hi content*:textarea=hello", Help: "发送", Hand: func(m *ice.Message, arg ...string) {
 				msg := m.Cmd("", m.OptionDefault(mdb.NAME, ADMIN))

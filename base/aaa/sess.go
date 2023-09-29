@@ -33,7 +33,7 @@ const SESS = "sess"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		SESS: {Name: "sess hash auto", Help: "会话", Actions: ice.MergeActions(ice.Actions{
+		SESS: {Help: "会话", Actions: ice.MergeActions(ice.Actions{
 			mdb.CREATE: {Name: "create username*", Hand: func(m *ice.Message, arg ...string) {
 				_sess_create(m, m.Option(USERNAME), UA, m.Option(ice.MSG_USERUA), IP, m.Option(ice.MSG_USERIP))
 			}},
@@ -62,5 +62,5 @@ func SessAuth(m *ice.Message, value ice.Any, arg ...string) *ice.Message {
 	)
 }
 func SessLogout(m *ice.Message, arg ...string) {
-	kit.If(m.Option(ice.MSG_SESSID) != "", func() { m.Cmd(SESS, mdb.REMOVE, mdb.HASH, m.Option(ice.MSG_SESSID)) })
+	kit.If(m.Option(ice.MSG_SESSID), func(sessid string) { m.Cmd(SESS, mdb.REMOVE, mdb.HASH, sessid) })
 }

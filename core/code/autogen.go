@@ -30,8 +30,12 @@ func _autogen_source(m *ice.Message, main, file string) {
 	m.Cmd(nfs.DEFS, main, m.Cmdx(nfs.CAT, ice.SRC_MAIN_SHY))
 	m.Cmd(nfs.PUSH, main, lex.NL+ssh.SOURCE+lex.SP+strings.TrimPrefix(file, ice.SRC+nfs.PS)+lex.NL)
 }
-func _autogen_script(m *ice.Message, file string) { m.Cmd(nfs.DEFS, file, nfs.Template(m, "demo.shy")) }
-func _autogen_module(m *ice.Message, file string) { m.Cmd(nfs.DEFS, file, nfs.Template(m, "demo.go")) }
+func _autogen_script(m *ice.Message, file string) {
+	m.Cmd(nfs.DEFS, file, nfs.Template(m, "demo.shy"))
+}
+func _autogen_module(m *ice.Message, file string) {
+	m.Cmd(nfs.DEFS, file, nfs.Template(m, "demo.go"))
+}
 func _autogen_import(m *ice.Message, main string, ctx string, mod string) {
 	m.Cmd(nfs.DEFS, ice.ETC_MISS_SH, m.Cmdx(nfs.CAT, ice.ETC_MISS_SH))
 	m.Cmd(nfs.DEFS, ice.README_MD, m.Cmdx(nfs.CAT, ice.README_MD))
@@ -94,7 +98,7 @@ func _autogen_mod(m *ice.Message, file string) (mod string) {
 	} else {
 		host = path.Join(host, "x", path.Base(kit.Path("")))
 	}
-	m.Cmd(nfs.DEFS, file, nfs.Template(m, ice.GO_MOD, host))
+	m.Cmd(nfs.DEFS, file, kit.Format(nfs.Template(m, ice.GO_MOD), host))
 	m.Cmd(nfs.CAT, file, func(line string) {
 		kit.If(strings.HasPrefix(line, nfs.MODULE), func() { mod = kit.Split(line, lex.SP)[1] })
 	})

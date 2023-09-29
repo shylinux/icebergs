@@ -29,14 +29,19 @@ func _space_qrcode(m *ice.Message, dev string) {
 func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 	u := kit.ParseURL(kit.MergeURL2(strings.Replace(m.Cmdv(SPIDE, dev, CLIENT_ORIGIN), HTTP, "ws", 1), PP(SPACE), mdb.TYPE, ice.Info.NodeType, mdb.NAME, name,
 		nfs.MODULE, ice.Info.Make.Module, nfs.VERSION, ice.Info.Make.Versions(), arg))
-	args := kit.SimpleKV("type,name,host,port", u.Scheme, dev, u.Hostname(), kit.Select(kit.Select("443", "80", u.Scheme == "ws"), u.Port()))
+	m.Debug("what %v", m.Cmd(SPIDE, dev).FormatsMeta(nil))
+	m.Debug("what %v", u)
+	m.Debug("what %v", kit.Formats(m.Confv(SPIDE)))
+	m.Debug("what %v", m.Cmdv(SPIDE, dev, CLIENT_ORIGIN))
+	args := kit.SimpleKV("type,name,host,port", u.Scheme, dev, u.Hostname(),
+		kit.Select(kit.Select("443", "80", u.Scheme == "ws"), u.Port()))
 	gdb.Go(m, func() {
 		once := sync.Once{}
 		redial := kit.Dict(mdb.Configv(m, REDIAL))
 		a, b, c := kit.Int(redial["a"]), kit.Int(redial["b"]), kit.Int(redial["c"])
 		for i := 1; i < c; i++ {
 			next := time.Duration(rand.Intn(a*(i+1))+b*i) * time.Millisecond
-			m.Cmd(tcp.CLIENT, tcp.DIAL, args, func(c net.Conn) {
+			m.Spawn().Cmd(tcp.CLIENT, tcp.DIAL, args, func(c net.Conn) {
 				if c, e := websocket.NewClient(c, u); !m.Warn(e, tcp.DIAL, dev, SPACE, u.String()) {
 					defer mdb.HashCreateDeferRemove(m, kit.SimpleKV("", MASTER, dev, u.Host), kit.Dict(mdb.TARGET, c))()
 					kit.If(ice.Info.Colors, func() { once.Do(func() { m.Go(func() { _space_qrcode(m, dev) }) }) })
@@ -81,10 +86,12 @@ func _space_fork(m *ice.Message) {
 }
 func _space_handle(m *ice.Message, safe bool, name string, c *websocket.Conn) {
 	defer m.Cost(SPACE, name)
+	m.Debug("what %v", name)
 	m.Options(ice.MSG_USERROLE, "", mdb.TYPE, "", mdb.NAME, "", cli.DAEMON, "")
 	for {
 		_, b, e := c.ReadMessage()
 		if e != nil {
+			m.Debug("what %v", e)
 			break
 		}
 		msg := m.Spawn(b)
@@ -209,7 +216,7 @@ func init() {
 		return false
 	}
 	Index.MergeCommands(ice.Commands{
-		SPACE: {Name: "space name cmds auto", Help: "空间站", Actions: ice.MergeActions(ice.Actions{
+		SPACE: {Help: "空间站", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { aaa.White(m, SPACE, ice.MAIN) }},
 			ice.MAIN: {Name: "main index", Help: "首页", Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) > 0 {

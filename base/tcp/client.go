@@ -47,7 +47,7 @@ const CLIENT = "client"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		CLIENT: {Name: "client hash auto prunes", Help: "客户端", Actions: ice.MergeActions(ice.Actions{
+		CLIENT: {Help: "客户端", Actions: ice.MergeActions(ice.Actions{
 			DIAL: {Name: "dial type name port=9010 host=", Help: "连接", Hand: func(m *ice.Message, arg ...string) {
 				switch m.Option(mdb.TYPE) {
 				case UDP4:

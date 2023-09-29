@@ -99,11 +99,12 @@ func (c *Context) Register(s *Context, x Server, cmd ...string) *Context {
 	return s
 }
 func (c *Context) MergeCommands(Commands Commands) *Context {
-	for key, cmd := range Commands {
+	// for key, cmd := range Commands {
+	for _, cmd := range Commands {
 		if cmd.Hand == nil && cmd.RawHand == nil {
 			if cmd.RawHand = logs.FileLines(2); cmd.Actions != nil {
 				if action, ok := cmd.Actions[SELECT]; ok {
-					cmd.Name = kit.Select(strings.Replace(action.Name, SELECT, key, 1), cmd.Name)
+					// cmd.Name = kit.Select(strings.Replace(action.Name, SELECT, key, 1), cmd.Name)
 					cmd.Help = kit.Select(action.Help, cmd.Help)
 				}
 			}
@@ -163,7 +164,7 @@ func (c *Context) Merge(s *Context) *Context {
 					}
 				}
 			}
-			kit.If(sub == SELECT, func() { cmd.Name = kit.Select(action.Name, cmd.Name) })
+			// kit.If(sub == SELECT, func() { cmd.Name = kit.Select(action.Name, cmd.Name) })
 			if help := kit.Split(action.Help, " :："); len(help) > 0 {
 				if kit.Value(cmd.Meta, kit.Keys("_trans", strings.TrimPrefix(sub, "_")), help[0]); len(help) > 1 {
 					kit.Value(cmd.Meta, kit.Keys("_title", sub), help[1])
@@ -176,7 +177,7 @@ func (c *Context) Merge(s *Context) *Context {
 			kit.If(action.List == nil, func() { action.List = SplitCmd(action.Name, nil) })
 			kit.If(len(action.List) > 0, func() { cmd.Meta[sub] = action.List })
 		}
-		kit.If(cmd.Name == "", func() { cmd.Name = "list list" })
+		// kit.If(cmd.Name == "", func() { cmd.Name = "list list" })
 		kit.If(strings.HasPrefix(cmd.Name, LIST), func() { cmd.Name = strings.Replace(cmd.Name, LIST, key, 1) })
 		kit.If(cmd.List == nil, func() { cmd.List = SplitCmd(cmd.Name, cmd.Actions) })
 	}
@@ -357,7 +358,12 @@ func (m *Message) Search(key string, cb Any) *Message {
 		for _, p := range []*Context{p, m.target, m.source} {
 			for s := p; s != nil; s = s.context {
 				if cmd, ok := s.Commands[key]; ok {
-					cb(s.context, s, key, cmd)
+					func() {
+						_target, _key := m.target, m._key
+						m.target, m._key = s, key
+						cb(s.context, s, key, cmd)
+						m.target, m._key = _target, _key
+					}()
 					return m
 				}
 			}

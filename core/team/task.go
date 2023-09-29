@@ -87,7 +87,7 @@ func init() {
 					m.Push(arg[0], ONCE, STEP, WEEK)
 				case ctx.INDEX, ctx.ARGS:
 					m.Option(ctx.INDEX, m.Option("extra.index"))
-					ctx.CmdInputs(m, arg...)
+					mdb.ZoneInputs(m, arg)
 				default:
 					mdb.ZoneInputs(m, arg)
 				}

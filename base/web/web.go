@@ -59,7 +59,7 @@ func (f *Frame) Start(m *ice.Message, arg ...string) {
 	case func(http.Handler):
 		cb(f)
 	default:
-		m.Cmdy(tcp.SERVER, tcp.LISTEN, mdb.TYPE, HTTP, mdb.NAME, logs.FileLine(1), m.OptionSimple(tcp.HOST, tcp.PORT), func(l net.Listener) {
+		m.Spawn().Cmdy(tcp.SERVER, tcp.LISTEN, mdb.TYPE, HTTP, mdb.NAME, logs.FileLine(1), m.OptionSimple(tcp.HOST, tcp.PORT), func(l net.Listener) {
 			defer mdb.HashCreateDeferRemove(m, m.OptionSimple(mdb.NAME, tcp.PROTO), arg, cli.STATUS, tcp.START)()
 			gdb.Event(m, SERVE_START, arg)
 			m.Warn(f.Server.Serve(l))
@@ -77,7 +77,10 @@ const WEB = "web"
 var Index = &ice.Context{Name: WEB, Help: "网络模块"}
 
 func init() {
-	ice.Index.Register(Index, &Frame{}, COUNT, BROAD, SERVE, SPACE, DREAM, CACHE, SPIDE, SHARE)
+	ice.Index.Register(Index, &Frame{},
+		BROAD, SERVE, DREAM, ROUTE, SPACE,
+		TOKEN, SHARE, CACHE, SPIDE, COUNT,
+	)
 }
 
 func ApiAction(arg ...string) ice.Actions { return ice.Actions{kit.Select(nfs.PS, arg, 0): {}} }

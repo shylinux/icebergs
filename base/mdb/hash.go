@@ -148,7 +148,7 @@ func HashAction(arg ...Any) ice.Actions {
 		CREATE: {Hand: func(m *ice.Message, arg ...string) { HashCreate(m, arg) }},
 		REMOVE: {Hand: func(m *ice.Message, arg ...string) { HashRemove(m, arg) }},
 		MODIFY: {Hand: func(m *ice.Message, arg ...string) { HashModify(m, arg) }},
-		SELECT: {Name: "select hash auto create", Hand: func(m *ice.Message, arg ...string) { HashSelect(m, arg...) }},
+		SELECT: {Hand: func(m *ice.Message, arg ...string) { HashSelect(m, arg...) }},
 		PRUNES: {Name: "prunes before@date", Hand: func(m *ice.Message, arg ...string) { HashPrunes(m, nil) }},
 		EXPORT: {Hand: func(m *ice.Message, arg ...string) { HashExport(m, arg) }},
 		IMPORT: {Hand: func(m *ice.Message, arg ...string) { HashImport(m, arg) }},
@@ -156,21 +156,20 @@ func HashAction(arg ...Any) ice.Actions {
 }
 func StatusHashAction(arg ...Any) ice.Actions {
 	return ice.MergeActions(ice.Actions{
-		PRUNES: &ice.Action{Hand: func(m *ice.Message, arg ...string) {
-			m.Cmdy(PRUNES, m.PrefixKey(), "", HASH, STATUS, "error", STATUS, "close", STATUS, "stop", STATUS, "end", ice.OptionFields(HashField(m)))
+		PRUNES: &ice.Action{Name: "prunes status", Hand: func(m *ice.Message, arg ...string) {
+			args := []string{}
+			kit.For(kit.Split(m.OptionDefault(STATUS, "error,close,stop,end")), func(s string) { args = append(args, STATUS, s) })
+			m.Cmdy(PRUNES, m.PrefixKey(), "", HASH, args, ice.OptionFields(HashField(m)))
 		}},
 	}, HashAction(arg...))
 }
 func ClearOnExitHashAction() ice.Actions {
-	return ice.MergeActions(ice.Actions{ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { Conf(m, m.PrefixKey(), HASH, "") }}})
+	return ice.Actions{ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { Conf(m, m.PrefixKey(), HASH, "") }}}
 }
 func ExportHashAction(arg ...Any) ice.Actions {
 	return ice.MergeActions(ice.Actions{
-		ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) {
-			Config(m, IMPORTANT, ice.TRUE)
-			HashExport(m, arg)
-		}},
 		ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { HashImport(m, arg) }},
+		ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { Config(m, IMPORTANT, ice.TRUE); HashExport(m, arg) }},
 	}, HashAction(arg...))
 }
 
@@ -220,12 +219,14 @@ func HashSelect(m *ice.Message, arg ...string) *ice.Message {
 		m.Fields(len(kit.Slice(arg, 0, 1)), HashField(m))
 	}
 	m.Cmdy(SELECT, m.PrefixKey(), m.Option(SUBKEY), HASH, HashShort(m), arg, logs.FileLineMeta(-1))
-	kit.If(Config(m, SORT), func(sort string) { m.Sort(sort) })
+	kit.If(kit.Select(Config(m, SHORT), Config(m, SORT)), func(sort string) {
+		kit.If(sort != UNIQ, func() { m.Sort(sort) })
+	})
 	if m.PushAction(Config(m, ACTION), REMOVE); !m.FieldsIsDetail() {
-		m.Action(CREATE, PRUNES)
-		return m.StatusTimeCount()
+		return m.Action(CREATE, PRUNES).StatusTimeCount()
+	} else {
+		return m.StatusTime()
 	}
-	return m.StatusTime()
 }
 func HashPrunes(m *ice.Message, cb func(Map) bool) *ice.Message {
 	expire := kit.Select(m.Time("-"+kit.Select(DAYS, Config(m, EXPIRE))), m.Option("before"))

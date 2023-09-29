@@ -5,13 +5,13 @@ import (
 	"net/http"
 	"os"
 	"path"
-	"strings"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
+	"shylinux.com/x/icebergs/base/web/html"
 	kit "shylinux.com/x/toolkits"
 	"shylinux.com/x/toolkits/miss"
 )
@@ -111,7 +111,10 @@ const CACHE = "cache"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		CACHE: {Name: "cache hash auto write catch upload download", Help: "缓存池", Actions: ice.MergeActions(ice.Actions{
+		CACHE: {Name: "cache hash auto write catch upload", Help: "缓存池", Actions: ice.MergeActions(ice.Actions{
+			ice.RENDER_DOWNLOAD: {Hand: func(m *ice.Message, arg ...string) {
+				m.Echo(_share_link(m, kit.Select(arg[0], arg, 1), ice.POD, m.Option(ice.MSG_USERPOD), nfs.FILENAME, kit.Select("", arg[0], len(arg) > 1)))
+			}},
 			WATCH: {Name: "watch hash* path*", Hand: func(m *ice.Message, arg ...string) {
 				_cache_watch(m, m.Option(mdb.HASH), m.Option(nfs.PATH))
 			}},
@@ -132,9 +135,6 @@ func init() {
 					_cache_save(m, m.Option(mdb.TYPE), m.Option(mdb.NAME), "", file, size)
 				}
 			}},
-			ice.RENDER_DOWNLOAD: {Hand: func(m *ice.Message, arg ...string) {
-				m.Echo(_share_link(m, kit.Select(arg[0], arg, 1), ice.POD, m.Option(ice.MSG_USERPOD), nfs.FILENAME, kit.Select("", arg[0], len(arg) > 1)))
-			}},
 			nfs.PS: {Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashSelectDetail(m, arg[0], func(value ice.Map) {
 					kit.If(kit.Format(value[nfs.FILE]), func() { m.RenderDownload(value[nfs.FILE]) }, func() { m.RenderResult(value[mdb.TEXT]) })
@@ -142,9 +142,8 @@ func init() {
 			}},
 		}, mdb.HashAction(mdb.SHORT, mdb.TEXT, mdb.FIELD, "time,hash,size,type,name,text,file", ctx.ACTION, WATCH), ice.RenderAction(ice.RENDER_DOWNLOAD)), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) == 0 || m.R != nil && m.R.Method == http.MethodGet {
-				return
-			}
-			if m.Append(nfs.FILE) == "" {
+				m.Option(ice.MSG_ACTION, "")
+			} else if m.Append(nfs.FILE) == "" {
 				m.PushScript(mdb.TEXT, m.Append(mdb.TEXT))
 			} else {
 				PushDisplay(m, m.Append(mdb.TYPE), m.Append(mdb.NAME), MergeURL2(m, P(SHARE, CACHE, arg[0])))
@@ -183,10 +182,12 @@ func Download(m *ice.Message, link string, cb func(count, total, value int)) *ic
 	return m.Cmdy(Prefix(SPIDE), ice.DEV, SPIDE_CACHE, http.MethodGet, link, cb)
 }
 func PushDisplay(m *ice.Message, mime, name, link string) {
-	if strings.HasPrefix(mime, IMAGE+nfs.PS) || kit.ExtIsImage(name) {
+	if html.IsImage(name, mime) {
 		m.PushImages(nfs.FILE, link)
-	} else if strings.HasPrefix(mime, VIDEO+nfs.PS) || kit.ExtIsImage(name) {
+	} else if html.IsVideo(name, mime) {
 		m.PushVideos(nfs.FILE, link)
+	} else if html.IsAudio(name, mime) {
+		m.PushAudios(nfs.FILE, link)
 	} else {
 		m.PushDownload(nfs.FILE, name, link)
 	}

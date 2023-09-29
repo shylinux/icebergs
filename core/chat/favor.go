@@ -23,7 +23,7 @@ const FAVOR = "favor"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		FAVOR: {Name: "favor hash auto create upload getClipboardData", Help: "收藏夹", Icon: "favor.png", Actions: ice.MergeActions(ice.Actions{
+		FAVOR: {Help: "收藏夹", Icon: "favor.png", Actions: ice.MergeActions(ice.Actions{
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if mdb.IsSearchPreview(m, arg) {
 					m.Cmds("", func(value ice.Maps) {
@@ -91,17 +91,17 @@ func init() {
 				}
 				return
 			}
-			if len(arg) == 0 {
-				if m.IsMobileUA() {
-					m.Action("getLocation", "scanQRCode")
-				} else {
-					m.Action("record1", "record2")
-				}
-			}
 			if mdb.HashSelect(m, arg...); len(arg) > 0 {
 				text := m.Append(mdb.TEXT)
 				m.PushQRCode(cli.QRCODE, text)
 				m.PushScript(text)
+			}
+			if len(arg) == 0 {
+				if m.IsMobileUA() {
+					m.Action("upload", "getClipboardData", "getLocation", "scanQRCode")
+				} else {
+					m.Action("getClipboardData", "upload", "record1", "record2")
+				}
 			}
 			m.Table(func(value ice.Maps) {
 				delete(value, ctx.ACTION)

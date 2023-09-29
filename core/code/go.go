@@ -113,11 +113,11 @@ func init() {
 				} else if arg[1] == "misc/xterm/iterm.go" {
 					ProcessXterm(m, "ish", "", arg[1])
 				} else if cmd := ctx.GetFileCmd(path.Join(arg[2], arg[1])); cmd != "" {
-					ctx.ProcessCommand(m, cmd, kit.Simple())
+					ctx.ProcessField(m, cmd, kit.Simple())
 				} else if msg := m.Cmd(yac.STACK, path.Join(arg[2], arg[1])); msg.Option("__index") != "" {
-					ctx.ProcessCommand(m, msg.Option("__index"), kit.Simple())
+					ctx.ProcessField(m, msg.Option("__index"), kit.Simple())
 				} else {
-					ctx.ProcessCommand(m, yac.STACK, kit.Simple(path.Join(arg[2], arg[1])))
+					ctx.ProcessField(m, yac.STACK, kit.Simple(path.Join(arg[2], arg[1])))
 				}
 			}},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
@@ -126,11 +126,11 @@ func init() {
 				} else if arg[1] == "misc/xterm/iterm.go" {
 					ProcessXterm(m, "ish", "", arg[1])
 				} else if cmd := ctx.GetFileCmd(path.Join(arg[2], arg[1])); cmd != "" {
-					ctx.ProcessCommand(m, cmd, kit.Simple())
+					ctx.ProcessField(m, cmd, kit.Simple())
 				} else if msg := m.Cmd(yac.STACK, path.Join(arg[2], arg[1])); msg.Option("__index") != "" {
-					ctx.ProcessCommand(m, msg.Option("__index"), kit.Simple())
+					ctx.ProcessField(m, msg.Option("__index"), kit.Simple())
 				} else {
-					ctx.ProcessCommand(m, yac.STACK, kit.Simple(path.Join(arg[2], arg[1])))
+					ctx.ProcessField(m, yac.STACK, kit.Simple(path.Join(arg[2], arg[1])))
 				}
 			}},
 			TEMPLATE: {Hand: func(m *ice.Message, arg ...string) {

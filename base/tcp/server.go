@@ -73,7 +73,7 @@ const SERVER = "server"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		SERVER: {Name: "server hash auto prunes", Help: "服务器", Actions: ice.MergeActions(ice.Actions{
+		SERVER: {Help: "服务器", Actions: ice.MergeActions(ice.Actions{
 			LISTEN: {Name: "listen type name port=9030 host=", Hand: func(m *ice.Message, arg ...string) {
 				switch m.Option(mdb.TYPE) {
 				case UDP4:

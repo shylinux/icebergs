@@ -16,13 +16,14 @@ func _context_list(m *ice.Message, sub *ice.Context, name string) {
 		}
 		m.Push(mdb.NAME, s.Prefix()).Push(mdb.HELP, s.Help)
 	})
+	m.StatusTimeCount()
 }
 
 const CONTEXT = "context"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		CONTEXT: {Name: "context name=web action=context,command,config key auto", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
+		CONTEXT: {Name: "context name=ice action=context,command,config key auto", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
 			kit.If(len(arg) == 0, func() { arg = append(arg, m.Source().Prefix()) })
 			m.Search(arg[0]+nfs.PT, func(p *ice.Context, s *ice.Context) {
 				msg := m.Spawn(s)

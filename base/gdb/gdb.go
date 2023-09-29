@@ -36,7 +36,10 @@ func (f *Frame) Start(m *ice.Message, arg ...string) {
 		}
 	}
 }
-func (f *Frame) Close(m *ice.Message, arg ...string) { close(f.s) }
+func (f *Frame) Close(m *ice.Message, arg ...string) {
+	close(f.s)
+	kit.If(ice.Info.PidPath, func(p string) { os.Remove(p) })
+}
 func (f *Frame) listen(m *ice.Message, s int, arg ...string) {
 	signal.Notify(f.s, syscall.Signal(s))
 	mdb.HashCreate(m, SIGNAL, s, arg)

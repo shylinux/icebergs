@@ -29,10 +29,6 @@ func _space_qrcode(m *ice.Message, dev string) {
 func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 	u := kit.ParseURL(kit.MergeURL2(strings.Replace(m.Cmdv(SPIDE, dev, CLIENT_ORIGIN), HTTP, "ws", 1), PP(SPACE), mdb.TYPE, ice.Info.NodeType, mdb.NAME, name,
 		nfs.MODULE, ice.Info.Make.Module, nfs.VERSION, ice.Info.Make.Versions(), arg))
-	m.Debug("what %v", m.Cmd(SPIDE, dev).FormatsMeta(nil))
-	m.Debug("what %v", u)
-	m.Debug("what %v", kit.Formats(m.Confv(SPIDE)))
-	m.Debug("what %v", m.Cmdv(SPIDE, dev, CLIENT_ORIGIN))
 	args := kit.SimpleKV("type,name,host,port", u.Scheme, dev, u.Hostname(),
 		kit.Select(kit.Select("443", "80", u.Scheme == "ws"), u.Port()))
 	gdb.Go(m, func() {
@@ -86,12 +82,10 @@ func _space_fork(m *ice.Message) {
 }
 func _space_handle(m *ice.Message, safe bool, name string, c *websocket.Conn) {
 	defer m.Cost(SPACE, name)
-	m.Debug("what %v", name)
 	m.Options(ice.MSG_USERROLE, "", mdb.TYPE, "", mdb.NAME, "", cli.DAEMON, "")
 	for {
 		_, b, e := c.ReadMessage()
 		if e != nil {
-			m.Debug("what %v", e)
 			break
 		}
 		msg := m.Spawn(b)
@@ -249,7 +243,7 @@ func init() {
 			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) {
 				defer mdb.HashModifyDeferRemove(m, m.OptionSimple(mdb.NAME), mdb.STATUS, cli.STOP)()
 				m.Cmd("", m.Option(mdb.NAME), ice.EXIT)
-				m.Sleep("1s")
+				m.Sleep3s()
 			}},
 			DOMAIN: {Hand: func(m *ice.Message, arg ...string) { m.Echo(_space_domain(m)) }},
 			LOGIN: {Help: "授权", Hand: func(m *ice.Message, arg ...string) {

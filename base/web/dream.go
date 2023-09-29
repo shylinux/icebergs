@@ -262,7 +262,7 @@ func init() {
 				gdb.Event(m, DREAM_STOP, arg)
 				m.Cmd(SPACE, mdb.MODIFY, m.OptionSimple(mdb.NAME), mdb.STATUS, cli.STOP)
 				m.Go(func() { m.Cmd(SPACE, m.Option(mdb.NAME), ice.EXIT) })
-				m.Sleep30ms()
+				m.Sleep300ms()
 			}},
 			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
 				gdb.Event(m, DREAM_TRASH, arg)

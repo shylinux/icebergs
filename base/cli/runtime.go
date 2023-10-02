@@ -266,7 +266,7 @@ func init() {
 			m.Cmdy(ctx.CONFIG, RUNTIME, arg).Status(mdb.TIME, ice.Info.Make.Time,
 				mdb.HASH, kit.Cut(ice.Info.Hash, 6), nfs.SIZE, ice.Info.Size,
 				mdb.NAME, ice.Info.NodeName, nfs.VERSION, ice.Info.Make.Versions(),
-			)
+			).Option(ice.MSG_ACTION, "")
 			ctx.DisplayStoryJSON(m)
 		}},
 	})

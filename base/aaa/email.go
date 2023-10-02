@@ -30,12 +30,19 @@ func init() {
 	)
 	Index.MergeCommands(ice.Commands{
 		EMAIL: {Help: "邮件", Actions: ice.MergeActions(ice.Actions{
-			MAILBOX: {Help: "邮箱", Hand: func(m *ice.Message, arg ...string) { m.EchoIFrame(mdb.Config(m, MAILBOX)).ProcessInner() }},
+			mdb.CREATE: {Name: "create name*=admin service*='mail.shylinux.com:25' username*='shy@shylinux.com' password*"},
+			MAILBOX: {Help: "邮箱", Hand: func(m *ice.Message, arg ...string) {
+				if p := mdb.Config(m, MAILBOX); !m.Warn(p == "", ice.ErrNotValid, MAILBOX) {
+					m.EchoIFrame(p).ProcessInner()
+				}
+			}},
 			SEND: {Name: "send to*='shy@shylinux.com' cc subject*=hi content*:textarea=hello", Help: "发送", Hand: func(m *ice.Message, arg ...string) {
-				msg := m.Cmd("", m.OptionDefault(mdb.NAME, ADMIN))
+				msg := mdb.HashSelect(m.Spawn(), m.OptionDefault(mdb.NAME, ADMIN))
 				if m.Warn(msg.Append(SERVICE) == "", ice.ErrNotValid, SERVICE) {
 					return
 				}
+				m.Toast(ice.PROCESS, "", "-1")
+				defer m.Toast(ice.SUCCESS)
 				content := []byte(kit.JoinKV(DF, NL, kit.Simple(FROM, msg.Append(USERNAME), m.OptionSimple(TO, CC, SUBJECT), DATE, time.Now().Format(time.RFC1123Z), "Content-Type", "text/html; charset=UTF-8")...) + NL + NL + m.Option(CONTENT))
 				auth := smtp.PlainAuth("", msg.Append(USERNAME), msg.Append(PASSWORD), kit.Split(msg.Append(SERVICE), ice.DF)[0])
 				m.Logs(EMAIL, SEND, string(content)).Warn(smtp.SendMail(msg.Append(SERVICE), auth, msg.Append(USERNAME), kit.Split(m.Option(TO)), content))

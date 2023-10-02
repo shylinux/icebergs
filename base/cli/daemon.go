@@ -157,15 +157,15 @@ func Opens(m *ice.Message, arg ...string) {
 	switch runtime.GOOS {
 	case DARWIN:
 		if kit.Ext(arg[0]) == "app" {
-			m.Cmd(SYSTEM, OPEN, "-a", arg[0])
+			m.Cmdy(SYSTEM, OPEN, "-a", arg[0])
 		} else {
-			m.Cmd(SYSTEM, OPEN, arg[0])
+			m.Cmdy(SYSTEM, OPEN, arg[0])
 		}
 	case WINDOWS:
 		if kit.Ext(arg[0]) == "exe" {
-			m.Cmd(SYSTEM, arg[0])
+			m.Cmdy(SYSTEM, arg[0])
 		} else {
-			m.Cmd(SYSTEM, "explorer", arg[0])
+			m.Cmdy(SYSTEM, "explorer", arg[0])
 		}
 	}
 }

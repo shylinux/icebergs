@@ -39,7 +39,10 @@ func _parse_color(str string) color.Color {
 			return color.RGBA{uint8((u & 0xFF000000) >> 24), uint8((u & 0x00FF0000) >> 16), uint8((u & 0x0000FF00) >> 8), uint8((u & 0x000000FF) >> 0)}
 		}
 	}
-	return _color_map[str]
+	if color, ok := _color_map[str]; ok {
+		return color
+	}
+	return _color_map[WHITE]
 }
 func _parse_cli_color(str string) string {
 	res := 0

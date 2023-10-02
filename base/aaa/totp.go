@@ -34,9 +34,6 @@ func _totp_get(key string, per int64, num int) string {
 	return kit.Format(kit.Format("%%0%dd", num), res%int64(math.Pow10(num)))
 }
 
-const (
-	TOKEN = "token"
-)
 const TOTP = "totp"
 
 func init() {

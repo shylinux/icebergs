@@ -8,6 +8,7 @@ import (
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -21,7 +22,7 @@ const LOCATION = "location"
 func init() {
 	get := func(m *ice.Message, api string, arg ...ice.Any) string {
 		return kit.Format(mdb.Cache(m, kit.Join(kit.Simple(api, arg)), func() ice.Any {
-			res := kit.UnMarshal(m.Cmdx(http.MethodGet, "https://apis.map.qq.com/ws/"+api, mdb.KEY, mdb.Config(m, aaa.TOKEN), arg))
+			res := kit.UnMarshal(m.Cmdx(http.MethodGet, "https://apis.map.qq.com/ws/"+api, mdb.KEY, mdb.Config(m, web.TOKEN), arg))
 			m.Warn(kit.Format(kit.Value(res, "status")) != "0", kit.Format(res))
 			m.Debug("what %v %v", api, kit.Format(res))
 			return kit.Format(res)
@@ -52,10 +53,10 @@ func init() {
 			}},
 		}, FavorAction(), mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,latitude,longitude,extra", nfs.SCRIPT, "https://map.qq.com/api/gljs?v=1.exp")), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, kit.Slice(arg, 0, 1)...)
-			ctx.DisplayLocal(m, "", ctx.ConfigSimple(m, aaa.TOKEN))
+			ctx.DisplayLocal(m, "", ctx.ConfigSimple(m, web.TOKEN))
 			// m.Option(LOCATION, m.Cmdx(web.SERVE, tcp.HOST))
 			m.Option(LOCATION, get(m, "location/v1/ip", aaa.IP, m.Option(ice.MSG_USERIP)))
-			m.Option(nfs.SCRIPT, kit.MergeURL(mdb.Config(m, nfs.SCRIPT), "key", mdb.Config(m, aaa.TOKEN)))
+			m.Option(nfs.SCRIPT, kit.MergeURL(mdb.Config(m, nfs.SCRIPT), "key", mdb.Config(m, web.TOKEN)))
 		}},
 	})
 }

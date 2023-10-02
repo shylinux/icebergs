@@ -60,13 +60,13 @@ func init() {
 				}
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
+			m.Option(FG, kit.Select(m.Option("--plugin-fg-color"), arg, 1))
+			m.Option(BG, kit.Select(m.Option("--plugin-bg-color"), arg, 2))
 			switch m.Option(ice.MSG_THEME) {
 			case LIGHT, WHITE:
-				m.Option(FG, kit.Select(BLACK, arg, 1))
-				m.Option(BG, kit.Select(WHITE, arg, 2))
+				m.OptionDefault(FG, BLACK, BG, WHITE)
 			default:
-				m.Option(FG, kit.Select(kit.Select(BLACK, m.Option("--plugin-fg-color")), arg, 1))
-				m.Option(BG, kit.Select(kit.Select(WHITE, m.Option("--plugin-bg-color")), arg, 2))
+				m.OptionDefault(FG, WHITE, BG, BLACK)
 			}
 			if m.IsCliUA() {
 				_qrcode_cli(m, kit.Select(kit.Select(ice.Info.Make.Domain, ice.Info.Domain), arg, 0))

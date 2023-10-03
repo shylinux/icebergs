@@ -7,11 +7,13 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
 
 func init() {
 	Index.MergeCommands(ice.Commands{
+		ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { aaa.White(m, "basic") }},
 		"/basic/check": {Hand: func(m *ice.Message, arg ...string) {
 			kit.For(m.R.Header, func(key string, value []string) { m.Debug("what %v %v", key, value) })
 			if BasicSess(m); m.Option(ice.MSG_USERNAME) == "" {
@@ -21,7 +23,7 @@ func init() {
 		"/basic/login": {Hand: func(m *ice.Message, arg ...string) { RenderMain(m) }},
 		"/basic/auths": {Hand: func(m *ice.Message, arg ...string) {
 			kit.If(m.R.URL.Query().Get(ice.MSG_SESSID), func(p string) { RenderCookie(m, m.Option(ice.MSG_SESSID, p)) })
-			RenderRedirect(m, m.R.URL.Query().Get("redirect_uri"))
+			RenderRedirect(m, kit.Select(nfs.PS, m.R.URL.Query().Get("redirect_uri")))
 		}},
 	})
 }

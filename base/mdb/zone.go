@@ -207,9 +207,9 @@ func ZoneSelect(m *ice.Message, arg ...string) *ice.Message {
 	arg = kit.Slice(arg, 0, 2)
 	m.Fields(len(arg), kit.Select(kit.Fields(TIME, Config(m, SHORT), COUNT), Config(m, FIELDS)), ZoneField(m))
 	if m.Cmdy(SELECT, m.PrefixKey(), "", ZONE, arg, logs.FileLineMeta(-1)); len(arg) == 0 {
-		m.PushAction(Config(m, ACTION), REMOVE).StatusTimeCount().Sort(ZoneShort(m))
+		m.Sort(ZoneShort(m)).PushAction(Config(m, ACTION), REMOVE).Action(CREATE).StatusTimeCount()
 	} else if len(arg) == 1 {
-		m.StatusTimeCountTotal(_zone_meta(m, m.PrefixKey(), kit.Keys(HASH, HashSelectField(m, arg[0], HASH)), COUNT))
+		m.Action(INSERT).StatusTimeCountTotal(_zone_meta(m, m.PrefixKey(), kit.Keys(HASH, HashSelectField(m, arg[0], HASH)), COUNT))
 	}
 	return m
 }

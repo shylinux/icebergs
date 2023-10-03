@@ -43,9 +43,7 @@ func AgentIs(m Message, arg ...string) bool {
 func MergeURL2(m *ice.Message, url string, arg ...ice.Any) string {
 	kit.If(m.Option(log.DEBUG) == ice.TRUE, func() { arg = append(arg, log.DEBUG, ice.TRUE) })
 	kit.If(m.Option(ice.MSG_USERWEB) == "", func() {
-		m.Debug("what %v", 123)
 		m.Option(ice.MSG_USERWEB, Domain(ice.Pulse.Cmdv(tcp.HOST, aaa.IP), ice.Pulse.Cmdv(SERVE, tcp.PORT)))
-		m.Debug("what %v", 123)
 	})
 	return kit.MergeURL2(m.Option(ice.MSG_USERWEB), url, arg...)
 }

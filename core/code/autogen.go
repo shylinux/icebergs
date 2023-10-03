@@ -19,16 +19,16 @@ import (
 
 func _autogen_list(m *ice.Message) string {
 	return m.OptionDefault(mdb.LIST, ice.Maps{
-		"Zone": "zone id auto insert",
-		"Hash": "hash auto create",
+		"Hash": "hash auto",
+		"Zone": "zone id auto",
 		"Data": "path auto",
 		"Lang": "path auto",
-		"Code": "port path auto start order build download",
+		"Code": "port path auto start build download",
 	}[m.Option(mdb.TYPE)])
 }
 func _autogen_source(m *ice.Message, main, file string) {
 	m.Cmd(nfs.DEFS, main, m.Cmdx(nfs.CAT, ice.SRC_MAIN_SHY))
-	m.Cmd(nfs.PUSH, main, lex.NL+ssh.SOURCE+lex.SP+strings.TrimPrefix(file, ice.SRC+nfs.PS)+lex.NL)
+	m.Cmd(nfs.PUSH, main, lex.NL+ssh.SOURCE+lex.SP+strings.TrimPrefix(file, nfs.SRC)+lex.NL)
 }
 func _autogen_script(m *ice.Message, file string) {
 	m.Cmd(nfs.DEFS, file, nfs.Template(m, "demo.shy"))
@@ -62,8 +62,8 @@ func _autogen_import(m *ice.Message, main string, ctx string, mod string) {
 func _autogen_version(m *ice.Message) string {
 	if mod := _autogen_mod(m, ice.GO_MOD); !nfs.Exists(m, ".git") {
 		m.Cmd(REPOS, "init", nfs.ORIGIN, strings.Split(kit.MergeURL2(kit.Select(m.Option(ice.MSG_USERWEB), ice.Info.Make.Remote), "/x/"+path.Base(mod)), mdb.QS)[0], mdb.NAME, path.Base(mod), nfs.PATH, nfs.PWD)
-		defer m.Cmd(REPOS, "add", kit.Dict(nfs.REPOS, path.Base(mod), nfs.FILE, nfs.SRC))
 		defer m.Cmd(REPOS, "add", kit.Dict(nfs.REPOS, path.Base(mod), nfs.FILE, ice.GO_MOD))
+		defer m.Cmd(REPOS, "add", kit.Dict(nfs.REPOS, path.Base(mod), nfs.FILE, nfs.SRC))
 	}
 	m.Cmd(nfs.DEFS, ".gitignore", nfs.Template(m, "gitignore"))
 	m.Cmd(nfs.DEFS, ice.SRC_BINPACK_GO, nfs.Template(m, ice.SRC_BINPACK_GO))
@@ -124,10 +124,10 @@ func init() {
 				}
 			}},
 			nfs.SCRIPT: {Help: "脚本", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(nfs.DEFS, ice.ETC_MISS_SH, nfs.Template(m, ice.ETC_MISS_SH))
+				m.Cmd(nfs.DEFS, ice.ETC_MISS_SH, m.Cmdx(nfs.CAT, ice.ETC_MISS_SH))
 				m.Cmdy(nfs.DIR, ice.ETC_MISS_SH).Cmdy(nfs.CAT, ice.ETC_MISS_SH)
 			}},
-			nfs.MODULE: {Name: "module name*=hi help type*=Zone,Hash,Data,Code,Lang main*=main.go@key zone key", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
+			nfs.MODULE: {Name: "module name*=hi help type*=Hash,Zone,Data,Lang,Code main*=main.go@key zone key", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
 				m.OptionDefault(mdb.ZONE, m.Option(mdb.NAME), mdb.HELP, m.Option(mdb.NAME))
 				m.OptionDefault(mdb.KEY, Prefix(m.Option(mdb.ZONE), m.Option(mdb.NAME)))
 				m.Option(nfs.FILE, path.Join(m.Option(mdb.ZONE), kit.Keys(m.Option(mdb.NAME), GO)))
@@ -149,7 +149,7 @@ func init() {
 					USR_RELEASE_CONF_GO    = "usr/release/conf.go"
 					USR_RELEASE_BINPACK_GO = "usr/release/binpack.go"
 				)
-				if m.Cmd(BINPACK, mdb.CREATE); nfs.Exists(m, ice.USR_RELEASE) && m.Option(ice.MSG_USERPOD) == "" && ice.Info.Make.Remote == "https://shylinux.com/x/contexts" {
+				if m.Cmd(BINPACK, mdb.CREATE); nfs.Exists(m, ice.USR_RELEASE) && m.Option(ice.MSG_USERPOD) == "" {
 					nfs.CopyFile(m, USR_RELEASE_BINPACK_GO, ice.SRC_BINPACK_GO, func(buf []byte, offset int) []byte {
 						kit.If(offset == 0, func() { buf = bytes.Replace(buf, []byte("package main"), []byte("package ice"), 1) })
 						return buf

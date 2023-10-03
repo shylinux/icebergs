@@ -82,9 +82,11 @@ func init() {
 	}, Commands: ice.Commands{
 		SESSION: {Name: "session session window pane cmds auto", Help: "会话", Actions: ice.Actions{
 			web.DREAM_CREATE: {Hand: func(m *ice.Message, arg ...string) {
-				if !m.Warn(!nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME))), ice.ErrNotFound) {
-					m.Cmd("", mdb.CREATE)
-				}
+				m.Go(func() {
+					nfs.Exists(m.Sleep3s(), path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME)), func(p string) {
+						m.Cmd("", mdb.CREATE)
+					})
+				})
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(ctx.ACTION) == SCRIPT {

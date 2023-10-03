@@ -1,21 +1,22 @@
 code.go
 code.shy
 
-install.go
-upgrade.go
 webpack.go
 binpack.go
 autogen.go
 compile.go
 publish.go
+upgrade.go
+install.go
 
 vimer.go
 inner.go
 xterm.go
-favor.go
-oauth.go
-pprof.go
+xterm.shy
 bench.go
+pprof.go
+favor.go
+repos.go
 case.go
 
 c.go
@@ -26,3 +27,4 @@ go.go
 js.go
 css.go
 html.go
+makefile.go

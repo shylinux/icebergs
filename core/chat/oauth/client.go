@@ -48,19 +48,21 @@ type Client struct {
 	login string `name:"login" role:"void"`
 }
 
-var Inputs = []map[string]string{}
+var Inputs = map[string]map[string]string{}
 
 func init() {
-	Inputs = append(Inputs, map[string]string{
+	Inputs["repos"] = map[string]string{
 		OAUTH_URL:    "/login/oauth/authorize",
 		GRANT_URL:    "/login/oauth/access_token",
 		TOKEN_URL:    "/login/oauth/access_token",
 		USERS_URL:    "/api/v1/user",
 		API_PREFIX:   "/api/v1/",
 		TOKEN_PREFIX: "token",
-	})
+	}
 }
-
+func (s Client) Config(m *ice.Message, arg ...string) {
+	s.Create(m, kit.Simple(Inputs[arg[1]], arg, web.DOMAIN, m.Cmdv(web.SPIDE, arg[1], web.CLIENT_ORIGIN))...)
+}
 func (s Client) Inputs(m *ice.Message, arg ...string) {
 	switch m.Option(ctx.ACTION) {
 	case web.SSO:

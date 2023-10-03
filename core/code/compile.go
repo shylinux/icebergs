@@ -8,6 +8,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
@@ -30,6 +31,53 @@ func _compile_target(m *ice.Message, arg ...string) (string, string, string, str
 		file = path.Join(ice.USR_PUBLISH, kit.Keys(kit.Select(ice.ICE, kit.TrimExt(main, GO), main != ice.SRC_MAIN_GO), goos, arch))
 	}
 	return main, file, goos, arch
+}
+
+func _compile_get(m *ice.Message, main string) {
+	block, list := false, []string{}
+	m.Cmd(lex.SPLIT, main, func(ls []string) {
+		switch ls[0] {
+		case "import":
+			if ls[1] == "(" {
+				block = true
+			} else {
+				list = append(list, ls[1])
+			}
+		case ")":
+			block = false
+		default:
+			if block {
+				list = append(list, kit.Select("", ls, -1))
+			}
+		}
+	})
+	_list := map[string]bool{}
+	m.Cmd(lex.SPLIT, ice.GO_MOD, func(ls []string) {
+		switch ls[0] {
+		case "module":
+			_list[ls[1]] = true
+		case "require":
+			if ls[1] == "(" {
+				block = true
+			} else {
+				_list[ls[1]] = true
+			}
+		case ")":
+			block = false
+		default:
+			if block {
+				_list[kit.Select("", ls, 0)] = true
+			}
+		}
+	})
+	kit.For(list, func(p string) {
+		if _, ok := _list[p]; ok {
+			return
+		} else if ls := kit.Slice(strings.Split(p, nfs.PS), 0, 3); _list[path.Join(ls...)] {
+			return
+		}
+		m.Cmd(cli.SYSTEM, GO, "get", p)
+	})
 }
 
 const COMPILE = "compile"
@@ -64,11 +112,9 @@ func init() {
 				m.Cmdy(INSTALL, web.DOWNLOAD, kit.Format("%s/go%s.%s-%s.%s", m.Option(SERVICE), m.Option(VERSION), runtime.GOOS, runtime.GOARCH, kit.Select("tar.gz", "zip", runtime.GOOS == cli.WINDOWS)), ice.USR_LOCAL)
 			}},
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
-				kit.Switch(m.Option(mdb.TYPE), kit.Simple(web.SERVER, web.WORKER), func() {
-					kit.If(cli.SystemFind(m, GO), func() {
-						kit.If(nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME), "src/main.go")), func() {
-							m.PushButton(kit.Dict(m.CommandKey(), "构建"))
-						})
+				kit.If(m.Option(mdb.TYPE) == web.WORKER, func() {
+					kit.If(nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME), ice.SRC_MAIN_GO)), func() {
+						kit.If(cli.SystemFind(m, GO), func() { m.PushButton(kit.Dict(m.CommandKey(), "构建")) })
 					})
 				})
 			}},
@@ -79,20 +125,14 @@ func init() {
 			env := kit.Simple(cli.PATH, cli.BinPath(), cli.HOME, kit.Select(kit.Path(""), kit.Env(cli.HOME)), mdb.Configv(m, cli.ENV), m.Optionv(cli.ENV), cli.GOOS, goos, cli.GOARCH, arch)
 			kit.If(runtime.GOOS == cli.WINDOWS, func() { env = append(env, "GOPATH", kit.HomePath(GO), "GOCACHE", kit.HomePath("go/go-build")) })
 			m.Options(cli.CMD_ENV, env).Cmd(AUTOGEN, VERSION)
+			_compile_get(m, main)
 			defer m.StatusTime(VERSION, strings.TrimPrefix(m.Cmdx(cli.SYSTEM, GO, VERSION), "go version"))
-			kit.For([]string{"shylinux.com/x/ice"}, func(p string) {
-				kit.If(!strings.Contains(m.Cmdx(nfs.CAT, ice.GO_MOD), p), func() {
-					m.Cmd(cli.SYSTEM, GO, "get", p)
-				})
-			})
 			if msg := m.Cmd(cli.SYSTEM, GO, cli.BUILD, "-ldflags", "-w -s", "-o", file, main, ice.SRC_VERSION_GO, ice.SRC_BINPACK_GO); !cli.IsSuccess(msg) {
 				m.Copy(msg)
-				return
-			}
-			m.Logs(nfs.SAVE, nfs.TARGET, file, nfs.SOURCE, main)
-			m.Cmdy(nfs.DIR, file, "time,path,size,hash,link")
-			if !m.IsCliUA() {
-				kit.If(strings.Contains(file, ice.ICE), func() { m.Cmdy(PUBLISH, ice.CONTEXTS, ice.APP) })
+			} else {
+				m.Logs(nfs.SAVE, nfs.TARGET, file, nfs.SOURCE, main)
+				m.Cmdy(nfs.DIR, file, "time,path,size,hash,link")
+				kit.If(!m.IsCliUA() && strings.Contains(file, ice.ICE), func() { m.Cmdy(PUBLISH, ice.CONTEXTS, ice.APP) })
 			}
 		}},
 	})

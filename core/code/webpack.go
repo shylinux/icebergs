@@ -19,13 +19,14 @@ import (
 func _volcanos(m *ice.Message, p ...string) string { return ice.USR_VOLCANOS + path.Join(p...) }
 func _publish(m *ice.Message, p ...string) string  { return ice.USR_PUBLISH + path.Join(p...) }
 func _require(m *ice.Message, p string) string {
-	p = strings.Replace(p, ice.USR_MODULES, "/require/modules/", 1)
-	if kit.HasPrefix(p, nfs.SRC, nfs.USR) {
-		return path.Join("/require/", p)
-	} else if strings.HasPrefix(p, "/require/") {
-		return path.Join(nfs.PS, strings.TrimPrefix(p, ice.USR_VOLCANOS))
-	} else {
+	if kit.HasPrefix(p, ice.USR_MODULES) {
+		return path.Join("/require/modules/", strings.TrimPrefix(p, ice.USR_MODULES))
+	} else if kit.HasPrefix(p, ice.USR_VOLCANOS) {
 		return path.Join("/volcanos/", strings.TrimPrefix(p, ice.USR_VOLCANOS))
+	} else if kit.HasPrefix(p, nfs.SRC, nfs.USR) {
+		return path.Join("/require/", p)
+	} else {
+		return path.Join("/volcanos/", p)
 	}
 }
 func _webpack_css(m *ice.Message, css, js io.Writer, p string) {
@@ -45,7 +46,9 @@ func _webpack_end(m *ice.Message, js io.Writer, p string) {
 	fmt.Fprintln(js, `Volcanos.meta.cache["`+_require(m, p)+`"] = []`)
 }
 func _webpack_cache(m *ice.Message, dir string, write bool) {
-	if _, e := nfs.DiskFile.StatFile(ice.USR_VOLCANOS); os.IsNotExist(e) {
+	if m.Option(ice.MSG_USERPOD) != "" {
+		return
+	} else if _, e := nfs.DiskFile.StatFile(ice.USR_VOLCANOS); os.IsNotExist(e) {
 		return
 	}
 	css, _, e := nfs.CreateFile(m, path.Join(dir, PAGE_CACHE_CSS))
@@ -57,25 +60,23 @@ func _webpack_cache(m *ice.Message, dir string, write bool) {
 	if !write {
 		return
 	}
-	for _, k := range []string{LIB, PANEL, PLUGIN} {
+	kit.For([]string{LIB, PANEL, PLUGIN}, func(k string) {
 		nfs.DirDeepAll(m, dir, k, func(value ice.Maps) {
-			if kit.Ext(value[nfs.PATH]) == CSS {
+			kit.If(kit.Ext(value[nfs.PATH]) == CSS, func() {
 				_webpack_css(m, css, js, value[nfs.PATH])
-			}
+			})
 		})
-	}
-	for _, k := range []string{LIB, PANEL, PLUGIN} {
+	})
+	kit.For([]string{LIB, PANEL, PLUGIN}, func(k string) {
 		nfs.DirDeepAll(m, dir, k, func(value ice.Maps) {
-			if kit.Ext(value[nfs.PATH]) == JS {
+			kit.If(kit.Ext(value[nfs.PATH]) == JS, func() {
 				_webpack_js(m, js, value[nfs.PATH])
-			}
+			})
 		})
-	}
-	for _, k := range []string{ice.FRAME_JS} {
-		m.Option(nfs.DIR_ROOT, _volcanos(m))
-		_webpack_js(m, js, k)
-		m.Option(nfs.DIR_ROOT, "")
-	}
+	})
+	kit.For([]string{ice.FRAME_JS}, func(k string) {
+		_webpack_js(m, js, path.Join(dir, k))
+	})
 	m.Cmd(nfs.DIR, "src/template/web.chat.header/theme/", func(value ice.Maps) {
 		_webpack_css(m, css, js, value[nfs.PATH])
 	})
@@ -124,20 +125,20 @@ const WEBPACK = "webpack"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		WEBPACK: {Name: "webpack path auto create remove", Help: "打包", Actions: ice.MergeActions(ice.Actions{
-			mdb.CREATE: {Help: "发布", Hand: func(m *ice.Message, arg ...string) {
+			mdb.CREATE: {Hand: func(m *ice.Message, arg ...string) {
 				_webpack_cache(m.Spawn(), _volcanos(m), true)
-				_webpack_can(m)
+				// _webpack_can(m)
 				m.Cmdy("")
 			}},
-			mdb.REMOVE: {Help: "开发", Hand: func(m *ice.Message, arg ...string) {
+			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) {
 				_webpack_cache(m.Spawn(), _volcanos(m), false)
-				m.Cmdy(nfs.DIR, _volcanos(m, PAGE))
+				m.Cmdy("")
 			}},
 			mdb.INSERT: {Name: "insert path*", Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashCreate(m, m.OptionSimple(nfs.PATH))
+				mdb.HashCreate(m)
 			}},
 			cli.BUILD: {Name: "build name*=hi", Hand: func(m *ice.Message, arg ...string) {
-				kit.If(!nfs.Exists(m, USR_PUBLISH_CAN_JS), func() { m.Cmd("", mdb.CREATE) })
+				// kit.If(!nfs.Exists(m, USR_PUBLISH_CAN_JS), func() { m.Cmd("", mdb.CREATE) })
 				_webpack_build(m, _publish(m, m.Option(mdb.NAME)))
 			}},
 			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {

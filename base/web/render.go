@@ -122,11 +122,11 @@ func RenderMain(m *ice.Message) *ice.Message {
 	if m.IsCliUA() {
 		return m.RenderDownload(path.Join(ice.USR_INTSHELL, ice.INDEX_SH))
 	}
-	m.OptionDefault(nfs.VERSION, RenderVersion(m))
+	m.OptionDefault(nfs.VERSION, RenderVersion(m)+kit.Select("", "&pod="+m.Option(ice.MSG_USERPOD), m.Option(ice.MSG_USERPOD) != ""))
 	return RenderTemplate(m, "main.html")
 }
 func RenderCmds(m *ice.Message, list ...ice.Any) {
-	m.OptionDefault(nfs.VERSION, RenderVersion(m))
+	m.OptionDefault(nfs.VERSION, RenderVersion(m)+kit.Select("", "&pod="+m.Option(ice.MSG_USERPOD), m.Option(ice.MSG_USERPOD) != ""))
 	RenderTemplate(m.Options(mdb.LIST, kit.Format(list)), "cmds.html")
 }
 func RenderPodCmd(m *ice.Message, pod, cmd string, arg ...ice.Any) {

@@ -32,7 +32,7 @@ const SH = nfs.SH
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		SH: {Name: "sh path auto", Help: "命令", Actions: ice.MergeActions(ice.Actions{
+		SH: {Actions: ice.MergeActions(ice.Actions{
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
 				cmds, text := _sh_cmds(m, path.Join(arg[2], arg[1]))
 				ProcessXterm(m, cmds, text, path.Join(arg[2], arg[1]))

@@ -100,6 +100,7 @@ const (
 	SPLIT_QUOTE = "split.quote"
 	SPLIT_TRANS = "split.trans"
 )
+const PARSE = "parse"
 const SPLIT = "split"
 
 func init() {

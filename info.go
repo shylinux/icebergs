@@ -73,7 +73,7 @@ var Info = struct {
 	Stack  map[string]func(m *Message, key string, arg ...Any) Any
 	Inputs []func(m *Message, arg ...string)
 
-	PushStream func(m *Message)
+	PushStream func(m *Message) *Message
 	PushNotice func(m *Message, arg ...Any)
 	Save       func(m *Message, key ...string) *Message
 	Load       func(m *Message, key ...string) *Message
@@ -90,7 +90,7 @@ var Info = struct {
 	render: map[string]func(*Message, ...Any) string{},
 	Stack:  map[string]func(m *Message, key string, arg ...Any) Any{},
 
-	PushStream: func(m *Message) {},
+	PushStream: func(m *Message) *Message { return m },
 	PushNotice: func(m *Message, arg ...Any) {},
 	Save:       func(m *Message, key ...string) *Message { return m },
 	Load:       func(m *Message, key ...string) *Message { return m },

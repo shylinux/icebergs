@@ -7,6 +7,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -57,6 +58,29 @@ func _go_complete(m *ice.Message, arg ...string) {
 		}
 	}
 }
+func _go_navigate(m *ice.Message, arg ...string) {
+	for _, cmd := range []string{"guru", "gopls"} {
+		if ls := kit.Split(m.Cmdx(cli.SYSTEM, cmd, "definition", m.Option(nfs.PATH)+m.Option(nfs.FILE)+nfs.DF+"#"+m.Option("offset")), nfs.DF); len(ls) > 0 {
+			if strings.HasPrefix(ls[0], kit.Path("")) {
+				_ls := nfs.SplitPath(m, strings.TrimPrefix(ls[0], kit.Path("")+nfs.PS))
+				m.Push(nfs.PATH, _ls[0]).Push(nfs.FILE, _ls[1]).Push(nfs.LINE, ls[1])
+				return
+			}
+		}
+	}
+	_c_tags(m, "gotags", "-f", nfs.TAGS, "-R", nfs.PWD)
+}
+func _go_show(m *ice.Message, arg ...string) {
+	if arg[1] == "main.go" {
+		ProcessXterm(m, "ish", "", arg[1])
+	} else if cmd := ctx.GetFileCmd(path.Join(arg[2], arg[1])); cmd != "" {
+		ctx.ProcessField(m, cmd, kit.Simple())
+	} else if msg := m.Cmd(yac.STACK, path.Join(arg[2], arg[1])); msg.Option("__index") != "" {
+		ctx.ProcessField(m, msg.Option("__index"), kit.Simple())
+	} else {
+		ctx.ProcessField(m, yac.STACK, kit.Simple(path.Join(arg[2], arg[1])))
+	}
+}
 func _mod_show(m *ice.Message, file string) {
 	const (
 		MODULE  = "module"
@@ -99,60 +123,26 @@ const GO = "go"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		"godoc": {Name: "godoc key auto", Hand: func(m *ice.Message, arg ...string) {
-			if len(arg) == 0 {
-				m.Cmdy(cli.SYSTEM, "go", "list", "std")
-			} else {
-				m.Cmdy(cli.SYSTEM, "go", "doc", arg)
-			}
-		}},
-		GO: {Name: "go path auto", Help: "后端编程", Actions: ice.MergeActions(ice.Actions{
-			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
-				if arg[1] == "main.go" {
-					ProcessXterm(m, "ish", "", arg[1])
-				} else if arg[1] == "misc/xterm/iterm.go" {
-					ProcessXterm(m, "ish", "", arg[1])
-				} else if cmd := ctx.GetFileCmd(path.Join(arg[2], arg[1])); cmd != "" {
-					ctx.ProcessField(m, cmd, kit.Simple())
-				} else if msg := m.Cmd(yac.STACK, path.Join(arg[2], arg[1])); msg.Option("__index") != "" {
-					ctx.ProcessField(m, msg.Option("__index"), kit.Simple())
-				} else {
-					ctx.ProcessField(m, yac.STACK, kit.Simple(path.Join(arg[2], arg[1])))
-				}
-			}},
-			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
-				if arg[1] == "main.go" {
-					ProcessXterm(m, "ish", "", arg[1])
-				} else if arg[1] == "misc/xterm/iterm.go" {
-					ProcessXterm(m, "ish", "", arg[1])
-				} else if cmd := ctx.GetFileCmd(path.Join(arg[2], arg[1])); cmd != "" {
-					ctx.ProcessField(m, cmd, kit.Simple())
-				} else if msg := m.Cmd(yac.STACK, path.Join(arg[2], arg[1])); msg.Option("__index") != "" {
-					ctx.ProcessField(m, msg.Option("__index"), kit.Simple())
-				} else {
-					ctx.ProcessField(m, yac.STACK, kit.Simple(path.Join(arg[2], arg[1])))
-				}
-			}},
+		GO: {Actions: ice.MergeActions(ice.Actions{
+			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _go_show(m, arg...) }},
+			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _go_show(m, arg...) }},
 			TEMPLATE: {Hand: func(m *ice.Message, arg ...string) {
-				m.Option("name", kit.TrimExt(path.Base(arg[1]), "go"))
-				m.Option("zone", path.Base(path.Dir(path.Join(arg[2], arg[1]))))
-				m.Option("key", kit.Keys("web.code", m.Option("zone"), m.Option("name")))
+				m.Option(mdb.NAME, kit.TrimExt(path.Base(arg[1]), GO))
+				m.Option(mdb.ZONE, path.Base(path.Dir(path.Join(arg[2], arg[1]))))
+				m.Option(mdb.KEY, kit.Keys("web.code", m.Option(mdb.ZONE), m.Option(mdb.NAME)))
 				m.Echo(nfs.Template(m, "demo.go"))
 			}},
 			COMPLETE: {Hand: func(m *ice.Message, arg ...string) { _go_complete(m, arg...) }},
-			NAVIGATE: {Hand: func(m *ice.Message, arg ...string) {
-				for _, cmd := range []string{"guru", "gopls"} {
-					if ls := kit.Split(m.Cmdx(cli.SYSTEM, cmd, "definition", m.Option(nfs.PATH)+m.Option(nfs.FILE)+nfs.DF+"#"+m.Option("offset")), nfs.DF); len(ls) > 0 {
-						if strings.HasPrefix(ls[0], kit.Path("")) {
-							_ls := nfs.SplitPath(m, strings.TrimPrefix(ls[0], kit.Path("")+nfs.PS))
-							m.Push(nfs.PATH, _ls[0]).Push(nfs.FILE, _ls[1]).Push(nfs.LINE, ls[1])
-							return
-						}
-					}
+			NAVIGATE: {Hand: func(m *ice.Message, arg ...string) { _go_navigate(m, arg...) }},
+			VIMER_SAVE: {Hand: func(m *ice.Message, arg ...string) {
+				switch p := path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)); kit.Ext(m.Option(nfs.FILE)) {
+				case nfs.GO:
+					defer m.Cmdy(nfs.CAT, p)
+					m.Cmd(cli.SYSTEM, "gofmt", "-w", p)
+					m.Cmd(cli.SYSTEM, "goimports", "-w", p)
 				}
-				_c_tags(m, "gotags", "-f", nfs.TAGS, "-R", nfs.PWD)
 			}},
-		}, PlugAction())},
+		}, gdb.EventsAction(VIMER_SAVE), PlugAction())},
 		MOD: {Actions: ice.MergeActions(ice.Actions{
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _mod_show(m, path.Join(arg[2], arg[1])) }},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _mod_show(m, path.Join(arg[2], arg[1])) }},

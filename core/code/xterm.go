@@ -41,6 +41,7 @@ func _xterm_get(m *ice.Message, h string) xterm.XTerm {
 			for {
 				if n, e := term.Read(buf); !m.Warn(e) && e == nil {
 					if _xterm_echo(m, h, string(buf[:n])); len(text) > 0 {
+						m.Debug("what %v", text[0])
 						kit.If(text[0], func(cmd string) { m.Go(func() { m.Sleep30ms(); term.Writeln(cmd) }) })
 						text = text[1:]
 					}
@@ -175,7 +176,7 @@ func ProcessXterm(m *ice.Message, cmds, text string, arg ...string) {
 		if ls := kit.Simple(kit.UnMarshal(m.Option(ctx.ARGS))); len(ls) > 0 {
 			return ls
 		} else {
-			return []string{mdb.TYPE, cmds, mdb.NAME, kit.Select("", arg, 0), mdb.TEXT, text}
+			return []string{cmds, kit.Select("", arg, 0), text}
 		}
 	}, arg...)
 }

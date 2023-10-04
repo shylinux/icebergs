@@ -265,9 +265,10 @@ func ZoneSelectCB(m *ice.Message, zone string, cb Any) *ice.Message {
 }
 func PageZoneSelect(m *ice.Message, arg ...string) *ice.Message {
 	OptionPages(m, kit.Slice(arg, 2)...)
-	if ZoneSelect(m, arg...); len(kit.Slice(arg, 0, 2)) == 0 {
+	arg = kit.Slice(arg, 0, 2)
+	if ZoneSelect(m, arg...); len(arg) == 0 {
 		m.Action(CREATE)
-	} else {
+	} else if len(arg) == 1 {
 		m.Action(INSERT, "page")
 	}
 	return m

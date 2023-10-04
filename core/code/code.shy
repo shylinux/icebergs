@@ -17,7 +17,6 @@ repos.go
 favor.go
 bench.go
 pprof.go
-case.go
 
 c.go
 sh.go

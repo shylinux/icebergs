@@ -38,13 +38,13 @@ const C = "c"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		C: {Name: "c path auto", Help: "编程", Actions: ice.MergeActions(ice.Actions{
+		C: {Actions: ice.MergeActions(ice.Actions{
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _c_show(m, arg...) }},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _c_exec(m, arg...) }},
 			TEMPLATE:   {Hand: func(m *ice.Message, arg ...string) { m.Echo(nfs.Template(m, "demo.c")) }},
 			NAVIGATE:   {Hand: func(m *ice.Message, arg ...string) { _c_tags(m, "ctags", "-a", "-R", nfs.PWD) }},
 		}, PlugAction())},
-		H: {Name: "h path auto", Help: "编程", Actions: ice.MergeActions(ice.Actions{
+		H: {Actions: ice.MergeActions(ice.Actions{
 			NAVIGATE: {Hand: func(m *ice.Message, arg ...string) { _c_tags(m, "ctags", "-a", "-R", nfs.PWD) }},
 		}, PlugAction())},
 	})

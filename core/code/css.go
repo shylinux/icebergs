@@ -67,7 +67,7 @@ const CSS = "css"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		CSS: {Name: "css path auto", Help: "样式表", Actions: ice.MergeActions(ice.Actions{
+		CSS: {Actions: ice.MergeActions(ice.Actions{
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _css_show(m, arg...) }},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _css_exec(m, arg...) }},
 			TEMPLATE: {Hand: func(m *ice.Message, arg ...string) {

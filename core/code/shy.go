@@ -17,7 +17,7 @@ const SHY = "shy"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		SHY: {Name: "shy path auto", Help: "笔记", Actions: ice.MergeActions(ice.Actions{
+		SHY: {Actions: ice.MergeActions(ice.Actions{
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
 				ctx.ProcessField(m, web.WIKI_WORD, kit.Simple(path.Join(arg[2], arg[1])))
 				return
@@ -36,10 +36,10 @@ func init() {
 				m.Option(mdb.NAME, path.Base(path.Dir(path.Join(arg[2], arg[1]))))
 				m.Echo(nfs.Template(m, "demo.shy"))
 			}},
-			COMPLETE: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy("web.wiki.word", COMPLETE, arg) }},
+			COMPLETE: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(web.WIKI_WORD, COMPLETE, arg) }},
 		}, PlugAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 && kit.Ext(arg[0]) == m.CommandKey() {
-				m.Cmdy(web.WIKI_WORD, path.Join(ice.SRC, strings.TrimPrefix(arg[0], nfs.SRC)))
+				m.Cmdy(web.WIKI_WORD, path.Join(nfs.SRC, strings.TrimPrefix(arg[0], nfs.SRC)))
 			} else {
 				m.Cmdy(web.WIKI_WORD, arg)
 			}

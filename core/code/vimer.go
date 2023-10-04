@@ -9,6 +9,7 @@ import (
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -24,29 +25,24 @@ func _vimer_make(m *ice.Message, dir string, msg *ice.Message) {
 	for _, line := range strings.Split(msg.Append(cli.CMD_ERR), lex.NL) {
 		if !strings.Contains(line, nfs.DF) {
 			continue
-		}
-		if ls := strings.SplitN(line, nfs.DF, 4); len(ls) > 3 {
+		} else if ls := strings.SplitN(line, nfs.DF, 4); len(ls) > 3 {
 			for i, p := range kit.Split(dir) {
 				if strings.HasPrefix(ls[0], p) {
-					m.Push(nfs.PATH, p)
-					m.Push(nfs.FILE, strings.TrimPrefix(ls[0], p))
-					m.Push(nfs.LINE, ls[1])
-					m.Push(mdb.TEXT, ls[3])
+					m.Push(nfs.PATH, p).Push(nfs.FILE, strings.TrimPrefix(ls[0], p)).Push(nfs.LINE, ls[1]).Push(mdb.TEXT, ls[3])
 					break
 				} else if i == strings.Count(dir, mdb.FS) {
 					ps := nfs.SplitPath(m, ls[0])
-					m.Push(nfs.PATH, ps[0])
-					m.Push(nfs.FILE, ps[1])
-					m.Push(nfs.LINE, ls[1])
-					m.Push(mdb.TEXT, ls[3])
+					m.Push(nfs.PATH, ps[0]).Push(nfs.FILE, ps[1]).Push(nfs.LINE, ls[1]).Push(mdb.TEXT, ls[3])
 				}
 			}
 		}
 	}
-	// kit.If(m.Length() == 0, func() { m.Echo(msg.Append(cli.CMD_OUT)).Echo(msg.Append(cli.CMD_ERR)) })
 	m.Echo(msg.Append(cli.CMD_OUT)).Echo(msg.Append(cli.CMD_ERR))
 }
 
+const (
+	VIMER_SAVE = "vimer.save"
+)
 const VIMER = "vimer"
 
 func init() {
@@ -55,47 +51,46 @@ func init() {
 		ice.REQUIRE_USR: {Hand: func(m *ice.Message, arg ...string) { web.ShareLocalFile(m, ice.USR, path.Join(arg...)) }},
 		ice.REQUIRE_MODULES: {Hand: func(m *ice.Message, arg ...string) {
 			p := path.Join(ice.USR_MODULES, path.Join(arg...))
-			kit.If(!nfs.Exists(m, p), func() { m.Cmd(cli.SYSTEM, "npm", "install", arg[0], kit.Dict(cli.CMD_DIR, ice.USR)) })
+			kit.If(!nfs.Exists(m, p), func() { m.Cmd(cli.SYSTEM, "npm", INSTALL, arg[0], kit.Dict(cli.CMD_DIR, ice.USR)) })
 			m.RenderDownload(p)
 		}},
 	})
 	Index.MergeCommands(ice.Commands{
-		VIMER: {Name: "vimer path=src/@key file=main.go@key line=1 list", Icon: "vimer.png", Help: "编辑器", Meta: kit.Dict(ctx.STYLE, INNER), Actions: ice.MergeActions(ice.Actions{
+		VIMER: {Name: "vimer path=src/ file=main.go line=1 list", Icon: "vimer.png", Help: "编辑器", Meta: kit.Dict(ctx.STYLE, INNER), Actions: ice.MergeActions(ice.Actions{
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if mdb.IsSearchPreview(m, arg) {
-					m.PushSearch(mdb.TYPE, nfs.FILE, mdb.NAME, "main", mdb.TEXT, ice.SRC_MAIN_SH)
-					m.PushSearch(mdb.TYPE, nfs.FILE, mdb.NAME, "main", mdb.TEXT, ice.SRC_MAIN_SHY)
-					m.PushSearch(mdb.TYPE, nfs.FILE, mdb.NAME, "main", mdb.TEXT, ice.SRC_MAIN_GO)
-					m.PushSearch(mdb.TYPE, nfs.FILE, mdb.NAME, "main", mdb.TEXT, ice.SRC_MAIN_JS)
+					m.PushSearch(mdb.TYPE, nfs.FILE, mdb.NAME, ice.MAIN, mdb.TEXT, ice.SRC_MAIN_SH)
+					m.PushSearch(mdb.TYPE, nfs.FILE, mdb.NAME, ice.MAIN, mdb.TEXT, ice.SRC_MAIN_SHY)
+					m.PushSearch(mdb.TYPE, nfs.FILE, mdb.NAME, ice.MAIN, mdb.TEXT, ice.SRC_MAIN_GO)
+					m.PushSearch(mdb.TYPE, nfs.FILE, mdb.NAME, ice.MAIN, mdb.TEXT, ice.SRC_MAIN_JS)
 				}
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch m.Option(ctx.ACTION) {
 				case nfs.MODULE:
 					m.Cmdy(AUTOGEN, mdb.INPUTS, arg)
-				case nfs.SCRIPT:
-					for _, ext := range []string{SH, SHY, PY, JS, CSS, HTML} {
+				case nfs.SCRIPT, mdb.CREATE:
+					kit.For([]string{SH, SHY, PY, JS, CSS, HTML}, func(ext string) {
 						m.Push(nfs.PATH, kit.ExtChange(m.Option(nfs.FILE), ext))
-					}
+					})
 					m.Option(nfs.DIR_REG, kit.ExtReg(SH, SHY, PY, JS, CSS, HTML))
 					nfs.DirDeepAll(m, nfs.SRC, nfs.PWD, nil, nfs.PATH)
 				case web.DREAM, XTERM, AUTOGEN:
 					m.Cmdy(m.Option(ctx.ACTION), mdb.INPUTS, arg)
 				default:
 					switch arg[0] {
-					case web.SPACE:
-						m.Cmdy(web.SPACE, mdb.INPUTS, arg)
-					case ctx.INDEX:
-						m.Cmdy(web.Space(m, m.Option(web.SPACE)), ctx.COMMAND)
-					case ctx.ARGS:
-						m.Cmdy(web.Space(m, m.Option(web.SPACE)), ctx.COMMAND, mdb.INPUTS, m.Option(ctx.INDEX))
+					case nfs.PATH:
+						p := kit.Select(nfs.PWD, arg, 1)
+						m.Cmdy(nfs.DIR, p, nfs.DIR_CLI_FIELDS)
+						var bind = []string{"usr/icebergs/core/", "usr/volcanos/plugin/local/"}
+						kit.If(strings.HasPrefix(p, bind[0]), func() { m.Cmdy(nfs.DIR, strings.Replace(p, bind[0], bind[1], 1), nfs.DIR_CLI_FIELDS) })
+						kit.If(strings.HasPrefix(p, bind[1]), func() { m.Cmdy(nfs.DIR, strings.Replace(p, bind[1], bind[0], 1), nfs.DIR_CLI_FIELDS) })
 					case nfs.FILE:
 						list := ice.Map{}
 						push := func(k, p string) {
 							kit.IfNoKey(list, kit.Select(k, k+nfs.DF, k != "")+p, func(p string) { m.Push(nfs.PATH, p) })
 						}
-						mdb.HashSelect(m.Spawn()).TablesLimit(30, func(value ice.Maps) { push("", value[nfs.PATH]) })
-						m.Cmd(mdb.SEARCH, mdb.FOREACH, "", ice.OptionFields("type,name,text")).Sort("type,name,text").Table(func(value ice.Maps) {
+						m.Cmd(mdb.SEARCH, mdb.FOREACH, "", "").Sort("").Table(func(value ice.Maps) {
 							switch value[mdb.TYPE] {
 							case nfs.FILE:
 								push("", value[mdb.TEXT])
@@ -103,10 +98,10 @@ func init() {
 								push(web.SPACE, value[mdb.TEXT])
 							case web.LINK:
 								push(web.SPACE, value[mdb.TEXT])
-							case web.SERVER:
-								push(web.SPACE, value[mdb.TEXT])
 							case web.WORKER:
 								push(web.SPACE, value[mdb.NAME])
+							case web.SERVER:
+								push(web.SPACE, value[mdb.TEXT])
 							case ctx.INDEX:
 								push(ctx.INDEX, value[mdb.TEXT])
 							case ssh.SHELL:
@@ -118,38 +113,16 @@ func init() {
 						for _, p := range kit.Split(kit.Select(m.Option(nfs.PATH), m.Option("paths"))) {
 							nfs.DirDeepAll(m.Spawn(), nfs.PWD, p, func(value ice.Maps) { push("", value[nfs.PATH]) }, nfs.PATH)
 						}
-						m.Cmd(XTERM).Table(func(value ice.Maps) {
-							push(ctx.INDEX, kit.Join([]string{web.CODE_XTERM, value[mdb.HASH], kit.Select(value[mdb.TYPE], value[mdb.NAME])}))
-						})
-						m.Cmd(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND, ice.OptionFields(ctx.INDEX)).Table(func(value ice.Maps) { push(ctx.INDEX, value[ctx.INDEX]) })
-						m.Cmd(mdb.SEARCH, cli.SYSTEM, cli.OPENS, ice.OptionFields("type,name,text")).Sort("type,name,text").Table(func(value ice.Maps) { push(cli.OPENS, value[nfs.NAME]) })
+						m.Cmd(ctx.COMMAND).Table(func(value ice.Maps) { push(ctx.INDEX, value[ctx.INDEX]) })
 					default:
 						m.Cmdy(INNER, mdb.INPUTS, arg)
 					}
 				}
 			}},
 			nfs.SAVE: {Hand: func(m *ice.Message, arg ...string) {
-				if m.Option(nfs.CONTENT) == "" {
-					m.Option(nfs.CONTENT, m.Cmdx("", TEMPLATE))
-				}
-				p := path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE))
-				switch m.Cmd(nfs.SAVE, p); m.Option(nfs.FILE) {
-				case ice.INDEX_CSS, ice.PROTO_JS:
-					m.Cmd("", DEVPACK)
-				}
-				switch arg[0] {
-				case nfs.GO:
-					defer m.Cmdy(nfs.CAT, p)
-					m.Cmd(cli.SYSTEM, "gofmt", "-w", p)
-					m.Cmd(cli.SYSTEM, "goimports", "-w", p)
-				}
-			}},
-			cli.MAKE: {Hand: func(m *ice.Message, arg ...string) {
-				web.PushStream(m)
-				defer web.ToastProcess(m)()
-				m.Cmd(cli.SYSTEM, "echo")
-				m.Cmd(cli.SYSTEM, "date")
-				m.Cmd(cli.SYSTEM, cli.MAKE, m.Option("target"), kit.Dict(cli.CMD_DIR, m.Option(nfs.PATH)))
+				kit.If(m.Option(nfs.CONTENT) == "", func() { m.Option(nfs.CONTENT, m.Cmdx("", TEMPLATE)) })
+				m.Cmd(nfs.SAVE, path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)))
+				gdb.Event(m, VIMER_SAVE)
 			}},
 			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) { nfs.Trash(m, arg[0]) }},
 			nfs.MODULE: {Name: "create name*=h2 help=示例 type*=Hash,Zone,Data,Code main*=main.go zone key", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
@@ -158,19 +131,18 @@ func init() {
 			nfs.SCRIPT: {Name: "script file*=hi/hi.js", Help: "脚本", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(nfs.DEFS, path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)), m.Cmdx("", TEMPLATE))
 			}},
-			nfs.REPOS: {Help: "仓库"}, web.SPACE: {Help: "空间"}, web.DREAM: {Help: "空间"}, FAVOR: {Help: "收藏"},
-			cli.OPENS:  {Hand: func(m *ice.Message, arg ...string) { cli.Opens(m, arg...) }},
-			"listTags": {Help: "生成索引", Hand: func(m *ice.Message, arg ...string) { m.Cmd("web.code.vim.tags", nfs.LOAD) }},
-			TEMPLATE: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(TEMPLATE, kit.Ext(m.Option(mdb.FILE)), m.Option(nfs.FILE), m.Option(nfs.PATH))
-			}},
-			COMPLETE: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(COMPLETE, kit.Ext(m.Option(mdb.FILE)), m.Option(nfs.FILE), m.Option(nfs.PATH))
+			nfs.REPOS: {Help: "仓库"}, web.SPACE: {Help: "空间"}, web.DREAM: {Help: "空间"},
+			cli.OPENS: {Hand: func(m *ice.Message, arg ...string) { cli.Opens(m, arg...) }},
+			cli.MAKE: {Hand: func(m *ice.Message, arg ...string) {
+				defer web.ToastProcess(m)()
+				web.PushStream(m)
+				m.Cmd(cli.SYSTEM, "echo")
+				m.Cmd(cli.SYSTEM, "date")
+				m.Cmd(cli.SYSTEM, cli.MAKE, m.Option("target"), kit.Dict(cli.CMD_DIR, m.Option(nfs.PATH)))
 			}},
 			COMPILE: {Help: "编译", Hand: func(m *ice.Message, arg ...string) {
-				if m.Option(nfs.PATH) != "" && nfs.ExistsFile(m, path.Join(m.Option(nfs.PATH), "Makefile")) {
-					web.PushStream(m)
-					m.Cmdy(cli.SYSTEM, cli.MAKE, kit.Dict(cli.CMD_DIR, m.Option(nfs.PATH)))
+				if m.Option(nfs.PATH) != "" && nfs.ExistsFile(m, path.Join(m.Option(nfs.PATH), ice.MAKEFILE)) {
+					web.PushStream(m).Cmdy(cli.SYSTEM, cli.MAKE, kit.Dict(cli.CMD_DIR, m.Option(nfs.PATH)))
 					return
 				}
 				const app, _app = "usr/publish/Contexts.app", "Contents/MacOS/Contexts"
@@ -181,43 +153,39 @@ func init() {
 					cmds = []string{COMPILE, ice.SRC_WEBVIEW_GO, path.Join(app, _app)}
 				}
 				if msg := m.Cmd(cmds); cli.IsSuccess(msg) {
-					if isWebview() {
-						m.Go(func() { m.Cmd(cli.SYSTEM, "./bin/ice.bin", cli.FOREVER, cli.DELAY, "300ms", cli.SYSTEM, cli.OPEN, app) })
+					if m.Go(func() { m.Sleep30ms().Cmd(UPGRADE, cli.RESTART) }); isWebview() {
+						m.Cmd(cli.DAEMON, "./bin/ice.bin", cli.FOREVER, cli.DELAY, "300ms", cli.SYSTEM, cli.OPEN, app)
 					}
-					m.Go(func() { m.Sleep30ms().Cmd(UPGRADE, cli.RESTART) })
 				} else {
 					_vimer_make(m, nfs.PWD, msg)
 				}
 			}},
-			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
-				kit.Switch(m.Option(mdb.TYPE), kit.Simple(web.WORKER, web.SERVER), func() {
-					m.PushButton(kit.Dict(m.CommandKey(), "编程"))
-				})
+			TEMPLATE: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(TEMPLATE, kit.Ext(m.Option(mdb.FILE)), m.Option(nfs.FILE), m.Option(nfs.PATH))
 			}},
-			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { web.DreamProcess(m, []string{}, arg...) }},
+			COMPLETE: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(COMPLETE, kit.Ext(m.Option(mdb.FILE)), m.Option(nfs.FILE), m.Option(nfs.PATH))
+			}},
 			chat.FAVOR_INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case mdb.TYPE:
 					m.Push(arg[0], nfs.FILE)
 				case mdb.TEXT:
-					if m.Option(mdb.TYPE) == nfs.FILE {
-						m.Push(arg[0], "src/main.go", "src/main.shy")
-					}
+					kit.If(m.Option(mdb.TYPE) == nfs.FILE, func() { m.Push(arg[0], ice.SRC_MAIN_SHY, ice.SRC_MAIN_GO, ice.SRC_MAIN_JS) })
 				}
 			}},
 			chat.FAVOR_TABLES: {Hand: func(m *ice.Message, arg ...string) {
-				kit.If(m.Option(mdb.TYPE) == nfs.FILE, func() {
-					m.PushButton(kit.Dict(m.CommandKey(), "源码"))
-				})
+				kit.If(m.Option(mdb.TYPE) == nfs.FILE, func() { m.PushButton(kit.Dict(m.CommandKey(), "源码")) })
 			}},
 			chat.FAVOR_ACTION: {Hand: func(m *ice.Message, arg ...string) {
-				if m.Option(mdb.TYPE) == nfs.FILE {
-					ctx.ProcessField(m, m.PrefixKey(), nfs.SplitPath(m, m.Option(mdb.TEXT)))
-				}
+				kit.If(m.Option(mdb.TYPE) == nfs.FILE, func() { ctx.ProcessField(m, m.PrefixKey(), nfs.SplitPath(m, m.Option(mdb.TEXT))) })
 			}},
-		}, chat.FavorAction(), aaa.RoleAction(), mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path", ctx.TOOLS, "xterm,compile,runtime")), Hand: func(m *ice.Message, arg ...string) {
+			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
+				kit.Switch(m.Option(mdb.TYPE), kit.Simple(web.WORKER, web.SERVER), func() { m.PushButton(kit.Dict(m.CommandKey(), "编程")) })
+			}},
+			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { web.DreamProcess(m, []string{}, arg...) }},
+		}, aaa.RoleAction(), chat.FavorAction(), ctx.ConfAction(ctx.TOOLS, "xterm,compile,runtime")), Hand: func(m *ice.Message, arg ...string) {
 			if m.Cmdy(INNER, arg); arg[0] != ctx.ACTION {
-				kit.If(len(arg) > 1, func() { mdb.HashCreate(m.Spawn(), nfs.PATH, path.Join(kit.Slice(arg, 0, 2)...)) })
 				m.Action(nfs.SAVE, COMPILE, "show", "exec")
 				ctx.DisplayLocal(m, "")
 				ctx.Toolkit(m)
@@ -231,15 +199,18 @@ const COMPLETE = "complete"
 const NAVIGATE = "navigate"
 
 func init() {
-	Index.MergeCommands(ice.Commands{TEMPLATE: {Name: "template type name text auto", Help: "模板", Actions: mdb.RenderAction()}})
-	Index.MergeCommands(ice.Commands{COMPLETE: {Name: "complete type name text auto", Help: "补全", Actions: mdb.RenderAction()}})
-	Index.MergeCommands(ice.Commands{NAVIGATE: {Name: "navigate type name text auto", Help: "跳转", Actions: mdb.RenderAction()}})
+	Index.MergeCommands(ice.Commands{
+		TEMPLATE: {Name: "template type name text auto", Help: "模板", Actions: mdb.RenderAction()},
+		COMPLETE: {Name: "complete type name text auto", Help: "补全", Actions: mdb.RenderAction()},
+		NAVIGATE: {Name: "navigate type name text auto", Help: "跳转", Actions: mdb.RenderAction()},
+	})
 	ice.AddMergeAction(func(c *ice.Context, key string, cmd *ice.Command, sub string, action *ice.Action) ice.Handler {
 		switch sub {
 		case TEMPLATE, COMPLETE, NAVIGATE:
 			return func(m *ice.Message, arg ...string) { m.Cmd(sub, mdb.CREATE, key, m.PrefixKey()) }
+		default:
+			return nil
 		}
-		return nil
 	})
 }
 func Complete(m *ice.Message, text string, data ice.Map) {

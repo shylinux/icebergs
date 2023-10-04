@@ -154,7 +154,11 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: ice.Commands
 			LIST, func() { _list_inputs(m, arg[0], arg[1], kit.Select(NAME, arg, 3), kit.Select("", arg, 4)) },
 		)
 		for _, inputs := range ice.Info.Inputs {
-			inputs(m, arg[3])
+			if arg[2] == ZONE {
+				inputs(m, arg[4])
+			} else {
+				inputs(m, arg[3])
+			}
 		}
 	}},
 	INSERT: {Name: "insert key sub type arg...", Hand: func(m *ice.Message, arg ...string) {

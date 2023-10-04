@@ -63,7 +63,7 @@ func init() {
 				}
 			}},
 			ALPINE: {Name: "alpine cli cmd", Hand: func(m *ice.Message, arg ...string) { IsAlpine(m, arg...) }},
-		}, mdb.ZoneAction(mdb.SHORT, CLI, mdb.FIELD, "time,id,osid,cmd"), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.ZoneAction(mdb.SHORT, CLI, mdb.FIELDS, "time,id,osid,cmd"), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.ZoneSelect(m, arg...); len(arg) == 0 {
 				m.Table(func(value ice.Maps) {
 					p := SystemFind(m, value[CLI])

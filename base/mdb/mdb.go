@@ -255,16 +255,10 @@ func AutoConfig(arg ...Any) *ice.Action {
 				return
 			}
 			if cmd.Actions[INSERT] != nil {
-				if cmd.Meta[INSERT] == nil {
-					m.Design(INSERT, "", add(kit.Simple(Config(m, SHORT), kit.Split(ListField(m))))...)
-				}
-				if cmd.Meta[CREATE] == nil {
-					m.Design(CREATE, "", add(kit.Split(Config(m, SHORT)))...)
-				}
+				kit.If(cmd.Meta[INSERT] == nil, func() { m.Design(INSERT, "", add(kit.Simple(Config(m, SHORT), kit.Split(ListField(m))))...) })
+				kit.If(cmd.Meta[CREATE] == nil, func() { m.Design(CREATE, "", add(kit.Split(Config(m, SHORT)))...) })
 			} else if cmd.Actions[CREATE] != nil {
-				if cmd.Meta[CREATE] == nil {
-					m.Design(CREATE, "", add(kit.Split(HashField(m)))...)
-				}
+				kit.If(cmd.Meta[CREATE] == nil, func() { m.Design(CREATE, "", add(kit.Split(HashField(m)))...) })
 			}
 		}
 	}}

@@ -49,6 +49,8 @@ func _cat_list(m *ice.Message, p string) {
 		kit.For(f, cb)
 	case func([]string, string):
 		kit.For(f, cb)
+	case func([]string):
+		kit.For(f, cb)
 	case nil:
 		if b, e := ioutil.ReadAll(f); !m.Warn(e) {
 			m.Echo(string(b)).StatusTime(FILE, p, SIZE, len(b))

@@ -12,7 +12,7 @@ const KEYBOARD = "keyboard"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		KEYBOARD: {Name: "keyboard hash auto", Help: "键盘", Actions: ice.MergeActions(ice.Actions{
+		KEYBOARD: {Help: "键盘", Actions: ice.MergeActions(ice.Actions{
 			web.SPACE: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(web.SPACE, m.Option(web.SPACE), arg) }},
 		}, mdb.HashAction(mdb.FIELD, "time,hash,space,index,input")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) > 0 {

@@ -22,7 +22,7 @@ func init() {
 				ls := nfs.SplitPath(m, path.Join(kit.Select("", m.Option(cli.PWD), !path.IsAbs(m.Option(nfs.FILE))), m.Option(nfs.FILE)))
 				ctx.ProcessField(m, "", []string{ls[0], ls[1], m.Option(nfs.LINE)}, arg...)
 			}},
-		}, mdb.ZoneAction(mdb.FIELD, "time,id,type,name,text,file,line,pwd")), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.ZoneAction(mdb.FIELDS, "time,id,type,name,text,file,line,pwd")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.ZoneSelect(m, arg...); len(arg) == 0 {
 				m.Action(mdb.EXPORT, mdb.IMPORT)
 			} else {

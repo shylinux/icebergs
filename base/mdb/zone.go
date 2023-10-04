@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"os"
 	"path"
+	"strings"
 
 	ice "shylinux.com/x/icebergs"
 	kit "shylinux.com/x/toolkits"
@@ -146,21 +147,50 @@ const (
 )
 const ZONE = "zone"
 
+func ZoneConfig(arg ...Any) *ice.Action {
+	return &ice.Action{Hand: func(m *ice.Message, args ...string) {
+		if cs := m.Target().Configs; cs[m.CommandKey()] == nil {
+			cs[m.CommandKey()] = &ice.Config{Value: kit.Data(arg...)}
+		} else {
+			kit.For(kit.Dict(arg...), func(k string, v Any) { Config(m, k, v) })
+		}
+		if cmd := m.Target().Commands[m.CommandKey()]; cmd == nil {
+			return
+		} else {
+			s := kit.Select(ZONE, Config(m, SHORT))
+			kit.If(s == UNIQ || strings.Contains(s, ","), func() { s = HASH })
+			if cmd.Name == "" {
+				cmd.Name = kit.Format("%s %s id auto", m.CommandKey(), s)
+				cmd.List = ice.SplitCmd(cmd.Name, cmd.Actions)
+			}
+			add := func(list []string) (inputs []Any) {
+				kit.For(list, func(k string) {
+					kit.If(!kit.IsIn(k, TIME, HASH, COUNT, ID), func() {
+						inputs = append(inputs, k+kit.Select("", "*", strings.Contains(s, k)))
+					})
+				})
+				return
+			}
+			kit.If(cmd.Meta[INSERT] == nil, func() { m.Design(INSERT, "", add(kit.Simple(kit.Split(s), kit.Split(ZoneField(m))))...) })
+			kit.If(cmd.Meta[CREATE] == nil, func() { m.Design(CREATE, "", add(kit.Split(kit.Select(s, Config(m, FIELD))))...) })
+		}
+	}}
+}
 func ZoneAction(arg ...ice.Any) ice.Actions {
-	return ice.Actions{ice.CTX_INIT: AutoConfig(append(kit.List(SHORT, ZONE, FIELD, ZONE_FIELD), arg...)...),
+	return ice.Actions{ice.CTX_INIT: ZoneConfig(append(kit.List(SHORT, ZONE, FIELDS, ZONE_FIELD), arg...)...),
 		INPUTS: {Hand: func(m *ice.Message, arg ...string) { ZoneInputs(m, arg) }},
 		CREATE: {Hand: func(m *ice.Message, arg ...string) { ZoneCreate(m, arg) }},
 		REMOVE: {Hand: func(m *ice.Message, arg ...string) { ZoneRemove(m, arg) }},
 		INSERT: {Hand: func(m *ice.Message, arg ...string) { ZoneInsert(m, arg) }},
 		MODIFY: {Hand: func(m *ice.Message, arg ...string) { ZoneModify(m, arg) }},
-		SELECT: {Name: "select zone id auto insert", Hand: func(m *ice.Message, arg ...string) { ZoneSelect(m, arg...) }},
+		SELECT: {Hand: func(m *ice.Message, arg ...string) { ZoneSelect(m, arg...) }},
 		EXPORT: {Hand: func(m *ice.Message, arg ...string) { ZoneExport(m, arg) }},
 		IMPORT: {Hand: func(m *ice.Message, arg ...string) { ZoneImport(m, arg) }},
 	}
 }
 func PageZoneAction(arg ...ice.Any) ice.Actions {
 	return ice.MergeActions(ice.Actions{
-		SELECT: {Name: "select zone id auto insert page", Hand: func(m *ice.Message, arg ...string) { PageZoneSelect(m, arg...) }},
+		SELECT: {Hand: func(m *ice.Message, arg ...string) { PageZoneSelect(m, arg...) }},
 		PREV:   {Hand: func(m *ice.Message, arg ...string) { PrevPageLimit(m, arg[0], arg[1:]...) }},
 		NEXT:   {Hand: func(m *ice.Message, arg ...string) { NextPage(m, arg[0], arg[1:]...) }},
 	}, ZoneAction(arg...))
@@ -174,7 +204,7 @@ func ZoneKey(m *ice.Message) string {
 func ZoneShort(m *ice.Message) string {
 	return kit.Select(ZONE, Config(m, SHORT), Config(m, SHORT) != UNIQ)
 }
-func ZoneField(m *ice.Message) string { return kit.Select(ZONE_FIELD, Config(m, FIELD)) }
+func ZoneField(m *ice.Message) string { return kit.Select(ZONE_FIELD, Config(m, FIELDS)) }
 func ZoneInputs(m *ice.Message, arg ...Any) {
 	m.Cmdy(INPUTS, m.PrefixKey(), "", ZONE, m.Option(ZoneKey(m)), arg)
 }
@@ -205,7 +235,7 @@ func ZoneModify(m *ice.Message, arg ...Any) {
 }
 func ZoneSelect(m *ice.Message, arg ...string) *ice.Message {
 	arg = kit.Slice(arg, 0, 2)
-	m.Fields(len(arg), kit.Select(kit.Fields(TIME, Config(m, SHORT), COUNT), Config(m, FIELDS)), ZoneField(m))
+	m.Fields(len(arg), kit.Select(kit.Fields(TIME, Config(m, SHORT), COUNT), Config(m, FIELD)), ZoneField(m))
 	if m.Cmdy(SELECT, m.PrefixKey(), "", ZONE, arg, logs.FileLineMeta(-1)); len(arg) == 0 {
 		m.Sort(ZoneShort(m)).PushAction(Config(m, ACTION), REMOVE).Action(CREATE).StatusTimeCount()
 	} else if len(arg) == 1 {
@@ -235,5 +265,10 @@ func ZoneSelectCB(m *ice.Message, zone string, cb Any) *ice.Message {
 }
 func PageZoneSelect(m *ice.Message, arg ...string) *ice.Message {
 	OptionPages(m, kit.Slice(arg, 2)...)
-	return ZoneSelect(m, arg...)
+	if ZoneSelect(m, arg...); len(kit.Slice(arg, 0, 2)) == 0 {
+		m.Action(CREATE)
+	} else {
+		m.Action(INSERT, "page")
+	}
+	return m
 }

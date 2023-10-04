@@ -14,7 +14,7 @@ const IFRAME = "iframe"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		IFRAME: {Name: "iframe hash@key auto app", Help: "浏览器", Icon: "Safari.png", Actions: ice.MergeActions(ice.Actions{
+		IFRAME: {Name: "iframe hash@key auto", Help: "浏览器", Icon: "Safari.png", Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch mdb.HashInputs(m, arg); arg[0] {
 				case mdb.NAME:

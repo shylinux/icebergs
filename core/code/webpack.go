@@ -134,9 +134,7 @@ func init() {
 				_webpack_cache(m.Spawn(), _volcanos(m), false)
 				m.Cmdy("")
 			}},
-			mdb.INSERT: {Name: "insert path*", Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashCreate(m)
-			}},
+			mdb.INSERT: {Name: "insert path*", Hand: func(m *ice.Message, arg ...string) { mdb.HashCreate(m) }},
 			cli.BUILD: {Name: "build name*=hi", Hand: func(m *ice.Message, arg ...string) {
 				// kit.If(!nfs.Exists(m, USR_PUBLISH_CAN_JS), func() { m.Cmd("", mdb.CREATE) })
 				_webpack_build(m, _publish(m, m.Option(mdb.NAME)))

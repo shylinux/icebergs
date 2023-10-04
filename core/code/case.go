@@ -49,7 +49,7 @@ func init() {
 				m.Cmdy(web.SPIDE, m.Option(ice.DEV), web.SPIDE_RAW, m.Option(ice.CMD), m.Option(cli.API), web.SPIDE_DATA, m.Option(ice.ARG)).ProcessInner()
 				m.StatusTime(nfs.SCRIPT, `curl "`+kit.MergeURL2(m.Cmd(web.SPIDE, m.Option(ice.DEV)).Append(web.CLIENT_ORIGIN), m.Option(cli.API))+`" -H "Content-Type: application/json"`+` -d '`+m.Option(ice.ARG)+`'`)
 			}},
-		}, mdb.ZoneAction(mdb.FIELD, "time,id,name,cmd,api,arg,res")), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.ZoneAction(mdb.FIELDS, "time,id,name,cmd,api,arg,res")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				m.Cmdy(web.SPIDE).RenameAppend(web.CLIENT_NAME, ice.DEV, web.CLIENT_URL, "address")
 			} else if mdb.ZoneSelect(m, arg[1:]...); len(arg) > 1 {

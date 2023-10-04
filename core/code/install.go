@@ -31,37 +31,33 @@ func _install_download(m *ice.Message) {
 	link := m.Option(web.LINK)
 	name := path.Base(kit.ParseURL(link).Path)
 	file := path.Join(kit.Select(ice.USR_INSTALL, m.Option(nfs.PATH)), name)
+	defer m.Cmdy(nfs.DIR, file)
 	if nfs.Exists(m, file) {
-		m.Cmdy(nfs.DIR, file)
 		return
 	}
 	mdb.HashCreate(m.Cmd(nfs.SAVE, file, ""), mdb.NAME, name, nfs.PATH, file, web.LINK, link)
 	web.GoToast(m, name, func(toast func(string, int, int)) (list []string) {
-		defer nfs.TarExport(m, file)
 		begin := time.Now()
-		if mdb.Config(m, "repos") != "" {
-			web.SpideSave(m, file, mdb.Config(m, "repos")+path.Base(link), func(count, total, value int) {
-				cost := time.Now().Sub(begin)
-				mdb.HashSelectUpdate(m, name, func(value ice.Map) { value[mdb.COUNT], value[mdb.TOTAL], value[mdb.VALUE] = count, total, value })
-				toast(kit.FormatShow(nfs.FROM, begin.Format("15:04:05"), cli.COST, kit.FmtDuration(cost), cli.REST, kit.FmtDuration(cost*time.Duration(101)/time.Duration(value+1)-cost)), count, total)
-			})
+		_toast := func(count, total, value int) {
+			cost := time.Now().Sub(begin)
+			toast(kit.FormatShow(nfs.FROM, begin.Format("15:04:05"), cli.COST, kit.FmtDuration(cost), cli.REST, kit.FmtDuration(cost*time.Duration(101)/time.Duration(value+1)-cost)), count, total)
+			mdb.HashSelectUpdate(m, name, func(value ice.Map) { value[mdb.COUNT], value[mdb.TOTAL], value[mdb.VALUE] = count, total, value })
+		}
+		defer nfs.TarExport(m, file)
+		if mdb.Config(m, nfs.REPOS) != "" {
+			web.SpideSave(m, file, mdb.Config(m, nfs.REPOS)+path.Base(link), _toast)
 			if s, e := nfs.StatFile(m, file); e == nil && s.Size() > 0 {
 				return
 			}
 		}
-		web.SpideSave(m, file, link, func(count, total, value int) {
-			cost := time.Now().Sub(begin)
-			mdb.HashSelectUpdate(m, name, func(value ice.Map) { value[mdb.COUNT], value[mdb.TOTAL], value[mdb.VALUE] = count, total, value })
-			toast(kit.FormatShow(nfs.FROM, begin.Format("15:04:05"), cli.COST, kit.FmtDuration(cost), cli.REST, kit.FmtDuration(cost*time.Duration(101)/time.Duration(value+1)-cost)), count, total)
-		})
+		web.SpideSave(m, file, link, _toast)
 		return
 	})
 	if s, e := nfs.StatFile(m, file); e == nil && s.Size() > 0 {
-		m.Cmdy(nfs.DIR, file)
 		web.ToastSuccess(m)
 	} else {
-		nfs.Trash(m, file)
 		web.ToastFailure(m)
+		nfs.Trash(m, file)
 	}
 }
 func _install_build(m *ice.Message, arg ...string) string {
@@ -106,9 +102,7 @@ func _install_spawn(m *ice.Message, arg ...string) {
 	target, source := path.Join(ice.USR_LOCAL_DAEMON, m.Option(tcp.PORT)), _install_path(m, "")
 	nfs.MkdirAll(m, target)
 	defer m.Echo(target)
-	if m.Option(INSTALL) == "" && nfs.Exists(m, kit.Path(source, _INSTALL)) {
-		m.Option(INSTALL, _INSTALL)
-	}
+	kit.If(m.Option(INSTALL) == "" && nfs.Exists(m, kit.Path(source, _INSTALL)), func() { m.Option(INSTALL, _INSTALL) })
 	nfs.DirDeepAll(m.Spawn(), path.Join(source, m.Option(INSTALL)), "", func(value ice.Maps) {
 		m.Cmd(nfs.LINK, path.Join(target, value[nfs.PATH]), path.Join(source, m.Option(INSTALL), value[nfs.PATH]), kit.Dict(ice.LOG_DISABLE, ice.TRUE))
 	})
@@ -221,8 +215,4 @@ func InstallAction(args ...ice.Any) ice.Actions {
 		}},
 		nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) { nfs.Trash(m, m.Option(nfs.PATH)) }},
 	}
-}
-func init() {
-	return
-	ice.Info.Stack[Prefix(InstallAction)] = func(m *ice.Message, key string, arg ...ice.Any) ice.Any { return InstallAction(arg...) }
 }

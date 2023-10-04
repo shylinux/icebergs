@@ -13,7 +13,7 @@ func init() {
 		FLOWS: {Name: "flows zone hash auto", Icon: "Automator.png", Help: "工作流", Actions: ice.MergeActions(ice.Actions{
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if mdb.IsSearchPreview(m, arg) {
-					mdb.HashSelect(m.Spawn(ice.OptionFields(""))).Table(func(value ice.Maps) {
+					mdb.HashSelects(m).Table(func(value ice.Maps) {
 						m.PushSearch(mdb.TYPE, "", mdb.NAME, value[mdb.ZONE], mdb.TEXT, value[mdb.ZONE], value)
 					})
 				}

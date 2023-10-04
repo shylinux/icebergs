@@ -68,7 +68,6 @@ const (
 	OPERATOR = lex.OPERATOR
 	PREFIX   = lex.PREFIX
 	SUFFIX   = lex.SUFFIX
-	INCLUDE  = "include"
 )
 const (
 	COMMENT  = "comment"

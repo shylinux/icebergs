@@ -2,7 +2,6 @@ package code
 
 import (
 	"encoding/base64"
-	"os"
 	"path"
 	"strings"
 
@@ -22,9 +21,7 @@ import (
 
 func _xterm_get(m *ice.Message, h string) xterm.XTerm {
 	h = kit.Select(m.Option(mdb.HASH), h)
-	m.Assert(h != "")
-	m.Option("skip.important", ice.TRUE)
-	if m.Option(ice.MSG_USERPOD) == "" {
+	if m.Assert(h != ""); m.Option(ice.MSG_USERPOD) == "" {
 		mdb.HashModify(m, mdb.TIME, m.Time(), cli.DAEMON, kit.Keys(m.Option(ice.MSG_DAEMON)))
 	} else {
 		mdb.HashModify(m, mdb.TIME, m.Time(), cli.DAEMON, kit.Keys(kit.Slice(kit.Simple(m.Optionv("__target")), 0, -1), m.Option(ice.MSG_DAEMON)))
@@ -33,25 +30,18 @@ func _xterm_get(m *ice.Message, h string) xterm.XTerm {
 		text := strings.Split(value[mdb.TEXT], lex.NL)
 		ls := kit.Split(strings.Split(kit.Select(ISH, value[mdb.TYPE]), " # ")[0])
 		kit.If(value[nfs.PATH] != "" && !strings.HasSuffix(value[nfs.PATH], nfs.PS), func() { value[nfs.PATH] = path.Dir(value[nfs.PATH]) })
-		m.Debug("command %v %v", ls, value)
 		term, e := xterm.Command(m, value[nfs.PATH], kit.Select(ls[0], cli.SystemFind(m, ls[0], value[nfs.PATH])), ls[1:]...)
 		if m.Warn(e) {
 			return nil
 		}
 		m.Go(func() {
-			defer term.Close()
-			defer mdb.HashRemove(m, mdb.HASH, h)
 			m.Log(cli.START, strings.Join(ls, lex.SP))
+			defer mdb.HashRemove(m, mdb.HASH, h)
 			buf := make([]byte, ice.MOD_BUFS)
 			for {
 				if n, e := term.Read(buf); !m.Warn(e) && e == nil {
 					if _xterm_echo(m, h, string(buf[:n])); len(text) > 0 {
-						if cmd := text[0]; text[0] != "" {
-							m.Go(func() {
-								m.Sleep30ms()
-								term.Writeln(cmd)
-							})
-						}
+						kit.If(text[0], func(cmd string) { m.Go(func() { m.Sleep30ms(); term.Writeln(cmd) }) })
 						text = text[1:]
 					}
 				} else {
@@ -78,16 +68,17 @@ const (
 const XTERM = "xterm"
 
 func init() {
+	shell := kit.Env("SHELL", "/bin/sh")
 	Index.MergeCommands(ice.Commands{
 		XTERM: {Name: "xterm hash auto", Icon: "Terminal.png", Help: "命令行", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				kit.If(m.Cmd("").Length() == 0, func() { m.Cmd("", mdb.CREATE, mdb.TYPE, ISH) })
+				kit.If(m.Cmd("").Length() == 0, func() {
+					m.Cmd("", mdb.CREATE, mdb.TYPE, shell)
+					m.Cmd("", mdb.CREATE, mdb.TYPE, "/bin/ish")
+				})
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				if arg[0] == SHELL {
-					m.PushSearch(mdb.TYPE, ssh.SHELL, mdb.NAME, SH, mdb.TEXT, "/bin/sh")
-				}
-				mdb.IsSearchPreview(m, arg, func() []string { return []string{ssh.SHELL, SH, kit.Select("/bin/sh", os.Getenv("SHELL"))} })
+				mdb.IsSearchPreview(m, arg, func() []string { return []string{ssh.SHELL, SH, shell} })
 				mdb.IsSearchPreview(m, arg, func() []string { return []string{ssh.SHELL, ISH, "/bin/ish"} })
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
@@ -95,8 +86,7 @@ func init() {
 				case mdb.HASH:
 					fallthrough
 				case mdb.TYPE:
-					m.Push(arg[0], "/bin/ish", kit.Select("/bin/sh", os.Getenv("SHELL")))
-					m.Cmd(mdb.SEARCH, mdb.FOREACH, ssh.SHELL, ice.OptionFields("type,name,text"), func(value ice.Maps) {
+					m.Cmd(mdb.SEARCH, mdb.FOREACH, "", "", func(value ice.Maps) {
 						kit.If(value[mdb.TYPE] == ssh.SHELL, func() { m.Push(arg[0], value[mdb.TEXT]) })
 					})
 				case mdb.NAME:
@@ -117,7 +107,7 @@ func init() {
 				}
 			}},
 			mdb.CREATE: {Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessRewrite(mdb.HASH, mdb.HashCreate(m, arg))
+				m.ProcessRewrite(mdb.HASH, mdb.HashCreate(m))
 			}},
 			html.RESIZE: {Hand: func(m *ice.Message, arg ...string) {
 				_xterm_get(m, "").Setsize(m.OptionDefault("rows", "24"), m.OptionDefault("cols", "80"))
@@ -128,29 +118,17 @@ func init() {
 				}
 			}},
 			html.OUTPUT: {Help: "全屏", Hand: func(m *ice.Message, arg ...string) {
-				web.ProcessPodCmd(m, "", "", m.OptionSimple(mdb.HASH), ctx.STYLE, html.OUTPUT)
+				web.ProcessPodCmd(m, "", "", mdb.HASH, kit.Select(m.Option(mdb.HASH), arg, 0), ctx.STYLE, html.OUTPUT)
 			}},
-			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
-				kit.Switch(m.Option(mdb.TYPE), kit.Simple(web.SERVER, web.WORKER), func() { m.PushButton(kit.Dict(m.CommandKey(), "终端")) })
-			}},
-			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { web.DreamProcess(m, []string{}, arg...) }},
-			ctx.PROCESS: {Hand: func(m *ice.Message, arg ...string) {
-				if len(arg) == 1 {
-					ctx.ProcessField(m, m.PrefixKey(), arg, arg...)
-				} else {
-					ctx.ProcessField(m, m.PrefixKey(), func() string { return m.Cmdx("", mdb.CREATE, arg) }, arg...)
-				}
-			}},
-			"install": {Help: "安装", Hand: func(m *ice.Message, arg ...string) {
+			INSTALL: {Help: "安装", Hand: func(m *ice.Message, arg ...string) {
 				_xterm_get(m, kit.Select("", arg, 0)).Write([]byte(m.Cmdx(PUBLISH, ice.CONTEXTS, ice.APP, kit.Dict("format", "raw")) + ice.NL))
 				m.ProcessHold()
 			}},
-			"terminal": {Help: "本机", Hand: func(m *ice.Message, arg ...string) {
+			ice.APP: {Help: "本机", Hand: func(m *ice.Message, arg ...string) {
 				if h := kit.Select(m.Option(mdb.HASH), arg, 0); h == "" {
 					cli.Opens(m, "Terminal.app")
 				} else {
-					msg := m.Cmd("", h)
-					cli.OpenCmds(m, msg.Append(mdb.TYPE))
+					cli.OpenCmds(m, m.Cmdv("", h, mdb.TYPE))
 				}
 				m.ProcessHold()
 			}},
@@ -160,35 +138,33 @@ func init() {
 					m.Push(arg[0], SHELL)
 				case mdb.TEXT:
 					if m.Option(mdb.TYPE) == SHELL {
-						m.Push(arg[0], "/bin/ish", kit.Select("/bin/sh", os.Getenv("SHELL")))
+						m.Cmd(mdb.SEARCH, mdb.FOREACH, "", "", func(value ice.Maps) {
+							kit.If(value[mdb.TYPE] == ssh.SHELL, func() { m.Push(arg[0], value[mdb.TEXT]) })
+						})
 					}
 				}
 			}},
 			chat.FAVOR_TABLES: {Hand: func(m *ice.Message, arg ...string) {
-				kit.If(m.Option(mdb.TYPE) == SHELL, func() {
-					m.PushButton(kit.Dict(m.CommandKey(), "终端"))
-				})
+				kit.If(m.Option(mdb.TYPE) == SHELL, func() { m.PushButton(kit.Dict(m.CommandKey(), "终端")) })
 			}},
 			chat.FAVOR_ACTION: {Hand: func(m *ice.Message, arg ...string) {
-				if m.Option(mdb.TYPE) == SHELL {
+				kit.If(m.Option(mdb.TYPE) == SHELL, func() {
 					ctx.ProcessField(m, m.PrefixKey(), m.Cmdx("", mdb.CREATE, mdb.TYPE, m.Option(mdb.TEXT), mdb.NAME, m.Option(mdb.NAME), mdb.TEXT, ""))
-				}
+				})
 			}},
-		}, chat.FavorAction(), ctx.ProcessAction(), mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,path,theme,daemon")), Hand: func(m *ice.Message, arg ...string) {
+			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
+				kit.Switch(m.Option(mdb.TYPE), kit.Simple(web.WORKER, web.SERVER), func() { m.PushButton(kit.Dict(m.CommandKey(), "终端")) })
+			}},
+			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) {
+				web.DreamProcess(m, []string{}, arg...)
+			}},
+		}, chat.FavorAction(), ctx.ProcessAction(), mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,path")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) == 0 {
-				if m.Length() == 0 {
-					m.Action(mdb.CREATE)
-				} else {
-					m.PushAction(html.OUTPUT, mdb.REMOVE).Action(mdb.CREATE, mdb.PRUNES, "terminal")
-				}
+				m.Action(mdb.CREATE, mdb.PRUNES, ice.APP)
 			} else {
-				if m.Length() == 0 {
-					arg[0] = m.Cmdx("", mdb.CREATE, kit.SimpleKV("type,name,text,path", arg))
-					mdb.HashSelect(m, arg[0])
-				}
-				m.Push(mdb.HASH, arg[0])
+				kit.If(m.Length() == 0, func() { arg[0] = m.Cmdx("", mdb.CREATE, arg); mdb.HashSelect(m, arg[0]) })
+				m.Push(mdb.HASH, arg[0]).Action(html.OUTPUT, ice.APP)
 				ctx.DisplayLocal(m, "")
-				m.Action("terminal")
 			}
 		}},
 	})

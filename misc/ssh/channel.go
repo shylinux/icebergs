@@ -55,7 +55,7 @@ func init() {
 				}
 			}},
 			mdb.REPEAT: {Help: "执行", Hand: func(m *ice.Message, arg ...string) { m.Cmdy("", ctx.COMMAND, CMD, m.Option(mdb.TEXT)) }},
-		}, mdb.HashAction(mdb.FIELDS, "time,hash,status,tty,count,username,hostport", mdb.FIELD, "time,id,type,text")), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.FIELD, "time,hash,status,tty,count,username,hostport", mdb.FIELDS, "time,id,type,text")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.ZoneSelect(m, arg...); len(arg) == 0 {
 				m.Table(func(value ice.Maps) {
 					m.PushButton(kit.Select("", ctx.COMMAND, value[mdb.STATUS] == tcp.OPEN), mdb.REMOVE)

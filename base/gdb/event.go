@@ -27,7 +27,7 @@ func init() {
 					m.Cmdy(kit.Split(value[ice.CMD]), arg[1], arg[2:], ice.OptionFields(""))
 				})
 			}},
-		}, mdb.ZoneAction(mdb.SHORT, EVENT, mdb.FIELD, "time,id,cmd"), mdb.ClearOnExitHashAction())},
+		}, mdb.ZoneAction(mdb.SHORT, EVENT, mdb.FIELDS, "time,id,cmd"), mdb.ClearOnExitHashAction())},
 	})
 }
 

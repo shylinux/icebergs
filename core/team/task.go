@@ -106,7 +106,7 @@ func init() {
 			CANCEL:     {Hand: func(m *ice.Message, arg ...string) { _task_modify(m, STATUS, CANCEL) }},
 			BEGIN:      {Hand: func(m *ice.Message, arg ...string) { _task_modify(m, STATUS, PROCESS) }},
 			END:        {Hand: func(m *ice.Message, arg ...string) { _task_modify(m, STATUS, FINISH) }},
-		}, mdb.ImportantZoneAction(mdb.FIELD, "begin_time,close_time,id,status,level,score,type,name,text")), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.ImportantZoneAction(mdb.FIELDS, "begin_time,close_time,id,status,level,score,type,name,text")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.ZoneSelect(m, arg...); len(arg) > 0 && arg[0] != "" {
 				status := map[string]int{}
 				m.Table(func(value ice.Maps) { m.PushButton(_task_action(m, value[STATUS])) })

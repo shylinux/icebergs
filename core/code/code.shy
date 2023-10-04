@@ -9,14 +9,14 @@ publish.go
 upgrade.go
 install.go
 
-vimer.go
-inner.go
-xterm.go
 xterm.shy
+xterm.go
+inner.go
+vimer.go
+repos.go
+favor.go
 bench.go
 pprof.go
-favor.go
-repos.go
 case.go
 
 c.go

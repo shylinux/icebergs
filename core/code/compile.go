@@ -51,26 +51,8 @@ func _compile_get(m *ice.Message, main string) {
 			}
 		}
 	})
-	_list := map[string]bool{}
-	m.Cmd(lex.SPLIT, ice.GO_MOD, func(ls []string) {
-		switch ls[0] {
-		case "module":
-			_list[ls[1]] = true
-		case "require":
-			if ls[1] == "(" {
-				block = true
-			} else {
-				_list[ls[1]] = true
-			}
-		case ")":
-			block = false
-		default:
-			if block {
-				_list[kit.Select("", ls, 0)] = true
-			}
-		}
-	})
 	kit.For(list, func(p string) {
+		_list := _compile_mod(m)
 		if _, ok := _list[p]; ok {
 			return
 		} else if ls := kit.Slice(strings.Split(p, nfs.PS), 0, 3); _list[path.Join(ls...)] {
@@ -78,6 +60,28 @@ func _compile_get(m *ice.Message, main string) {
 		}
 		m.Cmd(cli.SYSTEM, GO, "get", p)
 	})
+}
+func _compile_mod(m *ice.Message) map[string]bool {
+	block, list := false, map[string]bool{}
+	m.Cmd(lex.SPLIT, ice.GO_MOD, func(ls []string) {
+		switch ls[0] {
+		case "module":
+			list[ls[1]] = true
+		case "require":
+			if ls[1] == "(" {
+				block = true
+			} else {
+				list[ls[1]] = true
+			}
+		case ")":
+			block = false
+		default:
+			if block {
+				list[kit.Select("", ls, 0)] = true
+			}
+		}
+	})
+	return list
 }
 
 const COMPILE = "compile"
@@ -90,11 +94,6 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		COMPILE: {Name: "compile arch=amd64,386,arm,arm64,mipsle os=linux,darwin,windows src=src/main.go@key run binpack webpack devpack install", Icon: "go.png", Help: "编译", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { cli.IsAlpine(m, GO, "go git") }},
-			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				mdb.IsSearchPreview(m, arg, func() []string {
-					return []string{ice.CMD, m.CommandKey(), kit.Format(kit.Simple(runtime.GOARCH, runtime.GOOS))}
-				})
-			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case SERVICE:

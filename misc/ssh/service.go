@@ -157,7 +157,7 @@ func init() {
 				if mdb.HashSelect(m, m.Option(tcp.PORT)).Length() > 0 {
 					mdb.HashModify(m, m.Option(tcp.PORT), mdb.STATUS, tcp.OPEN)
 				} else {
-					mdb.HashCreate(m.Spawn(), m.OptionSimple(mdb.Config(m, mdb.FIELDS)), mdb.STATUS, tcp.OPEN)
+					mdb.HashCreate(m.Spawn(), m.OptionSimple(), mdb.STATUS, tcp.OPEN)
 					m.Cmd("", ctx.LOAD, m.OptionSimple(AUTHKEY))
 				}
 				m.Go(func() {
@@ -195,7 +195,7 @@ func init() {
 				}
 			}},
 		}, mdb.StatusHashAction(
-			mdb.SHORT, tcp.PORT, mdb.FIELDS, "time,port,status,private,authkey,count", mdb.FIELD, "time,id,type,name,text",
+			mdb.SHORT, tcp.PORT, mdb.FIELD, "time,port,status,private,authkey,count", mdb.FIELDS, "time,id,type,name,text",
 			WELCOME, "welcome to contexts world\r\n", GOODBYE, "goodbye of contexts world\r\n",
 		)), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.ZoneSelect(m, arg...); len(arg) == 0 {

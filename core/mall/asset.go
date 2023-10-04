@@ -91,8 +91,7 @@ func init() {
 				}
 				web.Toast(m, "核算成功")
 			}},
-		}, mdb.ZoneAction()), Hand: func(m *ice.Message, arg ...string) {
-			m.Fields(len(arg), "time,account,amount,count", mdb.ZoneField(m))
+		}, mdb.ZoneAction(mdb.FIELD, "time,account,amount,count")), Hand: func(m *ice.Message, arg ...string) {
 			amount, count := 0, 0
 			if mdb.ZoneSelect(m, arg...); len(arg) == 0 {
 				m.PushAction(CHECK)

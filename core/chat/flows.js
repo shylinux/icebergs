@@ -149,7 +149,9 @@ Volcanos(chat.ONDETAIL, {
 			can.Update(can.request(event, can.Action("direct") == "horizon"? {from: item.hash}: {prev: item.hash}), [ctx.ACTION, mdb.INSERT]); break
 		default: can.ondetail._select(event, can, item)
 	} can.onkeymap.prevent(event) },
-	oncontextmenu: function(event, can, _sub, item) { can.user.carteItem(event, can, item) },
+	oncontextmenu: function(event, can, _sub, item) {
+		can.user.carteItem(event, can, can.base.CopyStr({action: item.action, zone: can.Option(mdb.ZONE)}, item))
+	},
 })
 Volcanos(chat.ONEXPORT, {
 	margin: function(can) { var margin = can.Action(html.MARGIN); return parseFloat(margin) },

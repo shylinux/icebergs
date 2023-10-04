@@ -27,7 +27,7 @@ func init() {
 				}
 			}},
 			web.DOWNLOAD: {Hand: func(m *ice.Message, arg ...string) { web.RenderCache(m, m.Option(mdb.TEXT)) }},
-		}, mdb.ZoneAction(mdb.FIELD, "time,id,type,name,text,pwd,username,hostname")), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.ZoneAction(mdb.FIELDS, "time,id,type,name,text,pwd,username,hostname")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.ZoneSelect(m, arg...); len(arg) == 0 {
 				m.Action(mdb.EXPORT, mdb.IMPORT)
 			} else {

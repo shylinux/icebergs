@@ -38,7 +38,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		MENU: {Name: "menu zone id auto insert", Help: "菜单", Actions: ice.MergeActions(ice.Actions{
 			mdb.INSERT: {Name: "insert zone=home title=hi refer=hello image"},
-		}, mdb.ZoneAction(mdb.FIELD, "time,id,title,refer,image")), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.ZoneAction(mdb.FIELDS, "time,id,title,refer,image")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.ZoneSelect(m, arg...); len(arg) > 0 {
 				_wx_action(m)
 			}

@@ -98,9 +98,9 @@ func init() {
 			}
 			if len(arg) == 0 {
 				if m.IsMobileUA() {
-					m.Action("upload", "getClipboardData", "getLocation", "scanQRCode")
+					m.Action(mdb.CREATE, web.UPLOAD, "getClipboardData", "getLocation", "scanQRCode")
 				} else {
-					m.Action("getClipboardData", "upload", "record1", "record2")
+					m.Action(mdb.CREATE, web.UPLOAD, "getClipboardData", "record1", "record2")
 				}
 			}
 			m.Table(func(value ice.Maps) {

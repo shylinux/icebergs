@@ -12,7 +12,8 @@ const FAVOR = "favor"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		FAVOR: {Name: "favor zone id auto insert page", Help: "收藏夹", Actions: ice.MergeActions(ice.Actions{
+		FAVOR: {Help: "收藏夹", Actions: ice.MergeActions(ice.Actions{
+			mdb.CREATE: {Name: "create zone*=数据结构"},
 			mdb.INSERT: {Name: "insert zone*=数据结构 type=go name*=hi text*=hello path file line"},
 			XTERM: {Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 				msg := mdb.ZoneSelects(m.Spawn(), m.Option(mdb.ZONE), m.Option(mdb.ID))
@@ -22,9 +23,10 @@ func init() {
 				msg := mdb.ZoneSelects(m.Spawn(), m.Option(mdb.ZONE), m.Option(mdb.ID))
 				ctx.Process(m, "", msg.OptionSplit(nfs.PATH, nfs.FILE, nfs.LINE), arg...)
 			}},
-		}, mdb.PageZoneAction(mdb.FIELD, "time,id,type,name,text,path,file,line")), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.PageZoneAction(mdb.FIELDS, "time,id,type,name,text,path,file,line")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.PageZoneSelect(m, arg...); len(arg) > 0 && arg[0] != "" {
-				m.Table(func(value ice.Maps) { m.PushButton(kit.Select(INNER, XTERM, value[nfs.FILE] == "")) }).Option(ctx.STYLE, arg[0])
+				m.Table(func(value ice.Maps) { m.PushButton(kit.Select(INNER, XTERM, value[nfs.FILE] == "")) })
+				m.Option(ctx.STYLE, arg[0])
 			}
 		}},
 	})

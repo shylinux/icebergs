@@ -35,6 +35,6 @@ func init() {
 				}
 			}},
 			mdb.CREATE: {Hand: func(m *ice.Message, arg ...string) { _tail_create(m, arg...) }},
-		}, mdb.PageZoneAction(mdb.SHORT, mdb.NAME, mdb.FIELDS, "time,name,file,count", mdb.FIELD, "time,id,file,size,text"))},
+		}, mdb.PageZoneAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,file,count", mdb.FIELDS, "time,id,file,size,text"))},
 	})
 }

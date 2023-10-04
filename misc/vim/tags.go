@@ -52,7 +52,7 @@ func init() {
 			}},
 			INPUT:      {Hand: func(m *ice.Message, arg ...string) { _tags_input(m, arg...) }},
 			code.INNER: {Hand: func(m *ice.Message, arg ...string) { ctx.ProcessField(m, "", m.OptionSplit("path,file,line"), arg...) }},
-		}, mdb.ZoneAction(mdb.FIELD, "time,id,type,name,text,path,file,line")), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.ZoneAction(mdb.FIELDS, "time,id,type,name,text,path,file,line")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.ZoneSelectAll(m, arg...); len(arg) == 0 {
 				m.Action(nfs.LOAD, mdb.EXPORT, mdb.IMPORT)
 			} else {

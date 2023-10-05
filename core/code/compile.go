@@ -37,7 +37,7 @@ func _compile_get(m *ice.Message, main string) {
 	block, list := false, []string{}
 	m.Cmd(lex.SPLIT, main, func(ls []string) {
 		switch ls[0] {
-		case "import":
+		case IMPORT:
 			if ls[1] == "(" {
 				block = true
 			} else {
@@ -58,16 +58,16 @@ func _compile_get(m *ice.Message, main string) {
 		} else if ls := kit.Slice(strings.Split(p, nfs.PS), 0, 3); _list[path.Join(ls...)] {
 			return
 		}
-		m.Cmd(cli.SYSTEM, GO, "get", p)
+		GoGet(m, p)
 	})
 }
 func _compile_mod(m *ice.Message) map[string]bool {
 	block, list := false, map[string]bool{}
 	m.Cmd(lex.SPLIT, ice.GO_MOD, func(ls []string) {
 		switch ls[0] {
-		case "module":
+		case MODULE:
 			list[ls[1]] = true
-		case "require":
+		case REQUIRE:
 			if ls[1] == "(" {
 				block = true
 			} else {
@@ -76,9 +76,7 @@ func _compile_mod(m *ice.Message) map[string]bool {
 		case ")":
 			block = false
 		default:
-			if block {
-				list[kit.Select("", ls, 0)] = true
-			}
+			kit.If(block, func() { list[kit.Select("", ls, 0)] = true })
 		}
 	})
 	return list
@@ -87,10 +85,6 @@ func _compile_mod(m *ice.Message) map[string]bool {
 const COMPILE = "compile"
 
 func init() {
-	const (
-		SERVICE = "service"
-		VERSION = "version"
-	)
 	Index.MergeCommands(ice.Commands{
 		COMPILE: {Name: "compile arch=amd64,386,arm,arm64,mipsle os=linux,darwin,windows src=src/main.go@key run binpack webpack devpack install", Icon: "go.png", Help: "编译", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { cli.IsAlpine(m, GO, "go git") }},
@@ -104,7 +98,7 @@ func init() {
 					m.Cmdy(nfs.DIR, ice.SRC, nfs.DIR_CLI_FIELDS, kit.Dict(nfs.DIR_REG, kit.ExtReg(GO)))
 				}
 			}},
-			BINPACK: {Help: "版本", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(AUTOGEN, BINPACK) }},
+			BINPACK: {Help: "发布", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(AUTOGEN, BINPACK) }},
 			WEBPACK: {Help: "打包", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(AUTOGEN, WEBPACK) }},
 			DEVPACK: {Help: "开发", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(AUTOGEN, DEVPACK) }},
 			INSTALL: {Name: "install service*='https://golang.google.cn/dl/' version*=1.13.5", Help: "安装", Hand: func(m *ice.Message, arg ...string) {
@@ -118,15 +112,15 @@ func init() {
 				})
 			}},
 			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { web.DreamProcess(m, []string{}, arg...) }},
-		}, ctx.ConfAction(cli.ENV, kit.Dict("GOPRIVATE", "shylinux.com,github.com", "GOPROXY", "https://goproxy.cn,direct", "CGO_ENABLED", "0"))), Hand: func(m *ice.Message, arg ...string) {
+		}, ctx.ConfAction(cli.ENV, kit.Dict(GOPRIVATE, "shylinux.com,github.com", GOPROXY, "https://goproxy.cn,direct", CGO_ENABLED, "0"))), Hand: func(m *ice.Message, arg ...string) {
 			defer web.ToastProcess(m)()
 			main, file, goos, arch := _compile_target(m, arg...)
 			env := kit.Simple(cli.PATH, cli.BinPath(), cli.HOME, kit.Select(kit.Path(""), kit.Env(cli.HOME)), mdb.Configv(m, cli.ENV), m.Optionv(cli.ENV), cli.GOOS, goos, cli.GOARCH, arch)
-			kit.If(runtime.GOOS == cli.WINDOWS, func() { env = append(env, "GOPATH", kit.HomePath(GO), "GOCACHE", kit.HomePath("go/go-build")) })
+			kit.If(runtime.GOOS == cli.WINDOWS, func() { env = append(env, GOPATH, kit.HomePath(GO), GOCACHE, kit.HomePath("go/go-build")) })
 			m.Options(cli.CMD_ENV, env).Cmd(AUTOGEN, VERSION)
 			_compile_get(m, main)
-			defer m.StatusTime(VERSION, strings.TrimPrefix(m.Cmdx(cli.SYSTEM, GO, VERSION), "go version"))
-			if msg := m.Cmd(cli.SYSTEM, GO, cli.BUILD, "-ldflags", "-w -s", "-o", file, main, ice.SRC_VERSION_GO, ice.SRC_BINPACK_GO); !cli.IsSuccess(msg) {
+			defer m.StatusTime(VERSION, strings.TrimPrefix(GoVersion(m), "go version"))
+			if msg := GoBuild(m.Spawn(), file, main, ice.SRC_VERSION_GO, ice.SRC_BINPACK_GO); !cli.IsSuccess(msg) {
 				m.Copy(msg)
 			} else {
 				m.Logs(nfs.SAVE, nfs.TARGET, file, nfs.SOURCE, main)

@@ -23,7 +23,7 @@ func init() {
 				m.EchoIFrame(kit.MergeURL(require(arg[2], arg[1]), "_v", kit.Hashs(mdb.UNIQ)))
 			}},
 			TEMPLATE: {Hand: func(m *ice.Message, arg ...string) {
-				m.Echo(nfs.Template(m, "demo.html"))
+				m.Echo(nfs.Template(m, DEMO_HTML))
 			}},
 		}, PlugAction())},
 	})

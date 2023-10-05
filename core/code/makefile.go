@@ -19,7 +19,7 @@ func _makefile_xterm(m *ice.Message, arg ...string) {
 		if ls := kit.Simple(kit.UnMarshal(m.Option(ctx.ARGS))); len(ls) > 0 {
 			return ls
 		}
-		return []string{mdb.TYPE, "sh", nfs.PATH, kit.Select("", kit.Dir(arg[2], arg[1]), arg[2] != ice.SRC)}
+		return []string{mdb.TYPE, SH, nfs.PATH, kit.Select("", kit.Dir(arg[2], arg[1]), arg[2] != ice.SRC)}
 	}, arg...)
 }
 

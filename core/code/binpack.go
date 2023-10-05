@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -34,7 +33,7 @@ func _binpack_file(m *ice.Message, w io.Writer, arg ...string) {
 	if f, e := nfs.OpenFile(m, arg[0]); !m.Warn(e, ice.ErrNotFound, arg[0]) {
 		defer f.Close()
 		if b, e := ioutil.ReadAll(f); !m.Warn(e, ice.ErrNotValid, arg[0]) {
-			kit.If(len(b) > 1<<20, func() { m.Warn("too larger %s %s", arg[0], len(b)) })
+			kit.If(len(b) > 1<<20, func() { m.Warn("too large %s %s", arg[0], len(b)) })
 			fmt.Fprintf(w, "        \"%s\": \"%s\",\n", kit.Select(arg[0], arg, 1), base64.StdEncoding.EncodeToString(b))
 		}
 	}
@@ -69,7 +68,7 @@ func _binpack_all(m *ice.Message) {
 	}
 	for _, k := range kit.SortedKey(list) {
 		v := kit.Select(k, list[k])
-		m.Cmd(nfs.DIR, nfs.PWD, nfs.PATH, kit.Dict(nfs.DIR_ROOT, v, nfs.DIR_REG, kit.ExtReg(kit.Split(mdb.Config(m, "extreg"))...))).Table(func(value ice.Maps) {
+		m.Cmd(nfs.DIR, nfs.PWD, nfs.PATH, kit.Dict(nfs.DIR_ROOT, v, nfs.DIR_REG, kit.ExtReg(kit.Split(mdb.Config(m, lex.EXTREG))...))).Table(func(value ice.Maps) {
 			if kit.HasPrefix(k, ice.USR_ICEBERGS) && !nfs.Exists(m, ice.USR_ICEBERGS) || m.Option(ice.MSG_USERPOD) != "" {
 				return
 			}
@@ -96,15 +95,13 @@ func init() {
 		BINPACK: {Name: "binpack path auto create insert", Help: "打包", Actions: ice.MergeActions(ice.Actions{
 			mdb.CREATE: {Hand: func(m *ice.Message, arg ...string) { _binpack_all(m) }},
 			mdb.INSERT: {Name: "insert path*", Hand: func(m *ice.Message, arg ...string) { mdb.HashCreate(m) }},
-		}, mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path", "extreg", "sh,shy,py,js,css,html,png,jpg"))},
+		}, mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path", lex.EXTREG, "sh,shy,py,js,css,html,png,jpg"))},
 	})
 }
 func GoCache(m *ice.Message) string {
 	return kit.GetValid(
-		func() string { return m.Cmdx(cli.SYSTEM, GO, "env", "GOMODCACHE") },
-		func() string {
-			return kit.Select(kit.HomePath("go")+nfs.PS, m.Cmdx(cli.SYSTEM, GO, "env", "GOPATH")) + "/pkg/mod/"
-		},
+		func() string { return GoEnv(m, GOMODCACHE) },
+		func() string { return kit.Select(kit.HomePath(GO)+nfs.PS, GoEnv(m, GOPATH)) + "/pkg/mod/" },
 		func() string { return ice.USR_REQUIRE },
 	)
 }

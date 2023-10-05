@@ -47,9 +47,9 @@ func _publish_contexts(m *ice.Message, arg ...string) {
 			m.Option(web.DOMAIN, m.Cmd(web.SPIDE, ice.SHY).Append(web.CLIENT_ORIGIN))
 		case ice.CORE:
 			m.Option(web.DOMAIN, m.Cmd(web.SPIDE, ice.DEV).Append(web.CLIENT_ORIGIN))
-		case nfs.SOURCE, "dev":
+		case nfs.SOURCE, ice.DEV:
 			m.Options(nfs.SOURCE, ice.Info.Make.Remote)
-		case nfs.BINARY, "app":
+		case nfs.BINARY, ice.APP:
 		case "curl", "wget":
 		case "manual":
 			m.Options(nfs.BINARY, "ice.linux.amd64")

@@ -31,7 +31,7 @@ func init() {
 			}},
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { ProcessXterm(m, PYTHON+" -i "+path.Join(arg[2], arg[1]), "") }},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _py_exec(m, path.Join(arg[2], arg[1])) }},
-			TEMPLATE:   {Hand: func(m *ice.Message, arg ...string) { m.Echo(nfs.Template(m, "demo.py")) }},
+			TEMPLATE:   {Hand: func(m *ice.Message, arg ...string) { m.Echo(nfs.Template(m, DEMO_PY)) }},
 		}, PlugAction())},
 	})
 }

@@ -158,7 +158,7 @@ func LoadPlug(m *ice.Message, lang ...string) {
 	}
 }
 func TagsList(m *ice.Message, cmds ...string) {
-	for _, l := range strings.Split(m.Cmdx(cli.SYSTEM, kit.Default(cmds, "ctags", "--excmd=number", "--sort=no", "-f", "-", path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)))), lex.NL) {
+	for _, l := range strings.Split(m.Cmdx(cli.SYSTEM, kit.Default(cmds, CTAGS, "--excmd=number", "--sort=no", "-f", "-", path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)))), lex.NL) {
 		if strings.HasPrefix(l, "!_") {
 			continue
 		}

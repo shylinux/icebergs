@@ -34,7 +34,7 @@ func init() {
 			}},
 			TEMPLATE: {Hand: func(m *ice.Message, arg ...string) {
 				m.Option(mdb.NAME, path.Base(path.Dir(path.Join(arg[2], arg[1]))))
-				m.Echo(nfs.Template(m, "demo.shy"))
+				m.Echo(nfs.Template(m, DEMO_SHY))
 			}},
 			COMPLETE: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(web.WIKI_WORD, COMPLETE, arg) }},
 		}, PlugAction()), Hand: func(m *ice.Message, arg ...string) {

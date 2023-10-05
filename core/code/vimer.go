@@ -41,6 +41,17 @@ func _vimer_make(m *ice.Message, dir string, msg *ice.Message) {
 }
 
 const (
+	DEMO_C    = "demo.c"
+	DEMO_SH   = "demo.sh"
+	DEMO_SHY  = "demo.shy"
+	DEMO_PY   = "demo.py"
+	DEMO_GO   = "demo.go"
+	DEMO_JS   = "demo.js"
+	DEMO_CSS  = "demo.css"
+	DEMO_HTML = "demo.html"
+	MAIN_GO   = "main.go"
+	MAIN_JS   = "main.js"
+
 	VIMER_SAVE = "vimer.save"
 )
 const VIMER = "vimer"
@@ -138,7 +149,7 @@ func init() {
 				web.PushStream(m)
 				m.Cmd(cli.SYSTEM, "echo")
 				m.Cmd(cli.SYSTEM, "date")
-				m.Cmd(cli.SYSTEM, cli.MAKE, m.Option("target"), kit.Dict(cli.CMD_DIR, m.Option(nfs.PATH)))
+				m.Cmd(cli.SYSTEM, cli.MAKE, m.Option(nfs.TARGET), kit.Dict(cli.CMD_DIR, m.Option(nfs.PATH)))
 			}},
 			COMPILE: {Help: "编译", Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(nfs.PATH) != "" && nfs.ExistsFile(m, path.Join(m.Option(nfs.PATH), ice.MAKEFILE)) {

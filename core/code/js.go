@@ -13,7 +13,7 @@ import (
 )
 
 func _js_show(m *ice.Message, arg ...string) {
-	if arg[1] == "main.js" {
+	if arg[1] == MAIN_JS {
 		ctx.ProcessField(m, web.CHAT_IFRAME, kit.Simple(web.UserHost(m)))
 	} else if arg[2] == ice.USR_VOLCANOS {
 		if strings.HasPrefix(arg[1], "plugin/local/") {
@@ -32,7 +32,7 @@ func init() {
 		JS: {Actions: ice.MergeActions(ice.Actions{
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _js_show(m, arg...) }},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _js_show(m, arg...) }},
-			TEMPLATE:   {Hand: func(m *ice.Message, arg ...string) { m.Echo(nfs.Template(m, "demo.js")) }},
+			TEMPLATE:   {Hand: func(m *ice.Message, arg ...string) { m.Echo(nfs.Template(m, DEMO_JS)) }},
 		}, PlugAction())},
 	})
 }

@@ -71,7 +71,7 @@ func init() {
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _css_show(m, arg...) }},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _css_exec(m, arg...) }},
 			TEMPLATE: {Hand: func(m *ice.Message, arg ...string) {
-				m.Echo(kit.Format(nfs.Template(m, "demo.css"), kit.Select(mdb.PLUGIN, ctx.GetFileCmd(kit.ExtChange(path.Join(arg[2], arg[1]), GO)))))
+				m.Echo(kit.Format(nfs.Template(m, DEMO_CSS), kit.Select(mdb.PLUGIN, ctx.GetFileCmd(kit.ExtChange(path.Join(arg[2], arg[1]), GO)))))
 			}},
 		}, PlugAction())},
 	})

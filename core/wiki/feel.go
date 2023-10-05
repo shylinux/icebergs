@@ -24,24 +24,23 @@ const FEEL = "feel"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		FEEL: {Name: "feel path auto prev next record1 record2 upload actions", Icon: "Photos.png", Help: "影音媒体", Actions: ice.MergeActions(ice.Actions{
-			"record1": {Help: "截图"}, "record2": {Help: "录屏"},
+		FEEL: {Name: "feel path auto upload record1 record2 actions", Icon: "Photos.png", Help: "影音媒体", Actions: ice.MergeActions(ice.Actions{
 			web.UPLOAD: {Hand: func(m *ice.Message, arg ...string) {
 				m.Option(nfs.PATH, _feel_path(m, m.Option(nfs.PATH)))
 				up := kit.Simple(m.Optionv(ice.MSG_UPLOAD))
 				m.Cmdy(web.CACHE, web.WATCH, m.Option(mdb.HASH), path.Join(m.Option(nfs.PATH), up[1]))
 			}},
 			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
-				nfs.Trash(m, _feel_path(m, m.Option(nfs.PATH)))
+				nfs.Trash(m, kit.Select(_feel_path(m, m.Option(nfs.PATH)), arg, 0))
 			}},
 			chat.FAVOR_INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case mdb.TYPE:
-					m.Push(arg[0], "image/png")
+					m.Push(arg[0], web.IMAGE_PNG)
 				case mdb.TEXT:
-					if m.Option(mdb.TYPE) == "image/png" {
+					kit.If(m.Option(mdb.TYPE) == web.IMAGE_PNG, func() {
 						m.Cmdy(nfs.DIR, ice.USR_ICONS).CutTo(nfs.PATH, arg[0])
-					}
+					})
 				}
 			}},
 			chat.FAVOR_TABLES: {Hand: func(m *ice.Message, arg ...string) {
@@ -62,8 +61,7 @@ func init() {
 				}
 			}},
 		}, chat.FavorAction(), WikiAction("", "png|PNG|jpg|JPG|jpeg|mp4|m4v|mov|MOV|webm")), Hand: func(m *ice.Message, arg ...string) {
-			m.Option(nfs.DIR_ROOT, _feel_path(m, ""))
-			_wiki_list(m, kit.Slice(arg, 0, 1)...)
+			_wiki_list(m.Options(nfs.DIR_ROOT, _feel_path(m, "")), kit.Slice(arg, 0, 1)...)
 			ctx.DisplayLocal(m, "")
 		}},
 	})

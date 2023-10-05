@@ -126,6 +126,10 @@ func IsNotValidFieldShare(m *ice.Message, msg *ice.Message) bool {
 	}
 	return false
 }
+func SharePath(m *ice.Message, p string) string {
+	kit.If(!kit.HasPrefix(p, nfs.PS, ice.HTTP), func() { p = path.Join(SHARE_LOCAL, p) })
+	return p
+}
 func ShareLocalFile(m *ice.Message, arg ...string) {
 	p := path.Join(arg...)
 	switch ls := strings.Split(p, nfs.PS); ls[0] {

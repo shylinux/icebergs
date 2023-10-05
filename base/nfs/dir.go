@@ -213,12 +213,12 @@ var bind = []string{
 func Relative(m *ice.Message, p string) string {
 	for i := 0; i < len(bind); i += 2 {
 		if strings.HasPrefix(p, bind[i]) {
-			if _p := strings.Replace(p, bind[i], bind[i+1], 1); Exists(m, kit.ExtChange(_p, JS)) {
+			if _p := kit.ExtChange(strings.Replace(p, bind[i], bind[i+1], 1), JS); Exists(m, _p) {
 				return _p
 			}
 		}
 	}
-	return p
+	return kit.ExtChange(p, JS)
 }
 func SplitPath(m *ice.Message, p string) []string {
 	if kit.HasPrefix(p, ice.REQUIRE_SRC, ice.REQUIRE_USR) {

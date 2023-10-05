@@ -32,8 +32,7 @@ func _wiki_path(m *ice.Message, arg ...string) string {
 	return path.Join(mdb.Config(m, nfs.PATH), path.Join(arg...))
 }
 func _wiki_link(m *ice.Message, text string) string {
-	kit.If(!kit.HasPrefix(text, nfs.PS, ice.HTTP), func() { text = path.Join(web.SHARE_LOCAL, _wiki_path(m, text)) })
-	return text
+	return web.SharePath(m, text)
 }
 func _wiki_list(m *ice.Message, arg ...string) bool {
 	if m.OptionDefault(nfs.DIR_ROOT, _wiki_path(m)); len(arg) == 0 || kit.HasSuffix(arg[0], nfs.PS) {
@@ -56,10 +55,7 @@ func _wiki_upload(m *ice.Message, dir string) {
 }
 func _wiki_template(m *ice.Message, file, name, text string, arg ...string) *ice.Message {
 	msg := _option(m, m.CommandKey(), name, strings.TrimSpace(text), arg...)
-	return m.Echo(nfs.Template(msg,
-		kit.Keys(kit.Select(m.CommandKey(), file), nfs.HTML),
-		&Message{msg},
-	))
+	return m.Echo(nfs.Template(msg, kit.Keys(kit.Select(m.CommandKey(), file), nfs.HTML), &Message{msg}))
 }
 
 const WIKI = "wiki"
@@ -77,21 +73,21 @@ func Prefix(arg ...string) string { return web.Prefix(WIKI, kit.Keys(arg)) }
 
 func WikiAction(dir string, ext ...string) ice.Actions {
 	return ice.Actions{ice.CTX_INIT: mdb.AutoConfig(nfs.PATH, dir, lex.REGEXP, kit.ExtReg(ext...)),
-		web.UPLOAD: {Hand: func(m *ice.Message, arg ...string) { _wiki_upload(m, m.Option(nfs.PATH)) }},
-		nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
-			nfs.Trash(m, _wiki_path(m, kit.Select("some", kit.Select(m.Option(nfs.PATH), arg, 0))))
-		}},
-		nfs.SAVE: {Hand: func(m *ice.Message, arg ...string) {
-			_wiki_save(m, m.Option(nfs.PATH), kit.Select(m.Option(mdb.TEXT), arg, 1))
-		}},
 		mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 			switch arg[0] {
 			case nfs.PATH:
 				m.Option(nfs.DIR_REG, mdb.Config(m, lex.REGEXP))
 				m.Cmdy(nfs.DIR, path.Join(mdb.Config(m, nfs.PATH), kit.Select("", arg, 1)))
-			case ctx.INDEX:
-				m.Cmdy(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND, ice.OptionFields(ctx.INDEX))
+			default:
+				mdb.HashInputs(m, arg)
 			}
+		}},
+		web.UPLOAD: {Hand: func(m *ice.Message, arg ...string) { _wiki_upload(m, m.Option(nfs.PATH)) }},
+		nfs.SAVE: {Hand: func(m *ice.Message, arg ...string) {
+			_wiki_save(m, m.Option(nfs.PATH), kit.Select(m.Option(mdb.TEXT), arg, 1))
+		}},
+		nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
+			nfs.Trash(m, _wiki_path(m, kit.Select("some", kit.Select(m.Option(nfs.PATH), arg, 0))))
 		}},
 	}
 }

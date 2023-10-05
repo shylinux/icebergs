@@ -160,7 +160,7 @@ func GetFileCmd(dir string) string {
 	return ""
 }
 func GetCmdFile(m *ice.Message, cmds string) (file string) {
-	m.Search(cmds, func(key string, cmd *ice.Command) {
+	m.Search(kit.Select(m.PrefixKey(), cmds), func(key string, cmd *ice.Command) {
 		if file = strings.TrimPrefix(FileURI(kit.Split(cmd.FileLine(), nfs.DF)[0]), "/require/"); !nfs.Exists(m, file) {
 			file = path.Join(ice.ISH_PLUGED, file)
 		}

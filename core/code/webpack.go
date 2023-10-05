@@ -125,7 +125,7 @@ const WEBPACK = "webpack"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		WEBPACK: {Name: "webpack path auto create remove", Help: "打包", Actions: ice.MergeActions(ice.Actions{
-			mdb.CREATE: {Hand: func(m *ice.Message, arg ...string) {
+			mdb.CREATE: {Name: "create path", Hand: func(m *ice.Message, arg ...string) {
 				_webpack_cache(m.Spawn(), _volcanos(m), true)
 				// _webpack_can(m)
 				m.Cmdy("")

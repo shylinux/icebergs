@@ -26,7 +26,7 @@ Volcanos(chat.ONIMPORT, {
 		can.onappend._status(can, can.base.Obj(msg.Option(ice.MSG_STATUS)))
 		can.core.Item(can.db.list, function(key, item) { if (item.prev) { item.prev = can.db.list[item.prev] } if (item.from) { item.from = can.db.list[item.from] } })
 		can.onappend.plugin(can, {index: web.WIKI_DRAW, display: "/plugin/local/wiki/draw.js", style: html.OUTPUT}, function(sub) { can.ui.toggle = can.onappend.toggle(can, can.ui.content)
-			sub.onexport.output = function(_sub, _msg) { sub.Action(svg.GO, "manual"), sub.Action(ice.MODE, web.RESIZE), can.onmotion.hidden(can, _sub._action), can.db._content_plugin = _sub
+			sub.onexport.output = function(_sub, _msg) { sub.Action(svg.GO, "manual"), sub.Action(ice.MODE, html.RESIZE), can.onmotion.hidden(can, _sub._action), can.db._content_plugin = _sub
 				can.onimport.layout(can), can.onimport._flows(can, _sub)
 			}, sub.run = function(event, cmds, cb) { cb(can.request(event)) }
 		}, can.ui.content)
@@ -40,7 +40,7 @@ Volcanos(chat.ONIMPORT, {
 		}, can.ui.profile)
 	},
 	_flows: async function(can, _sub) { var margin = can.onexport.margin(can), height = can.onexport.height(can), width = can.onexport.width(can)
-		var matrix = {}, horizon = can.Action("direct") == "horizon"; can.onmotion.clear(can, _sub.svg), can.db._height = 0, can.db._width = 0
+		var matrix = {}, horizon = can.Action("direct") == "horizon"; can.onmotion.clear(can, _sub.ui.svg), can.db._height = 0, can.db._width = 0
 		async function sleep() { return new Promise(resolve => { setTimeout(resolve, can.Action("delay")) }) }
 		async function show(item, main) { var prev = "from", from = "prev"; if (horizon) { var prev = "prev", from = "from" }
 			while (matrix[can.core.Keys(item.x, item.y)]) {
@@ -88,7 +88,7 @@ Volcanos(chat.ONIMPORT, {
 		if (can.page.isDisplay(can.ui.profile)) { var profile = can.db._profile_plugin; can.page.styleWidth(can, can.ui.profile, (can.ConfWidth()-can.ui.project.offsetWidth)/2) }
 		can.page.isDisplay(can.ui.display) && can.page.SelectChild(can, can.ui.display, html.TABLE, function(target) { can.page.styleHeight(can, can.ui.display, can.base.Max(target.offsetHeight, can.ConfHeight()/2)+1) })
 		can.ui.layout(can.ConfHeight(), can.ConfWidth(), 0, function(height, width) { can.ui.toggle && can.ui.toggle.layout()
-			var _sub = can.db._content_plugin; if (_sub) { _sub.sup.onimport.size(_sub.sup, height, width), _sub.svg.Val(html.HEIGHT, can.db._height), _sub.svg.Val(html.WIDTH, can.db._width) }
+			var _sub = can.db._content_plugin; if (_sub) { _sub.sup.onimport.size(_sub.sup, height, width), _sub.ui.svg.Val(html.HEIGHT, can.db._height), _sub.ui.svg.Val(html.WIDTH, can.db._width) }
 			profile && profile.onimport.size(profile, can.ui.profile.offsetHeight, can.ui.profile.offsetWidth-1, true)
 		})
 	},

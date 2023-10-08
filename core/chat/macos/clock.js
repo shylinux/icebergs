@@ -3,8 +3,8 @@ Volcanos(chat.ONIMPORT, {
 		can.onmotion.hidden(can, can._status), can.base.isFunc(cb) && cb(msg)
 		can.onmotion.hidden(can, can._action), can.onimport._show(can)
 	}) },
-	_show: function(can) { can.svg.Value("dominant-baseline", "middle")
-		can.onmotion.clear(can, can.svg), can.svg.Val(html.HEIGHT, can.ConfHeight()), can.svg.Val(html.WIDTH, can.ConfWidth())
+	_show: function(can) { can.ui.svg.Value("dominant-baseline", "middle")
+		can.onmotion.clear(can, can.ui.svg), can.ui.svg.Val(html.HEIGHT, can.ConfHeight()), can.ui.svg.Val(html.WIDTH, can.ConfWidth())
 		var x = can.ConfWidth()/2, y = can.ConfHeight()/2, r = can.base.Max(can.ConfHeight(), can.ConfWidth())/2-80, c = {x: x, y: y}
 		function pos(r, angle) { angle -= 90; return {x: x + r * Math.cos(angle * Math.PI / 180), y: y + r * Math.sin(angle * Math.PI / 180)} }
 		function line(g, c, p) { return can.onimport.draw(can, {shape: svg.LINE, points: [c, p]}, g) }

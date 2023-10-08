@@ -5,6 +5,7 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 )
@@ -15,7 +16,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		DRAW: {Name: "draw path=src/main.svg pid list save actions", Icon: "Grapher.png", Help: "思维导图", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(mdb.RENDER, mdb.CREATE, nfs.SVG, m.PrefixKey())
+				m.Cmd(mdb.RENDER, mdb.CREATE, mdb.Config(m, lex.REGEXP), m.PrefixKey())
 			}},
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
 				defer m.Echo("<!DOCTYPE html><html><body>").Echo("</body></html>")

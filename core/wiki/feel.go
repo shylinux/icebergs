@@ -26,9 +26,8 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		FEEL: {Name: "feel path auto upload record1 record2 actions", Icon: "Photos.png", Help: "影音媒体", Actions: ice.MergeActions(ice.Actions{
 			web.UPLOAD: {Hand: func(m *ice.Message, arg ...string) {
-				m.Option(nfs.PATH, _feel_path(m, m.Option(nfs.PATH)))
 				up := kit.Simple(m.Optionv(ice.MSG_UPLOAD))
-				m.Cmdy(web.CACHE, web.WATCH, m.Option(mdb.HASH), path.Join(m.Option(nfs.PATH), up[1]))
+				m.Cmdy(web.CACHE, web.WATCH, m.Option(mdb.HASH), path.Join(m.Option(nfs.PATH, _feel_path(m, m.Option(nfs.PATH))), up[1]))
 			}},
 			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
 				nfs.Trash(m, kit.Select(_feel_path(m, m.Option(nfs.PATH)), arg, 0))

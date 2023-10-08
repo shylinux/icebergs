@@ -211,6 +211,7 @@ var bind = []string{
 }
 
 func Relative(m *ice.Message, p string) string {
+	p = kit.TrimPrefix(p, kit.Path("")+PS)
 	for i := 0; i < len(bind); i += 2 {
 		if strings.HasPrefix(p, bind[i]) {
 			if _p := kit.ExtChange(strings.Replace(p, bind[i], bind[i+1], 1), JS); Exists(m, _p) {

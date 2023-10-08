@@ -40,7 +40,14 @@ func _wiki_list(m *ice.Message, arg ...string) bool {
 		m.Copy(m.Cmd(nfs.DIR, kit.Slice(arg, 0, 1), kit.Dict(nfs.DIR_TYPE, nfs.CAT, nfs.DIR_REG, mdb.Config(m, lex.REGEXP))).SortStr(nfs.PATH))
 		return true
 	} else {
-		ctx.DisplayLocal(m, path.Join(kit.PathName(2), kit.Keys(kit.FileName(2), nfs.JS)))
+		p := ctx.GetCmdFile(m, m.PrefixKey())
+		m.Debug("what %v", p)
+		p = nfs.Relative(m, p)
+		m.Debug("what %v", p)
+		p = ctx.FileURI(p)
+		m.Debug("what %v", p)
+		ctx.Display(m, ctx.FileURI(nfs.Relative(m, ctx.GetCmdFile(m, m.PrefixKey()))))
+		// ctx.DisplayLocal(m, path.Join(kit.PathName(2), kit.Keys(kit.FileName(2), nfs.JS)))
 		return false
 	}
 }
@@ -88,6 +95,9 @@ func WikiAction(dir string, ext ...string) ice.Actions {
 		}},
 		nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
 			nfs.Trash(m, _wiki_path(m, kit.Select("some", kit.Select(m.Option(nfs.PATH), arg, 0))))
+		}},
+		mdb.SELECT: {Hand: func(m *ice.Message, arg ...string) {
+			kit.If(!_wiki_list(m, arg...), func() { _wiki_show(m, arg[0]) })
 		}},
 	}
 }

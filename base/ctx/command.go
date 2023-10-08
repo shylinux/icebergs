@@ -112,9 +112,10 @@ func Command(m *ice.Message, arg ...string) {
 }
 
 func FileURI(dir string) string {
-	kit.If(runtime.GOOS == ice.WINDOWS, func() { dir = strings.ReplaceAll(dir, "\\", nfs.PS) })
 	if dir == "" {
 		return ""
+	} else if kit.HasPrefix(dir, nfs.PS, ice.HTTP) {
+		return dir
 	} else if strings.Contains(dir, "/pkg/mod/") {
 		dir = strings.Split(dir, "/pkg/mod/")[1]
 	} else if ice.Info.Make.Path != "" && strings.HasPrefix(dir, ice.Info.Make.Path) {
@@ -123,10 +124,12 @@ func FileURI(dir string) string {
 		dir = strings.TrimPrefix(dir, kit.Path("")+nfs.PS)
 	} else if strings.HasPrefix(dir, ice.ISH_PLUGED) {
 		dir = strings.TrimPrefix(dir, ice.ISH_PLUGED)
-	} else if kit.HasPrefix(dir, nfs.PS, ice.HTTP) {
-		return dir
 	}
-	return path.Join(nfs.PS, ice.REQUIRE, dir)
+	if strings.HasPrefix(dir, ice.USR_VOLCANOS) {
+		return strings.TrimPrefix(dir, ice.USR)
+	} else {
+		return path.Join(nfs.PS, ice.REQUIRE, dir)
+	}
 }
 func FileCmd(dir string) string {
 	if strings.Index(dir, ":") == 1 {

@@ -29,12 +29,11 @@ func init() {
 			}},
 			nfs.PUSH: {Name: "push path record", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.PUSH, path.Join(mdb.Config(m, nfs.PATH), arg[0]), kit.Join(arg[1:], mdb.FS)+lex.NL)
-			}}, "draw": {Help: "绘图"},
+			}},
 		}, WikiAction(ice.USR_LOCAL_EXPORT, nfs.CSV, nfs.JSON)), Hand: func(m *ice.Message, arg ...string) {
 			kit.If(!_wiki_list(m, arg...), func() {
 				if kit.Ext(arg[0]) == nfs.JSON {
-					m.Cmdy(nfs.CAT, arg[0])
-					ctx.DisplayStoryJSON(m)
+					ctx.DisplayStoryJSON(m.Cmdy(nfs.CAT, arg[0]))
 				} else {
 					CSV(m, m.Cmdx(nfs.CAT, arg[0])).StatusTimeCount()
 				}
@@ -46,11 +45,11 @@ func CSV(m *ice.Message, text string, head ...string) *ice.Message {
 	r := csv.NewReader(bytes.NewBufferString(text))
 	kit.If(len(head) == 0, func() { head, _ = r.Read() })
 	for {
-		line, e := r.Read()
-		if e != nil {
+		if line, e := r.Read(); e != nil {
 			break
+		} else {
+			kit.For(head, func(i int, k string) { m.Push(k, kit.Select("", line, i)) })
 		}
-		kit.For(head, func(i int, k string) { m.Push(k, kit.Select("", line, i)) })
 	}
 	return m
 }

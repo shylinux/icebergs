@@ -53,7 +53,7 @@ func (b *Block) Data(m *ice.Message, meta ice.Any) wiki.Chart {
 func (b *Block) Draw(m *ice.Message, x, y int) wiki.Chart {
 	float := kit.Int(kit.Select("2", "6", strings.Contains(m.Option(ice.MSG_USERUA), "Chrome")))
 	if m.Option(HIDE_BLOCK) != ice.TRUE {
-		item := wiki.NewItem(`<rect height="%d" width="%d" rx="4" ry="4" x="%d" y="%d"`, b.GetHeight(), b.GetWidth(), x+b.MarginX/2, y+b.MarginY/2)
+		item := wiki.NewItem(`<rect x="%d" y="%d" height="%d" width="%d" rx="4" ry="4"`, x+b.MarginX/2, y+b.MarginY/2, b.GetHeight(), b.GetWidth())
 		item.Push(`fill="%s"`, b.BackGround).Push(`%v`, b.RectData).Echo("/>").Dump(m)
 	}
 	item := wiki.NewItem(`<text x="%d" y="%d"`, x+b.GetWidths()/2, y+b.GetHeights()/2+float)

@@ -69,7 +69,7 @@ func (c *Chain) draw(m *ice.Message, root ice.Map, x, y int, p *Block, gs *wiki.
 	} else {
 		gs.EchoLine(LINE, item.x+item.MarginX/2, item.y+item.GetHeights()-item.MarginY/2, item.x+item.GetWidths()-item.MarginX/2, item.y+item.GetHeights()-item.MarginY/2)
 	}
-	gs.EchoTexts(TEXT, item.x+item.GetWidths()/2, item.y+item.GetHeights()/2, item.Text, item.TextData)
+	gs.EchoText(TEXT, item.x+item.GetWidths()/2, item.y+item.GetHeights()/2, item.Text, item.TextData)
 	h, x := 0, x+item.GetWidths()
 	if kit.For(root[mdb.LIST], func(value ice.Map) { h += c.draw(m, value, x, y+h, item, gs) }); h == 0 {
 		return item.GetHeights()

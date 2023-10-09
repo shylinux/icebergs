@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
@@ -21,8 +22,8 @@ func _name(m *ice.Message, arg []string) []string {
 func _option(m *ice.Message, kind, name, text string, arg ...string) *ice.Message {
 	extra := kit.Dict()
 	kit.For(arg, func(k, v string) {
-		kit.If(k == "fg", func() { k = "style.color" })
-		kit.If(k == "bg", func() { k = "style.background" })
+		kit.If(k == cli.FG, func() { k = "style.color" })
+		kit.If(k == cli.BG, func() { k = "style.background" })
 		kit.Value(extra, k, kit.Format(kit.Parse(nil, "", kit.Split(v)...)))
 	})
 	m.OptionDefault(mdb.META, kit.Format(extra))
@@ -40,12 +41,6 @@ func _wiki_list(m *ice.Message, arg ...string) bool {
 		m.Copy(m.Cmd(nfs.DIR, kit.Slice(arg, 0, 1), kit.Dict(nfs.DIR_TYPE, nfs.CAT, nfs.DIR_REG, mdb.Config(m, lex.REGEXP))).SortStr(nfs.PATH))
 		return true
 	} else {
-		p := ctx.GetCmdFile(m, m.PrefixKey())
-		m.Debug("what %v", p)
-		p = nfs.Relative(m, p)
-		m.Debug("what %v", p)
-		p = ctx.FileURI(p)
-		m.Debug("what %v", p)
 		ctx.Display(m, ctx.FileURI(nfs.Relative(m, ctx.GetCmdFile(m, m.PrefixKey()))))
 		// ctx.DisplayLocal(m, path.Join(kit.PathName(2), kit.Keys(kit.FileName(2), nfs.JS)))
 		return false
@@ -71,9 +66,9 @@ var Index = &ice.Context{Name: WIKI, Help: "文档中心"}
 
 func init() {
 	web.Index.Register(Index, &web.Frame{},
-		TITLE, BRIEF, REFER, SPARK, PARSE, FIELD,
+		FEEL, DRAW, DATA, WORD, PORTAL, STYLE,
+		TITLE, BRIEF, REFER, SPARK, FIELD,
 		ORDER, TABLE, CHART, IMAGE, VIDEO, AUDIO,
-		WORD, DATA, DRAW, FEEL, STYLE, PORTAL,
 	)
 }
 func Prefix(arg ...string) string { return web.Prefix(WIKI, kit.Keys(arg)) }

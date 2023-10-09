@@ -29,7 +29,7 @@ func (s spide) List(m *ice.Message, arg ...string) {
 			m.PushAudios(mdb.SHOW, value[mdb.LINK])
 		case wiki.VIDEO:
 			m.PushVideos(mdb.SHOW, value[mdb.LINK])
-		case wiki.IMG:
+		case "img":
 			m.PushImages(mdb.SHOW, value[mdb.LINK])
 		default:
 			m.Push(mdb.SHOW, "")

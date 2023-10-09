@@ -7,6 +7,11 @@ import (
 )
 
 const (
+	H1 = "h1"
+	H2 = "h2"
+	H3 = "h3"
+)
+const (
 	DARK   = "dark"
 	LIGHT  = "light"
 	WHITE  = "white"
@@ -23,6 +28,9 @@ const (
 	OUTPUT = "output"
 	LAYOUT = "layout"
 	RESIZE = "resize"
+
+	COLOR            = "color"
+	BACKGROUND_COLOR = "background-color"
 )
 
 const (

@@ -146,6 +146,7 @@ const (
 	FIND  = "find"
 	GREP  = "grep"
 	EXEC  = "exec"
+	ECHO  = "echo"
 	REST  = "rest"
 	OPENS = "opens"
 )

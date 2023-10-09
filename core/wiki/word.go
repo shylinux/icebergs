@@ -2,7 +2,7 @@ package wiki
 
 import (
 	"net/http"
-	"strings"
+	"path"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
@@ -16,10 +16,8 @@ import (
 )
 
 func _word_show(m *ice.Message, name string, arg ...string) {
-	if strings.HasPrefix(name, "/require/") {
-		m.Option(nfs.CAT_CONTENT, m.Cmdx(web.SPIDE, ice.OPS, web.SPIDE_RAW, http.MethodGet, name))
-	}
-	m.Options(ice.MSG_ALIAS, mdb.Configv(m, mdb.ALIAS), TITLE, map[string]int{})
+	kit.If(kit.HasPrefix(name, nfs.PS, web.HTTP), func() { m.Option(nfs.CAT_CONTENT, m.Cmdx(web.SPIDE, ice.OPS, web.SPIDE_RAW, http.MethodGet, name)) })
+	m.Options(ice.SSH_TARGET, m.Target(), ice.SSH_ALIAS, mdb.Configv(m, mdb.ALIAS), TITLE, map[string]int{})
 	m.Cmdy(ssh.SOURCE, name, kit.Dict(nfs.DIR_ROOT, _wiki_path(m)))
 }
 
@@ -44,19 +42,17 @@ func init() {
 					if m.Option(nfs.DIR_DEEP, ice.TRUE); kit.Path(value[nfs.PATH]) == kit.Path("") {
 						_wiki_list(m, nfs.SRC)
 					} else {
-						_wiki_list(m, value[nfs.PATH])
+						_wiki_list(m, path.Join(value[nfs.PATH], nfs.SRC))
 					}
 				})
 				m.Cut("path,size,time")
-			}}, "play": {Help: "演示"},
+			}},
 			code.COMPLETE: {Hand: func(m *ice.Message, arg ...string) {
-				ls := kit.Split(m.Option(mdb.TEXT))
-				kit.If(kit.IsIn(ls[0], IMAGE, VIDEO, AUDIO), func() { m.Cmdy(FEEL).CutTo(nfs.PATH, mdb.NAME) })
+				kit.If(kit.IsIn(kit.Split(m.Option(mdb.TEXT))[0], IMAGE, VIDEO, AUDIO), func() { m.Cmdy(FEEL).CutTo(nfs.PATH, mdb.NAME) })
 			}},
 		}, aaa.RoleAction(), WikiAction("", nfs.SHY)), Hand: func(m *ice.Message, arg ...string) {
-			if m.Option(nfs.DIR_DEEP, ice.TRUE); len(arg) == 0 {
-				arg = append(arg, nfs.SRC)
-			}
+			m.Option(nfs.DIR_DEEP, ice.TRUE)
+			kit.If(len(arg) == 0, func() { arg = append(arg, nfs.SRC) })
 			kit.If(!_wiki_list(m, arg...), func() { _word_show(m, arg[0]) })
 		}},
 	})

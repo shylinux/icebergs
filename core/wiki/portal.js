@@ -44,7 +44,7 @@ Volcanos(chat.ONIMPORT, {
 	},
 	content: function(can, file) {
 		can.runActionCommand(event, web.WIKI_WORD, [(can.base.beginWith(file, "usr/", "src/")? "": nfs.SRC_DOCUMENT+can.db.current)+file], function(msg) { can.ui.main.innerHTML = msg.Result(), can.onmotion.clear(can, can.ui.aside)
-			can.onimport._display(can, can.ui.main, function(target, meta) {
+			can.onimport._content(can, can.ui.main, function(target, meta) {
 				meta.type == wiki.TITLE && can.onappend.style(can, meta.name, target._menu = can.onimport.item(can, {name: meta.text}, function(event) { target.scrollIntoView() }, function() {}, can.ui.aside))
 			}), can.onmotion.select(can, can.ui.aside, html.DIV_ITEM, 0)
 			can.sup.onimport.size(can.sup, can.sup.ConfHeight(), can.sup.ConfWidth())

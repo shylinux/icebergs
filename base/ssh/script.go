@@ -78,7 +78,7 @@ func (f *Frame) change(m *ice.Message, ls []string) []string {
 func (f *Frame) alias(m *ice.Message, ls []string) []string {
 	if len(ls) == 0 {
 		return ls
-	} else if alias := kit.Simple(kit.Value(m.Optionv(ice.MSG_ALIAS), ls[0])); len(alias) > 0 {
+	} else if alias := kit.Simple(kit.Value(m.Optionv(ice.SSH_ALIAS), ls[0])); len(alias) > 0 {
 		ls = append(alias, ls[1:]...)
 	}
 	return ls
@@ -163,7 +163,11 @@ func (f *Frame) Start(m *ice.Message, arg ...string) {
 			f.stdin, f.stdout = bytes.NewBufferString(msg.Result()), buf
 			defer func() { m.Echo(buf.String()) }()
 		}
-		f.target = m.Source()
+		if target, ok := m.Optionv(ice.SSH_TARGET).(*ice.Context); ok {
+			f.target = target
+		} else {
+			f.target = m.Source()
+		}
 		f.scan(m, "", "")
 	}
 }

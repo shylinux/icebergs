@@ -6,6 +6,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/web/html"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -14,7 +15,9 @@ type Item struct {
 	args []ice.Any
 }
 
-func NewItem(str string, args ...ice.Any) *Item { return &Item{[]string{str}, args} }
+func NewItem(str string, args ...ice.Any) *Item {
+	return &Item{[]string{str}, args}
+}
 func (item *Item) Push(str string, arg ice.Any) *Item {
 	switch arg := arg.(type) {
 	case string:
@@ -55,27 +58,21 @@ func (g *Group) Get(group string) *ice.Message { return g.list[group] }
 func (g *Group) Echo(group string, str string, arg ...ice.Any) *ice.Message {
 	return g.Get(group).Echo(str, arg...)
 }
+func (g *Group) EchoRect(group string, height, width, x, y int, arg ...string) *ice.Message { // rx ry
+	return g.Echo(group, "<rect x=%d y=%d height=%d width=%d rx=%s ry=%s %s/>",
+		x, y, height, width, kit.Select("4", arg, 0), kit.Select("4", arg, 1), formatStyle(kit.Slice(arg, 2)...))
+}
+func (g *Group) EchoLine(group string, x1, y1, x2, y2 int, arg ...string) *ice.Message {
+	return g.Echo(group, "<line x1=%d y1=%d x2=%d y2=%d %s></line>", x1, y1, x2, y2, formatStyle(arg...))
+}
 func (g *Group) EchoPath(group string, str string, arg ...ice.Any) *ice.Message {
 	return g.Echo(group, `<path d="%s"></path>`, kit.Format(str, arg...))
 }
-func (g *Group) EchoLine(group string, x1, y1, x2, y2 int) *ice.Message {
-	return g.Echo(group, "<line x1=%d y1=%d x2=%d y2=%d></line>", x1, y1, x2, y2)
-}
-func (g *Group) EchoRect(group string, height, width, x, y int, arg ...string) *ice.Message { // rx ry
-	return g.Echo(group, `<rect height=%d width=%d rx=%s ry=%s x=%d y=%d %s/>`,
-		height, width, kit.Select("4", arg, 0), kit.Select("4", arg, 1), x, y, kit.JoinKV(mdb.EQ, lex.SP, kit.Slice(arg, 2)...))
-}
 func (g *Group) EchoText(group string, x, y int, text string, arg ...string) *ice.Message {
-	float := kit.Int(kit.Select("2", "6", strings.Contains(g.Get(group).Option(ice.MSG_USERUA), "Chrome")))
-	return g.Echo(group, "<text x=%d y=%d %s>%s</text>", x, y+float, kit.JoinKV(mdb.EQ, lex.SP, arg...), text)
-}
-func (g *Group) EchoTexts(group string, x, y int, text string, arg ...string) *ice.Message {
-	m := g.Get(group)
-	float := kit.Int(kit.Select("6", "2", strings.Contains(m.Option(ice.MSG_USERUA), "Chrome") || (strings.Contains(m.Option(ice.MSG_USERUA), "Mobile") && !kit.Contains(m.Option(ice.MSG_USERUA), "iPhone"))))
-	return g.EchoText(group, x, y+float, text, arg...)
+	return g.Echo(group, "<text x=%d y=%d %s>%s</text>", x, y+8, formatStyle(arg...), text)
 }
 func (g *Group) EchoArrowLine(group string, x1, y1, x2, y2 int, arg ...string) *ice.Message { // marker-end
-	return g.Echo(group, "<line x1=%d y1=%d x2=%d y2=%d marker-end='url(#%s)'></line>", x1, y1, x2, y2, kit.Select("arrowhead", arg, 0))
+	return g.EchoLine(group, x1, y1, x2, y2, "marker-end", kit.Format("url(#%s)", kit.Select("arrowhead", arg, 0)))
 }
 func (g *Group) DefsArrow(group string, height, width int, arg ...string) *ice.Message { // name
 	return g.Echo(group, `<defs>
@@ -114,9 +111,17 @@ func _chart_show(m *ice.Message, name, text string, arg ...string) {
 	chart.Init(m, text)
 	m.Options(HEIGHT, chart.GetHeight(), WIDTH, chart.GetWidth())
 	_wiki_template(m, "", name, text, arg...)
-	defer m.Echo("</svg>")
 	defer m.RenderResult()
+	defer m.Echo("</svg>")
 	chart.Draw(m, 0, 0)
+}
+
+func formatStyle(arg ...string) string {
+	return kit.JoinKV(mdb.EQ, lex.SP, kit.TransArgKey(arg, transKey)...)
+}
+
+var transKey = map[string]string{
+	BG: html.BACKGROUND_COLOR, FG: html.COLOR,
 }
 
 const (
@@ -145,7 +150,7 @@ const CHART = "chart"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		CHART: {Name: "chart type=label,chain,sequence auto text", Help: "图表", Hand: func(m *ice.Message, arg ...string) {
+		CHART: {Name: "chart type=label,chain,sequence", Help: "图表", Hand: func(m *ice.Message, arg ...string) {
 			_chart_show(m, arg[0], strings.TrimSpace(arg[1]), arg[2:]...)
 		}},
 	})

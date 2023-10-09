@@ -59,7 +59,7 @@ func (s *Label) Draw(m *ice.Message, x, y int) wiki.Chart {
 			if m.Option(HIDE_BLOCK) != ice.TRUE {
 				gs.EchoRect(RECT, item.GetHeight(), item.GetWidth(), left+item.MarginX/2, top+item.MarginY/2)
 			}
-			gs.EchoTexts(TEXT, left+item.GetWidths()/2, top+item.GetHeights()/2, item.Text)
+			gs.EchoText(TEXT, left+item.GetWidths()/2, top+item.GetHeights()/2, item.Text)
 			if left += item.GetWidths(); item.GetHeights() > height {
 				height = item.GetHeights()
 			}

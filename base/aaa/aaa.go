@@ -9,6 +9,7 @@ const (
 	RSA    = "rsa"
 	SIGN   = "sign"
 	VERIFY = "verify"
+	BASE64 = "base64"
 )
 const AAA = "aaa"
 

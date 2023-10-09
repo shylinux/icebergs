@@ -16,6 +16,7 @@ repos.go
 favor.go
 bench.go
 pprof.go
+parse.go
 
 c.go
 sh.go

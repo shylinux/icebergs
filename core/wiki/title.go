@@ -9,6 +9,7 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
+	"shylinux.com/x/icebergs/base/web/html"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -16,16 +17,14 @@ func _title_parse(m *ice.Message, text string) string {
 	deep, list := []int{}, []string{}
 	return m.Cmdx(lex.SPLIT, "", "name,link", kit.Dict(nfs.CAT_CONTENT, text), func(indent int, ls []string) []string {
 		for len(deep) > 0 && indent <= deep[len(deep)-1] {
-			deep = deep[:len(deep)-1]
-			list = list[:len(list)-1]
+			deep, list = deep[:len(deep)-1], list[:len(list)-1]
 		}
 		if len(ls) > 1 {
 			kit.If(!kit.HasPrefix(ls[1], nfs.PS, web.HTTP, nfs.SRC, nfs.USR), func() {
 				ls[1] = path.Join(kit.Select(path.Dir(m.Option(ice.MSG_SCRIPT)), list, -1), ls[1]) + kit.Select("", nfs.PS, strings.HasSuffix(ls[1], nfs.PS))
 			})
 		}
-		deep = append(deep, indent)
-		list = append(list, kit.Select("", ls, 1))
+		deep, list = append(deep, indent), append(list, kit.Select("", ls, 1))
 		return ls
 	})
 }
@@ -34,16 +33,16 @@ func _title_menu(m *ice.Message, name, text string, arg ...string) *ice.Message 
 	return _wiki_template(m, name, name, text, arg...)
 }
 func _title_show(m *ice.Message, name, text string, arg ...string) *ice.Message {
-	switch title, _ := m.Optionv(TITLE).(map[string]int); name {
+	switch title := m.Optionv(TITLE).(map[string]int); name {
 	case SECTION:
 		title[SECTION]++
-		m.Options(LEVEL, "h3", PREFIX, kit.Format("%d.%d ", title[CHAPTER], title[SECTION]))
+		m.Options(LEVEL, html.H3, PREFIX, kit.Format("%d.%d ", title[CHAPTER], title[SECTION]))
 	case CHAPTER:
 		title[CHAPTER]++
 		title[SECTION] = 0
-		m.Options(LEVEL, "h2", PREFIX, kit.Format("%d ", title[CHAPTER]))
+		m.Options(LEVEL, html.H2, PREFIX, kit.Format("%d ", title[CHAPTER]))
 	default:
-		m.Options(LEVEL, "h1", PREFIX, "")
+		m.Options(LEVEL, html.H1, PREFIX, "")
 	}
 	return _wiki_template(m, "", name, text, arg...)
 }

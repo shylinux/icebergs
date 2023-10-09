@@ -25,6 +25,7 @@ const (
 	HTTPS = "https"
 	HTTP  = "http"
 	HELP  = "help"
+	DEMO  = "demo"
 	MAIN  = "main"
 	AUTO  = "auto"
 	LIST  = "list"
@@ -193,7 +194,6 @@ const ( // MSG
 	MSG_STATUS = "_status"
 
 	MSG_INDEX  = "_index"
-	MSG_ALIAS  = "_alias"
 	MSG_SCRIPT = "_script"
 	MSG_OUTPUT = "_output"
 	MSG_ARGS   = "_args"
@@ -226,6 +226,8 @@ const ( // MSG
 	LOG_DISABLE = "log.disable"
 	YAC_MESSAGE = "yac.message"
 	YAC_STACK   = "yac.stack"
+	SSH_ALIAS   = "ssh.alias"
+	SSH_TARGET  = "ssh.target"
 )
 const ( // RENDER
 	RENDER_BUTTON = "_button"

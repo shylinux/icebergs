@@ -89,7 +89,7 @@ func (s *Sequence) Draw(m *ice.Message, x, y int) wiki.Chart {
 		pos := x + item.GetWidths()/2
 		gs.EchoLine(LINE, pos, item.GetHeight()+item.MarginY/2, pos, s.Height-s.MarginY/2)
 		gs.EchoRect(HEAD, item.GetHeight(), item.GetWidth(), x+item.MarginX/2, y+item.MarginY/2)
-		gs.EchoTexts(TITLE, pos, y+item.GetHeights()/2, head)
+		gs.EchoText(TITLE, pos, y+item.GetHeights()/2, head)
 		height = item.GetHeight() + item.MarginY/2
 		line_pos[i], x = pos, x+item.GetWidths()
 	}

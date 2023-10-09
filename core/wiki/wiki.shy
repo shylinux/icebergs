@@ -7,10 +7,9 @@ data.go
 word.go
 
 title.go
-refer.go
 brief.go
+refer.go
 spark.go
-parse.go
 field.go
 
 order.go
@@ -19,9 +18,9 @@ chart.go
 image.go
 video.go
 audio.go
+iframe.go
 
 style.go
-iframe.go
 portal.go
 portal.js
 portal.css

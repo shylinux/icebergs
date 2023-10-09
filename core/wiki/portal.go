@@ -14,8 +14,6 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-const PORTAL = "portal"
-
 func _portal_commands(m *ice.Message, arg ...string) {
 	const (
 		MAIN = "main"
@@ -69,6 +67,8 @@ const (
 	INDEX_SHY = "index.shy"
 )
 
+const PORTAL = "portal"
+
 func init() {
 	Index.MergeCommands(ice.Commands{
 		PORTAL: {Name: "portal path auto", Help: "网站门户", Actions: ice.MergeActions(ice.Actions{
@@ -82,9 +82,9 @@ func init() {
 				}
 			}},
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
-				kit.Switch(m.Option(mdb.TYPE), kit.Simple(web.SERVER, web.WORKER), func() { m.PushButton(ice.Maps{PORTAL: "官网"}) })
+				kit.Switch(m.Option(mdb.TYPE), kit.Simple(web.WORKER, web.SERVER), func() { m.PushButton(ice.Maps{PORTAL: "官网"}) })
 			}},
-			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { web.DreamProcess(m, []string{}, arg...) }},
+			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { web.DreamProcess(m, nil, arg...) }},
 		}, aaa.WhiteAction(), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
 			if m.Push(HEADER, m.Cmdx(WORD, path.Join(nfs.SRC_DOCUMENT, INDEX_SHY))); len(arg) > 0 {
 				kit.If(path.Join(arg...) == "commands", func() { _portal_commands(m, arg...) })

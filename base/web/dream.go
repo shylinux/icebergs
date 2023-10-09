@@ -301,7 +301,7 @@ func init() {
 func DreamAction() ice.Actions {
 	return ice.MergeActions(ice.Actions{
 		DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { DreamProcess(m, []string{}, arg...) }},
-	}, gdb.EventsAction(DREAM_OPEN, DREAM_CLOSE, DREAM_INPUTS, DREAM_CREATE, DREAM_TABLES, DREAM_ACTION))
+	}, gdb.EventsAction(DREAM_OPEN, DREAM_CLOSE, DREAM_INPUTS, DREAM_CREATE, DREAM_TRASH, DREAM_TABLES, DREAM_ACTION))
 }
 func DreamProcess(m *ice.Message, args ice.Any, arg ...string) {
 	if kit.HasPrefixList(arg, ctx.RUN) {

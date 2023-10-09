@@ -26,12 +26,14 @@ type WebView struct {
 func (w WebView) Menu() bool {
 	link, list := "", []string{}
 	w.Cmd(nfs.CAT, w.Source, func(ls []string, line string) {
-		if strings.HasPrefix(line, "# ") {
+		if len(ls) == 0 || strings.HasPrefix(line, "# ") {
 			return
-		} else if len(ls) > 1 {
-			link, list = ls[1], append(list, kit.Format(`<button onclick=%s()>%s</button>`, ls[0], ls[0]))
-			w.WebView.Bind(ls[0], func() { w.navigate(ls[1]) })
+		} else if len(ls) == 1 {
+			u := kit.ParseURL(ls[0])
+			ls = []string{strings.ReplaceAll(u.Hostname(), ".", "_"), ls[0]}
 		}
+		w.WebView.Bind(ls[0], func() { w.navigate(ls[1]) })
+		link, list = ls[1], append(list, kit.Format(`<button onclick=%s()>%s</button>`, ls[0], ls[0]))
 	})
 	if len(list) == 0 {
 		return false
@@ -52,18 +54,9 @@ func (w WebView) Menu() bool {
 }
 func (w WebView) Title(text string)  { w.WebView.SetTitle(text) }
 func (w WebView) Webview(url string) { w.WebView.Navigate(url) }
-func (w WebView) Open(url string) {
-	w.Message.Debug("open %v", url)
-	w.WebView.Navigate(url)
-}
-func (w WebView) OpenUrl(url string) {
-	w.Message.Debug("open %v", url)
-	cli.Opens(w.Message, url)
-}
-func (w WebView) OpenApp(app string) {
-	w.Message.Debug("open %v", app)
-	cli.Opens(w.Message, app)
-}
+func (w WebView) Open(url string)    { w.WebView.Navigate(url) }
+func (w WebView) OpenUrl(url string) { cli.Opens(w.Message, url) }
+func (w WebView) OpenApp(app string) { cli.Opens(w.Message, app) }
 func (w WebView) OpenCmd(cmd string) {
 	w.Cmd(nfs.SAVE, kit.HomePath(".bash_temp"), cmd)
 	cli.Opens(w.Message, "Terminal.app", "-n")
@@ -80,11 +73,8 @@ func (w WebView) Power() string {
 	}
 	return ""
 }
-func (w WebView) Close() { kit.If(!w.Menu(), func() { w.WebView.Terminate() }) }
-func (w WebView) Terminate() {
-	w.WebView.Eval("window.onbeforeunload()")
-	w.WebView.Terminate()
-}
+func (w WebView) Close()     { kit.If(!w.Menu(), func() { w.WebView.Terminate() }) }
+func (w WebView) Terminate() { w.WebView.Terminate() }
 func (w WebView) navigate(url string) {
 	w.WebView.SetSize(1200, 800, webview.HintNone)
 	w.WebView.Navigate(url)

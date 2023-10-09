@@ -30,7 +30,8 @@ func _install_path(m *ice.Message, link string) string {
 func _install_download(m *ice.Message) {
 	link := m.Option(web.LINK)
 	name := path.Base(kit.ParseURL(link).Path)
-	file := path.Join(kit.Select(ice.USR_INSTALL, m.Option(nfs.PATH)), name)
+	// file := path.Join(kit.Select(ice.USR_INSTALL, m.Option(nfs.PATH)), name)
+	file := path.Join(ice.USR_INSTALL, name)
 	defer m.Cmdy(nfs.DIR, file)
 	if nfs.Exists(m, file) {
 		return
@@ -190,7 +191,7 @@ func init() {
 				if m.Option(nfs.DIR_ROOT, path.Join(_install_path(m, ""), _INSTALL)); !nfs.Exists(m, m.Option(nfs.DIR_ROOT)) {
 					m.Option(nfs.DIR_ROOT, path.Join(_install_path(m, "")))
 				}
-				m.Cmdy(nfs.DIR, m.Option(nfs.PATH)).StatusTimeCount(nfs.PATH, m.Option(nfs.DIR_ROOT))
+				m.Cmdy(nfs.DIR, m.Option(nfs.PATH))
 			}},
 			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) { nfs.Trash(mdb.HashRemove(m), m.Option(nfs.PATH)) }},
 		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,count,total,name,path,link")), Hand: func(m *ice.Message, arg ...string) {
@@ -208,11 +209,20 @@ func init() {
 
 func InstallAction(args ...ice.Any) ice.Actions {
 	return ice.Actions{ice.CTX_INIT: mdb.AutoConfig(args...),
-		web.DOWNLOAD: {Help: "下载", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(INSTALL, web.DOWNLOAD, mdb.Config(m, nfs.SOURCE)) }},
-		cli.BUILD:    {Help: "构建", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(INSTALL, cli.BUILD, mdb.Config(m, nfs.SOURCE)) }},
+		web.DOWNLOAD: {Help: "下载", Hand: func(m *ice.Message, arg ...string) {
+			m.Cmdy(INSTALL, web.DOWNLOAD, mdb.Config(m, nfs.SOURCE))
+		}},
+		cli.BUILD: {Help: "构建", Hand: func(m *ice.Message, arg ...string) {
+			m.Cmdy(INSTALL, cli.BUILD, mdb.Config(m, nfs.SOURCE))
+		}},
 		cli.ORDER: {Help: "加载", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(INSTALL, cli.ORDER, mdb.Config(m, nfs.SOURCE), path.Join(_INSTALL, ice.BIN))
 		}},
-		nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) { nfs.Trash(m, m.Option(nfs.PATH)) }},
+		nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
+			nfs.Trash(m, m.Option(nfs.PATH))
+		}},
+		mdb.SELECT: {Name: "select path auto order build download", Hand: func(m *ice.Message, arg ...string) {
+			m.Options(nfs.PATH, "").Cmdy(INSTALL, ctx.ConfigSimple(m, nfs.SOURCE), arg)
+		}},
 	}
 }

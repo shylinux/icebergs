@@ -17,8 +17,8 @@ import (
 
 func init() {
 	const (
-		EXPLORE_REPOS = "/explore/repos"
 		REPOS_SEARCH  = "/api/v1/repos/search"
+		EXPLORE_REPOS = "/explore/repos"
 	)
 	const (
 		WEB_SPIDE   = "web.spide"
@@ -30,9 +30,9 @@ func init() {
 	)
 	const SEARCH = "search"
 	Index.MergeCommands(ice.Commands{
-		SEARCH: {Name: "search repos@key keyword auto", Help: "代码源", Actions: ice.Actions{
+		SEARCH: {Name: "search repos@key keyword auto", Help: "代码源", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				macos.AppInstall(m, "usr/icons/App Store.png", m.PrefixKey(), ctx.ARGS, kit.Format([]string{REPOS}))
+				macos.AppInstall(m, "App Store.png", m.PrefixKey(), ctx.ARGS, kit.Format([]string{REPOS}))
 			}},
 			cli.START: {Name: "start name*", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(web.DREAM, mdb.CREATE); m.Cmdy(web.DREAM, cli.START) }},
 			CLONE:     {Name: "clone name*", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(REPOS, CLONE, m.Option(REPOS)) }},
@@ -41,13 +41,19 @@ func init() {
 			ORIGIN: {Help: "平台", Hand: func(m *ice.Message, arg ...string) {
 				m.ProcessOpen(m.Cmdv(WEB_SPIDE, kit.Select(m.Option(REPOS), arg, 0), web.CLIENT_ORIGIN) + EXPLORE_REPOS)
 			}},
-		}, Hand: func(m *ice.Message, arg ...string) {
+			web.DREAM_INPUTS: {Hand: func(m *ice.Message, arg ...string) {
+				kit.If(arg[0] == REPOS, func() {
+					m.Cmds("", nfs.REPOS).Table(func(value ice.Maps) {
+						m.Push(nfs.REPOS, value["html_url"]).Push(nfs.VERSION, "").Push(mdb.TIME, value["updated_at"])
+					})
+				})
+			}},
+		}, web.DreamAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				m.Cmdy(WEB_SPIDE).RenameAppend(web.CLIENT_NAME, REPOS, web.CLIENT_URL, ORIGIN).Cut("time,repos,origin")
 				return
 			}
-			res := kit.UnMarshal(m.Cmdx(WEB_SPIDE, arg[0], web.SPIDE_RAW, http.MethodGet, REPOS_SEARCH, "q", kit.Select("", arg, 1), "sort", "updated", "order", "desc", "page", "1", "limit", "30"))
-			kit.For(kit.Value(res, mdb.DATA), func(value ice.Map) {
+			kit.For(kit.Value(kit.UnMarshal(m.Cmdx(WEB_SPIDE, arg[0], web.SPIDE_RAW, http.MethodGet, REPOS_SEARCH, "q", kit.Select("", arg, 1), "sort", "updated", "order", "desc", "page", "1", "limit", "30")), mdb.DATA), func(value ice.Map) {
 				value[nfs.SIZE] = kit.FmtSize(kit.Int(value[nfs.SIZE]) * 1000)
 				if t, e := time.Parse(time.RFC3339, kit.Format(value[UPDATED_AT])); e == nil {
 					value[UPDATED_AT] = t.Format("01-02 15:04")
@@ -64,7 +70,6 @@ func init() {
 				kit.For([]string{HTML_URL, WEBSITE}, func(key string) { kit.If(kit.Format(value[key]), func() { button = append(button, key) }) })
 				m.PushButton(button...)
 			})
-			// m.Echo("%v", kit.Formats(res))
 			m.RenameAppend(CLONE_URL, REPOS).StatusTimeCount().Display("").Action(ORIGIN)
 		}},
 	})

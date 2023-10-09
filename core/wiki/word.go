@@ -2,7 +2,6 @@ package wiki
 
 import (
 	"net/http"
-	"path"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
@@ -11,7 +10,6 @@ import (
 	"shylinux.com/x/icebergs/base/ssh"
 	"shylinux.com/x/icebergs/base/web"
 	"shylinux.com/x/icebergs/core/code"
-	"shylinux.com/x/icebergs/misc/git"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -38,13 +36,9 @@ func init() {
 				WordAlias(m, SEQUENCE, CHART, SEQUENCE)
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(git.REPOS, ice.OptionFields(nfs.PATH)).Table(func(value ice.Maps) {
-					if m.Option(nfs.DIR_DEEP, ice.TRUE); kit.Path(value[nfs.PATH]) == kit.Path("") {
-						_wiki_list(m, nfs.SRC)
-					} else {
-						_wiki_list(m, path.Join(value[nfs.PATH], nfs.SRC))
-					}
-				})
+				m.Option(nfs.DIR_DEEP, ice.TRUE)
+				_wiki_list(m, nfs.SRC)
+				_wiki_list(m, nfs.USR_ICEBERGS)
 				m.Cut("path,size,time")
 			}},
 			code.COMPLETE: {Hand: func(m *ice.Message, arg ...string) {

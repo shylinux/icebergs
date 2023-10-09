@@ -160,6 +160,7 @@ const (
 	CODE_GIT_REPOS   = "web.code.git.repos"
 	CODE_COMPILE     = "web.code.compile"
 	CODE_UPGRADE     = "web.code.upgrade"
+	CODE_PUBLISH     = "web.code.publish"
 	CODE_VIMER       = "web.code.vimer"
 	CODE_INNER       = "web.code.inner"
 	CODE_XTERM       = "web.code.xterm"

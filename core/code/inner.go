@@ -102,7 +102,7 @@ func init() {
 			}},
 		}, aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
 			if kit.HasPrefix(arg[0], "/volcanos/", "/require/", ice.HTTP) {
-				m.Echo(m.Cmdx(web.SPIDE, ice.DEV, web.SPIDE_RAW, http.MethodGet, arg[0]))
+				m.Echo(m.Cmdx(web.SPIDE, ice.OPS, web.SPIDE_RAW, http.MethodGet, arg[0]))
 				m.Options("mode", "simple", lex.PARSE, kit.Ext(kit.ParseURL(arg[0]).Path))
 				ctx.DisplayLocal(m, "")
 			} else if arg[0] = strings.Split(arg[0], mdb.FS)[0]; !strings.HasSuffix(arg[0], nfs.PS) && len(arg) == 1 {
@@ -117,7 +117,9 @@ func init() {
 			} else {
 				arg[1] = strings.Split(arg[1], mdb.FS)[0]
 				_inner_list(m, kit.Ext(arg[1]), arg[1], arg[0])
-				ctx.DisplayLocal(m, "").Option(REPOS, kit.Join(m.Cmd(REPOS, ice.OptionFields(nfs.PATH)).Sort(nfs.PATH).Appendv(nfs.PATH)))
+				if ctx.DisplayLocal(m, ""); !strings.HasPrefix(arg[0], ice.USR_INSTALL) {
+					m.Option(REPOS, kit.Join(m.Cmd(REPOS, ice.OptionFields(nfs.PATH)).Sort(nfs.PATH).Appendv(nfs.PATH)))
+				}
 				m.Status(mdb.TIME, ice.Info.Make.Time, nfs.FILE, arg[1], nfs.LINE, kit.Select("1", arg, 2), cli.BACK, "0")
 			}
 		}},

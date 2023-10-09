@@ -2,11 +2,8 @@ package git
 
 import (
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/ctx"
-	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
-	kit "shylinux.com/x/toolkits"
 )
 
 const SPIDE = "spide"
@@ -14,12 +11,11 @@ const SPIDE = "spide"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		SPIDE: {Name: "spide repos auto", Help: "构架图", Hand: func(m *ice.Message, arg ...string) {
-			if len(kit.Slice(arg, 0, 1)) == 0 {
+			if len(arg) == 0 {
 				m.Cmdy(REPOS)
-			} else if len(arg) == 1 {
-				nfs.DirDeepAll(m, _repos_path(m, arg[0]), "", func(value ice.Maps) { m.Push("", value, []string{nfs.PATH}) }, nfs.PATH)
-				m.Options(nfs.DIR_ROOT, _repos_path(m, arg[0])+nfs.PS).StatusTimeCount()
-				ctx.DisplayStory(m, "", mdb.FIELD, nfs.PATH, aaa.ROOT, arg[0])
+			} else if p := _repos_path(m, arg[0]); len(arg) == 1 {
+				nfs.DirDeepAll(m, p, "", nil, nfs.PATH).Options(nfs.DIR_ROOT, p+nfs.PS)
+				ctx.DisplayStory(m, "")
 			}
 		}},
 	})

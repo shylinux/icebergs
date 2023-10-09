@@ -29,7 +29,7 @@ func init() {
 		REST   = "rest"
 	)
 	Index.MergeCommands(ice.Commands{
-		TOTAL: {Name: "total repos auto pie", Help: "统计量", Actions: ice.MergeActions(ice.Actions{
+		TOTAL: {Name: "total repos auto pie", Help: "统计量", Actions: ice.Actions{
 			"pie": {Help: "饼图", Hand: func(m *ice.Message, arg ...string) {
 				defer ctx.DisplayStory(m, "pie.js")
 				m.Cmd("", func(value ice.Maps) {
@@ -38,9 +38,9 @@ func init() {
 					})
 				})
 			}},
-		}, ctx.ConfAction("skip", kit.DictList("go-git", "go-qrcode", "websocket", "webview", "word-dict"))), Hand: func(m *ice.Message, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 {
-				ReposList(m).Table(func(value ice.Maps) {
+				ReposList(m.Spawn()).Table(func(value ice.Maps) {
 					kit.If(value[REPOS] == arg[0], func() { m.Cmdy("_sum", value[nfs.PATH], arg[1:]) })
 				})
 				m.StatusTimeCount(m.AppendSimple(FROM))
@@ -48,9 +48,6 @@ func init() {
 			}
 			from, days, commit, adds, dels, rest := "", 0, 0, 0, 0, 0
 			TableGo(ReposList(m), func(value ice.Maps, lock *task.Lock) {
-				if mdb.Config(m, kit.Keys("skip", value[REPOS])) == ice.TRUE {
-					return
-				}
 				msg := m.Cmd("_sum", value[nfs.PATH], mdb.TOTAL, "10000")
 				defer lock.Lock()()
 				msg.Table(func(value ice.Maps) {
@@ -66,6 +63,8 @@ func init() {
 			m.SortIntR(REST).StatusTimeCount()
 		}},
 		"_sum": {Name: "_sum [path] [total] [count|date] args...", Help: "统计量", Hand: func(m *ice.Message, arg ...string) {
+			m.Options(nfs.CAT_CONTENT, "")
+			m.Options(nfs.DIR_ROOT, "")
 			if len(arg) > 0 {
 				if nfs.Exists(m, _git_dir(arg[0])) || nfs.Exists(m, path.Join(arg[0], "refs/heads/")) {
 					m.Option(cli.CMD_DIR, arg[0])

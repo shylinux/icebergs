@@ -10,6 +10,7 @@ import (
 
 	kit "shylinux.com/x/toolkits"
 	"shylinux.com/x/toolkits/logs"
+	"shylinux.com/x/toolkits/task"
 )
 
 type Any = interface{}
@@ -212,6 +213,7 @@ type Message struct {
 
 	data Map
 	meta map[string][]string
+	lock task.Lock
 
 	root    *Message
 	message *Message

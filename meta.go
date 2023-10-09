@@ -367,7 +367,9 @@ func (m *Message) Options(arg ...Any) *Message {
 	return m
 }
 func (m *Message) Optionv(key string, arg ...Any) Any {
+	var unlock func()
 	if len(arg) > 0 {
+		unlock = m.lock.Lock()
 		kit.If(kit.IndexOf(m.meta[MSG_OPTION], key) == -1, func() { m.meta[MSG_OPTION] = append(m.meta[MSG_OPTION], key) })
 		switch delete(m.data, key); v := arg[0].(type) {
 		case nil:
@@ -379,16 +381,23 @@ func (m *Message) Optionv(key string, arg ...Any) Any {
 		default:
 			m.data[key] = v
 		}
+	} else {
+		unlock = m.lock.RLock()
 	}
-	for msg := m; msg != nil; msg = msg.message {
-		if v, ok := msg.data[key]; ok {
-			return v
-		}
-		if v, ok := msg.meta[key]; ok {
-			return v
-		}
+	if v, ok := m.data[key]; ok {
+		unlock()
+		return v
+	} else if v, ok := m.meta[key]; ok {
+		unlock()
+		return v
+	} else {
+		unlock()
 	}
-	return nil
+	if m.message != nil {
+		return m.message.Optionv(key)
+	} else {
+		return nil
+	}
 }
 func (m *Message) Option(key string, arg ...Any) string {
 	return kit.Select("", kit.Simple(m.Optionv(key, arg...)), 0)

@@ -13,7 +13,7 @@ import (
 )
 
 func _zone_meta(m *ice.Message, prefix, chain, key string) string {
-	defer RLock(m, prefix, chain)()
+	defer RLock(m, prefix)()
 	return m.Conf(prefix, kit.Keys(chain, kit.Keym(key)))
 }
 func _zone_fields(m *ice.Message) []string {
@@ -25,7 +25,6 @@ func _zone_inputs(m *ice.Message, prefix, chain, zone string, field, value strin
 		return
 	}
 	h := _hash_select_field(m, prefix, chain, zone, HASH)
-	defer RLock(m, prefix, chain)()
 	_list_inputs(m, prefix, kit.Keys(chain, HASH, h), field, value)
 }
 func _zone_insert(m *ice.Message, prefix, chain, zone string, arg ...string) {
@@ -34,13 +33,11 @@ func _zone_insert(m *ice.Message, prefix, chain, zone string, arg ...string) {
 		h = _hash_insert(m, prefix, chain, kit.Select(ZONE, _zone_meta(m, prefix, chain, SHORT)), zone)
 	}
 	m.Assert(h != "")
-	defer Lock(m, prefix, chain)()
 	_list_insert(m, prefix, kit.Keys(chain, HASH, h), arg...)
 }
 func _zone_modify(m *ice.Message, prefix, chain, zone, id string, arg ...string) {
 	h := _hash_select_field(m, prefix, chain, zone, HASH)
 	m.Assert(h != "")
-	defer Lock(m, prefix, chain)()
 	_list_modify(m, prefix, kit.Keys(chain, HASH, h), ID, id, arg...)
 }
 func _zone_select(m *ice.Message, prefix, chain, zone string, id string) {
@@ -52,17 +49,16 @@ func _zone_select(m *ice.Message, prefix, chain, zone string, id string) {
 	}
 	defer m.SortIntR(ID)
 	fields := _zone_fields(m)
-	defer RLock(m, prefix, chain)()
+	defer RLock(m, prefix)()
 	Richs(m, prefix, chain, kit.Select(FOREACH, zone), func(key string, val Map) {
 		chain := kit.Keys(chain, HASH, key)
-		defer RLock(m, prefix, chain)()
 		Grows(m, prefix, chain, ID, id, func(value ice.Map) {
 			_mdb_select(m, m.OptionCB(""), key, value, fields, val)
 		})
 	})
 }
 func _zone_export(m *ice.Message, prefix, chain, file string) {
-	defer Lock(m, prefix, chain)()
+	defer Lock(m, prefix)()
 	f, p, e := miss.CreateFile(kit.Keys(file, CSV))
 	m.Assert(e)
 	defer f.Close()
@@ -76,7 +72,6 @@ func _zone_export(m *ice.Message, prefix, chain, file string) {
 		Richs(m, prefix, chain, key, func(key string, val ice.Map) {
 			val = kit.GetMeta(val)
 			chain := kit.Keys(chain, HASH, key)
-			defer Lock(m, prefix, chain)()
 			Grows(m, prefix, chain, "", "", func(value ice.Map) {
 				value = kit.GetMeta(value)
 				w.Write(kit.Simple(head, func(k string) string {
@@ -94,7 +89,7 @@ func _zone_export(m *ice.Message, prefix, chain, file string) {
 	m.Conf(prefix, kit.Keys(chain, HASH), "")
 }
 func _zone_import(m *ice.Message, prefix, chain, file string) {
-	defer Lock(m, prefix, chain)()
+	defer Lock(m, prefix)()
 	f, e := ice.Info.Open(m, kit.Keys(file, CSV))
 	if os.IsNotExist(e) {
 		return
@@ -133,7 +128,6 @@ func _zone_import(m *ice.Message, prefix, chain, file string) {
 		}
 		func() {
 			chain := kit.Keys(chain, HASH, list[zone])
-			defer Lock(m, prefix, chain)()
 			Grow(m, prefix, chain, data)
 		}()
 		count++

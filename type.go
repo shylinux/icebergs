@@ -100,15 +100,9 @@ func (c *Context) Register(s *Context, x Server, cmd ...string) *Context {
 	return s
 }
 func (c *Context) MergeCommands(Commands Commands) *Context {
-	for key, cmd := range Commands {
-		// for _, cmd := range Commands {
+	for _, cmd := range Commands {
 		if cmd.Hand == nil && cmd.RawHand == nil {
-			if cmd.RawHand = logs.FileLines(2); cmd.Actions != nil {
-				if action, ok := cmd.Actions[SELECT]; ok {
-					cmd.Name = kit.Select(strings.Replace(action.Name, SELECT, key, 1), cmd.Name)
-					cmd.Help = kit.Select(action.Help, cmd.Help)
-				}
-			}
+			cmd.RawHand = logs.FileLines(2)
 		}
 	}
 	configs := Configs{}
@@ -165,7 +159,8 @@ func (c *Context) Merge(s *Context) *Context {
 					}
 				}
 			}
-			// kit.If(sub == SELECT, func() { cmd.Name = kit.Select(action.Name, cmd.Name) })
+			kit.If(sub == SELECT, func() { cmd.Name = kit.Select(action.Name, cmd.Name) })
+			kit.If(sub == SELECT, func() { cmd.Help = kit.Select(action.Help, cmd.Help) })
 			if help := kit.Split(action.Help, " :："); len(help) > 0 {
 				if kit.Value(cmd.Meta, kit.Keys("_trans", strings.TrimPrefix(sub, "_")), help[0]); len(help) > 1 {
 					kit.Value(cmd.Meta, kit.Keys("_title", sub), help[1])
@@ -178,7 +173,6 @@ func (c *Context) Merge(s *Context) *Context {
 			kit.If(action.List == nil, func() { action.List = SplitCmd(action.Name, nil) })
 			kit.If(len(action.List) > 0, func() { cmd.Meta[sub] = action.List })
 		}
-		// kit.If(cmd.Name == "", func() { cmd.Name = "list list" })
 		kit.If(strings.HasPrefix(cmd.Name, LIST), func() { cmd.Name = strings.Replace(cmd.Name, LIST, key, 1) })
 		kit.If(cmd.List == nil, func() { cmd.List = SplitCmd(cmd.Name, cmd.Actions) })
 	}
@@ -211,9 +205,9 @@ type Message struct {
 	time time.Time
 	code int
 
-	data Map
-	meta map[string][]string
-	lock task.Lock
+	_data Map
+	_meta map[string][]string
+	lock  task.Lock
 
 	root    *Message
 	message *Message
@@ -254,14 +248,14 @@ func (m *Message) _fileline() string {
 }
 func (m *Message) Spawn(arg ...Any) *Message {
 	msg := &Message{time: time.Now(), code: int(m.target.root.ID()),
-		meta: map[string][]string{}, data: Map{}, message: m, root: m.root,
+		_meta: map[string][]string{}, _data: Map{}, message: m, root: m.root,
 		_source: logs.FileLine(2), source: m.target, target: m.target, _cmd: m._cmd, _key: m._key, _sub: m._sub,
 		W: m.W, R: m.R, O: m.O, I: m.I,
 	}
 	for _, val := range arg {
 		switch val := val.(type) {
 		case []byte:
-			if m.Warn(json.Unmarshal(val, &msg.meta), string(val)) {
+			if m.Warn(json.Unmarshal(val, &msg._meta), string(val)) {
 				m.Debug(m.FormatStack(1, 100))
 			}
 		case Option:

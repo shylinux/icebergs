@@ -12,11 +12,13 @@ import (
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/lex"
+	"shylinux.com/x/icebergs/base/log"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/ssh"
 	"shylinux.com/x/icebergs/base/tcp"
 	kit "shylinux.com/x/toolkits"
+	"shylinux.com/x/toolkits/logs"
 )
 
 func _serve_address(m *ice.Message) string { return Domain(tcp.LOCALHOST, m.Option(tcp.PORT)) }
@@ -53,7 +55,9 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	} else {
 		r.Header.Set(ice.MSG_USERIP, strings.Split(r.RemoteAddr, nfs.DF)[0])
 	}
-	if m.Logs(r.Header.Get(ice.MSG_USERIP), r.Method, r.URL.String()); r.Method == http.MethodGet {
+	traceid := log.Traceid()
+	r.Header.Set(ice.LOG_TRACEID, traceid)
+	if m.Logs(r.Header.Get(ice.MSG_USERIP), r.Method, r.URL.String(), logs.TraceidMeta(traceid)); r.Method == http.MethodGet {
 		ispod := kit.Contains(r.URL.String(), CHAT_POD, "pod=") || kit.Contains(r.Header.Get(Referer), CHAT_POD, "pod=")
 		if msg := m.Spawn(w, r).Options(ice.MSG_USERUA, r.UserAgent()); path.Join(r.URL.Path) == nfs.PS {
 			if !msg.IsCliUA() {
@@ -80,6 +84,7 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 }
 func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.ResponseWriter, r *http.Request) {
 	debug := strings.Contains(r.URL.String(), "debug=true") || strings.Contains(r.Header.Get(Referer), "debug=true")
+	m.Option(ice.LOG_TRACEID, r.Header.Get(ice.LOG_TRACEID))
 	_log := func(level string, arg ...ice.Any) *ice.Message {
 		if debug || arg[0] == ice.MSG_CMDS {
 			return m.Logs(strings.Title(level), arg...)
@@ -115,10 +120,11 @@ func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.Response
 	kit.If(m.Optionv(ice.MSG_CMDS) == nil, func() {
 		kit.If(strings.TrimPrefix(r.URL.Path, key), func(p string) { m.Optionv(ice.MSG_CMDS, strings.Split(p, nfs.PS)) })
 	})
+	m.W.Header().Add(strings.ReplaceAll(ice.LOG_TRACEID, ".", "-"), m.Option(ice.LOG_TRACEID))
 	defer func() { Render(m, m.Option(ice.MSG_OUTPUT), kit.List(m.Optionv(ice.MSG_ARGS))...) }()
 	if cmds, ok := _serve_auth(m, key, kit.Simple(m.Optionv(ice.MSG_CMDS)), w, r); ok {
 		defer func() {
-			m.Cost(kit.Format("%s: /chat/cmd/%s/%s %v %s", r.Method, m.Option(ice.MSG_INDEX), path.Join(cmds...), m.FormatSize(), kit.FmtSize(len(m.Result()))))
+			m.Cost(kit.Format("%s: /chat/cmd/%s/%s %v", r.Method, m.Option(ice.MSG_INDEX), path.Join(cmds...), m.FormatSize()))
 		}()
 		m.Option(ice.MSG_OPTS, kit.Simple(m.Optionv(ice.MSG_OPTION), func(k string) bool { return !strings.HasPrefix(k, ice.MSG_SESSID) }))
 		if m.Detailv(m.PrefixKey(), cmds); len(cmds) > 1 && cmds[0] == ctx.ACTION {

@@ -3,7 +3,9 @@ package log
 import (
 	"bufio"
 	"fmt"
+	"os"
 	"path"
+	"strings"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/lex"
@@ -103,3 +105,22 @@ var Index = &ice.Context{Name: LOG, Help: "日志模块", Configs: ice.Configs{
 }}
 
 func init() { ice.Index.Register(Index, &Frame{}, TAIL) }
+
+const (
+	LOG_TRACE = "log_trace"
+)
+
+func Traceid() (traceid string) {
+	ls := []string{}
+	kit.For(kit.Split(os.Getenv(LOG_TRACE)), func(key string) {
+		switch key {
+		case "short":
+			ls = append(ls, kit.Hashs(mdb.UNIQ)[:6])
+		case "long":
+			ls = append(ls, kit.Hashs(mdb.UNIQ))
+		case "node":
+			ls = append(ls, ice.Info.NodeName)
+		}
+	})
+	return strings.Join(ls, "-")
+}

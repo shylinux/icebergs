@@ -47,7 +47,7 @@ func init() {
 				return
 			}
 			from, days, commit, adds, dels, rest := "", 0, 0, 0, 0, 0
-			TableGo(ReposList(m), func(value ice.Maps, lock *task.Lock) {
+			TableGo(ReposList(m.Spawn()), func(value ice.Maps, lock *task.Lock) {
 				msg := m.Cmd("_sum", value[nfs.PATH], mdb.TOTAL, "10000")
 				defer lock.Lock()()
 				msg.Table(func(value ice.Maps) {
@@ -118,7 +118,7 @@ func TableGo(m *ice.Message, cb ice.Any) *ice.Message {
 	defer wg.Wait()
 	m.Table(func(value ice.Maps) {
 		wg.Add(1)
-		task.Put(logs.FileLine(cb), func(*task.Task) {
+		task.Put(m.FormatTaskMeta(), logs.FileLine(cb), func(*task.Task) {
 			defer wg.Done()
 			switch cb := cb.(type) {
 			case func(ice.Maps, *task.Lock):

@@ -177,6 +177,7 @@ const ( // DIR
 )
 const ( // MSG
 	MSG_CMDS   = "cmds"
+	MSG_DEBUG  = "debug"
 	MSG_FIELDS = "fields"
 	MSG_SESSID = "sessid"
 	MSG_METHOD = "method"
@@ -224,6 +225,7 @@ const ( // MSG
 	MSG_DAEMON  = "sess.daemon"
 	MSG_FILES   = "file.system"
 	LOG_DISABLE = "log.disable"
+	LOG_TRACEID = "log.id"
 	YAC_MESSAGE = "yac.message"
 	YAC_STACK   = "yac.stack"
 	SSH_ALIAS   = "ssh.alias"

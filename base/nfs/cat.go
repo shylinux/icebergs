@@ -120,7 +120,10 @@ func init() {
 			)),
 		}, DIR), Hand: func(m *ice.Message, arg ...string) {
 			if !DirList(m, arg...) {
-				_cat_list(m.Logs(FIND, m.OptionSimple(DIR_ROOT), FILE, arg[0]), arg[0])
+				if arg[0] != "" {
+					m.Logs(FIND, m.OptionSimple(DIR_ROOT), FILE, arg[0])
+				}
+				_cat_list(m, arg[0])
 			}
 		}},
 	})

@@ -89,6 +89,7 @@ func _space_handle(m *ice.Message, safe bool, name string, c *websocket.Conn) {
 			break
 		}
 		msg := m.Spawn(b)
+		// msg.Option(ice.LOG_TRACEID, kit.Split(msg.Option(ice.LOG_TRACEID), "-")[0]+"-"+ice.Info.NodeName)
 		if safe { // 下行权限
 			msg.OptionDefault(ice.MSG_USERROLE, aaa.UserRole(msg, msg.Option(ice.MSG_USERNAME)))
 		} else { // 上行权限

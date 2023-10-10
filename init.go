@@ -77,7 +77,7 @@ var Index = &Context{Name: ICE, Help: "冰山模块", Commands: Commands{
 		})
 	}},
 }, server: &Frame{}}
-var Pulse = &Message{meta: map[string][]string{}, data: Map{}, source: Index, target: Index}
+var Pulse = &Message{_meta: map[string][]string{}, _data: Map{}, source: Index, target: Index}
 
 func init() {
 	switch tz := os.Getenv("TZ"); tz {
@@ -98,7 +98,7 @@ func Run(arg ...string) string {
 	} else if arg[0] == FOREVER && arg[1] == START && runtime.GOOS == WINDOWS {
 		arg[0] = SERVE
 	}
-	Pulse.meta[MSG_DETAIL] = arg
+	Pulse.value(MSG_DETAIL, arg...)
 	kit.For(kit.Sort(os.Environ()), func(env string) {
 		if ls := strings.SplitN(env, EQ, 2); strings.ToLower(ls[0]) == ls[0] && ls[0] != "_" {
 			Pulse.Option(ls[0], ls[1])

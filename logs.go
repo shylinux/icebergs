@@ -14,6 +14,7 @@ import (
 
 	kit "shylinux.com/x/toolkits"
 	"shylinux.com/x/toolkits/logs"
+	"shylinux.com/x/toolkits/task"
 )
 
 func (m *Message) join(arg ...Any) (string, []Any) {
@@ -52,8 +53,20 @@ func (m *Message) log(level string, str string, arg ...Any) *Message {
 	if m.Option(LOG_DISABLE) == TRUE {
 		return m
 	}
+	arg = append(arg, logs.TraceidMeta(m.Option(LOG_TRACEID)))
+	args, traceid := []Any{}, ""
+	for _, v := range arg {
+		switch v := v.(type) {
+		case logs.Meta:
+			if v.Key == logs.TRACEID {
+				traceid = kit.Select(strings.TrimSpace(v.Value), traceid)
+				continue
+			}
+		}
+		args = append(args, v)
+	}
 	_source := logs.FileLineMeta(3)
-	kit.If(Info.Log != nil, func() { Info.Log(m, m.FormatPrefix(), level, logs.Format(str, append(arg, _source)...)) })
+	kit.If(Info.Log != nil, func() { Info.Log(m, m.FormatPrefix(traceid), level, logs.Format(str, append(args, _source)...)) })
 	prefix, suffix := "", ""
 	if Info.Colors {
 		switch level {
@@ -65,7 +78,8 @@ func (m *Message) log(level string, str string, arg ...Any) *Message {
 			prefix, suffix = "\033[31m", "\033[0m"
 		}
 	}
-	logs.Infof(str, append(arg, logs.PrefixMeta(kit.Format("%02d %4s->%-4s %s%s ", m.code, m.source.Name, m.target.Name, prefix, level)), logs.SuffixMeta(suffix), _source)...)
+	kit.If(traceid, func() { traceid = kit.Format("%s: %s ", logs.TRACEID, traceid) })
+	logs.Infof(str, append(args, logs.PrefixMeta(kit.Format("%s%02d %4s->%-4s %s%s ", traceid, m.code, m.source.Name, m.target.Name, prefix, level)), logs.SuffixMeta(suffix), _source)...)
 	return m
 }
 func (m *Message) Log(level string, str string, arg ...Any) *Message {
@@ -83,7 +97,7 @@ func (m *Message) Auth(arg ...Any) *Message {
 }
 func (m *Message) Cost(arg ...Any) *Message {
 	str, meta := m.join(arg...)
-	kit.If(str == "" || len(arg) == 0, func() { str, meta = kit.Join(m.meta[MSG_DETAIL], SP), []Any{logs.FileLineMeta(m._fileline())} })
+	kit.If(str == "" || len(arg) == 0, func() { str, meta = kit.Join(m.value(MSG_DETAIL), SP), []Any{logs.FileLineMeta(m._fileline())} })
 	return m.log(LOG_COST, kit.Join([]string{m.FormatCost(), str}, SP), meta...)
 }
 func (m *Message) Info(str string, arg ...Any) *Message {
@@ -145,7 +159,7 @@ func (m *Message) error(arg ...Any) {
 }
 func (m *Message) IsOk() bool { return m.Result() == OK }
 func (m *Message) IsErr(arg ...string) bool {
-	return len(arg) == 0 && kit.Select("", m.meta[MSG_RESULT], 0) == ErrWarn || len(arg) > 0 && kit.Select("", m.meta[MSG_RESULT], 1) == arg[0]
+	return len(arg) == 0 && m.index(MSG_RESULT, 0) == ErrWarn || len(arg) > 0 && m.index(MSG_RESULT, 1) == arg[0]
 }
 func (m *Message) IsErrNotFound() bool { return m.IsErr(ErrNotFound) }
 func (m *Message) Debug(str string, arg ...Any) {
@@ -153,41 +167,55 @@ func (m *Message) Debug(str string, arg ...Any) {
 	m.log(LOG_DEBUG, str, arg...)
 }
 
-func (m *Message) FormatPrefix() string {
-	return kit.Format("%s %d %s->%s", logs.FmtTime(logs.Now()), m.code, m.source.Name, m.target.Name)
+func (m *Message) FormatTaskMeta() task.Meta {
+	_traceid := ""
+	kit.If(m.Option(LOG_TRACEID), func(traceid string) { _traceid = kit.Format("%s: %s ", logs.TRACEID, traceid) })
+	return task.Meta{
+		Prefix:   kit.Format("%s%d %4s->%-4s ", _traceid, m.code, m.source.Name, m.target.Name),
+		FileLine: kit.FileLine(2, 3),
+	}
+}
+func (m *Message) FormatPrefix(traceid ...string) string {
+	_traceid := ""
+	kit.If(kit.Select(m.Option(LOG_TRACEID), traceid, 0), func(traceid string) { _traceid = kit.Format("%s: %s ", logs.TRACEID, traceid) })
+	return kit.Format("%s %s%d %s->%s", logs.FmtTime(logs.Now()), _traceid, m.code, m.source.Name, m.target.Name)
 }
 func (m *Message) FormatSize() string {
-	return kit.Format("%dx%d %v", m.Length(), len(m.meta[MSG_APPEND]), kit.Simple(m.meta[MSG_APPEND]))
+	return kit.Format("%dx%d %v %v", m.Length(), len(m.value(MSG_APPEND)), kit.Simple(m.value(MSG_APPEND)), kit.FmtSize(len(m.Result())))
 }
 func (m *Message) FormatCost() string { return kit.FmtDuration(time.Since(m.time)) }
-func (m *Message) FormatMeta() string { return kit.Format(m.meta) }
+func (m *Message) FormatMeta() string {
+	defer m.lock.RLock()()
+	return kit.Format(m._meta)
+}
 func (m *Message) FormatsMeta(w io.Writer, arg ...string) (res string) {
 	if w == nil {
 		buf := bytes.NewBuffer(make([]byte, 0, MOD_BUFS))
 		defer func() { res = buf.String() }()
 		w = buf
 	}
-	kit.For(m.meta[MSG_OPTION], func(i int, k string) {
-		kit.If(len(m.meta[k]) == 0 || len(m.meta[k]) == 1 && m.meta[k][0] == "", func() { m.meta[MSG_OPTION][i] = "" })
+	kit.For(m.value(MSG_OPTION), func(i int, k string) {
+		ls := m.value(k)
+		kit.If(len(ls) == 0 || len(ls) == 1 && ls[0] == "", func() { m.index(MSG_OPTION, i, "") })
 	})
-	m.meta[MSG_OPTION] = kit.Filters(m.meta[MSG_OPTION], MSG_CMDS, MSG_FIELDS, MSG_SESSID, MSG_OPTS, MSG_INDEX, "", "aaa.checker")
+	m.value(MSG_OPTION, kit.Filters(m.value(MSG_OPTION), MSG_CMDS, MSG_FIELDS, MSG_SESSID, MSG_OPTS, MSG_INDEX, "", "aaa.checker")...)
 	kit.If(len(arg) == 0 && m.Option(DEBUG) == TRUE, func() { arg = []string{SP, SP, NL} })
 	bio, count, NL := bufio.NewWriter(w), 0, kit.Select("", arg, 2)
 	defer bio.Flush()
 	echo := func(arg ...Any) { fmt.Fprint(bio, arg...) }
 	push := func(k string) {
-		if len(m.meta[k]) == 0 {
+		if len(m.value(k)) == 0 {
 			return
 		}
 		kit.If(count > 0, func() { echo(FS, NL) })
 		echo(kit.Format("%s%q:%s", kit.Select("", arg, 0), k, kit.Select("", arg, 1)))
-		b, _ := json.Marshal(m.meta[k])
+		b, _ := json.Marshal(m.value(k))
 		bio.Write(b)
 		count++
 	}
 	echo("{", NL)
 	defer echo(NL, "}", NL)
-	kit.For(kit.Simple(MSG_DETAIL, MSG_OPTION, m.meta[MSG_OPTION], m.meta[MSG_APPEND], MSG_APPEND, MSG_RESULT), push)
+	kit.For(kit.Simple(MSG_DETAIL, MSG_OPTION, m.value(MSG_OPTION), m.value(MSG_APPEND), MSG_APPEND, MSG_RESULT), push)
 	return
 }
 func (m *Message) FormatChain() string {
@@ -196,17 +224,18 @@ func (m *Message) FormatChain() string {
 		ms = append(ms, msg)
 	}
 	show := func(msg *Message, key string, arg ...string) string {
-		if len(msg.meta[key]) == 0 || len(msg.meta[key]) == 1 && msg.meta[key][0] == "" {
+		ls := msg.value(key)
+		if len(ls) == 0 || len(ls) == 1 && ls[0] == "" {
 			return ""
 		}
-		return kit.Format("%s%s:%s%d %v", kit.Select("", arg, 0), key, kit.Select("", arg, 1), len(msg.meta[key]), msg.meta[key])
+		return kit.Format("%s%s:%s%d %v", kit.Select("", arg, 0), key, kit.Select("", arg, 1), len(ls), ls)
 	}
 	meta := []string{}
 	for i := len(ms) - 1; i >= 0; i-- {
 		msg := ms[i]
 		meta = append(meta, kit.Join([]string{msg.FormatPrefix(), show(msg, MSG_DETAIL), show(msg, MSG_OPTION), show(msg, MSG_APPEND), show(msg, MSG_RESULT), msg._cmd.FileLines()}, SP))
-		kit.For(msg.meta[MSG_OPTION], func(k string) { kit.If(show(msg, k, TB, SP), func(s string) { meta = append(meta, s) }) })
-		kit.For(msg.meta[MSG_APPEND], func(k string) { kit.If(show(msg, k, TB, SP), func(s string) { meta = append(meta, s) }) })
+		kit.For(msg.value(MSG_OPTION), func(k string) { kit.If(show(msg, k, TB, SP), func(s string) { meta = append(meta, s) }) })
+		kit.For(msg.value(MSG_APPEND), func(k string) { kit.If(show(msg, k, TB, SP), func(s string) { meta = append(meta, s) }) })
 	}
 	return kit.Join(meta, NL)
 }

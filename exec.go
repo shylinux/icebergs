@@ -62,7 +62,7 @@ func (m *Message) GoSleep(t string, arg ...Any) {
 }
 func (m *Message) Go(cb func(), arg ...Any) *Message {
 	kit.If(len(arg) == 0, func() { arg = append(arg, logs.FileLine(cb)) })
-	task.Put(arg[0], func(task *task.Task) { m.TryCatch(true, func(m *Message) { cb() }) })
+	task.Put(m.FormatTaskMeta(), arg[0], func(task *task.Task) { m.TryCatch(true, func(m *Message) { cb() }) })
 	return m
 }
 func (m *Message) Wait(d string, cb ...Handler) (wait func() bool, done Handler) {
@@ -82,7 +82,7 @@ func (m *Message) Cmdv(arg ...Any) string {
 	return m._command(kit.Slice(args, 0, -1), OptionFields(field)).Append(field)
 }
 func (m *Message) Cmdx(arg ...Any) string {
-	res := strings.TrimSpace(kit.Select("", m._command(arg...).meta[MSG_RESULT], 0))
+	res := strings.TrimSpace(m._command(arg...).index(MSG_RESULT, 0))
 	return kit.Select("", res, res != strings.TrimSpace(ErrWarn))
 }
 func (m *Message) Cmdy(arg ...Any) *Message { return m.Copy(m._command(arg...)) }
@@ -147,7 +147,7 @@ func (m *Message) _command(arg ...Any) *Message {
 		panic(count)
 	}
 	list := kit.Simple(args...)
-	kit.If(len(list) == 0, func() { list = m.meta[MSG_DETAIL] })
+	kit.If(len(list) == 0, func() { list = m.value(MSG_DETAIL) })
 	if len(list) == 0 {
 		return m
 	}
@@ -175,7 +175,7 @@ func (c *Context) _command(m *Message, cmd *Command, key string, arg ...string) 
 	if m._cmd, m._key = cmd, key; cmd == nil {
 		return m
 	}
-	if m.meta[MSG_DETAIL] = kit.Simple(m.PrefixKey(), arg); cmd.Actions != nil {
+	if m.value(MSG_DETAIL, kit.Simple(m.PrefixKey(), arg)...); cmd.Actions != nil {
 		if len(arg) > 1 && arg[0] == ACTION {
 			if h, ok := cmd.Actions[arg[1]]; ok {
 				return c._action(m, cmd, key, arg[1], h, arg[2:]...)

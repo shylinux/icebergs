@@ -20,7 +20,7 @@ func _list_inputs(m *ice.Message, prefix, chain string, field, value string) {
 		kit.For(list, func(k string, i int) { m.Push(field, k).Push(COUNT, i) })
 		m.SortIntR(COUNT)
 	}()
-	defer RLock(m, prefix, chain)()
+	defer RLock(m, prefix)()
 	Grows(m, prefix, chain, "", "", func(value ice.Map) {
 		value = kit.GetMeta(value)
 		list[kit.Format(value[field])] += kit.Int(kit.Select("1", value[COUNT]))
@@ -28,26 +28,26 @@ func _list_inputs(m *ice.Message, prefix, chain string, field, value string) {
 }
 func _list_insert(m *ice.Message, prefix, chain string, arg ...string) {
 	m.Logs(INSERT, KEY, path.Join(prefix, chain), arg)
-	defer Lock(m, prefix, chain)()
+	defer Lock(m, prefix)()
 	saveImportant(m, prefix, chain, kit.Simple(INSERT, prefix, chain, LIST, TIME, m.Time(), arg)...)
 	m.Echo("%d", Grow(m, prefix, chain, kit.Dict(arg, TARGET, m.Optionv(TARGET))))
 }
 func _list_modify(m *ice.Message, prefix, chain string, field, value string, arg ...string) {
 	m.Logs(MODIFY, KEY, path.Join(prefix, chain), field, value, arg)
-	defer Lock(m, prefix, chain)()
+	defer Lock(m, prefix)()
 	saveImportant(m, prefix, chain, kit.Simple(MODIFY, prefix, chain, LIST, field, value, arg)...)
 	Grows(m, prefix, chain, field, value, func(index int, val ice.Map) { _mdb_modify(m, val, field, arg...) })
 }
 func _list_select(m *ice.Message, prefix, chain, field, value string) {
 	defer m.SortIntR(ID)
 	fields := _list_fields(m)
-	defer RLock(m, prefix, chain)()
+	defer RLock(m, prefix)()
 	Grows(m, prefix, chain, kit.Select(m.Option(CACHE_FIELD), field), kit.Select(m.Option(CACHE_VALUE), value), func(value ice.Map) {
 		_mdb_select(m, m.OptionCB(""), "", value, fields, nil)
 	})
 }
 func _list_export(m *ice.Message, prefix, chain, file string) {
-	defer Lock(m, prefix, chain)()
+	defer Lock(m, prefix)()
 	f, p, e := miss.CreateFile(kit.Keys(file, CSV))
 	m.Assert(e)
 	defer f.Close()
@@ -68,7 +68,7 @@ func _list_export(m *ice.Message, prefix, chain, file string) {
 	m.Conf(prefix, kit.Keys(chain, LIST), "")
 }
 func _list_import(m *ice.Message, prefix, chain, file string) {
-	defer Lock(m, prefix, chain)()
+	defer Lock(m, prefix)()
 	f, e := miss.OpenFile(kit.Keys(file, CSV))
 	m.Assert(e)
 	defer f.Close()

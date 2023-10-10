@@ -137,7 +137,7 @@ func (m *Message) PushSearch(arg ...Any) {
 	}
 }
 func (m *Message) PushAction(arg ...Any) *Message {
-	if len(m.meta[MSG_APPEND]) == 0 {
+	if len(m.value(MSG_APPEND)) == 0 {
 		return m
 	}
 	return m.Set(MSG_APPEND, ACTION).Table(func(value Maps) { m.PushButton(arg...) })
@@ -145,14 +145,14 @@ func (m *Message) PushAction(arg ...Any) *Message {
 func (m *Message) PushButton(arg ...Any) *Message {
 	if !m.IsCliUA() {
 		if m.FieldsIsDetail() {
-			for i, k := range m.meta[KEY] {
+			for i, k := range m.value(KEY) {
 				if k == ACTION {
-					m.meta[VALUE][i] = Render(m, RENDER_BUTTON, arg...)
+					m.index(VALUE, i, Render(m, RENDER_BUTTON, arg...))
 					return m
 				}
 			}
-		} else if len(m.meta[ACTION]) >= m.Length() {
-			m.meta[ACTION] = []string{}
+		} else if len(m.value(ACTION)) >= m.Length() {
+			m.delete(ACTION)
 		}
 		m.Push(ACTION, Render(m, RENDER_BUTTON, arg...))
 	}

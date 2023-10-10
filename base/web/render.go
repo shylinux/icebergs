@@ -32,8 +32,10 @@ func Render(m *ice.Message, cmd string, args ...ice.Any) bool {
 	arg := kit.Simple(args...)
 	kit.If(len(arg) == 0, func() { args = nil })
 	if cmd != "" {
-		if cmd != ice.RENDER_DOWNLOAD || !kit.HasPrefix(arg[0], ice.USR_VOLCANOS, ice.USR_INTSHELL, ice.SRC_TEMPLATE, ice.USR_ICONS, "usr/node_modules/") {
-			defer func() { m.Logs("Render", cmd, args) }()
+		if cmd != ice.RENDER_DOWNLOAD || !kit.HasPrefix(arg[0], ice.SRC_TEMPLATE, ice.USR_INTSHELL, ice.USR_VOLCANOS, ice.USR_ICONS, ice.USR_MODULES) {
+			if !(cmd == ice.RENDER_RESULT && len(args) == 0) {
+				defer func() { m.Logs("Render", cmd, args) }()
+			}
 		}
 	}
 	switch cmd {

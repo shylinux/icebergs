@@ -62,7 +62,8 @@ func (m *Message) MergePodCmd(pod, cmd string, arg ...Any) string {
 	return kit.MergeURL2(strings.Split(kit.Select(Info.Domain, m.Option(MSG_USERWEB)), QS)[0], PS+kit.Join(ls, PS), arg...)
 }
 func (m *Message) FieldsIsDetail() bool {
-	return len(m.meta[MSG_APPEND]) == 2 && m.meta[MSG_APPEND][0] == KEY && m.meta[MSG_APPEND][1] == VALUE || m.OptionFields() == FIELDS_DETAIL
+	ls := m.value(MSG_APPEND)
+	return len(ls) == 2 && ls[0] == KEY && ls[1] == VALUE || m.OptionFields() == FIELDS_DETAIL
 }
 func (m *Message) Fields(length int, fields ...string) string {
 	kit.If(length >= len(fields), func() { m.Option(MSG_FIELDS, FIELDS_DETAIL) })
@@ -78,13 +79,15 @@ func (m *Message) Status(arg ...Any) *Message {
 	return m.Options(MSG_STATUS, kit.Format(list))
 }
 func (m *Message) StatusTime(arg ...Any) *Message {
-	return m.Status(TIME, m.Time(), arg, kit.MDB_COST, m.FormatCost())
+	traceid := []string{}
+	kit.If(m.Option(MSG_DEBUG) == TRUE, func() { traceid = m.OptionSimple(LOG_TRACEID) })
+	return m.Status(TIME, m.Time(), arg, kit.MDB_COST, m.FormatCost(), traceid)
 }
 func (m *Message) StatusTimeCount(arg ...Any) *Message {
-	return m.Status(TIME, m.Time(), kit.MDB_COUNT, kit.Split(m.FormatSize())[0], arg, kit.MDB_COST, m.FormatCost())
+	return m.StatusTime(append([]Any{kit.MDB_COUNT, kit.Split(m.FormatSize())[0]}, arg...))
 }
 func (m *Message) StatusTimeCountTotal(arg ...Any) *Message {
-	return m.Status(TIME, m.Time(), kit.MDB_COUNT, kit.Split(m.FormatSize())[0], kit.MDB_TOTAL, arg, kit.MDB_COST, m.FormatCost())
+	return m.StatusTimeCount(append([]Any{kit.MDB_TOTAL}, arg...))
 }
 
 func (m *Message) Process(cmd string, arg ...Any) *Message {

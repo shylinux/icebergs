@@ -90,10 +90,11 @@ func (m *Message) RenameAppend(arg ...string) *Message {
 		if from == to {
 			return
 		}
-		kit.For(m.meta[MSG_APPEND], func(i int, k string) {
+		defer m.lock.Lock()()
+		kit.For(m._meta[MSG_APPEND], func(i int, k string) {
 			if k == from {
-				m.meta[MSG_APPEND][i], m.meta[to] = to, m.meta[from]
-				delete(m.meta, from)
+				m._meta[MSG_APPEND][i], m._meta[to] = to, m._meta[from]
+				delete(m._meta, from)
 			}
 		})
 	})
@@ -102,19 +103,20 @@ func (m *Message) RenameAppend(arg ...string) *Message {
 func (m *Message) RewriteAppend(cb func(value, key string, index int) string) *Message {
 	m.Table(func(index int, value Maps, head []string) {
 		for _, key := range head {
-			m.meta[key][index] = cb(value[key], key, index)
+			v := cb(value[key], key, index)
+			m.index(key, index, v)
 		}
 	})
 	return m
 }
 func (m *Message) ToLowerAppend(arg ...string) *Message {
-	kit.For(m.meta[MSG_APPEND], func(k string) { m.RenameAppend(k, strings.ToLower(k)) })
+	kit.For(m.value(MSG_APPEND), func(k string) { m.RenameAppend(k, strings.ToLower(k)) })
 	return m
 }
 func (m *Message) AppendSimple(key ...string) (res []string) {
 	if len(key) == 0 {
 		if m.FieldsIsDetail() {
-			key = append(key, m.meta[KEY]...)
+			key = append(key, m.value(KEY)...)
 		} else {
 			key = append(key, m.Appendv(MSG_APPEND)...)
 		}
@@ -124,15 +126,17 @@ func (m *Message) AppendSimple(key ...string) (res []string) {
 }
 func (m *Message) AppendTrans(cb func(value string, key string, index int) string) *Message {
 	if m.FieldsIsDetail() {
-		for i, v := range m.meta[VALUE] {
-			k := m.meta[KEY][i]
-			m.meta[VALUE][i] = cb(v, k, 0)
+		defer m.lock.Lock()()
+		for i, v := range m._meta[VALUE] {
+			k := m._meta[KEY][i]
+			m._meta[VALUE][i] = cb(v, k, 0)
 		}
 		return m
 	}
-	for _, k := range m.meta[MSG_APPEND] {
-		for i, v := range m.meta[k] {
-			m.meta[k][i] = cb(v, k, i)
+	defer m.lock.Lock()()
+	for _, k := range m._meta[MSG_APPEND] {
+		for i, v := range m._meta[k] {
+			m._meta[k][i] = cb(v, k, i)
 		}
 	}
 	return m

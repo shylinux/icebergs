@@ -41,7 +41,7 @@ func _bench_http(m *ice.Message, target string, arg ...string) {
 		}
 	})
 	var ndata int64
-	if s, e := bench.HTTP(nconn, nreqs, list, func(req *http.Request, res *http.Response) {
+	if s, e := bench.HTTP(m.FormatTaskMeta(), nconn, nreqs, list, func(req *http.Request, res *http.Response) {
 		n, _ := io.Copy(ioutil.Discard, res.Body)
 		atomic.AddInt64(&ndata, n)
 	}); m.Assert(e) {

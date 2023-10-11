@@ -12,6 +12,7 @@ import (
 	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 	"shylinux.com/x/toolkits/logs"
 	"shylinux.com/x/toolkits/task"
@@ -46,6 +47,7 @@ func init() {
 				m.StatusTimeCount(m.AppendSimple(FROM))
 				return
 			}
+			defer web.ToastProcess(m)()
 			from, days, commit, adds, dels, rest := "", 0, 0, 0, 0, 0
 			TableGo(ReposList(m.Spawn()), func(value ice.Maps, lock *task.Lock) {
 				msg := m.Cmd("_sum", value[nfs.PATH], mdb.TOTAL, "10000")
@@ -60,20 +62,19 @@ func init() {
 				m.Push(REPOS, value[REPOS]).Copy(msg)
 			})
 			m.Push(REPOS, mdb.TOTAL).Push(TAGS, "v3.0.0").Push(FROM, from).Push(DAYS, days).Push(COMMIT, commit).Push(ADDS, adds).Push(DELS, dels).Push(REST, rest)
-			m.SortIntR(REST).StatusTimeCount()
+			m.SortIntR(REST)
 		}},
 		"_sum": {Name: "_sum [path] [total] [count|date] args...", Help: "统计量", Hand: func(m *ice.Message, arg ...string) {
-			m.Options(nfs.CAT_CONTENT, "")
-			m.Options(nfs.DIR_ROOT, "")
+			m.Options(nfs.DIR_ROOT, "", nfs.CAT_CONTENT, "")
 			if len(arg) > 0 {
-				if nfs.Exists(m, _git_dir(arg[0])) || nfs.Exists(m, path.Join(arg[0], "refs/heads/")) {
+				if nfs.Exists(m, path.Join(arg[0], ".git")) || nfs.Exists(m, path.Join(arg[0], "refs/heads/")) {
 					m.Option(cli.CMD_DIR, arg[0])
 					arg = arg[1:]
 				}
 			}
 			total := false
 			kit.If(len(arg) > 0 && arg[0] == mdb.TOTAL, func() { total, arg = true, arg[1:] })
-			args := []string{"log", "--shortstat", "--pretty=commit: %H %ad %n%s", "--date=iso", "--reverse"}
+			args := []string{LOG, "--shortstat", "--pretty=commit: %H %ad %n%s", "--date=iso", "--reverse"}
 			if len(arg) > 0 {
 				arg[0] += kit.Select("", " 00:00:00", strings.Contains(arg[0], "-") && !strings.Contains(arg[0], nfs.DF))
 				args = append(args, kit.Select("-n", "--since", strings.Contains(arg[0], "-")))

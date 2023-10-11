@@ -50,7 +50,7 @@ func init() {
 					m.Push(mdb.VALUE, ls[2][1:len(ls[2])-1])
 				}
 			}
-			m.StatusTimeCount().PushAction(mdb.REMOVE).Action(mdb.CREATE)
+			m.PushAction(mdb.REMOVE).Action(mdb.CREATE)
 		}},
 		TEXT: {Name: "text auto text:textarea", Help: "文本", Hand: func(m *ice.Message, arg ...string) {
 			kit.If(len(arg) > 0, func() { _tmux_cmd(m, SET_BUFFER, arg[0]) })

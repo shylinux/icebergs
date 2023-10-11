@@ -50,7 +50,6 @@ func _css_show(m *ice.Message, arg ...string) {
 	})
 	_css_stat(m, "stats.key", stats_key)
 	_css_stat(m, "stats.value", stats_value)
-	m.StatusTimeCount()
 }
 func _css_exec(m *ice.Message, arg ...string) {
 	if arg[2] == ice.USR_VOLCANOS {

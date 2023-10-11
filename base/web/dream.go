@@ -233,14 +233,12 @@ func init() {
 					})
 					return nil
 				})
-				m.StatusTimeCount()
 			}},
 			nfs.CAT: {Name: "cat file*", Help: "文件", Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashSelect(m.Spawn()).Table(func(value ice.Maps) {
 					m.Push(mdb.NAME, value[mdb.NAME])
 					m.Push(mdb.TEXT, m.Cmdx(SPACE, value[mdb.NAME], nfs.CAT, m.Option(nfs.FILE)))
 				})
-				m.StatusTimeCount()
 			}},
 			ice.CMD: {Name: "cmd cmd*", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 				GoToast(m, "", func(toast func(string, int, int)) []string {
@@ -252,7 +250,6 @@ func init() {
 					})
 					return nil
 				})
-				m.StatusTimeCount()
 			}},
 			cli.START: {Hand: func(m *ice.Message, arg ...string) {
 				gdb.Event(m, DREAM_START, arg)

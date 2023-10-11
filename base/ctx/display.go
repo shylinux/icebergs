@@ -52,6 +52,9 @@ func DisplayLocal(m displayMessage, file string, arg ...ice.Any) displayMessage 
 	kit.If(isLocalFile(file), func() { file = path.Join(ice.PLUGIN_LOCAL, file) })
 	return DisplayBase(m, file, arg...)
 }
+func DisplayLocalInner(m displayMessage, arg ...ice.Any) displayMessage {
+	return DisplayLocal(m, "code/inner.js", arg...)
+}
 func DisplayBase(m displayMessage, file string, arg ...ice.Any) displayMessage {
 	m.Option(ice.MSG_DISPLAY, kit.MergeURL(kit.Select(kit.ExtChange(file, nfs.JS), file, strings.Contains(file, mdb.QS)), arg...))
 	return m

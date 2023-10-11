@@ -37,7 +37,6 @@ func init() {
 					kit.If(i%16 == 0, func() { m.Push("addr", kit.Format("%04x", i)) })
 					m.Push(kit.Format("%02x", i%16), kit.Format("%02x", buf[i]))
 				}
-				m.StatusTimeCount()
 			}
 		}},
 	})

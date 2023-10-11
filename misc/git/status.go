@@ -17,6 +17,14 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
+const (
+	INIT      = "init"
+	DIFF      = "diff"
+	INSTEADOF = "insteadof"
+	OAUTH     = "oauth"
+	GITEA     = "gitea"
+)
+
 const STATUS = "status"
 
 func init() {
@@ -39,24 +47,18 @@ func init() {
 					}
 				}
 			}},
+			INIT: {Name: "init origin*", Help: "初始化", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(REPOS, INIT) }},
 			CONFIGS: {Name: "configs email* username* token", Help: "配置", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.DEFS, kit.HomePath(".gitconfig"), kit.Format(nfs.Template(m, "gitconfig"), m.Option(aaa.USERNAME), m.Option(aaa.EMAIL)))
 				kit.If(m.Option(web.TOKEN), func() { m.Cmd(web.TOKEN, "set") })
 				mdb.Config(m, aaa.USERNAME, m.Option(aaa.USERNAME))
 				mdb.Config(m, aaa.EMAIL, m.Option(aaa.EMAIL))
 			}},
-			INIT: {Name: "init origin", Help: "初始化", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(REPOS, INIT)
-			}},
-			INSTEADOF: {Name: "insteadof remote", Help: "代理", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(REPOS, INSTEADOF, arg)
-			}},
+			INSTEADOF: {Name: "insteadof remote", Help: "代理", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(REPOS, INSTEADOF, arg) }},
 			OAUTH: {Help: "授权", Hand: func(m *ice.Message, arg ...string) {
 				m.ProcessOpen(kit.MergeURL2(kit.Select(ice.Info.Make.Domain, m.Cmdx(REPOS, "remoteURL")), web.ChatCmdPath(m, web.TOKEN, "gen"), tcp.HOST, m.Option(ice.MSG_USERWEB)))
 			}},
-			GITEA: {Help: "资源", Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessOpen(m.Cmdv("web.spide", ice.HUB, web.CLIENT_URL))
-			}},
+			GITEA: {Help: "资源", Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen(m.Cmdv("web.spide", ice.HUB, web.CLIENT_URL)) }},
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				if !kit.IsIn(m.Option(mdb.TYPE), web.WORKER, web.SERVER) {
 					return
@@ -66,7 +68,7 @@ func init() {
 				}
 				text := []string{}
 				for _, line := range kit.Split(m.Cmdx(web.SPACE, m.Option(mdb.NAME), cli.SYSTEM, GIT, DIFF, "--shortstat"), mdb.FS, mdb.FS) {
-					if list := kit.Split(line); strings.Contains(line, "file") {
+					if list := kit.Split(line); strings.Contains(line, nfs.FILE) {
 						text = append(text, list[0]+" file")
 					} else if strings.Contains(line, "ins") {
 						text = append(text, list[0]+" +++")

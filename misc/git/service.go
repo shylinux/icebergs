@@ -110,7 +110,7 @@ func init() {
 		if len(arg) == 0 {
 			return
 		} else if arg[0] == ice.LIST {
-			m.Cmd(Prefix(SERVICE), func(value ice.Maps) { m.Push(nfs.REPOS, web.MergeLink(m, "/x/"+kit.Keys(value[nfs.REPOS], GIT))) })
+			m.Cmd(Prefix(SERVICE), func(value ice.Maps) { m.Push(nfs.REPOS, _service_link(m, value[nfs.REPOS])) })
 			m.Sort(nfs.REPOS)
 			return
 		} else if m.RenderVoid(); m.Option("go-get") == "1" {
@@ -157,7 +157,7 @@ func init() {
 			web.DREAM_INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				kit.If(arg[0] == REPOS, func() { mdb.HashSelect(m).Sort(REPOS).Cut("repos,version,time") })
 			}},
-		}, web.DreamAction(), mdb.HashAction(mdb.SHORT, REPOS, mdb.FIELD, "time,repos,branch,version,comment"), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, web.DreamAction(), mdb.HashAction(mdb.SHORT, REPOS, mdb.FIELD, "time,repos,branch,version,message"), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				mdb.HashSelect(m, arg...).Table(func(value ice.Maps) {
 					m.Push(nfs.SIZE, kit.Split(m.Cmdx(cli.SYSTEM, "du", "-sh", path.Join(ice.USR_LOCAL_REPOS, value[REPOS])))[0])

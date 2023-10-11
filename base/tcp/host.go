@@ -32,7 +32,7 @@ func _host_list(m *ice.Message, name string) {
 	if len(m.Appendv(aaa.IP)) == 0 {
 		m.Push(mdb.INDEX, -1).Push(mdb.NAME, LOCALHOST).Push(aaa.IP, "127.0.0.1").Push("mask", "255.0.0.0").Push("hard", "")
 	}
-	m.SortInt(mdb.INDEX).StatusTimeCount()
+	m.SortInt(mdb.INDEX)
 }
 
 const (

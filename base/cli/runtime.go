@@ -191,7 +191,7 @@ func init() {
 				}
 				ctx.DisplayStorySpide(m.Options(nfs.DIR_ROOT, nfs.PS), lex.PREFIX, kit.Fields(ctx.ACTION, m.ActionKey()))
 				kit.For(ice.Info.Route, func(k, v string) { m.Push(nfs.PATH, k).Push(nfs.FILE, v) })
-				m.Sort(nfs.PATH).StatusTimeCount()
+				m.Sort(nfs.PATH)
 			}},
 			CLI: {Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) > 1 {
@@ -200,22 +200,21 @@ func init() {
 				}
 				ctx.DisplayStorySpide(m.Options(nfs.DIR_ROOT, "ice."), lex.PREFIX, kit.Fields(ctx.ACTION, m.ActionKey()), mdb.FIELD, mdb.NAME, lex.SPLIT, nfs.PT)
 				kit.For(ice.Info.File, func(k, v string) { m.Push(nfs.FILE, k).Push(mdb.NAME, v) })
-				m.Sort(mdb.NAME).StatusTimeCount()
+				m.Sort(mdb.NAME)
 			}},
 			CMD: {Hand: func(m *ice.Message, arg ...string) {
 				m.OptionFields(ctx.INDEX, mdb.NAME, mdb.HELP, nfs.FILE)
-				m.Cmdy(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND).StatusTimeCount()
+				m.Cmdy(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND)
 			}},
 			MOD: {Hand: func(m *ice.Message, arg ...string) {
 				kit.For(ice.Info.Gomod, func(k string, v string) { m.Push(nfs.MODULE, k).Push(nfs.VERSION, v) })
-				m.StatusTimeCount()
 			}},
 			ENV: {Hand: func(m *ice.Message, arg ...string) {
 				kit.For(os.Environ(), func(v string) {
 					ls := strings.SplitN(v, mdb.EQ, 2)
 					m.Push(mdb.NAME, ls[0]).Push(mdb.VALUE, ls[1])
 				})
-				m.StatusTimeCount().Sort(mdb.NAME)
+				m.Sort(mdb.NAME)
 			}},
 			nfs.PATH: {Hand: func(m *ice.Message, arg ...string) {
 				kit.For(_path_split(os.Getenv(PATH)), func(p string) { m.Push(nfs.PATH, p) })

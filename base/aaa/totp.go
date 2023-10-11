@@ -61,7 +61,7 @@ func init() {
 				}
 			})
 			if len(arg) == 0 {
-				m.PushAction(mdb.REMOVE).Action(mdb.CREATE, mdb.PRUNES).StatusTimeCount()
+				m.PushAction(mdb.REMOVE).Action(mdb.CREATE, mdb.PRUNES)
 			}
 		}},
 	})

@@ -35,7 +35,6 @@ func _route_match(m *ice.Message, space string, cb func(ice.Maps, int, []ice.Map
 	for i, item := range list {
 		cb(item, i, list)
 	}
-	m.StatusTimeCount()
 }
 func _route_toast(m *ice.Message, space string, args ...string) {
 	GoToast(m, "", func(toast func(string, int, int)) (list []string) {

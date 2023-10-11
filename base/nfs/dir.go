@@ -139,11 +139,12 @@ const (
 	PWD            = "./"
 	SRC            = "src/"
 	BIN            = "bin/"
+	VAR            = "var/"
 	USR            = "usr/"
 	USR_PORTAL     = ice.USR_PORTAL
 	USR_PUBLISH    = ice.USR_PUBLISH
-	USR_LOCAL_WORK = ice.USR_LOCAL_WORK
 	USR_ICEBERGS   = ice.USR_ICEBERGS
+	USR_LOCAL_WORK = ice.USR_LOCAL_WORK
 	SRC_DOCUMENT   = ice.SRC_DOCUMENT
 	SRC_TEMPLATE   = ice.SRC_TEMPLATE
 	REQUIRE        = "/require/"
@@ -202,6 +203,7 @@ func init() {
 			fields := kit.Split(kit.Select(kit.Select(DIR_DEF_FIELDS, m.OptionFields()), kit.Join(kit.Slice(arg, 1))))
 			size, _ := _dir_list(m, root, dir, 0, m.Option(DIR_DEEP) == ice.TRUE, kit.Select(TYPE_BOTH, m.Option(DIR_TYPE)), regexp.MustCompile(m.Option(DIR_REG)), fields)
 			// m.Status(mdb.TIME, last, mdb.COUNT, kit.Split(m.FormatSize())[0], SIZE, kit.FmtSize(size), m.OptionSimple(DIR_ROOT), kit.MDB_COST, m.FormatCost())
+			kit.If(m.Option(DIR_ROOT), func() { m.Option(DIR_ROOT, path.Join(m.Option(DIR_ROOT))+PS) })
 			m.StatusTimeCount(SIZE, kit.FmtSize(size), m.OptionSimple(DIR_ROOT))
 		}},
 	})

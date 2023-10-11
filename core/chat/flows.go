@@ -33,7 +33,7 @@ func init() {
 			} else {
 				m.Fields(len(arg)-1, mdb.Config(m, mdb.FIELDS), mdb.DETAIL)
 				m.Cmdy(mdb.SELECT, m.PrefixKey(), kit.KeyHash(arg[0]), mdb.HASH, arg[1:])
-				m.PushAction(mdb.PLUGIN, mdb.DELETE).StatusTimeCount()
+				m.PushAction(mdb.PLUGIN, mdb.DELETE)
 			}
 			m.Display("")
 		}},

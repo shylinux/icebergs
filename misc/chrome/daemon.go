@@ -37,7 +37,7 @@ func (s daemon) Inputs(m *ice.Message, arg ...string) {
 }
 func (s daemon) List(m *ice.Message, arg ...string) {
 	if len(arg) < 3 || arg[0] == "" || arg[1] == "" {
-		s.send(m, arg).StatusTimeCount()
+		s.send(m, arg)
 	} else {
 		s.send(m, arg[:2], "user.jumps", arg[2])
 	}

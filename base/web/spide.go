@@ -365,13 +365,11 @@ func init() {
 }
 
 func HostPort(m *ice.Message, host, port string) string {
-	if host == "" {
-		host = kit.ParseURL(UserHost(m)).Hostname()
-	}
-	if port == "80" {
-		return kit.Format("http://%s", host)
-	} else if port == "443" {
+	kit.If(host == "", func() { host = kit.ParseURL(UserHost(m)).Hostname() })
+	if port == "443" {
 		return kit.Format("https://%s", host)
+	} else if port == "80" || port == "" {
+		return kit.Format("http://%s", host)
 	} else {
 		return kit.Format("http://%s:%s", host, port)
 	}
@@ -393,4 +391,7 @@ func SpideDelete(m *ice.Message, arg ...ice.Any) ice.Any {
 }
 func SpideSave(m *ice.Message, file, link string, cb func(count int, total int, value int)) *ice.Message {
 	return m.Cmd(Prefix(SPIDE), ice.DEV, SPIDE_SAVE, file, http.MethodGet, link, cb)
+}
+func SpideOrigin(m *ice.Message, name string) string {
+	return m.Cmdv("web.spide", name, CLIENT_ORIGIN)
 }

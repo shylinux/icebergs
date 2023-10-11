@@ -223,10 +223,9 @@ func HashSelect(m *ice.Message, arg ...string) *ice.Message {
 		kit.If(sort != UNIQ, func() { m.Sort(sort) })
 	})
 	if m.PushAction(Config(m, ACTION), REMOVE); !m.FieldsIsDetail() {
-		return m.Action(CREATE, PRUNES).StatusTimeCount()
-	} else {
-		return m.StatusTime()
+		return m.Action(CREATE, PRUNES)
 	}
+	return m
 }
 func HashPrunes(m *ice.Message, cb func(Map) bool) *ice.Message {
 	expire := kit.Select(m.Time("-"+kit.Select(DAYS, Config(m, EXPIRE))), m.Option("before"))

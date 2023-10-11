@@ -63,7 +63,7 @@ func (s alpha) List(m *ice.Message, arg ...string) {
 	}
 	wiki.CSV(m.Message.Spawn(), m.Cmdx(cli.SYSTEM, "grep", "-rih", arg[1], mdb.Config(m, mdb.STORE)), kit.Split(mdb.Config(m, mdb.FIELD))...).Table(func(value ice.Maps) {
 		kit.If(m.FieldsIsDetail(), func() { m.PushDetail(value, mdb.Config(m, mdb.FIELD)) }, func() { m.PushRecord(value, mdb.Config(m, mdb.FIELD)) })
-	}).StatusTimeCount()
+	})
 }
 
 func init() { ice.Cmd("web.wiki.alpha.alpha", alpha{}) }

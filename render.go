@@ -21,6 +21,7 @@ func Render(m *Message, cmd string, args ...Any) string {
 	if render, ok := Info.render[cmd]; ok {
 		return render(m, args...)
 	}
+	trans := kit.Value(m._cmd.Meta, CTX_TRANS)
 	switch arg := kit.Simple(args...); cmd {
 	case RENDER_BUTTON:
 		list := []string{}
@@ -33,7 +34,9 @@ func Render(m *Message, cmd string, args ...Any) string {
 					list = append(list, k)
 					break
 				}
-				kit.For(kit.Split(k), func(k string) { list = append(list, kit.Format(`<input type="button" name="%s" value="%s">`, k, k)) })
+				kit.For(kit.Split(k), func(k string) {
+					list = append(list, kit.Format(`<input type="button" name="%s" value="%s">`, k, kit.Select(k, kit.Value(trans, k), !m.IsEnglish())))
+				})
 			case Map, Maps:
 				kit.For(k, func(k, v string) {
 					list = append(list, kit.Format(`<input type="button" name="%s" value="%s">`, k, kit.Select(v, k, m.IsEnglish())))

@@ -174,5 +174,5 @@ func TagsList(m *ice.Message, cmds ...string) {
 		}
 		m.PushRecord(kit.Dict(mdb.TYPE, ls[3], mdb.NAME, ls[0], nfs.LINE, strings.TrimSuffix(ls[2], ";\"")))
 	}
-	m.Sort(nfs.LINE).StatusTimeCount()
+	m.Sort(nfs.LINE)
 }

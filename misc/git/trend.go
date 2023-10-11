@@ -19,8 +19,7 @@ func init() {
 				m.Cmdy("", code.INNER, m.Option(REPOS), MASTER, m.Option(mdb.HASH), m.Cmdv(REPOS, m.Option(REPOS), MASTER, m.Option(mdb.HASH), nfs.FILE))
 			}},
 			code.INNER: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(REPOS, code.INNER, arg)
-				ctx.DisplayLocal(m, "code/inner.js", ctx.STYLE, html.FLOAT)
+				ctx.DisplayLocalInner(m.Cmdy(REPOS, code.INNER, arg), ctx.STYLE, html.FLOAT)
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {

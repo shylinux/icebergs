@@ -1,4 +1,4 @@
-package shy
+package core
 
 import (
 	_ "shylinux.com/x/icebergs/core/chat"

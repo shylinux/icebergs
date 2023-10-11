@@ -62,7 +62,7 @@ func init() {
 					m.Push(PATH, path.Join(p, s.Name())+kit.Select("", PS, s.IsDir()))
 					m.Push(SIZE, kit.FmtSize(s.Size()))
 				})
-				m.PushAction(mdb.REMOVE).StatusTimeCount()
+				m.PushAction(mdb.REMOVE)
 			}
 		}},
 	})

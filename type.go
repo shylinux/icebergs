@@ -162,11 +162,11 @@ func (c *Context) Merge(s *Context) *Context {
 			kit.If(sub == SELECT, func() { cmd.Name = kit.Select(action.Name, cmd.Name) })
 			kit.If(sub == SELECT, func() { cmd.Help = kit.Select(action.Help, cmd.Help) })
 			if help := kit.Split(action.Help, " :："); len(help) > 0 {
-				if kit.Value(cmd.Meta, kit.Keys("_trans", strings.TrimPrefix(sub, "_")), help[0]); len(help) > 1 {
-					kit.Value(cmd.Meta, kit.Keys("_title", sub), help[1])
+				if kit.Value(cmd.Meta, kit.Keys(CTX_TRANS, strings.TrimPrefix(sub, "_")), help[0]); len(help) > 1 {
+					kit.Value(cmd.Meta, kit.Keys(CTX_TITLE, sub), help[1])
 				}
 			}
-			kit.Value(cmd.Meta, kit.Keys("_icons", sub), action.Icon)
+			kit.Value(cmd.Meta, kit.Keys(CTX_ICONS, sub), action.Icon)
 			if action.Hand == nil {
 				continue
 			}
@@ -401,7 +401,7 @@ func (m *Message) Design(action Any, help string, input ...Any) {
 	k := kit.Format(action)
 	if a, ok := m._cmd.Actions[k]; ok {
 		m._cmd.Meta[k], a.List = list, list
-		kit.Value(m._cmd.Meta, kit.Keys("_trans", k), help)
+		kit.Value(m._cmd.Meta, kit.Keys(CTX_TRANS, k), help)
 	}
 }
 func (m *Message) Actions(key string) *Action   { return m._cmd.Actions[key] }

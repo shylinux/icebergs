@@ -44,7 +44,7 @@ func _role_list(m *ice.Message, role string) *ice.Message {
 			m.Push(ROLE, kit.Value(value, mdb.NAME)).Push(mdb.ZONE, BLACK).Push(mdb.KEY, k).Push(mdb.STATUS, v)
 		})
 	})
-	return m.Sort(mdb.KEY).StatusTimeCount()
+	return m.Sort(mdb.KEY)
 }
 
 const (

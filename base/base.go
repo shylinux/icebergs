@@ -1,4 +1,4 @@
-package shy
+package base
 
 import (
 	_ "shylinux.com/x/icebergs/base/aaa"

@@ -7,10 +7,10 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _configs_set(m *ice.Message, k, v string) string { return _git_cmds(m, CONFIG, "--global", k, v) }
-func _configs_get(m *ice.Message, k string) string    { return _git_cmds(m, CONFIG, "--global", k) }
+func _configs_set(m *ice.Message, k, v string) string { return _git_cmds(m, CONFIG, GLOBAL, k, v) }
+func _configs_get(m *ice.Message, k string) string    { return _git_cmds(m, CONFIG, GLOBAL, k) }
 func _configs_list(m *ice.Message) *ice.Message {
-	kit.SplitKV(mdb.EQ, lex.NL, _configs_get(m, "--list"), func(text string, ls []string) {
+	kit.SplitKV(mdb.EQ, lex.NL, _configs_get(m, LIST), func(text string, ls []string) {
 		m.Push(mdb.NAME, ls[0]).Push(mdb.VALUE, ls[1]).PushButton(mdb.REMOVE)
 	})
 	return mdb.HashSelectValue(m, func(value ice.Maps) {
@@ -21,6 +21,10 @@ func _configs_list(m *ice.Message) *ice.Message {
 const (
 	USER_EMAIL = "user.email"
 	USER_NAME  = "user.name"
+
+	GLOBAL = "--global"
+	UNSET  = "--unset"
+	LIST   = "--list"
 )
 const CONFIGS = "configs"
 
@@ -38,7 +42,7 @@ func init() {
 			}},
 			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashCreate(m.Spawn(), m.OptionSimple(mdb.NAME, mdb.VALUE))
-				_configs_set(m, "--unset", m.Option(mdb.NAME))
+				_configs_set(m, UNSET, m.Option(mdb.NAME))
 			}},
 			mdb.MODIFY: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == mdb.VALUE {
@@ -52,11 +56,10 @@ func init() {
 			"core", kit.Dict("quotepath", "false"), "color", kit.Dict("ui", "always"),
 		))), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
-				_configs_list(m).Action(mdb.CREATE, ice.INIT).StatusTimeCount()
+				_configs_list(m).Action(mdb.CREATE, ice.INIT)
 				return
-			} else if len(arg) > 1 {
-				m.Echo(_configs_set(m, arg[0], arg[1]))
 			}
+			kit.If(len(arg) > 1, func() { _configs_set(m, arg[0], arg[1]) })
 			m.Echo(_configs_get(m, arg[0]))
 		}},
 	})

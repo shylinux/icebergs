@@ -16,7 +16,6 @@ func _context_list(m *ice.Message, sub *ice.Context, name string) {
 		}
 		m.Push(mdb.NAME, s.Prefix()).Push(mdb.HELP, s.Help)
 	})
-	m.StatusTimeCount()
 }
 
 const CONTEXT = "context"

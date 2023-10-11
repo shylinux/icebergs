@@ -93,7 +93,7 @@ func init() {
 			}},
 		}, aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
-				m.Cmdy("", mdb.SEARCH, COMMAND, ice.OptionFields(INDEX)).Action(mdb.EXPORT).StatusTimeCount()
+				m.Cmdy("", mdb.SEARCH, COMMAND, ice.OptionFields(INDEX)).Action(mdb.EXPORT)
 				DisplayStory(m.Options(nfs.DIR_ROOT, "ice."), "spide.js?split=.")
 			} else {
 				kit.For(arg, func(k string) { _command_list(m, k) })

@@ -282,8 +282,11 @@ const ( // CTX
 	CTX_SERVE = "serve"
 	CTX_CLOSE = "close"
 
-	CTX_INIT = "_init"
-	CTX_EXIT = "_exit"
+	CTX_INIT  = "_init"
+	CTX_EXIT  = "_exit"
+	CTX_ICONS = "_icons"
+	CTX_TRANS = "_trans"
+	CTX_TITLE = "_title"
 )
 const ( // LOG
 	LOG_CMDS  = "cmds"

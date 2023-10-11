@@ -104,7 +104,7 @@ func PushStream(m *ice.Message) *ice.Message {
 func init() { ice.Info.PushStream = PushStream }
 func init() { ice.Info.PushNotice = PushNotice }
 
-func Toast(m *ice.Message, text string, arg ...ice.Any) { // [title [duration [progress]]]
+func Toast(m *ice.Message, text string, arg ...ice.Any) *ice.Message { // [title [duration [progress]]]
 	if len(arg) > 1 {
 		switch val := arg[1].(type) {
 		case string:
@@ -116,6 +116,7 @@ func Toast(m *ice.Message, text string, arg ...ice.Any) { // [title [duration [p
 	kit.If(len(arg) == 0, func() { arg = append(arg, m.PrefixKey()) })
 	kit.If(len(arg) > 0, func() { arg[0] = kit.Select(m.PrefixKey(), arg[0]) })
 	PushNoticeToast(m, text, arg)
+	return m
 }
 func toastContent(m *ice.Message, state string) string {
 	return kit.Join([]string{map[string]string{ice.PROCESS: "🕑", ice.FAILURE: "❌", ice.SUCCESS: "✅"}[state], state, m.ActionKey()}, " ")

@@ -35,7 +35,7 @@ func init() {
 				if kit.Ext(arg[0]) == nfs.JSON {
 					ctx.DisplayStoryJSON(m.Cmdy(nfs.CAT, arg[0]))
 				} else {
-					CSV(m, m.Cmdx(nfs.CAT, arg[0])).StatusTimeCount()
+					CSV(m, m.Cmdx(nfs.CAT, arg[0]))
 				}
 			})
 		}},

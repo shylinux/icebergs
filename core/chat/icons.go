@@ -22,7 +22,6 @@ func init() {
 					m.Push(mdb.NAME, name).Push(mdb.ICON, kit.Format(`<i class="%s"></i>`, name))
 				}
 			})
-			m.StatusTimeCount()
 		}},
 	})
 }

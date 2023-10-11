@@ -94,12 +94,11 @@ func _mod_show(m *ice.Message, file string) {
 		}
 	})
 	kit.For(require, func(k, v string) { m.Push(REQUIRE, k).Push(VERSION, v).Push(REPLACE, kit.Select("", replace[k])) })
-	m.StatusTimeCount()
 }
 func _sum_show(m *ice.Message, file string) {
 	m.Cmdy(nfs.CAT, file, func(ls []string, line string) {
 		m.Push(nfs.REPOS, ls[0]).Push(nfs.VERSION, ls[1]).Push(mdb.HASH, ls[2])
-	}).StatusTimeCount()
+	})
 }
 
 const (

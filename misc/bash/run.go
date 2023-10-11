@@ -16,7 +16,7 @@ import (
 
 func _run_action(m *ice.Message, cmd *ice.Command, script string, arg ...string) {
 	list, args := []string{}, []string{}
-	kit.For(cmd.Meta["_trans"], func(k string, v string) {
+	kit.For(cmd.Meta[ice.CTX_TRANS], func(k string, v string) {
 		list = append(list, k)
 		args = append(args, kit.Format(`			%s)`, k))
 		kit.For(cmd.Meta[k], func(index int, value ice.Map) {

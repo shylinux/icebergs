@@ -145,7 +145,7 @@ const SERVICE = "service"
 
 func init() {
 	psh.Index.MergeCommands(ice.Commands{
-		SERVICE: {Name: "service port id auto listen prunes", Icon: "ssh.png", Help: "服务", Actions: ice.MergeActions(ice.Actions{
+		SERVICE: {Name: "service port id auto", Icon: "ssh.png", Help: "服务", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashSelect(m).Table(func(value ice.Maps) {
 					if value[mdb.STATUS] == tcp.OPEN {
@@ -190,16 +190,14 @@ func init() {
 			}},
 			aaa.INVITE: {Help: "邀请", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(cli.HOSTNAME, tcp.PublishLocalhost(m, web.UserWeb(m).Hostname()))
-				if buf, err := kit.Render(`ssh -p {{.Option "port"}} {{.Option "user.name"}}@{{.Option "hostname"}}`, m); err == nil {
-					m.EchoScript(string(buf))
-				}
+				m.EchoScript(kit.Renders(`ssh -p {{.Option "port"}} {{.Option "user.name"}}@{{.Option "hostname"}}`, m))
 			}},
 		}, mdb.StatusHashAction(
 			mdb.SHORT, tcp.PORT, mdb.FIELD, "time,port,status,private,authkey,count", mdb.FIELDS, "time,id,type,name,text",
 			WELCOME, "welcome to contexts world\r\n", GOODBYE, "goodbye of contexts world\r\n",
 		)), Hand: func(m *ice.Message, arg ...string) {
-			if mdb.ZoneSelect(m, arg...); len(arg) == 0 {
-				m.PushAction(aaa.INVITE, mdb.INSERT, ctx.LOAD, ctx.SAVE, mdb.REMOVE)
+			if mdb.ZoneSelect(m, arg...).PushAction(aaa.INVITE, mdb.INSERT, ctx.LOAD, ctx.SAVE, mdb.REMOVE); len(arg) == 0 {
+				m.Action(tcp.LISTEN)
 			}
 		}},
 	})

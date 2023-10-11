@@ -1,14 +1,12 @@
 package ssh
 
 import (
-	"crypto"
 	"crypto/rand"
 	"crypto/rsa"
-	"crypto/sha256"
 	"crypto/x509"
-	"encoding/hex"
 	"encoding/pem"
 	"path"
+	"strings"
 
 	"golang.org/x/crypto/ssh"
 
@@ -21,10 +19,8 @@ import (
 )
 
 const (
-	PUBLIC  = "public"
 	PRIVATE = "private"
-	VERIFY  = "verify"
-	SIGN    = "sign"
+	PUBLIC  = "public"
 )
 const RSA = "rsa"
 
@@ -46,7 +42,8 @@ func init() {
 			mdb.CREATE: {Name: "create bits=2048,4096 title=some", Hand: func(m *ice.Message, arg ...string) {
 				if key, err := rsa.GenerateKey(rand.Reader, kit.Int(m.Option(BITS))); !m.Warn(err, ice.ErrNotValid) {
 					if pub, err := ssh.NewPublicKey(key.Public()); !m.Warn(err, ice.ErrNotValid) {
-						mdb.HashCreate(m, m.OptionSimple(TITLE), PUBLIC, string(ssh.MarshalAuthorizedKey(pub))+lex.SP+m.Option(TITLE),
+						mdb.HashCreate(m, m.OptionSimple(TITLE),
+							PUBLIC, strings.TrimSpace(string(ssh.MarshalAuthorizedKey(pub)))+lex.SP+strings.TrimSpace(m.Option(TITLE)),
 							PRIVATE, string(pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(key)})),
 						)
 					}
@@ -64,46 +61,6 @@ func init() {
 					PRIVATE, m.Cmdx(nfs.CAT, kit.HomePath(m.Option(KEY))),
 					PUBLIC, m.Cmdx(nfs.CAT, kit.HomePath(m.Option(PUB))),
 				))
-			}},
-			SIGN: {Hand: func(m *ice.Message, arg ...string) {
-				if !nfs.Exists(m, "etc/id_rsa") {
-					if key, err := rsa.GenerateKey(rand.Reader, kit.Int("2048")); !m.Warn(err, ice.ErrNotValid) {
-						m.Cmd(nfs.SAVE, "etc/id_rsa", string(pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(key)})))
-						m.Cmd(nfs.SAVE, "etc/id_rsa.pub", string(pem.EncodeToMemory(&pem.Block{Type: "RSA PUBLIC KEY", Bytes: x509.MarshalPKCS1PublicKey(key.Public().(*rsa.PublicKey))})))
-					}
-				}
-				block, _ := pem.Decode([]byte(m.Cmdx(nfs.CAT, "etc/id_rsa")))
-				key, err := x509.ParsePKCS1PrivateKey(block.Bytes)
-				if m.Warn(err) {
-					return
-				}
-				hash := sha256.New()
-				if _, err := hash.Write([]byte(arg[0])); m.Warn(err) {
-					return
-				}
-				signature, err := rsa.SignPSS(rand.Reader, key, crypto.SHA256, hash.Sum(nil), nil)
-				if m.Warn(err) {
-					return
-				}
-				m.Echo(hex.EncodeToString(signature))
-			}},
-			VERIFY: {Hand: func(m *ice.Message, arg ...string) {
-				block, _ := pem.Decode([]byte(m.Cmdx(nfs.CAT, "etc/id_rsa.pub")))
-				pub, err := x509.ParsePKCS1PublicKey(block.Bytes)
-				if m.Warn(err) {
-					return
-				}
-				signature, err := hex.DecodeString(arg[1])
-				if m.Warn(err) {
-					return
-				}
-				hash := sha256.New()
-				if _, err := hash.Write([]byte(arg[0])); m.Warn(err) {
-					return
-				}
-				if !m.Warn(rsa.VerifyPSS(pub, crypto.SHA256, hash.Sum(nil), signature, nil)) {
-					m.Echo(ice.OK)
-				}
 			}},
 		}, mdb.HashAction(mdb.SHORT, PRIVATE, mdb.FIELD, "time,hash,title,public,private")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...).PushAction(mdb.EXPORT, mdb.REMOVE); len(arg) == 0 {

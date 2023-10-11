@@ -20,6 +20,9 @@ import (
 	"shylinux.com/x/icebergs/base/nfs"
 	psh "shylinux.com/x/icebergs/base/ssh"
 	"shylinux.com/x/icebergs/base/tcp"
+	"shylinux.com/x/icebergs/base/web"
+	"shylinux.com/x/icebergs/core/code"
+	"shylinux.com/x/icebergs/misc/xterm"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -30,26 +33,26 @@ func _ssh_open(m *ice.Message, arg ...string) {
 			defer terminal.Restore(fd, oldState)
 		}
 		w, h, _ := terminal.GetSize(fd)
-		c.Write([]byte(fmt.Sprintf("#height:%d,width:%d\n", h, w)))
-		for _, item := range kit.Simple(m.Optionv(ice.INIT)) {
+		c.Write([]byte(fmt.Sprintf("#height:%d,width:%d"+lex.NL, h, w)))
+		kit.For(kit.Simple(m.Optionv(ice.INIT)), func(cmd string) {
+			defer c.Write([]byte(cmd + lex.NL))
 			m.Sleep300ms()
-			c.Write([]byte(item + lex.NL))
-		}
-		m.Go(func() { io.Copy(c, os.Stdin) })
-		io.Copy(os.Stdout, c)
+		})
+		m.Go(func() { io.Copy(os.Stdout, c) })
+		io.Copy(c, os.Stdin)
 	}, arg...)
 }
 func _ssh_dial(m *ice.Message, cb func(net.Conn), arg ...string) {
 	p := kit.HomePath(".ssh", fmt.Sprintf("%s@%s:%s", m.Option(aaa.USERNAME), m.Option(tcp.HOST), m.Option(tcp.PORT)))
 	if nfs.Exists(m, p) {
-		if c, e := net.Dial("unix", p); e == nil {
+		if c, e := net.Dial(tcp.UNIX, p); e == nil {
 			cb(c)
 			return
 		}
 		nfs.Remove(m, p)
 	}
 	_ssh_conn(m, func(client *ssh.Client) {
-		if l, e := net.Listen("unix", p); !m.Warn(e, ice.ErrNotValid) {
+		if l, e := net.Listen(tcp.UNIX, p); !m.Warn(e, ice.ErrNotValid) {
 			defer func() { nfs.Remove(m, p) }()
 			defer l.Close()
 			m.Go(func() {
@@ -72,18 +75,15 @@ func _ssh_dial(m *ice.Message, cb func(net.Conn), arg ...string) {
 							}
 							s.Stdin, s.Stdout, s.Stderr = c, c, c
 							s.RequestPty(kit.Env(cli.TERM), h, w, ssh.TerminalModes{ssh.ECHO: 1, ssh.TTY_OP_ISPEED: 14400, ssh.TTY_OP_OSPEED: 14400})
+							gdb.SignalNotify(m, 28, func() { w, h, _ := terminal.GetSize(int(os.Stdin.Fd())); s.WindowChange(h, w) })
 							defer s.Wait()
-							gdb.SignalNotify(m, 28, func() {
-								w, h, _ := terminal.GetSize(int(os.Stdin.Fd()))
-								s.WindowChange(h, w)
-							})
 							s.Shell()
 						})
 					}(c)
 				}
 			})
 		}
-		if c, e := net.Dial("unix", p); e == nil {
+		if c, e := net.Dial(tcp.UNIX, p); !m.Warn(e) {
 			cb(c)
 		}
 	}, arg...)
@@ -109,7 +109,6 @@ func _ssh_conn(m *ice.Message, cb func(*ssh.Client), arg ...string) {
 				}
 			case strings.HasSuffix(p, "password:"):
 				res = append(res, m.Option(aaa.PASSWORD))
-			default:
 			}
 		}
 		return
@@ -124,54 +123,108 @@ func _ssh_conn(m *ice.Message, cb func(*ssh.Client), arg ...string) {
 		}
 	})
 }
+func _ssh_hold(m *ice.Message, c *ssh.Client) {
+	if s, e := _ssh_session(m, c); !m.Warn(e, ice.ErrNotValid) {
+		defer s.Wait()
+		s.Shell()
+	}
+}
+func _ssh_target(m *ice.Message, name string) *ssh.Client {
+	return mdb.HashSelectTarget(m, name, func(value ice.Maps) (res ice.Any) {
+		m.GoWait(func(done func()) {
+			_ssh_conn(m.Spawn(value), func(c *ssh.Client) {
+				defer _ssh_hold(m, c)
+				defer done()
+				res = c
+			})
+		})
+		return
+	}).(*ssh.Client)
+}
 
 const SSH = "ssh"
+const (
+	DIRECT = "direct"
+)
 const CONNECT = "connect"
 
 func init() {
 	psh.Index.MergeCommands(ice.Commands{
-		CONNECT: {Name: "connect name auto", Help: "连接", Actions: ice.MergeActions(ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashSelect(m).Table(func(value ice.Maps) {
-					if value[mdb.STATUS] == tcp.OPEN {
-						m.Cmd("", tcp.DIAL, mdb.NAME, value[mdb.NAME], value)
-					}
-				})
-			}},
+		CONNECT: {Help: "连接", Actions: ice.MergeActions(ice.Actions{
 			tcp.OPEN: {Name: "open authfile username=shy password verfiy host=shylinux.com port=22 private=.ssh/id_rsa", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
 				defer nfs.OptionLoad(m, m.Option("authfile")).Echo("exit %s@%s:%s\n", m.Option(aaa.USERNAME), m.Option(tcp.HOST), m.Option(tcp.PORT))
 				_ssh_open(m, arg...)
 			}},
 			tcp.DIAL: {Name: "dial name=shylinux host=shylinux.com port=22 username=shy private=.ssh/id_rsa", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				m.Go(func() {
-					_ssh_conn(m, func(client *ssh.Client) {
-						mdb.HashCreate(m.Spawn(), m.OptionSimple(mdb.NAME, tcp.HOST, tcp.PORT, aaa.USERNAME), mdb.STATUS, tcp.OPEN, kit.Dict(mdb.TARGET, client))
-						m.Cmd("", SESSION, m.OptionSimple(mdb.NAME))
+					msg := m.Spawn()
+					_ssh_conn(m, func(c *ssh.Client) {
+						defer _ssh_hold(m, c)
+						mdb.HashCreate(msg, m.OptionSimple(mdb.NAME, tcp.HOST, tcp.PORT, aaa.USERNAME, PRIVATE), kit.Dict(mdb.TARGET, c))
 					}, arg...)
-				})
-				m.Sleep300ms()
+				}).Sleep3s()
 			}},
-			SESSION: {Help: "会话", Hand: func(m *ice.Message, arg ...string) {
-				if c, e := _ssh_session(m, mdb.HashSelectTarget(m, m.Option(mdb.NAME), nil).(*ssh.Client)); !m.Warn(e, ice.ErrNotValid) {
-					defer c.Wait()
-					c.Shell()
-				}
-			}},
-			ctx.COMMAND: {Name: "command cmd=pwd", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
-				client := mdb.HashSelectTarget(m, m.Option(mdb.NAME), nil).(*ssh.Client)
-				if s, e := client.NewSession(); !m.Warn(e, ice.ErrNotValid) {
+			SESSION: {Help: "会话", Hand: func(m *ice.Message, arg ...string) { _ssh_hold(m, _ssh_target(m, m.Option(mdb.NAME))) }},
+			DIRECT: {Name: "direct cmd=pwd", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
+				if m.Option(mdb.NAME) == "" {
+					msg := m.Cmds("")
+					web.GoToast(m, m.Option(ice.CMD), func(toast func(string, int, int)) []string {
+						count, total := 0, msg.Length()
+						toast("", count, total)
+						msg.Table(func(value ice.Maps) {
+							toast(value[mdb.NAME], count, total)
+							msg := m.Cmds("", m.ActionKey(), value)
+							kit.If(len(msg.Resultv()) == 0, func() { msg.TableEcho() })
+							m.Push(mdb.TIME, msg.Time())
+							m.Push(mdb.NAME, value[mdb.NAME])
+							m.Push(cli.COST, m.FormatCost())
+							m.Push(RES, msg.Result())
+							count++
+						})
+						return nil
+					}).ProcessInner()
+				} else if s, e := _ssh_target(m, m.Option(mdb.NAME)).NewSession(); !m.Warn(e, ice.ErrNotValid) {
 					defer s.Close()
 					if b, e := s.CombinedOutput(m.Option(ice.CMD)); !m.Warn(e, ice.ErrNotValid) {
-						m.Echo(string(b))
+						m.Echo(string(b)).ProcessInner()
 					}
+				} else {
+					mdb.HashSelectUpdate(m, m.Option(mdb.NAME), func(value ice.Map) { delete(value, mdb.TARGET) })
 				}
 			}},
-		}, mdb.StatusHashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,status,username,host,port")), Hand: func(m *ice.Message, arg ...string) {
-			if mdb.HashSelect(m, arg...).Table(func(value ice.Maps) {
-				m.PushButton(kit.Select("", "command,session", value[mdb.STATUS] == tcp.OPEN), mdb.REMOVE)
-			}); len(arg) == 0 {
-				m.Action(tcp.DIAL)
+			code.XTERM: {Hand: func(m *ice.Message, arg ...string) {
+				ctx.Process(m, code.XTERM, []string{SSH + lex.SP + m.Option(mdb.NAME)}, arg...)
+			}},
+		}, mdb.StatusHashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,username,private,host,port"), mdb.ImportantHashAction()), Hand: func(m *ice.Message, arg ...string) {
+			if mdb.HashSelect(m, arg...).PushAction(code.XTERM, DIRECT, SESSION, mdb.REMOVE); len(arg) == 0 {
+				m.Sort(mdb.NAME).Action(tcp.DIAL, DIRECT)
 			}
 		}},
 	})
 }
+
+type session struct {
+	name string
+	sess *ssh.Session
+	pty  *os.File
+}
+
+func NewSession(m *ice.Message, arg ...string) (xterm.XTerm, error) {
+	sess := &session{name: arg[0]}
+	m.GoWait(func(done func()) {
+		m.Cmd("ssh.connect", SESSION, kit.Dict(mdb.NAME, arg[0]), func(s *ssh.Session) {
+			defer done()
+			pty, tty, _ := xterm.Open()
+			sess.sess, sess.pty = s, pty
+			s.Stdin, s.Stdout, s.Stderr = tty, tty, tty
+			s.RequestPty(kit.Env(cli.TERM), 24, 80, ssh.TerminalModes{ssh.ECHO: 0, ssh.TTY_OP_ISPEED: 14400, ssh.TTY_OP_OSPEED: 14400})
+		})
+	})
+	return sess, nil
+}
+func (s session) Setsize(h, w string) error     { return s.sess.WindowChange(kit.Int(h), kit.Int(w)) }
+func (s session) Write(buf []byte) (int, error) { return s.pty.Write(buf) }
+func (s session) Read(buf []byte) (int, error)  { return s.pty.Read(buf) }
+func (s session) Close() error                  { return s.sess.Close() }
+
+func init() { xterm.AddCommand(SSH, NewSession) }

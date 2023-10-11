@@ -65,6 +65,11 @@ func (m *Message) Go(cb func(), arg ...Any) *Message {
 	task.Put(m.FormatTaskMeta(), arg[0], func(task *task.Task) { m.TryCatch(true, func(m *Message) { cb() }) })
 	return m
 }
+func (m *Message) GoWait(cb func(func()), arg ...Any) *Message {
+	res := make(chan bool, 2)
+	defer func() { <-res }()
+	return m.Go(func() { cb(func() { res <- true }) }, arg...)
+}
 func (m *Message) Wait(d string, cb ...Handler) (wait func() bool, done Handler) {
 	sync := make(chan bool, 2)
 	t := time.AfterFunc(kit.Duration(d), func() { sync <- false })

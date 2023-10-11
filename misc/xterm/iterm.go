@@ -35,7 +35,8 @@ type iterm struct {
 	*idata
 }
 
-func NewITerm(m *ice.Message) (XTerm, error) {
+func init() { AddCommand("ish", NewITerm) }
+func NewITerm(m *ice.Message, arg ...string) (XTerm, error) {
 	r, w, e := os.Pipe()
 	return &iterm{m: m, r: r, w: w, idata: &idata{cmds: kit.Simple(
 		kit.SortedKey(ice.Info.Index),

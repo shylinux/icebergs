@@ -41,7 +41,7 @@ func _xterm_get(m *ice.Message, h string) xterm.XTerm {
 			for {
 				if n, e := term.Read(buf); !m.Warn(e) && e == nil {
 					if _xterm_echo(m, h, string(buf[:n])); len(text) > 0 {
-						kit.If(text[0], func(cmd string) { m.Go(func() { m.Sleep30ms(); term.Writeln(cmd) }) })
+						kit.If(text[0], func(cmd string) { m.Go(func() { m.Sleep30ms(); term.Write([]byte(cmd + lex.NL)) }) })
 						text = text[1:]
 					}
 				} else {
@@ -54,11 +54,12 @@ func _xterm_get(m *ice.Message, h string) xterm.XTerm {
 	}).(xterm.XTerm)
 }
 func _xterm_echo(m *ice.Message, h string, str string) {
-	m.Options(ice.MSG_COUNT, "0", ice.LOG_DISABLE, ice.TRUE, "__target", "", ice.MSG_DAEMON, mdb.HashSelectField(m, h, cli.DAEMON))
+	m.Options(ice.MSG_DAEMON, mdb.HashSelectField(m, h, cli.DAEMON), ice.MSG_COUNT, "0", "__target", "")
+	m.Options(ice.LOG_DISABLE, ice.TRUE)
 	web.PushNoticeGrow(m, h, str)
 }
 func _xterm_cmds(m *ice.Message, h string, cmd string, arg ...ice.Any) {
-	kit.If(cmd != "", func() { _xterm_get(m, h).Writeln(cmd, arg...) })
+	kit.If(cmd != "", func() { _xterm_get(m, h).Write([]byte(kit.Format(cmd, arg...) + lex.NL)) })
 	m.ProcessHold()
 }
 

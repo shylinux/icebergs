@@ -129,7 +129,7 @@ func ToastProcess(m *ice.Message, arg ...ice.Any) func() {
 	Toast(m, toastContent(m, ice.PROCESS), arg...)
 	return func() { Toast(m, toastContent(m, ice.SUCCESS)) }
 }
-func GoToast(m *ice.Message, title string, cb func(toast func(string, int, int)) []string) {
+func GoToast(m *ice.Message, title string, cb func(toast func(string, int, int)) []string) *ice.Message {
 	_total := 0
 	toast := func(name string, count, total int) {
 		kit.If(total == 0, func() { total = 1 })
@@ -144,4 +144,5 @@ func GoToast(m *ice.Message, title string, cb func(toast func(string, int, int))
 	} else {
 		toast(ice.SUCCESS, _total, _total)
 	}
+	return m
 }

@@ -20,7 +20,6 @@ type Winsize struct {
 
 type XTerm interface {
 	Setsize(rows, cols string) error
-	Writeln(data string, arg ...ice.Any)
 	Write(buf []byte) (int, error)
 	Read(buf []byte) (int, error)
 	Close() error
@@ -38,11 +37,16 @@ func (s xterm) Write(buf []byte) (int, error)      { return s.File.Write(buf) }
 func (s xterm) Read(buf []byte) (int, error)       { return s.File.Read(buf) }
 func (s xterm) Close() error                       { return s.Cmd.Process.Kill() }
 
+type handler func(m *ice.Message, arg ...string) (XTerm, error)
+
+var list = map[string]handler{}
+
+func AddCommand(key string, cb handler) { list[key] = cb }
+
 func Command(m *ice.Message, dir string, cli string, arg ...string) (XTerm, error) {
-	if path.Base(cli) == "ish" {
-		return NewITerm(m)
+	if cb, ok := list[path.Base(cli)]; ok {
+		return cb(m.Spawn(), arg...)
 	}
-	m.Debug("command %v %v", cli, arg)
 	cmd := exec.Command(cli, arg...)
 	cmd.Dir = nfs.MkdirAll(m, kit.Path(dir))
 	cmd.Env = append(cmd.Env, os.Environ()...)

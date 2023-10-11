@@ -68,6 +68,7 @@ const (
 )
 const (
 	LISTEN = "listen"
+	UNIX   = "unix"
 )
 const SERVER = "server"
 

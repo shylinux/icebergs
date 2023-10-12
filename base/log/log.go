@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"path"
 	"strings"
+	"sync/atomic"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/lex"
@@ -115,6 +116,9 @@ func init() {
 	ice.Info.Traceid = "short"
 	ice.Pulse.Option(ice.LOG_TRACEID, Traceid())
 }
+
+var _trace_count int64
+
 func Traceid() (traceid string) {
 	ls := []string{}
 	kit.For(kit.Split(ice.Info.Traceid), func(key string) {
@@ -128,6 +132,9 @@ func Traceid() (traceid string) {
 		case "hide":
 			ls = ls[:0]
 		}
+	})
+	kit.If(len(ls) > 0, func() {
+		ls = append(ls, kit.Format(atomic.AddInt64(&_trace_count, 1)))
 	})
 	return strings.Join(ls, "-")
 }

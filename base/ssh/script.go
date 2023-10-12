@@ -14,6 +14,7 @@ import (
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/lex"
+	"shylinux.com/x/icebergs/base/log"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
@@ -95,6 +96,7 @@ func (f *Frame) parse(m *ice.Message, h, line string) string {
 		return ""
 	}
 	msg := m.Spawn(f.target)
+	kit.If(h == STDIO, func() { msg.Option(ice.LOG_TRACEID, log.Traceid()) })
 	if msg.Cmdy(ls); h == STDIO && msg.IsErrNotFound() {
 		msg.SetResult().Cmdy(cli.SYSTEM, ls)
 	}

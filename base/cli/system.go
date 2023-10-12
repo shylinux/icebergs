@@ -30,11 +30,9 @@ func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
 			}
 		}
 	})
-	if bin == "" && nfs.Exists(m, ice.ETC_PATH) {
-		if text := m.Cmdx(nfs.CAT, ice.ETC_PATH, kit.Dict(aaa.UserRole, aaa.ROOT)); len(text) > 0 {
-			if bin = _system_find(m, arg[0], strings.Split(text, lex.NL)...); bin != "" {
-				m.Logs(FIND, "etcpath cmd", bin)
-			}
+	if bin == "" {
+		if bin = _system_find(m, arg[0], EtcPath(m)...); bin != "" {
+			m.Logs(FIND, "etcpath cmd", bin)
 		}
 	}
 	if bin == "" {
@@ -156,11 +154,11 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		SYSTEM: {Name: "system cmd", Help: "系统命令", Actions: ice.MergeActions(ice.Actions{
 			nfs.PUSH: {Hand: func(m *ice.Message, arg ...string) {
-				for _, p := range arg {
-					if !strings.Contains(m.Cmdx(nfs.CAT, ice.ETC_PATH), p) {
+				kit.For(arg, func(p string) {
+					kit.If(!kit.IsIn(p, EtcPath(m)...), func() {
 						m.Cmd(nfs.PUSH, ice.ETC_PATH, strings.TrimSpace(p)+lex.NL)
-					}
-				}
+					})
+				})
 				m.Cmdy(nfs.CAT, ice.ETC_PATH)
 			}},
 			FIND: {Hand: func(m *ice.Message, arg ...string) { m.Echo(_system_find(m, arg[0], arg[1:]...)) }},
@@ -180,9 +178,7 @@ func init() {
 }
 
 func SystemFind(m *ice.Message, bin string, dir ...string) string {
-	if text := m.Cmdx(nfs.CAT, ice.ETC_PATH); len(text) > 0 {
-		dir = append(dir, strings.Split(text, lex.NL)...)
-	}
+	dir = append(dir, EtcPath(m)...)
 	return _system_find(m, bin, append(dir, _path_split(kit.Env(PATH))...)...)
 }
 func SystemExec(m *ice.Message, arg ...string) string { return strings.TrimSpace(m.Cmdx(SYSTEM, arg)) }
@@ -190,3 +186,20 @@ func SystemCmds(m *ice.Message, cmds string, args ...ice.Any) string {
 	return strings.TrimRight(m.Cmdx(SYSTEM, "sh", "-c", kit.Format(cmds, args...), ice.Option{CMD_OUTPUT, ""}), lex.NL)
 }
 func IsSuccess(m *ice.Message) bool { return m.Append(CODE) == "" || m.Append(CODE) == "0" }
+
+var _cache_path []string
+
+func EtcPath(m *ice.Message) (res []string) {
+	if len(_cache_path) > 0 {
+		return _cache_path
+	}
+	nfs.Exists(m, ice.ETC_PATH, func(p string) {
+		kit.For(strings.Split(m.Cmdx(nfs.CAT, p, kit.Dict(aaa.UserRole, aaa.ROOT)), lex.NL), func(p string) {
+			kit.If(p != "" && !strings.HasPrefix(p, "# "), func() {
+				res = append(res, p)
+			})
+		})
+	})
+	_cache_path = res
+	return
+}

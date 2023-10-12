@@ -64,7 +64,7 @@ func BinPath(arg ...string) string {
 	}
 	kit.For(arg, func(p string) {
 		list = append(list, kit.Path(p, ice.BIN), kit.Path(p, ice.USR_PUBLISH), kit.Path(p, ice.USR_LOCAL_BIN), kit.Path(p, ice.USR_LOCAL_GO_BIN))
-		kit.For(kit.Reverse(strings.Split(ice.Pulse.Cmdx(nfs.CAT, kit.Path(p, ice.ETC_PATH)), lex.NL)), func(l string) {
+		kit.For(kit.Reverse(EtcPath(ice.Pulse)), func(l string) {
 			kit.If(strings.TrimSpace(l) != "" && !strings.HasPrefix(strings.TrimSpace(l), "#"), func() { push(kit.Path(p, l)) })
 		})
 	})

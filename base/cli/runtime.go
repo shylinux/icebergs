@@ -157,9 +157,8 @@ const RUNTIME = "runtime"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		RUNTIME: {Name: "runtime info=bootinfo,ifconfig,diskinfo,hostinfo,userinfo,procstat,procinfo,bootinfo,role,api,cli,cmd,mod,env,path,chain,routine auto upgrade restart logs conf", Icon: "Infomation.png", Help: "运行环境", Actions: ice.MergeActions(ice.Actions{
+		RUNTIME: {Name: "runtime info=bootinfo,ifconfig,diskinfo,hostinfo,userinfo,procstat,procinfo,bootinfo,role,api,cli,cmd,mod,env,path,chain,routine auto upgrade restart reboot logs conf", Icon: "Infomation.png", Help: "运行环境", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				aaa.White(m, ice.ETC_PATH)
 				aaa.White(m, ice.LICENSE)
 				_runtime_init(m)
 			}},
@@ -253,6 +252,9 @@ func init() {
 			}},
 			RESTART: {Help: "重启", Hand: func(m *ice.Message, arg ...string) {
 				m.Go(func() { m.Sleep30ms(ice.EXIT, 1) })
+			}},
+			"reboot": {Help: "清空", Hand: func(m *ice.Message, arg ...string) {
+				m.Go(func() { m.Sleep30ms(ice.QUIT, 1) })
 			}},
 			"logs": {Help: "日志", Hand: func(m *ice.Message, arg ...string) {
 				OpenCmds(m, kit.Format("cd %s", kit.Path("")), "tail -f var/log/bench.log")

@@ -26,7 +26,9 @@ func (m *Message) join(arg ...Any) (string, []Any) {
 			i--
 			continue
 		case []string:
-			list = append(list, kit.JoinKV(DF+SP, SP, v...))
+			if len(v) > 0 {
+				list = append(list, kit.JoinKV(DF+SP, SP, v...))
+			}
 			i--
 			continue
 		}

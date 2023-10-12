@@ -178,7 +178,7 @@ func init() {
 				}
 			}},
 			ctx.LOAD: {Name: "load authkey=.ssh/authorized_keys", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(nfs.CAT, kit.HomePath(m.Option(AUTHKEY)), func(pub string) { m.Cmd(SERVICE, mdb.INSERT, mdb.TEXT, pub) })
+				m.Cmd(nfs.CAT, kit.HomePath(m.Option(AUTHKEY)), func(pub string) { m.Cmd(SERVICE, mdb.INSERT, pub) })
 			}},
 			ctx.SAVE: {Name: "save authkey=.ssh/authorized_keys", Hand: func(m *ice.Message, arg ...string) {
 				list := []string{}

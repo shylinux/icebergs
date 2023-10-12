@@ -152,9 +152,14 @@ func RenderVersion(m *ice.Message) string {
 }
 
 const (
-	CHAT     = "chat"
-	CHAT_POD = "/chat/pod/"
-	CHAT_CMD = "/chat/cmd/"
+	CHAT            = "chat"
+	CHAT_POD        = "/chat/pod/"
+	CHAT_CMD        = "/chat/cmd/"
+	REQUIRE_SRC     = "/require/src/"
+	REQUIRE_USR     = "/require/usr/"
+	REQUIRE_MODULES = "/require/modules/"
+	VOLCANOS        = "/volcanos/"
+	INTSHELL        = "/intshell/"
 
 	CODE_GIT_SERVICE = "web.code.git.service"
 	CODE_GIT_SEARCH  = "web.code.git.search"

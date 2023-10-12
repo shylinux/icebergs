@@ -232,6 +232,7 @@ const (
 	UserAgent      = "User-Agent"
 	Referer        = "Referer"
 	Accept         = "Accept"
+	Mozilla        = "Mozilla"
 
 	ApplicationForm  = "application/x-www-form-urlencoded"
 	ApplicationOctet = "application/octet-stream"

@@ -87,12 +87,17 @@ func PushImages(m *ice.Message, name string) {
 	}
 }
 func PushNotice(m *ice.Message, arg ...ice.Any) {
+	opts := ice.Map{ice.MSG_OPTION: []string{}, ice.MSG_OPTS: []string{}}
+	kit.For([]string{ice.LOG_DEBUG, ice.LOG_TRACEID}, func(key string) {
+		opts[ice.MSG_OPTION] = kit.Simple(opts[ice.MSG_OPTION], key)
+		opts[key] = m.Option(key)
+	})
 	if m.Option(ice.MSG_DAEMON) == "" {
 		return
 	} else if m.Option(ice.MSG_USERPOD) == "" {
-		m.Cmd(SPACE, m.Option(ice.MSG_DAEMON), arg, ice.Maps{ice.MSG_OPTION: "", ice.MSG_OPTS: ""})
+		m.Cmd(SPACE, m.Option(ice.MSG_DAEMON), arg, opts)
 	} else {
-		m.Cmd(SPACE, kit.Keys(m.Option("__target"), m.Option(ice.MSG_DAEMON)), arg, ice.Maps{ice.MSG_OPTION: "", ice.MSG_OPTS: ""})
+		m.Cmd(SPACE, kit.Keys(m.Option("__target"), m.Option(ice.MSG_DAEMON)), arg, opts)
 	}
 }
 func PushNoticeToast(m *ice.Message, arg ...ice.Any) { PushNotice(m, kit.List("toast", arg)...) }

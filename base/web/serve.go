@@ -58,32 +58,38 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	} else {
 		r.Header.Set(ice.MSG_USERIP, strings.Split(r.RemoteAddr, nfs.DF)[0])
 	}
-	traceid := log.Traceid()
-	r.Header.Set(ice.LOG_TRACEID, traceid)
-	if m.Logs(r.Header.Get(ice.MSG_USERIP), r.Method, r.URL.String(), logs.TraceidMeta(traceid)); r.Method == http.MethodGet {
-		ispod := kit.Contains(r.URL.String(), CHAT_POD, "pod=") || kit.Contains(r.Header.Get(Referer), CHAT_POD, "pod=")
-		if msg := m.Spawn(w, r).Options(ice.MSG_USERUA, r.UserAgent()); path.Join(r.URL.Path) == nfs.PS {
-			if !msg.IsCliUA() {
-				if r.URL.Path = kit.Select(nfs.PS, mdb.Config(m, ice.MAIN)); path.Join(r.URL.Path) != nfs.PS {
-					return true
-				}
-			}
-			return !Render(RenderMain(msg), msg.Option(ice.MSG_OUTPUT), kit.List(msg.Optionv(ice.MSG_ARGS))...)
-		} else if p := path.Join(kit.Select(ice.USR_VOLCANOS, ice.USR_INTSHELL, msg.IsCliUA()), r.URL.Path); nfs.Exists(msg, p) {
-			return !Render(msg, ice.RENDER_DOWNLOAD, p)
-		} else if p = path.Join(nfs.USR, r.URL.Path); kit.HasPrefix(r.URL.Path, nfs.VOLCANOS, nfs.INTSHELL) && nfs.Exists(msg, p) {
-			return !Render(msg, ice.RENDER_DOWNLOAD, p)
-		} else if p = strings.TrimPrefix(r.URL.Path, nfs.REQUIRE); kit.HasPrefix(r.URL.Path, ice.REQUIRE_SRC, nfs.REQUIRE+ice.USR_ICONS, nfs.REQUIRE+ice.USR_ICEBERGS) && nfs.Exists(msg, p) {
-			if !ispod {
-				return !Render(msg, ice.RENDER_DOWNLOAD, p)
-			}
-		} else if p = path.Join(ice.USR_MODULES, strings.TrimPrefix(r.URL.Path, ice.REQUIRE_MODULES)); kit.HasPrefix(r.URL.Path, ice.REQUIRE_MODULES) && nfs.Exists(msg, p) {
-			return !Render(msg, ice.RENDER_DOWNLOAD, p)
-		}
-	} else if path.Join(r.URL.Path) == nfs.PS {
+	if !kit.HasPrefix(r.URL.String(), VOLCANOS, REQUIRE_SRC, REQUIRE_MODULES, INTSHELL) {
+		r.Header.Set(ice.LOG_TRACEID, log.Traceid())
+		m.Logs(r.Header.Get(ice.MSG_USERIP), r.Method, r.URL.String(), logs.TraceidMeta(r.Header.Get(ice.LOG_TRACEID)))
+	}
+	if path.Join(r.URL.Path) == nfs.PS && strings.HasPrefix(r.UserAgent(), Mozilla) {
 		r.URL.Path = kit.Select(nfs.PS, mdb.Config(m, ice.MAIN))
 	}
+	if r.Method == http.MethodGet {
+		msg := m.Spawn(w, r).Options(ice.MSG_USERUA, r.UserAgent(), ice.LOG_TRACEID, r.Header.Get(ice.LOG_TRACEID))
+		if path.Join(r.URL.Path) == nfs.PS {
+			if Render(RenderMain(msg), msg.Option(ice.MSG_OUTPUT), kit.List(msg.Optionv(ice.MSG_ARGS))...) {
+				return false
+			}
+		} else if _serve_static(msg, w, r) {
+			return false
+		}
+	}
 	return true
+}
+func _serve_static(msg *ice.Message, w http.ResponseWriter, r *http.Request) bool {
+	if p := path.Join(kit.Select(ice.USR_VOLCANOS, ice.USR_INTSHELL, msg.IsCliUA()), r.URL.Path); nfs.Exists(msg, p) {
+		return Render(msg, ice.RENDER_DOWNLOAD, p)
+	} else if p = path.Join(nfs.USR, r.URL.Path); kit.HasPrefix(r.URL.Path, nfs.VOLCANOS, nfs.INTSHELL) && nfs.Exists(msg, p) {
+		return Render(msg, ice.RENDER_DOWNLOAD, p)
+	} else if p = strings.TrimPrefix(r.URL.Path, nfs.REQUIRE); kit.HasPrefix(r.URL.Path, ice.REQUIRE_SRC, nfs.REQUIRE+ice.USR_ICONS, nfs.REQUIRE+ice.USR_ICEBERGS) && nfs.Exists(msg, p) {
+		ispod := kit.Contains(r.URL.String(), CHAT_POD, "pod=") || kit.Contains(r.Header.Get(Referer), CHAT_POD, "pod=")
+		return !ispod && Render(msg, ice.RENDER_DOWNLOAD, p)
+	} else if p = path.Join(ice.USR_MODULES, strings.TrimPrefix(r.URL.Path, ice.REQUIRE_MODULES)); kit.HasPrefix(r.URL.Path, ice.REQUIRE_MODULES) && nfs.Exists(msg, p) {
+		return Render(msg, ice.RENDER_DOWNLOAD, p)
+	} else {
+		return false
+	}
 }
 func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.ResponseWriter, r *http.Request) {
 	debug := strings.Contains(r.URL.String(), "debug=true") || strings.Contains(r.Header.Get(Referer), "debug=true")
@@ -130,7 +136,7 @@ func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.Response
 	if cmds, ok := _serve_auth(m, key, kit.Simple(m.Optionv(ice.MSG_CMDS)), w, r); ok {
 		defer func() {
 			kit.If(m.Option(ice.MSG_STATUS) == "", func() { m.StatusTimeCount() })
-			m.Cost(kit.Format("%s: /chat/cmd/%s/%s %v", r.Method, m.Option(ice.MSG_INDEX), path.Join(cmds...), m.FormatSize()))
+			m.Cost(kit.Format("%s: %s %v", r.Method, r.URL.String(), m.FormatSize()))
 		}()
 		m.Option(ice.MSG_OPTS, kit.Simple(m.Optionv(ice.MSG_OPTION), func(k string) bool { return !strings.HasPrefix(k, ice.MSG_SESSID) }))
 		if m.Detailv(m.PrefixKey(), cmds); len(cmds) > 1 && cmds[0] == ctx.ACTION {

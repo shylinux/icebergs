@@ -67,6 +67,7 @@ func init() {
 		SPARK: {Name: "spark type=inner,shell,redis,mysql text", Help: "段落", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				ice.AddRender(ice.RENDER_SCRIPT, func(msg *ice.Message, args ...ice.Any) string {
+					return msg.Cmdx(SPARK, SHELL, args)
 					return m.Options(ice.MSG_COUNT, "0").Cmdx(SPARK, SHELL, args)
 				})
 			}},

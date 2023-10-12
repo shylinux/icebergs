@@ -21,8 +21,8 @@ func _command_list(m *ice.Message, name string) *ice.Message {
 		m.Push(mdb.INDEX, kit.Keys(s.Prefix(), key))
 		m.Push(mdb.NAME, kit.Format(cmd.Name))
 		m.Push(mdb.HELP, kit.Format(cmd.Help))
-		m.Push(mdb.META, FormatPretty(cmd.Meta, 0, 2))
-		m.Push(mdb.LIST, FormatPretty(cmd.List, 0, 2))
+		m.Push(mdb.META, kit.Format(cmd.Meta))
+		m.Push(mdb.LIST, kit.Format(cmd.List))
 	})
 	return m
 }

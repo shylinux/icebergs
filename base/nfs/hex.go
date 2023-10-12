@@ -37,7 +37,7 @@ func init() {
 				m.Push(kit.Format(i%8), hex.EncodeToString(buf[i:i+1]))
 				kit.If(i%8 == 7, func() { m.Push(mdb.TEXT, string(buf[i-7:i+1])) })
 			})
-			m.Status(mdb.TIME, s.ModTime().Format(ice.MOD_TIME), FILE, arg[0], SIZE, kit.FmtSize(s.Size()))
+			m.StatusTime(mdb.TIME, s.ModTime().Format(ice.MOD_TIME), FILE, arg[0], SIZE, kit.FmtSize(s.Size()))
 		})
 	}}})
 }

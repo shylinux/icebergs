@@ -184,7 +184,7 @@ func init() {
 			}
 			m.Table(func(value ice.Maps) {
 				kit.If(value["tag"] == "1", func() { m.PushButton("") }, func() { m.PushButton(code.XTERM, mdb.SELECT, mdb.REMOVE) })
-			}).StatusTimeCount()
+			})
 		}},
 		WINDOW: {Hand: func(m *ice.Message, arg ...string) {
 			m.Split(m.Cmdx(cli.SYSTEM, TMUX, LIST_WINDOWS, "-t", kit.Select("", arg, 0), "-F", mdb.Config(m, FORMAT)), mdb.Config(m, FIELDS), mdb.FS, lex.NL)

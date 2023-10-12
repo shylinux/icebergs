@@ -101,5 +101,5 @@ func (s input) List(m *ice.Message, arg ...string) {
 			m.Push(mdb.ID, line[3]).Push(CODE, line[2]).Push(TEXT, line[4]).Push(WEIGHT, line[6])
 		}
 	}
-	m.StatusTimeCount().SortIntR(WEIGHT)
+	m.SortIntR(WEIGHT)
 }

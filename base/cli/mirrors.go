@@ -59,7 +59,7 @@ func init() {
 					kit.If(m.Option("proxy"), func(p string) {
 						m.Cmd(nfs.SAVE, ETC_APK_REPOS, strings.ReplaceAll(m.Cmdx(nfs.CAT, ETC_APK_REPOS), "dl-cdn.alpinelinux.org", p))
 					})
-					m.Cmdy(SYSTEM, "apk", "update").StatusTime()
+					m.Cmdy(SYSTEM, "apk", "update")
 				}
 			}},
 			ALPINE: {Name: "alpine cli cmd", Hand: func(m *ice.Message, arg ...string) { IsAlpine(m, arg...) }},

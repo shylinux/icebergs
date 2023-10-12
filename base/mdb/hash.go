@@ -230,7 +230,7 @@ func HashSelect(m *ice.Message, arg ...string) *ice.Message {
 func HashPrunes(m *ice.Message, cb func(Map) bool) *ice.Message {
 	expire := kit.Select(m.Time("-"+kit.Select(DAYS, Config(m, EXPIRE))), m.Option("before"))
 	m.OptionCB(PRUNES, func(key string, value Map) bool { return kit.Format(value[TIME]) < expire && (cb == nil || cb(value)) })
-	return m.Cmdy(PRUNES, m.PrefixKey(), "", HASH, ice.OptionFields(HashField(m))).StatusTimeCount()
+	return m.Cmdy(PRUNES, m.PrefixKey(), "", HASH, ice.OptionFields(HashField(m)))
 }
 func HashExport(m *ice.Message, arg ...Any) *ice.Message {
 	return m.Cmdy(EXPORT, m.PrefixKey(), "", HASH, arg)

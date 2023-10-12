@@ -2,6 +2,7 @@ package ice
 
 import (
 	"io"
+	"os"
 	"reflect"
 	"strings"
 
@@ -54,6 +55,7 @@ var Info = struct {
 	Hostname string
 	Pathname string
 	PidPath  string
+	Traceid  string
 	Colors   bool
 
 	System    string
@@ -98,6 +100,9 @@ var Info = struct {
 	Log:        func(m *Message, p, l, s string) {},
 }
 
+func init() {
+	Info.Traceid = os.Getenv(LOG_TRACE)
+}
 func AddMergeAction(h ...Any) {
 	Info.merges = append(Info.merges, h...)
 }

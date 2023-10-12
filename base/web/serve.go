@@ -200,19 +200,20 @@ func init() {
 					mdb.Config(m, ice.MAIN, CHAT_CMD+m.Option(ctx.INDEX)+nfs.PS)
 				}
 			}},
+			log.TRACEID: {Help: "日志", Hand: func(m *ice.Message, arg ...string) {
+				kit.If(len(arg) > 0, func() { ice.Info.Traceid = arg[0] })
+				m.Echo(ice.Info.Traceid)
+			}},
 			tcp.HOST: {Help: "公网", Hand: func(m *ice.Message, arg ...string) { m.Echo(kit.Formats(PublicIP(m))) }},
 			cli.DARK: {Help: "主题", Hand: func(m *ice.Message, arg ...string) {
-				if tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) {
+				kit.If(tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)), func() {
 					m.Cmd(cli.SYSTEM, "osascript", "-e", `tell app "System Events" to tell appearance preferences to set dark mode to not dark mode`)
-				}
+				})
 			}},
 			cli.SYSTEM: {Help: "系统", Hand: func(m *ice.Message, arg ...string) { cli.Opens(m, "System Settings.app") }},
-			cli.START: {Name: "start dev proto host port=9020 nodename username usernick", Hand: func(m *ice.Message, arg ...string) {
-				_serve_start(m)
-			}},
+			cli.START:  {Name: "start dev proto host port=9020 nodename username usernick", Hand: func(m *ice.Message, arg ...string) { _serve_start(m) }},
 			SERVE_START: {Hand: func(m *ice.Message, arg ...string) {
 				m.Go(func() {
-					m.Option(ice.MSG_USERIP, "127.0.0.1")
 					ssh.PrintQRCode(m, tcp.PublishLocalhost(m, _serve_address(m)))
 					cli.Opens(m, mdb.Config(m, cli.OPEN))
 				})

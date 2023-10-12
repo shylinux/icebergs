@@ -3,7 +3,6 @@ package log
 import (
 	"bufio"
 	"fmt"
-	"os"
 	"path"
 	"strings"
 
@@ -15,12 +14,17 @@ import (
 	"shylinux.com/x/toolkits/logs"
 )
 
-type Log struct{ p, l, s string }
+type Log struct {
+	c       bool
+	p, l, s string
+}
 type Frame struct{ p chan *Log }
 
 func (f *Frame) Begin(m *ice.Message, arg ...string) {
 	f.p = make(chan *Log, ice.MOD_BUFS)
-	ice.Info.Log = func(m *ice.Message, p, l, s string) { f.p <- &Log{p: p, l: l, s: s} }
+	ice.Info.Log = func(m *ice.Message, p, l, s string) {
+		f.p <- &Log{c: m.Option(ice.LOG_DEBUG) == ice.TRUE, p: p, l: l, s: s}
+	}
 }
 func (f *Frame) Start(m *ice.Message, arg ...string) {
 	mdb.Confm(m, FILE, nil, func(k string, v ice.Map) {
@@ -47,8 +51,8 @@ func (f *Frame) Start(m *ice.Message, arg ...string) {
 				defer fmt.Fprintln(bio)
 				fmt.Fprint(bio, l.p, lex.SP)
 				view := mdb.Confm(m, VIEW, m.Conf(SHOW, kit.Keys(l.l, VIEW)))
-				kit.If(ice.Info.Colors, func() { bio.WriteString(kit.Format(view[PREFIX])) })
-				defer kit.If(ice.Info.Colors, func() { bio.WriteString(kit.Format(view[SUFFIX])) })
+				kit.If(ice.Info.Colors || l.c, func() { bio.WriteString(kit.Format(view[PREFIX])) })
+				defer kit.If(ice.Info.Colors || l.c, func() { bio.WriteString(kit.Format(view[SUFFIX])) })
 				fmt.Fprint(bio, l.l, lex.SP, l.s)
 			})
 		}
@@ -60,8 +64,9 @@ func (f *Frame) Close(m *ice.Message, arg ...string) {
 }
 
 const (
-	PREFIX = "prefix"
-	SUFFIX = "suffix"
+	PREFIX  = "prefix"
+	SUFFIX  = "suffix"
+	TRACEID = "traceid"
 )
 const (
 	GREEN  = "green"
@@ -106,13 +111,9 @@ var Index = &ice.Context{Name: LOG, Help: "日志模块", Configs: ice.Configs{
 
 func init() { ice.Index.Register(Index, &Frame{}, TAIL) }
 
-const (
-	LOG_TRACE = "log_trace"
-)
-
 func Traceid() (traceid string) {
 	ls := []string{}
-	kit.For(kit.Split(os.Getenv(LOG_TRACE)), func(key string) {
+	kit.For(kit.Split(ice.Info.Traceid), func(key string) {
 		switch key {
 		case "short":
 			ls = append(ls, kit.Hashs(mdb.UNIQ)[:6])

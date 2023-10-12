@@ -356,9 +356,9 @@ func (m *Message) Search(key string, cb Any) *Message {
 				if cmd, ok := s.Commands[key]; ok {
 					func() {
 						_target, _key := m.target, m._key
+						defer func() { m.target, m._key = _target, _key }()
 						m.target, m._key = s, key
 						cb(s.context, s, key, cmd)
-						m.target, m._key = _target, _key
 					}()
 					return m
 				}

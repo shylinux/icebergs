@@ -371,3 +371,6 @@ const ( // ice
 	CLI = "cli"
 	LOG = "log"
 )
+const ( // env
+	LOG_TRACE = "log_trace"
+)

@@ -113,14 +113,12 @@ func _ssh_conn(m *ice.Message, cb func(*ssh.Client), arg ...string) {
 		}
 		return
 	}))
-	m.Cmdy(tcp.CLIENT, tcp.DIAL, mdb.TYPE, SSH, mdb.NAME, m.Option(tcp.HOST), m.OptionSimple(tcp.HOST, tcp.PORT), arg, func(c net.Conn) {
+	m.Cmd(tcp.CLIENT, tcp.DIAL, mdb.TYPE, SSH, mdb.NAME, m.Option(tcp.HOST), m.OptionSimple(tcp.HOST, tcp.PORT), arg, func(c net.Conn) {
 		conn, chans, reqs, err := ssh.NewClientConn(c, m.Option(tcp.HOST)+nfs.DF+m.Option(tcp.PORT), &ssh.ClientConfig{
 			User: m.Option(aaa.USERNAME), Auth: methods, BannerCallback: func(message string) error { return nil },
 			HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error { return nil },
 		})
-		if !m.Warn(err) {
-			cb(ssh.NewClient(conn, chans, reqs))
-		}
+		kit.If(!m.Warn(err), func() { cb(ssh.NewClient(conn, chans, reqs)) })
 	})
 }
 func _ssh_hold(m *ice.Message, c *ssh.Client) {

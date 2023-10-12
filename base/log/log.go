@@ -111,6 +111,10 @@ var Index = &ice.Context{Name: LOG, Help: "日志模块", Configs: ice.Configs{
 
 func init() { ice.Index.Register(Index, &Frame{}, TAIL) }
 
+func init() {
+	ice.Info.Traceid = "short"
+	ice.Pulse.Option(ice.LOG_TRACEID, Traceid())
+}
 func Traceid() (traceid string) {
 	ls := []string{}
 	kit.For(kit.Split(ice.Info.Traceid), func(key string) {
@@ -121,6 +125,8 @@ func Traceid() (traceid string) {
 			ls = append(ls, kit.Hashs(mdb.UNIQ))
 		case "node":
 			ls = append(ls, ice.Info.NodeName)
+		case "hide":
+			ls = ls[:0]
 		}
 	})
 	return strings.Join(ls, "-")

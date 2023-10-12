@@ -53,15 +53,11 @@ func (m *Message) log(level string, str string, arg ...Any) *Message {
 	if m.Option(LOG_DISABLE) == TRUE {
 		return m
 	}
-	arg = append(arg, logs.TraceidMeta(m.Option(LOG_TRACEID)))
 	args, traceid := []Any{}, ""
 	for _, v := range arg {
-		switch v := v.(type) {
-		case logs.Meta:
-			if v.Key == logs.TRACEID {
-				traceid = kit.Select(strings.TrimSpace(v.Value), traceid)
-				continue
-			}
+		if v, ok := v.(logs.Meta); ok && v.Key == logs.TRACEID {
+			traceid = kit.Select(strings.TrimSpace(v.Value), traceid)
+			continue
 		}
 		args = append(args, v)
 	}
@@ -78,8 +74,7 @@ func (m *Message) log(level string, str string, arg ...Any) *Message {
 			prefix, suffix = "\033[31m", "\033[0m"
 		}
 	}
-	kit.If(traceid, func() { traceid = kit.Format("%s: %s ", logs.TRACEID, traceid) })
-	logs.Infof(str, append(args, logs.PrefixMeta(kit.Format("%s%02d %4s->%-4s %s%s ", traceid, m.code, m.source.Name, m.target.Name, prefix, level)), logs.SuffixMeta(suffix), _source)...)
+	logs.Infof(str, append(args, logs.PrefixMeta(kit.Format("%s %s%s ", m.FormatShip(traceid), prefix, level)), logs.SuffixMeta(suffix), _source)...)
 	return m
 }
 func (m *Message) Log(level string, str string, arg ...Any) *Message {
@@ -168,17 +163,15 @@ func (m *Message) Debug(str string, arg ...Any) {
 }
 
 func (m *Message) FormatTaskMeta() task.Meta {
-	_traceid := ""
-	kit.If(m.Option(LOG_TRACEID), func(traceid string) { _traceid = kit.Format("%s: %s ", logs.TRACEID, traceid) })
-	return task.Meta{
-		Prefix:   kit.Format("%s%d %4s->%-4s ", _traceid, m.code, m.source.Name, m.target.Name),
-		FileLine: kit.FileLine(2, 3),
-	}
+	return task.Meta{Prefix: m.FormatShip() + " ", FileLine: kit.FileLine(2, 3)}
 }
 func (m *Message) FormatPrefix(traceid ...string) string {
+	return kit.Format("%s %s", logs.FmtTime(logs.Now()), m.FormatShip(traceid...))
+}
+func (m *Message) FormatShip(traceid ...string) string {
 	_traceid := ""
 	kit.If(kit.Select(m.Option(LOG_TRACEID), traceid, 0), func(traceid string) { _traceid = kit.Format("%s: %s ", logs.TRACEID, traceid) })
-	return kit.Format("%s %s%d %s->%s", logs.FmtTime(logs.Now()), _traceid, m.code, m.source.Name, m.target.Name)
+	return kit.Format("%s%02d %4s->%-4s", _traceid, m.code, m.source.Name, m.target.Name)
 }
 func (m *Message) FormatSize() string {
 	return kit.Format("%dx%d %v %v", m.Length(), len(m.value(MSG_APPEND)), kit.Simple(m.value(MSG_APPEND)), kit.FmtSize(len(m.Result())))

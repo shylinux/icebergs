@@ -18,8 +18,8 @@ func (m *Message) TryCatch(catch bool, cb ...func(*Message)) {
 		case io.EOF, nil:
 		default:
 			fileline := m.FormatStack(2, 1)
-			m.Log(LOG_WARN, "catch: %s %s", e, fileline).Log("chain", m.FormatChain())
-			m.Log(LOG_WARN, "catch: %s %s", e, kit.FileLine(4, 10)).Log("stack", m.FormatStack(2, 1000))
+			m.Log(LOG_WARN, "catch: %s %s", e, fileline).Log("chain", "\n"+m.FormatChain())
+			m.Log(LOG_WARN, "catch: %s %s", e, kit.FileLine(4, 10)).Log("stack", "\n"+m.FormatStack(2, 1000))
 			m.Log(LOG_WARN, "catch: %s %s", e, fileline).Result(ErrWarn, e, SP, m.FormatStack(2, 5))
 			if len(cb) > 1 {
 				m.TryCatch(catch, cb[1:]...)
@@ -61,8 +61,10 @@ func (m *Message) GoSleep(t string, arg ...Any) {
 	m.Go(func() { m.Spawn(kit.Dict(MSG_COUNT, "0")).Sleep(t).Cmd(arg...) })
 }
 func (m *Message) Go(cb func(), arg ...Any) *Message {
-	kit.If(len(arg) == 0, func() { arg = append(arg, logs.FileLine(cb)) })
-	task.Put(m.FormatTaskMeta(), arg[0], func(task *task.Task) { m.TryCatch(true, func(m *Message) { cb() }) })
+	meta := m.FormatTaskMeta()
+	meta.FileLine = kit.FileLine(2, 3)
+	kit.If(len(arg) > 0, func() { meta.FileLine = kit.Format(arg[0]) })
+	task.Put(meta, nil, func(task *task.Task) { m.TryCatch(true, func(m *Message) { cb() }) })
 	return m
 }
 func (m *Message) GoWait(cb func(func()), arg ...Any) *Message {

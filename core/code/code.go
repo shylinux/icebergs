@@ -14,6 +14,7 @@ func init() {
 	web.Index.Register(Index, &web.Frame{},
 		WEBPACK, BINPACK, AUTOGEN, COMPILE, PUBLISH, UPGRADE, INSTALL,
 		XTERM, INNER, VIMER, BENCH, PPROF,
+		TEMPLATE, COMPLETE, NAVIGATE,
 	)
 }
 func Prefix(arg ...ice.Any) string { return web.Prefix(CODE, kit.Keys(arg...)) }

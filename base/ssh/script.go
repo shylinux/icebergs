@@ -107,7 +107,7 @@ func (f *Frame) scan(m *ice.Message, h, line string) *Frame {
 	f.ps2 = kit.Simple(mdb.Confv(m, PROMPT, kit.Keym(PS2)))
 	ps, bio := f.ps1, bufio.NewScanner(f.stdin)
 	m.I, m.O = f.stdin, f.stdout
-	for f.prompt(m, ps...); f.stdin != nil && bio.Scan(); f.prompt(m, ps...) {
+	for f.prompt(m.Sleep300ms(), ps...); f.stdin != nil && bio.Scan(); f.prompt(m, ps...) {
 		if len(bio.Text()) == 0 && h == STDIO {
 			continue
 		}

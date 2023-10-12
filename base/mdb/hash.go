@@ -112,10 +112,9 @@ func _hash_export(m *ice.Message, prefix, chain, file string) {
 func _hash_import(m *ice.Message, prefix, chain, file string) {
 	defer Lock(m, prefix)()
 	f, e := ice.Info.Open(m, kit.Keys(file, JSON))
-	if os.IsNotExist(e) {
+	if e != nil && !ice.Info.Important {
 		return
-	}
-	if m.Warn(e) {
+	} else if m.Warn(e) {
 		return
 	}
 	defer f.Close()

@@ -193,11 +193,11 @@ func (c *Context) Begin(m *Message, arg ...string) *Context {
 	return c.Merge(c)
 }
 func (c *Context) Start(m *Message, arg ...string) {
-	m.Log(CTX_START, c.Prefix())
+	m.Log(CTX_START, c.Prefix(), logs.FileLineMeta(2))
 	kit.If(c.server != nil, func() { c.server.Start(m, arg...) })
 }
 func (c *Context) Close(m *Message, arg ...string) {
-	m.Log(CTX_CLOSE, c.Prefix())
+	m.Log(CTX_CLOSE, c.Prefix(), logs.FileLineMeta(2))
 	kit.If(c.server != nil, func() { c.server.Close(m, arg...) })
 }
 

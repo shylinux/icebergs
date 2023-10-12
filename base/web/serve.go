@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"path"
 	"regexp"
+	"runtime"
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
@@ -23,14 +24,16 @@ import (
 
 func _serve_address(m *ice.Message) string { return Domain(tcp.LOCALHOST, m.Option(tcp.PORT)) }
 func _serve_start(m *ice.Message) {
-	defer kit.For(kit.Split(m.Option(ice.DEV)), func(v string) {
-		m.Sleep30ms().Cmd(SPACE, tcp.DIAL, ice.DEV, v, mdb.NAME, ice.Info.NodeName, m.OptionSimple(TOKEN))
-	})
-	kit.If(m.Option(tcp.PORT) == tcp.RANDOM, func() { m.Option(tcp.PORT, m.Cmdx(tcp.PORT, aaa.RIGHT)) })
 	kit.If(m.Option(aaa.USERNAME), func() { aaa.UserRoot(m, m.Option(aaa.USERNICK), m.Option(aaa.USERNAME)) })
-	m.Go(func() { m.Cmd(SPIDE, ice.OPS, _serve_address(m)+"/exit", ice.Maps{CLIENT_TIMEOUT: "30ms"}) }).Sleep30ms()
+	kit.If(m.Option(tcp.PORT) == tcp.RANDOM, func() { m.Option(tcp.PORT, m.Cmdx(tcp.PORT, aaa.RIGHT)) })
+	kit.If(runtime.GOOS == cli.WINDOWS || m.Cmdx(cli.SYSTEM, "lsof", "-i", ":"+m.Option(tcp.PORT)) != "", func() {
+		m.Go(func() { m.Cmd(SPIDE, ice.OPS, _serve_address(m)+"/exit", ice.Maps{CLIENT_TIMEOUT: "30ms"}) }).Sleep30ms()
+	})
 	cli.NodeInfo(m, kit.Select(ice.Info.Hostname, m.Option(tcp.NODENAME)), SERVER)
 	m.Start("", m.OptionSimple(tcp.HOST, tcp.PORT)...)
+	kit.For(kit.Split(m.Option(ice.DEV)), func(dev string) {
+		m.Sleep30ms(SPACE, tcp.DIAL, ice.DEV, dev, mdb.NAME, ice.Info.NodeName, m.OptionSimple(TOKEN))
+	})
 }
 func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	const (

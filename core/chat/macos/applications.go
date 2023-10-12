@@ -2,6 +2,7 @@ package macos
 
 import (
 	"path"
+	"strings"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
@@ -26,7 +27,9 @@ func init() {
 						if !kit.HasPrefix(cmd.Icon, nfs.PS, web.HTTP) {
 							kit.If(!nfs.Exists(m, cmd.Icon), func() { nfs.Exists(m, ice.USR_ICONS+cmd.Icon, func(p string) { cmd.Icon = p }) })
 							kit.If(!nfs.Exists(m, cmd.Icon), func() {
-								nfs.Exists(m, ctx.GetCmdFile(m, m.PrefixKey()), func(p string) { cmd.Icon = path.Join(path.Dir(p), cmd.Icon) })
+								nfs.Exists(m, ctx.GetCmdFile(m, m.PrefixKey()), func(p string) {
+									cmd.Icon = path.Join(path.Dir(strings.TrimPrefix(p, kit.Path(""))), cmd.Icon)
+								})
 							})
 						}
 						AppInstall(m, cmd.Icon, m.PrefixKey())

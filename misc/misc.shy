@@ -4,8 +4,8 @@ websocket
 webview
 qrcode
 xterm
-git
 ssh
+git
 
 vim
 bash
@@ -15,8 +15,8 @@ input
 yac
 lex
 
-java
 node
+java
 coder
 chrome
 github

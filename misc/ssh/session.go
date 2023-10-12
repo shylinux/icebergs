@@ -73,7 +73,7 @@ func init() {
 				m.ProcessRefresh()
 			}},
 			code.XTERM: {},
-		}, mdb.PageZoneAction(mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,count,status,connect", mdb.FIELDS, "time,id,type,text")), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.PageZoneAction(mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,count,status,connect", mdb.FIELDS, "time,id,type,text"), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.PageZoneSelect(m, arg...); len(arg) == 0 {
 				m.Table(func(value ice.Maps) {
 					m.PushButton(kit.Select("", ctx.COMMAND, value[mdb.STATUS] == tcp.OPEN), mdb.REMOVE)

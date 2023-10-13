@@ -82,7 +82,7 @@ func init() {
 				}
 			}},
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
-				kit.Switch(m.Option(mdb.TYPE), kit.Simple(web.WORKER, web.SERVER), func() { m.PushButton(ice.Maps{PORTAL: "官网"}) })
+				kit.Switch(m.Option(mdb.TYPE), kit.Simple(web.WORKER, web.SERVER), func() { m.PushButton(kit.Dict(PORTAL, "官网")) })
 			}},
 			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { web.DreamProcess(m, nil, arg...) }},
 		}, aaa.WhiteAction(), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {

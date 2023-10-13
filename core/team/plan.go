@@ -28,7 +28,7 @@ func _plan_scope(m *ice.Message, arg ...string) (begin_time, end_time time.Time)
 		begin_time = begin_time.AddDate(0, 0, -begin_time.YearDay()+1).AddDate(-5, 0, 0)
 		end_time = begin_time.AddDate(10, 0, 0)
 	}
-	m.Logs(mdb.SELECT, "begin_time", begin_time, "end_time", end_time)
+	m.Logs(mdb.SELECT, BEGIN_TIME, begin_time, END_TIME, end_time)
 	return begin_time, end_time
 }
 func _plan_list(m *ice.Message, begin_time, end_time string) {
@@ -61,22 +61,21 @@ func init() {
 			ctx.RUN: {Hand: func(m *ice.Message, arg ...string) {
 				if m.RenameOption(TASK_POD, ice.POD); ctx.PodCmd(m, m.PrefixKey(), ctx.RUN, arg) {
 					return
-				}
-				if cmd := m.CmdAppend(TASK, kit.Slice(arg, 0, 2), ctx.INDEX); cmd != "" {
+				} else if cmd := m.CmdAppend(TASK, kit.Slice(arg, 0, 2), ctx.INDEX); cmd != "" {
 					m.Cmdy(cmd, arg[2:])
 				} else if aaa.Right(m, arg) {
 					m.Cmdy(arg)
 				}
 			}},
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
-				kit.Switch(m.Option(mdb.TYPE), kit.Simple(web.SERVER, web.WORKER), func() { m.PushButton(kit.Dict(m.CommandKey(), "计划")) })
+				kit.Switch(m.Option(mdb.TYPE), kit.Simple(web.WORKER, web.SERVER), func() { m.PushButton(kit.Dict(m.CommandKey(), "计划")) })
 			}},
-		}, aaa.RoleAction(), TASK), Hand: func(m *ice.Message, arg ...string) {
+		}, aaa.RoleAction(), ctx.ConfAction(mdb.TOOLS, "todo,task,epic"), TASK), Hand: func(m *ice.Message, arg ...string) {
 			begin_time, end_time := _plan_scope(m, kit.Slice(arg, 0, 2)...)
 			_plan_list(m, begin_time.Format(ice.MOD_TIME), end_time.Format(ice.MOD_TIME))
 			web.PushPodCmd(m, "", arg...)
 			ctx.DisplayLocal(m, "")
-			ctx.Toolkit(m, TODO, TASK, EPIC)
+			ctx.Toolkit(m, "")
 		}},
 	})
 }

@@ -176,7 +176,7 @@ const SPACE = "space"
 
 func init() {
 	ice.Info.Inputs = append(ice.Info.Inputs, func(m *ice.Message, arg ...string) {
-		switch arg[0] {
+		switch kit.TrimPrefix(arg[0], "extra.") {
 		case SPACE:
 			m.Cmd(SPACE, func(value ice.Maps) {
 				kit.If(kit.IsIn(value[mdb.TYPE], WORKER, SERVER), func() { m.Push(arg[0], value[mdb.NAME]) })
@@ -190,6 +190,7 @@ func init() {
 				m.Cmdy(ctx.COMMAND)
 			}
 		case ctx.ARGS:
+			m.OptionDefault(ctx.INDEX, m.Option("extra.index"))
 			if space := m.Option(SPACE); space != "" {
 				m.Options(SPACE, []string{}).Cmdy(SPACE, space, ctx.COMMAND, mdb.INPUTS, m.Option(ctx.INDEX))
 			} else {

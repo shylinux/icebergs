@@ -66,6 +66,7 @@ func _zone_export(m *ice.Message, prefix, chain, file string) {
 	w := csv.NewWriter(f)
 	defer w.Flush()
 	head := kit.AddUniq(_zone_fields(m), EXTRA)
+	m.Debug("export %v", head)
 	w.Write(head)
 	count := 0
 	for _, key := range kit.SortedKey(m.Confv(prefix, kit.Keys(chain, HASH))) {
@@ -181,6 +182,12 @@ func ZoneAction(arg ...ice.Any) ice.Actions {
 		EXPORT: {Hand: func(m *ice.Message, arg ...string) { ZoneExport(m, arg) }},
 		IMPORT: {Hand: func(m *ice.Message, arg ...string) { ZoneImport(m, arg) }},
 	}
+}
+func ExportZoneAction(arg ...ice.Any) ice.Actions {
+	return ice.MergeActions(ZoneAction(arg...), ice.Actions{
+		ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { Config(m, IMPORTANT, ice.TRUE); ZoneImport(m, arg) }},
+		ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { m.OptionFields(""); ZoneExport(m, arg) }},
+	})
 }
 func PageZoneAction(arg ...ice.Any) ice.Actions {
 	return ice.MergeActions(ice.Actions{

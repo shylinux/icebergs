@@ -218,7 +218,7 @@ func (c *Context) _action(m *Message, cmd *Command, key string, sub string, h *A
 				}
 			}
 			kit.If(order && i < len(arg), func() { m.Option(name, arg[i]) })
-			if m.Warn(m.OptionDefault(name, kit.Format(kit.Value(v, VALUE))) == "" && kit.Value(v, "need") == "must", ErrNotValid, name) {
+			if m.Warn(m.OptionDefault(name, kit.Format(kit.Value(v, VALUE))) == "" && kit.Value(v, "need") == "must", ErrNotValid, name, key, sub) {
 				return m
 			}
 		}

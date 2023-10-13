@@ -150,6 +150,9 @@ func init() {
 				m.Cmd(cli.SYSTEM, "date")
 				m.Cmd(cli.SYSTEM, cli.MAKE, m.Option(nfs.TARGET), kit.Dict(cli.CMD_DIR, m.Option(nfs.PATH)))
 			}},
+			ice.APP: {Help: "本机", Hand: func(m *ice.Message, arg ...string) {
+				cli.OpenCmds(m, "cd "+kit.Path(""), "vim "+path.Join(arg[0], arg[1])+" +"+arg[2]).ProcessHold()
+			}},
 			COMPILE: {Help: "编译", Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(nfs.PATH) != "" && nfs.ExistsFile(m, path.Join(m.Option(nfs.PATH), ice.MAKEFILE)) {
 					web.PushStream(m).Cmdy(cli.SYSTEM, cli.MAKE, kit.Dict(cli.CMD_DIR, m.Option(nfs.PATH)))
@@ -196,7 +199,7 @@ func init() {
 			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { web.DreamProcess(m, []string{}, arg...) }},
 		}, aaa.RoleAction(), chat.FavorAction(), ctx.ConfAction(ctx.TOOLS, "xterm,compile,runtime")), Hand: func(m *ice.Message, arg ...string) {
 			if m.Cmdy(INNER, arg); arg[0] != ctx.ACTION {
-				m.Action(nfs.SAVE, COMPILE, "show", "exec")
+				m.Action(nfs.SAVE, COMPILE, mdb.SHOW, cli.EXEC, ice.APP)
 				ctx.DisplayLocal(m, "")
 				ctx.Toolkit(m)
 			}

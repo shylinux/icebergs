@@ -69,7 +69,7 @@ func _dream_start(m *ice.Message, name string) {
 		}
 	}
 	defer ToastProcess(m)()
-	defer m.Sleep300ms()
+	defer m.Sleep3s()
 	m.Options(cli.CMD_DIR, kit.Path(p), cli.CMD_ENV, kit.EnvList(kit.Simple(
 		cli.CTX_OPS, Domain(tcp.LOCALHOST, m.Cmdv(SERVE, tcp.PORT)), cli.CTX_LOG, ice.VAR_LOG_BOOT_LOG, cli.CTX_PID, ice.VAR_LOG_ICE_PID,
 		cli.PATH, cli.BinPath(p, ""), cli.USER, ice.Info.Username,

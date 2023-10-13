@@ -169,12 +169,12 @@ func Opens(m *ice.Message, arg ...string) {
 		}
 	}
 }
-func OpenCmds(m *ice.Message, arg ...string) {
+func OpenCmds(m *ice.Message, arg ...string) *ice.Message {
 	if !tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) {
-		return
+		return m
 	}
 	if len(arg) == 0 || arg[0] == "" {
-		return
+		return m
 	}
 	m.Cmd(SYSTEM, "osascript", "-e", kit.Format(`
 tell application "Terminal"
@@ -182,4 +182,5 @@ tell application "Terminal"
 	activate
 end tell
 `, strings.Join(arg, "; ")))
+	return m
 }

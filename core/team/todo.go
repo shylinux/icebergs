@@ -12,13 +12,13 @@ const TODO = "todo"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		TODO: {Name: "todo hash list create", Help: "待办", Actions: ice.MergeActions(ice.Actions{
+		TODO: {Help: "待办", Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) { mdb.HashInputs(m, arg).Cmdy(TASK, mdb.INPUTS, arg) }},
 			cli.START: {Name: "start type=once,step,week", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(TASK, mdb.INSERT, m.OptionSimple("zone,type,name,text"))
 				mdb.HashRemove(m, m.OptionSimple(mdb.HASH))
 			}},
-		}, mdb.HashAction(mdb.FIELD, "time,hash,zone,name,text")), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.ExportHashAction(mdb.FIELD, "time,hash,zone,name,text")), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, arg...).PushAction(cli.START, mdb.REMOVE)
 			web.PushPodCmd(m, "", arg...)
 			ctx.DisplayTableCard(m)

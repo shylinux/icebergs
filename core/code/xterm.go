@@ -127,7 +127,7 @@ func init() {
 			}},
 			ice.APP: {Help: "本机", Hand: func(m *ice.Message, arg ...string) {
 				if h := kit.Select(m.Option(mdb.HASH), arg, 0); h == "" {
-					cli.Opens(m, "Terminal.app")
+					cli.OpenCmds(m, "cd "+kit.Path(""))
 				} else {
 					cli.OpenCmds(m, m.Cmdv("", h, mdb.TYPE))
 				}

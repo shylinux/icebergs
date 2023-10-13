@@ -127,13 +127,12 @@ func init() {
 		CONFIG: {Name: "config key auto", Help: "配置", Actions: ice.Actions{
 			SAVE:       {Hand: func(m *ice.Message, arg ...string) { _config_save(m, arg[0], arg[1:]...) }},
 			LOAD:       {Hand: func(m *ice.Message, arg ...string) { _config_load(m, arg[0], arg[1:]...) }},
-			mdb.EXPORT: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(mdb.EXPORT, arg[0], "", mdb.HASH) }},
-			mdb.IMPORT: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(mdb.IMPORT, arg[0], "", mdb.HASH) }},
+			mdb.EXPORT: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(arg[0], mdb.EXPORT) }},
+			mdb.IMPORT: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(arg[0], mdb.IMPORT) }},
 			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(mdb.EXPORT, arg[0], "", mdb.HASH, path.Join(ice.VAR_TRASH, kit.Keys(arg[0])))
 				nfs.Trash(m, path.Join(ice.VAR_DATA, arg[0]))
+				nfs.Trash(m, m.Cmdx(arg[0], mdb.EXPORT))
 				mdb.Config(m, arg[0], nil, nil)
-				m.Go(func() { m.Cmd(ice.EXIT, 1) })
 			}},
 			mdb.LIST: {Hand: func(m *ice.Message, arg ...string) {
 				list := []ice.Any{}

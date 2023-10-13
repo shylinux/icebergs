@@ -4,7 +4,6 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
@@ -53,6 +52,7 @@ const (
 const (
 	BEGIN_TIME = "begin_time"
 	CLOSE_TIME = "close_time"
+	END_TIME   = "end_time"
 
 	STATUS = "status"
 	LEVEL  = "level"
@@ -66,34 +66,17 @@ const TASK = "task"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		TASK: {Name: "task zone id auto insert", Help: "任务", Actions: ice.MergeActions(ice.Actions{
+		TASK: {Help: "任务", Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
-				if space := m.Option(web.SPACE); space != "" && arg[0] != web.SPACE {
-					m.Options(web.SPACE, "").Cmdy(web.SPACE, space, TASK, mdb.INPUTS, arg)
-					return
-				}
-				switch arg[0] = strings.TrimPrefix(arg[0], "extra."); arg[0] {
-				case web.SPACE:
-					m.Cmd(web.SPACE, func(value ice.Maps) {
-						if kit.IsIn(value[mdb.TYPE], web.WORKER, web.SERVER) {
-							m.Push(arg[0], value[mdb.NAME])
-						}
-					})
+				switch mdb.ZoneInputs(m, arg); strings.TrimPrefix(arg[0], "extra.") {
 				case mdb.STATUS:
 					m.Push(arg[0], PREPARE, PROCESS, CANCEL, FINISH)
 				case LEVEL, SCORE:
 					m.Push(arg[0], "1", "2", "3", "4", "5")
 				case mdb.TYPE:
 					m.Push(arg[0], ONCE, STEP, WEEK)
-				case ctx.INDEX, ctx.ARGS:
-					m.Option(ctx.INDEX, m.Option("extra.index"))
-					mdb.ZoneInputs(m, arg)
-				default:
-					mdb.ZoneInputs(m, arg)
 				}
-				if arg[0] == mdb.ZONE {
-					m.Push(arg[0], kit.Split(nfs.TemplateText(m, mdb.ZONE)))
-				}
+				kit.If(arg[0] == mdb.ZONE, func() { m.Push(arg[0], kit.Split(nfs.TemplateText(m, mdb.ZONE))) })
 			}},
 			mdb.INSERT: {Name: "insert space zone* type=once,step,week name* text begin_time@date close_time@date", Hand: func(m *ice.Message, arg ...string) {
 				if space, arg := arg[1], arg[2:]; space != "" {
@@ -106,7 +89,7 @@ func init() {
 			CANCEL:     {Hand: func(m *ice.Message, arg ...string) { _task_modify(m, STATUS, CANCEL) }},
 			BEGIN:      {Hand: func(m *ice.Message, arg ...string) { _task_modify(m, STATUS, PROCESS) }},
 			END:        {Hand: func(m *ice.Message, arg ...string) { _task_modify(m, STATUS, FINISH) }},
-		}, mdb.ImportantZoneAction(mdb.FIELDS, "begin_time,close_time,id,status,level,score,type,name,text")), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.ExportZoneAction(mdb.FIELDS, "begin_time,close_time,id,status,level,score,type,name,text")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.ZoneSelect(m, arg...); len(arg) > 0 && arg[0] != "" {
 				status := map[string]int{}
 				m.Table(func(value ice.Maps) { m.PushButton(_task_action(m, value[STATUS])) })

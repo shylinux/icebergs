@@ -34,7 +34,7 @@ type alpha struct {
 
 func (s alpha) Load(m *ice.Message, arg ...string) {
 	if !nfs.Exists(m, path.Dir(m.Option(nfs.FILE))) {
-		git.ReposClone(m.Message, mdb.Config(m, "repos"))
+		git.ReposClone(m.Message, mdb.Config(m, nfs.REPOS))
 	}
 	lib := kit.Select(path.Base(m.Option(nfs.FILE)), m.Option(mdb.ZONE))
 	m.Assert(nfs.RemoveAll(m, path.Join(mdb.Config(m, mdb.STORE), lib)))
@@ -61,7 +61,7 @@ func (s alpha) List(m *ice.Message, arg ...string) {
 		m.OptionFields(ice.FIELDS_DETAIL)
 		arg[1] = "^" + arg[1] + mdb.FS
 	}
-	wiki.CSV(m.Message.Spawn(), m.Cmdx(cli.SYSTEM, "grep", "-rih", arg[1], mdb.Config(m, mdb.STORE)), kit.Split(mdb.Config(m, mdb.FIELD))...).Table(func(value ice.Maps) {
+	wiki.CSV(m.Message.Spawn(), m.Cmdx(cli.SYSTEM, nfs.GREP, "-rih", arg[1], mdb.Config(m, mdb.STORE)), kit.Split(mdb.Config(m, mdb.FIELD))...).Table(func(value ice.Maps) {
 		kit.If(m.FieldsIsDetail(), func() { m.PushDetail(value, mdb.Config(m, mdb.FIELD)) }, func() { m.PushRecord(value, mdb.Config(m, mdb.FIELD)) })
 	})
 }

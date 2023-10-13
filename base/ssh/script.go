@@ -100,6 +100,7 @@ func (f *Frame) parse(m *ice.Message, h, line string) string {
 	if msg.Cmdy(ls); h == STDIO && msg.IsErrNotFound() {
 		msg.SetResult().Cmdy(cli.SYSTEM, ls)
 	}
+	kit.If(m.Option(ice.MSG_STATUS) == "", func() { m.StatusTimeCount() })
 	f.res = Render(msg, msg.Option(ice.MSG_OUTPUT), kit.List(msg.Optionv(ice.MSG_ARGS))...)
 	return ""
 }

@@ -42,7 +42,7 @@ func (s input) Inputs(m *ice.Message, arg ...string) {
 	}
 }
 func (s input) Load(m *ice.Message, arg ...string) {
-	if f, e := nfs.OpenFile(m, m.Option(nfs.FILE)); !m.Warn(e) {
+	if f, e := nfs.OpenFile(m.Message, m.Option(nfs.FILE)); !m.Warn(e) {
 		defer f.Close()
 		lib := kit.Select(path.Base(m.Option(nfs.FILE)), m.Option(mdb.ZONE))
 		m.Assert(nfs.RemoveAll(m, path.Join(mdb.Config(m, mdb.STORE), lib)))
@@ -92,7 +92,7 @@ func (s input) List(m *ice.Message, arg ...string) {
 	case WORD:
 		arg[1] = "^" + arg[1] + mdb.FS
 	}
-	res := m.Cmdx(cli.SYSTEM, "grep", "-rn", arg[1], mdb.Config(m, mdb.STORE))
+	res := m.Cmdx(cli.SYSTEM, nfs.GREP, "-rn", arg[1], mdb.Config(m, mdb.STORE))
 	bio := csv.NewReader(bytes.NewBufferString(strings.Replace(res, nfs.DF, mdb.FS, -1)))
 	for i := 0; i < kit.Int(10); i++ {
 		if line, e := bio.Read(); e != nil {

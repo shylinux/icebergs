@@ -60,7 +60,7 @@ func init() {
 }
 func PushText(m *ice.Message, text string) {
 	m.OptionFields(ice.MSG_DETAIL)
-	if m.PushScript(nfs.SCRIPT, text); strings.HasPrefix(text, ice.HTTP) {
+	if m.PushScript(text); strings.HasPrefix(text, ice.HTTP) {
 		m.PushQRCode(cli.QRCODE, text)
 		m.PushAnchor(text)
 	}

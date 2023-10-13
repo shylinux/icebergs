@@ -52,6 +52,10 @@ func _spark_tabs(m *ice.Message, arg ...string) {
 	kit.For(arg[1:], func(k, v string) { m.Cmdy("", arg[0], v) })
 }
 func _spark_show(m *ice.Message, name, text string, arg ...string) *ice.Message {
+	if m.IsCliUA() {
+		kit.For(kit.SplitLine(text), func(text string) { m.Echo(text).Echo("\n") })
+		return m
+	}
 	return _wiki_template(m.Options(mdb.LIST, kit.SplitLine(text)), name, name, text, arg...)
 }
 
@@ -68,7 +72,6 @@ func init() {
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				ice.AddRender(ice.RENDER_SCRIPT, func(msg *ice.Message, args ...ice.Any) string {
 					return msg.Cmdx(SPARK, SHELL, args)
-					return m.Options(ice.MSG_COUNT, "0").Cmdx(SPARK, SHELL, args)
 				})
 			}},
 			ice.DEMO: {Hand: func(m *ice.Message, arg ...string) {

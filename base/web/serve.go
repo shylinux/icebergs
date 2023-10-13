@@ -130,9 +130,7 @@ func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.Response
 		kit.If(strings.TrimPrefix(r.URL.Path, key), func(p string) { m.Optionv(ice.MSG_CMDS, strings.Split(p, nfs.PS)) })
 	})
 	m.W.Header().Add(strings.ReplaceAll(ice.LOG_TRACEID, ".", "-"), m.Option(ice.LOG_TRACEID))
-	defer func() {
-		Render(m, m.Option(ice.MSG_OUTPUT), kit.List(m.Optionv(ice.MSG_ARGS))...)
-	}()
+	defer func() { Render(m, m.Option(ice.MSG_OUTPUT), kit.List(m.Optionv(ice.MSG_ARGS))...) }()
 	if cmds, ok := _serve_auth(m, key, kit.Simple(m.Optionv(ice.MSG_CMDS)), w, r); ok {
 		defer func() {
 			kit.If(m.Option(ice.MSG_STATUS) == "", func() { m.StatusTimeCount() })

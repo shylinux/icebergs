@@ -88,7 +88,7 @@ func init() {
 			} else if len(arg) == 0 {
 				kit.If(config != nil, func() { m.Option(aaa.EMAIL, kit.Select(mdb.Config(m, aaa.EMAIL), config.User.Email)) })
 				m.Cmdy(REPOS, STATUS).Action(PULL, PUSH, INSTEADOF, OAUTH, CONFIGS, GITEA)
-				m.Cmdy(code.PUBLISH, ice.CONTEXTS, ice.DEV)
+				kit.If(!m.IsCliUA(), func() { m.Cmdy(code.PUBLISH, ice.CONTEXTS, ice.DEV) })
 			} else {
 				_repos_cmd(m, arg[0], DIFF)
 			}

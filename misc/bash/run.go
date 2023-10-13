@@ -94,7 +94,7 @@ func init() {
 func Complete(m *ice.Message, detail bool, arg ...string) (res []string) {
 	echo := func(arg ...string) { res = append(res, arg...) }
 	if len(arg) < 2 || arg[1] != ctx.ACTION {
-		list := ctx.CmdList(m.Spawn()).Appendv(ctx.INDEX)
+		list := m.Cmd(ctx.COMMAND).Appendv(ctx.INDEX)
 		if len(arg) > 0 {
 			pre := arg[0][0 : strings.LastIndex(arg[0], nfs.PT)+1]
 			list = kit.Simple(list, func(cmd string) bool { return strings.HasPrefix(cmd, arg[0]) }, func(cmd string) string { return strings.TrimPrefix(cmd, pre) })

@@ -26,8 +26,6 @@ func _tmux_key(arg ...string) string {
 		return "miss"
 	}
 }
-func _tmux_cmd(m *ice.Message, arg ...string) *ice.Message { return m.Cmd(cli.SYSTEM, TMUX, arg) }
-func _tmux_cmds(m *ice.Message, arg ...string) string      { return _tmux_cmd(m, arg...).Results() }
 
 const (
 	FORMAT = "format"
@@ -81,13 +79,6 @@ func init() {
 		)},
 	}, Commands: ice.Commands{
 		SESSION: {Name: "session session window pane cmds auto", Help: "会话", Actions: ice.Actions{
-			web.DREAM_CREATE: {Hand: func(m *ice.Message, arg ...string) {
-				m.Go(func() {
-					nfs.Exists(m.Sleep3s(), path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME)), func(p string) {
-						m.Cmd("", mdb.CREATE)
-					})
-				})
-			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(ctx.ACTION) == SCRIPT {
 					m.Cmdy(SCRIPT, mdb.INPUTS, arg)
@@ -166,6 +157,11 @@ func init() {
 						)
 					})
 				}).Sleep30ms()
+			}},
+			web.DREAM_CREATE: {Hand: func(m *ice.Message, arg ...string) {
+				m.Go(func() {
+					nfs.Exists(m.Sleep3s(), path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME)), func(p string) { m.Cmd("", mdb.CREATE) })
+				})
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			if m.Action(SCRIPT); len(arg) > 3 {

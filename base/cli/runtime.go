@@ -250,12 +250,8 @@ func init() {
 					m.Cmdy("web.code.upgrade")
 				}
 			}},
-			RESTART: {Help: "重启", Hand: func(m *ice.Message, arg ...string) {
-				m.Go(func() { m.Sleep30ms(ice.EXIT, 1) })
-			}},
-			"reboot": {Help: "清空", Hand: func(m *ice.Message, arg ...string) {
-				m.Go(func() { m.Sleep30ms(ice.QUIT, 1) })
-			}},
+			RESTART:  {Help: "重启", Hand: func(m *ice.Message, arg ...string) { m.Go(func() { m.Sleep30ms(ice.EXIT, 1) }) }},
+			"reboot": {Help: "清空", Hand: func(m *ice.Message, arg ...string) { m.Go(func() { m.Sleep30ms(ice.QUIT, 1) }) }},
 			"logs": {Help: "日志", Hand: func(m *ice.Message, arg ...string) {
 				OpenCmds(m, kit.Format("cd %s", kit.Path("")), "tail -f var/log/bench.log")
 			}},

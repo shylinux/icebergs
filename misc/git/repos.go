@@ -405,7 +405,8 @@ func init() {
 				if p = path.Join(cache, path.Join(arg...)); !nfs.Exists(m, p) {
 					if p = path.Join(ice.USR_REQUIRE, path.Join(arg...)); !nfs.Exists(m, p) {
 						if m.Warn(kit.Lasterr(git.PlainClone(path.Join(ice.USR_REQUIRE, path.Join(arg[:3]...)), false, &git.CloneOptions{
-							URL: ice.HTTPS + "://" + ls[0], Depth: 1, ReferenceName: plumbing.NewTagReferenceName(kit.Select(ice.Info.Gomod[ls[0]], ls, 1)),
+							URL: ice.HTTPS + "://" + path.Join(arg[0], arg[1], ls[0]), Depth: 1,
+							ReferenceName: plumbing.NewTagReferenceName(kit.Select(ice.Info.Gomod[ls[0]], ls, 1)),
 						}))) {
 							return
 						}

@@ -208,21 +208,14 @@ func init() {
 	})
 }
 
-var bind = []string{
-	"usr/icebergs/core/chat/", "usr/volcanos/panel/",
-	"usr/icebergs/core/", "usr/volcanos/plugin/local/",
-}
-
 func Relative(m *ice.Message, p string) string {
-	p = kit.TrimPrefix(p, kit.Path("")+PS)
-	for i := 0; i < len(bind); i += 2 {
-		if strings.HasPrefix(p, bind[i]) {
-			if _p := kit.ExtChange(strings.Replace(p, bind[i], bind[i+1], 1), JS); Exists(m, _p) {
-				return _p
-			}
-		}
+	if _p := kit.ExtChange(p, JS); Exists(m, _p) {
+		return _p
+	} else if _p := kit.ExtChange(path.Join(ice.USR_VOLCANOS, "plugin/local", path.Join(kit.Slice(kit.Split(p, "/"), -2)...)), JS); Exists(m, _p) {
+		return _p
+	} else {
+		return p
 	}
-	return kit.ExtChange(p, JS)
 }
 func SplitPath(m *ice.Message, p string) []string {
 	if kit.HasPrefix(p, ice.REQUIRE_SRC, ice.REQUIRE_USR) {

@@ -51,7 +51,7 @@ func init() {
 			FAVOR_ACTION: {Hand: func(m *ice.Message, arg ...string) {
 				kit.If(m.Option(mdb.TYPE) == LOCATION, func() { ctx.ProcessField(m, m.PrefixKey(), []string{m.Option(mdb.TEXT)}, arg...) })
 			}},
-		}, FavorAction(), mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,latitude,longitude,extra", nfs.SCRIPT, "https://map.qq.com/api/gljs?v=1.exp")), Hand: func(m *ice.Message, arg ...string) {
+		}, FavorAction(), mdb.ExportHashAction(mdb.FIELD, "time,hash,type,name,text,latitude,longitude,extra", nfs.SCRIPT, "https://map.qq.com/api/gljs?v=1.exp")), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, kit.Slice(arg, 0, 1)...)
 			// m.Option(LOCATION, m.Cmdx(web.SERVE, tcp.HOST))
 			m.Option(LOCATION, get(m, "location/v1/ip", aaa.IP, m.Option(ice.MSG_USERIP)))

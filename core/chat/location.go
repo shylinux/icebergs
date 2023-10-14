@@ -53,10 +53,9 @@ func init() {
 			}},
 		}, FavorAction(), mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,latitude,longitude,extra", nfs.SCRIPT, "https://map.qq.com/api/gljs?v=1.exp")), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, kit.Slice(arg, 0, 1)...)
-			ctx.DisplayLocal(m, "", ctx.ConfigSimple(m, web.TOKEN))
 			// m.Option(LOCATION, m.Cmdx(web.SERVE, tcp.HOST))
 			m.Option(LOCATION, get(m, "location/v1/ip", aaa.IP, m.Option(ice.MSG_USERIP)))
-			m.Option(nfs.SCRIPT, kit.MergeURL(mdb.Config(m, nfs.SCRIPT), "key", mdb.Config(m, web.TOKEN)))
+			ctx.DisplayLocal(m.Options(nfs.SCRIPT, kit.MergeURL(mdb.Config(m, nfs.SCRIPT), mdb.KEY, mdb.Config(m, web.TOKEN))), "")
 		}},
 	})
 }

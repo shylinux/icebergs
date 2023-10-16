@@ -132,7 +132,9 @@ func init() {
 				m.OptionFields("")
 				list := m.CmdMap(SPACE, mdb.NAME)
 				stat := map[string]int{}
+				size := 0
 				m.Table(func(value ice.Maps) {
+					size += kit.Int(kit.Select("", kit.Split(value[nfs.SIZE], nfs.PS), 1))
 					if _, ok := list[value[SPACE]]; ok {
 						m.Push(mdb.STATUS, ONLINE)
 						stat[ONLINE]++
@@ -141,7 +143,7 @@ func init() {
 						stat[OFFLINE]++
 					}
 				})
-				m.Sort("status,space", ice.STR_R, ice.STR).StatusTimeCount(stat)
+				m.Sort("status,space", ice.STR_R, ice.STR).StatusTimeCount(stat, nfs.SIZE, kit.FmtSize(size))
 				m.Option(ice.MSG_ACTION, "")
 			}
 		}},

@@ -72,6 +72,7 @@ func PushPodCmd(m *ice.Message, cmd string, arg ...string) {
 		kit.For(list, func(index int, space string) {
 			toast(space, index, len(list))
 			m.Cmd(SPACE, space, kit.Dict(ice.MSG_USERPOD, space), kit.Select(m.PrefixKey(), cmd), arg).Table(func(index int, val ice.Maps, head []string) {
+				kit.If(!kit.IsIn(SPACE, head...), func() { head = append(head, SPACE) })
 				val[SPACE] = kit.Keys(space, val[SPACE])
 				m.Push("", val, head)
 			})

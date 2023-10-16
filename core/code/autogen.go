@@ -124,6 +124,9 @@ func init() {
 				m.Cmdy(nfs.DIR, ice.ETC_MISS_SH).Cmdy(nfs.CAT, ice.ETC_MISS_SH)
 			}},
 			nfs.MODULE: {Name: "module name*=hi help type*=Hash,Zone,Data,Lang,Code main*=main.go@key zone key", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
+				if m.Warn(!nfs.Exists(m, kit.Path(".git")), ice.ErrNotValid, "未初始化代码库") {
+					return
+				}
 				m.OptionDefault(mdb.ZONE, m.Option(mdb.NAME), mdb.HELP, m.Option(mdb.NAME))
 				m.OptionDefault(mdb.KEY, Prefix(m.Option(mdb.ZONE), m.Option(mdb.NAME)))
 				m.Option(nfs.FILE, path.Join(m.Option(mdb.ZONE), kit.Keys(m.Option(mdb.NAME), GO)))

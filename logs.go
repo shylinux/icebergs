@@ -160,8 +160,10 @@ func (m *Message) IsErr(arg ...string) bool {
 }
 func (m *Message) IsErrNotFound() bool { return m.IsErr(ErrNotFound) }
 func (m *Message) Debug(str string, arg ...Any) {
-	kit.Format(str == "", func() { str = m.FormatMeta() })
-	m.log(LOG_DEBUG, str, arg...)
+	if m.Option(MSG_DEBUG) == TRUE {
+		kit.Format(str == "", func() { str = m.FormatMeta() })
+		m.log(LOG_DEBUG, str, arg...)
+	}
 }
 
 func (m *Message) FormatTaskMeta() task.Meta {

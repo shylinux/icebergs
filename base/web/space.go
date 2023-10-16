@@ -89,7 +89,6 @@ func _space_handle(m *ice.Message, safe bool, name string, c *websocket.Conn) {
 			break
 		}
 		msg := m.Spawn(b)
-		// msg.Option(ice.LOG_TRACEID, kit.Split(msg.Option(ice.LOG_TRACEID), "-")[0]+"-"+ice.Info.NodeName)
 		if safe { // 下行权限
 			msg.OptionDefault(ice.MSG_USERROLE, aaa.UserRole(msg, msg.Option(ice.MSG_USERNAME)))
 		} else { // 上行权限
@@ -243,9 +242,9 @@ func init() {
 				_space_dial(m, m.Option(ice.DEV), kit.Select(ice.Info.NodeName, m.Option(mdb.NAME)), arg...)
 			}},
 			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) {
-				defer mdb.HashModifyDeferRemove(m, m.OptionSimple(mdb.NAME), mdb.STATUS, cli.STOP)()
+				mdb.HashModify(m, m.OptionSimple(mdb.NAME), mdb.STATUS, cli.STOP)
 				m.Cmd("", m.Option(mdb.NAME), ice.EXIT)
-				m.Sleep3s()
+				m.Sleep300ms()
 			}},
 			DOMAIN: {Hand: func(m *ice.Message, arg ...string) { m.Echo(_space_domain(m)) }},
 			LOGIN: {Help: "授权", Hand: func(m *ice.Message, arg ...string) {

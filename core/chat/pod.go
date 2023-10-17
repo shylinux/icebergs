@@ -30,7 +30,7 @@ func init() {
 					m.Cmd(web.DREAM, cli.START, kit.Dict(mdb.NAME, arg[0]))
 				}
 				if len(arg) == 1 {
-					m.Cmdy(web.SPACE, arg[0], web.SPACE, ice.MAIN, kit.Dict(nfs.VERSION, web.RenderVersion(m), ice.MSG_USERPOD, arg[0]))
+					m.Cmdy(web.SPACE, arg[0], web.SPACE, ice.MAIN, kit.Dict(ice.MSG_USERPOD, arg[0]))
 				} else if arg[1] == CMD {
 					web.RenderPodCmd(m, arg[0], arg[2], arg[3:])
 				}

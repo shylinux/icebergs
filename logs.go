@@ -119,7 +119,7 @@ func (m *Message) Warn(err Any, arg ...Any) bool {
 		return false
 	}
 	str, meta := m.join(arg...)
-	if m.log(LOG_WARN, str, meta...); !m.IsErr() && len(arg) > 0 {
+	if m.log(LOG_WARN, str, meta...); len(arg) > 0 {
 		m.error(arg...)
 		kit.If(map[string]int{
 			ErrNotLogin: http.StatusUnauthorized,

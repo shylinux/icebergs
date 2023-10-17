@@ -12,6 +12,7 @@ import (
 	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/log"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
 	kit "shylinux.com/x/toolkits"
 	"shylinux.com/x/toolkits/file"
@@ -50,6 +51,18 @@ func MergeURL2(m *ice.Message, url string, arg ...ice.Any) string {
 func MergeLink(m *ice.Message, url string, arg ...ice.Any) string {
 	kit.If(m.Option(log.DEBUG) == ice.TRUE, func() { arg = append(arg, log.DEBUG, ice.TRUE) })
 	return kit.MergeURL(strings.Split(MergeURL2(m, url), QS)[0], arg...)
+}
+func ParseLink(m *ice.Message, url string) ice.Maps {
+	list := ice.Maps{}
+	u := kit.ParseURL(url)
+	switch arg := strings.Split(strings.TrimPrefix(u.Path, nfs.PS), nfs.PS); arg[0] {
+	case CHAT:
+		kit.For(arg[1:], func(k, v string) { list[k] = v })
+	case SHARE:
+		list[arg[0]] = arg[1]
+	}
+	kit.For(u.Query(), func(k string, v []string) { list[k] = v[0] })
+	return list
 }
 func ProcessPodCmd(m *ice.Message, pod, cmd string, arg ...ice.Any) {
 	m.ProcessOpen(m.MergePodCmd(pod, cmd, arg...))

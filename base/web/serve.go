@@ -58,7 +58,7 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	} else {
 		r.Header.Set(ice.MSG_USERIP, strings.Split(r.RemoteAddr, nfs.DF)[0])
 	}
-	if !kit.HasPrefix(r.URL.String(), VOLCANOS, REQUIRE_SRC, REQUIRE_MODULES, INTSHELL) {
+	if !kit.HasPrefix(r.URL.String(), VOLCANOS, REQUIRE_MODULES, INTSHELL) {
 		r.Header.Set(ice.LOG_TRACEID, log.Traceid())
 		m.Logs(r.Header.Get(ice.MSG_USERIP), r.Method, r.URL.String(), logs.TraceidMeta(r.Header.Get(ice.LOG_TRACEID)))
 	}
@@ -66,7 +66,8 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 		r.URL.Path = kit.Select(nfs.PS, mdb.Config(m, ice.MAIN))
 	}
 	if r.Method == http.MethodGet {
-		msg := m.Spawn(w, r).Options(ice.MSG_USERUA, r.UserAgent(), ice.LOG_TRACEID, r.Header.Get(ice.LOG_TRACEID))
+		msg := m.Spawn(w, r).Options(ice.MSG_USERUA, r.UserAgent(), ice.LOG_TRACEID, r.Header.Get(ice.LOG_TRACEID),
+			ParseLink(m, kit.Select(r.URL.String(), r.Referer())))
 		if path.Join(r.URL.Path) == nfs.PS {
 			if Render(RenderMain(msg), msg.Option(ice.MSG_OUTPUT), kit.List(msg.Optionv(ice.MSG_ARGS))...) {
 				return false

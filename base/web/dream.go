@@ -256,10 +256,11 @@ func init() {
 				_dream_start(m, m.Option(mdb.NAME))
 			}},
 			cli.STOP: {Hand: func(m *ice.Message, arg ...string) {
+				defer ToastProcess(m)()
+				defer m.Sleep3s()
 				gdb.Event(m, DREAM_STOP, arg)
 				m.Cmd(SPACE, mdb.MODIFY, m.OptionSimple(mdb.NAME), mdb.STATUS, cli.STOP)
 				m.Cmd(SPACE, m.Option(mdb.NAME), ice.EXIT)
-				m.Sleep300ms()
 			}},
 			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
 				gdb.Event(m, DREAM_TRASH, arg)

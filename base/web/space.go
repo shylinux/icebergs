@@ -205,6 +205,9 @@ func init() {
 					m.Cmd(SPACE, pod, SPIDE, ice.DEV, CACHE, SHARE_CACHE+ls[0])
 				}
 				m.Options(key, []string{}, ice.MSG_USERPOD, pod).Cmdy(append(kit.List(ice.SPACE, pod), arg...)...)
+				if m.IsErr() {
+					m.Warn(m.IsErr(), kit.Select("", m.Resultv(), 1), kit.Slice(m.Resultv(), 2))
+				}
 				return true
 			}
 		}

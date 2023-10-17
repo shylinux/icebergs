@@ -377,6 +377,7 @@ const (
 	REMOTE  = "remote"
 	ORIGIN  = "origin"
 	CONFIG  = "config"
+	IGNORE  = "ignore"
 	INDEX   = "index"
 	TAGS    = "tags"
 	VERSION = "version"
@@ -440,6 +441,7 @@ func init() {
 			}},
 			INIT: {Name: "init origin* path", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.DEFS, kit.Path(".git/config"), kit.Format(nfs.Template(m, CONFIG), m.Option(ORIGIN)))
+				m.Cmd(nfs.DEFS, kit.Path(".gitignore"), nfs.Template(m, IGNORE))
 				git.PlainInit(m.Option(nfs.PATH), false)
 				_repos_insert(m, kit.Path(""))
 				m.ProcessRefresh()

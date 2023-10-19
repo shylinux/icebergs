@@ -50,7 +50,10 @@ func _binpack_all(m *ice.Message) {
 	defer fmt.Fprintln(w, nfs.Template(m, "binpack_end.go"))
 	defer fmt.Fprint(w, lex.TB)
 	nfs.OptionFiles(m, nfs.DiskFile)
-	kit.For([]string{ice.USR_VOLCANOS, ice.USR_INTSHELL, ice.SRC}, func(p string) { _binpack_dir(m, w, p) })
+	kit.If(m.Option(ice.MSG_USERPOD) == "", func() {
+		kit.For([]string{ice.USR_VOLCANOS, ice.USR_INTSHELL}, func(p string) { _binpack_dir(m, w, p) })
+	})
+	kit.For([]string{ice.SRC}, func(p string) { _binpack_dir(m, w, p) })
 	kit.For([]string{
 		ice.ETC_MISS_SH, ice.ETC_INIT_SHY, ice.ETC_LOCAL_SHY, ice.ETC_EXIT_SHY, ice.ETC_PATH,
 		ice.README_MD, ice.MAKEFILE, ice.LICENSE, ice.GO_MOD, ice.GO_SUM,

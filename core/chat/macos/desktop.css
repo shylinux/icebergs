@@ -4,7 +4,7 @@ fieldset.macos.desktop>div.output>fieldset.macos { background-color:var(--plugin
 fieldset.macos.desktop>div.output>fieldset.macos>div.output { background-color:transparent; }
 fieldset.macos.desktop>div.output>fieldset.macos.menu { line-height:25px; border-radius:0; height:25px; width:100%; position:absolute; top:0; overflow:hidden; }
 fieldset.macos.desktop>div.output>fieldset.macos.menu div.menu:hover { background-color:var(--hover-bg-color); }
-fieldset.macos.desktop>div.output>fieldset.macos.menu div.menu.create { font-size:24px; line-height:20px; height:25px; }
+fieldset.macos.desktop>div.output>fieldset.macos.menu div.menu.icon { font-size:24px; line-height:20px; height:25px; padding:0 10px; }
 fieldset.macos.desktop>div.output>fieldset.macos.menu>div.output { overflow:hidden; }
 fieldset.macos.desktop>div.output>fieldset.macos.dock { border:var(--box-border); border-radius:20px; position:absolute; bottom:10px; transition:margin-left 0.3s; }
 fieldset.macos.desktop>div.output>fieldset.macos.searchs { position:absolute; z-index:100; }

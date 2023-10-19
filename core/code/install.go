@@ -27,11 +27,12 @@ func _install_path(m *ice.Message, link string) string {
 		return p
 	}
 }
-func _install_download(m *ice.Message) {
-	link := m.Option(web.LINK)
+func _install_download(m *ice.Message, arg ...string) {
+	link := kit.Select(m.Option(web.LINK), arg, 0)
 	name := path.Base(kit.ParseURL(link).Path)
 	// file := path.Join(kit.Select(ice.USR_INSTALL, m.Option(nfs.PATH)), name)
-	file := path.Join(ice.USR_INSTALL, name)
+	file := path.Join(kit.Select(ice.USR_INSTALL, arg, 1), name)
+	// file := path.Join(ice.USR_INSTALL, name)
 	defer m.Cmdy(nfs.DIR, file)
 	if nfs.Exists(m, file) {
 		return
@@ -170,7 +171,7 @@ const INSTALL = "install"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		INSTALL: {Name: "install name port path:text auto download", Help: "安装", Actions: ice.MergeActions(ice.Actions{
-			web.DOWNLOAD: {Name: "download link* path", Hand: func(m *ice.Message, arg ...string) { _install_download(m) }},
+			web.DOWNLOAD: {Name: "download link* path", Hand: func(m *ice.Message, arg ...string) { _install_download(m, arg...) }},
 			cli.BUILD: {Name: "build link*", Hand: func(m *ice.Message, arg ...string) {
 				web.PushStream(m)
 				if err := _install_build(m, arg...); m.Warn(err != "", err) {

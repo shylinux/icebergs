@@ -4,9 +4,9 @@ websocket
 webview
 qrcode
 xterm
-git
-
 ssh
+
+git
 vim
 bash
 tmux

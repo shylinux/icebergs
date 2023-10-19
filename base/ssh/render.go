@@ -18,7 +18,11 @@ func Render(m *ice.Message, cmd string, arg ...ice.Any) (res string) {
 		return res
 	default:
 		if res = m.Result(); res == "" {
-			res = m.TableEchoWithStatus().Result()
+			if m.IsCliUA() {
+				res = m.TableEchoWithStatus().Result()
+			} else {
+				res = m.TableEcho().Result()
+			}
 		}
 	}
 	if fmt.Fprint(m.O, res); !strings.HasSuffix(res, lex.NL) {

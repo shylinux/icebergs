@@ -69,6 +69,9 @@ func init() {
 					if _, ok := cmd.Actions[RUN]; !ok {
 						cmd.Actions[RUN] = &ice.Action{Hand: Run}
 					}
+					if _, ok := cmd.Actions[mdb.INPUTS]; !ok {
+						cmd.Actions[mdb.INPUTS] = &ice.Action{Hand: func(m *ice.Message, arg ...string) { mdb.HashInputs(m, arg) }}
+					}
 				})
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {

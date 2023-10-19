@@ -440,10 +440,11 @@ func init() {
 				}
 			}},
 			INIT: {Name: "init origin* path", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(nfs.DEFS, kit.Path(".git/config"), kit.Format(nfs.Template(m, CONFIG), m.Option(ORIGIN)))
-				m.Cmd(nfs.DEFS, kit.Path(".gitignore"), nfs.Template(m, IGNORE))
+				m.OptionDefault(nfs.PATH, kit.Path(""))
+				m.Cmd(nfs.DEFS, path.Join(m.Option(nfs.PATH), ".git/config"), kit.Format(nfs.Template(m, CONFIG), m.Option(ORIGIN)))
+				m.Cmd(nfs.DEFS, path.Join(m.Option(nfs.PATH), ".gitignore"), nfs.Template(m, IGNORE))
 				git.PlainInit(m.Option(nfs.PATH), false)
-				_repos_insert(m, kit.Path(""))
+				_repos_insert(m, m.Option(nfs.PATH))
 				m.ProcessRefresh()
 			}},
 			REMOTE: {Hand: func(m *ice.Message, arg ...string) {
@@ -595,16 +596,6 @@ func init() {
 			web.DREAM_TRASH: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd("", mdb.REMOVE, kit.Dict(REPOS, m.Option(mdb.NAME)))
 			}},
-			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
-				if !kit.IsIn(m.Option(mdb.TYPE), web.WORKER, web.SERVER) {
-					return
-				} else if !nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME), ".git")) {
-					return
-				} else {
-					m.PushButton(kit.Dict(m.CommandKey(), "源码"))
-				}
-			}},
-			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { web.DreamProcess(m, []string{}, arg...) }},
 		}, aaa.RoleAction(REMOTE), web.DreamAction(), mdb.HashAction(mdb.SHORT, REPOS, mdb.FIELD, "time,repos,branch,version,message,origin"), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				mdb.HashSelect(m, arg...).Sort(REPOS).PushAction(STATUS, mdb.REMOVE).Action(STATUS, PULL, PUSH, CLONE)
@@ -634,4 +625,7 @@ func ReposList(m *ice.Message) *ice.Message {
 }
 func ReposClone(m *ice.Message, arg ...string) *ice.Message {
 	return m.Cmdy(web.CODE_GIT_REPOS, CLONE, arg)
+}
+func ReposInit(m *ice.Message, arg ...string) *ice.Message {
+	return m.Cmdy(web.CODE_GIT_REPOS, INIT, arg)
 }

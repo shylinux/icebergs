@@ -150,6 +150,18 @@ func init() {
 					m.Cmdy(SPACE, m.Option(mdb.NAME), SPACE, mdb.INPUTS, arg)
 					return
 				}
+				switch m.Option(ctx.ACTION) {
+				case nfs.CAT:
+					switch arg[0] {
+					case nfs.FILE:
+						m.Options(nfs.DIR_TYPE, nfs.TYPE_CAT, ice.MSG_FIELDS, nfs.PATH)
+						m.Cmdy(nfs.DIR, "src/")
+						m.Cmdy(nfs.DIR, "etc/")
+						m.Cmdy(nfs.DIR, "")
+						return
+					}
+					return
+				}
 				switch arg[0] {
 				case mdb.NAME, nfs.TEMPLATE:
 					_dream_list(m).Cut("name,status,time")
@@ -165,9 +177,10 @@ func init() {
 				}
 			}},
 			mdb.CREATE: {Name: "create name*=hi icon@icon repos binary template", Hand: func(m *ice.Message, arg ...string) {
-				m.OptionDefault(mdb.ICON, nfs.USR_ICONS_ICEBERGS)
-				m.Option(nfs.REPOS, kit.Select("", kit.Slice(kit.Split(m.Option(nfs.REPOS)), -1), 0))
 				kit.If(!strings.Contains(m.Option(mdb.NAME), "-") || !strings.HasPrefix(m.Option(mdb.NAME), "20"), func() { m.Option(mdb.NAME, m.Time("20060102-")+m.Option(mdb.NAME)) })
+				m.OptionDefault(nfs.REPOS, mdb.Config(m, nfs.REPOS)+m.Option(mdb.NAME))
+				m.Option(nfs.REPOS, kit.Select("", kit.Slice(kit.Split(m.Option(nfs.REPOS)), -1), 0))
+				m.OptionDefault(mdb.ICON, nfs.USR_ICONS_ICEBERGS)
 				if mdb.HashCreate(m); !m.IsCliUA() {
 					_dream_start(m, m.OptionDefault(mdb.NAME, path.Base(m.Option(nfs.REPOS))))
 				}
@@ -239,6 +252,7 @@ func init() {
 					m.Push(mdb.NAME, value[mdb.NAME])
 					m.Push(mdb.TEXT, m.Cmdx(SPACE, value[mdb.NAME], nfs.CAT, m.Option(nfs.FILE)))
 				})
+				m.StatusTimeCount(nfs.FILE, m.Option(nfs.FILE))
 			}},
 			ice.CMD: {Name: "cmd cmd*", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 				GoToast(m, "", func(toast func(string, int, int)) []string {

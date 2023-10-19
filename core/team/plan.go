@@ -32,7 +32,7 @@ func _plan_scope(m *ice.Message, arg ...string) (begin_time, end_time time.Time)
 	return begin_time, end_time
 }
 func _plan_list(m *ice.Message, begin_time, end_time string) {
-	m.Options(mdb.CACHE_LIMIT, "-1").OptionFields("begin_time,close_time,zone,id,level,status,score,type,name,text,extra")
+	m.Options(mdb.CACHE_LIMIT, "-1").OptionFields("begin_time,end_time,zone,id,status,level,score,type,name,text,extra")
 	m.Cmd(mdb.SELECT, m.Prefix(TASK), "", mdb.ZONE, mdb.FOREACH, func(key string, fields []string, value, val ice.Map) {
 		if begin_time <= kit.Format(value[BEGIN_TIME]) && kit.Format(value[BEGIN_TIME]) < end_time {
 			m.Push(key, value, fields, val).PushButton(_task_action(m, value[STATUS], mdb.PLUGIN))

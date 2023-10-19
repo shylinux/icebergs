@@ -32,7 +32,7 @@ func _task_modify(m *ice.Message, field, value string, arg ...string) {
 		case PROCESS:
 			arg = append(arg, BEGIN_TIME, m.Time())
 		case CANCEL, FINISH:
-			arg = append(arg, CLOSE_TIME, m.Time())
+			arg = append(arg, END_TIME, m.Time())
 		}
 	}
 	mdb.ZoneModify(m, field, value, arg)
@@ -51,7 +51,6 @@ const (
 )
 const (
 	BEGIN_TIME = "begin_time"
-	CLOSE_TIME = "close_time"
 	END_TIME   = "end_time"
 
 	STATUS = "status"
@@ -78,7 +77,7 @@ func init() {
 				}
 				kit.If(arg[0] == mdb.ZONE, func() { m.Push(arg[0], kit.Split(nfs.TemplateText(m, mdb.ZONE))) })
 			}},
-			mdb.INSERT: {Name: "insert space zone* type=once,step,week name* text begin_time@date close_time@date", Hand: func(m *ice.Message, arg ...string) {
+			mdb.INSERT: {Name: "insert space zone* type=once,step,week name* text begin_time@date end_time@date", Hand: func(m *ice.Message, arg ...string) {
 				if space, arg := arg[1], arg[2:]; space != "" {
 					m.Cmdy(web.SPACE, space, TASK, mdb.INSERT, web.SPACE, "", arg)
 				} else {
@@ -89,7 +88,7 @@ func init() {
 			CANCEL:     {Hand: func(m *ice.Message, arg ...string) { _task_modify(m, STATUS, CANCEL) }},
 			BEGIN:      {Hand: func(m *ice.Message, arg ...string) { _task_modify(m, STATUS, PROCESS) }},
 			END:        {Hand: func(m *ice.Message, arg ...string) { _task_modify(m, STATUS, FINISH) }},
-		}, mdb.ExportZoneAction(mdb.FIELDS, "begin_time,close_time,id,status,level,score,type,name,text")), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.ExportZoneAction(mdb.FIELDS, "begin_time,end_time,id,status,level,score,type,name,text")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.ZoneSelect(m, arg...); len(arg) > 0 && arg[0] != "" {
 				status := map[string]int{}
 				m.Table(func(value ice.Maps) { m.PushButton(_task_action(m, value[STATUS])) })

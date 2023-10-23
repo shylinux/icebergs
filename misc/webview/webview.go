@@ -9,6 +9,7 @@ import (
 	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
+	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 	"shylinux.com/x/webview"
 )
@@ -90,5 +91,5 @@ func Run(cb func(*WebView) ice.Any) {
 	} else {
 		kit.Reflect(cb(view), func(name string, value ice.Any) { w.Bind(name, value) })
 	}
-	kit.If(!view.Menu(), func() { view.navigate("http://localhost:9020") })
+	kit.If(!view.Menu(), func() { view.navigate(ice.Pulse.Cmdv(web.SPIDE, ice.OPS, web.CLIENT_ORIGIN)) })
 }

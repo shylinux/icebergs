@@ -114,6 +114,7 @@ const ( // DIR
 	REQUIRE_MODULES = "/require/modules/"
 	REQUIRE_USR     = "/require/usr/"
 	REQUIRE_SRC     = "/require/src/"
+	SHARE_LOCAL     = "/share/local/"
 
 	ISH_PLUGED   = ".ish/pluged/"
 	USR_MODULES  = "usr/node_modules/"

@@ -93,7 +93,7 @@ func init() {
 				case SERVICE:
 					m.Push(arg[0], kit.MergeURL2(m.Cmd(web.SPIDE, ice.DEV).Append(web.CLIENT_ORIGIN), "/publish/"))
 				case VERSION:
-					m.Push(arg[0], "1.13.5", "1.15.5", "1.17.3")
+					m.Push(arg[0], "1.13.5", "1.15.5", "1.17.3", "1.20.3")
 				default:
 					m.Cmdy(nfs.DIR, ice.SRC, nfs.DIR_CLI_FIELDS, kit.Dict(nfs.DIR_REG, kit.ExtReg(GO)))
 				}
@@ -125,7 +125,10 @@ func init() {
 			} else {
 				m.Logs(nfs.SAVE, nfs.TARGET, file, nfs.SOURCE, main)
 				m.Cmdy(nfs.DIR, file, "time,path,size,hash,link")
-				kit.If(!m.IsCliUA() && strings.Contains(file, ice.ICE), func() { m.Cmdy(PUBLISH, ice.CONTEXTS, ice.APP) })
+				kit.If(!m.IsCliUA() && strings.Contains(file, ice.ICE), func() {
+					defer m.EchoScript("docker run -p 20000:9020 -w /root -it alpine")
+					m.Cmdy(PUBLISH, ice.CONTEXTS, ice.APP)
+				})
 			}
 		}},
 	})

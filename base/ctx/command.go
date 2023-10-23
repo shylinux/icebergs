@@ -45,6 +45,7 @@ func _command_search(m *ice.Message, kind, name, text string) {
 
 const (
 	INDEX   = "index"
+	CMDS    = "cmds"
 	ARGS    = "args"
 	OPTS    = "opts"
 	STYLE   = "style"

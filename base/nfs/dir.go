@@ -103,7 +103,7 @@ func _dir_list(m *ice.Message, root string, dir string, level int, deep bool, di
 						m.PushDownload(mdb.LINK, p)
 					}
 				case mdb.SHOW:
-					switch p := kit.MergeURL("/share/local/"+p, ice.POD, m.Option(ice.MSG_USERPOD)); kit.Ext(s.Name()) {
+					switch p := kit.MergeURL(ice.SHARE_LOCAL+p, ice.POD, m.Option(ice.MSG_USERPOD)); kit.Ext(s.Name()) {
 					case PNG, JPG:
 						m.PushImages(field, p)
 					case MP4:
@@ -188,10 +188,15 @@ func init() {
 				aaa.White(m, ice.SRC, ice.BIN, ice.USR)
 				aaa.Black(m, ice.USR_LOCAL)
 			}},
-			ice.APP: {Help: "本机", Hand: func(m *ice.Message, arg ...string) { m.Cmd("cli.system", "opens", "Finder.app") }},
+			ice.APP: {Help: "本机", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd("cli.system", "opens", "Finder.app")
+			}},
 			mdb.SHOW: {Help: "预览", Hand: func(m *ice.Message, arg ...string) {
 				Show(m.ProcessInner(), path.Join(m.Option(DIR_ROOT), m.Option(PATH)))
 			}}, mdb.UPLOAD: {},
+			SIZE: {Hand: func(m *ice.Message, arg ...string) {
+				m.Echo(kit.Select("", kit.Split(m.Cmdx("cli.system", "du", "-sh")), 0))
+			}},
 			TRASH: {Hand: func(m *ice.Message, arg ...string) { m.Cmd(TRASH, mdb.CREATE, m.Option(PATH)) }},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			root, dir := kit.Select(PWD, m.Option(DIR_ROOT)), kit.Select(PWD, arg, 0)
@@ -211,7 +216,7 @@ func init() {
 func Relative(m *ice.Message, p string) string {
 	if _p := kit.ExtChange(p, JS); Exists(m, _p) {
 		return _p
-	} else if _p := kit.ExtChange(path.Join(ice.USR_VOLCANOS, "plugin/local", path.Join(kit.Slice(kit.Split(p, "/"), -2)...)), JS); Exists(m, _p) {
+	} else if _p := kit.ExtChange(path.Join(ice.USR_VOLCANOS, ice.PLUGIN_LOCAL, path.Join(kit.Slice(kit.Split(p, PS), -2)...)), JS); Exists(m, _p) {
 		return _p
 	} else {
 		return p
@@ -250,8 +255,10 @@ func DirDeepAll(m *ice.Message, root, dir string, cb func(ice.Maps), arg ...stri
 	}
 }
 func Show(m *ice.Message, file string) bool {
-	p := "/share/local/" + file
-	kit.If(m.Option(ice.MSG_USERPOD), func(pod string) { p += "?pod=" + pod })
+	p := ice.SHARE_LOCAL + file
+	kit.If(m.Option(ice.MSG_USERPOD), func(pod string) {
+		p += "?" + kit.JoinKV("=", "&", ice.POD, pod)
+	})
 	switch strings.ToLower(kit.Ext(file)) {
 	case PNG, JPG:
 		m.EchoImages(p)

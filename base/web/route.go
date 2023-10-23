@@ -78,7 +78,7 @@ func init() {
 			"spide": {Help: "导图", Hand: func(m *ice.Message, arg ...string) {
 				ctx.DisplayStorySpide(m.Cmdy(""), nfs.DIR_ROOT, ice.Info.NodeName, mdb.FIELD, SPACE, lex.SPLIT, nfs.PT, ctx.ACTION, ice.MAIN)
 			}},
-			"cmds": {Name: "cmds space index* args", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
+			ctx.CMDS: {Name: "cmds space index* args", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 				_route_toast(m, m.Option(SPACE), append([]string{m.Option(ctx.INDEX)}, kit.Split(m.Option(ctx.ARGS))...)...)
 			}},
 			cli.BUILD: {Name: "build space", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
@@ -86,7 +86,7 @@ func init() {
 				m.Sleep("1s").Cmdy("", "travel")
 			}},
 			"_build": {Hand: func(m *ice.Message, arg ...string) {
-				if nfs.Exists(m, ".git") {
+				if _, err := nfs.DiskFile.StatFile(ice.SRC_MAIN_GO); err == nil && nfs.Exists(m, ".git") {
 					m.Cmdy(CODE_VIMER, "compile")
 				} else if ice.Info.NodeType == SERVER {
 					m.Cmdy(CODE_UPGRADE)
@@ -106,7 +106,7 @@ func init() {
 					case "md5":
 						m.Push(key, ice.Info.Hash)
 					case nfs.SIZE:
-						m.Push(key, kit.Format("%s/%s", ice.Info.Size, kit.Select("", kit.Split(m.Cmdx(cli.SYSTEM, "du", "-sh")), 0)))
+						m.Push(key, kit.Format("%s/%s", ice.Info.Size, m.Cmdx(nfs.DIR, nfs.SIZE)))
 					case mdb.TYPE:
 						m.Push(key, ice.Info.NodeType)
 					case nfs.PATH:
@@ -143,8 +143,9 @@ func init() {
 						stat[OFFLINE]++
 					}
 				})
-				m.Sort("status,space", ice.STR_R, ice.STR).StatusTimeCount(stat, nfs.SIZE, kit.FmtSize(size))
-				m.Option(ice.MSG_ACTION, "")
+				m.Sort("status,space", ice.STR_R, ice.STR)
+				m.StatusTimeCount(stat, nfs.SIZE, kit.FmtSize(size))
+				m.Options(ice.MSG_ACTION, "")
 			}
 		}},
 	})

@@ -28,11 +28,12 @@ fieldset.web.wiki.portal>div.output>div.layout>div.main p code {
 	background-color:var(--code-bg-color); color:var(--code-fg-color); padding:0 10px;
 }
 fieldset.web.wiki.portal>div.output>div.layout>div.main div.story[data-type=spark][data-name=shell] {
-	background-color:var(--code-bg-color); color:var(--code-fg-color); padding:10px; margin:10px auto;
+	background-color:var(--code-bg-color); color:var(--code-fg-color);
+   	padding:10px; margin:10px auto;
 	box-shadow:var(--box-shadow);
 }
 fieldset.web.wiki.portal>div.output>div.layout>div.main div.story[data-type=spark][data-name=shell] kbd:hover {
-	background-color:white; color:black;
+	/* background-color:white; color:black; */
 }
 fieldset.web.wiki.portal>div.output>div.layout>div.main fieldset.inner.output div.content {
 	background-color:var(--code-bg-color); color:var(--code-fg-color); padding:10px 0;

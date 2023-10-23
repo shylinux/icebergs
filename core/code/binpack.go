@@ -24,7 +24,7 @@ func _binpack_file(m *ice.Message, w io.Writer, arg ...string) {
 		return
 	}
 	switch arg[0] {
-	case ice.SRC_VERSION_GO, ice.SRC_BINPACK_GO:
+	case ice.GO_MOD, ice.GO_SUM, ice.SRC_VERSION_GO, ice.SRC_BINPACK_GO:
 		return
 	case ice.ETC_LOCAL_SHY:
 		fmt.Fprintf(w, "        \"%s\": \"%s\",\n", kit.Select(arg[0], arg, 1), "")
@@ -66,7 +66,7 @@ func _binpack_all(m *ice.Message) {
 			list[path.Join(kit.Slice(ls, 1, -1)...)] = ""
 		default:
 			p := path.Join(cache, path.Join(kit.Slice(ls, 1, -1)...))
-			list[path.Join(nfs.USR, strings.Split(ls[3], mdb.AT)[0], path.Join(kit.Slice(ls, 4)...))] = p
+			list[path.Join(nfs.USR, strings.Split(ls[3], mdb.AT)[0], path.Join(kit.Slice(ls, 4, -1)...))] = p
 		}
 	}
 	for _, k := range kit.SortedKey(list) {

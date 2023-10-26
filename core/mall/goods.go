@@ -19,7 +19,7 @@ const GOODS = "goods"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		GOODS: {Name: "goods list what", Icon: "mall.png", Help: "商品", Meta: kit.Dict(
+		GOODS: {Name: "goods list", Icon: "mall.png", Help: "商品", Meta: kit.Dict(
 			ctx.TRANS, kit.Dict(html.INPUT, kit.Dict(mdb.TYPE, "单位", PRICE, "价格", AMOUNT, "总价")),
 		), Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) {
@@ -50,6 +50,9 @@ func init() {
 			ctx.DisplayLocal(m, "")
 			ctx.Toolkit(m, "")
 			m.Sort("zone,name")
+			var total float64
+			m.Table(func(value ice.Maps) { total += kit.Float(value[PRICE]) * kit.Float(value[mdb.COUNT]) })
+			m.StatusTimeCount(AMOUNT, kit.Format("%0.2f", total))
 		}},
 	})
 }

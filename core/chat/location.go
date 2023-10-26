@@ -57,7 +57,9 @@ func init() {
 			mdb.HashSelect(m, kit.Slice(arg, 0, 1)...)
 			// m.Option(LOCATION, m.Cmdx(web.SERVE, tcp.HOST))
 			// m.Option(LOCATION, get(m, "location/v1/ip", aaa.IP, m.Option(ice.MSG_USERIP)))
+			web.PushPodCmd(m, "", arg...)
 			ctx.DisplayLocal(m.Options(nfs.SCRIPT, kit.MergeURL(mdb.Config(m, nfs.SCRIPT), mdb.KEY, mdb.Config(m, web.TOKEN))), "")
+			ctx.Toolkit(m, "")
 		}},
 	})
 }

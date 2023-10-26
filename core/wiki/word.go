@@ -2,6 +2,7 @@ package wiki
 
 import (
 	"net/http"
+	"strings"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
@@ -36,17 +37,44 @@ func init() {
 				WordAlias(m, SEQUENCE, CHART, SEQUENCE)
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
-				m.Option(nfs.DIR_DEEP, ice.TRUE)
-				_wiki_list(m, nfs.SRC)
-				_wiki_list(m, nfs.USR_ICEBERGS)
-				m.Cut("path,size,time")
+				if len(arg) > 0 {
+					m.OptionFields("path,size,time")
+					mdb.HashSelect(m)
+				}
+				msg := m.Spawn(kit.Dict(nfs.DIR_DEEP, ice.TRUE))
+				_wiki_list(msg, nfs.SRC)
+				_wiki_list(msg, nfs.USR_ICEBERGS)
+				msg.Table(func(value ice.Maps) {
+					if !kit.HasPrefix(value[nfs.PATH], nfs.SRC_TEMPLATE, nfs.SRC_DOCUMENT) {
+						m.Push("", value, kit.Split("path,size,time"))
+					}
+				})
+				web.PushPodCmd(m.Spawn(), "").Table(func(value ice.Maps) {
+					if !kit.HasPrefix(value[nfs.PATH], nfs.SRC_TEMPLATE, nfs.SRC_DOCUMENT) {
+						value[nfs.PATH] = value[web.SPACE] + nfs.DF + value[nfs.PATH]
+						m.Push("", value, kit.Split("path,size,time"))
+					}
+				})
 			}},
 			code.COMPLETE: {Hand: func(m *ice.Message, arg ...string) {
 				kit.If(kit.IsIn(kit.Split(m.Option(mdb.TEXT))[0], IMAGE, VIDEO, AUDIO), func() { m.Cmdy(FEEL).CutTo(nfs.PATH, mdb.NAME) })
 			}},
-		}, aaa.RoleAction(), WikiAction("", nfs.SHY)), Hand: func(m *ice.Message, arg ...string) {
-			m.Option(nfs.DIR_DEEP, ice.TRUE)
-			kit.If(len(arg) == 0, func() { arg = append(arg, nfs.SRC) })
+		}, aaa.RoleAction(), WikiAction("", nfs.SHY), mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path")), Hand: func(m *ice.Message, arg ...string) {
+			if len(arg) > 0 {
+				mdb.HashCreate(m.Spawn(), nfs.PATH, arg[0])
+			}
+			if len(arg) > 0 && strings.Contains(arg[0], nfs.DF) {
+				ls := kit.Split(arg[0], nfs.DF)
+				arg[0] = ls[1]
+				defer web.ToastProcess(m)()
+				defer m.StatusTime(web.SPACE, m.Option(web.SPACE, ls[0]))
+			}
+			if len(arg) == 0 {
+				m.Option(nfs.DIR_DEEP, ice.TRUE)
+				arg = append(arg, nfs.SRC)
+			} else if web.PodCmd(m, web.SPACE, arg...) {
+				return
+			}
 			kit.If(!_wiki_list(m, arg...), func() { _word_show(m, arg[0]) })
 		}},
 	})

@@ -77,7 +77,7 @@ func init() {
 				}
 				kit.If(arg[0] == mdb.ZONE, func() { m.Push(arg[0], kit.Split(nfs.TemplateText(m, mdb.ZONE))) })
 			}},
-			mdb.INSERT: {Name: "insert space zone* type=once,step,week name* text begin_time@date end_time@date", Hand: func(m *ice.Message, arg ...string) {
+			mdb.INSERT: {Name: "insert space zone* type*=once,step,week name* text begin_time*@date end_time@date", Hand: func(m *ice.Message, arg ...string) {
 				if space, arg := arg[1], arg[2:]; space != "" {
 					m.Cmdy(web.SPACE, space, TASK, mdb.INSERT, web.SPACE, "", arg)
 				} else {

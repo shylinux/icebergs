@@ -28,6 +28,7 @@ const (
 	OUTPUT = "output"
 	LAYOUT = "layout"
 	RESIZE = "resize"
+	FILTER = "filter"
 
 	COLOR            = "color"
 	BACKGROUND_COLOR = "background-color"

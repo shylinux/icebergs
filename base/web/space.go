@@ -293,3 +293,11 @@ func Space(m *ice.Message, arg ice.Any) []string {
 	}
 	return []string{SPACE, kit.Format(arg)}
 }
+func PodCmd(m *ice.Message, key string, arg ...string) bool {
+	if pod := m.Option(key); pod != "" {
+		m.Options(key, "", ice.MSG_USERPOD, pod).Cmdy(SPACE, pod, m.PrefixKey(), arg)
+		return true
+	} else {
+		return false
+	}
+}

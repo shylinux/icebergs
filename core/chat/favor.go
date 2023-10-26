@@ -91,17 +91,22 @@ func init() {
 				}
 				return
 			}
-			if mdb.HashSelect(m, arg...); len(arg) > 0 {
-				text := m.Append(mdb.TEXT)
-				m.PushQRCode(cli.QRCODE, text)
-				m.PushScript(text)
-			}
-			if len(arg) == 0 {
+			if mdb.HashSelect(m, arg...); len(arg) == 0 {
+				defer web.PushPodCmd(m, "", arg...)
 				if m.IsMobileUA() {
 					m.Action(mdb.CREATE, web.UPLOAD, "getClipboardData", "getLocation", "scanQRCode")
 				} else {
 					m.Action(mdb.CREATE, web.UPLOAD, "getClipboardData", "record1", "record2")
 				}
+			} else {
+				if web.PodCmd(m, web.SPACE, arg...) {
+					return
+				} else if m.Length() == 0 {
+					return
+				}
+				text := m.Append(mdb.TEXT)
+				m.PushQRCode(cli.QRCODE, text)
+				m.PushScript(text)
 			}
 			m.Table(func(value ice.Maps) {
 				delete(value, ctx.ACTION)

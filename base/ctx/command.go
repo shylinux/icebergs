@@ -54,6 +54,10 @@ const (
 	TOOLS   = "tools"
 	RUN     = "run"
 	SHIP    = "ship"
+
+	ICONS = ice.CTX_ICONS
+	TRANS = ice.CTX_TRANS
+	TITLE = ice.CTX_TITLE
 )
 const COMMAND = "command"
 

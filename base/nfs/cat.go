@@ -99,6 +99,8 @@ const (
 	MD    = "md"
 	PY    = "py"
 
+	IMAGE = "image"
+
 	PNG = "png"
 	JPG = "jpg"
 	MP4 = "mp4"

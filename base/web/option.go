@@ -72,13 +72,13 @@ func ProcessIframe(m *ice.Message, name, link string, arg ...string) {
 		return []string{m.Cmdx(CHAT_IFRAME, mdb.CREATE, mdb.TYPE, LINK, mdb.NAME, name, LINK, link)}
 	}, arg...)
 }
-func PushPodCmd(m *ice.Message, cmd string, arg ...string) {
+func PushPodCmd(m *ice.Message, cmd string, arg ...string) *ice.Message {
 	list := []string{}
 	m.Cmds(SPACE, func(value ice.Maps) {
 		kit.If(kit.IsIn(value[mdb.TYPE], WORKER), func() { list = append(list, value[mdb.NAME]) })
 	})
 	if len(list) == 0 {
-		return
+		return m
 	}
 	kit.If(m.Length() > 0 && len(m.Appendv(SPACE)) == 0, func() { m.Table(func(value ice.Maps) { m.Push(SPACE, "") }) })
 	GoToast(m, "", func(toast func(string, int, int)) []string {
@@ -92,6 +92,7 @@ func PushPodCmd(m *ice.Message, cmd string, arg ...string) {
 		})
 		return nil
 	})
+	return m
 }
 func PushImages(m *ice.Message, name string) {
 	if kit.ExtIsImage(name) {

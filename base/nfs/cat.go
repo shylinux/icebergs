@@ -101,11 +101,12 @@ const (
 
 	IMAGE = "image"
 
-	PNG = "png"
-	JPG = "jpg"
-	MP4 = "mp4"
-	MOV = "mov"
-	PDF = "pdf"
+	PNG  = "png"
+	JPEG = "jpeg"
+	JPG  = "jpg"
+	MP4  = "mp4"
+	MOV  = "mov"
+	PDF  = "pdf"
 
 	DF = ice.DF
 	PS = ice.PS

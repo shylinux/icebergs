@@ -261,7 +261,7 @@ func Show(m *ice.Message, file string) bool {
 		p += "?" + kit.JoinKV("=", "&", ice.POD, pod)
 	})
 	switch strings.ToLower(kit.Ext(file)) {
-	case PNG, JPG:
+	case PNG, JPG, JPEG:
 		m.EchoImages(p)
 	case MP4, MOV:
 		m.EchoVideos(p)

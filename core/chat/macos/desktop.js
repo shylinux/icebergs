@@ -29,7 +29,7 @@ Volcanos(chat.ONIMPORT, {
 		sub.onaction._close = function() { can.onmotion.hidden(can, sub._target) }, can.onmotion.hidden(can, sub._target)
 		sub.onexport.record = function(sub, value, key, item) { can.onimport._window(can, item) }
 	}) },
-	_searchs: function(can) { can.onappend.plugin(can, {index: "web.chat.macos.searchs"}, function(sub) { can.ui.searchs = sub
+	_searchs: function(can) { can.onappend.plugin(can, {index: "web.chat.macos.searchs"}, function(sub) { can.ui.searchs = sub, can.onmotion.hidden(can, sub._target)
 		can.page.style(can, sub._target, html.LEFT, can.ConfWidth()/4, html.TOP, can.ConfHeight()/4), sub.onimport.size(sub, can.ConfHeight()/2, can.ConfWidth()/2, true)
 		sub.onaction._close = function() { can.onmotion.hidden(can, sub._target) }, can.onmotion.hidden(can, sub._target)
 		sub.onexport.record = function(sub, value, key, item, event) { switch (item.type) {

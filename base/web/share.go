@@ -23,10 +23,19 @@ func _share_link(m *ice.Message, p string, arg ...ice.Any) string {
 	return tcp.PublishLocalhost(m, MergeLink(m, kit.Select("", PP(SHARE, LOCAL), !strings.HasPrefix(p, nfs.PS) && !strings.HasPrefix(p, HTTP))+p, arg...))
 }
 func _share_cache(m *ice.Message, arg ...string) {
-	if m.Cmdy(CACHE, arg[0]); m.Append(nfs.FILE) == "" {
-		m.RenderResult(m.Append(mdb.TEXT))
-	} else {
+	if m.Cmdy(CACHE, arg[0]); m.Length() == 0 {
+		if pod := m.Option(ice.POD); pod != "" {
+			msg := m.Options(ice.POD, "").Cmd(SPACE, pod, CACHE, arg[0])
+			kit.If(kit.Format(msg.Append(nfs.FILE)), func() {
+				m.RenderDownload(path.Join(ice.USR_LOCAL_WORK, pod, msg.Append(nfs.FILE)))
+			}, func() {
+				m.RenderResult(msg.Append(mdb.TEXT))
+			})
+		}
+	} else if m.Append(nfs.FILE) != "" {
 		m.RenderDownload(m.Append(nfs.FILE), m.Append(mdb.TYPE), m.Append(mdb.NAME))
+	} else {
+		m.RenderResult(m.Append(mdb.TEXT))
 	}
 }
 func _share_proxy(m *ice.Message) {

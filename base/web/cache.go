@@ -115,13 +115,13 @@ func init() {
 			ice.RENDER_DOWNLOAD: {Hand: func(m *ice.Message, arg ...string) {
 				m.Echo(_share_link(m, kit.Select(arg[0], arg, 1), ice.POD, m.Option(ice.MSG_USERPOD), nfs.FILENAME, kit.Select("", arg[0], len(arg) > 1)))
 			}},
-			WATCH: {Name: "watch hash* path*", Hand: func(m *ice.Message, arg ...string) {
+			WATCH: {Name: "watch hash* path*", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
 				_cache_watch(m, m.Option(mdb.HASH), m.Option(nfs.PATH))
 			}},
-			WRITE: {Name: "write type name* text*", Hand: func(m *ice.Message, arg ...string) {
+			WRITE: {Name: "write type name* text*", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				_cache_save(m, m.Option(mdb.TYPE), m.Option(mdb.NAME), m.Option(mdb.TEXT))
 			}},
-			CATCH: {Name: "catch path* type", Hand: func(m *ice.Message, arg ...string) {
+			CATCH: {Name: "catch path* type", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
 				file, size := _cache_catch(m, m.Option(nfs.PATH))
 				_cache_save(m, m.Option(mdb.TYPE), m.Option(nfs.PATH), "", file, size)
 			}},
@@ -131,14 +131,24 @@ func init() {
 			}},
 			DOWNLOAD: {Name: "download type name*", Hand: func(m *ice.Message, arg ...string) {
 				if res, ok := m.Optionv(RESPONSE).(*http.Response); !m.Warn(!ok, ice.ErrNotValid, RESPONSE) {
-					file, size := _cache_catch(m, _cache_download(m, res, path.Join(ice.VAR_TMP, kit.Hashs(mdb.UNIQ)), m.OptionCB("")))
+					p := path.Join(ice.VAR_TMP, kit.Hashs(mdb.UNIQ))
+					defer os.Remove(p)
+					file, size := _cache_catch(m, _cache_download(m, res, p, m.OptionCB("")))
 					_cache_save(m, m.Option(mdb.TYPE), m.Option(mdb.NAME), "", file, size)
 				}
 			}},
 			nfs.PS: {Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashSelectDetail(m, arg[0], func(value ice.Map) {
+				if mdb.HashSelectDetail(m, arg[0], func(value ice.Map) {
 					kit.If(kit.Format(value[nfs.FILE]), func() { m.RenderDownload(value[nfs.FILE]) }, func() { m.RenderResult(value[mdb.TEXT]) })
-				})
+				}) {
+					return
+				}
+				if pod := m.Option(ice.POD); pod != "" {
+					msg := m.Options(ice.POD, "").Cmd(SPACE, pod, CACHE, arg[0])
+					kit.If(kit.Format(msg.Append(nfs.FILE)), func() {
+						m.RenderDownload(path.Join(ice.USR_LOCAL_WORK, pod, msg.Append(nfs.FILE)))
+					}, func() { m.RenderResult(msg.Append(mdb.TEXT)) })
+				}
 			}},
 		}, mdb.HashAction(mdb.SHORT, mdb.TEXT, mdb.FIELD, "time,hash,size,type,name,text,file", ctx.ACTION, WATCH), ice.RenderAction(ice.RENDER_DOWNLOAD)), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) == 0 || m.R != nil && m.R.Method == http.MethodGet {

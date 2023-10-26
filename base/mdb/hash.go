@@ -248,7 +248,7 @@ func HashSelectValue(m *ice.Message, cb Any) *ice.Message {
 }
 func HashSelectUpdate(m *ice.Message, key string, cb Any) *ice.Message {
 	defer Lock(m, m.PrefixKey())()
-	Richs(m, m.PrefixKey(), nil, key, func(key string, value Map) { _mdb_select(m, cb, key, value, nil, nil) })
+	Richs(m, m.PrefixKey(), nil, kit.Select(FOREACH, key), func(key string, value Map) { _mdb_select(m, cb, key, value, nil, nil) })
 	return m
 }
 func HashSelectDetail(m *ice.Message, key string, cb Any) (has bool) {

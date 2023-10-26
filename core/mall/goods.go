@@ -1,6 +1,8 @@
 package mall
 
 import (
+	"path"
+
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
@@ -17,9 +19,26 @@ const GOODS = "goods"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		GOODS: {Name: "goods list", Icon: "mall.png", Help: "商品", Meta: kit.Dict(
+		GOODS: {Name: "goods list what", Icon: "mall.png", Help: "商品", Meta: kit.Dict(
 			ctx.TRANS, kit.Dict(html.INPUT, kit.Dict(mdb.TYPE, "单位", PRICE, "价格", AMOUNT, "总价")),
 		), Actions: ice.MergeActions(ice.Actions{
+			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) {
+				mdb.HashSelect(m.Spawn(kit.Dict(ice.MSG_FIELDS, nfs.IMAGE))).Table(func(value ice.Maps) {
+					kit.For(kit.Split(value[nfs.IMAGE]), func(h string) {
+						msg := m.Cmd(web.CACHE, h)
+						m.Cmd(nfs.LINK, kit.Keys(path.Join(ice.USR_LOCAL_EXPORT, m.PrefixKey(), nfs.IMAGE, h), kit.Select("", kit.Split(msg.Append(mdb.TYPE), nfs.PS), -1)), msg.Append(nfs.FILE))
+					})
+				})
+			}},
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				list := map[string]string{}
+				m.Cmd(nfs.DIR, path.Join(ice.USR_LOCAL_EXPORT, m.PrefixKey(), nfs.IMAGE), func(value ice.Maps) {
+					list[kit.TrimExt(value[nfs.PATH])] = m.Cmd(web.CACHE, web.CATCH, value[nfs.PATH]).Append(mdb.HASH)
+				})
+				mdb.HashSelectUpdate(m, "", func(value ice.Map) {
+					value[nfs.IMAGE] = kit.Join(kit.Simple(kit.For(kit.Split(kit.Format(value[nfs.IMAGE])), func(p string) string { return kit.Select(p, list[p]) })))
+				})
+			}},
 			mdb.CREATE: {Name: "create zone* name* text price* count*=1 type*=件,个,份,斤 image*=4@img"},
 			mdb.MODIFY: {Name: "modify zone* name* text price* count*=1 type*=件,个,份,斤 image*=4@img"},
 			nfs.IMAGE:  {Name: "image image*=4@img", Help: "图片", Hand: func(m *ice.Message, arg ...string) { mdb.HashModify(m, arg) }},

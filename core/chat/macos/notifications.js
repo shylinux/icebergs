@@ -6,7 +6,7 @@ Volcanos(chat.ONIMPORT, {_init: function(can, msg) {
 		target.onclick = function(event) { can.sup.onexport.record(can.sup, item.index, ctx.INDEX, item)
 			can.runAction(can.request(event, item), "read", [], function() { can.onappend.style(can, "read", target) })
 		}
-	}} })), msg.Length() == 0 && can.onmotion.hidden(can, can._fields), can.onappend._action(can), can.page.style(can, can._action, html.DISPLAY, html.BLOCK)
+	}} })), can.onmotion.hidden(can, can._fields), can.onappend._action(can), can.page.style(can, can._action, html.DISPLAY, html.BLOCK)
 }})
 Volcanos(chat.ONACTION, {
 	list: [web.REFRESH, mdb.PRUNES, html.TOGGLE], _trans: {refresh: "刷新", toggle: "隐藏"},

@@ -209,3 +209,24 @@ func RenderCache(m *ice.Message, h string) {
 		m.RenderDownload(msg.Append(mdb.FILE), msg.Append(mdb.TYPE), msg.Append(mdb.NAME))
 	}
 }
+func ExportCacheAction(field string) ice.Actions {
+	return ice.Actions{
+		ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) {
+			mdb.HashSelect(m.Spawn(kit.Dict(ice.MSG_FIELDS, field))).Table(func(value ice.Maps) {
+				kit.For(kit.Split(value[field]), func(h string) {
+					msg := m.Cmd(CACHE, h)
+					m.Cmd(nfs.LINK, kit.Keys(path.Join(ice.USR_LOCAL_EXPORT, m.PrefixKey(), field, h), kit.Select("", kit.Split(msg.Append(mdb.TYPE), nfs.PS), -1)), msg.Append(nfs.FILE))
+				})
+			})
+		}},
+		ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+			list := map[string]string{}
+			m.Cmd(nfs.DIR, path.Join(ice.USR_LOCAL_EXPORT, m.PrefixKey(), field), func(value ice.Maps) {
+				list[kit.TrimExt(value[nfs.PATH])] = m.Cmd(CACHE, CATCH, value[nfs.PATH]).Append(mdb.HASH)
+			})
+			mdb.HashSelectUpdate(m, "", func(value ice.Map) {
+				value[field] = kit.Join(kit.Simple(kit.For(kit.Split(kit.Format(value[field])), func(p string) string { return kit.Select(p, list[p]) })))
+			})
+		}},
+	}
+}

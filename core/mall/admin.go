@@ -14,7 +14,7 @@ const ADMIN = "admin"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		ADMIN: {Name: "admin hash auto", Help: "管理", Meta: kit.Dict(
+		ADMIN: {Help: "管理", Meta: kit.Dict(
 			ctx.TRANS, kit.Dict(html.INPUT, kit.Dict(mdb.TYPE, "单位", PRICE, "价格", AMOUNT, "总价")),
 		), Actions: ice.MergeActions(ice.Actions{
 			web.UPLOAD: {Hand: func(m *ice.Message, arg ...string) { m.Echo(m.Append(mdb.HASH)) }},
@@ -24,14 +24,17 @@ func init() {
 			kit.If(m.IsMobileUA(), func() { m.Action(mdb.CREATE) }, func() { m.Action(mdb.CREATE, "filter:text") })
 			kit.If(len(arg) > 0, func() {
 				kit.For(kit.Split(m.Append(nfs.IMAGE)), func(p string) {
-					m.EchoImages(web.MergeURL2(m, web.SHARE_CACHE+p))
+					m.EchoImages(web.MergeURL2(m, web.SHARE_CACHE+p, ice.POD, m.Append(web.SPACE)))
 				})
 			})
 			ctx.DisplayTable(m)
-			ctx.Toolkit(m, "")
-			var total float64
-			m.Table(func(value ice.Maps) { total += kit.Float(value[PRICE]) * kit.Float(value[mdb.COUNT]) })
-			m.StatusTimeCount(AMOUNT, kit.Format("%0.2f", total))
+			_status_amount(m)
 		}},
 	})
+}
+
+func _status_amount(m *ice.Message) (total float64) {
+	m.Table(func(value ice.Maps) { total += kit.Float(value[PRICE]) * kit.Float(value[mdb.COUNT]) })
+	m.StatusTimeCount(AMOUNT, kit.Format("%0.2f", total))
+	return
 }

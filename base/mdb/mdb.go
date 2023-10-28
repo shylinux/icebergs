@@ -115,7 +115,7 @@ const (
 	OFFEND = "offend"
 	OFFSET = "offset"
 	RANDOM = "random"
-	SUBKEY = "subkey"
+	SUBKEY = "mdb.sub"
 
 	ACTION = "action"
 	UPLOAD = "upload"

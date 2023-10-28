@@ -38,7 +38,16 @@ func _hash_insert(m *ice.Message, prefix, chain string, arg ...string) string {
 	if arg[0] == HASH {
 		m.Echo(arg[1]).Conf(prefix, kit.Keys(chain, HASH, arg[1]), kit.Data(arg[2:]))
 	} else {
-		m.Echo(Rich(m, prefix, chain, kit.Data(arg, TARGET, m.Optionv(TARGET))))
+		func() {
+			switch target := m.Optionv(TARGET).(type) {
+			case []string:
+				if len(target) == 0 {
+					m.Echo(Rich(m, prefix, chain, kit.Data(arg)))
+					return
+				}
+			}
+			m.Echo(Rich(m, prefix, chain, kit.Data(arg, TARGET, m.Optionv(TARGET))))
+		}()
 	}
 	saveImportant(m, prefix, chain, kit.Simple(INSERT, prefix, chain, HASH, HASH, m.Result(), TIME, m.Time(), arg)...)
 	return m.Result()
@@ -158,7 +167,7 @@ func StatusHashAction(arg ...Any) ice.Actions {
 		PRUNES: &ice.Action{Name: "prunes status", Hand: func(m *ice.Message, arg ...string) {
 			args := []string{}
 			kit.For(kit.Split(m.OptionDefault(STATUS, "error,close,stop,end")), func(s string) { args = append(args, STATUS, s) })
-			m.Cmdy(PRUNES, m.PrefixKey(), "", HASH, args, ice.OptionFields(HashField(m)))
+			m.Cmdy(PRUNES, m.PrefixKey(), m.Option(SUBKEY), HASH, args, ice.OptionFields(HashField(m)))
 		}},
 	}, HashAction(arg...))
 }
@@ -191,11 +200,11 @@ func HashField(m *ice.Message) string {
 	return kit.Select(HASH_FIELD, Config(m, FIELD))
 }
 func HashInputs(m *ice.Message, arg ...Any) *ice.Message {
-	return m.Cmdy(INPUTS, m.PrefixKey(), "", HASH, arg)
+	return m.Cmdy(INPUTS, m.PrefixKey(), m.Option(SUBKEY), HASH, arg)
 }
 func HashCreate(m *ice.Message, arg ...Any) string {
 	kit.If(len(arg) == 0 || len(kit.Simple(arg...)) == 0, func() { arg = append(arg, m.OptionSimple(strings.Replace(HashField(m), "hash,", "", 1))) })
-	return m.Echo(m.Cmdx(append(kit.List(INSERT, m.PrefixKey(), "", HASH, logs.FileLineMeta(-1)), arg...)...)).Result()
+	return m.Echo(m.Cmdx(append(kit.List(INSERT, m.PrefixKey(), m.Option(SUBKEY), HASH, logs.FileLineMeta(-1)), arg...)...)).Result()
 }
 func HashRemove(m *ice.Message, arg ...Any) *ice.Message {
 	if args := kit.Simple(arg...); len(args) == 0 {
@@ -203,13 +212,13 @@ func HashRemove(m *ice.Message, arg ...Any) *ice.Message {
 	} else if len(args) == 1 {
 		arg = kit.List(HashKey(m), args[0])
 	}
-	return m.Cmdy(DELETE, m.PrefixKey(), "", HASH, arg)
+	return m.Cmdy(DELETE, m.PrefixKey(), m.Option(SUBKEY), HASH, arg)
 }
 func HashModify(m *ice.Message, arg ...Any) *ice.Message {
 	if args := kit.Simple(arg...); args[0] != HASH && args[0] != HashShort(m) {
 		arg = append(kit.List(m.OptionSimple(HashKey(m))), arg...)
 	}
-	return m.Cmd(MODIFY, m.PrefixKey(), "", HASH, arg)
+	return m.Cmd(MODIFY, m.PrefixKey(), m.Option(SUBKEY), HASH, arg)
 }
 func HashSelect(m *ice.Message, arg ...string) *ice.Message {
 	if len(arg) > 0 && arg[0] == FOREACH {

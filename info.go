@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"strings"
 
+	"shylinux.com/x/icebergs/base/web/html"
 	kit "shylinux.com/x/toolkits"
 	"shylinux.com/x/toolkits/miss"
 )
@@ -147,6 +148,11 @@ func MergeActions(arg ...Any) Actions {
 			h.Hand = MergeHand(h.Hand, func(m *Message, arg ...string) {
 				_cmd := m._cmd
 				m.Search(from, func(p *Context, s *Context, key string, cmd *Command) {
+					kit.For(kit.Value(cmd.Meta, kit.Keys(CTX_TRANS, html.INPUT)), func(k, v string) {
+						if kit.Format(kit.Value(_cmd.Meta, kit.Keys(CTX_TRANS, html.INPUT, k))) == "" {
+							kit.Value(_cmd.Meta, kit.Keys(CTX_TRANS, html.INPUT, k), v)
+						}
+					})
 					for k, v := range cmd.Actions {
 						func(k string) {
 							if h, ok := list[k]; !ok {

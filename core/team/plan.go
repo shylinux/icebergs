@@ -50,6 +50,7 @@ const (
 )
 const (
 	TASK_POD = "task.pod"
+	SCALE    = "scale"
 )
 
 const PLAN = "plan"
@@ -58,11 +59,8 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		PLAN: {Name: "plan scale=month,day,week,month,year,long begin_time@date list insert prev next", Icon: "Calendar.png", Help: "计划表", Meta: kit.Dict(
 			ctx.TRANS, kit.Dict(html.INPUT, kit.Dict(
-				"begin_time", "起始", "end_time", "结束",
-				"level", "优先级", "score", "完成度", "scale", "跨度", "view", "视图",
-				"day", "日", "week", "周", "month", "月", "year", "年", "long", "代",
-				"prepare", "准备中", "process", "进行中", "cancel", "已取消", "finish", "已完成",
-				"once", "一次性", "step", "阶段性",
+				SCALE, "跨度", "view", "视图",
+				DAY, "日", WEEK, "周", MONTH, "月", YEAR, "年", LONG, "代",
 			)),
 		), Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(TODO, mdb.INPUTS, arg) }},

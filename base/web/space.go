@@ -245,9 +245,10 @@ func init() {
 				_space_dial(m, m.Option(ice.DEV), kit.Select(ice.Info.NodeName, m.Option(mdb.NAME)), arg...)
 			}},
 			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) {
+				defer ToastProcess(m)()
 				mdb.HashModify(m, m.OptionSimple(mdb.NAME), mdb.STATUS, cli.STOP)
 				m.Cmd("", m.Option(mdb.NAME), ice.EXIT)
-				m.Sleep300ms()
+				m.Sleep3s()
 			}},
 			DOMAIN: {Hand: func(m *ice.Message, arg ...string) { m.Echo(_space_domain(m)) }},
 			LOGIN: {Help: "授权", Hand: func(m *ice.Message, arg ...string) {

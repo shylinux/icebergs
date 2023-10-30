@@ -4,9 +4,11 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
+	"shylinux.com/x/icebergs/base/web/html"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -65,7 +67,14 @@ const TASK = "task"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		TASK: {Help: "任务", Actions: ice.MergeActions(ice.Actions{
+		TASK: {Help: "任务", Meta: kit.Dict(
+			ctx.TRANS, kit.Dict(html.INPUT, kit.Dict(
+				BEGIN_TIME, "起始时间", END_TIME, "结束时间",
+				LEVEL, "优先级", SCORE, "完成度",
+				PREPARE, "准备中", PROCESS, "进行中", CANCEL, "已取消", FINISH, "已完成",
+				ONCE, "一次性", STEP, "阶段性", WEEK, "周期性",
+			)),
+		), Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch mdb.ZoneInputs(m, arg); strings.TrimPrefix(arg[0], "extra.") {
 				case mdb.STATUS:
@@ -77,11 +86,11 @@ func init() {
 				}
 				kit.If(arg[0] == mdb.ZONE, func() { m.Push(arg[0], kit.Split(nfs.TemplateText(m, mdb.ZONE))) })
 			}},
-			mdb.INSERT: {Name: "insert space zone* type*=once,step,week name* text begin_time*@date end_time@date", Hand: func(m *ice.Message, arg ...string) {
+			mdb.INSERT: {Name: "insert space zone* type*=once,step,week name* text begin_time@date end_time@date", Hand: func(m *ice.Message, arg ...string) {
 				if space, arg := arg[1], arg[2:]; space != "" {
 					m.Cmdy(web.SPACE, space, TASK, mdb.INSERT, web.SPACE, "", arg)
 				} else {
-					mdb.ZoneInsert(m, arg[:2], BEGIN_TIME, m.Time(), STATUS, PREPARE, LEVEL, 3, SCORE, 3, arg[2:])
+					mdb.ZoneInsert(m, arg[:2], STATUS, PREPARE, LEVEL, 3, SCORE, 3, kit.ArgDef(arg[2:], BEGIN_TIME, m.Time()))
 				}
 			}},
 			mdb.MODIFY: {Hand: func(m *ice.Message, arg ...string) { _task_modify(m, arg[0], arg[1], arg[2:]...) }},

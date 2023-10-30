@@ -120,7 +120,7 @@ func init() {
 				if ctx.DisplayLocal(m, ""); !strings.HasPrefix(arg[0], ice.USR_INSTALL) {
 					m.Option(REPOS, kit.Join(m.Cmd(REPOS, ice.OptionFields(nfs.PATH)).Sort(nfs.PATH).Appendv(nfs.PATH)))
 				}
-				m.StatusTime(mdb.TIME, ice.Info.Make.Time, nfs.FILE, arg[1], nfs.LINE, kit.Select("1", arg, 2), cli.BACK, "0")
+				m.StatusTime(mdb.TIME, ice.Info.Make.Time, nfs.FILE, arg[1], nfs.LINE, kit.Select("1", arg, 2))
 			}
 		}},
 	})

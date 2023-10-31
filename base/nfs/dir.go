@@ -138,6 +138,7 @@ func _dir_list(m *ice.Message, root string, dir string, level int, deep bool, di
 const (
 	PWD            = "./"
 	SRC            = "src/"
+	ETC            = "etc/"
 	BIN            = "bin/"
 	VAR            = "var/"
 	USR            = "usr/"

@@ -257,6 +257,7 @@ const (
 	CLIENT_URL      = "client.url"
 
 	OPEN  = "open"
+	MAIN  = "main"
 	FULL  = "full"
 	LINK  = "link"
 	MERGE = "merge"

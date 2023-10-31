@@ -133,7 +133,7 @@ const DREAM = "dream"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		DREAM: {Name: "dream name@key auto create repos startall stopall publish cmd cat", Icon: "Launchpad.png", Help: "梦想家", Actions: ice.MergeActions(ice.Actions{
+		DREAM: {Name: "dream name@key auto create repos startall stopall publish cmd cat", Help: "梦想家", Icon: "Launchpad.png", Actions: ice.MergeActions(ice.Actions{
 			ctx.CONFIG: {Hand: func(m *ice.Message, arg ...string) {
 				for _, cmd := range kit.Reverse(arg) {
 					m.Cmd(gdb.EVENT, gdb.LISTEN, gdb.EVENT, DREAM_TABLES, ice.CMD, cmd)
@@ -146,25 +146,23 @@ func init() {
 				}
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
-				if m.Option(ctx.ACTION) == ice.MAIN {
+				switch m.Option(ctx.ACTION) {
+				case mdb.CREATE:
+					switch arg[0] {
+					case mdb.NAME, nfs.TEMPLATE:
+						_dream_list(m).Cut("name,status,time")
+						return
+					}
+				case "startall":
+					DreamEach(m, "", cli.STOP, func(name string) { m.Push(arg[0], name) })
+					return
+				case ice.MAIN:
 					m.Cmdy(SPACE, m.Option(mdb.NAME), SPACE, mdb.INPUTS, arg)
 					return
 				}
-				switch m.Option(ctx.ACTION) {
-				case nfs.CAT:
-					switch arg[0] {
-					case nfs.FILE:
-						m.Options(nfs.DIR_TYPE, nfs.TYPE_CAT, ice.MSG_FIELDS, nfs.PATH)
-						m.Cmdy(nfs.DIR, "src/")
-						m.Cmdy(nfs.DIR, "etc/")
-						m.Cmdy(nfs.DIR, "")
-						return
-					}
-					return
-				}
 				switch arg[0] {
-				case mdb.NAME, nfs.TEMPLATE:
-					_dream_list(m).Cut("name,status,time")
+				case mdb.NAME:
+					DreamEach(m, "", cli.START, func(name string) { m.Push(arg[0], name) })
 				case nfs.BINARY:
 					m.Cmdy(nfs.DIR, ice.BIN, "path,size,time", kit.Dict(nfs.DIR_TYPE, nfs.TYPE_BIN))
 					m.Cmd(nfs.DIR, ice.USR_LOCAL_WORK, kit.Dict(nfs.DIR_TYPE, nfs.TYPE_BOTH), func(value ice.Maps) {
@@ -172,6 +170,11 @@ func init() {
 					})
 					m.RenameAppend(nfs.PATH, arg[0])
 					mdb.HashInputs(m, arg)
+				case ice.CMD:
+					m.Cmdy(ctx.COMMAND)
+				case nfs.FILE:
+					m.Options(nfs.DIR_TYPE, nfs.TYPE_CAT, ice.MSG_FIELDS, nfs.PATH)
+					m.Cmdy(nfs.DIR, nfs.SRC).Cmdy(nfs.DIR, nfs.ETC).Cmdy(nfs.DIR, "")
 				default:
 					gdb.Event(m, DREAM_INPUTS, arg)
 				}
@@ -189,76 +192,31 @@ func init() {
 				m.ProcessOpen(m.MergePodCmd("", CODE_GIT_SEARCH, nfs.REPOS, nfs.REPOS))
 			}},
 			"startall": {Name: "startall name", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
-				reg, err := regexp.Compile(m.Option(mdb.NAME))
-				if m.Warn(err) {
-					return
-				}
-				list := []string{}
-				m.Spawn().Cmds("").Table(func(value ice.Maps) {
-					if value[mdb.STATUS] == cli.STOP && reg.MatchString(value[mdb.NAME]) {
-						list = append(list, value[mdb.NAME])
-					}
-				})
-				if len(list) == 0 {
-					return
-				}
-				GoToast(m, "", func(toast func(string, int, int)) []string {
-					kit.For(list, func(index int, name string) {
-						toast(name, index, len(list))
-						m.Cmd("", cli.START, ice.Maps{mdb.NAME: name, ice.MSG_DAEMON: ""})
-					})
-					return nil
+				DreamEach(m, m.Option(mdb.NAME), cli.STOP, func(name string) {
+					m.Cmd("", cli.START, ice.Maps{mdb.NAME: name, ice.MSG_DAEMON: ""})
 				})
 			}},
 			"stopall": {Name: "stopall name", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
-				reg, err := regexp.Compile(m.Option(mdb.NAME))
-				if m.Warn(err) {
-					return
-				}
-				list := []string{}
-				m.Spawn().Cmds("").Table(func(value ice.Maps) {
-					if value[mdb.STATUS] == cli.START && reg.MatchString(value[mdb.NAME]) {
-						list = append(list, value[mdb.NAME])
-					}
-				})
-				if len(list) == 0 {
-					return
-				}
-				GoToast(m, "", func(toast func(string, int, int)) []string {
-					kit.For(list, func(index int, name string) {
-						toast(name, index, len(list))
-						m.Cmd("", cli.STOP, ice.Maps{mdb.NAME: name, ice.MSG_DAEMON: ""})
-					})
-					return nil
+				DreamEach(m, m.Option(mdb.NAME), "", func(name string) {
+					m.Cmd("", cli.STOP, ice.Maps{mdb.NAME: name, ice.MSG_DAEMON: ""})
 				})
 			}},
-			"publish": {Name: "发布", Hand: func(m *ice.Message, arg ...string) {
-				GoToast(m, "", func(toast func(string, int, int)) []string {
-					msg := mdb.HashSelect(m.Spawn())
-					msg.Table(func(index int, value ice.Maps) {
-						toast(value[mdb.NAME], index, msg.Length())
-						m.Push(mdb.NAME, value[mdb.NAME]).Push(mdb.TEXT, m.Cmdx(SPACE, value[mdb.NAME], "compile", cli.LINUX))
-						m.Push(mdb.NAME, value[mdb.NAME]).Push(mdb.TEXT, m.Cmdx(SPACE, value[mdb.NAME], "compile", cli.DARWIN))
-						m.Push(mdb.NAME, value[mdb.NAME]).Push(mdb.TEXT, m.Cmdx(SPACE, value[mdb.NAME], "compile", cli.WINDOWS))
-					})
-					return nil
+			"publish": {Name: "publish name", Help: "发布", Hand: func(m *ice.Message, arg ...string) {
+				DreamEach(m, m.Option(mdb.NAME), "", func(name string) {
+					m.Push(mdb.NAME, name).Push(mdb.TEXT, m.Cmdx(SPACE, name, "compile", cli.LINUX))
+					m.Push(mdb.NAME, name).Push(mdb.TEXT, m.Cmdx(SPACE, name, "compile", cli.DARWIN))
+					m.Push(mdb.NAME, name).Push(mdb.TEXT, m.Cmdx(SPACE, name, "compile", cli.WINDOWS))
 				})
 			}},
-			nfs.CAT: {Name: "cat file*", Help: "文件", Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashSelect(m.Spawn()).Table(func(value ice.Maps) {
-					m.Push(mdb.NAME, value[mdb.NAME]).Push(mdb.TEXT, m.Cmdx(SPACE, value[mdb.NAME], nfs.CAT, m.Option(nfs.FILE)))
-				})
-				m.StatusTimeCount(nfs.FILE, m.Option(nfs.FILE))
+			ice.CMD: {Name: "cmd name cmd*", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
+				DreamEach(m, m.Option(mdb.NAME), "", func(name string) {
+					m.Push(mdb.NAME, name).Push(mdb.TEXT, m.Cmdx(SPACE, name, kit.Split(m.Option(ice.CMD))))
+				}).StatusTimeCount(ice.CMD, m.Option(ice.CMD))
 			}},
-			ice.CMD: {Name: "cmd cmd*", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
-				GoToast(m, "", func(toast func(string, int, int)) []string {
-					msg := mdb.HashSelect(m.Spawn())
-					msg.Table(func(index int, value ice.Maps) {
-						toast(value[mdb.NAME], index, msg.Length())
-						m.Push(mdb.NAME, value[mdb.NAME]).Push(mdb.TEXT, m.Cmdx(SPACE, value[mdb.NAME], kit.Split(m.Option(ice.CMD))))
-					})
-					return nil
-				})
+			nfs.CAT: {Name: "cat name file*", Help: "文件", Hand: func(m *ice.Message, arg ...string) {
+				DreamEach(m, m.Option(mdb.NAME), "", func(name string) {
+					m.Push(mdb.NAME, name).Push(mdb.TEXT, m.Cmdx(SPACE, name, nfs.CAT, m.Option(nfs.FILE)))
+				}).StatusTimeCount(nfs.FILE, m.Option(nfs.FILE))
 			}},
 			cli.START: {Hand: func(m *ice.Message, arg ...string) {
 				gdb.Event(m, DREAM_START, arg)
@@ -275,10 +233,10 @@ func init() {
 				gdb.Event(m, DREAM_TRASH, arg)
 				nfs.Trash(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME)))
 			}},
-			ice.MAIN: {Name: "main index", Help: "首页", Hand: func(m *ice.Message, arg ...string) {
+			OPEN: {Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen(m.MergePod(m.Option(mdb.NAME))) }},
+			MAIN: {Name: "main index", Help: "首页", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(SPACE, m.Option(mdb.NAME), SPACE, ice.MAIN, m.Option(ctx.INDEX))
 			}},
-			OPEN: {Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen(m.MergePod(m.Option(mdb.NAME))) }},
 			DREAM_CLOSE: {Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(cli.DAEMON) == ice.OPS && m.Cmdv(SPACE, m.Option(mdb.NAME), mdb.STATUS) != cli.STOP {
 					m.Go(func() { m.Sleep300ms(DREAM, cli.START, m.OptionSimple(mdb.NAME)) })
@@ -321,4 +279,27 @@ func DreamProcess(m *ice.Message, args ice.Any, arg ...string) {
 			m.Push("_space", dream)
 		}
 	}
+}
+func DreamEach(m *ice.Message, name string, status string, cb func(string)) *ice.Message {
+	reg, err := regexp.Compile(name)
+	if m.Warn(err) {
+		return m
+	}
+	list := []string{}
+	m.Spawn().Cmds(DREAM).Table(func(value ice.Maps) {
+		if value[mdb.STATUS] == kit.Select(cli.START, status) && reg.MatchString(value[mdb.NAME]) {
+			list = append(list, value[mdb.NAME])
+		}
+	})
+	if len(list) == 0 {
+		return m
+	}
+	GoToast(m, "", func(toast func(string, int, int)) []string {
+		kit.For(list, func(index int, name string) {
+			toast(name, index, len(list))
+			cb(name)
+		})
+		return nil
+	})
+	return m
 }

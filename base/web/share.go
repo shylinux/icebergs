@@ -74,7 +74,7 @@ func init() {
 		SHARE: {Name: "share hash auto login", Help: "共享链", Actions: ice.MergeActions(ice.Actions{
 			mdb.CREATE: {Name: "create type name text", Hand: func(m *ice.Message, arg ...string) {
 				kit.If(m.Option(mdb.TYPE) == LOGIN, func() { arg = append(arg, mdb.TEXT, tcp.PublishLocalhost(m, m.Option(mdb.TEXT))) })
-				mdb.HashCreate(m, arg, aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERROLE, m.Option(ice.MSG_USERROLE))
+				mdb.HashCreate(m, arg, SPACE, m.Option(ice.MSG_USERPOD), aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERROLE, m.Option(ice.MSG_USERROLE))
 				m.Option(mdb.LINK, _share_link(m, P(SHARE, m.Result())))
 			}},
 			LOGIN: {Help: "登录", Hand: func(m *ice.Message, arg ...string) {
@@ -87,7 +87,10 @@ func init() {
 			}},
 			ctx.RUN: {Hand: func(m *ice.Message, arg ...string) {
 				if msg := mdb.HashSelect(m.Spawn(), m.Option(SHARE)); !IsNotValidFieldShare(m, msg) {
-					m.Cmdy(msg.Append(mdb.NAME), arg[1:])
+					m.Option(ice.MSG_USERNICK, msg.Append(aaa.USERNICK))
+					m.Option(ice.MSG_USERNAME, msg.Append(aaa.USERNAME))
+					m.Option(ice.MSG_USERROLE, msg.Append(aaa.USERROLE))
+					m.Cmdy(Space(m, msg.Append(SPACE)), msg.Append(mdb.NAME), arg[1:])
 				}
 			}},
 			nfs.PS: {Hand: func(m *ice.Message, arg ...string) {
@@ -103,7 +106,7 @@ func init() {
 				case LOGIN:
 					m.RenderRedirect(msg.Append(mdb.TEXT), ice.MSG_SESSID, aaa.SessCreate(m, msg.Append(aaa.USERNAME)))
 				case FIELD:
-					RenderCmd(m, msg.Append(mdb.NAME), kit.UnMarshal(msg.Append(mdb.TEXT)))
+					RenderPodCmd(m, msg.Append(SPACE), msg.Append(mdb.NAME), kit.UnMarshal(msg.Append(mdb.TEXT)))
 				case DOWNLOAD:
 					m.RenderDownload(msg.Append(mdb.TEXT))
 				default:

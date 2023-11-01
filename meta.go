@@ -158,6 +158,12 @@ func (m *Message) Length() (max int) {
 func (m *Message) TablesLimit(count int, cb func(value Maps)) *Message {
 	return m.Table(func(index int, value Maps) { kit.If(index < count, func() { cb(value) }) })
 }
+func (m *Message) Stats(arg ...string) (res []string) {
+	stats := map[string]float64{}
+	m.Table(func(value Maps) { kit.For(arg, func(k string) { stats[k] += kit.Float(value[k]) }) })
+	kit.For(arg, func(k string) { res = append(res, k, kit.Format("%0.2f", stats[k])) })
+	return
+}
 func (m *Message) Table(cb Any) *Message {
 	n := m.Length()
 	if n == 0 {

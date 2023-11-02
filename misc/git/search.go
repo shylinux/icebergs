@@ -68,7 +68,7 @@ func init() {
 				button = append(button, CLONE)
 				kit.For([]string{HTML_URL, WEBSITE}, func(key string) { kit.If(kit.Format(value[key]), func() { button = append(button, key) }) })
 				m.PushButton(button...)
-				m.Echo(kit.Formats(value))
+				// m.Echo(kit.Formats(value))
 			})
 			m.RenameAppend(CLONE_URL, REPOS).Action(ORIGIN).Display("")
 		}},

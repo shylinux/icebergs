@@ -25,8 +25,10 @@ func _route_match(m *ice.Message, space string, cb func(ice.Maps, int, []ice.Map
 		return
 	}
 	list := []ice.Maps{}
-	mdb.HashSelect(m.Spawn()).Table(func(value ice.Maps) {
-		if value[SPACE] == space {
+	m.Cmd("").Table(func(value ice.Maps) {
+		if value[mdb.STATUS] == OFFLINE {
+
+		} else if value[SPACE] == space {
 			list = append(list, value)
 		} else if reg.MatchString(kit.Format("%s:%s=%s@%s", value[SPACE], value[mdb.TYPE], value[nfs.MODULE], value[nfs.VERSION])) {
 			list = append(list, value)
@@ -63,9 +65,7 @@ const ROUTE = "route"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		ROUTE: {Name: "route space:text cmds:text auto spide cmds build travel prunes", Icon: "Podcasts.png", Help: "路由表", Actions: ice.MergeActions(ice.Actions{
-			ice.MAIN: {Help: "首页", Hand: func(m *ice.Message, arg ...string) {
-				ctx.ProcessField(m, CHAT_IFRAME, m.MergePod(""), arg...)
-			}},
+			ice.MAIN: {Help: "首页", Hand: func(m *ice.Message, arg ...string) { ctx.ProcessField(m, CHAT_IFRAME, m.MergePod(""), arg...) }},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch mdb.HashInputs(m, arg); arg[0] {
 				case SPACE:
@@ -83,7 +83,8 @@ func init() {
 			}},
 			cli.BUILD: {Name: "build space", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
 				_route_toast(m, m.Option(SPACE), m.PrefixKey(), "_build")
-				m.Sleep("1s").Cmdy("", "travel")
+				func() { defer ToastProcess(m)(); m.Sleep("3s") }()
+				m.Cmdy("", "travel")
 			}},
 			"_build": {Hand: func(m *ice.Message, arg ...string) {
 				if _, err := nfs.DiskFile.StatFile(ice.SRC_MAIN_GO); err == nil && nfs.Exists(m, ".git") {
@@ -121,6 +122,11 @@ func init() {
 				PushPodCmd(m, "", m.ActionKey())
 				m.Table(func(value ice.Maps) { kit.If(value[SPACE], func() { mdb.HashCreate(m.Spawn(), kit.Simple(value)) }) })
 			}},
+			mdb.PRUNES: &ice.Action{Name: "prunes status=offline", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd("", func(value ice.Maps) {
+					kit.If(value[mdb.STATUS] == OFFLINE, func() { mdb.HashRemove(m, SPACE, value[SPACE]) })
+				})
+			}},
 		}, mdb.HashAction(mdb.SHORT, SPACE, mdb.FIELD, "time,space,type,module,version,md5,size,path,hostname", mdb.SORT, "type,space", mdb.ACTION, ice.MAIN)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 1 {
 				_route_match(m, arg[0], func(value ice.Maps, i int, list []ice.Maps) {
@@ -131,8 +137,7 @@ func init() {
 			} else {
 				m.OptionFields("")
 				list := m.CmdMap(SPACE, mdb.NAME)
-				stat := map[string]int{}
-				size := 0
+				size, stat := 0, map[string]int{}
 				m.Table(func(value ice.Maps) {
 					size += kit.Int(kit.Select("", kit.Split(value[nfs.SIZE], nfs.PS), 1))
 					if _, ok := list[value[SPACE]]; ok {
@@ -142,10 +147,7 @@ func init() {
 						m.Push(mdb.STATUS, OFFLINE)
 						stat[OFFLINE]++
 					}
-				})
-				m.Sort("status,space", ice.STR_R, ice.STR)
-				m.StatusTimeCount(stat, nfs.SIZE, kit.FmtSize(size))
-				m.Options(ice.MSG_ACTION, "")
+				}).Sort("status,space", ice.STR_R, ice.STR).StatusTimeCount(stat, nfs.SIZE, kit.FmtSize(size)).Options(ice.MSG_ACTION, "")
 			}
 		}},
 	})

@@ -2,6 +2,7 @@ package web
 
 import (
 	"regexp"
+	"runtime"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
@@ -107,7 +108,9 @@ func init() {
 					case "md5":
 						m.Push(key, ice.Info.Hash)
 					case nfs.SIZE:
-						m.Push(key, kit.Format("%s/%s", ice.Info.Size, m.Cmdx(nfs.DIR, nfs.SIZE)))
+						var stats runtime.MemStats
+						runtime.ReadMemStats(&stats)
+						m.Push(key, kit.Format("%s/%s/%s", kit.FmtSize(int64(stats.Sys)), ice.Info.Size, m.Cmdx(nfs.DIR, nfs.SIZE)))
 					case mdb.TYPE:
 						m.Push(key, ice.Info.NodeType)
 					case nfs.PATH:
@@ -137,9 +140,10 @@ func init() {
 			} else {
 				m.OptionFields("")
 				list := m.CmdMap(SPACE, mdb.NAME)
-				size, stat := 0, map[string]int{}
+				mem, disk, stat := 0, 0, map[string]int{}
 				m.Table(func(value ice.Maps) {
-					size += kit.Int(kit.Select("", kit.Split(value[nfs.SIZE], nfs.PS), 1))
+					disk += kit.Int(kit.Select("", kit.Split(value[nfs.SIZE], nfs.PS), 2))
+					mem += kit.Int(kit.Select("", kit.Split(value[nfs.SIZE], nfs.PS), 0))
 					if _, ok := list[value[SPACE]]; ok {
 						m.Push(mdb.STATUS, ONLINE)
 						stat[ONLINE]++
@@ -147,7 +151,7 @@ func init() {
 						m.Push(mdb.STATUS, OFFLINE)
 						stat[OFFLINE]++
 					}
-				}).Sort("status,space", ice.STR_R, ice.STR).StatusTimeCount(stat, nfs.SIZE, kit.FmtSize(size)).Options(ice.MSG_ACTION, "")
+				}).Sort("status,space", ice.STR_R, ice.STR).StatusTimeCount(stat, nfs.SIZE, kit.Format("%s/%s", kit.FmtSize(mem), kit.FmtSize(disk))).Options(ice.MSG_ACTION, "")
 			}
 		}},
 	})

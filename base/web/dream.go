@@ -245,7 +245,7 @@ func init() {
 			DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				kit.Switch(m.Option(mdb.TYPE), []string{WORKER, SERVER}, func() { m.PushButton(OPEN, ice.MAIN) })
 			}},
-		}, DreamAction(), mdb.ImportantHashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icon,repos,binary,template")), Hand: func(m *ice.Message, arg ...string) {
+		}, DreamAction(), mdb.ImportantHashAction(ctx.TOOLS, "web.space,web.route,web.code.git.search", mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icon,repos,binary,template")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				_dream_list(m).RewriteAppend(func(value, key string, index int) string {
 					if key == mdb.ICON {

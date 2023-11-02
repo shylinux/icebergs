@@ -16,6 +16,7 @@ import (
 	"shylinux.com/x/icebergs/base/ssh"
 	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/base/web"
+	"shylinux.com/x/icebergs/base/web/html"
 	"shylinux.com/x/icebergs/core/chat"
 	kit "shylinux.com/x/toolkits"
 )
@@ -66,7 +67,13 @@ func init() {
 		}},
 	})
 	Index.MergeCommands(ice.Commands{
-		VIMER: {Name: "vimer path=src/ file=main.go line=1 list", Icon: "vimer.png", Help: "编辑器", Meta: kit.Dict(ctx.STYLE, INNER), Actions: ice.MergeActions(ice.Actions{
+		VIMER: {Name: "vimer path=src/ file=main.go line=1 list", Icon: "vimer.png", Help: "编辑器", Meta: kit.Dict(
+			ctx.STYLE, INNER,
+			ice.CTX_TRANS, kit.Dict(html.INPUT, kit.Dict(
+				ice.HELP, "帮助",
+				cli.MAIN, "程序",
+			)),
+		), Actions: ice.MergeActions(ice.Actions{
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if mdb.IsSearchPreview(m, arg) {
 					m.PushSearch(mdb.TYPE, nfs.FILE, mdb.NAME, ice.MAIN, mdb.TEXT, ice.SRC_MAIN_SH)

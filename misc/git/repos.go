@@ -539,8 +539,8 @@ func init() {
 						password, _ = u.User.Password()
 					}
 					m.Sort("repos,status,file").StatusTimeCount(mdb.TIME, last,
-						REMOTE, remote, VERSION, ice.Info.Make.Versions(),
 						kit.Select(aaa.TECH, aaa.VOID, password == ""), m.Option(aaa.EMAIL),
+						REMOTE, remote, VERSION, ice.Info.Make.Versions(),
 					)
 				}
 			}},

@@ -89,7 +89,6 @@ const CHAIN = "chain"
 
 func init() {
 	wiki.AddChart(CHAIN, func(m *ice.Message) wiki.Chart {
-		m.OptionDefault(wiki.FONT_SIZE, "18")
 		m.OptionDefault(wiki.MARGINX, "60")
 		m.OptionDefault(wiki.MARGINY, "16")
 		m.OptionDefault(wiki.PADDING, "10")

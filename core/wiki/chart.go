@@ -69,7 +69,8 @@ func (g *Group) EchoPath(group string, str string, arg ...ice.Any) *ice.Message 
 	return g.Echo(group, `<path d="%s"></path>`, kit.Format(str, arg...))
 }
 func (g *Group) EchoText(group string, x, y int, text string, arg ...string) *ice.Message {
-	return g.Echo(group, "<text x=%d y=%d %s>%s</text>", x, y+8, formatStyle(arg...), text)
+	offset := kit.Int(kit.Select("8", "4", g.Get(group).IsMobileUA()))
+	return g.Echo(group, "<text x=%d y=%d %s>%s</text>", x, y+offset, formatStyle(arg...), text)
 }
 func (g *Group) EchoArrowLine(group string, x1, y1, x2, y2 int, arg ...string) *ice.Message { // marker-end
 	return g.EchoLine(group, x1, y1, x2, y2, "marker-end", kit.Format("url(#%s)", kit.Select("arrowhead", arg, 0)))
@@ -103,12 +104,13 @@ var chart_list = map[string]func(m *ice.Message) Chart{}
 func AddChart(name string, hand func(m *ice.Message) Chart) { chart_list[name] = hand }
 
 func _chart_show(m *ice.Message, name, text string, arg ...string) {
-	m.Options(FONT_SIZE, "24", STROKE_WIDTH, "2")
 	kit.For(arg, func(k, v string) { m.Option(k, v) })
 	m.Option(FILL, kit.Select(m.Option(FILL), m.Option(BG)))
 	m.Option(STROKE, kit.Select(m.Option(STROKE), m.Option(FG)))
 	chart := chart_list[name](m)
 	chart.Init(m, text)
+	m.OptionDefault(STROKE_WIDTH, "2")
+	m.OptionDefault(FONT_SIZE, kit.Select("24", "13", m.IsMobileUA()))
 	m.Options(HEIGHT, chart.GetHeight(), WIDTH, chart.GetWidth())
 	_wiki_template(m, "", name, text, arg...)
 	defer m.RenderResult()

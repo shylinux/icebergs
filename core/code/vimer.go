@@ -67,12 +67,8 @@ func init() {
 		}},
 	})
 	Index.MergeCommands(ice.Commands{
-		VIMER: {Name: "vimer path=src/ file=main.go line=1 list", Icon: "vimer.png", Help: "编辑器", Meta: kit.Dict(
-			ctx.STYLE, INNER,
-			ice.CTX_TRANS, kit.Dict(html.INPUT, kit.Dict(
-				ice.HELP, "帮助",
-				cli.MAIN, "程序",
-			)),
+		VIMER: {Name: "vimer path=src/ file=main.go line=1 list", Help: "编辑器", Icon: "vimer.png", Meta: kit.Dict(
+			ctx.STYLE, INNER, ice.CTX_TRANS, kit.Dict(html.INPUT, kit.Dict(cli.MAIN, "程序")),
 		), Actions: ice.MergeActions(ice.Actions{
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if mdb.IsSearchPreview(m, arg) {
@@ -206,7 +202,11 @@ func init() {
 			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { web.DreamProcess(m, []string{}, arg...) }},
 		}, aaa.RoleAction(), chat.FavorAction(), ctx.ConfAction(ctx.TOOLS, "xterm,compile,runtime")), Hand: func(m *ice.Message, arg ...string) {
 			if m.Cmdy(INNER, arg); arg[0] != ctx.ACTION {
-				m.Action(nfs.SAVE, COMPILE, mdb.SHOW, cli.EXEC, ice.APP)
+				if web.IsLocalHost(m) {
+					m.Action(nfs.SAVE, COMPILE, mdb.SHOW, cli.EXEC, ice.APP)
+				} else {
+					m.Action(nfs.SAVE, COMPILE, mdb.SHOW)
+				}
 				ctx.DisplayLocal(m, "")
 				ctx.Toolkit(m)
 			}

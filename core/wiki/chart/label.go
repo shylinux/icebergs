@@ -75,4 +75,9 @@ const (
 )
 const LABEL = "label"
 
-func init() { wiki.AddChart(LABEL, func(m *ice.Message) wiki.Chart { return &Label{} }) }
+func init() {
+	wiki.AddChart(LABEL, func(m *ice.Message) wiki.Chart {
+		m.OptionDefault(wiki.FONT_SIZE, kit.Select("24", "13", m.IsMobileUA()))
+		return &Label{}
+	})
+}

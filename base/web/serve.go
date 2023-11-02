@@ -266,5 +266,5 @@ func RequireFile(m *ice.Message, file string) string {
 	return ""
 }
 func IsLocalHost(m *ice.Message) bool {
-	return m.R.Header.Get("X-Forwarded-For") == "" && tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP))
+	return (m.R == nil || m.R.Header.Get("X-Forwarded-For") == "") && tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP))
 }

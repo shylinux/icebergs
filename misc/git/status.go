@@ -23,7 +23,6 @@ const (
 	DIFF      = "diff"
 	INSTEADOF = "insteadof"
 	OAUTH     = "oauth"
-	GITEA     = "gitea"
 )
 
 const STATUS = "status"
@@ -61,7 +60,6 @@ func init() {
 			OAUTH: {Help: "授权", Hand: func(m *ice.Message, arg ...string) {
 				m.ProcessOpen(kit.MergeURL2(kit.Select(ice.Info.Make.Domain, m.Cmdx(REPOS, "remoteURL")), web.ChatCmdPath(m, web.TOKEN, "gen"), tcp.HOST, m.Option(ice.MSG_USERWEB)))
 			}},
-			GITEA: {Help: "资源", Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen(m.Cmdv("web.spide", ice.HUB, web.CLIENT_URL)) }},
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				if !kit.IsIn(m.Option(mdb.TYPE), web.WORKER, web.SERVER) {
 					return
@@ -91,7 +89,7 @@ func init() {
 				m.Action(INIT).Echo("please init repos. ").EchoButton(INIT)
 			} else if len(arg) == 0 {
 				kit.If(config != nil, func() { m.Option(aaa.EMAIL, kit.Select(mdb.Config(m, aaa.EMAIL), config.User.Email)) })
-				m.Cmdy(REPOS, STATUS).Action(PULL, PUSH, INSTEADOF, OAUTH, CONFIGS, GITEA)
+				m.Cmdy(REPOS, STATUS).Action(PULL, PUSH, INSTEADOF, OAUTH, CONFIGS)
 				kit.If(!m.IsCliUA(), func() { m.Cmdy(code.PUBLISH, ice.CONTEXTS, ice.DEV) })
 			} else {
 				_repos_cmd(m, arg[0], DIFF)

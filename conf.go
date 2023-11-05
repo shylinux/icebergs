@@ -118,6 +118,7 @@ const ( // DIR
 
 	ISH_PLUGED   = ".ish/pluged/"
 	USR_MODULES  = "usr/node_modules/"
+	USR_GEOAREA  = "usr/geoarea/"
 	USR_RELEASE  = "usr/release/"
 	USR_LEARNING = "usr/learning/"
 	USR_VOLCANOS = "usr/volcanos/"

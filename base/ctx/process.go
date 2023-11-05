@@ -20,6 +20,9 @@ func ProcessAction() ice.Actions {
 
 func _process_args(m *ice.Message, args ice.Any) []string {
 	switch cb := args.(type) {
+	case func():
+		cb()
+		return []string{}
 	case func() string:
 		return []string{cb()}
 	case func() []string:

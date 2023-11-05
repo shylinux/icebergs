@@ -41,6 +41,9 @@ func DisplayStoryJSON(m *ice.Message, arg ...ice.Any) *ice.Message {
 func DisplayStorySpide(m *ice.Message, arg ...ice.Any) *ice.Message {
 	return DisplayStory(m, "spide", arg...)
 }
+func DisplayStoryChina(m *ice.Message, arg ...ice.Any) *ice.Message {
+	return DisplayStory(m, "china", arg...)
+}
 func DisplayStudio(m *ice.Message, cmd ...string) *ice.Message {
 	for i, k := range cmd {
 		kit.If(!strings.Contains(cmd[i], nfs.PT), func() { cmd[i] = m.Prefix(k) })

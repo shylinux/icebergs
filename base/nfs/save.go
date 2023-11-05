@@ -72,6 +72,7 @@ const PUSH = "push"
 const COPY = "copy"
 const LINK = "link"
 const LOAD = "load"
+const MOVE = "move"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
@@ -92,6 +93,11 @@ func init() {
 		}},
 		LINK: {Name: "link file from run", Help: "链接", Hand: func(m *ice.Message, arg ...string) {
 			_link_file(m, arg[0], arg[1])
+		}},
+		MOVE: {Name: "move file from run", Help: "移动", Hand: func(m *ice.Message, arg ...string) {
+			arg[1] = path.Join(m.Option(DIR_ROOT), arg[1])
+			arg[0] = path.Join(m.Option(DIR_ROOT), arg[0])
+			Rename(m, arg[1], arg[0])
 		}},
 	})
 }

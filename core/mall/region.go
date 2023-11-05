@@ -38,7 +38,7 @@ func init() {
 			}},
 			CITY: {Help: "本地", Hand: func(m *ice.Message, arg ...string) {
 				ctx.ProcessField(m, m.PrefixKey(), func() {
-					m.Push(ctx.DISPLAY, "/plugin/story/china.js?title=深圳资源分布&field=area&style=float&path=440300")
+					m.Push(ctx.DISPLAY, "/plugin/story/china.js?title=深圳资源分布&field=area&style=float&path=深圳市")
 				}, arg...)
 			}},
 		}, mdb.ExportHashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,gdp,population,area,text")), Hand: func(m *ice.Message, arg ...string) {

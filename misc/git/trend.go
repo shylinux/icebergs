@@ -14,7 +14,17 @@ const TREND = "trend"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		TREND: {Name: "trend repos begin_time@date auto", Help: "趋势图", Actions: ice.Actions{
+		TREND: {Name: "trend repos begin_time@date auto", Help: "趋势图", Meta: kit.Dict(
+			ice.CTX_TRANS, kit.Dict(
+				html.INPUT, kit.Dict(
+					"from", "起始",
+					"date", "日期",
+					"max", "最多",
+					"add", "添加",
+					"del", "删除",
+				),
+			),
+		), Actions: ice.Actions{
 			mdb.DETAIL: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy("", code.INNER, m.Option(REPOS), MASTER, m.Option(mdb.HASH), m.Cmdv(REPOS, m.Option(REPOS), MASTER, m.Option(mdb.HASH), nfs.FILE))
 			}},

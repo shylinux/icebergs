@@ -77,8 +77,8 @@ func init() {
 						text = append(text, list[0]+" ---")
 					}
 				}
-				m.PushButton(kit.Dict(m.CommandKey(), "源码"))
 				m.Push(mdb.TEXT, strings.Join(text, ", "))
+				m.PushButton(kit.Dict(m.CommandKey(), "源码"))
 			}},
 		}, aaa.RoleAction(), web.DreamAction(), Prefix(REPOS)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 && arg[0] == ctx.ACTION {

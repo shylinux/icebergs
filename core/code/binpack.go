@@ -18,7 +18,7 @@ import (
 func _binpack_file(m *ice.Message, w io.Writer, arg ...string) {
 	if kit.IsIn(kit.Ext(arg[0]), "zip", "gz") {
 		return
-	} else if kit.Contains(arg[0], "/dist/", "/bin/", "/log/") {
+	} else if kit.Contains(arg[0], "/bin/", "/log/") {
 		return
 	} else if strings.HasPrefix(arg[0], "usr/volcanos/publish/") && !strings.HasSuffix(arg[0], "/proto.js") {
 		return

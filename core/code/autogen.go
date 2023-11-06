@@ -131,7 +131,7 @@ func init() {
 				m.OptionDefault(mdb.KEY, Prefix(m.Option(mdb.ZONE), m.Option(mdb.NAME)))
 				m.Option(nfs.FILE, path.Join(m.Option(mdb.ZONE), kit.Keys(m.Option(mdb.NAME), GO)))
 				m.Option(mdb.TEXT, kit.Format("`name:\"list %s\" help:\"%s\"`", _autogen_list(m), m.Option(mdb.HELP)))
-				defer _autogen_version(m.Spawn())
+				defer m.Go(func() { _autogen_version(m.Spawn()) })
 				if p := path.Join(ice.SRC, kit.ExtChange(m.Option(nfs.FILE), SHY)); !nfs.Exists(m, p) {
 					_autogen_source(m, kit.ExtChange(path.Join(ice.SRC, m.Option(cli.MAIN)), SHY), p)
 					_autogen_script(m, p)

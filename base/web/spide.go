@@ -184,7 +184,8 @@ func _spide_save(m *ice.Message, action, file, uri string, res *http.Response) {
 	switch action {
 	case SPIDE_RAW:
 		if b, _ := ioutil.ReadAll(res.Body); strings.HasPrefix(res.Header.Get(ContentType), ApplicationJSON) {
-			m.Echo(kit.Formats(kit.UnMarshal(string(b))))
+			// m.Echo(kit.Formats(kit.UnMarshal(string(b))))
+			m.Echo(string(b))
 		} else {
 			m.Echo(string(b))
 		}
@@ -257,11 +258,12 @@ const (
 	CLIENT_ORIGIN   = "client.origin"
 	CLIENT_URL      = "client.url"
 
-	OPEN  = "open"
-	MAIN  = "main"
-	FULL  = "full"
-	LINK  = "link"
-	MERGE = "merge"
+	OPEN   = "open"
+	MAIN   = "main"
+	FULL   = "full"
+	LINK   = "link"
+	MERGE  = "merge"
+	VENDOR = "vendor"
 
 	QS = "?"
 )

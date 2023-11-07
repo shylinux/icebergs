@@ -1,8 +1,7 @@
-section "location"
+section "tmap"
 refer `
 后台 https://lbs.qq.com/dev/console/application/mine
 后端 https://lbs.qq.com/service/webService/webServiceGuide/webServiceOverview
 前端 https://lbs.qq.com/webApi/javascriptGL/glGuide/glBasic
 手册 https://lbs.qq.com/webApi/javascriptGL/glDoc/docIndexMap
 `
-

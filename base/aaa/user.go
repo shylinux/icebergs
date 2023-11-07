@@ -18,6 +18,7 @@ const (
 	AVATAR     = "avatar"
 	GENDER     = "gender"
 	MOBILE     = "mobile"
+	SECRET     = "secret"
 
 	CITY     = "city"
 	COUNTRY  = "country"

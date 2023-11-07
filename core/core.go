@@ -2,6 +2,7 @@ package core
 
 import (
 	_ "shylinux.com/x/icebergs/core/chat"
+	_ "shylinux.com/x/icebergs/core/chat/location"
 	_ "shylinux.com/x/icebergs/core/chat/macos"
 	_ "shylinux.com/x/icebergs/core/code"
 	_ "shylinux.com/x/icebergs/core/mall"

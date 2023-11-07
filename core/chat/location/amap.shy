@@ -1,0 +1,6 @@
+section "amap"
+refer `
+高德 https://www.amap.com
+文档 https://lbs.amap.com/api/javascript-api/guide/abc/prepare
+后台 https://console.amap.com/dev/key/app
+`

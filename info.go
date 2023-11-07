@@ -217,7 +217,7 @@ func SplitCmd(name string, actions Actions) (list []Any) {
 			push(BUTTON, "next")
 			push(TEXT, "offend")
 			push(TEXT, "limit")
-		case ARGS, CONTENT, TEXTAREA, TEXT:
+		case ARGS, CONTENT, TEXTAREA, TEXT, "extra":
 			push(TEXTAREA, ls[i])
 		case PASSWORD:
 			push(PASSWORD, ls[i])

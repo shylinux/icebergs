@@ -3,6 +3,7 @@ Volcanos(chat.ONIMPORT, {
 		var item = can.onimport.item(can, value, function(event) { if (can.onmotion.cache(can, function() { return value.name }, can.ui.content)) { return }
 			can.runActionCommand(event, value.index, [], function(msg) {
 				switch (value.name) {
+					case ".":
 					case "applications": can.onimport.icons(can, msg, can.ui.content); break
 					default: can.onappend.table(can, msg, null, can.ui.content)
 				} can.onimport.layout(can)

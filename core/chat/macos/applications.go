@@ -20,7 +20,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		APPLICATIONS: {Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				FinderAppend(m, APPLICATIONS, m.PrefixKey())
+				FinderAppend(m, "", m.PrefixKey())
 				defer Notify(m, "Infomation.png", cli.RUNTIME, "系统启动成功", ctx.INDEX, cli.RUNTIME)
 				m.Travel(func(p *ice.Context, c *ice.Context, key string, cmd *ice.Command) {
 					kit.If(cmd.Icon, func() {
@@ -42,8 +42,13 @@ func init() {
 	})
 }
 func install(m *ice.Message, cmd, icon, index string, arg ...string) {
-	name := kit.TrimExt(path.Base(icon), nfs.PNG, nfs.JPG)
-	nfs.Exists(m, ice.USR_ICONS+icon, func(p string) { icon = p })
+	name := kit.TrimExt(path.Base(icon), nfs.PNG, nfs.JPG, nfs.JPEG)
+	if icon != "" {
+		nfs.Exists(m, ice.USR_ICONS+icon, func(p string) { icon = p })
+		if m.Warn(!strings.HasPrefix(icon, web.HTTP) && !nfs.Exists(m, icon)) {
+			return
+		}
+	}
 	m.Cmd(Prefix(cmd), mdb.CREATE, mdb.NAME, name, mdb.ICON, icon, ctx.INDEX, index, arg)
 }
 func AppInstall(m *ice.Message, icon, index string, arg ...string) {

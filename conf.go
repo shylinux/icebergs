@@ -117,6 +117,7 @@ const ( // DIR
 	SHARE_LOCAL     = "/share/local/"
 
 	ISH_PLUGED   = ".ish/pluged/"
+	USR_PACKAGE  = "usr/package.json"
 	USR_MODULES  = "usr/node_modules/"
 	USR_GEOAREA  = "usr/geoarea/"
 	USR_RELEASE  = "usr/release/"

@@ -62,7 +62,14 @@ func init() {
 		ice.REQUIRE_USR: {Hand: func(m *ice.Message, arg ...string) { web.ShareLocalFile(m, ice.USR, path.Join(arg...)) }},
 		ice.REQUIRE_MODULES: {Hand: func(m *ice.Message, arg ...string) {
 			p := path.Join(ice.USR_MODULES, path.Join(arg...))
-			kit.If(!nfs.Exists(m, p), func() { m.Cmd(cli.SYSTEM, "npm", INSTALL, arg[0], kit.Dict(cli.CMD_DIR, ice.USR)) })
+			kit.If(!nfs.Exists(m, p), func() {
+				if kit.IsIn(m.Option(ice.MSG_USERROLE), aaa.TECH, aaa.ROOT) {
+					kit.If(!nfs.Exists(m, ice.USR_PACKAGE), func() {
+						m.Cmd(nfs.SAVE, ice.USR_PACKAGE, kit.Formats(kit.Dict(mdb.NAME, "usr", nfs.VERSION, "0.0.1")))
+					})
+					m.Cmd(cli.SYSTEM, "npm", INSTALL, arg[0], kit.Dict(cli.CMD_DIR, ice.USR))
+				}
+			})
 			m.RenderDownload(p)
 		}},
 	})

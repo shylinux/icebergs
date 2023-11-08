@@ -21,7 +21,7 @@ func init() {
 		}},
 	})
 	chat.Index.MergeCommands(ice.Commands{
-		AMAP: {Name: "amap keyword auto", Help: "高德地图", Hand: func(m *ice.Message, arg ...string) {
+		AMAP: {Help: "高德地图", Hand: func(m *ice.Message, arg ...string) {
 			m.Display("", nfs.SCRIPT, mdb.Config(m, nfs.SCRIPT))
 		}},
 	})

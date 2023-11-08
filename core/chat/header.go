@@ -64,7 +64,7 @@ const HEADER = "header"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		HEADER: {Actions: ice.MergeActions(ice.Actions{
+		HEADER: {Help: "标题栏", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				aaa.White(m, HEADER)
 				aaa.Black(m, kit.Keys(HEADER, ctx.ACTION, mdb.CREATE))

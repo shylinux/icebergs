@@ -10,7 +10,7 @@ const CMD = "cmd"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		CMD: {Actions: web.ApiWhiteAction(), Hand: func(m *ice.Message, arg ...string) {
+		CMD: {Help: "命令", Actions: web.ApiWhiteAction(), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg[0]) == 0 || arg[0] == "" {
 				web.RenderMain(m)
 			} else if aaa.Right(m, arg) {

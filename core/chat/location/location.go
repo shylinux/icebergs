@@ -24,7 +24,7 @@ const LOCATION = "location"
 func init() {
 	chat.Index.MergeCommands(ice.Commands{
 		LOCATION: {Help: "地图", Icon: "Maps.png", Meta: kit.Dict(
-			ice.CTX_TRANS, kit.Dict(html.INPUT, kit.Dict(
+			ice.CTX_TRANS, kit.Dict(EXPLORE, "周边", DIRECTION, "导航", DISTRICT, "地区", html.INPUT, kit.Dict(
 				LONGITUDE, "经度", LATITUDE, "纬度", PROVINCE, "省份", CITY, "城市", DISTRICT, "区域", STREET, "街路",
 			)),
 		), Actions: ice.MergeActions(ice.Actions{

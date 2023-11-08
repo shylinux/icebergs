@@ -39,7 +39,7 @@ const RIVER = "river"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		RIVER: {Actions: ice.MergeActions(ice.Actions{
+		RIVER: {Help: "导航", Actions: ice.MergeActions(ice.Actions{
 			mdb.CREATE: {Name: "create type=void,tech,root name=hi text=hello template=base", Hand: func(m *ice.Message, arg ...string) {
 				h := mdb.HashCreate(m, arg)
 				defer m.Result(h)

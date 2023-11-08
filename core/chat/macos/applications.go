@@ -18,7 +18,7 @@ const APPLICATIONS = "applications"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		APPLICATIONS: {Actions: ice.MergeActions(ice.Actions{
+		APPLICATIONS: {Help: "应用", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				FinderAppend(m, "", m.PrefixKey())
 				defer Notify(m, "Infomation.png", cli.RUNTIME, "系统启动成功", ctx.INDEX, cli.RUNTIME)

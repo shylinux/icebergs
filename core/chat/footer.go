@@ -13,7 +13,7 @@ const FOOTER = "footer"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		FOOTER: {Actions: ice.MergeActions(ice.Actions{
+		FOOTER: {Help: "状态栏", Actions: ice.MergeActions(ice.Actions{
 			ice.HELP: {Hand: func(m *ice.Message, arg ...string) {
 				ctx.ProcessField(m, web.WIKI_WORD, []string{ctx.FileURI(kit.ExtChange(ctx.GetCmdFile(m, arg[0]), nfs.SHY))}, arg...)
 			}},

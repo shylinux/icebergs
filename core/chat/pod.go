@@ -16,7 +16,7 @@ const POD = "pod"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		POD: {Actions: web.ApiWhiteAction(), Hand: func(m *ice.Message, arg ...string) {
+		POD: {Help: "空间", Actions: web.ApiWhiteAction(), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 || arg[0] == "" {
 				web.RenderMain(m)
 			} else if strings.HasPrefix(m.Option(ice.MSG_USERUA), "git/") {

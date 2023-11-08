@@ -68,7 +68,7 @@ const ACTION = "action"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		ACTION: {Actions: ice.MergeActions(ice.Actions{
+		ACTION: {Help: "工作区", Actions: ice.MergeActions(ice.Actions{
 			mdb.MODIFY: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(mdb.MODIFY, RIVER, _storm_key(m), mdb.LIST, m.OptionSimple(mdb.ID), arg)
 			}},

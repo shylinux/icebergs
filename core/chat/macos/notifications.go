@@ -13,7 +13,7 @@ const NOTIFICATIONS = "notifications"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		NOTIFICATIONS: {Actions: ice.MergeActions(ice.Actions{
+		NOTIFICATIONS: {Help: "消息", Actions: ice.MergeActions(ice.Actions{
 			web.DREAM_CREATE: {Hand: func(m *ice.Message, arg ...string) {
 				Notify(m, "Launchpad.png", m.Option(mdb.NAME), "空间创建成功", ctx.INDEX, web.CHAT_IFRAME, ctx.ARGS, m.MergePod(m.Option(mdb.NAME)))
 			}},

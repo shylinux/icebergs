@@ -12,6 +12,12 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
+const (
+	SEARCH    = "search"
+	EXPLORE   = "explore"
+	CURRENT   = "current"
+	DIRECTION = "direction"
+)
 const TMAP = "tmap"
 
 func init() {
@@ -24,21 +30,21 @@ func init() {
 		}))
 	}
 	chat.Index.MergeCommands(ice.Commands{
-		TMAP: {Actions: ice.Actions{
+		TMAP: {Help: "腾讯地图", Actions: ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(web.SPIDE, mdb.CREATE, TMAP, "https://apis.map.qq.com/ws/")
 			}},
-			"explore": {Help: "周边", Hand: func(m *ice.Message, arg ...string) {
+			DISTRICT: {Help: "地区", Hand: func(m *ice.Message, arg ...string) {
+				m.Echo(get(m, "district/v1/getchildren", m.OptionSimple(mdb.ID)))
+			}},
+			EXPLORE: {Help: "周边", Hand: func(m *ice.Message, arg ...string) {
 				m.Echo(get(m, "place/v1/explore", m.OptionSimple("keyword,boundary,page_index")))
 			}},
-			"search": {Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
+			SEARCH: {Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 				m.Echo(get(m, "place/v1/search", m.OptionSimple("keyword,boundary,page_index")))
 			}},
-			"direction": {Help: "导航", Hand: func(m *ice.Message, arg ...string) {
+			DIRECTION: {Help: "导航", Hand: func(m *ice.Message, arg ...string) {
 				m.Echo(get(m, "direction/v1/"+m.Option(mdb.TYPE)+nfs.PS, m.OptionSimple("from,to")))
-			}},
-			"district": {Help: "地区", Hand: func(m *ice.Message, arg ...string) {
-				m.Echo(get(m, "district/v1/getchildren", m.OptionSimple(mdb.ID)))
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			// m.Option(LOCATION, m.Cmdx(web.SERVE, tcp.HOST))

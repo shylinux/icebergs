@@ -73,7 +73,6 @@ Volcanos(chat.ONACTION, {
 		current: "定位", favor: "收藏",
 		input: {
 			zoom: "缩放", pitch: "倾斜", rotation: "旋转",
-			weather: "天气", temperature: "温度", humidity: "湿度", windPower: "风速",
 		},
 	},
 	_point: function(event, can, item) { var rect = can.ui.content.getBoundingClientRect()

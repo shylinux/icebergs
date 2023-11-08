@@ -17,6 +17,9 @@ Volcanos(chat.ONIMPORT, {
 					var weather = new AMap.Weather(); weather.getLive(can.Status("city"), function(err, data) { can.Status(data) })
 				}, 500)
 			}), can.onmotion.delay(can, function() { can.onaction.current({}, can) })
+			AMap.event.addListener(can.ui.geolocation, 'error', function(res) {
+				can.user.toastFailure(can, res.message)
+			})
 		})
 		map.add(can.ui.favor = new AMap.OverlayGroup())
 		map.add(can.ui.marker = new AMap.Marker({position: [116.39, 39.9]}))
@@ -40,6 +43,7 @@ Volcanos(chat.ONACTION, {
 		current: "定位", favor: "收藏",
 		input: {
 			zoom: "缩放", pitch: "倾斜", rotation: "旋转",
+			weather: "天气", temperature: "温度", humidity: "湿度", windPower: "风速",
 		},
 	},
 	current: function(event, can) {
@@ -55,6 +59,9 @@ Volcanos(chat.ONACTION, {
 	center: function(can, item) { can.ui.marker.setTitle(item.name)
 		can.ui.map.setCenter(new AMap.LngLat(parseFloat(item.longitude), parseFloat(item.latitude)))
 		can.onmotion.delay(can, function() { can.onexport.status(can) }, 500)
+	},
+	direction: function(event, can, button, item) {
+		can.user.isMobile && window.open(`https://uri.amap.com/marker?position=${item.longitude},${item.latitude}&name=${item.name||item.text}&callnative=1`)
 	}
 })
 Volcanos(chat.ONEXPORT, {

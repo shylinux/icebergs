@@ -3,7 +3,7 @@ Volcanos(chat.ONIMPORT, {_init: function(can, msg) {},
 		can.db.list = {}, can.ui = can.onappend.layout(can), can.onimport._project(can)
 		// can.core.Item(can.ui.zone, function(key, item) { key == "favor" || item._legend.click() })
 		if (can.user.isMobile) {
-			can.page.style(can, can.ui.project, "z-index", 10, "position", "absolute")
+			can.page.style(can, can.ui.project, "z-index", 10, "position", "absolute", html.MAX_HEIGHT, can.ConfHeight()-120)
 			can.page.style(can, can.ui.content, html.HEIGHT, can.ConfHeight(), html.WIDTH, can.ConfWidth())
 			can.onmotion.hidden(can, can._action), can.onmotion.hidden(can, can._status)
 		} else {
@@ -11,7 +11,7 @@ Volcanos(chat.ONIMPORT, {_init: function(can, msg) {},
 		}
 		msg.Option(ice.MSG_ACTION, ""), cb && cb(msg)
 		if (msg.IsDetail()) { can.onaction.center(can, can.onimport._item(can, msg.TableDetail())) } else {
-			msg.Table(function(item) { can.onimport._item(can, item) }), can.ui.zone.favor._total(msg.Length())
+			msg.Table(function(item) { can.onimport._item(can, item) }), can.ui.zone.favor._total(msg.Length()), can.ui.zone.favor.toggle(true)
 			var item = can.db.list[can.db.hash[0]]; item &&  item.click()
 		}
 	},
@@ -33,7 +33,7 @@ Volcanos(chat.ONIMPORT, {_init: function(can, msg) {},
 			}, 500)
 		}, function(event) {
 			can.onaction.center(can, item), can.user.carteRight(event, can, {
-				direction: function(event, button) { can.onaction[button](event, can, button) },
+				direction: function(event, button) { can.onaction[button](event, can, button, item) },
 				favor: function(event, button) { can.onaction.create(can.request(event, item), can, button) },
 				plugin: function(event, button) { can.user.input(can.request(event, item), can, [ctx.INDEX, ctx.ARGS], function(data) {
 					item.extra = can.base.Copy(item.extra||{}, data), can.onimport.plugin(can, item)
@@ -49,8 +49,10 @@ Volcanos(chat.ONIMPORT, {_init: function(can, msg) {},
 		if (can.onmotion.cache(can, function() { return item.hash }, can.ui.profile)) { return true }
 		can.onappend.plugin(can, {space: item.space, index: extra.index, args: extra.args}, function(sub) { item._plugin = sub
 			sub.onaction._close = function() { can.onmotion.hidden(can, can.ui.profile) }
-			sub.onexport.output = function() { sub.onimport.size(sub, can.ConfHeight()/2, can.ConfWidth()/2, true)
-				can.page.style(can, can.ui.profile, html.HEIGHT, can.ConfHeight()/2, html.WIDTH, can.ConfWidth()/2)
+			sub.onexport.output = function() {
+				var width = (can.user.isMobile? can.ConfWidth()-120: can.ConfWidth()/2)
+				sub.onimport.size(sub, can.ConfHeight()/2, width, true)
+				can.page.style(can, can.ui.profile, html.HEIGHT, can.ConfHeight()/2, html.WIDTH, width)
 			}
 		}, can.ui.profile)
 		return true

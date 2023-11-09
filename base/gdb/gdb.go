@@ -49,4 +49,6 @@ const GDB = "gdb"
 
 var Index = &ice.Context{Name: GDB, Help: "事件模块"}
 
+func Prefix(arg ...string) string { return kit.Keys(GDB, arg) }
+
 func init() { ice.Index.Register(Index, &Frame{}, SIGNAL, EVENT, TIMER, ROUTINE) }

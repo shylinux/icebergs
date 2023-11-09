@@ -185,3 +185,9 @@ func ProxyUpload(m *ice.Message, pod string, p string) string {
 	m.Cmd(SPACE, pod, SPIDE, PROXY, URL, url, nfs.SIZE, size, CACHE, cache.Format(ice.MOD_TIME), UPLOAD, mdb.AT+p)
 	return kit.Select(p, pp, file.ExistsFile(pp))
 }
+func ShareLocal(m *ice.Message, p string) string {
+	if kit.HasPrefix(p, nfs.PS, HTTP) {
+		return p
+	}
+	return MergeLink(m, "/share/local/"+p)
+}

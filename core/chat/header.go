@@ -99,7 +99,7 @@ func init() {
 			m.Option("language.list", m.Cmd(nfs.DIR, nfs.TemplatePath(m, aaa.LANGUAGE)+nfs.PS, nfs.FILE).Appendv(nfs.FILE))
 			m.Option("theme.list", m.Cmd(nfs.DIR, nfs.TemplatePath(m, aaa.THEME)+nfs.PS, nfs.FILE).Appendv(nfs.FILE))
 			m.Option(nfs.REPOS, m.Cmdv(web.SPIDE, nfs.REPOS, web.CLIENT_URL))
-			m.Option(ICONS, mdb.Conf(m, ICONS, kit.Keym(nfs.PATH)))
+			m.Option("icons", mdb.Conf(m, ICON, kit.Keym(nfs.PATH)))
 			m.Option(MENUS, mdb.Config(m, MENUS))
 			m.Echo(mdb.Config(m, TITLE))
 			if mdb.HashSelect(m); m.Length() == 0 {

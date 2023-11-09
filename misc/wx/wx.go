@@ -8,6 +8,6 @@ import (
 
 const WX = "wx"
 
-var Index = &ice.Context{Name: WX, Help: "公众号"}
+var Index = &ice.Context{Name: WX, Help: "微信公众号"}
 
 func init() { chat.Index.Register(Index, &web.Frame{}) }

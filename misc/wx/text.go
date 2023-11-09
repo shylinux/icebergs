@@ -6,35 +6,29 @@ import (
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
-
-func _wx_reply(m *ice.Message, tmpl string) {
-	if res, err := kit.Render(mdb.Config(m, nfs.TEMPLATE), m); err == nil {
-		m.SetResult().RenderResult(string(res))
-	}
-}
 
 const TEXT = "text"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		TEXT: {Name: "text", Help: "文本", Actions: ice.MergeActions(ice.Actions{
-			MENU: {Name: "menu name=home", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(MENU, m.Option(mdb.NAME)) }},
-		}, ctx.ConfAction(nfs.TEMPLATE, text)), Hand: func(m *ice.Message, arg ...string) {
-			if m.Cmdy(arg); m.IsErrNotFound() {
-				m.SetResult().Cmdy(cli.SYSTEM, arg)
-			}
-			kit.If(m.Result() == "", func() { m.TableEcho() })
-			_wx_reply(m, m.CommandKey())
+		TEXT: {Help: "文本", Actions: ice.Actions{
+			ctx.CMDS: {Hand: func(m *ice.Message, arg ...string) {
+				msg := m.Cmd(arg)
+				kit.If(msg.IsErrNotFound(), func() { msg.SetResult().Cmdy(cli.SYSTEM, arg) })
+				kit.If(msg.Result() == "", func() { msg.TableEcho() })
+				m.Cmdy("", msg.Result())
+			}},
+			web.LINK: {Name: "link link name text icons", Hand: func(m *ice.Message, arg ...string) {
+				kit.If(m.Option(mdb.ICONS) == "", func() { m.Option(mdb.ICONS, m.Cmdv(ACCESS, m.Option(ACCESS), mdb.ICONS)) })
+				m.Option(mdb.ICONS, web.ShareLocal(m, m.Option(mdb.ICONS)))
+				m.Cmdy("", m.OptionDefault(mdb.TEXT, "工具系统"), "link.xml")
+			}},
+		}, Hand: func(m *ice.Message, arg ...string) {
+			m.Echo(nfs.Template(m.Options(mdb.TEXT, arg[0]), kit.Select("welcome.xml", arg, 1))).RenderResult()
+			m.Debug("text: %v", m.Result())
 		}},
 	})
 }
-
-var text = `<xml>
-<FromUserName><![CDATA[{{.Option "ToUserName"}}]]></FromUserName>
-<ToUserName><![CDATA[{{.Option "FromUserName"}}]]></ToUserName>
-<CreateTime>{{.Option "CreateTime"}}</CreateTime>
-<MsgType><![CDATA[text]]></MsgType>
-<Content><![CDATA[{{.Result}}]]></Content>
-</xml>`

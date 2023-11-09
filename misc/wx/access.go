@@ -4,96 +4,84 @@ import (
 	"crypto/sha1"
 	"net/http"
 	"strings"
-	"time"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/ctx"
-	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
-	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/base/web"
-	"shylinux.com/x/icebergs/core/chat"
+	"shylinux.com/x/icebergs/base/web/html"
+	"shylinux.com/x/icebergs/core/chat/oauth"
 	kit "shylinux.com/x/toolkits"
 )
 
-func _wx_sign(m *ice.Message, nonce, stamp string) string {
-	return kit.Format(sha1.Sum([]byte(kit.Join(kit.Sort(kit.Simple(
-		kit.Format("jsapi_ticket=%s", m.Cmdx(ACCESS, TICKET)),
-		kit.Format("url=%s", m.Option(ice.MSG_USERWEB)),
-		kit.Format("timestamp=%s", stamp),
-		kit.Format("noncestr=%s", nonce),
-	)), "&"))))
-}
-func _wx_config(m *ice.Message, nonce string) {
-	m.Option("signature", _wx_sign(m, m.Option("noncestr", nonce), m.Option("timestamp", kit.Format(time.Now().Unix()))))
-	ctx.OptionFromConfig(m, APPID, nfs.SCRIPT)
-}
-func _wx_check(m *ice.Message) {
-	check := kit.Sort([]string{mdb.Config(m, TOKEN), m.Option("timestamp"), m.Option("nonce")})
-	if sig := kit.Format(sha1.Sum([]byte(strings.Join(check, "")))); !m.Warn(sig != m.Option("signature"), ice.ErrNotRight, check) {
-		kit.If(m.Option("echostr") != "", func() { m.RenderResult(m.Option("echostr")) }, func() { m.Echo(ice.TRUE) })
-	}
-}
-
 const (
 	APPID   = "appid"
-	APPMM   = "appmm"
+	SECRET  = "secret"
 	TOKEN   = "token"
 	TOKENS  = "tokens"
 	EXPIRES = "expires"
 	TICKET  = "ticket"
 	EXPIRE  = "expire"
-	CONFIG  = "config"
-	CHECK   = "check"
 )
 const (
-	ERRCODE = "errcode"
-	ERRMSG  = "errmsg"
+	CGI_BIN       = "https://api.weixin.qq.com/cgi-bin/"
+	QRCODE_CREATE = "qrcode/create"
+	MENU_CREATE   = "menu/create"
+	USER_INFO     = "user/info"
+	USER_GET      = "user/get"
 )
 const ACCESS = "access"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		ACCESS: {Name: "access appid auto ticket tokens login", Help: "认证", Actions: ice.MergeActions(ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(web.SPIDE, mdb.CREATE, WX, mdb.Config(m, tcp.SERVER))
-				gdb.Watch(m, chat.HEADER_AGENT, m.PrefixKey())
+		ACCESS: {Help: "认证", Meta: Meta(), Actions: ice.MergeActions(ice.Actions{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { m.Cmd(web.SPIDE, mdb.CREATE, WX, mdb.Config(m, tcp.SERVER)) }},
+			mdb.CREATE: {Name: "login usernick access* appid* secret* token* icons", Help: "登录", Hand: func(m *ice.Message, arg ...string) {
+				mdb.HashCreate(m, m.OptionSimple(aaa.USERNICK, ACCESS, APPID, SECRET, TOKEN, mdb.ICONS))
+				ctx.ConfigFromOption(m, ACCESS, APPID, TOKEN)
 			}},
-			chat.HEADER_AGENT: {Hand: func(m *ice.Message, arg ...string) {
-				if strings.Index(m.Option(ice.MSG_USERUA), "MicroMessenger") > -1 {
-					_wx_config(m, mdb.Config(m, APPID))
+			aaa.CHECK: {Hand: func(m *ice.Message, arg ...string) {
+				check := kit.Sort([]string{mdb.Config(m, TOKEN), m.Option(TIMESTAMP), m.Option(NONCE)})
+				if sig := kit.Format(sha1.Sum([]byte(strings.Join(check, "")))); !m.Warn(sig != m.Option(SIGNATURE), ice.ErrNotRight, check) {
+					m.Echo(ice.TRUE)
 				}
 			}},
-			LOGIN: {Name: "login appid appmm token", Help: "登录", Hand: func(m *ice.Message, arg ...string) {
-				ctx.ConfigFromOption(m, APPID, APPMM, TOKEN)
-			}},
-			TOKENS: {Help: "令牌", Hand: func(m *ice.Message, arg ...string) {
-				if now := time.Now().Unix(); mdb.Config(m, TOKENS) == "" || now > kit.Int64(mdb.Config(m, EXPIRES)) {
-					msg := m.Cmd(web.SPIDE, WX, http.MethodGet, "/cgi-bin/token?grant_type=client_credential", APPID, mdb.Config(m, APPID), "secret", mdb.Config(m, APPMM))
-					if m.Warn(msg.Append(ERRCODE) != "", msg.Append(ERRCODE), msg.Append(ERRMSG)) {
-						return
-					}
-					mdb.Config(m, EXPIRES, now+kit.Int64(msg.Append("expires_in")))
-					mdb.Config(m, TOKENS, msg.Append("access_token"))
+			AGENT: {Hand: func(m *ice.Message, arg ...string) { ctx.OptionFromConfig(m, ACCESS, APPID) }},
+			TOKENS: {Hand: func(m *ice.Message, arg ...string) {
+				msg := mdb.HashSelect(m.Spawn(), m.Option(ACCESS))
+				if msg.Append(TOKENS) == "" || m.Time() > msg.Append(EXPIRES) {
+					res := m.Cmd(web.SPIDE, WX, http.MethodGet, "token?grant_type=client_credential", msg.AppendSimple(APPID, SECRET))
+					mdb.HashModify(m, m.OptionSimple(ACCESS), EXPIRES, m.Time(kit.Format("%vs", res.Append(oauth.EXPIRES_IN))), TOKENS, res.Append(oauth.ACCESS_TOKEN))
+					msg = mdb.HashSelect(m.Spawn(), m.Option(ACCESS))
 				}
-				m.Echo(mdb.Config(m, TOKENS)).Status(EXPIRES, time.Unix(kit.Int64(mdb.Config(m, EXPIRES)), 0).Format(ice.MOD_TIME))
+				m.Echo(msg.Append(TOKENS)).Status(msg.AppendSimple(EXPIRES))
 			}},
-			TICKET: {Help: "票据", Hand: func(m *ice.Message, arg ...string) {
-				if now := time.Now().Unix(); mdb.Config(m, TICKET) == "" || now > kit.Int64(mdb.Config(m, EXPIRE)) {
-					msg := m.Cmd(web.SPIDE, WX, http.MethodGet, "/cgi-bin/ticket/getticket?type=jsapi", "access_token", m.Cmdx("", TOKENS))
-					if m.Warn(msg.Append(ERRCODE) != "0", msg.Append(ERRCODE), msg.Append(ERRMSG)) {
-						return
-					}
-					mdb.Config(m, EXPIRE, now+kit.Int64(msg.Append("expires_in")))
-					mdb.Config(m, TICKET, msg.Append(TICKET))
+			TICKET: {Hand: func(m *ice.Message, arg ...string) {
+				msg := mdb.HashSelect(m.Spawn(), m.Option(ACCESS))
+				if msg.Append(TICKET) == "" || m.Time() > msg.Append(EXPIRE) {
+					res := m.Cmd(web.SPIDE, WX, http.MethodGet, "ticket/getticket?type=jsapi", arg, oauth.ACCESS_TOKEN, m.Cmdx(ACCESS, TOKENS))
+					mdb.HashModify(m, m.OptionSimple(ACCESS), EXPIRE, m.Time(kit.Format("%vs", res.Append(oauth.EXPIRES_IN))), TICKET, res.Append(TICKET))
+					msg = mdb.HashSelect(m.Spawn(), m.Option(ACCESS))
 				}
-				m.Echo(mdb.Config(m, TICKET)).Status(EXPIRE, time.Unix(kit.Int64(mdb.Config(m, EXPIRE)), 0).Format(ice.MOD_TIME))
+				m.Echo(msg.Append(TICKET)).Status(msg.AppendSimple(EXPIRE))
 			}},
-			CONFIG: {Hand: func(m *ice.Message, arg ...string) { _wx_config(m, mdb.Config(m, APPID)) }},
-			CHECK:  {Hand: func(m *ice.Message, arg ...string) { _wx_check(m) }},
-		}, mdb.HashAction(tcp.SERVER, "https://api.weixin.qq.com", nfs.SCRIPT, "/plugin/local/chat/wx.js")), Hand: func(m *ice.Message, arg ...string) {
-			m.Echo(mdb.Config(m, APPID))
+		}, mdb.ImportantHashAction(mdb.SHORT, ACCESS, mdb.FIELD, "time,access,usernick,appid,icons", tcp.SERVER, CGI_BIN)), Hand: func(m *ice.Message, arg ...string) {
+			mdb.HashSelect(m, arg...).StatusTimeCount(mdb.ConfigSimple(m, ACCESS, APPID), web.LINK, web.MergeURL2(m, "/chat/wx/login/"))
 		}},
 	})
+}
+func SpideGet(m *ice.Message, api string, arg ...ice.Any) ice.Any {
+	return kit.UnMarshal(m.Cmdx(web.SPIDE, WX, web.SPIDE_RAW, http.MethodGet, kit.MergeURL(api, oauth.ACCESS_TOKEN, m.Cmdx(ACCESS, TOKENS)), arg))
+}
+func SpidePost(m *ice.Message, api string, arg ...ice.Any) ice.Any {
+	return kit.UnMarshal(m.Cmdx(web.SPIDE, WX, web.SPIDE_RAW, http.MethodPost, kit.MergeURL(api, oauth.ACCESS_TOKEN, m.Cmdx(ACCESS, TOKENS)), arg))
+}
+func Meta() ice.Map {
+	return kit.Dict(ice.CTX_TRANS, kit.Dict(html.INPUT, kit.Dict(
+		ACCESS, "账号", APPID, "应用", SECRET, "密码",
+		EXPIRE_SECONDS, "有效期",
+		SCENE, "场景", RIVER, "一级", STORM, "二级",
+	)))
 }

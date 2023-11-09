@@ -23,7 +23,7 @@ const FAVOR = "favor"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		FAVOR: {Help: "收藏夹", Icon: "favor.png", Actions: ice.MergeActions(ice.Actions{
+		FAVOR: {Name: "favor hash auto", Help: "收藏夹", Icon: "favor.png", Actions: ice.MergeActions(ice.Actions{
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if mdb.IsSearchPreview(m, arg) {
 					m.Cmds("", func(value ice.Maps) {
@@ -58,7 +58,7 @@ func init() {
 			"scanQRCode":       {Name: "favor create", Help: "扫码"},
 			"record1":          {Name: "favor upload", Help: "截图"},
 			"record2":          {Name: "favor upload", Help: "录屏"},
-			mdb.CREATE: {Name: "create type name text", Hand: func(m *ice.Message, arg ...string) {
+			mdb.CREATE: {Name: "create type name text*", Hand: func(m *ice.Message, arg ...string) {
 				if strings.HasPrefix(m.Option(mdb.TEXT), ice.HTTP) {
 					m.OptionDefault(mdb.TYPE, mdb.LINK, mdb.NAME, kit.ParseURL(m.Option(mdb.TEXT)).Host)
 				}
@@ -81,7 +81,7 @@ func init() {
 				}
 			}},
 			cli.OPENS: {Hand: func(m *ice.Message, arg ...string) { cli.Opens(m, m.Option(mdb.TEXT)) }},
-		}, FavorAction(), mdb.ExportHashAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, FavorAction(), mdb.ExportHashAction(mdb.SHORT, mdb.TEXT, mdb.FIELD, "time,hash,type,name,text")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 && arg[0] == ctx.ACTION {
 				if m.Option(ice.MSG_INDEX) == m.PrefixKey() {
 					m.Option(mdb.TYPE, mdb.HashSelects(m.Spawn(), m.Option(mdb.HASH)).Append(mdb.TYPE))
@@ -98,6 +98,7 @@ func init() {
 				} else {
 					m.Action(mdb.CREATE, web.UPLOAD, "getClipboardData", "record1", "record2")
 				}
+				m.SortStrR(mdb.TIME)
 			} else {
 				if web.PodCmd(m, web.SPACE, arg...) {
 					return

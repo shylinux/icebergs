@@ -50,7 +50,7 @@ func init() {
 		QRCODE: {Name: "qrcode text fg@key bg@key size auto", Help: "二维码", Actions: ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				ice.AddRender(ice.RENDER_QRCODE, func(m *ice.Message, args ...ice.Any) string {
-					return m.Cmd(QRCODE, kit.Simple(args...)).Result()
+					return m.Cmd(Prefix(QRCODE), kit.Simple(args...)).Result()
 				})
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {

@@ -4,13 +4,16 @@ import (
 	"bytes"
 	"encoding/xml"
 	"io/ioutil"
+	"strings"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
+	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/web"
 	"shylinux.com/x/icebergs/core/chat"
-	"shylinux.com/x/icebergs/core/wiki"
+	"shylinux.com/x/icebergs/core/chat/location"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -22,70 +25,80 @@ func _wx_parse(m *ice.Message) {
 		MsgType      string
 		MsgId        int64
 		Event        string
+		EventKey     string
 		Content      string
-		Title        string
-		Description  string
-		Url          string
-		PicUrl       string
 		Location_X   float64
 		Location_Y   float64
 		Scale        string
 		Label        string
+		Title        string
+		Description  string
+		MediaId      int64
+		PicUrl       string
+		Url          string
+		ScanCodeInfo struct {
+			ScanType   string
+			ScanResult string
+		}
 	}{}
 	defer m.R.Body.Close()
 	buf, _ := ioutil.ReadAll(m.R.Body)
-	m.Debug("buf: %+v", string(buf))
 	xml.NewDecoder(bytes.NewBuffer(buf)).Decode(&data)
+	m.Option("debug", "true")
+	m.Debug("buf: %+v", string(buf))
 	m.Debug("data: %+v", data)
-	m.Option("FromUserName", data.FromUserName)
-	m.Option("ToUserName", data.ToUserName)
+	m.Option(ACCESS, data.ToUserName)
 	m.Option("CreateTime", data.CreateTime)
-	m.Option("MsgId", data.MsgId)
+	m.Option(aaa.USERNAME, data.FromUserName)
+	m.Option(mdb.TYPE, data.MsgType)
+	m.Option(mdb.ID, data.MsgId)
 	m.Option("Event", data.Event)
-	m.Option("MsgType", data.MsgType)
-	m.Option("Content", data.Content)
-	m.Option("Title", data.Title)
-	m.Option("Description", data.Description)
-	m.Option("URL", data.Url)
-	m.Option("URL", data.PicUrl)
-	m.Option("LocationX", kit.Int(data.Location_X*100000))
-	m.Option("LocationY", kit.Int(data.Location_Y*100000))
-	m.Option("Scale", data.Scale)
+	m.Option("EventKey", data.EventKey)
+	m.Option(mdb.TEXT, data.Content)
+	m.Option(web.LINK, kit.Select(data.Url, data.PicUrl))
+	m.Option(location.LATITUDE, kit.Format("%0.6f", data.Location_X))
+	m.Option(location.LONGITUDE, kit.Format("%0.6f", data.Location_Y))
+	m.Option(location.SCALE, data.Scale)
 	m.Option("Label", data.Label)
+	m.Option("Title", data.Title)
+	m.Option("MediaId", data.MediaId)
+	m.Option("Description", data.Description)
+	m.Option("ScanResult", data.ScanCodeInfo.ScanResult)
 }
 
 const LOGIN = "login"
 
 func init() {
+	web.Index.MergeCommands(ice.Commands{
+		"/MP_verify_0xp0zkW3fIzIq2Bo.txt": {Actions: aaa.WhiteAction(), Hand: func(m *ice.Message, arg ...string) { m.RenderResult("0xp0zkW3fIzIq2Bo") }},
+	})
 	Index.MergeCommands(ice.Commands{
 		web.PP(LOGIN): {Actions: aaa.WhiteAction(), Hand: func(m *ice.Message, arg ...string) {
-			if m.Cmdx(ACCESS, CHECK) == "" {
+			if m.Cmdx(ACCESS, aaa.CHECK) == "" {
+				return
+			} else if m.Option("echostr") != "" {
+				m.RenderResult(m.Option("echostr"))
 				return
 			}
 			_wx_parse(m)
-			m.Option(ice.MSG_USERZONE, WX)
-			aaa.SessAuth(m, kit.Dict(aaa.USERNAME, m.Option("FromUserName"), aaa.USERROLE, aaa.UserRole(m, m.Option("FromUserName"))))
-			switch m.Option("MsgType") {
-			case EVENT:
-				m.Cmdy(EVENT, m.Option("Event"))
+			aaa.SessAuth(m.Options(ice.MSG_USERZONE, WX), kit.Dict(aaa.USERNAME, m.Option(aaa.USERNAME), aaa.USERROLE, aaa.UserRole(m, m.Option(aaa.USERNAME))))
+			switch m.Option(mdb.TYPE) {
+			case gdb.EVENT:
+				m.Cmdy(EVENTS, strings.ToLower(m.Option("Event")), kit.Split(m.Option("EventKey")))
+			case location.LOCATION:
+				m.Cmdy(location.LOCATION, mdb.CREATE, mdb.TEXT, m.Option("Label"), m.OptionSimple(location.LONGITUDE, location.LATITUDE, location.SCALE))
 			case TEXT:
-				if cmds := kit.Split(m.Option("Content")); aaa.Right(m, cmds) {
-					m.Cmdy(TEXT, cmds)
-				} else {
-					m.Cmdy(MENU, "home")
+				if cmds := kit.Split(m.Option(mdb.TEXT)); aaa.Right(m, cmds) {
+					m.Cmdy(TEXT, ctx.CMDS, cmds)
+					break
 				}
-			case mdb.LINK:
-				m.Cmdy(chat.FAVOR, mdb.CREATE, mdb.TYPE, mdb.LINK, mdb.NAME, m.Option("Title"), mdb.TEXT, m.Option("URL"))
-			case wiki.IMAGE:
-				m.Cmdy(chat.FAVOR, mdb.CREATE, mdb.TYPE, wiki.IMAGE, mdb.NAME, m.Option("Title"), mdb.TEXT, m.Option("URL"))
-			case chat.LOCATION:
-				m.Cmdy(chat.LOCATION, mdb.CREATE, mdb.TYPE, "", mdb.NAME, m.Option("Label"), mdb.TEXT, m.Option("Label"),
-					"latitude", m.Option("LocationX"), "longitude", m.Option("LocationY"), "scale", m.Option("Scale"),
-				)
+				fallthrough
+			default:
+				m.Cmdy(chat.FAVOR, mdb.CREATE, mdb.TYPE, m.Option(mdb.TYPE), mdb.NAME, m.Option("Title"), mdb.TEXT, kit.Select(m.Option(mdb.TEXT), m.Option(web.LINK)))
 			}
 		}},
-		LOGIN: {Name: "login", Help: "登录", Actions: ice.Actions{
-			mdb.CREATE: {Name: "create appid appmm token", Hand: func(m *ice.Message, arg ...string) { m.Cmd(ACCESS, LOGIN, arg) }},
-		}},
+		LOGIN: {Name: "login list", Help: "登录", Actions: ice.Actions{
+			mdb.CREATE: {Hand: func(m *ice.Message, arg ...string) { m.Cmd(ACCESS, mdb.CREATE, arg) }},
+		}, Hand: func(m *ice.Message, arg ...string) { m.Cmdy(ACCESS) }},
 	})
 }

@@ -1,4 +1,4 @@
-package chat
+package location
 
 import (
 	ice "shylinux.com/x/icebergs"
@@ -17,6 +17,7 @@ const (
 	CITY      = "city"
 	DISTRICT  = "district"
 	STREET    = "street"
+	SCALE     = "scale"
 )
 
 const LOCATION = "location"

@@ -92,6 +92,7 @@ const (
 	STORE = kit.MDB_STORE
 	FSIZE = kit.MDB_FSIZE
 
+	ICONS     = "icons"
 	TOOLS     = "tools"
 	SOURCE    = "_source"
 	TARGET    = "_target"
@@ -101,6 +102,7 @@ const (
 	INPUTS = "inputs"
 	CREATE = "create"
 	REMOVE = "remove"
+	UPDATE = "update"
 	INSERT = "insert"
 	DELETE = "delete"
 	MODIFY = "modify"

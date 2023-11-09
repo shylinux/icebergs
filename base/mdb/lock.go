@@ -30,6 +30,12 @@ func RLock(m configMessage, arg ...string) func() { return getLock(m, arg...).RL
 func Config(m configMessage, key string, arg ...Any) string {
 	return kit.Format(Configv(m, key, arg...))
 }
+func ConfigSimple(m configMessage, key ...string) (res []string) {
+	for _, key := range key {
+		res = append(res, key, kit.Format(Configv(m, key)))
+	}
+	return
+}
 func Configv(m configMessage, key string, arg ...Any) Any {
 	kit.If(len(arg) > 0, func() { Confv(m, m.PrefixKey(), kit.Keym(key), arg[0]) })
 	return Confv(m, m.PrefixKey(), kit.Keym(key))

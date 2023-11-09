@@ -55,9 +55,9 @@ func SessAuth(m *ice.Message, value ice.Any, arg ...string) *ice.Message {
 		value = kit.Dict(USERNICK, kit.Select("", val, 0), USERNAME, kit.Select("", val, 1), USERROLE, kit.Select("", val, 2))
 	}
 	return m.Auth(
-		USERNICK, m.Option(ice.MSG_USERNICK, kit.Value(value, USERNICK)),
-		USERNAME, m.Option(ice.MSG_USERNAME, kit.Value(value, USERNAME)),
-		USERROLE, m.Option(ice.MSG_USERROLE, kit.Value(value, USERROLE)),
+		USERNICK, m.Option(ice.MSG_USERNICK, kit.Format(kit.Value(value, USERNICK))),
+		USERNAME, m.Option(ice.MSG_USERNAME, kit.Format(kit.Value(value, USERNAME))),
+		USERROLE, m.Option(ice.MSG_USERROLE, kit.Format(kit.Value(value, USERROLE))),
 		arg, logs.FileLineMeta(kit.Select(logs.FileLine(-1), m.Option("aaa.checker"))),
 	)
 }

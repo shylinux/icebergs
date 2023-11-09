@@ -44,13 +44,13 @@ var list map[string]int = map[string]int{}
 
 func Watch(m *ice.Message, key string, arg ...string) *ice.Message {
 	kit.If(len(arg) == 0, func() { arg = append(arg, m.PrefixKey()) })
-	return m.Cmd(EVENT, LISTEN, EVENT, key, ice.CMD, kit.Join(arg, ice.SP))
+	return m.Cmd(Prefix(EVENT), LISTEN, EVENT, key, ice.CMD, kit.Join(arg, ice.SP))
 }
 func Event(m *ice.Message, key string, arg ...ice.Any) *ice.Message {
 	if key = kit.Select(kit.Keys(m.CommandKey(), m.ActionKey()), key); list[key] == 0 {
 		return m
 	}
-	return m.Cmdy(EVENT, HAPPEN, EVENT, key, arg, logs.FileLineMeta(-1))
+	return m.Cmdy(Prefix(EVENT), HAPPEN, EVENT, key, arg, logs.FileLineMeta(-1))
 }
 func EventDeferEvent(m *ice.Message, key string, arg ...ice.Any) func(string, ...ice.Any) {
 	Event(m, key, arg...)

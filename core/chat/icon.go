@@ -11,11 +11,11 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-const ICONS = "icons"
+const ICON = "icon"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		ICONS: {Help: "图标", Actions: ctx.ConfAction(nfs.PATH, "bootstrap-icons/font/bootstrap-icons.css"), Hand: func(m *ice.Message, arg ...string) {
+		ICON: {Help: "图标", Actions: ctx.ConfAction(nfs.PATH, "bootstrap-icons/font/bootstrap-icons.css"), Hand: func(m *ice.Message, arg ...string) {
 			m.Cmd(lex.SPLIT, ice.USR_MODULES+mdb.Config(m, nfs.PATH), kit.Dict(lex.SPLIT_SPACE, " {:;}"), func(text string, ls []string) {
 				if len(ls) > 2 && ls[2] == nfs.CONTENT {
 					name := "bi " + strings.TrimPrefix(ls[0], nfs.PT)

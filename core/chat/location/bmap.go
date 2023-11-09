@@ -1,4 +1,4 @@
-package chat
+package location
 
 import (
 	ice "shylinux.com/x/icebergs"

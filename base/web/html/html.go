@@ -25,6 +25,7 @@ const (
 
 	VIEW   = "view"
 	INPUT  = "input"
+	VALUE  = "value"
 	OUTPUT = "output"
 	LAYOUT = "layout"
 	RESIZE = "resize"

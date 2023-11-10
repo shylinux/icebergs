@@ -80,4 +80,4 @@ Volcanos(chat.ONACTION, {
 	rotation: function(event, can) { can.ui.map.setRotation(can.Action("rotation")) },
 	center: function(can, item) {},
 })
-Volcanos(chat.ONEXPORT, {list: ["province", "city", "district", "street", "longitude", "latitude", "type", "name", "text", "space", "weather", "temperature", "humidity", "windPower"]})
+Volcanos(chat.ONEXPORT, {list: ["province", "city", "district", "street", aaa.LONGITUDE, aaa.LATITUDE, "type", "name", "text", "space", "weather", "temperature", "humidity", "windPower"]})

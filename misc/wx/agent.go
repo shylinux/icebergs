@@ -6,8 +6,10 @@ import (
 	"time"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
 	"shylinux.com/x/icebergs/core/chat"
 	"shylinux.com/x/icebergs/core/chat/location"
@@ -37,10 +39,11 @@ func init() {
 			chat.HEADER_AGENT: {Hand: func(m *ice.Message, arg ...string) {
 				kit.If(strings.Index(m.Option(ice.MSG_USERUA), "MicroMessenger") > -1, func() { m.Option(mdb.PLUGIN, m.PrefixKey()) })
 			}},
-			"scanQRCode1": {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(chat.FAVOR, mdb.CREATE, arg) }},
 			"getLocation": {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(location.LOCATION, mdb.CREATE, arg) }},
-		}, gdb.EventsAction(chat.HEADER_AGENT)), Hand: func(m *ice.Message, arg ...string) {
-			m.Cmdy(ACCESS, AGENT).Options(SIGNATURE, _wx_sign(m, m.Option(NONCESTR, "some"), m.Option(TIMESTAMP, kit.Format(time.Now().Unix())))).Display("")
+			"scanQRCode1": {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(chat.FAVOR, mdb.CREATE, arg) }},
+		}, gdb.EventsAction(chat.HEADER_AGENT), ctx.ConfAction(nfs.SCRIPT, "https://res.wx.qq.com/open/js/jweixin-1.6.0.js")), Hand: func(m *ice.Message, arg ...string) {
+			m.Cmdy(ACCESS, AGENT).Options(SIGNATURE, _wx_sign(m, m.Option(NONCESTR, ice.Info.Pathname), m.Option(TIMESTAMP, kit.Format(time.Now().Unix())))).Display("")
+			ctx.OptionFromConfig(m, nfs.SCRIPT)
 		}},
 	})
 }

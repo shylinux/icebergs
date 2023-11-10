@@ -104,7 +104,11 @@ func (m *Message) RewriteAppend(cb func(value, key string, index int) string) *M
 	m.Table(func(index int, value Maps, head []string) {
 		for _, key := range head {
 			v := cb(value[key], key, index)
-			m.index(key, index, v)
+			if m.FieldsIsDetail() {
+				m.Append(key, v)
+			} else {
+				m.index(key, index, v)
+			}
 		}
 	})
 	return m

@@ -58,7 +58,7 @@ func init() {
 					if i > math.MaxInt32 {
 						m.Echo(time.Unix(i/1000, i%1000*1000000).Format(ice.MOD_TIME))
 					} else {
-						m.Echo(time.Unix(i, 0).Format(ice.MOD_TIME))
+						m.Echo(kit.TimeUnix(i))
 					}
 				}
 			case aaa.BASE64:

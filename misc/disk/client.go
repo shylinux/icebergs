@@ -1,8 +1,6 @@
 package disk
 
 import (
-	"time"
-
 	"shylinux.com/x/ice"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -50,7 +48,7 @@ func (s Client) List(m *ice.Message, arg ...string) {
 	}
 	res := s.Client.Get(m, arg[0], "https://pan.baidu.com/rest/2.0/xpan/file?method=list", "dir", kit.Select("", arg, 1))
 	kit.For(kit.Value(res, mdb.LIST), func(value ice.Map) {
-		m.Push(mdb.TIME, time.Unix(kit.Int64(value["server_mtime"]), 0))
+		m.Push(mdb.TIME, kit.TimeUnix(value["server_mtime"]))
 		m.Push(nfs.PATH, kit.Format(value[nfs.PATH])+kit.Select("", nfs.PS, kit.Format(value["isdir"]) == "1"))
 		m.Push(nfs.SIZE, kit.FmtSize(kit.Int(value[nfs.SIZE])))
 		m.Push(mdb.ID, value["fs_id"])

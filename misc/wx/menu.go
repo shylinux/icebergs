@@ -4,6 +4,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/web"
+	"shylinux.com/x/icebergs/base/web/html"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -16,8 +17,12 @@ const MENU = "menu"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		MENU: {Name: "menu access hash auto", Help: "菜单", Meta: Meta(), Actions: ice.MergeActions(ice.Actions{
-			mdb.CREATE: {Name: "create scene*=main river*=1,2,3 storm*=1,2,3,4,5,6 type*=click,view,scancode_push,scancode_waitmsg,pic_sysphoto,pic_photo_or_album,pic_weixin,location_select name* text icons space index args"},
+		MENU: {Name: "menu access hash auto", Help: "菜单", Meta: kit.Merge(Meta(), kit.Dict(ice.CTX_TRANS, kit.Dict(html.VALUE, kit.Dict(
+			"click", "点击", "view", "链接", "location_select", "定位",
+			"scancode_waitmsg", "扫码上传", "scancode_push", "扫码",
+			"pic_photo_or_album", "照片", "pic_sysphoto", "拍照", "pic_weixin", "相册",
+		)))), Actions: ice.MergeActions(ice.Actions{
+			mdb.CREATE: {Name: "create scene*=main river*=1,2,3 storm*=1,2,3,4,5,6 type*=click,view,location_select,scancode_waitmsg,scancode_push,pic_photo_or_album,pic_sysphoto,pic_weixin name* text icons space index args"},
 			mdb.UPDATE: {Name: "update scene*", Hand: func(m *ice.Message, arg ...string) {
 				list := kit.Dict()
 				m.Cmd("", m.Option(ACCESS), func(value ice.Maps) {
@@ -33,8 +38,8 @@ func init() {
 		}, mdb.ExportHashAction(mdb.SHORT, "scene,river,storm", mdb.FIELD, "time,hash,scene,river,storm,type,name,text,icons,space,index,args")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				m.Cmdy(ACCESS).PushAction("").Option(ice.MSG_ACTION, "")
-			} else {
-				mdb.HashSelect(m, arg[1:]...).Sort(mdb.Config(m, mdb.SHORT), ice.STR, ice.INT, ice.INT).Action(mdb.CREATE, mdb.UPDATE)
+			} else if mdb.HashSelect(m, arg[1:]...).Sort(mdb.Config(m, mdb.SHORT), ice.STR, ice.INT, ice.INT); len(arg) == 1 {
+				m.Action(mdb.CREATE, mdb.UPDATE)
 			}
 		}},
 	})

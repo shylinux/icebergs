@@ -7,6 +7,7 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
+	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/tcp"
@@ -17,6 +18,23 @@ import (
 )
 
 const (
+	CGI_BIN                     = "https://api.weixin.qq.com/cgi-bin/"
+	TOKEN_CREDENTIAL            = "token?grant_type=client_credential"
+	TICKET_GETTICKET            = "ticket/getticket?type=jsapi"
+	QRCODE_CREATE               = "qrcode/create"
+	MENU_CREATE                 = "menu/create"
+	USER_REMARK                 = "user/info/updateremark"
+	USER_INFO                   = "user/info"
+	USER_GET                    = "user/get"
+	USER_TAG_GET                = "user/tag/get"
+	TAGS_CREATE                 = "tags/create"
+	TAGS_DELETE                 = "tags/delete"
+	TAGS_UPDATE                 = "tags/update"
+	TAGS_GET                    = "tags/get"
+	TAGS_MEMBERS_BATCHTAGGING   = "tags/members/batchtagging"
+	TAGS_MEMBERS_BATCHUNTAGGING = "tags/members/batchuntagging"
+)
+const (
 	APPID   = "appid"
 	SECRET  = "secret"
 	TOKEN   = "token"
@@ -25,21 +43,16 @@ const (
 	TICKET  = "ticket"
 	EXPIRE  = "expire"
 )
-const (
-	CGI_BIN       = "https://api.weixin.qq.com/cgi-bin/"
-	QRCODE_CREATE = "qrcode/create"
-	MENU_CREATE   = "menu/create"
-	USER_INFO     = "user/info"
-	USER_GET      = "user/get"
-)
 const ACCESS = "access"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
 		ACCESS: {Help: "认证", Meta: Meta(), Actions: ice.MergeActions(ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { m.Cmd(web.SPIDE, mdb.CREATE, WX, mdb.Config(m, tcp.SERVER)) }},
-			mdb.CREATE: {Name: "login usernick access* appid* secret* token* icons", Help: "登录", Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashCreate(m, m.OptionSimple(aaa.USERNICK, ACCESS, APPID, SECRET, TOKEN, mdb.ICONS))
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(web.SPIDE, mdb.CREATE, WX, mdb.Config(m, tcp.SERVER))
+			}},
+			mdb.CREATE: {Name: "create usernick access* appid* secret* token* icons qrcode", Hand: func(m *ice.Message, arg ...string) {
+				mdb.HashCreate(m, m.OptionSimple(aaa.USERNICK, ACCESS, APPID, SECRET, TOKEN, mdb.ICONS, cli.QRCODE))
 				ctx.ConfigFromOption(m, ACCESS, APPID, TOKEN)
 			}},
 			aaa.CHECK: {Hand: func(m *ice.Message, arg ...string) {
@@ -48,11 +61,13 @@ func init() {
 					m.Echo(ice.TRUE)
 				}
 			}},
-			AGENT: {Hand: func(m *ice.Message, arg ...string) { ctx.OptionFromConfig(m, ACCESS, APPID) }},
+			AGENT: {Hand: func(m *ice.Message, arg ...string) {
+				ctx.OptionFromConfig(m, ACCESS, APPID)
+			}},
 			TOKENS: {Hand: func(m *ice.Message, arg ...string) {
 				msg := mdb.HashSelect(m.Spawn(), m.Option(ACCESS))
 				if msg.Append(TOKENS) == "" || m.Time() > msg.Append(EXPIRES) {
-					res := m.Cmd(web.SPIDE, WX, http.MethodGet, "token?grant_type=client_credential", msg.AppendSimple(APPID, SECRET))
+					res := m.Cmd(web.SPIDE, WX, http.MethodGet, TOKEN_CREDENTIAL, msg.AppendSimple(APPID, SECRET))
 					mdb.HashModify(m, m.OptionSimple(ACCESS), EXPIRES, m.Time(kit.Format("%vs", res.Append(oauth.EXPIRES_IN))), TOKENS, res.Append(oauth.ACCESS_TOKEN))
 					msg = mdb.HashSelect(m.Spawn(), m.Option(ACCESS))
 				}
@@ -61,27 +76,35 @@ func init() {
 			TICKET: {Hand: func(m *ice.Message, arg ...string) {
 				msg := mdb.HashSelect(m.Spawn(), m.Option(ACCESS))
 				if msg.Append(TICKET) == "" || m.Time() > msg.Append(EXPIRE) {
-					res := m.Cmd(web.SPIDE, WX, http.MethodGet, "ticket/getticket?type=jsapi", arg, oauth.ACCESS_TOKEN, m.Cmdx(ACCESS, TOKENS))
+					res := m.Cmd(web.SPIDE, WX, http.MethodGet, TICKET_GETTICKET, oauth.ACCESS_TOKEN, m.Cmdx(ACCESS, TOKENS))
 					mdb.HashModify(m, m.OptionSimple(ACCESS), EXPIRE, m.Time(kit.Format("%vs", res.Append(oauth.EXPIRES_IN))), TICKET, res.Append(TICKET))
 					msg = mdb.HashSelect(m.Spawn(), m.Option(ACCESS))
 				}
 				m.Echo(msg.Append(TICKET)).Status(msg.AppendSimple(EXPIRE))
 			}},
-		}, mdb.ImportantHashAction(mdb.SHORT, ACCESS, mdb.FIELD, "time,access,usernick,appid,icons", tcp.SERVER, CGI_BIN)), Hand: func(m *ice.Message, arg ...string) {
-			mdb.HashSelect(m, arg...).StatusTimeCount(mdb.ConfigSimple(m, ACCESS, APPID), web.LINK, web.MergeURL2(m, "/chat/wx/login/"))
+		}, mdb.ImportantHashAction(mdb.SHORT, ACCESS, mdb.FIELD, "time,access,icons,usernick,appid", tcp.SERVER, CGI_BIN)), Hand: func(m *ice.Message, arg ...string) {
+			mdb.HashSelect(m, arg...).StatusTimeCount(mdb.ConfigSimple(m, ACCESS, APPID), web.SERVE, web.MergeLink(m, "/chat/wx/login/"))
+			m.RewriteAppend(func(value, key string, index int) string {
+				kit.If(key == cli.QRCODE, func() { value = ice.Render(m, ice.RENDER_QRCODE, value) })
+				return value
+			})
 		}},
 	})
-}
-func SpideGet(m *ice.Message, api string, arg ...ice.Any) ice.Any {
-	return kit.UnMarshal(m.Cmdx(web.SPIDE, WX, web.SPIDE_RAW, http.MethodGet, kit.MergeURL(api, oauth.ACCESS_TOKEN, m.Cmdx(ACCESS, TOKENS)), arg))
 }
 func SpidePost(m *ice.Message, api string, arg ...ice.Any) ice.Any {
 	return kit.UnMarshal(m.Cmdx(web.SPIDE, WX, web.SPIDE_RAW, http.MethodPost, kit.MergeURL(api, oauth.ACCESS_TOKEN, m.Cmdx(ACCESS, TOKENS)), arg))
 }
+func SpideGet(m *ice.Message, api string, arg ...ice.Any) ice.Any {
+	return kit.UnMarshal(m.Cmdx(web.SPIDE, WX, web.SPIDE_RAW, http.MethodGet, kit.MergeURL(api, oauth.ACCESS_TOKEN, m.Cmdx(ACCESS, TOKENS)), arg))
+}
 func Meta() ice.Map {
 	return kit.Dict(ice.CTX_TRANS, kit.Dict(html.INPUT, kit.Dict(
 		ACCESS, "账号", APPID, "应用", SECRET, "密码",
-		EXPIRE_SECONDS, "有效期",
+		TOKEN, "口令", TOKENS, "令牌", TICKET, "票据",
+		EXPIRES, "令牌有效期", EXPIRE, "票据有效期", EXPIRE_SECONDS, "有效期",
 		SCENE, "场景", RIVER, "一级", STORM, "二级",
+		SEX, "性别", TAGS, "标签", REMARK, "备注",
+		"subscribe", "订阅", "subscribe_time", "时间",
+		"nickname", "昵称", "headimgurl", "头像",
 	)))
 }

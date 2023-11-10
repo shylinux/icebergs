@@ -124,7 +124,7 @@ Volcanos(chat.ONACTION, {
 	},
 	create: function(event, can) { can.request(event, can.ui.current.item)
 		can.user.input(event, can, can.core.Split("type,name,text"), function(args) { var p = can.onexport.center(can)
-			can.runAction(event, mdb.CREATE, args.concat("latitude", p.latitude, "longitude", p.longitude), function(msg) {
+			can.runAction(event, mdb.CREATE, args.concat(aaa.LATITUDE, p.latitude, aaa.LONGITUDE, p.longitude), function(msg) {
 				can.onimport._item(can, can.base.Copy(p, {name: msg.Option(mdb.NAME), text: msg.Option(mdb.TEXT)}))
 			}, true)
 		})

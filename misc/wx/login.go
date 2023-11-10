@@ -46,7 +46,7 @@ func _wx_parse(m *ice.Message) {
 	xml.NewDecoder(bytes.NewBuffer(buf)).Decode(&data)
 	m.Option("debug", "true")
 	m.Debug("buf: %+v", string(buf))
-	m.Debug("data: %+v", data)
+	m.Debug("data: %+v", kit.Formats(data))
 	m.Option(ACCESS, data.ToUserName)
 	m.Option("CreateTime", data.CreateTime)
 	m.Option(aaa.USERNAME, data.FromUserName)
@@ -62,7 +62,6 @@ func _wx_parse(m *ice.Message) {
 	m.Option("Label", data.Label)
 	m.Option("Title", data.Title)
 	m.Option("MediaId", data.MediaId)
-	m.Option("Description", data.Description)
 	m.Option("ScanResult", data.ScanCodeInfo.ScanResult)
 }
 

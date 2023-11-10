@@ -8,8 +8,9 @@ refer `
 
 chapter "配置"
 field web.chat.wx.access
-field web.chat.wx.qrcode
 field web.chat.wx.menu
+field web.chat.wx.scan
+field web.chat.wx.tags
 field web.chat.wx.users
 
 chapter "数据"
@@ -20,8 +21,8 @@ order `
 wx.go
 wx.shy
 access.go
-qrcode.go
 menu.go
+scan.go
 text.go
 login.go
 events.go
@@ -29,8 +30,3 @@ users.go
 agent.go
 agent.js
 `
-
-qrcode `http://weixin.qq.com/r/_B1-Z7TEXOkjrfAE90jq`
-
-chapter "企业微信"
-field "机器人" web.chat.wework.bot

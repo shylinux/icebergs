@@ -42,7 +42,7 @@ type Client struct {
 	ice.Hash
 	short string `data:"domain,client_id"`
 	field string `data:"time,hash,domain,client_id,client_secret,oauth_url,grant_url,token_url,users_url,scope,user_key,nick_key,api_prefix,token_prefix"`
-	sso   string `name:"sso name* icon*@icon" help:"登录"`
+	sso   string `name:"sso name* icons*" help:"登录"`
 	auth  string `name:"auth" help:"授权"`
 	user  string `name:"user" help:"用户"`
 	orgs  string `name:"orgs" help:"组织"`
@@ -86,7 +86,7 @@ func (s Client) Inputs(m *ice.Message, arg ...string) {
 	}
 }
 func (s Client) Sso(m *ice.Message, arg ...string) {
-	m.Cmd(web.CHAT_HEADER, mdb.CREATE, m.Option(mdb.NAME), m.Option(mdb.ICON), s.OAuthURL(m))
+	m.Cmd(web.CHAT_HEADER, mdb.CREATE, "oauth", m.Option(mdb.NAME), m.Option(mdb.ICONS), s.OAuthURL(m))
 }
 func (s Client) Auth(m *ice.Message, arg ...string) {
 	m.ProcessOpen(s.OAuthURL(m))

@@ -93,19 +93,20 @@ func init() {
 				m.Options(ice.MSG_USERWEB, kit.MergeURL(m.Option(ice.MSG_USERWEB), web.SHARE, m.Cmdx(web.SHARE, mdb.CREATE, mdb.TYPE, web.LOGIN)))
 				m.Cmdy(aaa.EMAIL, aaa.SEND, arg, aaa.CONTENT, nfs.Template(m, "email.html"))
 			}},
-			mdb.CREATE: {Name: "create name icon url", Hand: func(m *ice.Message, arg ...string) { mdb.HashCreate(m, m.OptionSimple()) }},
+			mdb.CREATE: {Name: "create type*=oauth,plugin name* icons link order space index args", Hand: func(m *ice.Message, arg ...string) { mdb.HashCreate(m, m.OptionSimple()) }},
 			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) { mdb.HashRemove(m, m.OptionSimple(mdb.NAME)) }},
-		}, web.ApiAction(), ctx.ConfAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icon,url")), Hand: func(m *ice.Message, arg ...string) {
+		}, web.ApiAction(), ctx.ConfAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icons,type,link,order,space,index,args")), Hand: func(m *ice.Message, arg ...string) {
 			m.Option("language.list", m.Cmd(nfs.DIR, nfs.TemplatePath(m, aaa.LANGUAGE)+nfs.PS, nfs.FILE).Appendv(nfs.FILE))
 			m.Option("theme.list", m.Cmd(nfs.DIR, nfs.TemplatePath(m, aaa.THEME)+nfs.PS, nfs.FILE).Appendv(nfs.FILE))
 			m.Option(nfs.REPOS, m.Cmdv(web.SPIDE, nfs.REPOS, web.CLIENT_URL))
-			m.Option("icons", mdb.Conf(m, ICON, kit.Keym(nfs.PATH)))
+			m.Option("icon.lib", mdb.Conf(m, ICON, kit.Keym(nfs.PATH)))
 			m.Option(MENUS, mdb.Config(m, MENUS))
 			m.Echo(mdb.Config(m, TITLE))
-			if mdb.HashSelect(m); m.Length() == 0 {
+			if mdb.HashSelect(m, arg...); m.Length() == 0 {
 				kit.If(GetSSO(m), func(p string) {
-					m.Push(mdb.TIME, m.Time()).Push(mdb.NAME, web.SERVE).Push(mdb.ICON, nfs.USR_ICONS_ICEBERGS).Push(web.URL, p)
+					m.Push(mdb.TIME, m.Time()).Push(mdb.NAME, web.SERVE).Push(mdb.ICONS, nfs.USR_ICONS_ICEBERGS).Push(mdb.TYPE, "oauth").Push(web.LINK, p)
 				})
+				m.Sort("order", "int")
 			}
 			if gdb.Event(m, HEADER_AGENT); !_header_check(m, arg...) {
 				return

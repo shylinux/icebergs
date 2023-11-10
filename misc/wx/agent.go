@@ -35,7 +35,7 @@ const AGENT = "agent"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		AGENT: {Name: "agent auto", Actions: ice.MergeActions(ice.Actions{
+		AGENT: {Name: "agent auto", Help: "代理", Actions: ice.MergeActions(ice.Actions{
 			chat.HEADER_AGENT: {Hand: func(m *ice.Message, arg ...string) {
 				kit.If(strings.Index(m.Option(ice.MSG_USERUA), "MicroMessenger") > -1, func() { m.Option(mdb.PLUGIN, m.PrefixKey()) })
 			}},

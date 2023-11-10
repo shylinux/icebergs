@@ -16,17 +16,3 @@ field web.chat.wx.users
 chapter "数据"
 field web.chat.favor
 field web.chat.location
-return
-order `
-wx.go
-wx.shy
-access.go
-menu.go
-scan.go
-text.go
-login.go
-events.go
-users.go
-agent.go
-agent.js
-`

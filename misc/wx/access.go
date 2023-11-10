@@ -82,8 +82,16 @@ func init() {
 				}
 				m.Echo(msg.Append(TICKET)).Status(msg.AppendSimple(EXPIRE))
 			}},
-		}, mdb.ImportantHashAction(mdb.SHORT, ACCESS, mdb.FIELD, "time,access,icons,usernick,appid", tcp.SERVER, CGI_BIN)), Hand: func(m *ice.Message, arg ...string) {
-			mdb.HashSelect(m, arg...).StatusTimeCount(mdb.ConfigSimple(m, ACCESS, APPID), web.SERVE, web.MergeLink(m, "/chat/wx/login/"))
+			web.SSO: {Name: "sso name*=微信授权", Help: "登录", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(web.CHAT_HEADER, mdb.CREATE, mdb.TYPE, mdb.PLUGIN, m.OptionSimple(mdb.NAME),
+					ctx.INDEX, m.PrefixKey(), ctx.ARGS, kit.Join(kit.Simple(aaa.LOGIN, m.Option(ACCESS))))
+			}},
+			aaa.LOGIN: {Hand: func(m *ice.Message, arg ...string) {
+				m.Options(ACCESS, arg[0]).Cmdy(SCAN, mdb.CREATE, mdb.TYPE, "QR_STR_SCENE",
+					mdb.NAME, "授权登录", mdb.TEXT, m.Option(web.SPACE), ctx.INDEX, "web.chat.grant", ctx.ARGS, m.Option(web.SPACE))
+			}},
+		}, aaa.RoleAction(aaa.LOGIN), mdb.ImportantHashAction(mdb.SHORT, ACCESS, mdb.FIELD, "time,access,icons,usernick,appid", tcp.SERVER, CGI_BIN)), Hand: func(m *ice.Message, arg ...string) {
+			mdb.HashSelect(m, arg...).PushAction(web.SSO, mdb.REMOVE).StatusTimeCount(mdb.ConfigSimple(m, ACCESS, APPID), web.SERVE, web.MergeLink(m, "/chat/wx/login/"))
 			m.RewriteAppend(func(value, key string, index int) string {
 				kit.If(key == cli.QRCODE, func() { value = ice.Render(m, ice.RENDER_QRCODE, value) })
 				return value

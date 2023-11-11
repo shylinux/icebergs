@@ -82,7 +82,7 @@ func init() {
 				}
 				m.Echo(msg.Append(TICKET)).Status(msg.AppendSimple(EXPIRE))
 			}},
-			web.SSO: {Name: "sso name*=微信授权", Help: "登录", Hand: func(m *ice.Message, arg ...string) {
+			web.SSO: {Name: "sso name*=微信扫码", Help: "登录", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(web.CHAT_HEADER, mdb.CREATE, mdb.TYPE, mdb.PLUGIN, m.OptionSimple(mdb.NAME),
 					ctx.INDEX, m.PrefixKey(), ctx.ARGS, kit.Join(kit.Simple(aaa.LOGIN, m.Option(ACCESS))))
 			}},

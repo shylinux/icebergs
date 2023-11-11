@@ -61,7 +61,8 @@ func _space_fork(m *ice.Message) {
 			text = p
 		}
 	}
-	args := kit.Simple(mdb.TYPE, kit.Select(WORKER, m.Option(mdb.TYPE)), mdb.NAME, name, mdb.TEXT, text, m.OptionSimple(nfs.MODULE, nfs.VERSION, cli.DAEMON, ice.MSG_USERUA))
+	args := kit.Simple(mdb.TYPE, kit.Select(WORKER, m.Option(mdb.TYPE)), mdb.NAME, name, mdb.TEXT, text, m.OptionSimple(nfs.MODULE, nfs.VERSION, cli.DAEMON))
+	args = append(args, aaa.UA, m.Option(ice.MSG_USERUA), aaa.IP, m.Option(ice.MSG_USERIP))
 	if c, e := websocket.Upgrade(m.W, m.R); !m.Warn(e) {
 		gdb.Go(m, func() {
 			defer mdb.HashCreateDeferRemove(m, args, kit.Dict(mdb.TARGET, c))()
@@ -268,9 +269,12 @@ func init() {
 			if len(arg) < 2 {
 				defer m.StatusTimeCount(kit.Dict(ice.MAIN, mdb.Config(m, ice.MAIN)))
 				m.Option(ice.MSG_USERWEB, tcp.PublishLocalhost(m, m.Option(ice.MSG_USERWEB)))
-				mdb.HashSelect(m.Spawn(), arg...).Sort("").Table(func(index int, value ice.Maps, field []string) {
+				kit.If(len(arg) > 0 && arg[0] != "", func() { m.OptionFields(ice.MSG_DETAIL) })
+				mdb.HashSelect(m.Spawn(), arg...).Table(func(index int, value ice.Maps, field []string) {
 					if m.Push("", value, kit.Split(mdb.Config(m, mdb.FIELD))); len(arg) > 0 && arg[0] != "" {
 						m.Push(mdb.STATUS, value[mdb.STATUS])
+						m.Push(aaa.UA, value[aaa.UA])
+						m.Push(aaa.IP, value[aaa.IP])
 					}
 					if kit.IsIn(value[mdb.TYPE], WORKER, SERVER) {
 						m.Push(mdb.LINK, m.MergePod(value[mdb.NAME]))
@@ -281,7 +285,7 @@ func init() {
 					}
 					m.PushButton(kit.Select(OPEN, LOGIN, value[mdb.TYPE] == LOGIN), mdb.REMOVE)
 				})
-				kit.If(len(arg) == 1, func() { m.EchoIFrame(m.MergePod(arg[0])) }, func() { m.Action(ice.MAIN) })
+				// kit.If(len(arg) == 1, func() { m.EchoIFrame(m.MergePod(arg[0])) }, func() { m.Action(ice.MAIN) })
 			} else {
 				_space_send(m, arg[0], kit.Simple(kit.Split(arg[1]), arg[2:])...)
 			}

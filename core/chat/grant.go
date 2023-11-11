@@ -7,10 +7,11 @@ import (
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/gdb"
-	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/base/web"
+	kit "shylinux.com/x/toolkits"
 )
 
 const GRANT = "grant"
@@ -24,6 +25,9 @@ func init() {
 					m.Sleep30ms(web.SPACE, m.Option(mdb.NAME), cli.PWD, m.Option(mdb.NAME), link, m.Cmdx(cli.QRCODE, link))
 				})
 			}},
+			"home": {Help: "首页", Hand: func(m *ice.Message, arg ...string) {
+				m.ProcessOpen(web.MergeLink(m, "/chat/portal/"))
+			}},
 			aaa.CONFIRM: {Help: "授权", Hand: func(m *ice.Message, arg ...string) {
 				if m.Warn(m.R.Method == http.MethodGet, ice.ErrNotAllow) {
 					return
@@ -32,13 +36,21 @@ func init() {
 				} else if msg := m.Cmd(web.SPACE, m.Option(web.SPACE)); m.Warn(msg.Append(mdb.TYPE) != aaa.LOGIN, ice.ErrNotFound, m.Option(web.SPACE)) {
 					return
 				} else {
+					kit.If(m.Option(ice.MSG_SESSID) == "", func() { web.RenderCookie(m, aaa.SessCreate(m, m.Option(ice.MSG_USERNAME))) })
 					m.Option(ice.MSG_USERUA, msg.Append(ice.MSG_USERUA))
 					m.Cmd(web.SPACE, m.Option(web.SPACE), ice.MSG_SESSID, aaa.SessCreate(m, m.Option(ice.MSG_USERNAME)))
 					m.ProcessLocation(web.MergeURL2(m, msg.Append(mdb.TEXT)))
 				}
 			}},
 		}, aaa.RoleAction(aaa.CONFIRM), gdb.EventsAction(web.SPACE_LOGIN)), Hand: func(m *ice.Message, arg ...string) {
-			m.Echo("请授权: %s 访问设备: %s", arg[0], ice.Info.Hostname).Echo(lex.NL).EchoButton(aaa.CONFIRM)
+			msg := m.Cmd(web.SPACE, m.Option(web.SPACE, arg[0]))
+			m.Option(tcp.HOSTNAME, ice.Info.Hostname)
+			m.Option(nfs.PATH, msg.Append(mdb.TEXT))
+			m.Option(aaa.UA, msg.Append(aaa.UA))
+			m.Option(aaa.IP, msg.Append(aaa.IP))
+			if !m.Warn(m.Option(nfs.PATH) == "", ice.ErrNotFound, arg[0]) {
+				m.Echo(nfs.Template(m, "auth.html"))
+			}
 		}},
 	})
 }

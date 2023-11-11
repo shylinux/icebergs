@@ -102,6 +102,7 @@ func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.Response
 		}
 		return m
 	}
+	_log("page", Referer, r.Header.Get(Referer))
 	if u, e := url.Parse(r.Header.Get(Referer)); e == nil {
 		add := func(k, v string) { _log(nfs.PATH, k, m.Option(k, v)) }
 		switch arg := strings.Split(strings.TrimPrefix(u.Path, nfs.PS), nfs.PS); arg[0] {

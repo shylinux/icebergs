@@ -1,6 +1,7 @@
 Volcanos(chat.ONIMPORT, {
 	_init: function(can, msg) { msg.Option(ice.MSG_ACTION, ""), can.require([msg.Option(nfs.SCRIPT)], function(can) {
-		wx.config({debug: msg.Option(log.DEBUG) == ice.TRUE, signature: msg.Option("signature"), timestamp: msg.Option("timestamp"), nonceStr: msg.Option("noncestr"), appId: msg.Option("appid"),
+		var debug = msg.isDebug() && can.user.info.userrole == aaa.TECH; debug && can.onmotion.toggle(can, can._fields, true)
+		wx.config({debug: debug, signature: msg.Option("signature"), timestamp: msg.Option("timestamp"), nonceStr: msg.Option("noncestr"), appId: msg.Option("appid"),
 			jsApiList: can.core.Item({
 				getLocation: function(can, cb) { wx.getLocation({type: "gcj02", success: function (res) {
 					can.base.isFunc(cb) && cb({type: "gcj02", name: "当前位置", text: "当前位置", latitude: parseInt(res.latitude*100000), longitude: parseInt(res.longitude*100000) })

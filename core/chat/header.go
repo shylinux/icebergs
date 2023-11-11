@@ -1,6 +1,8 @@
 package chat
 
 import (
+	"strings"
+
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
@@ -69,6 +71,7 @@ func init() {
 				aaa.White(m, HEADER)
 				aaa.Black(m, kit.Keys(HEADER, ctx.ACTION, mdb.CREATE))
 				aaa.Black(m, kit.Keys(HEADER, ctx.ACTION, mdb.REMOVE))
+				aaa.Black(m, kit.Keys(HEADER, ctx.ACTION, mdb.MODIFY))
 			}},
 			web.SHARE:      {Hand: _header_share},
 			aaa.LOGIN:      {Hand: func(m *ice.Message, arg ...string) {}},
@@ -93,8 +96,9 @@ func init() {
 				m.Options(ice.MSG_USERWEB, kit.MergeURL(m.Option(ice.MSG_USERWEB), web.SHARE, m.Cmdx(web.SHARE, mdb.CREATE, mdb.TYPE, web.LOGIN)))
 				m.Cmdy(aaa.EMAIL, aaa.SEND, arg, aaa.CONTENT, nfs.Template(m, "email.html"))
 			}},
-			mdb.CREATE: {Name: "create type*=oauth,plugin name* icons link order space index args", Hand: func(m *ice.Message, arg ...string) { mdb.HashCreate(m, m.OptionSimple()) }},
+			mdb.CREATE: {Name: "create type*=oauth,plugin,qrcode name* icons link order space index args", Hand: func(m *ice.Message, arg ...string) { mdb.HashCreate(m, m.OptionSimple()) }},
 			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) { mdb.HashRemove(m, m.OptionSimple(mdb.NAME)) }},
+			mdb.MODIFY: {Hand: func(m *ice.Message, arg ...string) { mdb.HashModify(m, m.OptionSimple(mdb.NAME), arg) }},
 		}, web.ApiAction(), ctx.ConfAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icons,type,link,order,space,index,args")), Hand: func(m *ice.Message, arg ...string) {
 			m.Option("language.list", m.Cmd(nfs.DIR, nfs.TemplatePath(m, aaa.LANGUAGE)+nfs.PS, nfs.FILE).Appendv(nfs.FILE))
 			m.Option("theme.list", m.Cmd(nfs.DIR, nfs.TemplatePath(m, aaa.THEME)+nfs.PS, nfs.FILE).Appendv(nfs.FILE))
@@ -102,11 +106,10 @@ func init() {
 			m.Option("icon.lib", mdb.Conf(m, ICON, kit.Keym(nfs.PATH)))
 			m.Option(MENUS, mdb.Config(m, MENUS))
 			m.Echo(mdb.Config(m, TITLE))
-			if mdb.HashSelect(m, arg...); m.Length() == 0 {
+			if mdb.HashSelect(m, arg...).Sort("order", "int"); m.Length() < 2 {
 				kit.If(GetSSO(m), func(p string) {
 					m.Push(mdb.TIME, m.Time()).Push(mdb.NAME, web.SERVE).Push(mdb.ICONS, nfs.USR_ICONS_ICEBERGS).Push(mdb.TYPE, "oauth").Push(web.LINK, p)
 				})
-				m.Sort("order", "int")
 			}
 			if gdb.Event(m, HEADER_AGENT); !_header_check(m, arg...) {
 				return
@@ -114,7 +117,10 @@ func init() {
 			msg := m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME))
 			kit.For([]string{aaa.USERNICK, aaa.LANGUAGE, aaa.EMAIL}, func(k string) { m.Option(k, msg.Append(k)) })
 			kit.For([]string{aaa.AVATAR, aaa.BACKGROUND}, func(k string) { m.Option(k, web.RequireFile(m, msg.Append(k))) })
-			kit.If(m.Option(aaa.LANGUAGE) == "", func() { m.Option(aaa.LANGUAGE, kit.Split(m.R.Header.Get(web.AcceptLanguage), ",;")[0]) })
+			kit.If(m.Option(aaa.LANGUAGE) == "", func() {
+				m.Option(aaa.LANGUAGE, kit.Select("", "zh-cn", strings.Contains(m.Option(ice.MSG_USERUA), "zh_CN")))
+				kit.If(m.Option(aaa.LANGUAGE) == "", func() { m.Option(aaa.LANGUAGE, kit.Select("", kit.Split(m.R.Header.Get(web.AcceptLanguage), ",;"), 0)) })
+			})
 		}},
 	})
 }

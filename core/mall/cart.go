@@ -31,7 +31,7 @@ func init() {
 				m.Options(mdb.HASH, m.Cmdx(ORDER, mdb.CREATE, aaa.USERNAME, m.Option(ice.MSG_USERNAME), mdb.STATUS, ORDER_CONFIRM, AMOUNT, amount))
 				msg.Table(func(value ice.Maps) { m.Cmd(ORDER, mdb.INSERT, kit.Simple(value)) })
 			}},
-		}, mdb.ExportHashAction(mdb.SHORT, aaa.USERNAME, mdb.FIELD, "time,username", mdb.FIELDS, "time,goods,count")), Hand: func(m *ice.Message, arg ...string) {
+		}, aaa.RoleAction(), mdb.ExportHashAction(mdb.SHORT, aaa.USERNAME, mdb.FIELD, "time,username", mdb.FIELDS, "time,goods,count")), Hand: func(m *ice.Message, arg ...string) {
 			m.Options(mdb.SUBKEY, kit.KeyHash(m.Option(ice.MSG_USERNAME))).OptionFields(mdb.Config(m, mdb.FIELDS))
 			mdb.HashSelect(m, arg...).Options(mdb.SUBKEY, "").Table(func(value ice.Maps) {
 				m.Cmd(GOODS, value[GOODS], func(value ice.Maps) {

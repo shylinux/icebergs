@@ -2,6 +2,7 @@ package mall
 
 import (
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/mdb"
 	kit "shylinux.com/x/toolkits"
 )
@@ -37,7 +38,7 @@ func init() {
 			RECEIVE:  {Help: "收货", Hand: func(m *ice.Message, arg ...string) { mdb.HashModify(m, mdb.STATUS, ORDER_RECEIVED) }},
 			RETURN:   {Help: "退货", Hand: func(m *ice.Message, arg ...string) { mdb.HashModify(m, mdb.STATUS, ORDER_RETURNED) }},
 			REFUND:   {Help: "退钱", Hand: func(m *ice.Message, arg ...string) { mdb.HashModify(m, mdb.STATUS, ORDER_REFUNDED) }},
-		}, mdb.ExportHashAction(mdb.FIELD, "time,hash,username,status,amount", mdb.FIELDS, "time,goods,price,count,units,name,text,image")), Hand: func(m *ice.Message, arg ...string) {
+		}, aaa.RoleAction(), mdb.ExportHashAction(mdb.FIELD, "time,hash,username,status,amount", mdb.FIELDS, "time,goods,price,count,units,name,text,image")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				stats := map[string]int{}
 				mdb.HashSelect(m, arg...).Table(func(value ice.Maps) {

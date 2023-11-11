@@ -25,7 +25,7 @@ func _share_link(m *ice.Message, p string, arg ...ice.Any) string {
 func _share_cache(m *ice.Message, arg ...string) {
 	if m.Cmdy(CACHE, arg[0]); m.Length() == 0 {
 		if pod := m.Option(ice.POD); pod != "" {
-			msg := m.Options(ice.POD, "").Cmd(SPACE, pod, CACHE, arg[0])
+			msg := m.Options(ice.POD, "", ice.MSG_USERROLE, aaa.TECH).Cmd(SPACE, pod, CACHE, arg[0])
 			kit.If(kit.Format(msg.Append(nfs.FILE)), func() {
 				m.RenderDownload(path.Join(ice.USR_LOCAL_WORK, pod, msg.Append(nfs.FILE)))
 			}, func() {
@@ -87,9 +87,7 @@ func init() {
 			}},
 			ctx.RUN: {Hand: func(m *ice.Message, arg ...string) {
 				if msg := mdb.HashSelect(m.Spawn(), m.Option(SHARE)); !IsNotValidFieldShare(m, msg) {
-					m.Option(ice.MSG_USERNICK, msg.Append(aaa.USERNICK))
-					m.Option(ice.MSG_USERNAME, msg.Append(aaa.USERNAME))
-					m.Option(ice.MSG_USERROLE, msg.Append(aaa.USERROLE))
+					aaa.SessAuth(m, kit.Dict(msg.AppendSimple(aaa.USERNICK, aaa.USERNAME, aaa.USERROLE)))
 					m.Cmdy(Space(m, msg.Append(SPACE)), msg.Append(mdb.NAME), arg[1:])
 				}
 			}},

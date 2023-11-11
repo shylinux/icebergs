@@ -46,7 +46,12 @@ func _dream_list(m *ice.Message) *ice.Message {
 			}
 		}
 	})
-	return m.Sort("status,type,name", ice.STR, ice.STR, ice.STR_R).StatusTimeCount(stats)
+	mem, disk := 0, 0
+	PushPodCmd(m.Spawn(), ROUTE, "travel").Table(func(value ice.Maps) {
+		mem += kit.Int(kit.Select("", kit.Split(value[nfs.SIZE], nfs.PS), 0))
+		disk += kit.Int(kit.Select("", kit.Split(value[nfs.SIZE], nfs.PS), 2))
+	})
+	return m.Sort("status,type,name", ice.STR, ice.STR, ice.STR_R).StatusTimeCount(stats, nfs.SIZE, kit.Format("%s/%s", kit.FmtSize(mem), kit.FmtSize(disk)))
 
 }
 func _dream_start(m *ice.Message, name string) {

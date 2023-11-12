@@ -13,7 +13,6 @@ import (
 	"time"
 
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/log"
@@ -303,13 +302,14 @@ func init() {
 		SPIDE: {Help: "蜘蛛侠", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				conf := mdb.Confm(m, cli.RUNTIME, cli.CONF)
-				m.Cmd("", mdb.CREATE, ice.OPS, kit.Select("http://localhost:9020", conf[cli.CTX_OPS]))
-				m.Cmd("", mdb.CREATE, ice.DEV, kit.Select(kit.Select("https://contexts.com.cn", ice.Info.Make.Domain), conf[cli.CTX_DEV]))
 				m.Cmd("", mdb.CREATE, ice.SHY, kit.Select(kit.Select("https://shylinux.com", ice.Info.Make.Remote), conf[cli.CTX_SHY]))
-				m.Cmd("", mdb.CREATE, ice.COM, kit.Select("https://2021.shylinux.com", conf[cli.CTX_COM]))
+				m.Cmd("", mdb.CREATE, ice.DEV, kit.Select(kit.Select("https://contexts.com.cn", ice.Info.Make.Domain), conf[cli.CTX_DEV]))
 				m.Cmd("", mdb.CREATE, ice.HUB, kit.Select("https://repos.shylinux.com", conf[cli.CTX_HUB]))
+				m.Cmd("", mdb.CREATE, ice.COM, kit.Select("https://2021.shylinux.com", conf[cli.CTX_COM]))
+				m.Cmd("", mdb.CREATE, ice.OPS, kit.Select("http://localhost:9020", conf[cli.CTX_OPS]))
+				m.Cmd("", mdb.CREATE, ice.DEMO, kit.Select("http://localhost:20000", conf[cli.CTX_DEMO]))
+				m.Cmd("", mdb.CREATE, ice.MAIL, kit.Select("https://mail.shylinux.com", conf[cli.CTX_MAIL]))
 				m.Cmd("", mdb.CREATE, nfs.REPOS, kit.Select("https://repos.shylinux.com", conf[cli.CTX_HUB]))
-				m.Cmd("", mdb.CREATE, aaa.EMAIL, "https://mail.shylinux.com")
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if mdb.IsSearchPreview(m, arg) {

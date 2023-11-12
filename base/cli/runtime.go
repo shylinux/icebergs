@@ -33,6 +33,7 @@ func _runtime_init(m *ice.Message) {
 		m.Conf(RUNTIME, kit.Keys(CONF, k), kit.Env(k))
 		kit.If(k == CTX_PID, func() { ice.Info.PidPath = kit.Env(k) })
 	})
+	ice.Info.Lang = m.Conf(RUNTIME, kit.Keys(CONF, LANG))
 	m.Conf(RUNTIME, kit.Keys(BOOT, HOSTNAME), kit.Env("HOSTNAME"))
 	if name, e := os.Hostname(); e == nil && name != "" {
 		m.Conf(RUNTIME, kit.Keys(BOOT, HOSTNAME), name)
@@ -124,18 +125,21 @@ const (
 	TZ    = "TZ"
 )
 const (
-	CTX_SHY = "ctx_shy"
-	CTX_COM = "ctx_com"
-	CTX_HUB = "ctx_hub"
-	CTX_DEV = "ctx_dev"
-	CTX_OPS = "ctx_ops"
+	CTX_SHY  = "ctx_shy"
+	CTX_DEV  = "ctx_dev"
+	CTX_HUB  = "ctx_hub"
+	CTX_COM  = "ctx_com"
+	CTX_OPS  = "ctx_ops"
+	CTX_DEMO = "ctx_demo"
+	CTX_MAIL = "ctx_mail"
+
 	CTX_PID = "ctx_pid"
 	CTX_LOG = "ctx_log"
 	CTX_POD = "ctx_pod"
 	CTX_ENV = "ctx_env"
 )
 
-var ENV_LIST = []string{TZ, LANG, TERM, SHELL, CTX_SHY, CTX_HUB, CTX_COM, CTX_DEV, CTX_OPS, CTX_PID}
+var ENV_LIST = []string{TZ, LANG, TERM, SHELL, CTX_SHY, CTX_DEV, CTX_HUB, CTX_COM, CTX_OPS, CTX_DEMO, CTX_MAIL, CTX_PID}
 
 const (
 	HOSTNAME = "hostname"

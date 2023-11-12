@@ -72,6 +72,7 @@ func init() {
 				aaa.Black(m, kit.Keys(HEADER, ctx.ACTION, mdb.CREATE))
 				aaa.Black(m, kit.Keys(HEADER, ctx.ACTION, mdb.REMOVE))
 				aaa.Black(m, kit.Keys(HEADER, ctx.ACTION, mdb.MODIFY))
+				kit.If(mdb.HashSelect(m.Spawn()).Length() == 0, func() { m.Cmd("", mdb.CREATE, mdb.TYPE, cli.QRCODE, mdb.NAME, "扫码登录", mdb.ORDER, "1") })
 			}},
 			web.SHARE:      {Hand: _header_share},
 			aaa.LOGIN:      {Hand: func(m *ice.Message, arg ...string) {}},
@@ -99,7 +100,7 @@ func init() {
 			mdb.CREATE: {Name: "create type*=oauth,plugin,qrcode name* icons link order space index args", Hand: func(m *ice.Message, arg ...string) { mdb.HashCreate(m, m.OptionSimple()) }},
 			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) { mdb.HashRemove(m, m.OptionSimple(mdb.NAME)) }},
 			mdb.MODIFY: {Hand: func(m *ice.Message, arg ...string) { mdb.HashModify(m, m.OptionSimple(mdb.NAME), arg) }},
-		}, web.ApiAction(), mdb.ExportHashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icons,type,link,order,space,index,args")), Hand: func(m *ice.Message, arg ...string) {
+		}, web.ApiAction(), mdb.ImportantHashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icons,type,link,order,space,index,args")), Hand: func(m *ice.Message, arg ...string) {
 			m.Option("language.list", m.Cmd(nfs.DIR, nfs.TemplatePath(m, aaa.LANGUAGE)+nfs.PS, nfs.FILE).Appendv(nfs.FILE))
 			m.Option("theme.list", m.Cmd(nfs.DIR, nfs.TemplatePath(m, aaa.THEME)+nfs.PS, nfs.FILE).Appendv(nfs.FILE))
 			m.Option(nfs.REPOS, m.Cmdv(web.SPIDE, nfs.REPOS, web.CLIENT_URL))
@@ -120,6 +121,7 @@ func init() {
 			kit.If(m.Option(aaa.LANGUAGE) == "", func() {
 				m.Option(aaa.LANGUAGE, kit.Select("", "zh-cn", strings.Contains(m.Option(ice.MSG_USERUA), "zh_CN")))
 				kit.If(m.Option(aaa.LANGUAGE) == "", func() { m.Option(aaa.LANGUAGE, kit.Select("", kit.Split(m.R.Header.Get(web.AcceptLanguage), ",;"), 0)) })
+				kit.If(m.Option(aaa.LANGUAGE) == "", func() { m.Option(aaa.LANGUAGE, ice.Info.Lang) })
 			})
 		}},
 	})

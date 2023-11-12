@@ -126,6 +126,7 @@ func init() {
 				m.Logs(nfs.SAVE, nfs.TARGET, file, nfs.SOURCE, main)
 				m.Cmdy(nfs.DIR, file, "time,path,size,hash,link")
 				kit.If(!m.IsCliUA() && strings.Contains(file, ice.ICE), func() {
+					defer m.EchoScript(m.Cmdv(web.SPIDE, ice.DEMO, web.CLIENT_URL))
 					defer m.EchoScript("docker run -p 20000:9020 -w /root -it alpine")
 					m.Cmdy(PUBLISH, ice.CONTEXTS, ice.APP)
 				})

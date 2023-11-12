@@ -59,6 +59,7 @@ var Info = struct {
 	Traceid  string
 	Colors   bool
 
+	Lang      string
 	System    string
 	Domain    string
 	NodeType  string

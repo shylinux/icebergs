@@ -102,7 +102,8 @@ func init() {
 				}
 				switch msg.Append(mdb.TYPE) {
 				case LOGIN:
-					m.RenderRedirect(msg.Append(mdb.TEXT), ice.MSG_SESSID, aaa.SessCreate(m, msg.Append(aaa.USERNAME)))
+					RenderCookie(m, aaa.SessCreate(m, msg.Append(aaa.USERNAME)))
+					m.RenderRedirect(msg.Append(mdb.TEXT))
 				case FIELD:
 					RenderPodCmd(m, msg.Append(SPACE), msg.Append(mdb.NAME), kit.UnMarshal(msg.Append(mdb.TEXT)))
 				case DOWNLOAD:

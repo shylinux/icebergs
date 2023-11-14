@@ -21,9 +21,8 @@ func init() {
 				web.RenderMain(m)
 				return
 			}
-			msg := m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME))
-			m.Cmdx(web.SPACE, m.Option(web.SPACE), aaa.USER, mdb.CREATE, msg.AppendSimple(aaa.USERNICK, aaa.USERNAME, aaa.USERROLE, aaa.USERZONE, aaa.AVATAR, aaa.AVATAR_URL, aaa.BACKGROUND, aaa.LANGUAGE))
-			m.RenderRedirect(kit.MergeURL(m.Option(cli.BACK), ice.MSG_SESSID, m.Cmdx(web.SPACE, m.Option(web.SPACE), aaa.SESS, mdb.CREATE, aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERROLE, m.Option(ice.MSG_USERROLE), kit.Dict(ice.MSG_USERROLE, aaa.TECH))))
+			m.Cmdx(web.SPACE, m.Option(web.SPACE), aaa.USER, mdb.CREATE, m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME)).AppendSimple(aaa.USERNICK, aaa.USERNAME, aaa.USERROLE, aaa.USERZONE, aaa.AVATAR, aaa.AVATAR_URL, aaa.BACKGROUND, aaa.LANGUAGE))
+			m.RenderRedirect(kit.MergeURL2(m.Option(cli.BACK), web.P(web.SHARE, m.Cmdx(web.SPACE, m.Option(web.SPACE), web.SHARE, mdb.CREATE, mdb.TYPE, web.LOGIN, mdb.TEXT, m.Option(cli.BACK)))))
 		}},
 	})
 }

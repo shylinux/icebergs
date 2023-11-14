@@ -19,7 +19,7 @@ const UPGRADE = "upgrade"
 func init() {
 	Index.Merge(&ice.Context{Configs: ice.Configs{
 		UPGRADE: {Value: kit.Dict(
-			mdb.META, kit.Dict(mdb.FIELD, "type,file,path"),
+			mdb.META, kit.Dict(mdb.FIELDS, "type,file,path"),
 			mdb.HASH, kit.Dict(
 				nfs.TARGET, kit.Dict(mdb.LIST, kit.List(mdb.TYPE, ice.BIN, nfs.FILE, ice.ICE_BIN)),
 				ctx.CONFIG, kit.Dict(mdb.LIST, kit.List(mdb.TYPE, nfs.SHY, nfs.FILE, ice.ETC_LOCAL_SHY)),

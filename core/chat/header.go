@@ -72,7 +72,9 @@ func init() {
 				aaa.Black(m, kit.Keys(HEADER, ctx.ACTION, mdb.CREATE))
 				aaa.Black(m, kit.Keys(HEADER, ctx.ACTION, mdb.REMOVE))
 				aaa.Black(m, kit.Keys(HEADER, ctx.ACTION, mdb.MODIFY))
-				kit.If(mdb.HashSelect(m.Spawn()).Length() == 0, func() { m.Cmd("", mdb.CREATE, mdb.TYPE, cli.QRCODE, mdb.NAME, "扫码登录", mdb.ORDER, "1") })
+				kit.If(mdb.HashSelect(m.Spawn()).Length() == 0, func() {
+					m.Cmd("", mdb.CREATE, mdb.TYPE, cli.QRCODE, mdb.NAME, "扫码登录", mdb.ORDER, "1")
+				})
 			}},
 			web.SHARE:      {Hand: _header_share},
 			aaa.LOGIN:      {Hand: func(m *ice.Message, arg ...string) {}},
@@ -97,6 +99,23 @@ func init() {
 				m.Options(ice.MSG_USERWEB, kit.MergeURL(m.Option(ice.MSG_USERWEB), web.SHARE, m.Cmdx(web.SHARE, mdb.CREATE, mdb.TYPE, web.LOGIN)))
 				m.Cmdy(aaa.EMAIL, aaa.SEND, arg, aaa.CONTENT, nfs.Template(m, "email.html"))
 			}},
+			ice.DEMO: {Help: "体验", Hand: func(m *ice.Message, arg ...string) {
+				if m.Option(ice.MSG_USERROLE) == aaa.TECH {
+					if mdb.Config(m, ice.DEMO) == ice.TRUE {
+						mdb.Config(m, ice.DEMO, ice.FALSE)
+					} else {
+						mdb.Config(m, ice.DEMO, ice.TRUE)
+						m.Cmd("", mdb.CREATE, mdb.TYPE, mdb.PLUGIN, mdb.NAME, "免登录体验", mdb.ORDER, "2", ctx.INDEX, HEADER, ctx.ARGS, ice.DEMO)
+					}
+					return
+				}
+				if mdb.Config(m, ice.DEMO) == ice.TRUE {
+					web.RenderCookie(m, aaa.SessCreate(m, ice.Info.Username))
+					m.Echo("login success")
+				} else {
+					m.Echo("hello world")
+				}
+			}},
 			mdb.CREATE: {Name: "create type*=oauth,plugin,qrcode name* icons link order space index args", Hand: func(m *ice.Message, arg ...string) { mdb.HashCreate(m, m.OptionSimple()) }},
 			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) { mdb.HashRemove(m, m.OptionSimple(mdb.NAME)) }},
 			mdb.MODIFY: {Hand: func(m *ice.Message, arg ...string) { mdb.HashModify(m, m.OptionSimple(mdb.NAME), arg) }},
@@ -107,11 +126,14 @@ func init() {
 			m.Option("icon.lib", mdb.Conf(m, ICON, kit.Keym(nfs.PATH)))
 			m.Option(MENUS, mdb.Config(m, MENUS))
 			m.Echo(mdb.Config(m, TITLE))
-			if mdb.HashSelect(m, arg...).Sort("order", "int"); m.Length() < 2 {
-				kit.If(GetSSO(m), func(p string) {
-					m.Push(mdb.TIME, m.Time()).Push(mdb.NAME, web.SERVE).Push(mdb.ICONS, nfs.USR_ICONS_ICEBERGS).Push(mdb.TYPE, "oauth").Push(web.LINK, p)
-				})
+			mdb.HashSelect(m, arg...).Sort("order", "int")
+			if m.Option(ice.MSG_USERROLE) == aaa.TECH {
+				m.Action(mdb.CREATE, ice.DEMO)
 			}
+			kit.If(GetSSO(m), func(p string) {
+				m.Push(mdb.TIME, m.Time()).Push(mdb.NAME, web.SERVE).Push(mdb.ICONS, nfs.USR_ICONS_ICEBERGS).Push(mdb.TYPE, "oauth").Push(web.LINK, p)
+			})
+			m.StatusTimeCount(kit.Dict(ice.DEMO, mdb.Config(m, ice.DEMO)))
 			if gdb.Event(m, HEADER_AGENT); !_header_check(m, arg...) {
 				return
 			}

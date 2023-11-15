@@ -181,7 +181,6 @@ func _serve_auth(m *ice.Message, key string, cmds []string, w http.ResponseWrite
 		}
 	}
 	m.Cmd(COUNT, mdb.CREATE, aaa.IP, m.Option(ice.MSG_USERIP), m.Option(ice.MSG_USERUA), kit.Dict(ice.LOG_DISABLE, ice.TRUE))
-	m.Cmd(COUNT, mdb.CREATE, m.R.Method, m.R.URL.Path, kit.Join(kit.Simple(m.Optionv(ice.MSG_CMDS)), " "), kit.Dict(ice.LOG_DISABLE, ice.TRUE))
 	return cmds, aaa.Right(m, key, cmds)
 }
 

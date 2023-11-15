@@ -10,6 +10,6 @@ const CHAT = "chat"
 
 var Index = &ice.Context{Name: CHAT, Help: "聊天中心"}
 
-func init() { web.Index.Register(Index, &web.Frame{}, FAVOR) }
+func init() { web.Index.Register(Index, &web.Frame{}, HEADER, FAVOR) }
 
 func Prefix(arg ...string) string { return web.Prefix(CHAT, kit.Keys(arg)) }

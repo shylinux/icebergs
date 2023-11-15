@@ -100,13 +100,9 @@ func init() {
 				m.Cmdy(aaa.EMAIL, aaa.SEND, arg, aaa.CONTENT, nfs.Template(m, "email.html"))
 			}},
 			ice.DEMO: {Help: "体验", Hand: func(m *ice.Message, arg ...string) {
-				if m.Option(ice.MSG_USERROLE) == aaa.TECH {
-					if mdb.Config(m, ice.DEMO) == ice.TRUE {
-						mdb.Config(m, ice.DEMO, ice.FALSE)
-					} else {
-						mdb.Config(m, ice.DEMO, ice.TRUE)
-						m.Cmd("", mdb.CREATE, mdb.TYPE, mdb.PLUGIN, mdb.NAME, "免登录体验", mdb.ORDER, "2", ctx.INDEX, HEADER, ctx.ARGS, ice.DEMO)
-					}
+				if kit.IsIn(m.Option(ice.MSG_USERROLE), aaa.TECH, aaa.ROOT) {
+					m.Cmd("", mdb.CREATE, mdb.TYPE, mdb.PLUGIN, mdb.NAME, "免登录体验", mdb.ORDER, "2", ctx.INDEX, HEADER, ctx.ARGS, ice.DEMO)
+					mdb.Config(m, ice.DEMO, ice.TRUE)
 					return
 				}
 				if mdb.Config(m, ice.DEMO) == ice.TRUE {

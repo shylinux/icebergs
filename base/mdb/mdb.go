@@ -211,16 +211,26 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: ice.Commands
 		m.OptionDefault(CACHE_LIMIT, "-1")
 		file := _mdb_export_file(m, arg...)
 		kit.Switch(arg[2],
-			HASH, func() { _hash_export(m, arg[0], arg[1], file) },
-			ZONE, func() { _zone_export(m, arg[0], arg[1], file) },
+			HASH, func() {
+				_hash_export(m, arg[0], arg[1], file)
+			},
+			ZONE, func() {
+				_zone_export(m, arg[0], arg[1], file)
+				_hash_export(m, arg[0], arg[1], file)
+			},
 			LIST, func() { _list_export(m, arg[0], arg[1], file) },
 		)
 	}},
 	IMPORT: {Name: "import key sub type file", Hand: func(m *ice.Message, arg ...string) {
 		file := _mdb_export_file(m, arg...)
 		kit.Switch(arg[2],
-			HASH, func() { _hash_import(m, arg[0], arg[1], file) },
-			ZONE, func() { _zone_import(m, arg[0], arg[1], file) },
+			HASH, func() {
+				_hash_import(m, arg[0], arg[1], file)
+			},
+			ZONE, func() {
+				_hash_import(m, arg[0], arg[1], file)
+				_zone_import(m, arg[0], arg[1], file)
+			},
 			LIST, func() { _list_import(m, arg[0], arg[1], file) },
 		)
 	}},

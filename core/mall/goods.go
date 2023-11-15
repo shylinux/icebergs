@@ -11,8 +11,9 @@ import (
 )
 
 const (
-	PRICE = "price"
-	UNITS = "units"
+	AMOUNT = "amount"
+	PRICE  = "price"
+	UNITS  = "units"
 )
 const GOODS = "goods"
 

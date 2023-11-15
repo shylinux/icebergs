@@ -66,7 +66,6 @@ func _zone_export(m *ice.Message, prefix, chain, file string) {
 	w := csv.NewWriter(f)
 	defer w.Flush()
 	head := kit.AddUniq(_zone_fields(m), EXTRA)
-	m.Debug("export %v", head)
 	w.Write(head)
 	count := 0
 	for _, key := range kit.SortedKey(m.Confv(prefix, kit.Keys(chain, HASH))) {
@@ -81,13 +80,14 @@ func _zone_export(m *ice.Message, prefix, chain, file string) {
 				count++
 			})
 		})
+		m.Conf(prefix, kit.Keys(chain, HASH, key, LIST), "")
+		m.Conf(prefix, kit.Keys(chain, HASH, key, META, COUNT), "")
 	}
 	if count == 0 {
 		os.Remove(p)
 		return
 	}
 	m.Logs(EXPORT, KEY, path.Join(prefix, chain), FILE, p, COUNT, count)
-	m.Conf(prefix, kit.Keys(chain, HASH), "")
 }
 func _zone_import(m *ice.Message, prefix, chain, file string) {
 	defer Lock(m, prefix)()
@@ -228,7 +228,9 @@ func ZoneInsert(m *ice.Message, arg ...Any) {
 	}
 }
 func ZoneModify(m *ice.Message, arg ...Any) {
-	if args := kit.Simple(arg...); args[0] == HASH || args[0] == ZoneShort(m) {
+	if args := kit.Simple(arg...); m.Option(ID) == "" {
+		HashModify(m, arg...)
+	} else if args[0] == HASH || args[0] == ZoneShort(m) {
 		m.Cmdy(MODIFY, m.PrefixKey(), "", ZONE, args[1], args[3], arg[4:])
 	} else {
 		m.Cmdy(MODIFY, m.PrefixKey(), "", ZONE, m.Option(ZoneKey(m)), m.Option(ID), arg)

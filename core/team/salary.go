@@ -7,7 +7,6 @@ import (
 )
 
 const (
-	AMOUNT = "amount"
 	INCOME = "income"
 	TAX    = "tax"
 )

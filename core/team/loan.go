@@ -1,4 +1,4 @@
-package mall
+package team
 
 import (
 	"math"

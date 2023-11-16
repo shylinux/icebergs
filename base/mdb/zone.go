@@ -103,6 +103,10 @@ func _zone_import(m *ice.Message, prefix, chain, file string) {
 	head, _ := r.Read()
 	zkey := kit.Select(head[0], m.OptionFields())
 	list := ice.Maps{}
+	times := ice.Maps{}
+	kit.For(m.Confv(prefix, kit.Keys(chain, HASH)), func(key string, value ice.Any) {
+		times[key] = kit.Format(kit.Value(value, kit.Keys(META, TIME)))
+	})
 	count := 0
 	for {
 		line, e := r.Read()
@@ -126,6 +130,7 @@ func _zone_import(m *ice.Message, prefix, chain, file string) {
 		}
 		if list[zone] == "" {
 			list[zone] = Rich(m, prefix, chain, kit.Data(zkey, zone))
+			kit.If(times[list[zone]], func(t string) { m.Confv(prefix, kit.Keys(chain, HASH, list[zone], META, TIME), t) })
 		}
 		func() {
 			chain := kit.Keys(chain, HASH, list[zone])

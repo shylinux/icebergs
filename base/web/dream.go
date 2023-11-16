@@ -251,7 +251,22 @@ func init() {
 			DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				kit.Switch(m.Option(mdb.TYPE), []string{WORKER, SERVER}, func() { m.PushButton(OPEN, ice.MAIN) })
 			}},
-		}, aaa.RoleAction(), DreamAction(), mdb.ImportantHashAction(ctx.TOOLS, "web.space,web.route,web.code.git.search", mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icon,repos,binary,template")), Hand: func(m *ice.Message, arg ...string) {
+			STATS_TABLES: {Hand: func(m *ice.Message, arg ...string) {
+				if msg := mdb.HashSelects(m.Spawn()); msg.Length() > 0 {
+					stats := map[string]int{}
+					list := m.CmdMap(SPACE, mdb.NAME)
+					msg.Table(func(value ice.Maps) {
+						if _, ok := list[value[mdb.NAME]]; ok {
+							stats[cli.START]++
+						}
+					})
+					m.Push(mdb.NAME, kit.Keys(m.CommandKey(), cli.START)).Push(mdb.VALUE, stats[cli.START])
+					m.Push(mdb.NAME, kit.Keys(m.CommandKey(), mdb.TOTAL)).Push(mdb.VALUE, msg.Length())
+					m.Push("units", "")
+					m.Push("units", "")
+				}
+			}},
+		}, aaa.RoleAction(), StatsAction(), DreamAction(), mdb.ImportantHashAction(ctx.TOOLS, "web.space,web.route,web.code.git.search", mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icon,repos,binary,template")), Hand: func(m *ice.Message, arg ...string) {
 			if ice.Info.NodeType == WORKER {
 				return
 			}

@@ -30,7 +30,16 @@ func init() {
 					m.Push(arg[0], kit.Split(nfs.TemplateText(m, arg[0])))
 				}
 			}},
-		}, aaa.RoleAction(), web.ExportCacheAction(nfs.IMAGE), mdb.ExportHashAction(ctx.TOOLS, kit.Fields(Prefix(CART), Prefix(ORDER)), mdb.FIELD, "time,hash,zone,name,text,price,count,units,image")), Hand: func(m *ice.Message, arg ...string) {
+			web.STATS_TABLES: {Hand: func(m *ice.Message, arg ...string) {
+				if msg := mdb.HashSelects(m.Spawn()); msg.Length() > 0 {
+					amount := msg.TableAmount(func(value ice.Maps) float64 { return kit.Float(value[mdb.COUNT]) * kit.Float(value[PRICE]) })
+					m.Push(mdb.NAME, kit.Keys(m.CommandKey(), AMOUNT)).Push(mdb.VALUE, amount)
+					m.Push("units", "元")
+					m.Push(mdb.NAME, kit.Keys(m.CommandKey(), mdb.COUNT)).Push(mdb.VALUE, msg.Length())
+					m.Push("units", "")
+				}
+			}},
+		}, aaa.RoleAction(), web.StatsAction(), web.ExportCacheAction(nfs.IMAGE), mdb.ExportHashAction(ctx.TOOLS, kit.Fields(Prefix(CART), Prefix(ORDER)), mdb.FIELD, "time,hash,zone,name,text,price,count,units,image")), Hand: func(m *ice.Message, arg ...string) {
 			kit.If(len(arg) == 0 && m.IsMobileUA(), func() { m.OptionDefault(ice.MSG_FIELDS, "zone,name,price,count,units,text,hash,time,image") })
 			mdb.HashSelect(m, arg...).PushAction(ORDER).Action("filter:text")
 			web.PushPodCmd(m, "", arg...).Sort("zone,name")

@@ -164,6 +164,11 @@ func (m *Message) Stats(arg ...string) (res []string) {
 	kit.For(arg, func(k string) { res = append(res, k, kit.Format("%0.2f", stats[k])) })
 	return
 }
+func (m *Message) TableAmount(cb func(Maps) float64) float64 {
+	var amount float64
+	m.Table(func(value Maps) { amount += cb(value) })
+	return amount
+}
 func (m *Message) Table(cb Any) *Message {
 	n := m.Length()
 	if n == 0 {

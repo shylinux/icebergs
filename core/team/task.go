@@ -97,7 +97,15 @@ func init() {
 			CANCEL:     {Hand: func(m *ice.Message, arg ...string) { _task_modify(m, STATUS, CANCEL) }},
 			BEGIN:      {Hand: func(m *ice.Message, arg ...string) { _task_modify(m, STATUS, PROCESS) }},
 			END:        {Hand: func(m *ice.Message, arg ...string) { _task_modify(m, STATUS, FINISH) }},
-		}, mdb.ExportZoneAction(mdb.FIELDS, "begin_time,end_time,id,status,level,score,type,name,text")), Hand: func(m *ice.Message, arg ...string) {
+			web.STATS_TABLES: {Hand: func(m *ice.Message, arg ...string) {
+				if msg := mdb.HashSelects(m.Spawn()); msg.Length() > 0 {
+					count := 0
+					msg.Table(func(value ice.Maps) { count += kit.Int(value[mdb.COUNT]) })
+					m.Push(mdb.NAME, kit.Keys(m.CommandKey(), mdb.TOTAL)).Push(mdb.VALUE, count)
+					m.Push("units", "")
+				}
+			}},
+		}, web.StatsAction(), mdb.ExportZoneAction(mdb.FIELD, "time,zone,count", mdb.FIELDS, "begin_time,end_time,id,status,level,score,type,name,text")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.ZoneSelect(m, arg...); len(arg) > 0 && arg[0] != "" {
 				status := map[string]int{}
 				m.Table(func(value ice.Maps) { m.PushButton(_task_action(m, value[STATUS])) })

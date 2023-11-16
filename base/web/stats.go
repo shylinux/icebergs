@@ -33,10 +33,11 @@ func init() {
 				"disk.used", "磁盘用量",
 				"mem.total", "内存总量",
 				"mem.used", "内存用量",
+				"cpu.total", "处理器核数",
 			)),
 		), Hand: func(m *ice.Message, arg ...string) {
 			m.Push(mdb.NAME, kit.Keys(aaa.SESS, mdb.TOTAL)).Push(mdb.VALUE, m.Cmd(aaa.SESS).Length())
-			m.Push(mdb.NAME, kit.Keys(aaa.USER, mdb.TOTAL)).Push(mdb.VALUE, m.Cmd(aaa.USER).Length())
+			m.Push(mdb.NAME, kit.Keys(aaa.USER, mdb.TOTAL)).Push(mdb.VALUE, m.Cmd(aaa.USER).Length()-1)
 			m.Push("units", "")
 			m.Push("units", "")
 			ctx.DisplayStory(m, "stats.js")

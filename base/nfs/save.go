@@ -7,6 +7,7 @@ import (
 	"path"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/mdb"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -208,4 +209,14 @@ func Pipe(m *ice.Message, cb ice.Any) io.WriteCloser {
 	default:
 	}
 	return w
+}
+
+func Temp(m *ice.Message, cb func(p string)) {
+	p := path.Join(ice.VAR_TMP, kit.Hashs(mdb.UNIQ))
+	defer os.Remove(p)
+	cb(p)
+}
+
+var ImageResize = func(m *ice.Message, p string, height, width uint) bool {
+	return false
 }

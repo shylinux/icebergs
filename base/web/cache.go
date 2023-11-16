@@ -131,10 +131,10 @@ func init() {
 			}},
 			DOWNLOAD: {Name: "download type name*", Hand: func(m *ice.Message, arg ...string) {
 				if res, ok := m.Optionv(RESPONSE).(*http.Response); !m.Warn(!ok, ice.ErrNotValid, RESPONSE) {
-					p := path.Join(ice.VAR_TMP, kit.Hashs(mdb.UNIQ))
-					defer os.Remove(p)
-					file, size := _cache_catch(m, _cache_download(m, res, p, m.OptionCB("")))
-					_cache_save(m, m.Option(mdb.TYPE), m.Option(mdb.NAME), "", file, size)
+					nfs.Temp(m, func(p string) {
+						file, size := _cache_catch(m, _cache_download(m, res, p, m.OptionCB("")))
+						_cache_save(m, m.Option(mdb.TYPE), m.Option(mdb.NAME), "", file, size)
+					})
 				}
 			}},
 			nfs.PS: {Hand: func(m *ice.Message, arg ...string) {
@@ -226,6 +226,14 @@ func ExportCacheAction(field string) ice.Actions {
 			})
 			mdb.HashSelectUpdate(m, "", func(value ice.Map) {
 				value[field] = kit.Join(kit.Simple(kit.For(kit.Split(kit.Format(value[field])), func(p string) string { return kit.Select(p, list[p]) })))
+			})
+		}},
+		UPLOAD: {Hand: func(m *ice.Message, arg ...string) {
+			nfs.Temp(m, func(p string) {
+				msg := m.Cmd(CACHE, Upload(m)[0])
+				if os.Link(msg.Append(nfs.FILE), p); nfs.ImageResize(m, p, 390, 390) {
+					m.Echo(m.Cmd(CACHE, CATCH, p, msg.Append(mdb.TYPE)).Append(mdb.HASH))
+				}
 			})
 		}},
 	}

@@ -22,8 +22,7 @@ func init() {
 		GOODS: {Help: "商品", Icon: "mall.png", Actions: ice.MergeActions(ice.Actions{
 			mdb.CREATE: {Name: "create zone* name* text price* count*=1 units*=件 image*=4@img"},
 			// mdb.MODIFY: {Name: "modify zone* name* text price* count*=1 units*=件 image*=4@img"},
-			ORDER:      {Name: "order count*=1", Help: "选购", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(CART, mdb.INSERT, arg) }},
-			web.UPLOAD: {Hand: func(m *ice.Message, arg ...string) { m.Echo(web.Upload(m)[0]) }},
+			ORDER: {Name: "order count*=1", Help: "选购", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(CART, mdb.INSERT, arg) }},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch mdb.HashInputs(m, arg); arg[0] {
 				case "units":

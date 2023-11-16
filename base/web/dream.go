@@ -46,12 +46,7 @@ func _dream_list(m *ice.Message) *ice.Message {
 			}
 		}
 	})
-	mem, disk := 0, 0
-	PushPodCmd(m.Spawn(), ROUTE, "travel").Table(func(value ice.Maps) {
-		mem += kit.Int(kit.Select("", kit.Split(value[nfs.SIZE], nfs.PS), 0))
-		disk += kit.Int(kit.Select("", kit.Split(value[nfs.SIZE], nfs.PS), 2))
-	})
-	return m.Sort("status,type,name", ice.STR, ice.STR, ice.STR_R).StatusTimeCount(stats, nfs.SIZE, kit.Format("%s/%s", kit.FmtSize(mem), kit.FmtSize(disk)))
+	return m.Sort("status,type,name", ice.STR, ice.STR, ice.STR_R).StatusTimeCount()
 
 }
 func _dream_start(m *ice.Message, name string) {
@@ -260,10 +255,8 @@ func init() {
 							stats[cli.START]++
 						}
 					})
-					m.Push(mdb.NAME, kit.Keys(m.CommandKey(), cli.START)).Push(mdb.VALUE, stats[cli.START])
-					m.Push(mdb.NAME, kit.Keys(m.CommandKey(), mdb.TOTAL)).Push(mdb.VALUE, msg.Length())
-					m.Push("units", "")
-					m.Push("units", "")
+					PushStats(m, kit.Keys(m.CommandKey(), cli.START), stats[cli.START], "")
+					PushStats(m, kit.Keys(m.CommandKey(), mdb.TOTAL), msg.Length(), "")
 				}
 			}},
 		}, aaa.RoleAction(), StatsAction(), DreamAction(), mdb.ImportantHashAction(ctx.TOOLS, "web.space,web.route,web.code.git.search", mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icon,repos,binary,template")), Hand: func(m *ice.Message, arg ...string) {

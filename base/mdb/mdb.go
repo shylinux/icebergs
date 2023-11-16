@@ -93,6 +93,7 @@ const (
 	FSIZE = kit.MDB_FSIZE
 
 	ICONS     = "icons"
+	UNITS     = "units"
 	TOOLS     = "tools"
 	SOURCE    = "_source"
 	TARGET    = "_target"

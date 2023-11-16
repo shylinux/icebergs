@@ -101,8 +101,7 @@ func init() {
 				if msg := mdb.HashSelects(m.Spawn()); msg.Length() > 0 {
 					count := 0
 					msg.Table(func(value ice.Maps) { count += kit.Int(value[mdb.COUNT]) })
-					m.Push(mdb.NAME, kit.Keys(m.CommandKey(), mdb.TOTAL)).Push(mdb.VALUE, count)
-					m.Push("units", "")
+					web.PushStats(m, kit.Keys(m.CommandKey(), mdb.TOTAL), count, "")
 				}
 			}},
 		}, web.StatsAction(), mdb.ExportZoneAction(mdb.FIELD, "time,zone,count", mdb.FIELDS, "begin_time,end_time,id,status,level,score,type,name,text")), Hand: func(m *ice.Message, arg ...string) {

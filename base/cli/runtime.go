@@ -44,8 +44,8 @@ func _runtime_init(m *ice.Message) {
 	ice.Info.Pathname = m.Conf(RUNTIME, kit.Keys(BOOT, PATHNAME))
 	ice.Info.Username = m.Conf(RUNTIME, kit.Keys(BOOT, USERNAME))
 	ice.Info.System = m.Conf(RUNTIME, kit.Keys(HOST, OSID))
-	aaa.UserRoot(ice.Pulse, "", ice.Info.Username, aaa.ROOT, ice.OPS)
 	aaa.UserRoot(ice.Pulse, "", ice.Info.Make.Username, aaa.TECH, ice.DEV)
+	aaa.UserRoot(ice.Pulse, "", ice.Info.Username, aaa.ROOT, ice.OPS)
 	if runtime.GOARCH != MIPSLE {
 		msg := m.Cmd(nfs.DIR, _system_find(m, os.Args[0]), "time,path,size,hash")
 		m.Conf(RUNTIME, kit.Keys(BOOT, mdb.TIME), msg.Append(mdb.TIME))

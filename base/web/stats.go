@@ -17,8 +17,9 @@ const STATS = "stats"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		STATS: {Name: "stats name auto", Help: "汇总量", Meta: kit.Dict(
+		STATS: {Name: "stats refresh", Help: "汇总量", Meta: kit.Dict(
 			ice.CTX_TRANS, kit.Dict(html.INPUT, kit.Dict(
+				"command.total", "命令总数",
 				"repos.total", "代码库总数",
 				"dream.total", "空间总数",
 				"dream.start", "已启动空间",
@@ -36,11 +37,16 @@ func init() {
 				"cpu.total", "处理器核数",
 			)),
 		), Hand: func(m *ice.Message, arg ...string) {
-			m.Push(mdb.NAME, kit.Keys(aaa.SESS, mdb.TOTAL)).Push(mdb.VALUE, m.Cmd(aaa.SESS).Length())
-			m.Push(mdb.NAME, kit.Keys(aaa.USER, mdb.TOTAL)).Push(mdb.VALUE, m.Cmd(aaa.USER).Length()-1)
-			m.Push("units", "")
-			m.Push("units", "")
-			ctx.DisplayStory(m, "stats.js")
+			defer ctx.DisplayStory(m, "stats.js")
+			if m.Option(ice.MSG_USERPOD) == "" {
+				PushStats(m, kit.Keys(aaa.SESS, mdb.TOTAL), m.Cmd(aaa.SESS).Length(), "")
+				if ice.Info.Username == ice.Info.Make.Username {
+					PushStats(m, kit.Keys(aaa.USER, mdb.TOTAL), m.Cmd(aaa.USER).Length()-1, "")
+				} else {
+					PushStats(m, kit.Keys(aaa.USER, mdb.TOTAL), m.Cmd(aaa.USER).Length()-2, "")
+				}
+				PushStats(m, kit.Keys(ctx.COMMAND, mdb.TOTAL), m.Cmd(ctx.COMMAND).Length(), "")
+			}
 			gdb.Event(m, STATS_TABLES)
 			PushPodCmd(m, "", arg...)
 		}},
@@ -50,9 +56,11 @@ func StatsAction() ice.Actions {
 	return ice.MergeActions(ice.Actions{
 		STATS_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 			if msg := mdb.HashSelects(m.Spawn()); msg.Length() > 0 {
-				m.Push(mdb.NAME, kit.Keys(m.CommandKey(), mdb.TOTAL)).Push(mdb.VALUE, msg.Length())
-				m.Push("units", "")
+				PushStats(m, kit.Keys(m.CommandKey(), mdb.TOTAL), msg.Length(), "")
 			}
 		}},
 	}, gdb.EventsAction(STATS_TABLES))
+}
+func PushStats(m *ice.Message, name string, value ice.Any, units string) {
+	kit.If(value != 0, func() { m.Push(mdb.NAME, name).Push(mdb.VALUE, value).Push(mdb.UNITS, units) })
 }

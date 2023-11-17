@@ -16,8 +16,12 @@ import (
 )
 
 const (
-	APPID   = "appid"
-	APPMM   = "appmm"
+	AUTH_CODE = "/sns/jscode2session?grant_type=authorization_code"
+)
+const (
+	APPID  = "appid"
+	SECRET = "secret"
+
 	ACCESS  = "access"
 	OPENID  = "openid"
 	TOKENS  = "tokens"
@@ -33,29 +37,32 @@ const LOGIN = "login"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		web.PP(LOGIN): {Actions: ice.MergeActions(ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { m.Cmd(web.SPIDE, mdb.CREATE, MP, mdb.Config(m, tcp.SERVER)) }},
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(web.SPIDE, mdb.CREATE, MP, mdb.Config(m, tcp.SERVER))
+			}},
 			aaa.SESS: {Name: "sess code", Help: "会话", Hand: func(m *ice.Message, arg ...string) {
-				msg := m.Cmd(web.SPIDE, MP, http.MethodGet, "/sns/jscode2session?grant_type=authorization_code", "js_code", m.Option(cli.CODE), APPID, mdb.Config(m, APPID), "secret", mdb.Config(m, APPMM))
 				m.Option(ice.MSG_USERZONE, MP)
+				msg := m.Cmd(web.SPIDE, MP, http.MethodGet, AUTH_CODE, "js_code", m.Option(cli.CODE), mdb.ConfigSimple(m, APPID, SECRET))
 				m.Echo(aaa.SessCreate(msg, msg.Append(OPENID)))
 			}},
 			aaa.USER: {Help: "用户", Hand: func(m *ice.Message, arg ...string) {
 				if m.Cmd(aaa.USER, m.Option(aaa.USERNAME, m.Option(ice.MSG_USERNAME))).Length() == 0 {
-					m.Cmd(aaa.USER, mdb.CREATE, m.OptionSimple(aaa.USERNAME))
+					m.Cmd(aaa.USER, mdb.CREATE, aaa.USERNICK, "", m.OptionSimple(aaa.USERNAME))
 				}
-				m.Cmd(aaa.USER, mdb.MODIFY, aaa.USERNICK, m.Option("nickName"), aaa.USERZONE, MP,
+				m.Cmd(aaa.USER, mdb.MODIFY, m.OptionSimple(aaa.USERNAME), aaa.USERNICK, m.Option("nickName"), aaa.USERZONE, MP,
 					aaa.AVATAR, m.Option("avatarUrl"), aaa.GENDER, kit.Select("女", "男", m.Option(aaa.GENDER) == "1"),
 					m.OptionSimple(aaa.CITY, aaa.COUNTRY, aaa.LANGUAGE, aaa.PROVINCE),
 				)
 			}},
-		}, ctx.ConfAction(tcp.SERVER, "https://api.weixin.qq.com"), aaa.WhiteAction(aaa.SESS, aaa.USER))},
+		}, aaa.WhiteAction(aaa.SESS, aaa.USER), ctx.ConfAction(tcp.SERVER, "https://api.weixin.qq.com"))},
+
 		LOGIN: {Name: "login appid auto qrcode tokens create", Help: "认证", Actions: ice.Actions{
-			mdb.CREATE: {Name: "create appid appmm", Help: "登录", Hand: func(m *ice.Message, arg ...string) {
-				ctx.ConfigFromOption(m, APPID, APPMM)
+			mdb.CREATE: {Name: "create appid secret", Hand: func(m *ice.Message, arg ...string) {
+				ctx.ConfigFromOption(m, APPID, SECRET)
 			}},
 			TOKENS: {Help: "令牌", Hand: func(m *ice.Message, arg ...string) {
 				if now := time.Now().Unix(); mdb.Config(m, TOKENS) == "" || now > kit.Int64(mdb.Config(m, EXPIRES)) {
-					msg := m.Cmd(web.SPIDE, MP, http.MethodGet, "/cgi-bin/token?grant_type=client_credential", APPID, mdb.Config(m, APPID), "secret", mdb.Config(m, APPMM))
+					msg := m.Cmd(web.SPIDE, MP, http.MethodGet, "/cgi-bin/token?grant_type=client_credential", APPID, mdb.Config(m, APPID), SECRET, mdb.Config(m, SECRET))
 					if m.Warn(msg.Append(ERRCODE) != "", msg.Append(ERRCODE), msg.Append(ERRMSG)) {
 						return
 					}

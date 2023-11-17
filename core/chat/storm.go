@@ -42,6 +42,13 @@ func init() {
 				m.Action(mdb.CREATE)
 			} else if len(arg) == 0 || kit.Int(arg[0]) > 0 {
 				m.Cmdy(mdb.SELECT, RIVER, _storm_key(m), mdb.LIST, mdb.ID, arg, ice.OptionFields("time,id,space,icon,index,args,style,display,deleted")).SortInt(mdb.ID)
+				m.Table(func(value ice.Maps) {
+					msg := m.Cmd(ctx.COMMAND, value[mdb.INDEX])
+					m.Push(mdb.NAME, msg.Append(mdb.NAME))
+					m.Push(mdb.HELP, msg.Append(mdb.HELP))
+					m.Push(mdb.META, msg.Append(mdb.META))
+					m.Push(mdb.LIST, msg.Append(mdb.LIST))
+				})
 				m.Action(mdb.INSERT)
 			} else if aaa.Right(m, arg) {
 				m.Push(ctx.INDEX, arg[0])

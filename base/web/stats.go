@@ -33,6 +33,7 @@ func init() {
 				"user.total", "用户总数",
 				"sess.total", "会话总数",
 				"cpu.total", "处理器核数",
+				"cpu.used", "处理器使用率",
 				"mem.used", "内存用量",
 				"mem.total", "内存总量",
 				"disk.used", "磁盘用量",

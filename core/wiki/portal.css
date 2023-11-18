@@ -24,12 +24,15 @@ fieldset.web.wiki.portal>div.output>div.layout>div.main h2 { margin:0; }
 fieldset.web.wiki.portal>div.output>div.layout>div.main ul { margin:20px 40px; }
 fieldset.web.wiki.portal>div.output>div.layout>div.main ol { margin:20px 40px; }
 fieldset.web.wiki.portal>div.output>div.layout>div.main p code { background-color:var(--code-bg-color); color:var(--code-fg-color); padding:0 10px; }
-fieldset.web.wiki.portal>div.output>div.layout>div.main>div>div:first-child {
+fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column {
 	display:flex; flex-direction:column; justify-content:center;
 }
-fieldset.web.wiki.portal>div.output>div.layout>div.main div.story[data-type=spark][data-name=shell] {
+fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column fieldset.inner>div.output>div.layout>div.layout div.content div.tips {
+	top:10px; right:10px;
+}
+fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column div.story[data-type=spark][data-name=shell] {
 	background-color:var(--code-bg-color); color:var(--code-fg-color);
-   	padding:10px; margin:10px auto;
+	padding:10px; margin-top:10px;
 	box-shadow:var(--box-shadow);
 }
 fieldset.web.wiki.portal>div.output>div.layout>div.main div.story[data-type=spark][data-name=shell] kbd { color:silver; }

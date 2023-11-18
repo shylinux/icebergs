@@ -71,6 +71,7 @@ const (
 	SUFFIX   = lex.SUFFIX
 )
 const (
+	INCLUDE  = "include"
 	COMMENT  = "comment"
 	KEYWORD  = "keyword"
 	CONSTANT = "constant"
@@ -125,8 +126,8 @@ func init() {
 		}},
 	})
 }
-func PlugAction() ice.Actions {
-	return ice.Actions{
+func PlugAction(arg ...ice.Any) ice.Actions {
+	return ice.MergeActions(ice.Actions{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 			if cmd := m.Target().Commands[m.CommandKey()]; cmd != nil {
 				if cmd.Name == "" {
@@ -149,7 +150,7 @@ func PlugAction() ice.Actions {
 				m.Cmdy(nfs.DIR, arg, kit.Dict(nfs.DIR_ROOT, ice.SRC, nfs.DIR_DEEP, ice.TRUE, nfs.DIR_REG, kit.ExtReg(m.CommandKey())))
 			}
 		}},
-	}
+	}, ctx.ConfAction(arg...))
 }
 func LoadPlug(m *ice.Message, lang ...string) {
 	for _, lang := range lang {

@@ -17,7 +17,7 @@ const STATS = "stats"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		STATS: {Name: "stats refresh", Help: "汇总量", Meta: kit.Dict(
+		STATS: {Help: "汇总量", Meta: kit.Dict(
 			ice.CTX_TRANS, kit.Dict(html.INPUT, kit.Dict(
 				"goods.amount", "商品总额",
 				"goods.count", "商品数量",

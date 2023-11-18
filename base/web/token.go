@@ -43,6 +43,11 @@ func init() {
 				}).Cmd(nfs.SAVE, kit.HomePath(FILE), strings.Join(list, lex.NL)+lex.NL)
 				m.ProcessClose()
 			}},
-		}, mdb.HashAction(mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,type,name,text", mdb.EXPIRE, mdb.MONTH))},
+		}, StatsAction(), mdb.HashAction(mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,type,name,text", mdb.EXPIRE, mdb.MONTH)), Hand: func(m *ice.Message, arg ...string) {
+			mdb.HashSelect(m, arg...)
+			if len(arg) > 0 {
+				m.EchoScript(kit.Format("ish_miss_serve_log dev %s token %s", UserHost(m), arg[0]))
+			}
+		}},
 	})
 }

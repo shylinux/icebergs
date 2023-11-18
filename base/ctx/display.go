@@ -31,7 +31,7 @@ func DisplayTableCard(m *ice.Message, arg ...ice.Any) *ice.Message {
 	return DisplayTable(m, STYLE, "card")
 }
 func DisplayStory(m *ice.Message, file string, arg ...ice.Any) *ice.Message {
-	kit.If(file == "", func() { file = kit.Keys(kit.FileName(5), nfs.JS) })
+	kit.If(file == "", func() { file = kit.Keys(m.CommandKey(), nfs.JS) })
 	kit.If(isLocalFile(file), func() { file = path.Join(ice.PLUGIN_STORY, file) })
 	return DisplayBase(m, file, arg...)
 }

@@ -4,13 +4,16 @@ import (
 	"bytes"
 	"encoding/xml"
 	"io/ioutil"
+	"net/http"
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
+	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
 	"shylinux.com/x/icebergs/core/chat"
 	"shylinux.com/x/icebergs/core/chat/location"
@@ -68,11 +71,30 @@ func _wx_parse(m *ice.Message) {
 const LOGIN = "login"
 
 func init() {
+	const (
+		AUTH_CODE = "/sns/jscode2session?grant_type=authorization_code"
+	)
 	web.Index.MergeCommands(ice.Commands{
 		"/MP_verify_0xp0zkW3fIzIq2Bo.txt": {Actions: aaa.WhiteAction(), Hand: func(m *ice.Message, arg ...string) { m.RenderResult("0xp0zkW3fIzIq2Bo") }},
 	})
 	Index.MergeCommands(ice.Commands{
-		web.PP(LOGIN): {Actions: aaa.WhiteAction(), Hand: func(m *ice.Message, arg ...string) {
+		web.PP(LOGIN): {Actions: ice.MergeActions(ice.Actions{
+			aaa.SESS: {Name: "sess code", Help: "会话", Hand: func(m *ice.Message, arg ...string) {
+				m.Option(ice.MSG_USERZONE, WX)
+				msg := m.Cmd(ACCESS, kit.Split(kit.ParseURL(m.Option(ice.MSG_REFERER)).Path, nfs.PS)[0])
+				msg = m.Cmd(web.SPIDE, WX, http.MethodGet, AUTH_CODE, "js_code", m.Option(cli.CODE), msg.AppendSimple(APPID, SECRET))
+				m.Echo(aaa.SessCreate(msg, msg.Append(OPENID)))
+			}},
+			aaa.USER: {Help: "用户", Hand: func(m *ice.Message, arg ...string) {
+				if m.Cmd(aaa.USER, m.Option(aaa.USERNAME, m.Option(ice.MSG_USERNAME))).Length() == 0 {
+					m.Cmd(aaa.USER, mdb.CREATE, aaa.USERNICK, "", m.OptionSimple(aaa.USERNAME))
+				}
+				m.Cmd(aaa.USER, mdb.MODIFY, m.OptionSimple(aaa.USERNAME), aaa.USERNICK, m.Option("nickName"), aaa.USERZONE, WX,
+					aaa.AVATAR, m.Option("avatarUrl"), aaa.GENDER, kit.Select("女", "男", m.Option(aaa.GENDER) == "1"),
+					m.OptionSimple(aaa.CITY, aaa.COUNTRY, aaa.LANGUAGE, aaa.PROVINCE),
+				)
+			}},
+		}, aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {
 			if m.Cmdx(ACCESS, aaa.CHECK) == "" {
 				return
 			} else if m.Option("echostr") != "" {

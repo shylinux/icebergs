@@ -19,25 +19,27 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		STATS: {Name: "stats refresh", Help: "汇总量", Meta: kit.Dict(
 			ice.CTX_TRANS, kit.Dict(html.INPUT, kit.Dict(
-				"command.total", "命令总数",
-				"repos.total", "代码库总数",
-				"dream.total", "空间总数",
-				"dream.start", "已启动空间",
-				"asset.amount", "资产总额",
-				"asset.count", "资产数量",
 				"goods.amount", "商品总额",
 				"goods.count", "商品数量",
+				"asset.amount", "资产总额",
+				"asset.count", "资产数量",
+				"task.total", "任务总数",
+				"dream.total", "空间总数",
+				"dream.start", "已启动空间",
+				"repos.total", "代码库总数",
+				"command.total", "命令总数",
+				"share.total", "共享总数",
+				"token.total", "令牌总数",
 				"user.total", "用户总数",
 				"sess.total", "会话总数",
-				"task.total", "任务总数",
-				"disk.total", "磁盘总量",
-				"disk.used", "磁盘用量",
-				"mem.total", "内存总量",
-				"mem.used", "内存用量",
 				"cpu.total", "处理器核数",
+				"mem.used", "内存用量",
+				"mem.total", "内存总量",
+				"disk.used", "磁盘用量",
+				"disk.total", "磁盘总量",
 			)),
 		), Hand: func(m *ice.Message, arg ...string) {
-			defer ctx.DisplayStory(m, "stats.js")
+			defer ctx.DisplayStory(m, "")
 			if m.Option(ice.MSG_USERPOD) == "" {
 				PushStats(m, kit.Keys(aaa.SESS, mdb.TOTAL), m.Cmd(aaa.SESS).Length(), "")
 				if ice.Info.Username == ice.Info.Make.Username {

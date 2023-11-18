@@ -228,6 +228,7 @@ const ( // MSG
 	MSG_STORM   = "sess.storm"
 	MSG_COUNT   = "sess.count"
 	MSG_DAEMON  = "sess.daemon"
+	MSG_REFERER = "sess.referer"
 	MSG_FILES   = "file.system"
 	LOG_DISABLE = "log.disable"
 	LOG_TRACEID = "log.id"

@@ -122,14 +122,13 @@ func init() {
 			m.Option("icon.lib", mdb.Conf(m, ICON, kit.Keym(nfs.PATH)))
 			m.Option(MENUS, mdb.Config(m, MENUS))
 			m.Echo(mdb.Config(m, TITLE))
-			mdb.HashSelect(m, arg...).Sort("order", "int")
-			if m.Option(ice.MSG_USERROLE) == aaa.TECH {
-				m.Action(mdb.CREATE, ice.DEMO)
-			}
+			mdb.HashSelect(m, arg...).Sort(mdb.ORDER, ice.INT)
+			m.Table(func(value ice.Maps) { m.Push(mdb.STATUS, kit.Select("enable", "disable", value[mdb.ORDER] == "")) })
+			kit.If(m.Option(ice.MSG_USERROLE) == aaa.TECH, func() { m.Action(mdb.CREATE, ice.DEMO) })
 			kit.If(GetSSO(m), func(p string) {
 				m.Push(mdb.TIME, m.Time()).Push(mdb.NAME, web.SERVE).Push(mdb.ICONS, nfs.USR_ICONS_ICEBERGS).Push(mdb.TYPE, "oauth").Push(web.LINK, p)
 			})
-			m.StatusTimeCount(kit.Dict(ice.DEMO, mdb.Config(m, ice.DEMO)))
+			m.StatusTimeCount(kit.Dict(mdb.ConfigSimple(m, ice.DEMO)))
 			if gdb.Event(m, HEADER_AGENT); !_header_check(m, arg...) {
 				return
 			}

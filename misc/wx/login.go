@@ -81,7 +81,7 @@ func init() {
 		web.PP(LOGIN): {Actions: ice.MergeActions(ice.Actions{
 			aaa.SESS: {Name: "sess code", Help: "会话", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(ice.MSG_USERZONE, WX)
-				msg := m.Cmd(ACCESS, kit.Split(kit.ParseURL(m.Option(ice.MSG_REFERER)).Path, nfs.PS)[0])
+				msg := m.Cmd(ACCESS, kit.Select(m.Option(APPID), kit.Split(kit.ParseURL(m.Option(ice.MSG_REFERER)).Path, nfs.PS), 0))
 				msg = m.Cmd(web.SPIDE, WX, http.MethodGet, AUTH_CODE, "js_code", m.Option(cli.CODE), msg.AppendSimple(APPID, SECRET))
 				m.Echo(aaa.SessCreate(msg, msg.Append(OPENID)))
 			}},

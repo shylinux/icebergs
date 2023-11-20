@@ -15,7 +15,7 @@ field web.chat.wx.users
 
 chapter "数据"
 field web.chat.favor
-field web.chat.location
+# field web.chat.location
 
 title "微信小程序"
 refer `

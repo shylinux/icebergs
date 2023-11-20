@@ -120,6 +120,9 @@ func (m *Message) IsCliUA() bool {
 func (m *Message) IsMobileUA() bool {
 	return strings.Contains(m.Option(MSG_USERUA), "Mobile")
 }
+func (m *Message) IsWeixinUA() bool {
+	return strings.Contains(m.Option(MSG_USERUA), "MicroMessenger")
+}
 func (m *Message) PushSearch(arg ...Any) {
 	data := kit.Dict(arg...)
 	kit.For(arg, func(k, v Any) {

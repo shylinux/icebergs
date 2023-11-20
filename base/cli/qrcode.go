@@ -64,6 +64,7 @@ func init() {
 				m.OptionDefault(FG, BLACK, BG, WHITE)
 				_qrcode_cli(m, kit.Select(kit.Select(ice.Info.Make.Domain, ice.Info.Domain), arg, 0))
 			} else {
+				m.OptionDefault(SIZE, "320")
 				m.Option(FG, kit.Select(m.Option("--plugin-fg-color"), arg, 1))
 				m.Option(BG, kit.Select(m.Option("--plugin-bg-color"), arg, 2))
 				switch m.Option(ice.MSG_THEME) {
@@ -72,7 +73,6 @@ func init() {
 				default:
 					m.OptionDefault(FG, WHITE, BG, BLACK)
 				}
-				m.OptionDefault(SIZE, "360")
 				m.StatusTime(mdb.LINK, _qrcode_web(m, tcp.PublishLocalhost(m, kit.Select(m.Option(ice.MSG_USERWEB), arg, 0))))
 			}
 		}},

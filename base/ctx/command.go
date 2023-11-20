@@ -113,10 +113,10 @@ func init() {
 var PodCmd = func(m *ice.Message, arg ...ice.Any) bool { return false }
 
 func Run(m *ice.Message, arg ...string) {
-	kit.If(!PodCmd(m, arg) && aaa.Right(m, arg), func() { m.Cmdy(arg) })
+	kit.If(kit.IsIn(arg[0], "web.chat.grant") || !PodCmd(m, arg) && aaa.Right(m, arg), func() { m.Cmdy(arg) })
 }
 func Command(m *ice.Message, arg ...string) {
-	kit.If(!PodCmd(m, COMMAND, arg), func() { m.Cmdy(COMMAND, arg) })
+	kit.If(kit.IsIn(arg[0], "web.chat.grant") || !PodCmd(m, COMMAND, arg), func() { m.Cmdy(COMMAND, arg) })
 }
 
 func FileURI(dir string) string {

@@ -94,9 +94,7 @@ func init() {
 					m.OptionSimple(aaa.CITY, aaa.COUNTRY, aaa.LANGUAGE, aaa.PROVINCE),
 				)
 			}},
-			SCAN: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(web.CHAT_FAVOR, mdb.CREATE, mdb.TYPE, "", arg)
-			}},
+			SCAN: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(web.CHAT_FAVOR, mdb.CREATE, mdb.TYPE, "", arg) }},
 		}, aaa.WhiteAction(aaa.SESS, aaa.USER)), Hand: func(m *ice.Message, arg ...string) {
 			if m.Cmdx(ACCESS, aaa.CHECK) == "" {
 				return

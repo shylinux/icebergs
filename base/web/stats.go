@@ -65,5 +65,8 @@ func StatsAction() ice.Actions {
 	}, gdb.EventsAction(STATS_TABLES))
 }
 func PushStats(m *ice.Message, name string, value ice.Any, units string) {
-	kit.If(value != 0, func() { m.Push(mdb.NAME, name).Push(mdb.VALUE, value).Push(mdb.UNITS, units) })
+	kit.If(value != 0, func() {
+		m.Push(mdb.NAME, name).Push(mdb.VALUE, value).Push(mdb.UNITS, units)
+		m.Push(ctx.INDEX, m.PrefixKey())
+	})
 }

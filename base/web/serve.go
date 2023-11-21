@@ -141,7 +141,7 @@ func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.Response
 			m.Cost(kit.Format("%s: %s %v", r.Method, r.URL.String(), m.FormatSize()))
 		}()
 		m.Option(ice.MSG_OPTS, kit.Simple(m.Optionv(ice.MSG_OPTION), func(k string) bool { return !strings.HasPrefix(k, ice.MSG_SESSID) }))
-		if m.Detailv(m.PrefixKey(), cmds); len(cmds) > 1 && cmds[0] == ctx.ACTION {
+		if m.Detailv(m.PrefixKey(), cmds); len(cmds) > 1 && cmds[0] == ctx.ACTION && cmds[1] != ctx.ACTION {
 			if !kit.IsIn(cmds[1], aaa.LOGIN, ctx.RUN, ctx.COMMAND) && m.Warn(r.Method == http.MethodGet, ice.ErrNotAllow) {
 				return
 			}

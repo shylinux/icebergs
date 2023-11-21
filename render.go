@@ -203,6 +203,9 @@ func (m *Message) EchoFields(cmd string, arg ...string) *Message {
 </fieldset>
 `, cmd, kit.Join(arg))
 }
+func (m *Message) EchoInfoButton(info string, arg ...Any) *Message {
+	return m.Echo(info).EchoButton(arg...).Echo(NL).Action(arg...)
+}
 func (m *Message) EchoButton(arg ...Any) *Message    { return m.Echo(Render(m, RENDER_BUTTON, arg...)) }
 func (m *Message) EchoAnchor(arg ...string) *Message { return m.Echo(Render(m, RENDER_ANCHOR, arg)) }
 func (m *Message) EchoQRCode(src string) *Message    { return m.Echo(Render(m, RENDER_QRCODE, src)) }

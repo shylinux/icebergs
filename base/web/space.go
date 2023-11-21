@@ -162,6 +162,7 @@ func _space_send(m *ice.Message, name string, arg ...string) (h string) {
 }
 
 const (
+	WEIXIN = "weixin"
 	PORTAL = "portal"
 	WORKER = "worker"
 	SERVER = "server"
@@ -278,14 +279,14 @@ func init() {
 					}
 					if kit.IsIn(value[mdb.TYPE], WORKER, SERVER) {
 						m.Push(mdb.LINK, m.MergePod(value[mdb.NAME]))
-					} else if value[mdb.TYPE] == PORTAL && value[mdb.NAME] != html.CHROME {
+					} else if kit.IsIn(value[mdb.TYPE], PORTAL, WEIXIN) && value[mdb.NAME] != html.CHROME {
 						m.Push(mdb.LINK, MergeURL2(m, value[mdb.TEXT]))
 					} else {
 						m.Push(mdb.LINK, "")
 					}
 					m.PushButton(kit.Select(OPEN, LOGIN, value[mdb.TYPE] == LOGIN), mdb.REMOVE)
 				})
-				// kit.If(len(arg) == 1, func() { m.EchoIFrame(m.MergePod(arg[0])) }, func() { m.Action(ice.MAIN) })
+				m.Sort("type,name,text")
 			} else {
 				_space_send(m, arg[0], kit.Simple(kit.Split(arg[1]), arg[2:])...)
 			}

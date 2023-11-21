@@ -74,9 +74,11 @@ func init() {
 	const (
 		AUTH_CODE = "/sns/jscode2session?grant_type=authorization_code"
 	)
-	web.Index.MergeCommands(ice.Commands{
-		"/MP_verify_0xp0zkW3fIzIq2Bo.txt": {Actions: aaa.WhiteAction(), Hand: func(m *ice.Message, arg ...string) { m.RenderResult("0xp0zkW3fIzIq2Bo") }},
-	})
+	if false {
+		web.Index.MergeCommands(ice.Commands{
+			"/MP_verify_0xp0zkW3fIzIq2Bo.txt": {Actions: aaa.WhiteAction(), Hand: func(m *ice.Message, arg ...string) { m.RenderResult("0xp0zkW3fIzIq2Bo") }},
+		})
+	}
 	Index.MergeCommands(ice.Commands{
 		web.PP(LOGIN): {Actions: ice.MergeActions(ice.Actions{
 			aaa.SESS: {Name: "sess code", Help: "会话", Hand: func(m *ice.Message, arg ...string) {

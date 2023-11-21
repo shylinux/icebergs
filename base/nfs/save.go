@@ -211,8 +211,11 @@ func Pipe(m *ice.Message, cb ice.Any) io.WriteCloser {
 	return w
 }
 
+func TempName(m *ice.Message) string {
+	return m.Cmdx(SAVE, path.Join(ice.VAR_TMP, kit.Hashs(mdb.UNIQ)), "")
+}
 func Temp(m *ice.Message, cb func(p string)) {
-	p := path.Join(ice.VAR_TMP, kit.Hashs(mdb.UNIQ))
+	p := TempName(m)
 	defer os.Remove(p)
 	cb(p)
 }

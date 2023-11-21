@@ -167,6 +167,9 @@ func init() {
 				if m.Option(nfs.PATH) != "" && nfs.ExistsFile(m, path.Join(m.Option(nfs.PATH), ice.MAKEFILE)) {
 					web.PushStream(m).Cmdy(cli.SYSTEM, cli.MAKE, kit.Dict(cli.CMD_DIR, m.Option(nfs.PATH)))
 					return
+				} else if m.Option(nfs.PATH) == ice.USR_VOLCANOS && strings.HasPrefix(m.Option(nfs.FILE), "publish/client/mp/") {
+					web.PushStream(m).Cmdy(cli.SYSTEM, cli.MAKE, kit.Dict(cli.CMD_DIR, path.Join(m.Option(nfs.PATH), "publish/client/mp/")))
+					return
 				}
 				const app, _app = "usr/publish/Contexts.app", "Contents/MacOS/Contexts"
 				isWebview := func() bool { return strings.HasSuffix(os.Args[0], _app) }

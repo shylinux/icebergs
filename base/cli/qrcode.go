@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/tcp"
@@ -47,7 +48,7 @@ const QRCODE = "qrcode"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		QRCODE: {Name: "qrcode text fg@key bg@key size auto", Help: "二维码", Actions: ice.Actions{
+		QRCODE: {Name: "qrcode text fg@key bg@key size auto", Help: "二维码", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				ice.AddRender(ice.RENDER_QRCODE, func(m *ice.Message, args ...ice.Any) string {
 					return m.Cmd(Prefix(QRCODE), kit.Simple(args...)).Result()
@@ -59,7 +60,7 @@ func init() {
 					m.Push(arg[0], BLACK, WHITE)
 				}
 			}},
-		}, Hand: func(m *ice.Message, arg ...string) {
+		}, aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
 			if m.IsCliUA() {
 				m.OptionDefault(FG, BLACK, BG, WHITE)
 				_qrcode_cli(m, kit.Select(kit.Select(ice.Info.Make.Domain, ice.Info.Domain), arg, 0))

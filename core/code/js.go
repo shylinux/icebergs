@@ -16,8 +16,10 @@ func _js_show(m *ice.Message, arg ...string) {
 	if arg[1] == MAIN_JS {
 		ctx.ProcessField(m, web.CHAT_IFRAME, kit.Simple(web.UserHost(m)))
 	} else if arg[2] == ice.USR_VOLCANOS {
-		if strings.HasPrefix(arg[1], "plugin/local/") {
-			ctx.ProcessField(m, kit.Select(ice.CAN_PLUGIN, "web."+strings.Replace(strings.TrimSuffix(strings.TrimPrefix(arg[1], "plugin/local/"), nfs.PT+JS), nfs.PS, nfs.PT, -1)), kit.Simple())
+		if strings.HasPrefix(arg[1], "publish/client/mp/") {
+			ctx.ProcessField(m, "web.chat.wx.ide", nil)
+		} else if strings.HasPrefix(arg[1], "plugin/local/") {
+			ctx.ProcessField(m, kit.Select(ice.CAN_PLUGIN, "web."+strings.Replace(strings.TrimSuffix(strings.TrimPrefix(arg[1], "plugin/local/"), nfs.PT+JS), nfs.PS, nfs.PT, -1)), nil)
 		}
 	} else {
 		ctx.DisplayBase(m, require(arg[2], arg[1]))

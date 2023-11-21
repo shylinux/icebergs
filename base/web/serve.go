@@ -102,7 +102,7 @@ func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.Response
 		}
 		return m
 	}
-	_log("page", Referer, r.Header.Get(Referer))
+	kit.If(r.Header.Get(Referer), func(p string) { _log("page", Referer, p) })
 	if u, e := url.Parse(r.Header.Get(Referer)); e == nil {
 		add := func(k, v string) { _log(nfs.PATH, k, m.Option(k, v)) }
 		switch arg := strings.Split(strings.TrimPrefix(u.Path, nfs.PS), nfs.PS); arg[0] {
@@ -165,6 +165,9 @@ func _serve_domain(m *ice.Message) string {
 	)
 }
 func _serve_auth(m *ice.Message, key string, cmds []string, w http.ResponseWriter, r *http.Request) ([]string, bool) {
+	if len(cmds) > 0 {
+		cmds = append(kit.Split(cmds[0], ","), cmds[1:]...)
+	}
 	if r.URL.Path == PP(SPACE) {
 		return cmds, true
 	}

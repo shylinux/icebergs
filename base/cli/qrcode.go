@@ -8,6 +8,7 @@ import (
 	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/tcp"
+	"shylinux.com/x/icebergs/base/web/html"
 	"shylinux.com/x/icebergs/misc/qrcode"
 	kit "shylinux.com/x/toolkits"
 )
@@ -48,7 +49,11 @@ const QRCODE = "qrcode"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		QRCODE: {Name: "qrcode text fg@key bg@key size auto", Help: "二维码", Actions: ice.MergeActions(ice.Actions{
+		QRCODE: {Name: "qrcode text fg@key bg@key size auto", Help: "二维码", Meta: kit.Dict(
+			ice.CTX_TRANS, kit.Dict(html.INPUT, kit.Dict(
+				mdb.TEXT, "文本", BG, "背景色", FG, "字体色",
+			)),
+		), Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				ice.AddRender(ice.RENDER_QRCODE, func(m *ice.Message, args ...ice.Any) string {
 					return m.Cmd(Prefix(QRCODE), kit.Simple(args...)).Result()
@@ -65,7 +70,7 @@ func init() {
 				m.OptionDefault(FG, BLACK, BG, WHITE)
 				_qrcode_cli(m, kit.Select(kit.Select(ice.Info.Make.Domain, ice.Info.Domain), arg, 0))
 			} else {
-				m.OptionDefault(SIZE, "320")
+				m.OptionDefault(SIZE, kit.Select("320", "370", m.IsWeixinUA()))
 				m.Option(FG, kit.Select(m.Option("--plugin-fg-color"), arg, 1))
 				m.Option(BG, kit.Select(m.Option("--plugin-bg-color"), arg, 2))
 				switch m.Option(ice.MSG_THEME) {

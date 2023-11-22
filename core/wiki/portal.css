@@ -30,7 +30,7 @@ fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column {
 fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column fieldset.inner>div.output>div.layout>div.layout div.content div.tips {
 	top:10px; right:10px;
 }
-fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column div.story[data-type=spark][data-name=shell] {
+fieldset.web.wiki.portal>div.output>div.layout>div.main div.story[data-type=spark][data-name=shell] {
 	background-color:var(--code-bg-color); color:var(--code-fg-color);
 	padding:10px; margin-top:10px;
 	box-shadow:var(--box-shadow);

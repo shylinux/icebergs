@@ -120,6 +120,7 @@ func init() {
 			m.Option("theme.list", m.Cmd(nfs.DIR, nfs.TemplatePath(m, aaa.THEME)+nfs.PS, nfs.FILE).Appendv(nfs.FILE))
 			m.Option(nfs.REPOS, m.Cmdv(web.SPIDE, nfs.REPOS, web.CLIENT_URL))
 			m.Option("icon.lib", mdb.Conf(m, ICON, kit.Keym(nfs.PATH)))
+			m.Option("diy", mdb.Config(m, "diy"))
 			m.Option(MENUS, mdb.Config(m, MENUS))
 			m.Echo(mdb.Config(m, TITLE))
 			mdb.HashSelect(m, arg...).Sort(mdb.ORDER, ice.INT)

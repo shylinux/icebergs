@@ -3,7 +3,8 @@ Volcanos(chat.ONIMPORT, {
 		can.db.prefix = location.pathname.indexOf(p) > 0? location.pathname.split(p)[0]+p: "/wiki/portal/"
 		can.db.current = can.isCmdMode()? can.base.trimPrefix(location.pathname, can.db.prefix+"/", can.db.prefix): can.Option(nfs.PATH)
 		can.sup.onexport.link = function() { return can.db.prefix }
-		can.require(["/plugin/local/wiki/word.js"]), can.Conf(html.PADDING, can.user.isMobile? 10: 40)
+		can.require(["/plugin/local/wiki/word.js"])
+		can.Conf(html.PADDING, can.page.styleValueInt(can, "--portal-main-padding", can._output))
 		can.onmotion.clear(can), can.isCmdMode() && can.onappend.style(can, html.OUTPUT)
 		can.ui = can.onappend.layout(can, [html.HEADER, [html.NAV, html.MAIN, html.ASIDE]], html.FLOW), can.onimport._scroll(can)
 		can.ui.header.innerHTML = msg.Append(html.HEADER), can.ui.nav.innerHTML = msg.Append(html.NAV)
@@ -52,6 +53,7 @@ Volcanos(chat.ONIMPORT, {
 	},
 	layout: function(can, height, width) { can.onmotion.delay(can, function() { padding = can.Conf(html.PADDING)
 		can.ui.layout(height, width), can.ConfHeight(can.ui.main.offsetHeight), can.ConfWidth(can.ui.main.offsetWidth)
+		can.Conf(html.PADDING, can.page.styleValueInt(can, "--portal-main-padding", can._output))
 		if (can.user.isMobile && can.isCmdMode()) {
 			can.page.style(can, can.ui.nav, html.HEIGHT, "", html.WIDTH, can.page.width())
 			can.page.style(can, can.ui.main, html.HEIGHT, "", html.WIDTH, can.page.width())

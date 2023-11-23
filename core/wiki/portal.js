@@ -1,5 +1,6 @@
 Volcanos(chat.ONIMPORT, {
 	_init: function(can, msg) { var p = "/cmd/web.wiki.portal"
+		can.isCmdMode() && (can.user.toast = function() {})
 		can.db.prefix = location.pathname.indexOf(p) > 0? location.pathname.split(p)[0]+p: "/wiki/portal/"
 		can.db.current = can.isCmdMode()? can.base.trimPrefix(location.pathname, can.db.prefix+"/", can.db.prefix): can.Option(nfs.PATH)
 		can.sup.onexport.link = function() { return can.db.prefix }

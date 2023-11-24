@@ -1,4 +1,7 @@
-fieldset.web.wiki.portal { --portal-max-width:1200px; --portal-header-height:64px; --portal-main-padding:40px; --plugin-radius:10px; }
+fieldset.web.wiki.portal {
+	--portal-max-width:1200px; --portal-header-height:64px; --portal-main-padding:40px; --plugin-radius:10px;
+	--code-font-size:14px; --code-line-height:20px;
+}
 fieldset.web.wiki.portal.home { --portal-max-width:1500px; }
 fieldset.web.wiki.portal>div.output { padding:0; }
 fieldset.web.wiki.portal>div.output>div.header { background-color:rgb(22 31 49); height:var(--portal-header-height); --hover-bg-color:var(--plugin-bg-color); }

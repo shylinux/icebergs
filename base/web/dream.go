@@ -35,7 +35,11 @@ func _dream_list(m *ice.Message) *ice.Message {
 		} else {
 			m.Push(nfs.VERSION, "")
 			m.Push(mdb.TYPE, WORKER)
-			m.Push(cli.STATUS, cli.STOP)
+			if nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, value[mdb.NAME])) {
+				m.Push(cli.STATUS, cli.STOP)
+			} else {
+				m.Push(cli.STATUS, cli.BEGIN)
+			}
 			m.Push(mdb.TEXT, "")
 			if nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, value[mdb.NAME])) {
 				m.PushButton(cli.START, nfs.TRASH)
@@ -46,8 +50,7 @@ func _dream_list(m *ice.Message) *ice.Message {
 			}
 		}
 	})
-	return m.Sort("status,type,name", ice.STR, ice.STR, ice.STR_R).StatusTimeCount()
-
+	return m.Sort("status,type,name", []string{cli.START, cli.STOP, cli.BEGIN}, ice.STR, ice.STR_R).StatusTimeCount()
 }
 func _dream_start(m *ice.Message, name string) {
 	if m.Warn(name == "", ice.ErrNotValid, mdb.NAME) {
@@ -179,7 +182,7 @@ func init() {
 					gdb.Event(m, DREAM_INPUTS, arg)
 				}
 			}},
-			mdb.CREATE: {Name: "create name*=hi icon@icon repos binary template", Hand: func(m *ice.Message, arg ...string) {
+			mdb.CREATE: {Name: "create name*=hi icon@icons repos binary template", Hand: func(m *ice.Message, arg ...string) {
 				kit.If(!strings.Contains(m.Option(mdb.NAME), "-") || !strings.HasPrefix(m.Option(mdb.NAME), "20"), func() { m.Option(mdb.NAME, m.Time("20060102-")+m.Option(mdb.NAME)) })
 				m.OptionDefault(mdb.ICON, nfs.USR_ICONS_ICEBERGS)
 				kit.If(mdb.Config(m, nfs.REPOS), func(p string) { m.OptionDefault(nfs.REPOS, p+m.Option(mdb.NAME)) })

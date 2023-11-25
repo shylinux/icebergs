@@ -2,6 +2,7 @@ package wiki
 
 import (
 	"net/http"
+	"path"
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
@@ -24,7 +25,7 @@ const WORD = "word"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		WORD: {Name: "word path=src/main.shy@key auto play", Help: "上下文", Icon: "Books.png", Actions: ice.MergeActions(ice.Actions{
+		WORD: {Name: "word path=src/main.shy@key auto favor play", Help: "上下文", Icon: "Books.png", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				WordAlias(m, NAVMENU, TITLE, NAVMENU)
 				WordAlias(m, PREMENU, TITLE, PREMENU)
@@ -35,6 +36,14 @@ func init() {
 				WordAlias(m, LABEL, CHART, LABEL)
 				WordAlias(m, CHAIN, CHART, CHAIN)
 				WordAlias(m, SEQUENCE, CHART, SEQUENCE)
+			}},
+			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
+				if mdb.IsSearchPreview(m, arg) {
+					mdb.HashSelects(m.Spawn()).SortStrR(mdb.TIME).TablesLimit(5, func(value ice.Maps) {
+						// m.PushSearch(mdb.TYPE, nfs.SHY, mdb.NAME, path.Base(value[nfs.PATH]), mdb.TEXT, value[nfs.PATH])
+						m.PushSearch(mdb.TYPE, nfs.SHY, mdb.NAME, value[mdb.TIME], mdb.TEXT, value[nfs.PATH])
+					})
+				}
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) > 0 {
@@ -58,6 +67,10 @@ func init() {
 			}},
 			code.COMPLETE: {Hand: func(m *ice.Message, arg ...string) {
 				kit.If(kit.IsIn(kit.Split(m.Option(mdb.TEXT))[0], IMAGE, VIDEO, AUDIO), func() { m.Cmdy(FEEL).CutTo(nfs.PATH, mdb.NAME) })
+			}},
+			"favor": {Help: "收藏", Icon: "bi bi-star", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(web.CHAT_FAVOR, mdb.CREATE, mdb.TYPE, nfs.SHY, mdb.NAME, path.Base(arg[0]), mdb.TEXT, arg[0])
+				m.ProcessHold("favor success")
 			}},
 		}, aaa.RoleAction(), WikiAction("", nfs.SHY), mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 {

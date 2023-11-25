@@ -4,7 +4,6 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
-	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
@@ -19,11 +18,6 @@ func init() {
 		}, ctx.ConfAction(ctx.TOOLS, Prefix(GOODS)), GOODS), Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(GOODS, arg).PushAction(mdb.MODIFY, mdb.REMOVE)
 			m.Action(mdb.CREATE)
-			kit.If(len(arg) > 0, func() {
-				kit.For(kit.Split(m.Append(nfs.IMAGE)), func(p string) {
-					m.EchoImages(web.MergeURL2(m, web.SHARE_CACHE+p, ice.POD, m.Append(web.SPACE)))
-				})
-			})
 			ctx.DisplayTable(m)
 			_status_amount(m)
 		}},

@@ -74,7 +74,13 @@ func init() {
 			} else if m.Warn(!_river_right(m, arg[0]), ice.ErrNotRight, arg) {
 				return
 			}
-			if len(arg) == 2 {
+			if web.PodCmd(m, web.SPACE, arg...) {
+				m.Table(func(value ice.Maps) {
+					m.StatusTimeCount()
+					m.Push(web.SPACE, m.Option(ice.MSG_USERPOD))
+				})
+				return
+			} else if len(arg) == 2 {
 				ctx.OptionFromConfig(m, MENUS)
 				_action_list(m, arg[0], arg[1])
 			} else {

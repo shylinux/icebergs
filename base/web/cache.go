@@ -103,6 +103,7 @@ const (
 	WRITE    = "write"
 	UPLOAD   = "upload"
 	DOWNLOAD = "download"
+	PREVIEW  = "preview"
 
 	IMAGE = "image"
 	VIDEO = "video"

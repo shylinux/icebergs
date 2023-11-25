@@ -79,9 +79,10 @@ func (m *Message) Status(arg ...Any) *Message {
 	return m.Options(MSG_STATUS, kit.Format(list))
 }
 func (m *Message) StatusTime(arg ...Any) *Message {
-	traceid := []string{}
-	kit.If(m.Option(MSG_DEBUG) == TRUE, func() { traceid = m.OptionSimple(LOG_TRACEID) })
-	return m.Status(TIME, m.Time(), arg, kit.MDB_COST, m.FormatCost(), traceid)
+	args := []string{}
+	kit.If(m.Option(MSG_USERPOD), func(p string) { args = append(args, SPACE, p) })
+	kit.If(m.Option(MSG_DEBUG) == TRUE, func() { args = append(args, m.OptionSimple(LOG_TRACEID)...) })
+	return m.Status(TIME, m.Time(), arg, kit.MDB_COST, m.FormatCost(), args)
 }
 func (m *Message) StatusTimeCount(arg ...Any) *Message {
 	return m.StatusTime(append([]Any{kit.MDB_COUNT, kit.Split(m.FormatSize())[0]}, arg...))

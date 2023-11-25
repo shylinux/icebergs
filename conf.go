@@ -199,6 +199,7 @@ const ( // MSG
 	MSG_ACTION = "_action"
 	MSG_STATUS = "_status"
 
+	MSG_SPACE  = "_space"
 	MSG_INDEX  = "_index"
 	MSG_SCRIPT = "_script"
 	MSG_OUTPUT = "_output"
@@ -221,6 +222,8 @@ const ( // MSG
 	MSG_USERZONE = "user.zone"
 	MSG_LANGUAGE = "user.lang"
 
+	MSG_BG      = "sess.bg"
+	MSG_FG      = "sess.fg"
 	MSG_MODE    = "sess.mode"
 	MSG_THEME   = "sess.theme"
 	MSG_TITLE   = "sess.title"

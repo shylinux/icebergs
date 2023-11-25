@@ -261,13 +261,28 @@ const (
 	INT   = "int"
 )
 
-func (m *Message) Sort(key string, arg ...string) *Message {
+func (m *Message) Sort(key string, arg ...Any) *Message {
 	if m.FieldsIsDetail() {
 		return m
 	}
+	order := map[string]map[string]int{}
 	keys, cmps := kit.Split(kit.Select("type,name,text", key)), kit.Simple()
 	for i, k := range keys {
-		cmp := kit.Select("", arg, i)
+		cmp := ""
+		if i < len(arg) {
+			switch v := arg[i].(type) {
+			case string:
+				cmp = v
+			case map[string]int:
+				order[k] = v
+			case []string:
+				list := map[string]int{}
+				for i, v := range v {
+					list[v] = i + 1
+				}
+				order[k] = list
+			}
+		}
 		if cmp == "" {
 			cmp = INT
 			for _, v := range m.value(k) {
@@ -283,6 +298,15 @@ func (m *Message) Sort(key string, arg ...string) *Message {
 	gt := func(i, j int) bool {
 		for s, k := range keys {
 			if a, b := list[i][k], list[j][k]; a != b {
+				if v, ok := order[k]; ok {
+					if v[a] > v[b] {
+						return true
+					} else if v[a] < v[b] {
+						return false
+					} else {
+						continue
+					}
+				}
 				switch cmp := cmps[s]; cmp {
 				case STR, STR_R:
 					if a > b {

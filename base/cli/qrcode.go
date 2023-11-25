@@ -71,8 +71,8 @@ func init() {
 				_qrcode_cli(m, kit.Select(kit.Select(ice.Info.Make.Domain, ice.Info.Domain), arg, 0))
 			} else {
 				m.OptionDefault(SIZE, kit.Select("320", "368", m.IsWeixinUA()))
-				m.Option(FG, kit.Select(m.Option("--plugin-fg-color"), arg, 1))
-				m.Option(BG, kit.Select(m.Option("--plugin-bg-color"), arg, 2))
+				m.Option(FG, kit.Select(m.Option(ice.MSG_FG), arg, 1))
+				m.Option(BG, kit.Select(m.Option(ice.MSG_BG), arg, 2))
 				switch m.Option(ice.MSG_THEME) {
 				case LIGHT, WHITE:
 					m.OptionDefault(FG, BLACK, BG, WHITE)

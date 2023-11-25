@@ -11,6 +11,7 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
+	"shylinux.com/x/icebergs/base/web/html"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -53,16 +54,19 @@ func init() {
 				}
 				gdb.Event(m, "", arg)
 			}},
-			"getClipboardData": {Name: "favor create", Help: "粘贴"},
-			"getLocation":      {Name: "favor create", Help: "定位"},
-			"scanQRCode":       {Name: "favor create", Help: "扫码"},
-			"record1":          {Name: "favor upload", Help: "截图"},
-			"record2":          {Name: "favor upload", Help: "录屏"},
-			mdb.CREATE: {Name: "create type name text*", Hand: func(m *ice.Message, arg ...string) {
+			html.GetLocation:      {Name: "favor create", Help: "定位"},
+			html.GetClipboardData: {Name: "favor create", Help: "粘贴"},
+			html.ScanQRCode:       {Name: "favor create", Help: "扫码"},
+			html.Record1:          {Name: "favor upload", Help: "截图"},
+			html.Record2:          {Name: "favor upload", Help: "录屏"},
+			mdb.CREATE: {Hand: func(m *ice.Message, arg ...string) {
 				if strings.HasPrefix(m.Option(mdb.TEXT), ice.HTTP) {
 					m.OptionDefault(mdb.TYPE, mdb.LINK, mdb.NAME, kit.ParseURL(m.Option(mdb.TEXT)).Host)
 				}
 				mdb.HashCreate(m, m.OptionSimple())
+			}},
+			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) {
+				kit.If(!web.PodCmd(m, web.SPACE, kit.Simple(ctx.ACTION, m.ActionKey(), arg)...), func() { mdb.HashRemove(m, arg) })
 			}},
 			web.UPLOAD: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd("", mdb.CREATE, m.OptionSimple(mdb.TYPE, mdb.NAME, mdb.TEXT))
@@ -70,17 +74,8 @@ func init() {
 			web.DOWNLOAD: {Hand: func(m *ice.Message, arg ...string) {
 				m.ProcessOpen(web.MergeURL2(m, web.SHARE_LOCAL+m.Option(mdb.TEXT), nfs.FILENAME, m.Option(mdb.NAME)))
 			}},
-			ctx.INDEX: {Help: "命令", Hand: func(m *ice.Message, arg ...string) {
-				if kit.HasPrefixList(arg, ctx.RUN) {
-					msg := mdb.HashSelects(m.Spawn(), arg[1])
-					ctx.ProcessField(m, msg.Append(mdb.NAME), kit.Split(msg.Append(mdb.TEXT)), kit.Simple(ctx.RUN, arg[2:])...)
-				} else {
-					msg := mdb.HashSelects(m.Spawn(), m.Option(mdb.HASH))
-					ctx.ProcessField(m, msg.Append(mdb.NAME), kit.Split(msg.Append(mdb.TEXT)), arg...)
-					m.Option(ice.FIELD_PREFIX, ctx.ACTION, m.ActionKey(), ctx.RUN, m.Option(mdb.HASH))
-				}
-			}},
-			cli.OPENS: {Hand: func(m *ice.Message, arg ...string) { cli.Opens(m, m.Option(mdb.TEXT)) }},
+			web.PREVIEW: {Hand: FavorPreview},
+			cli.OPENS:   {Hand: func(m *ice.Message, arg ...string) { cli.Opens(m, m.Option(mdb.TEXT)) }},
 		}, FavorAction(), mdb.ExportHashAction(mdb.SHORT, mdb.TEXT, mdb.FIELD, "time,hash,type,name,text")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 && arg[0] == ctx.ACTION {
 				if m.Option(ice.MSG_INDEX) == m.PrefixKey() {
@@ -90,24 +85,16 @@ func init() {
 					m.Cmdy(m.Option(ice.MSG_INDEX), arg[3:])
 				}
 				return
-			}
-			if mdb.HashSelect(m, arg...); len(arg) == 0 {
+			} else if mdb.HashSelect(m, arg...); len(arg) == 0 {
 				defer web.PushPodCmd(m, "", arg...)
-				if m.IsMobileUA() {
-					m.Action(mdb.CREATE, web.UPLOAD, "getClipboardData", "getLocation", "scanQRCode")
+				if m.SortStrR(mdb.TIME); m.IsMobileUA() {
+					m.Action(mdb.CREATE, web.UPLOAD, html.GetClipboardData, html.GetLocation, html.ScanQRCode)
 				} else {
-					m.Action(mdb.CREATE, web.UPLOAD, "getClipboardData", "record1", "record2")
+					m.Action(mdb.CREATE, web.UPLOAD, html.GetClipboardData, html.Record1, html.Record2)
 				}
-				m.SortStrR(mdb.TIME)
 			} else {
-				if web.PodCmd(m, web.SPACE, arg...) {
-					return
-				} else if m.Length() == 0 {
-					return
-				}
-				text := m.Append(mdb.TEXT)
-				m.PushQRCode(cli.QRCODE, text)
-				m.PushScript(text)
+				m.PushQRCode(cli.QRCODE, m.Append(mdb.TEXT))
+				m.PushScript(m.Append(mdb.TEXT))
 			}
 			m.Table(func(value ice.Maps) {
 				delete(value, ctx.ACTION)
@@ -116,12 +103,10 @@ func init() {
 					return
 				}
 				switch value[mdb.TYPE] {
-				case ctx.INDEX:
-					m.PushButton(ctx.INDEX, mdb.REMOVE)
 				case cli.OPENS:
 					m.PushButton(cli.OPENS, mdb.REMOVE)
 				default:
-					m.PushButton(mdb.REMOVE)
+					m.PushButton(web.PREVIEW, mdb.REMOVE)
 				}
 			})
 		}},
@@ -129,3 +114,29 @@ func init() {
 }
 
 func FavorAction() ice.Actions { return gdb.EventsAction(FAVOR_INPUTS, FAVOR_TABLES, FAVOR_ACTION) }
+func FavorPreview(m *ice.Message, arg ...string) {
+	if kit.HasPrefixList(arg, ctx.RUN) {
+		if pod := arg[1]; pod != "" {
+			arg[1] = ""
+			m.Options(ice.MSG_USERPOD, pod).Cmdy(web.SPACE, pod, m.CommandKey(), ctx.ACTION, m.ActionKey(), arg)
+		} else {
+			index, args := favorPreview(m, arg[2], arg...)
+			ctx.ProcessField(m, index, args, kit.Simple(ctx.RUN, arg[3:])...)
+		}
+	} else if !web.PodCmd(m, web.SPACE, kit.Simple(ctx.ACTION, m.ActionKey(), arg)...) {
+		index, args := favorPreview(m, m.Option(mdb.HASH), arg...)
+		ctx.ProcessField(m, index, args, arg...).Push(ice.MSG_SPACE, m.Option(ice.MSG_USERPOD))
+		m.Option(ice.FIELD_PREFIX, ctx.ACTION, m.ActionKey(), ctx.RUN, m.Option(ice.MSG_USERPOD), m.Option(mdb.HASH))
+	}
+}
+func favorPreview(m *ice.Message, h string, arg ...string) (string, []string) {
+	msg := mdb.HashSelects(m.Spawn(), h)
+	index, args := msg.Append(mdb.TYPE), kit.Split(msg.Append(mdb.TEXT))
+	switch msg.Append(mdb.TYPE) {
+	case ctx.INDEX:
+		index = msg.Append(mdb.NAME)
+	case nfs.SHY:
+		index = web.WIKI_WORD
+	}
+	return index, args
+}

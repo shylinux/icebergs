@@ -51,3 +51,13 @@ func IsVideo(name, mime string) bool {
 func IsAudio(name, mime string) bool {
 	return strings.HasPrefix(mime, "audio/")
 }
+
+const (
+	GetLocation      = "getLocation"
+	ConnectWifi      = "ConnectWifi"
+	GetClipboardData = "getClipboardData"
+	ScanQRCode       = "scanQRCode"
+	ChooseImage      = "chooseImage"
+	Record1          = "record1"
+	Record2          = "record2"
+)

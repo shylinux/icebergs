@@ -29,7 +29,7 @@ Volcanos(chat.ONIMPORT, {
 		}))
 	},
 	_style: function(can, style) {
-		style = {"light": "normal", "dark": "grey"}[style]||style
+		style = {"light": "normal", "dark": "grey", "black": "blue", "white": "macaron", "silver": "grey", "blue": "graffiti", "red": "graffiti"}[style]||style
 		can.ui.map.setMapStyle("amap://styles/"+can.Action("style", style))
 		return style
 	},

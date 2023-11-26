@@ -74,12 +74,6 @@ fieldset.macos.finder>div.output div.content>div.item div.name { font-size:var(-
 body.dark fieldset.macos.desktop>div.output>fieldset.macos { background-color:#08234ad1; }
 body.dark fieldset.macos.desktop>div.output>div.desktop fieldset table.content tbody tr:nth-child(odd) { background-color:#282B2F; }
 body.dark fieldset.macos.desktop>div.output>div.desktop fieldset table.content tbody tr:nth-child(even) { background-color:#1a1d1e; }
-/* body.dark.macos.desktop { background-color:#08234ad1; } */
-/* body.light.cmd.macos.desktop { background-color:#daefff99; } */
-body.cmd.dark.web.chat.macos.desktop { background-color:#0c3267; }
-body.cmd.light.web.chat.macos.desktop { background-color:#8ebff2; }
-body.cmd.white.web.chat.macos.desktop { background-color:#cadef7; }
-body.cmd.black.web.chat.macos.desktop { background-color:#0d3e7d; }
 body.light fieldset.macos.desktop>div.output>fieldset.macos { background-color:#daefff99; }
 body.light fieldset.macos.desktop>div.output>div.desktop fieldset table.content tbody tr:nth-child(odd) { background-color:white; }
 body.light fieldset.macos.desktop>div.output>div.desktop fieldset table.content tbody tr:nth-child(even) { background-color:#f4f5f5; }

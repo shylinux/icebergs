@@ -28,11 +28,18 @@ var _color_map = map[string]color.Color{
 	SILVER: color.RGBA{0xC0, 0xC0, 0xC0, _DARK},
 }
 
+var _color_list = map[string]string{
+	"aliceblue": "#f0f8ff",
+	"navy":      "#000080",
+	"firebrick": "#b22222",
+}
+
 func _parse_color(str string) color.Color {
 	if str == RANDOM {
 		list := kit.SortedKey(_color_map)
 		str = list[rand.Intn(len(list))]
 	}
+	str = kit.Select(str, _color_list[str])
 	if strings.HasPrefix(str, "#") {
 		kit.If(len(str) == 7, func() { str += "ff" })
 		if u, e := strconv.ParseUint(str[1:], 16, 64); e == nil {

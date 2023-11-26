@@ -9,7 +9,7 @@ Volcanos(chat.ONIMPORT, {_init: function(can, msg) {
 	}} })), can.onmotion.hidden(can, can._fields), can.onappend._action(can), can.page.style(can, can._action, html.DISPLAY, html.BLOCK)
 }})
 Volcanos(chat.ONACTION, {
-	list: [web.REFRESH, mdb.PRUNES, html.TOGGLE], _trans: {refresh: "刷新", toggle: "隐藏"},
-	toggle: function(event, can, button) { can.onmotion.hidden(can, can._fields) },
+	list: [cli.CLOSE, web.REFRESH, mdb.PRUNES], _trans: {refresh: "刷新", toggle: "隐藏"},
+	close: function(event, can, button) { can.onmotion.hidden(can, can._fields) },
 	refresh: function(event, can, button) { can.Update(event) },
 })

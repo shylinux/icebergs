@@ -108,6 +108,9 @@ func init() {
 					case "md5":
 						m.Push(key, ice.Info.Hash)
 					case nfs.SIZE:
+						if m.Option(ice.MSG_USERPOD) == "" {
+							defer ToastProcess(m)()
+						}
 						var stats runtime.MemStats
 						runtime.ReadMemStats(&stats)
 						m.Push(key, kit.Format("%s/%s/%s", kit.FmtSize(int64(stats.Sys)), ice.Info.Size, m.Cmdx(nfs.DIR, nfs.SIZE)))

@@ -1,6 +1,9 @@
 Volcanos(chat.ONIMPORT, {
 	_init: function(can, msg, cb) { window._AMapSecurityConfig = {serviceHost: location.origin+"/_AMapService"}, can.require([can.Conf(nfs.SCRIPT)], function() {
-		can.require(["location.js"], function() { can.onimport._layout_init(can, msg, function() { cb && cb(msg), can.onimport._content(can) }) })
+		can.require(["location.js"], function() { can.onimport._layout_init(can, msg, function() { cb && cb(msg)
+			can.page.style(can, can.ui.content, html.WIDTH, can.ConfWidth(can._fields.offsetWidth)-can.ui.project.offsetWidth)
+			can.onimport._content(can) })
+		})
 	}) },
 	_content: function(can, item) {
 		var map = new AMap.Map(can.ui.content, {viewMode: '3D', lang: can.getHeaderLanguage().split("-")[0], zoom: can.Action("zoom"), pitch: can.Action("pitch"), rotation: can.Action("rotation")}); can.ui.map = map

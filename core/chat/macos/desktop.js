@@ -71,12 +71,14 @@ Volcanos(chat.ONIMPORT, {
 		if (can.user.isMobile) { item.left = 0, item.top = 25, item.height = can.ConfHeight()-125, item.width = can.ConfWidth() }
 		can.onappend.plugin(can, item, function(sub) { can.ondetail.select(can, sub._target)
 			var index = 0; can.core.Item({
-				"#f95f57": function(event) { sub.onaction._close(event, sub) },
-				"#fcbc2f": function(event) { var dock = can.page.Append(can, can.ui.dock._output, [{view: html.ITEM, list: [{view: html.ICON, list: [{img: can.misc.PathJoin(item.icon)}]}], onclick: function() {
+				close: {color: "#f95f57", inner: "x", onclick: function(event) { sub.onaction._close(event, sub) }},
+				small: {color: "#fcbc2f", inner: "-", onclick: function(event) { var dock = can.page.Append(can, can.ui.dock._output, [{view: html.ITEM, list: [{view: html.ICON, list: [{img: can.misc.PathJoin(item.icon)}]}], onclick: function() {
 					can.onmotion.toggle(can, sub._target, true), can.page.Remove(can, dock)
-				}}])._target; sub.onmotion.hidden(sub, sub._target) },
-				"#32c840": function(event) { sub.onaction.full(event, sub) },
-			}, function(color, cb) { can.page.insertBefore(can, [{view: [[html.ITEM, html.BUTTON]], style: {"background-color": color, right: 10+20*index++}, onclick: cb}], sub._output) })
+				}}])._target; sub.onmotion.hidden(sub, sub._target) }},
+				full: {color: "#32c840", inner: "+", onclick: function(event) { sub.onaction.full(event, sub) }},
+			}, function(name, item) {
+				can.page.insertBefore(can, [{view: [[html.ITEM, html.BUTTON, name], ""], title: name, list: [{text: item.inner}], style: {"background-color": item.color, right: 10+25*index++}, onclick: item.onclick}], sub._output)
+			})
 			sub.onexport.marginTop = function() { return 25 }, sub.onexport.marginBottom = function() { return 100 }
 			sub.onexport.actionHeight = function(sub) { return can.page.ClassList.has(can, sub._target, html.OUTPUT)? 0: html.ACTION_HEIGHT+20 }
 			sub.onexport.output = function() { sub.onimport.size(sub, item.height, can.base.Min(sub._target.offsetWidth, item.width), true)
@@ -109,13 +111,16 @@ Volcanos(chat.ONIMPORT, {
 		}, function() { _select && _select.click() })
 	},
 	layout: function(can) { can.page.style(can, can._output, html.HEIGHT, can.ConfHeight(), html.WIDTH, can.ConfWidth())
-		can.ui.notifications && can.page.style(can, can.ui.notifications._target, html.LEFT, can.ConfWidth()-250)
+		// can.ui.notifications && can.page.style(can, can.ui.notifications._target, html.LEFT, can.ConfWidth()-250)
 		can.ui.dock && can.page.style(can, can.ui.dock._target, html.LEFT, can.base.Min((can.ConfWidth()-(can.ui.dock._target.offsetWidth||502))/2, 0))
 	},
 }, [""])
 Volcanos(chat.ONACTION, {list: ["full"],
-	_search: function(can) { if (can.onmotion.toggle(can, can.ui.searchs._target)) {
-		can.page.Select(can, can.ui.searchs._option, "input[name=keyword]", function(target) { can.onmotion.focus(can, target) })
+	_search: function(can) { var sub = can.ui.searchs; if (can.onmotion.toggle(can, sub._target)) {
+		sub.onimport.size(sub, can.ConfHeight()/2, can.ConfWidth()/2, true)
+		sub.onimport.size(sub, can.ConfHeight()/2, can.base.Min(sub._target.offsetWidth, can.ConfWidth()/2, can.ConfWidth()), true)
+		can.page.style(can, sub._target, html.LEFT, (can.ConfWidth()-sub._target.offsetWidth)/2, html.TOP, can.ConfHeight()/4)
+		can.page.Select(can, sub._option, "input[name=keyword]", function(target) { can.onmotion.focus(can, target) })
 	} },
 	full: function(event, can) { document.body.requestFullscreen() },
 	create: function(event, can) { can.onimport._desktop(can) },

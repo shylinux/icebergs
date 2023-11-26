@@ -125,7 +125,7 @@ func init() {
 				_xterm_get(m, kit.Select("", arg, 0)).Write([]byte(m.Cmdx(PUBLISH, ice.CONTEXTS, ice.APP, kit.Dict("format", "raw")) + ice.NL))
 				m.ProcessHold()
 			}},
-			ice.APP: {Help: "本机", Hand: func(m *ice.Message, arg ...string) {
+			ice.APP: {Help: "本机", Icon: "bi bi-terminal", Hand: func(m *ice.Message, arg ...string) {
 				if h := kit.Select(m.Option(mdb.HASH), arg, 0); h == "" {
 					cli.OpenCmds(m, "cd "+kit.Path(""))
 				} else {

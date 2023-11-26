@@ -52,7 +52,10 @@ fieldset.macos.desktop>div.output>div.desktop>fieldset>div.output>table.content 
 fieldset.macos.desktop>div.output>div.desktop>fieldset.web.wiki.feel>div.status { display:none; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset.web.code.xterm>div.status { display:none; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset.web.chat.iframe>div.status { display:none; }
-fieldset.macos.desktop>div.output>div.desktop>fieldset.web.chat.location>div.action>div.item.text input { width:48px; }
+fieldset.macos.desktop>div.output>div.desktop>fieldset.web.chat.location>form.option>div.item:last-child { margin-right:unset; }
+fieldset.macos.desktop>div.output>div.desktop>fieldset.web.chat.location>div.action>div.item.text { display:none; }
+fieldset.macos.desktop>div.output>div.desktop>fieldset.web.chat.location>div.action>div.item.style select { width:80px; }
+fieldset.macos.desktop>div.output>div.desktop>fieldset.web.chat.location>div.action>div.item.feature select { width:60px; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset.web.chat.iframe>form.option>div.item.hash>input { width:var(--river-width); }
 fieldset.macos.desktop>div.output>div.desktop>fieldset.web.chat.macos.finder>div.status { display:none; }
 fieldset.macos.menu>div.output>div.item { padding:0 var(--input-padding); height:var(--desktop-menu-height); float:right; }
@@ -71,6 +74,12 @@ fieldset.macos.finder>div.output div.content>div.item div.name { font-size:var(-
 body.dark fieldset.macos.desktop>div.output>fieldset.macos { background-color:#08234ad1; }
 body.dark fieldset.macos.desktop>div.output>div.desktop fieldset table.content tbody tr:nth-child(odd) { background-color:#282B2F; }
 body.dark fieldset.macos.desktop>div.output>div.desktop fieldset table.content tbody tr:nth-child(even) { background-color:#1a1d1e; }
+/* body.dark.macos.desktop { background-color:#08234ad1; } */
+/* body.light.cmd.macos.desktop { background-color:#daefff99; } */
+body.cmd.dark.web.chat.macos.desktop { background-color:#0c3267; }
+body.cmd.light.web.chat.macos.desktop { background-color:#8ebff2; }
+body.cmd.white.web.chat.macos.desktop { background-color:#cadef7; }
+body.cmd.black.web.chat.macos.desktop { background-color:#0d3e7d; }
 body.light fieldset.macos.desktop>div.output>fieldset.macos { background-color:#daefff99; }
 body.light fieldset.macos.desktop>div.output>div.desktop fieldset table.content tbody tr:nth-child(odd) { background-color:white; }
 body.light fieldset.macos.desktop>div.output>div.desktop fieldset table.content tbody tr:nth-child(even) { background-color:#f4f5f5; }

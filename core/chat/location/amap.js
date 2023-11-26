@@ -70,6 +70,10 @@ Volcanos(chat.ONACTION, {
 Volcanos(chat.ONEXPORT, {
 	status: function(can, p) { p = p||can.ui.map.getCenter(), can.ui.marker.setPosition(p), can.ui.circle.setCenter(p)
 		can.Status({longitude: p.getLng().toFixed(6), latitude: p.getLat().toFixed(6)}), can.ui.map.getCity(function(result) { can.Status(result) })
-		can.ui.geocoder.getAddress(p, function(status, result) { can.Status(result.regeocode.addressComponent), can.Status({text: result.regeocode.formattedAddress}) })
+		can.ui.geocoder.getAddress(p, function(status, result) {
+			var info = result.regeocode.addressComponent, text = result.regeocode.formattedAddress
+			text = can.base.trimPrefix(text, info.province, info.city, info.district, info.township)
+			can.Status(info), can.Status({text: text})
+		})
 	},
 })

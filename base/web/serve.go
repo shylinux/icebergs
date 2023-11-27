@@ -227,6 +227,10 @@ func init() {
 			cli.START:  {Name: "start dev proto host port=9020 nodename username usernick", Hand: func(m *ice.Message, arg ...string) { _serve_start(m) }},
 			SERVE_START: {Hand: func(m *ice.Message, arg ...string) {
 				kit.If(m.Option(ice.DEMO) == ice.TRUE, func() { m.Cmd(CHAT_HEADER, ice.DEMO) })
+				switch cb := m.Optionv(SERVE_START).(type) {
+				case func():
+					cb()
+				}
 				m.Go(func() {
 					ssh.PrintQRCode(m, tcp.PublishLocalhost(m, _serve_address(m)))
 					cli.Opens(m, mdb.Config(m, cli.OPEN))

@@ -401,3 +401,6 @@ func SpideSave(m *ice.Message, file, link string, cb func(count int, total int, 
 func SpideOrigin(m *ice.Message, name string) string {
 	return m.Cmdv("web.spide", name, CLIENT_ORIGIN)
 }
+func SpideURL(m *ice.Message, name string) string {
+	return m.Cmdv("web.spide", name, CLIENT_URL)
+}

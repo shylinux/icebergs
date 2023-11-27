@@ -163,7 +163,6 @@ func init() {
 					m.Push(nfs.SIZE, kit.Split(m.Cmdx(cli.SYSTEM, "du", "-sh", path.Join(ice.USR_LOCAL_REPOS, value[REPOS])))[0])
 					m.PushScript(kit.Format("git clone %s", _service_link(m, value[REPOS])))
 				}).Sort(REPOS).Cmdy(web.CODE_PUBLISH, ice.CONTEXTS, ice.DEV)
-				m.EchoScript(web.SpideURL(m, ice.DEMO))
 				kit.If(mdb.Config(m, aaa.AUTH) == aaa.PRIVATE, func() { m.StatusTimeCount(aaa.AUTH, aaa.PRIVATE) })
 			} else if repos := _repos_open(m, arg[0]); len(arg) == 1 {
 				defer m.PushScript(kit.Format("git clone %s", _service_link(m, arg[0])))

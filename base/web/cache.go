@@ -33,7 +33,7 @@ func _cache_save(m *ice.Message, mime, name, text string, arg ...string) {
 	if m.Warn(name == "", ice.ErrNotValid, mdb.NAME) {
 		return
 	} else if len(text) > 512 {
-		p := m.Cmdx(nfs.SAVE, _cache_name(m, kit.Hashs(text)), text)
+		p := m.Cmdx(nfs.SAVE, _cache_name(m, kit.Hashs(text)), kit.Dict(nfs.CONTENT, text))
 		text, arg = p, kit.Simple(p, len(text))
 	}
 	file, size := kit.Select("", arg, 0), kit.Int(kit.Select(kit.Format(len(text)), arg, 1))

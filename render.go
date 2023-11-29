@@ -170,8 +170,9 @@ func (m *Message) PushButton(arg ...Any) *Message {
 func (m *Message) PushAnchor(arg ...string) {
 	kit.If(!m.IsCliUA(), func() { m.Push(LINK, Render(m, RENDER_ANCHOR, arg)) })
 }
-func (m *Message) PushQRCode(key, src string) {
+func (m *Message) PushQRCode(key, src string) *Message {
 	kit.If(!m.IsCliUA(), func() { m.Push(key, Render(m, RENDER_QRCODE, src)) })
+	return m
 }
 func (m *Message) PushImages(key, src string, arg ...string) {
 	kit.If(!m.IsCliUA(), func() { m.Push(key, Render(m, RENDER_IMAGES, src, arg)) })

@@ -22,6 +22,7 @@ const (
 	TOKEN_CREDENTIAL            = "token?grant_type=client_credential"
 	TICKET_GETTICKET            = "ticket/getticket?type=jsapi"
 	QRCODE_CREATE               = "qrcode/create"
+	WXACODE_UNLIMIT             = "/wxa/getwxacodeunlimit"
 	MENU_CREATE                 = "menu/create"
 	USER_REMARK                 = "user/info/updateremark"
 	USER_INFO                   = "user/info"
@@ -99,6 +100,9 @@ func init() {
 		}},
 	})
 }
+func spidePost(m *ice.Message, api string, arg ...ice.Any) *ice.Message {
+	return m.Cmd(web.SPIDE, WX, web.SPIDE_RAW, http.MethodPost, kit.MergeURL(api, oauth.ACCESS_TOKEN, m.Cmdx(ACCESS, TOKENS)), arg)
+}
 func SpidePost(m *ice.Message, api string, arg ...ice.Any) ice.Any {
 	return kit.UnMarshal(m.Cmdx(web.SPIDE, WX, web.SPIDE_RAW, http.MethodPost, kit.MergeURL(api, oauth.ACCESS_TOKEN, m.Cmdx(ACCESS, TOKENS)), arg))
 }
@@ -114,5 +118,6 @@ func Meta() ice.Map {
 		SEX, "性别", TAGS, "标签", REMARK, "备注",
 		"subscribe", "订阅", "subscribe_time", "时间",
 		"nickname", "昵称", "headimgurl", "头像",
+		ENV, "环境", PAGES, "页面",
 	)))
 }

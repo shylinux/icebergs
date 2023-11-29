@@ -63,10 +63,12 @@ func _spide_show(m *ice.Message, name string, arg ...string) {
 	defer res.Body.Close()
 	m.Cost(cli.STATUS, res.Status, nfs.SIZE, kit.FmtSize(kit.Int64(res.Header.Get(ContentLength))), mdb.TYPE, res.Header.Get(ContentType))
 	m.Push(mdb.TYPE, STATUS).Push(mdb.NAME, res.StatusCode).Push(mdb.VALUE, res.Status)
+	m.Options(STATUS, res.Status)
 	kit.For(res.Header, func(k string, v []string) {
 		if m.Option(log.DEBUG) == ice.TRUE {
 			m.Logs(RESPONSE, k, v)
 		}
+		m.Options(k, v)
 		m.Push(mdb.TYPE, SPIDE_HEADER).Push(mdb.NAME, k).Push(mdb.VALUE, v[0])
 	})
 	mdb.HashSelectUpdate(m, name, func(value ice.Map) {
@@ -239,9 +241,10 @@ const (
 	ApplicationOctet = "application/octet-stream"
 	ApplicationJSON  = "application/json"
 
-	IMAGE_PNG = "image/png"
-	TEXT_HTML = "text/html"
-	TEXT_CSS  = "text/css"
+	IMAGE_JPEG = "image/jpeg"
+	IMAGE_PNG  = "image/png"
+	TEXT_HTML  = "text/html"
+	TEXT_CSS   = "text/css"
 )
 const (
 	SPIDE_CLIENT = "client"

@@ -30,6 +30,8 @@ const (
 	LAYOUT = "layout"
 	RESIZE = "resize"
 	FILTER = "filter"
+	HEIGHT = "height"
+	WIDTH  = "width"
 
 	COLOR            = "color"
 	BACKGROUND_COLOR = "background-color"

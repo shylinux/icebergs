@@ -178,6 +178,7 @@ const (
 	CHAT_HEADER      = "web.chat.header"
 	CHAT_IFRAME      = "web.chat.iframe"
 	CHAT_FAVOR       = "web.chat.favor"
+	CHAT_GRANT       = "web.chat.grant"
 	CHAT_FLOWS       = "web.chat.flows"
 	TEAM_PLAN        = "web.team.plan"
 )

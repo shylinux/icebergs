@@ -16,16 +16,16 @@ import (
 )
 
 const (
-	EXPIRE_SECONDS = "expire_seconds"
+	UNLIMIT            = "unlimit"
+	EXPIRE_SECONDS     = "expire_seconds"
+	QR_STR_SCENE       = "QR_STR_SCENE"
+	QR_LIMIT_STR_SCENE = "QR_LIMIT_STR_SCENE"
 )
 const SCAN = "scan"
 
 func init() {
 	const (
-		UNLIMIT            = "unlimit"
-		IS_HYALINE         = "is_hyaline"
-		QR_STR_SCENE       = "QR_STR_SCENE"
-		QR_LIMIT_STR_SCENE = "QR_LIMIT_STR_SCENE"
+		IS_HYALINE = "is_hyaline"
 	)
 	Index.MergeCommands(ice.Commands{
 		SCAN: {Name: "scan access hash auto", Help: "桌牌", Meta: kit.Merge(Meta(), kit.Dict(ice.CTX_TRANS, kit.Dict(html.VALUE, kit.Dict(
@@ -44,7 +44,7 @@ func init() {
 				mdb.HashModify(m, mdb.HASH, h, mdb.LINK, kit.Value(res, web.URL), mdb.TIME, m.Time(kit.Format("%ss", kit.Select("60", m.Option(EXPIRE_SECONDS)))))
 				m.EchoQRCode(kit.Format(kit.Value(res, web.URL)))
 			}},
-			UNLIMIT: {Name: "unlimit scene* env*=develop,release,trial,develop is_hyaline=true,false", Help: "小程序码", Hand: func(m *ice.Message, arg ...string) {
+			UNLIMIT: {Name: "unlimit scene* env*=develop,release,trial,develop is_hyaline=true,false name", Help: "小程序码", Hand: func(m *ice.Message, arg ...string) {
 				defer m.ProcessInner()
 				scene := m.Option(SCENE)
 				meta, info := "", m.Cmd(IDE, scene)
@@ -60,12 +60,13 @@ func init() {
 					meta = path.Join("s", u.Host, scene)
 				}
 				msg := spidePost(m, WXACODE_UNLIMIT, web.SPIDE_DATA, kit.Format(kit.Dict(
-					"env_version", m.Option(ENV), "page", info.Append(PAGES), SCENE, meta, IS_HYALINE, m.Option(IS_HYALINE) == ice.TRUE, html.WIDTH, 370,
+					"env_version", m.Option(ENV), "page", info.Append(PAGES), SCENE, meta, IS_HYALINE, m.Option(IS_HYALINE) == ice.TRUE, html.WIDTH, 360,
 				)))
 				switch kit.Select("", kit.Split(msg.Option(web.ContentType), "; "), 0) {
 				case web.IMAGE_JPEG:
 					image := m.Cmd(web.CACHE, web.WRITE, mdb.TYPE, web.IMAGE_JPEG, mdb.NAME, scene, kit.Dict(mdb.TEXT, msg.Result())).Append(mdb.HASH)
-					mdb.HashSelects(m, mdb.HashCreate(m.Spawn(), mdb.TEXT, meta, nfs.IMAGE, image, ctx.INDEX, m.Prefix(IDE), ctx.ARGS, scene, mdb.TYPE, m.Option(ENV)))
+					mdb.HashSelects(m, mdb.HashCreate(m.Spawn(), m.OptionSimple(mdb.NAME), mdb.TEXT, meta, nfs.IMAGE, image, ctx.INDEX, m.Prefix(IDE), ctx.ARGS, scene, mdb.TYPE, m.Option(ENV)))
+					m.EchoImages(web.SHARE_CACHE + m.Append(nfs.IMAGE))
 				default:
 					m.Echo(msg.Result())
 				}

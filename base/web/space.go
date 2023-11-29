@@ -173,6 +173,7 @@ const (
 )
 const (
 	SPACE_LOGIN = "space.login"
+	SPACE_GRANT = "space.grant"
 )
 const SPACE = "space"
 
@@ -255,7 +256,8 @@ func init() {
 			}},
 			DOMAIN: {Hand: func(m *ice.Message, arg ...string) { m.Echo(_space_domain(m)) }},
 			LOGIN: {Help: "授权", Hand: func(m *ice.Message, arg ...string) {
-				m.Option(ice.MSG_USERUA, m.Cmdv("", kit.Select(m.Option(mdb.NAME), arg, 0), ice.MSG_USERUA))
+				msg := m.Cmd("", kit.Select(m.Option(mdb.NAME), arg, 0))
+				m.Options(ice.MSG_USERIP, msg.Append(aaa.IP), ice.MSG_USERUA, msg.Append(aaa.UA))
 				m.Cmd("", kit.Select(m.Option(mdb.NAME), arg, 0), ice.MSG_SESSID, aaa.SessCreate(m, m.Option(ice.MSG_USERNAME)))
 			}},
 			OPEN: {Hand: func(m *ice.Message, arg ...string) {

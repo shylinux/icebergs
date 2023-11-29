@@ -9,6 +9,8 @@ import (
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/gdb"
+	"shylinux.com/x/icebergs/base/log"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/base/web"
@@ -52,8 +54,8 @@ func init() {
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(web.SPIDE, mdb.CREATE, WX, mdb.Config(m, tcp.SERVER))
 			}},
-			mdb.CREATE: {Name: "create usernick access* appid* secret* token* icons qrcode", Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashCreate(m, m.OptionSimple(aaa.USERNICK, ACCESS, APPID, SECRET, TOKEN, mdb.ICONS, cli.QRCODE))
+			mdb.CREATE: {Name: "create type=web,app usernick access* appid* secret* token* icons qrcode", Hand: func(m *ice.Message, arg ...string) {
+				mdb.HashCreate(m, m.OptionSimple(mdb.TYPE, aaa.USERNICK, ACCESS, APPID, SECRET, TOKEN, mdb.ICONS, cli.QRCODE))
 				ctx.ConfigFromOption(m, ACCESS, APPID, TOKEN)
 			}},
 			aaa.CHECK: {Hand: func(m *ice.Message, arg ...string) {
@@ -88,10 +90,22 @@ func init() {
 					ctx.INDEX, m.PrefixKey(), ctx.ARGS, kit.Join(kit.Simple(aaa.LOGIN, m.Option(ACCESS))))
 			}},
 			aaa.LOGIN: {Hand: func(m *ice.Message, arg ...string) {
-				m.Options(ACCESS, arg[0]).Cmdy(SCAN, mdb.CREATE, mdb.TYPE, "QR_STR_SCENE",
-					mdb.NAME, "授权登录", mdb.TEXT, m.Option(web.SPACE), ctx.INDEX, "web.chat.grant", ctx.ARGS, m.Option(web.SPACE))
+				if m.Cmd("", m.Option(ACCESS, arg[0])).Append(mdb.TYPE) == ice.WEB {
+					m.Cmdy(SCAN, mdb.CREATE, mdb.TYPE, QR_STR_SCENE, mdb.NAME, "授权登录", mdb.TEXT, m.Option(web.SPACE),
+						ctx.INDEX, web.CHAT_GRANT, ctx.ARGS, m.Option(web.SPACE))
+				} else {
+					h := m.Cmdx(IDE, mdb.CREATE, mdb.NAME, m.Option(web.SPACE), PAGES, "pages/action/action",
+						ctx.INDEX, web.CHAT_GRANT, ctx.ARGS, kit.JoinQuery(m.OptionSimple(web.SPACE, log.DEBUG)...))
+					m.Echo(m.Cmdx(SCAN, UNLIMIT, SCENE, h, ENV, "release", mdb.NAME, m.Option(web.SPACE)))
+				}
 			}},
-		}, aaa.RoleAction(aaa.LOGIN), mdb.ImportantHashAction(mdb.SHORT, ACCESS, mdb.FIELD, "time,access,icons,usernick,appid", tcp.SERVER, CGI_BIN)), Hand: func(m *ice.Message, arg ...string) {
+			web.SPACE_GRANT: {Hand: func(m *ice.Message, arg ...string) {
+				if strings.HasPrefix(m.Option(ice.MSG_REFERER), "https://servicewechat.com/") {
+					m.Cmd(mdb.PRUNES, m.Prefix(SCAN), "", mdb.HASH, mdb.NAME, m.Option(web.SPACE))
+					m.Cmd(mdb.PRUNES, m.Prefix(IDE), "", mdb.HASH, mdb.NAME, m.Option(web.SPACE))
+				}
+			}},
+		}, aaa.RoleAction(aaa.LOGIN), gdb.EventsAction(web.SPACE_GRANT), mdb.ImportantHashAction(mdb.SHORT, ACCESS, mdb.FIELD, "time,type,access,icons,usernick,appid", tcp.SERVER, CGI_BIN)), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, arg...).PushAction(web.SSO, mdb.REMOVE).StatusTimeCount(mdb.ConfigSimple(m, ACCESS, APPID), web.SERVE, web.MergeLink(m, "/chat/wx/login/"))
 			m.RewriteAppend(func(value, key string, index int) string {
 				kit.If(key == cli.QRCODE, func() { value = ice.Render(m, ice.RENDER_QRCODE, value) })

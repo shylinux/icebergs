@@ -38,7 +38,7 @@ func init() {
 				_sess_create(m, m.Option(USERNAME), UA, m.Option(ice.MSG_USERUA), IP, m.Option(ice.MSG_USERIP))
 			}},
 			CHECK: {Name: "check sessid*", Hand: func(m *ice.Message, arg ...string) { _sess_check(m, m.Option(ice.MSG_SESSID)) }},
-		}, mdb.ImportantHashAction(mdb.EXPIRE, mdb.MONTH, mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,usernick,username,userrole,ua,ip"))},
+		}, mdb.ImportantHashAction(mdb.EXPIRE, mdb.MONTH, mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,usernick,username,userrole,ip,ua"))},
 	})
 }
 

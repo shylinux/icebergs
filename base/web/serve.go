@@ -197,6 +197,7 @@ const (
 	ORIGIN = "origin"
 	FORM   = "form"
 	BODY   = "body"
+	HOME   = "home"
 
 	SERVE_START = "serve.start"
 )

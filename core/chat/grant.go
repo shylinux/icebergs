@@ -25,9 +25,7 @@ func init() {
 					m.Sleep30ms(web.SPACE, m.Option(mdb.NAME), cli.PWD, m.Option(mdb.NAME), link, m.Cmdx(cli.QRCODE, link))
 				})
 			}},
-			"home": {Help: "首页", Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessOpen(web.MergeLink(m, "/chat/portal/"))
-			}},
+			web.HOME: {Help: "首页", Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen(web.MergeLink(m, web.CHAT_PORTAL)) }},
 			aaa.CONFIRM: {Help: "授权", Hand: func(m *ice.Message, arg ...string) {
 				if m.Warn(m.R.Method == http.MethodGet, ice.ErrNotAllow) {
 					return
@@ -37,7 +35,7 @@ func init() {
 					return
 				} else {
 					if m.IsWeixinUA() {
-						m.Option(ice.MSG_USERUA, msg.Append(ice.MSG_USERUA))
+						m.Options(ice.MSG_USERIP, msg.Append(aaa.IP), ice.MSG_USERUA, msg.Append(aaa.UA))
 						m.Cmd(web.SPACE, m.Option(web.SPACE), ice.MSG_SESSID, aaa.SessCreate(m, m.Option(ice.MSG_USERNAME)))
 						m.Echo(ice.SUCCESS)
 					} else {
@@ -46,6 +44,7 @@ func init() {
 						m.Cmd(web.SPACE, m.Option(web.SPACE), ice.MSG_SESSID, aaa.SessCreate(m, m.Option(ice.MSG_USERNAME)))
 						m.ProcessLocation(web.MergeURL2(m, msg.Append(mdb.TEXT)))
 					}
+					gdb.Event(m, web.SPACE_GRANT, m.OptionSimple(web.SPACE))
 				}
 			}},
 		}, aaa.RoleAction(aaa.CONFIRM), gdb.EventsAction(web.SPACE_LOGIN)), Hand: func(m *ice.Message, arg ...string) {

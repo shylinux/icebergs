@@ -17,16 +17,15 @@ import (
 
 const (
 	UNLIMIT            = "unlimit"
-	EXPIRE_SECONDS     = "expire_seconds"
+	IS_HYALINE         = "is_hyaline"
 	QR_STR_SCENE       = "QR_STR_SCENE"
 	QR_LIMIT_STR_SCENE = "QR_LIMIT_STR_SCENE"
+	EXPIRE_SECONDS     = "expire_seconds"
 )
 const SCAN = "scan"
 
 func init() {
-	const (
-		IS_HYALINE = "is_hyaline"
-	)
+	const ()
 	Index.MergeCommands(ice.Commands{
 		SCAN: {Name: "scan access hash auto", Help: "桌牌", Meta: kit.Merge(Meta(), kit.Dict(ice.CTX_TRANS, kit.Dict(html.VALUE, kit.Dict(
 			QR_LIMIT_STR_SCENE, "永久码", QR_STR_SCENE, "临时码", mdb.VALID, "有效", mdb.EXPIRED, "失效",
@@ -60,7 +59,7 @@ func init() {
 					meta = path.Join("s", u.Host, scene)
 				}
 				msg := spidePost(m, WXACODE_UNLIMIT, web.SPIDE_DATA, kit.Format(kit.Dict(
-					"env_version", m.Option(ENV), "page", info.Append(PAGES), SCENE, meta, IS_HYALINE, m.Option(IS_HYALINE) == ice.TRUE, html.WIDTH, 360,
+					"env_version", m.Option(ENV), "page", info.Append(PAGES), SCENE, meta, IS_HYALINE, m.Option(IS_HYALINE) == ice.TRUE, html.WIDTH, 320,
 				)))
 				switch kit.Select("", kit.Split(msg.Option(web.ContentType), "; "), 0) {
 				case web.IMAGE_JPEG:

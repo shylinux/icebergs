@@ -77,6 +77,7 @@ func _space_fork(m *ice.Message) {
 					m.Cmd(SPACE, name, ice.MSG_SESSID, m.Option(ice.MSG_SESSID))
 				}
 				gdb.Event(m, SPACE_LOGIN, args)
+				defer gdb.Event(m, SPACE_LOGIN_CLOSE, args)
 			}
 			_space_handle(m, false, name, c)
 		}, kit.Join(kit.Simple(SPACE, name), lex.SP))
@@ -172,8 +173,9 @@ const (
 	REDIAL = "redial"
 )
 const (
-	SPACE_LOGIN = "space.login"
-	SPACE_GRANT = "space.grant"
+	SPACE_LOGIN       = "space.login"
+	SPACE_LOGIN_CLOSE = "space.login.close"
+	SPACE_GRANT       = "space.grant"
 )
 const SPACE = "space"
 
@@ -184,6 +186,8 @@ func init() {
 			m.Cmd(SPACE, func(value ice.Maps) {
 				kit.If(kit.IsIn(value[mdb.TYPE], WORKER, SERVER), func() { m.Push(arg[0], value[mdb.NAME]) })
 			})
+		case tcp.WIFI:
+			m.Cmdy(tcp.WIFI).CutTo(tcp.SSID, arg[0])
 		case mdb.ICON:
 			m.Cmdy(nfs.DIR, ice.USR_ICONS, nfs.PATH).CutTo(nfs.PATH, arg[0])
 		case ctx.INDEX:

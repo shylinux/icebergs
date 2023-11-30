@@ -33,6 +33,9 @@ func _ide_args_qrcode(m *ice.Message, p string) []string {
 }
 
 const (
+	PAGES_ACTION = "pages/action/action"
+)
+const (
 	PROJECT = "project"
 	PAGES   = "pages"
 	ENV     = "env"

@@ -85,18 +85,19 @@ func init() {
 				}
 				m.Echo(msg.Append(TICKET)).Status(msg.AppendSimple(EXPIRE))
 			}},
-			web.SSO: {Name: "sso name*=微信扫码", Help: "登录", Hand: func(m *ice.Message, arg ...string) {
+			web.SSO: {Name: "sso name*=微信扫码 wifi env=release,trial,develop", Help: "登录", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(web.CHAT_HEADER, mdb.CREATE, mdb.TYPE, mdb.PLUGIN, m.OptionSimple(mdb.NAME),
-					ctx.INDEX, m.PrefixKey(), ctx.ARGS, kit.Join(kit.Simple(aaa.LOGIN, m.Option(ACCESS))))
+					ctx.INDEX, m.PrefixKey(), ctx.ARGS, kit.Join(kit.Simple(aaa.LOGIN, m.Option(ACCESS), m.Option(tcp.WIFI), m.Option(ENV))))
 			}},
 			aaa.LOGIN: {Hand: func(m *ice.Message, arg ...string) {
 				if m.Cmd("", m.Option(ACCESS, arg[0])).Append(mdb.TYPE) == ice.WEB {
 					m.Cmdy(SCAN, mdb.CREATE, mdb.TYPE, QR_STR_SCENE, mdb.NAME, "授权登录", mdb.TEXT, m.Option(web.SPACE),
 						ctx.INDEX, web.CHAT_GRANT, ctx.ARGS, m.Option(web.SPACE))
 				} else {
-					h := m.Cmdx(IDE, mdb.CREATE, mdb.NAME, m.Option(web.SPACE), PAGES, "pages/action/action",
-						ctx.INDEX, web.CHAT_GRANT, ctx.ARGS, kit.JoinQuery(m.OptionSimple(web.SPACE, log.DEBUG)...))
-					m.Echo(m.Cmdx(SCAN, UNLIMIT, SCENE, h, ENV, "release", mdb.NAME, m.Option(web.SPACE)))
+					h := m.Cmdx(IDE, mdb.CREATE, mdb.NAME, m.Option(web.SPACE), PAGES, PAGES_ACTION, tcp.WIFI, kit.Select("", arg, 1),
+						ctx.INDEX, web.CHAT_GRANT, ctx.ARGS, kit.JoinQuery(m.OptionSimple(web.SPACE, log.DEBUG)...),
+					)
+					m.Echo(m.Cmdx(SCAN, UNLIMIT, SCENE, h, ENV, kit.Select("release", arg, 2), IS_HYALINE, ice.FALSE, mdb.NAME, m.Option(web.SPACE)))
 				}
 			}},
 			web.SPACE_GRANT: {Hand: func(m *ice.Message, arg ...string) {
@@ -105,7 +106,11 @@ func init() {
 					m.Cmd(mdb.PRUNES, m.Prefix(IDE), "", mdb.HASH, mdb.NAME, m.Option(web.SPACE))
 				}
 			}},
-		}, aaa.RoleAction(aaa.LOGIN), gdb.EventsAction(web.SPACE_GRANT), mdb.ImportantHashAction(mdb.SHORT, ACCESS, mdb.FIELD, "time,type,access,icons,usernick,appid", tcp.SERVER, CGI_BIN)), Hand: func(m *ice.Message, arg ...string) {
+			web.SPACE_LOGIN_CLOSE: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(mdb.PRUNES, m.Prefix(SCAN), "", mdb.HASH, m.OptionSimple(mdb.NAME))
+				m.Cmd(mdb.PRUNES, m.Prefix(IDE), "", mdb.HASH, m.OptionSimple(mdb.NAME))
+			}},
+		}, aaa.RoleAction(aaa.LOGIN), gdb.EventsAction(web.SPACE_GRANT, web.SPACE_LOGIN_CLOSE), mdb.ImportantHashAction(mdb.SHORT, ACCESS, mdb.FIELD, "time,type,access,icons,usernick,appid", tcp.SERVER, CGI_BIN)), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, arg...).PushAction(web.SSO, mdb.REMOVE).StatusTimeCount(mdb.ConfigSimple(m, ACCESS, APPID), web.SERVE, web.MergeLink(m, "/chat/wx/login/"))
 			m.RewriteAppend(func(value, key string, index int) string {
 				kit.If(key == cli.QRCODE, func() { value = ice.Render(m, ice.RENDER_QRCODE, value) })

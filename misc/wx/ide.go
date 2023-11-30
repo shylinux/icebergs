@@ -115,7 +115,12 @@ func init() {
 				m.EchoInfoButton("请登录: ", aaa.LOGIN)
 				return
 			}
-			if mdb.HashSelect(m, arg...).PushAction(AUTO_PREVIEW, PREVIEW, PUSH, mdb.REMOVE).Action(mdb.CREATE, ice.APP, aaa.LOGIN, web.ADMIN, DOC); len(arg) > 0 {
+			if mdb.HashSelect(m, arg...); tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) {
+				m.PushAction(AUTO_PREVIEW, PREVIEW, PUSH, mdb.REMOVE).Action(mdb.CREATE, ice.APP, aaa.LOGIN, web.ADMIN, DOC)
+			} else {
+				m.PushAction(PUSH, mdb.REMOVE).Action(mdb.CREATE, web.ADMIN, DOC)
+			}
+			if len(arg) > 0 {
 				m.Options(m.AppendSimple(web.SPACE, ctx.INDEX, ctx.ARGS, tcp.WIFI))
 				p := kit.MergeURL2(kit.Select(web.UserHost(m), m.Option(web.SERVE)), path.Join(nfs.PS+m.Append(PAGES)), _ide_args(m))
 				m.PushQRCode(cli.QRCODE, p).Push(web.LINK, p).Echo(p)

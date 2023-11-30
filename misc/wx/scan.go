@@ -30,6 +30,7 @@ func init() {
 		SCAN: {Name: "scan access hash auto", Help: "桌牌", Meta: kit.Merge(Meta(), kit.Dict(ice.CTX_TRANS, kit.Dict(html.VALUE, kit.Dict(
 			QR_LIMIT_STR_SCENE, "永久码", QR_STR_SCENE, "临时码", mdb.VALID, "有效", mdb.EXPIRED, "失效",
 			"develop", "开发版", "trial", "体验版", "release", "发布版",
+			IS_HYALINE, "透明",
 		)))), Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {

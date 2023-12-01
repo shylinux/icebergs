@@ -401,6 +401,9 @@ func SpideDelete(m *ice.Message, arg ...ice.Any) ice.Any {
 func SpideSave(m *ice.Message, file, link string, cb func(count, total, value int)) *ice.Message {
 	return m.Cmd(Prefix(SPIDE), ice.DEV, SPIDE_SAVE, file, http.MethodGet, link, cb)
 }
+func SpideCache(m *ice.Message, link string) *ice.Message {
+	return m.Cmd(Prefix(SPIDE), ice.DEV, SPIDE_CACHE, http.MethodGet, link)
+}
 func SpideOrigin(m *ice.Message, name string) string {
 	return m.Cmdv("web.spide", name, CLIENT_ORIGIN)
 }

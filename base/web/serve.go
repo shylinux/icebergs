@@ -169,6 +169,7 @@ func _serve_auth(m *ice.Message, key string, cmds []string, w http.ResponseWrite
 		cmds = append(kit.Split(cmds[0], ","), cmds[1:]...)
 	}
 	if r.URL.Path == PP(SPACE) {
+		aaa.SessCheck(m, m.Option(ice.MSG_SESSID))
 		return cmds, true
 	}
 	defer func() { m.Options(ice.MSG_CMDS, "", ice.MSG_SESSID, "") }()

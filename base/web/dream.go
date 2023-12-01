@@ -137,6 +137,16 @@ const DREAM = "dream"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		DREAM: {Name: "dream name@key auto create repos startall stopall publish cmd cat", Help: "梦想家", Icon: "Launchpad.png", Actions: ice.MergeActions(ice.Actions{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				m = m.Spawn()
+				m.GoSleep("10s", func() {
+					mdb.HashSelects(m).Table(func(value ice.Maps) {
+						if value[cli.RESTART] == "always" && nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK+value[mdb.NAME])) {
+							m.Cmd(DREAM, cli.START, kit.Dict(mdb.NAME, value[mdb.NAME]))
+						}
+					})
+				})
+			}},
 			ctx.CONFIG: {Hand: func(m *ice.Message, arg ...string) {
 				for _, cmd := range kit.Reverse(arg) {
 					m.Cmd(gdb.EVENT, gdb.LISTEN, gdb.EVENT, DREAM_TABLES, ice.CMD, cmd)
@@ -262,7 +272,8 @@ func init() {
 					PushStats(m, kit.Keys(m.CommandKey(), mdb.TOTAL), msg.Length(), "")
 				}
 			}},
-		}, aaa.RoleAction(), StatsAction(), DreamAction(), mdb.ImportantHashAction(ctx.TOOLS, "web.space,web.route,web.code.git.search", mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icon,repos,binary,template")), Hand: func(m *ice.Message, arg ...string) {
+		}, aaa.RoleAction(), StatsAction(), DreamAction(), mdb.ImportantHashAction(ctx.TOOLS, "web.space,web.route,web.code.git.search",
+			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icon,repos,binary,template,restart")), Hand: func(m *ice.Message, arg ...string) {
 			if ice.Info.NodeType == WORKER {
 				return
 			}

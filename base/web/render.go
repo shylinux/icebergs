@@ -132,12 +132,18 @@ func RenderCmds(m *ice.Message, cmds ...ice.Any) {
 }
 func RenderPodCmd(m *ice.Message, pod, cmd string, arg ...ice.Any) {
 	msg := m.Cmd(Space(m, pod), ctx.COMMAND, kit.Select(m.PrefixKey(), cmd))
+	if msg.Length() == 0 {
+		RenderResult(m, kit.Format("not found command %s", cmd))
+		return
+	}
 	RenderCmds(m, kit.Dict(msg.AppendSimple(mdb.NAME, mdb.HELP),
 		ctx.INDEX, msg.Append(ctx.INDEX), ctx.ARGS, kit.Simple(arg), ctx.DISPLAY, m.Option(ice.MSG_DISPLAY),
 		mdb.LIST, kit.UnMarshal(msg.Append(mdb.LIST)), mdb.META, kit.UnMarshal(msg.Append(mdb.META)),
 	))
 }
-func RenderCmd(m *ice.Message, cmd string, arg ...ice.Any) { RenderPodCmd(m, "", cmd, arg...) }
+func RenderCmd(m *ice.Message, cmd string, arg ...ice.Any) {
+	RenderPodCmd(m, "", cmd, arg...)
+}
 
 func RenderVersion(m *ice.Message) string {
 	if ice.Info.Make.Hash == "" {

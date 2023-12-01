@@ -154,6 +154,8 @@ func init() {
 		}, mdb.HashAction(mdb.SHORT, mdb.TEXT, mdb.FIELD, "time,hash,size,type,name,text,file", ctx.ACTION, WATCH), ice.RenderAction(ice.RENDER_DOWNLOAD)), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) == 0 || m.R != nil && m.R.Method == http.MethodGet {
 				m.Option(ice.MSG_ACTION, "")
+			} else if m.Length() == 0 {
+				return
 			} else if m.Append(nfs.FILE) == "" {
 				m.PushScript(mdb.TEXT, m.Append(mdb.TEXT))
 			} else {
@@ -171,7 +173,9 @@ func init() {
 			action.Hand = ice.MergeHand(func(m *ice.Message, arg ...string) {
 				up := Upload(m)
 				m.Assert(len(up) > 1)
-				m.Cmd(CACHE, m.Option(ice.MSG_UPLOAD)).Table(func(value ice.Maps) { m.Options(value) })
+				if m.Cmd(CACHE, m.Option(ice.MSG_UPLOAD)).Table(func(value ice.Maps) { m.Options(value) }).Length() == 0 {
+					SpideCache(m.Spawn(), kit.MergeURL2(m.Option(ice.MSG_USERWEB), SHARE_CACHE+up[0]))
+				}
 				if m.Options(mdb.HASH, up[0], mdb.NAME, up[1]); watch {
 					m.Cmdy(CACHE, WATCH, m.Option(mdb.HASH), path.Join(m.Option(nfs.PATH), up[1]))
 				}

@@ -58,6 +58,7 @@ var Info = struct {
 	PidPath  string
 	Traceid  string
 	Colors   bool
+	Pwd      string
 
 	Lang      string
 	System    string
@@ -103,6 +104,7 @@ var Info = struct {
 }
 
 func init() {
+	Info.Pwd = kit.Path("")
 	Info.Traceid = os.Getenv(LOG_TRACE)
 }
 func AddMergeAction(h ...Any) {

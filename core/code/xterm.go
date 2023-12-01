@@ -161,10 +161,14 @@ func init() {
 			}},
 		}, chat.FavorAction(), ctx.ProcessAction(), mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,path")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) == 0 {
-				m.Action(mdb.CREATE, mdb.PRUNES, ice.APP)
+				if web.IsLocalHost(m) {
+					m.Action(mdb.CREATE, mdb.PRUNES, ice.APP)
+				} else {
+					m.Action(mdb.CREATE, mdb.PRUNES)
+				}
 			} else {
 				kit.If(m.Length() == 0, func() { arg[0] = m.Cmdx("", mdb.CREATE, arg); mdb.HashSelect(m, arg[0]) })
-				m.Push(mdb.HASH, arg[0]).Action(html.OUTPUT, ice.APP)
+				m.Push(mdb.HASH, arg[0])
 				ctx.DisplayLocal(m, "")
 			}
 		}},

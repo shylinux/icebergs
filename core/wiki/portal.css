@@ -42,8 +42,8 @@ body.dark fieldset.web.wiki.portal>div.output>div.header div.story[data-name=nav
 body.white fieldset.web.wiki.portal>div.output>div.header { color:silver; }
 body.light fieldset.web.wiki.portal>div.output>div.header { color:white; }
 body.light fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] { --hover-fg-color:black; }
-body.light fieldset.web.wiki.portal>div.output>div.header div.list { display:flex; }
 fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] { --hover-fg-color:white; }
+fieldset.web.wiki.portal>div.output>div.header div.list { display:flex; }
 
 body.mobile fieldset.web.wiki.portal { --portal-main-padding:10px; --legend-padding:10px; }
 body.mobile fieldset.web.wiki.portal>div.output>div.layout { display:block; }

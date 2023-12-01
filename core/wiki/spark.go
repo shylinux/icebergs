@@ -97,7 +97,7 @@ func init() {
 		}), Hand: func(m *ice.Message, arg ...string) {
 			if kit.Ext(arg[0]) == "md" {
 				_spark_md(m, arg...)
-			} else if arg[0] == SHELL && kit.IsIn(kit.Select("", arg, 1), cli.ALPINE, cli.CENTOS, cli.LINUX, cli.DARWIN, cli.MACOS, cli.WINDOWS) {
+			} else if arg[0] == SHELL && kit.IsIn(kit.Select("", arg, 1), cli.ALPINE, "centos", cli.LINUX, cli.DARWIN, cli.MACOS, cli.WINDOWS) {
 				_spark_tabs(m, arg...)
 			} else {
 				if arg = _name(m, arg); arg[0] == SHELL && len(arg) > 3 && arg[2] == "with" && arg[3] == cli.ECHO {

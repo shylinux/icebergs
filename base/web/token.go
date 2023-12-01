@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -41,6 +42,7 @@ func init() {
 					line = strings.ReplaceAll(line, "%3a", ":")
 					kit.IfNoKey(host, kit.ParseURL(line).Host, func(p string) { list = append(list, line) })
 				}).Cmd(nfs.SAVE, kit.HomePath(FILE), strings.Join(list, lex.NL)+lex.NL)
+				m.Cmd(cli.SYSTEM, "git", "config", "--global", "credential.helper", "store")
 				m.ProcessClose()
 			}},
 		}, StatsAction(), mdb.HashAction(mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,type,name,text", mdb.EXPIRE, mdb.MONTH)), Hand: func(m *ice.Message, arg ...string) {

@@ -17,8 +17,6 @@ const (
 	ADD     = "add"
 	OSID    = "osid"
 	REPOS   = "repos"
-	UBUNTU  = "ubuntu"
-	CENTOS  = "centos"
 	ALPINE  = "alpine"
 	BUSYBOX = "busybox"
 	RELEASE = "release"
@@ -110,12 +108,9 @@ func insert(m *ice.Message, sys, cmd string, arg ...string) bool {
 func IsAlpine(m *ice.Message, arg ...string) bool {
 	return insert(m, ALPINE, "system apk add", arg...)
 }
-func IsCentos(m *ice.Message, arg ...string) bool {
-	return insert(m, CENTOS, "system yum install -y", arg...)
-}
-func IsUbuntu(m *ice.Message, arg ...string) bool {
-	return insert(m, UBUNTU, "system apt get -y", arg...)
+func IsRedhat(m *ice.Message, arg ...string) bool {
+	return insert(m, "rhel", "system yum install -y", arg...)
 }
 func IsSystem(m *ice.Message, arg ...string) bool {
-	return IsAlpine(m, arg...) || IsCentos(m, arg...) || IsUbuntu(m, arg...)
+	return IsAlpine(m, arg...) || IsRedhat(m, arg...)
 }

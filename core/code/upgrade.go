@@ -46,13 +46,18 @@ func init() {
 					uri = kit.MergeURL2(os.Getenv(cli.CTX_DEV), web.CHAT_POD+p, cli.GOOS, runtime.GOOS, cli.GOARCH, runtime.GOARCH)
 				})
 				dir := path.Join(kit.Format(value[nfs.PATH]), kit.Format(value[nfs.FILE]))
-				switch web.SpideSave(m, dir, uri, nil); value[mdb.TYPE] {
-				case nfs.TAR:
-					m.Cmd(cli.SYSTEM, nfs.TAR, "xf", dir, "-C", path.Dir(dir))
-					// m.Cmd(nfs.TAR, mdb.EXPORT, dir, "-C", path.Dir(dir))
-				case ice.BIN:
-					os.Chmod(dir, ice.MOD_DIR)
-				}
+				web.GoToast(m, m.PrefixKey(), func(toast func(name string, count, total int)) []string {
+					switch web.SpideSave(m, dir, uri, func(count, total, value int) {
+						toast(dir, count, total)
+					}); value[mdb.TYPE] {
+					case nfs.TAR:
+						m.Cmd(cli.SYSTEM, nfs.TAR, "xf", dir, "-C", path.Dir(dir))
+						// m.Cmd(nfs.TAR, mdb.EXPORT, dir, "-C", path.Dir(dir))
+					case ice.BIN:
+						os.Chmod(dir, ice.MOD_DIR)
+					}
+					return nil
+				})
 				m.Cmdy(nfs.DIR, dir, "time,size,path,hash")
 			})
 			if web.ToastSuccess(m); m.Option(ice.EXIT) == ice.TRUE {

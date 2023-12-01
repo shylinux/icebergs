@@ -15,7 +15,7 @@ type npm struct {
 
 func (s npm) Init(m *ice.Message) {
 	cli.IsAlpine(m.Message, NPM)
-	cli.IsCentos(m.Message, NPM, "nodejs")
+	cli.IsRedhat(m.Message, NPM, "nodejs")
 }
 func (s npm) List(m *ice.Message) {
 	m.Cmdy(nfs.DIR, ice.USR_MODULES)

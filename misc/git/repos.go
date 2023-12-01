@@ -471,6 +471,15 @@ func init() {
 				m.Echo(_repos_remote(m, _repos_origin(m, _repos_open(m, path.Base(kit.Path(""))))))
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
+				switch m.Option(ctx.ACTION) {
+				case CLONE:
+					switch arg[0] {
+					case ORIGIN:
+						m.Push(arg[0], "https://shylinux.com/x/icons")
+						m.Push(arg[0], "https://shylinux.com/x/volcanos")
+						m.Push(arg[0], "https://shylinux.com/x/icebergs")
+					}
+				}
 				switch arg[0] {
 				case MESSAGE:
 					ls := kit.Split(m.Option(nfs.FILE), " /")

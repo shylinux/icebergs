@@ -18,7 +18,7 @@ type node struct {
 
 func (s node) Init(m *ice.Message) {
 	cli.IsAlpine(m.Message, NODE, "nodejs")
-	cli.IsCentos(m.Message, NODE, "nodejs")
+	cli.IsRedhat(m.Message, NODE, "nodejs")
 }
 func (s node) List(m *ice.Message, arg ...string) {
 	s.Code.Source(m, "", arg...)

@@ -235,6 +235,8 @@ func _repos_status(m *ice.Message, p string, repos *git.Repository) error {
 			continue
 		} else if kit.IsIn(kit.Ext(k), "swp", "swo") || kit.HasPrefix(k, nfs.BIN, nfs.VAR, nfs.USR) && !strings.HasPrefix(k, ice.USR_LOCAL_EXPORT) {
 			continue
+		} else if kit.HasPrefix(k, "etc/conf/cert/") {
+			continue
 		}
 		switch m.Push(REPOS, p).Push(STATUS, string(v.Worktree)+string(v.Staging)).Push(nfs.FILE, k); v.Worktree {
 		case git.Untracked:

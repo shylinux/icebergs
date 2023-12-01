@@ -563,7 +563,7 @@ func init() {
 					nfs.Trash(m, _repos_path(m, m.Option(REPOS), m.Option(nfs.FILE)))
 				}
 			}},
-			COMMIT: {Name: "commit actions=add,fix,opt message*=some", Help: "提交", Hand: func(m *ice.Message, arg ...string) {
+			COMMIT: {Name: "commit actions=add,opt,fix message*=some", Help: "提交", Hand: func(m *ice.Message, arg ...string) {
 				if work, err := _repos_open(m, m.Option(REPOS)).Worktree(); !m.Warn(err) {
 					opt := &git.CommitOptions{All: true}
 					if cfg, err := config.LoadConfig(config.GlobalScope); err == nil {

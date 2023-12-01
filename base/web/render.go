@@ -124,7 +124,7 @@ func RenderMain(m *ice.Message) *ice.Message {
 	if m.IsCliUA() {
 		return m.RenderDownload(path.Join(ice.USR_INTSHELL, ice.INDEX_SH))
 	}
-	m.Options(nfs.SCRIPT, kit.MergeURL(ice.SRC_MAIN_JS, kit.Dict(nfs.VERSION, RenderVersion(m), ice.POD, m.Option(ice.MSG_USERPOD))))
+	m.Options(nfs.SCRIPT, ice.SRC_MAIN_JS, nfs.VERSION, RenderVersion(m))
 	return m.RenderResult(kit.Renders(m.Cmdx(nfs.CAT, ice.SRC_MAIN_HTML), m))
 }
 func RenderCmds(m *ice.Message, cmds ...ice.Any) {
@@ -147,7 +147,7 @@ func RenderVersion(m *ice.Message) string {
 	if m.Option(log.DEBUG) == ice.TRUE || m.R != nil && strings.Contains(m.R.URL.RawQuery, "debug=true") {
 		ls = append(ls, kit.Format("%d", time.Now().Unix()-kit.Time(ice.Info.Make.When)/int64(time.Second)))
 	}
-	return "?_v=" + strings.Join(ls, "-")
+	return "?" + kit.JoinQuery(kit.Simple(kit.Dict("_v", strings.Join(ls, "-"), ice.POD, m.Option(ice.MSG_USERPOD)))...)
 }
 
 const (

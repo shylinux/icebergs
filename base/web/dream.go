@@ -139,7 +139,8 @@ func init() {
 		DREAM: {Name: "dream name@key auto create repos startall stopall publish cmd cat", Help: "梦想家", Icon: "Launchpad.png", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m = m.Spawn()
-				m.GoSleep("10s", func() {
+				m.Go(func() {
+					m.Sleep("10s")
 					mdb.HashSelects(m).Table(func(value ice.Maps) {
 						if value[cli.RESTART] == "always" && nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK+value[mdb.NAME])) {
 							m.Cmd(DREAM, cli.START, kit.Dict(mdb.NAME, value[mdb.NAME]))

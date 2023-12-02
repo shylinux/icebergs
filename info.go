@@ -56,6 +56,7 @@ var Info = struct {
 	Hostname string
 	Pathname string
 	PidPath  string
+	CtxRoot  string
 	Traceid  string
 	Colors   bool
 	Pwd      string
@@ -105,6 +106,7 @@ var Info = struct {
 
 func init() {
 	Info.Pwd = kit.Path("")
+	Info.CtxRoot = kit.Env("ctx_root")
 	Info.Traceid = os.Getenv(LOG_TRACE)
 }
 func AddMergeAction(h ...Any) {

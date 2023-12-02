@@ -132,6 +132,7 @@ const (
 	CTX_COM  = "ctx_com"
 	CTX_OPS  = "ctx_ops"
 	CTX_DEMO = "ctx_demo"
+	CTX_ROOT = "ctx_root"
 	CTX_MAIL = "ctx_mail"
 
 	CTX_PID = "ctx_pid"
@@ -140,7 +141,7 @@ const (
 	CTX_ENV = "ctx_env"
 )
 
-var ENV_LIST = []string{TZ, LANG, TERM, SHELL, CTX_SHY, CTX_DEV, CTX_HUB, CTX_COM, CTX_OPS, CTX_DEMO, CTX_MAIL, CTX_PID}
+var ENV_LIST = []string{TZ, LANG, TERM, SHELL, CTX_SHY, CTX_DEV, CTX_HUB, CTX_COM, CTX_OPS, CTX_ROOT, CTX_DEMO, CTX_MAIL, CTX_PID}
 
 const (
 	HOSTNAME = "hostname"

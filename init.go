@@ -85,6 +85,7 @@ func init() {
 		time.Local = time.FixedZone(tz, 28800)
 	}
 	Index.root, Pulse.root, Pulse.time = Index, Pulse, time.Now()
+	logs.Disable(true)
 }
 
 func Run(arg ...string) string {
@@ -107,11 +108,11 @@ func Run(arg ...string) string {
 	kit.If(Pulse._cmd == nil, func() { Pulse._cmd = &Command{RawHand: logs.FileLines(3)} })
 	switch Index.Merge(Index).Begin(Pulse, arg...); kit.Select("", arg, 0) {
 	case SERVE, SPACE:
+		logs.Disable(false)
 		Pulse.Go(func() { Index.Start(Pulse, arg...) })
 		conf.Wait()
 		os.Exit(kit.Int(Pulse.Option(EXIT)))
 	default:
-		logs.Disable(true)
 		Pulse.Cmdy(INIT).Cmdy(arg)
 		kit.If(Pulse.IsErrNotFound(), func() { Pulse.SetAppend().SetResult().Cmdy(SYSTEM, arg) })
 		kit.If(strings.TrimSpace(Pulse.Result()) == "" && Pulse.Length() > 0, func() { Pulse.TableEcho() })

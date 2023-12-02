@@ -38,8 +38,6 @@ fieldset.macos.desktop>div.output>div.desktop>fieldset>legend { padding:0 var(--
 fieldset.macos.desktop>div.output>div.desktop>fieldset>legend:not(:hover) { background-color:transparent; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>*:not(.textarea) { margin:var(--button-margin); }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>div.icon { margin:var(--button-margin) 0; }
-fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>div.icon.refresh { margin:8px 0 12px; }
-fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>div.icon.goback { margin:8px 0 12px; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset:not(:hover)>form.option>div.icon { visibility:hidden; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>div.item:last-child { margin-right:100px; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>div.action>div.item:last-child { margin-right:100px; }

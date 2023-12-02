@@ -38,8 +38,10 @@ func _ssh_open(m *ice.Message, arg ...string) {
 			defer c.Write([]byte(cmd + lex.NL))
 			m.Sleep300ms()
 		})
-		m.Go(func() { io.Copy(os.Stdout, c) })
-		io.Copy(c, os.Stdin)
+		m.Go(func() {
+			io.Copy(c, os.Stdin)
+		})
+		io.Copy(os.Stdout, c)
 	}, arg...)
 }
 func _ssh_dial(m *ice.Message, cb func(net.Conn), arg ...string) {

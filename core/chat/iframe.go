@@ -66,18 +66,18 @@ func init() {
 			}},
 		}, FavorAction(), mdb.HashAction(mdb.SHORT, web.LINK, mdb.FIELD, "time,hash,type,name,link")), Hand: func(m *ice.Message, arg ...string) {
 			list := []string{m.MergePodCmd("", web.WIKI_PORTAL, log.DEBUG, m.Option(log.DEBUG))}
-			list = append(list, web.MergeLink(m, "/chat/portal/", ice.POD, m.Option(ice.MSG_USERPOD), log.DEBUG, m.Option(log.DEBUG)))
+			list = append(list, web.MergeLink(m, web.CHAT_PORTAL, ice.POD, m.Option(ice.MSG_USERPOD), log.DEBUG, m.Option(log.DEBUG)))
 			if mdb.HashSelect(m, arg...); len(arg) == 0 {
 				for _, link := range list {
 					if u := kit.ParseURL(link); u != nil {
 						m.Push("", kit.Dict(mdb.TIME, m.Time(), mdb.HASH, kit.Hashs(link), mdb.TYPE, web.LINK, mdb.NAME, u.Path, web.LINK, link))
 					}
 				}
-				if m.Length() == 0 {
-					m.Action(mdb.CREATE, ice.APP)
-				} else {
-					m.PushAction(web.OPEN, mdb.REMOVE).Action(mdb.CREATE, mdb.PRUNES, ice.APP)
-				}
+				m.PushAction(web.OPEN, mdb.REMOVE)
+				list := kit.List(mdb.CREATE)
+				kit.If(m.Length() > 0, func() { list = append(list, mdb.PRUNES) })
+				kit.If(web.IsLocalHost(m), func() { list = append(list, ice.APP) })
+				m.Action(list...)
 			} else {
 				kit.If(m.Length() == 0, func() {
 					for _, link := range list {

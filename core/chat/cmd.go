@@ -11,7 +11,12 @@ const CMD = "cmd"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		CMD: {Help: "命令", Actions: web.ApiWhiteAction(), Hand: func(m *ice.Message, arg ...string) {
-			web.RenderCmd(m, kit.Select(web.WIKI_WORD, arg, 0), kit.Slice(arg, 1))
+			switch cmd := kit.Select(web.WIKI_WORD, arg, 0); cmd {
+			case web.CHAT_PORTAL:
+				web.RenderMain(m)
+			default:
+				web.RenderCmd(m, cmd, kit.Slice(arg, 1))
+			}
 		}},
 	})
 }

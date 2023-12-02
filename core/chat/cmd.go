@@ -15,7 +15,11 @@ func init() {
 			case web.CHAT_PORTAL:
 				web.RenderMain(m)
 			default:
-				web.RenderCmd(m, cmd, kit.Slice(arg, 1))
+				if m.IsCliUA() {
+					m.Cmdy(arg, m.Optionv(ice.ARG)).RenderResult()
+				} else {
+					web.RenderCmd(m, cmd, kit.Slice(arg, 1))
+				}
 			}
 		}},
 	})

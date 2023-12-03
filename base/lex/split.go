@@ -34,6 +34,7 @@ func _split_list(m *ice.Message, file string, arg ...string) ice.Map {
 	const INDENT = "_indent"
 	stack, indent := []int{}, 0
 	list, line := kit.List(kit.Data(INDENT, -1)), ""
+	err := false
 	m.Cmd(nfs.CAT, file, func(text string) {
 		if strings.TrimSpace(text) == "" {
 			return
@@ -47,6 +48,9 @@ func _split_list(m *ice.Message, file string, arg ...string) ice.Map {
 		stack, indent = _split_deep(stack, text)
 		data := kit.Data(INDENT, indent)
 		ls := kit.Split(text, m.Option(SPLIT_SPACE), m.Option(SPLIT_BLOCK), m.Option(SPLIT_QUOTE), m.Option(SPLIT_TRANS))
+		if err {
+			return
+		}
 		switch cb := m.OptionCB(SPLIT).(type) {
 		case func(int, []string):
 			cb(indent, ls)
@@ -69,6 +73,7 @@ func _split_list(m *ice.Message, file string, arg ...string) ice.Map {
 			cb(indent, text, ls)
 		case nil:
 		default:
+			err = true
 			m.ErrorNotImplement(cb)
 		}
 		kit.For(arg, func(k string) {

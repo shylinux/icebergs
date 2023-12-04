@@ -98,8 +98,10 @@ const (
 	SOURCE    = "_source"
 	TARGET    = "_target"
 	IMPORTANT = "important"
-	EXPIRED   = "expired"
 	VALID     = "valid"
+	EXPIRED   = "expired"
+	DISABLE   = "disable"
+	ENABLE    = "enable"
 )
 const (
 	INPUTS = "inputs"

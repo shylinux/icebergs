@@ -28,6 +28,8 @@ func _header_users(m *ice.Message, arg ...string) {
 func _header_share(m *ice.Message, arg ...string) {
 	if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin, "没有登录") {
 		return
+	} else if m.Warn(m.Option(web.SHARE) != "", ice.ErrNotRight, "没有权限") {
+		return
 	} else if kit.For(arg, func(k, v string) { m.Option(k, v) }); m.Option(mdb.LINK) == "" {
 		m.Cmdy(web.SHARE, mdb.CREATE, mdb.TYPE, web.LOGIN, arg)
 	} else {
@@ -72,18 +74,12 @@ func init() {
 				aaa.Black(m, kit.Keys(HEADER, ctx.ACTION, mdb.CREATE))
 				aaa.Black(m, kit.Keys(HEADER, ctx.ACTION, mdb.REMOVE))
 				aaa.Black(m, kit.Keys(HEADER, ctx.ACTION, mdb.MODIFY))
-				kit.If(mdb.HashSelect(m.Spawn()).Length() == 0, func() {
-					m.Cmd("", mdb.CREATE, mdb.TYPE, cli.QRCODE, mdb.NAME, "扫码登录", mdb.ORDER, "1")
-				})
 			}},
 			web.SHARE:      {Hand: _header_share},
-			aaa.LOGIN:      {Hand: func(m *ice.Message, arg ...string) {}},
-			aaa.LOGOUT:     {Hand: aaa.SessLogout},
-			aaa.PASSWORD:   {Hand: _header_users},
-			aaa.USERNICK:   {Hand: _header_users},
 			aaa.LANGUAGE:   {Hand: _header_users},
-			aaa.BACKGROUND: {Hand: _header_users},
+			aaa.USERNICK:   {Hand: _header_users},
 			aaa.AVATAR:     {Hand: _header_users},
+			aaa.BACKGROUND: {Hand: _header_users},
 			aaa.THEME: {Hand: func(m *ice.Message, arg ...string) {
 				if tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) {
 					m.Cmd(cli.SYSTEM, "osascript", "-e", `tell app "System Events" to tell appearance preferences to set dark mode to `+
@@ -99,48 +95,49 @@ func init() {
 				m.Options(ice.MSG_USERWEB, kit.MergeURL(m.Option(ice.MSG_USERWEB), web.SHARE, m.Cmdx(web.SHARE, mdb.CREATE, mdb.TYPE, web.LOGIN)))
 				m.Cmdy(aaa.EMAIL, aaa.SEND, arg, aaa.CONTENT, nfs.Template(m, "email.html"))
 			}},
+			aaa.LOGOUT: {Hand: aaa.SessLogout},
+			mdb.CREATE: {Name: "create type*=oauth,plugin,qrcode name* icons link order space index args", Hand: func(m *ice.Message, arg ...string) { mdb.HashCreate(m, m.OptionSimple()) }},
+			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) { mdb.HashRemove(m, m.OptionSimple(mdb.NAME)) }},
+			mdb.MODIFY: {Hand: func(m *ice.Message, arg ...string) { mdb.HashModify(m, m.OptionSimple(mdb.NAME), arg) }},
 			ice.DEMO: {Help: "体验", Hand: func(m *ice.Message, arg ...string) {
 				if kit.IsIn(m.Option(ice.MSG_USERROLE), aaa.TECH, aaa.ROOT) {
 					m.Cmd("", mdb.CREATE, mdb.TYPE, mdb.PLUGIN, mdb.NAME, "免登录体验", mdb.ORDER, "2", ctx.INDEX, HEADER, ctx.ARGS, ice.DEMO)
 					mdb.Config(m, ice.DEMO, ice.TRUE)
-					return
-				}
-				if mdb.Config(m, ice.DEMO) == ice.TRUE {
+				} else if mdb.Config(m, ice.DEMO) == ice.TRUE {
 					web.RenderCookie(m, aaa.SessCreate(m, ice.Info.Username))
 					m.Echo("login success")
 				} else {
-					m.Echo("hello world")
+					m.Echo("login failure")
 				}
 			}},
-			mdb.CREATE: {Name: "create type*=oauth,plugin,qrcode name* icons link order space index args", Hand: func(m *ice.Message, arg ...string) { mdb.HashCreate(m, m.OptionSimple()) }},
-			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) { mdb.HashRemove(m, m.OptionSimple(mdb.NAME)) }},
-			mdb.MODIFY: {Hand: func(m *ice.Message, arg ...string) { mdb.HashModify(m, m.OptionSimple(mdb.NAME), arg) }},
 		}, web.ApiAction(), mdb.ImportantHashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icons,type,link,order,space,index,args")), Hand: func(m *ice.Message, arg ...string) {
 			m.Option("language.list", m.Cmd(nfs.DIR, nfs.TemplatePath(m, aaa.LANGUAGE)+nfs.PS, nfs.FILE).Appendv(nfs.FILE))
 			m.Option("theme.list", m.Cmd(nfs.DIR, nfs.TemplatePath(m, aaa.THEME)+nfs.PS, nfs.FILE).Appendv(nfs.FILE))
 			m.Option(nfs.REPOS, m.Cmdv(web.SPIDE, nfs.REPOS, web.CLIENT_URL))
 			m.Option("icon.lib", mdb.Conf(m, ICON, kit.Keym(nfs.PATH)))
 			m.Option("diy", mdb.Config(m, "diy"))
-			m.Option(MENUS, mdb.Config(m, MENUS))
 			m.Echo(mdb.Config(m, TITLE))
 			mdb.HashSelect(m, arg...).Sort(mdb.ORDER, ice.INT)
-			m.Table(func(value ice.Maps) { m.Push(mdb.STATUS, kit.Select("enable", "disable", value[mdb.ORDER] == "")) })
-			kit.If(m.Option(ice.MSG_USERROLE) == aaa.TECH, func() { m.Action(mdb.CREATE, ice.DEMO) })
+			m.Table(func(value ice.Maps) { m.Push(mdb.STATUS, kit.Select(mdb.ENABLE, mdb.DISABLE, value[mdb.ORDER] == "")) })
+			kit.If(m.Length() == 0, func() {
+				m.Push(mdb.TIME, m.Time()).Push(mdb.NAME, "扫码登录").Push(mdb.ICONS, nfs.USR_ICONS_VOLCANOS).Push(mdb.TYPE, cli.QRCODE).Push(web.LINK, "").Push(mdb.ORDER, "1")
+			})
 			kit.If(GetSSO(m), func(p string) {
 				m.Push(mdb.TIME, m.Time()).Push(mdb.NAME, web.SERVE).Push(mdb.ICONS, nfs.USR_ICONS_ICEBERGS).Push(mdb.TYPE, "oauth").Push(web.LINK, p)
 			})
 			m.StatusTimeCount(kit.Dict(mdb.ConfigSimple(m, ice.DEMO)))
+			kit.If(kit.IsIn(m.Option(ice.MSG_USERROLE), aaa.TECH, aaa.ROOT), func() { m.Action(mdb.CREATE, ice.DEMO) })
 			if gdb.Event(m, HEADER_AGENT); !_header_check(m, arg...) {
 				return
 			}
 			msg := m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME))
-			kit.For([]string{aaa.USERNICK, aaa.LANGUAGE, aaa.EMAIL}, func(k string) { m.Option(k, msg.Append(k)) })
+			kit.For([]string{aaa.LANGUAGE, aaa.USERNICK, aaa.EMAIL}, func(k string) { m.Option(k, msg.Append(k)) })
 			kit.For([]string{aaa.AVATAR, aaa.BACKGROUND}, func(k string) { m.Option(k, web.RequireFile(m, msg.Append(k))) })
 			kit.If(m.Option(aaa.LANGUAGE) == "", func() {
 				m.Option(aaa.LANGUAGE, kit.Select("", "zh-cn", strings.Contains(m.Option(ice.MSG_USERUA), "zh_CN")))
-				kit.If(m.Option(aaa.LANGUAGE) == "", func() { m.Option(aaa.LANGUAGE, kit.Select("", kit.Split(m.R.Header.Get(web.AcceptLanguage), ",;"), 0)) })
-				kit.If(m.Option(aaa.LANGUAGE) == "", func() { m.Option(aaa.LANGUAGE, ice.Info.Lang) })
 			})
+			kit.If(m.Option(aaa.LANGUAGE) == "", func() { m.Option(aaa.LANGUAGE, kit.Select("", kit.Split(m.R.Header.Get(web.AcceptLanguage), ",;"), 0)) })
+			kit.If(m.Option(aaa.LANGUAGE) == "", func() { m.Option(aaa.LANGUAGE, ice.Info.Lang) })
 		}},
 	})
 }

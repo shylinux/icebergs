@@ -231,6 +231,13 @@ func HashSelect(m *ice.Message, arg ...string) *ice.Message {
 	if m.PushAction(Config(m, ACTION), REMOVE); !m.FieldsIsDetail() {
 		return m.Action(CREATE, PRUNES)
 	}
+	if m.FieldsIsDetail() {
+		m.Table(func(value ice.Maps) {
+			m.SetAppend().OptionFields(ice.FIELDS_DETAIL)
+			kit.For(kit.Split(HashField(m)), func(key string) { m.Push(key, value[key]); delete(value, key) })
+			kit.For(kit.SortedKey(value), func(k string) { m.Push(k, value[k]) })
+		})
+	}
 	return m
 }
 func HashPrunes(m *ice.Message, cb func(Map) bool) *ice.Message {

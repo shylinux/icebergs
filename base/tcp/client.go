@@ -2,6 +2,7 @@ package tcp
 
 import (
 	"net"
+	"time"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/mdb"
@@ -29,7 +30,7 @@ func (c *Conn) Write(b []byte) (int, error) {
 func (c *Conn) Close() error { return c.Conn.Close() }
 
 func _client_dial(m *ice.Message, arg ...string) {
-	c, e := net.Dial(TCP, m.Option(HOST)+nfs.DF+m.Option(PORT))
+	c, e := net.DialTimeout(TCP, m.Option(HOST)+nfs.DF+m.Option(PORT), 3*time.Second)
 	c = &Conn{Conn: c, m: m, s: &Stat{}}
 	defer kit.If(e == nil, func() { c.Close() })
 	switch cb := m.OptionCB("").(type) {

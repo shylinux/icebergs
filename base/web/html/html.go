@@ -7,9 +7,18 @@ import (
 )
 
 const (
-	H1 = "h1"
-	H2 = "h2"
-	H3 = "h3"
+	H1   = "h1"
+	H2   = "h2"
+	H3   = "h3"
+	SPAN = "span"
+
+	STYLE  = "style"
+	WIDTH  = "width"
+	HEIGHT = "height"
+
+	BACKGROUND_COLOR = "background-color"
+
+	COLOR = "color"
 )
 const (
 	DARK   = "dark"
@@ -30,11 +39,6 @@ const (
 	LAYOUT = "layout"
 	RESIZE = "resize"
 	FILTER = "filter"
-	HEIGHT = "height"
-	WIDTH  = "width"
-
-	COLOR            = "color"
-	BACKGROUND_COLOR = "background-color"
 )
 
 const (
@@ -63,3 +67,13 @@ const (
 	Record1          = "record1"
 	Record2          = "record2"
 )
+
+func Format(tag string, inner string, arg ...string) string {
+	return kit.Format("<%s %s>%s</%s>", tag, kit.JoinProperty(arg...), inner, tag)
+}
+func FormatDanger(value string) string {
+	return Format(SPAN, value, STYLE, kit.JoinCSS(
+		BACKGROUND_COLOR, "var(--danger-bg-color)",
+		COLOR, "var(--danger-fg-color)",
+	))
+}

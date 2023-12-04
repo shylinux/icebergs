@@ -190,6 +190,8 @@ func init() {
 			m.Cmdy(tcp.WIFI).CutTo(tcp.SSID, arg[0])
 		case mdb.ICON:
 			m.Cmdy(nfs.DIR, ice.USR_ICONS, nfs.PATH).CutTo(nfs.PATH, arg[0])
+		case aaa.PASSWORD:
+			m.SetAppend()
 		case ctx.INDEX:
 			if space := m.Option(SPACE); space != "" {
 				m.Options(SPACE, []string{}).Cmdy(SPACE, space, ctx.COMMAND)

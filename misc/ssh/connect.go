@@ -5,7 +5,9 @@ import (
 	"io"
 	"net"
 	"os"
+	"path"
 	"strings"
+	"time"
 
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/terminal"
@@ -24,6 +26,7 @@ import (
 	"shylinux.com/x/icebergs/core/code"
 	"shylinux.com/x/icebergs/misc/xterm"
 	kit "shylinux.com/x/toolkits"
+	"shylinux.com/x/toolkits/task"
 )
 
 func _ssh_open(m *ice.Message, arg ...string) {
@@ -38,9 +41,7 @@ func _ssh_open(m *ice.Message, arg ...string) {
 			defer c.Write([]byte(cmd + lex.NL))
 			m.Sleep300ms()
 		})
-		m.Go(func() {
-			io.Copy(c, os.Stdin)
-		})
+		m.Go(func() { io.Copy(c, os.Stdin) })
 		io.Copy(os.Stdout, c)
 	}, arg...)
 }
@@ -70,11 +71,11 @@ func _ssh_dial(m *ice.Message, cb func(net.Conn), arg ...string) {
 							fmt.Sscanf(string(buf[:n]), "#height:%d,width:%d", &h, &w)
 						}
 						m.Go(func() {
-							defer c.Close()
 							s, e := client.NewSession()
 							if e != nil {
 								return
 							}
+							defer c.Close()
 							s.Stdin, s.Stdout, s.Stderr = c, c, c
 							s.RequestPty(kit.Env(cli.TERM), h, w, ssh.TerminalModes{ssh.ECHO: 1, ssh.TTY_OP_ISPEED: 14400, ssh.TTY_OP_OSPEED: 14400})
 							gdb.SignalNotify(m, 28, func() { w, h, _ := terminal.GetSize(int(os.Stdin.Fd())); s.WindowChange(h, w) })
@@ -93,7 +94,7 @@ func _ssh_dial(m *ice.Message, cb func(net.Conn), arg ...string) {
 func _ssh_conn(m *ice.Message, cb func(*ssh.Client), arg ...string) {
 	methods := []ssh.AuthMethod{}
 	methods = append(methods, ssh.PublicKeysCallback(func() ([]ssh.Signer, error) {
-		key, err := ssh.ParsePrivateKey([]byte(m.Cmdx(nfs.CAT, kit.HomePath(m.Option(PRIVATE)))))
+		key, err := ssh.ParsePrivateKey([]byte(m.Cmdx(nfs.CAT, kit.HomePath(m.OptionDefault(PRIVATE, ".ssh/id_rsa")))))
 		return []ssh.Signer{key}, err
 	}))
 	methods = append(methods, ssh.PasswordCallback(func() (string, error) { return m.Option(aaa.PASSWORD), nil }))
@@ -228,3 +229,71 @@ func (s session) Read(buf []byte) (int, error)  { return s.pty.Read(buf) }
 func (s session) Close() error                  { return s.sess.Close() }
 
 func init() { xterm.AddCommand(SSH, NewSession) }
+func CombinedOutput(m *ice.Message, cmd string, cb func(string)) {
+	_ssh_conn(m, func(c *ssh.Client) {
+		if s, e := c.NewSession(); !m.Warn(e, ice.ErrNotValid) {
+			defer s.Close()
+			m.Debug("cmd %v", cmd)
+			if b, e := s.CombinedOutput(cmd); !m.Warn(e, ice.ErrNotValid) {
+				cb(string(b))
+			}
+		}
+	})
+}
+func PushOutput(m *ice.Message, cmd string, cb func(string)) {
+	_ssh_conn(m, func(c *ssh.Client) {
+		if s, e := c.NewSession(); !m.Warn(e, ice.ErrNotValid) {
+			defer s.Close()
+			r, _ := s.StdoutPipe()
+			m.Debug("res %v", cmd)
+			s.Run(cmd)
+			kit.For(r, func(res []byte) {
+				m.Debug("res %v", string(res))
+				cb(string(res))
+			})
+		}
+	})
+}
+func PushShell(m *ice.Message, cmds []string, cb func(string)) {
+	_ssh_conn(m, func(c *ssh.Client) {
+		if s, e := c.NewSession(); !m.Warn(e, ice.ErrNotValid) {
+			defer s.Close()
+			w, _ := s.StdinPipe()
+			r, _ := s.StdoutPipe()
+			width, height, _ := terminal.GetSize(int(os.Stdin.Fd()))
+			s.RequestPty(kit.Env(cli.TERM), height, width, ssh.TerminalModes{ssh.ECHO: 1, ssh.TTY_OP_ISPEED: 14400, ssh.TTY_OP_OSPEED: 14400})
+			defer s.Wait()
+			s.Shell()
+			lock := task.Lock{}
+			list := [][]string{}
+			cmd := kit.Format("%s@%s[%s]%s$ ssh %s@%s\r\n",
+				m.Option(aaa.USERNAME), ice.Info.Hostname, kit.Split(time.Now().Format(ice.MOD_TIME))[1], path.Base(kit.Path("")),
+				m.Option(aaa.USERNAME), m.Option(tcp.HOST))
+			list = append(list, []string{cmd})
+			m.Debug("cmd %v", cmd)
+			cb(cmd)
+			defer cb("\r\n\r\n")
+			m.Go(func() {
+				kit.For(append(cmds, cli.EXIT), func(cmd string) {
+					for {
+						m.Sleep300ms()
+						if func() bool { defer lock.Lock()(); return len(list[len(list)-1]) > 1 }() {
+							break
+						}
+					}
+					m.Debug("cmd %v", cmd)
+					fmt.Fprintln(w, cmd)
+					defer lock.Lock()()
+					list = append(list, []string{cmd})
+				})
+			})
+			kit.For(r, func(res []byte) {
+				m.Debug("res %v", string(res))
+				m.Debug("res %v", res)
+				cb(string(res))
+				defer lock.Lock()()
+				list[len(list)-1] = append(list[len(list)-1], string(res))
+			})
+		}
+	})
+}

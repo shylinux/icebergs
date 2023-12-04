@@ -188,4 +188,6 @@ const (
 	CHAT_FLOWS        = "web.chat.flows"
 	CHAT_GRANT        = "web.chat.grant"
 	TEAM_PLAN         = "web.team.plan"
+
+	PLUGIN_XTERM = "/plugin/local/code/xterm.js"
 )

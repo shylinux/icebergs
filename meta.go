@@ -152,6 +152,12 @@ func (m *Message) Copy(msg *Message, arg ...string) *Message {
 	return m.Add(MSG_RESULT, msg.value(MSG_RESULT)...)
 }
 func (m *Message) Length() (max int) {
+	if m.FieldsIsDetail() {
+		if len(m.value(KEY)) > 0 {
+			return 1
+		}
+		return 0
+	}
 	kit.For(m.value(MSG_APPEND), func(k string) { max = kit.Max(len(m.value(k)), max) })
 	return max
 }

@@ -103,7 +103,7 @@ func PushImages(m *ice.Message, name string) {
 }
 func PushNotice(m *ice.Message, arg ...ice.Any) {
 	opts := ice.Map{ice.MSG_OPTION: []string{}, ice.MSG_OPTS: []string{}}
-	kit.For([]string{ctx.DISPLAY, ctx.STYLE, ice.LOG_DEBUG, ice.LOG_TRACEID}, func(key string) {
+	kit.For([]string{ctx.DISPLAY, ctx.STYLE, "delay", ice.LOG_DEBUG, ice.LOG_TRACEID}, func(key string) {
 		opts[ice.MSG_OPTION] = kit.Simple(opts[ice.MSG_OPTION], key)
 		opts[key] = m.Option(key)
 	})

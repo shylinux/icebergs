@@ -33,6 +33,12 @@ func _port_right(m *ice.Message, arg ...string) string {
 }
 
 const (
+	PORT_22   = "22"
+	PORT_80   = "80"
+	PORT_443  = "443"
+	PORT_9020 = "9020"
+	PORT_9022 = "9022"
+
 	SOCKET  = "socket"
 	BEGIN   = "begin"
 	CURRENT = "current"

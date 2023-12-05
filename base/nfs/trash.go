@@ -2,7 +2,6 @@ package nfs
 
 import (
 	"io"
-	"os"
 	"path"
 
 	ice "shylinux.com/x/icebergs"
@@ -15,7 +14,7 @@ func _trash_create(m *ice.Message, from string) {
 		return
 	}
 	s, e := StatFile(m, from)
-	defer os.Remove(from)
+	defer Remove(m, from)
 	if m.Warn(e, ice.ErrNotFound, from) {
 		return
 	}

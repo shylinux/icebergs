@@ -94,7 +94,7 @@ func _ssh_dial(m *ice.Message, cb func(net.Conn), arg ...string) {
 func _ssh_conn(m *ice.Message, cb func(*ssh.Client), arg ...string) {
 	methods := []ssh.AuthMethod{}
 	methods = append(methods, ssh.PublicKeysCallback(func() ([]ssh.Signer, error) {
-		key, err := ssh.ParsePrivateKey([]byte(m.Cmdx(nfs.CAT, kit.HomePath(m.OptionDefault(PRIVATE, ".ssh/id_rsa")))))
+		key, err := ssh.ParsePrivateKey([]byte(m.Cmdx(nfs.CAT, kit.HomePath(m.OptionDefault(PRIVATE, ID_RSA_KEY)))))
 		return []ssh.Signer{key}, err
 	}))
 	methods = append(methods, ssh.PasswordCallback(func() (string, error) { return m.Option(aaa.PASSWORD), nil }))
@@ -146,6 +146,9 @@ func _ssh_target(m *ice.Message, name string) *ssh.Client {
 const SSH = "ssh"
 const (
 	DIRECT = "direct"
+
+	ID_RSA_KEY = ".ssh/id_rsa"
+	ID_RSA_PUB = ".ssh/id_rsa.pub"
 )
 const CONNECT = "connect"
 
@@ -229,6 +232,7 @@ func (s session) Read(buf []byte) (int, error)  { return s.pty.Read(buf) }
 func (s session) Close() error                  { return s.sess.Close() }
 
 func init() { xterm.AddCommand(SSH, NewSession) }
+
 func CombinedOutput(m *ice.Message, cmd string, cb func(string)) {
 	_ssh_conn(m, func(c *ssh.Client) {
 		if s, e := c.NewSession(); !m.Warn(e, ice.ErrNotValid) {

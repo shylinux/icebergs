@@ -60,7 +60,7 @@ func init() {
 			}},
 			aaa.LOGIN: {Help: "登录", Hand: func(m *ice.Message, arg ...string) {
 				p := nfs.TempName(m)
-				m.Go(func() { web.PushNoticeGrow(m.Sleep("1s"), ice.Render(m, ice.RENDER_IMAGES, web.SHARE_LOCAL+p)) })
+				m.GoSleep("1s", func() { web.PushNoticeGrow(m, ice.Render(m, ice.RENDER_IMAGES, web.SHARE_LOCAL+p)) })
 				IdeCli(m, "", _ide_args_cli(m), _ide_args_qrcode(m, p)).ProcessRefresh()
 			}},
 			web.ADMIN: {Help: "后台", Hand: func(m *ice.Message, arg ...string) {

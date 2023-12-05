@@ -107,8 +107,7 @@ func init() {
 					if !cli.IsSuccess(_tmux_cmd(m, SPLIT_WINDOW, "-t", kit.Keys(name, "1"), "-p", "40")) {
 						return
 					}
-					m.Go(func() {
-						m.Sleep300ms()
+					m.GoSleep300ms(func() {
 						_tmux_cmd(m, SEND_KEYS, "-t", kit.Keys(name, "2"), "ish_miss_log", ENTER)
 						_tmux_cmd(m, SEND_KEYS, "-t", kit.Keys(name, "1"), "vi etc/miss.sh", ENTER)
 					})
@@ -159,8 +158,8 @@ func init() {
 				}).Sleep30ms()
 			}},
 			web.DREAM_CREATE: {Hand: func(m *ice.Message, arg ...string) {
-				m.Go(func() {
-					nfs.Exists(m.Sleep3s(), path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME)), func(p string) { m.Cmd("", mdb.CREATE) })
+				m.GoSleep3s(func() {
+					nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME)), func(p string) { m.Cmd("", mdb.CREATE) })
 				})
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {

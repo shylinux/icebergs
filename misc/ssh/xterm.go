@@ -25,8 +25,8 @@ func (s XTerm) Close() error {
 	return s.Session.Close()
 }
 
-func Shell(m *ice.Message, cb func(xterm.XTerm)) {
-	_ssh_conn(m, func(c *ssh.Client) {
+func Shell(m *ice.Message, cb func(xterm.XTerm)) error {
+	return _ssh_conn(m, func(c *ssh.Client) {
 		if s, e := c.NewSession(); !m.Warn(e, ice.ErrNotValid) {
 			defer s.Close()
 			w, _ := s.StdinPipe()

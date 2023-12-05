@@ -91,7 +91,7 @@ func _ssh_dial(m *ice.Message, cb func(net.Conn), arg ...string) {
 		}
 	}, arg...)
 }
-func _ssh_conn(m *ice.Message, cb func(*ssh.Client), arg ...string) {
+func _ssh_conn(m *ice.Message, cb func(*ssh.Client), arg ...string) (err error) {
 	methods := []ssh.AuthMethod{}
 	methods = append(methods, ssh.PublicKeysCallback(func() ([]ssh.Signer, error) {
 		key, err := ssh.ParsePrivateKey([]byte(m.Cmdx(nfs.CAT, kit.HomePath(m.OptionDefault(PRIVATE, ID_RSA_KEY)))))
@@ -117,12 +117,14 @@ func _ssh_conn(m *ice.Message, cb func(*ssh.Client), arg ...string) {
 		return
 	}))
 	m.Cmd(tcp.CLIENT, tcp.DIAL, mdb.TYPE, SSH, mdb.NAME, m.Option(tcp.HOST), m.OptionSimple(tcp.HOST, tcp.PORT), arg, func(c net.Conn) {
-		conn, chans, reqs, err := ssh.NewClientConn(c, m.Option(tcp.HOST)+nfs.DF+m.Option(tcp.PORT), &ssh.ClientConfig{
+		conn, chans, reqs, _err := ssh.NewClientConn(c, m.Option(tcp.HOST)+nfs.DF+m.Option(tcp.PORT), &ssh.ClientConfig{
 			User: m.Option(aaa.USERNAME), Auth: methods, BannerCallback: func(message string) error { return nil },
 			HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error { return nil },
 		})
-		kit.If(!m.Warn(err), func() { cb(ssh.NewClient(conn, chans, reqs)) })
+		kit.If(!m.Warn(_err), func() { cb(ssh.NewClient(conn, chans, reqs)) })
+		err = _err
 	})
+	return
 }
 func _ssh_hold(m *ice.Message, c *ssh.Client) {
 	if s, e := _ssh_session(m, c); !m.Warn(e, ice.ErrNotValid) {

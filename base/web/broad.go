@@ -20,8 +20,10 @@ func _broad_send(m *ice.Message, to_host, to_port string, host, port string, arg
 	})
 }
 func _broad_serve(m *ice.Message) {
-	m.GoSleep("30ms", tcp.HOST, func(value ice.Maps) {
-		_broad_send(m, "", "", value[aaa.IP], m.Option(tcp.PORT), gdb.EVENT, tcp.LISTEN, mdb.NAME, ice.Info.NodeName, mdb.TYPE, ice.Info.NodeType)
+	m.GoSleep300ms(func() {
+		m.Cmd(tcp.HOST, func(value ice.Maps) {
+			_broad_send(m, "", "", value[aaa.IP], m.Option(tcp.PORT), gdb.EVENT, tcp.LISTEN, mdb.NAME, ice.Info.NodeName, mdb.TYPE, ice.Info.NodeType)
+		})
 	})
 	m.Cmd(tcp.SERVER, tcp.LISTEN, mdb.TYPE, tcp.UDP4, mdb.NAME, logs.FileLine(1), m.OptionSimple(tcp.HOST, tcp.PORT), func(from *net.UDPAddr, buf []byte) {
 		msg := m.Spawn(buf).Logs(tcp.RECV, BROAD, string(buf), nfs.FROM, from)

@@ -101,7 +101,9 @@ func insert(m *ice.Message, sys, cmd string, arg ...string) bool {
 		return false
 	}
 	if len(arg) > 0 {
-		m.GoSleep("300ms", mdb.INSERT, kit.Keys(CLI, MIRRORS), "", mdb.ZONE, arg[0], OSID, sys, CMD, cmd+lex.SP+kit.Select(arg[0], arg, 1))
+		m.GoSleep300ms(func() {
+			m.Cmd(mdb.INSERT, kit.Keys(CLI, MIRRORS), "", mdb.ZONE, arg[0], OSID, sys, CMD, cmd+lex.SP+kit.Select(arg[0], arg, 1))
+		})
 	}
 	return true
 }

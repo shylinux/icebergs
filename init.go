@@ -59,11 +59,10 @@ var Index = &Context{Name: ICE, Help: "冰山模块", Commands: Commands{
 		loadImportant(m)
 	}},
 	QUIT: {Hand: func(m *Message, arg ...string) {
-		m.Go(func() { m.Sleep30ms(); os.Exit(kit.Int(kit.Select("0", arg, 0))) })
+		m.GoSleep300ms(func() { os.Exit(kit.Int(kit.Select("0", arg, 0))) })
 	}},
 	EXIT: {Hand: func(m *Message, arg ...string) {
-		m.Go(func() {
-			m.Sleep30ms()
+		m.GoSleep300ms(func() {
 			m.root.Option(EXIT, kit.Select("0", arg, 0))
 			m.Cmd(SOURCE, ETC_EXIT_SHY)
 			m.Cmd(CTX_EXIT)

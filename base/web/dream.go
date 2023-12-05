@@ -139,8 +139,7 @@ func init() {
 		DREAM: {Name: "dream name@key auto create repos startall stopall publish cmd cat", Help: "梦想家", Icon: "Launchpad.png", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m = m.Spawn()
-				m.Go(func() {
-					m.Sleep("10s")
+				m.GoSleep("10s", func() {
 					mdb.HashSelects(m).Table(func(value ice.Maps) {
 						if value[cli.RESTART] == "always" && nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK+value[mdb.NAME])) {
 							m.Cmd(DREAM, cli.START, kit.Dict(mdb.NAME, value[mdb.NAME]))
@@ -254,7 +253,7 @@ func init() {
 			}},
 			DREAM_CLOSE: {Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(cli.DAEMON) == ice.OPS && m.Cmdv(SPACE, m.Option(mdb.NAME), mdb.STATUS) != cli.STOP {
-					m.Go(func() { m.Sleep300ms(DREAM, cli.START, m.OptionSimple(mdb.NAME)) })
+					m.GoSleep300ms(func() { m.Cmd(DREAM, cli.START, m.OptionSimple(mdb.NAME)) })
 				}
 			}},
 			DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {

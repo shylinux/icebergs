@@ -179,7 +179,7 @@ func init() {
 					cmds = []string{COMPILE, ice.SRC_WEBVIEW_GO, path.Join(app, _app)}
 				}
 				if msg := m.Cmd(cmds); cli.IsSuccess(msg) {
-					if m.Go(func() { m.Sleep30ms().Cmd(UPGRADE, cli.RESTART) }); isWebview() {
+					if m.GoSleep30ms(func() { m.Cmd(UPGRADE, cli.RESTART) }); isWebview() {
 						m.Cmd(cli.DAEMON, "./bin/ice.bin", cli.FOREVER, cli.DELAY, "300ms", cli.SYSTEM, cli.OPEN, app)
 					}
 				} else {

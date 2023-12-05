@@ -57,9 +57,12 @@ func (m *Message) Sleep(d Any, arg ...Any) *Message {
 func (m *Message) Sleep300ms(arg ...Any) *Message { return m.Sleep("300ms", arg...) }
 func (m *Message) Sleep30ms(arg ...Any) *Message  { return m.Sleep("30ms", arg...) }
 func (m *Message) Sleep3s(arg ...Any) *Message    { return m.Sleep("3s", arg...) }
-func (m *Message) GoSleep(t string, arg ...Any) {
-	m.Go(func() { m.Spawn(kit.Dict(MSG_COUNT, "0")).Sleep(t).Cmd(arg...) })
+func (m *Message) GoSleep(t string, cb func(), arg ...Any) {
+	m.Go(func() { m.Spawn(kit.Dict(MSG_COUNT, "0")).Sleep(t); cb() })
 }
+func (m *Message) GoSleep300ms(cb func(), arg ...Any) { m.GoSleep("300ms", cb, arg...) }
+func (m *Message) GoSleep30ms(cb func(), arg ...Any)  { m.GoSleep("30ms", cb, arg...) }
+func (m *Message) GoSleep3s(cb func(), arg ...Any)    { m.GoSleep("3s", cb, arg...) }
 func (m *Message) Go(cb func(), arg ...Any) *Message {
 	meta := m.FormatTaskMeta()
 	meta.FileLine = kit.FileLine(2, 3)

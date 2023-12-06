@@ -280,7 +280,7 @@ func PushShell(m *ice.Message, cmds []string, cb func(string)) {
 			cb(cmd)
 			defer cb("\r\n\r\n")
 			m.Go(func() {
-				kit.For(append(cmds, cli.EXIT), func(cmd string) {
+				kit.For(cmds, func(cmd string) {
 					for {
 						m.Sleep300ms()
 						if func() bool { defer lock.Lock()(); return len(list[len(list)-1]) > 1 }() {
@@ -292,6 +292,8 @@ func PushShell(m *ice.Message, cmds []string, cb func(string)) {
 					defer lock.Lock()()
 					list = append(list, []string{cmd})
 				})
+				m.Sleep3s()
+				fmt.Fprintln(w, cli.EXIT)
 			})
 			kit.For(r, func(res []byte) {
 				m.Debug("res %v", string(res))

@@ -27,11 +27,17 @@ const (
 	RELAY        = "relay"
 	SSH_RELAY    = "ssh.relay"
 	SRC_RELAY_GO = "src/relay.go"
+
+	INSTALL_SH = "install.sh"
+	UPGRADE_SH = "upgrade.sh"
+	VERSION_SH = "version.sh"
+	PUSHBIN_SH = "pushbin.sh"
 )
 const (
 	MACHINE    = "machine"
 	PACKAGE    = "package"
 	KERNEL     = "kernel"
+	SHELL      = "shell"
 	ARCH       = "arch"
 	NCPU       = "ncpu"
 	VCPU       = "vcpu"
@@ -52,10 +58,11 @@ type relay struct {
 	ice.Hash
 	ice.Code
 	short   string `data:"machine"`
-	field   string `data:"time,machine,username,password,host,port,portal,module,version,when,package,kernel,arch,ncpu,vcpu,mhz,mem,disk,network,listen,socket,proc,vendor"`
+	field   string `data:"time,machine,username,password,host,port,portal,module,version,commit,compile,package,shell,kernel,arch,ncpu,vcpu,mhz,mem,disk,network,listen,socket,proc,vendor"`
 	create  string `name:"create machine* username* password host* port*=22 portal vendor"`
 	pubkey  string `name:"pubkey" help:"公钥"`
 	stats   string `name:"stats machine" help:"采集"`
+	version string `name:"version" help:"版本"`
 	forEach string `name:"forEach machine cmd*:textarea=pwd" help:"遍历"`
 	forFlow string `name:"forFlow machine cmd*:textarea=pwd" help:"流程"`
 	list    string `name:"list machine auto" help:"代理"`
@@ -64,14 +71,14 @@ type relay struct {
 
 func (s relay) Init(m *ice.Message, arg ...string) {
 	s.Hash.Init(m).TransInput(MACHINE, "机器",
-		PACKAGE, "软件包", KERNEL, "内核", ARCH, "架构",
-		NCPU, "处理器", VCPU, "超线程", MHZ, "频率",
+		PACKAGE, "软件包", SHELL, "命令行", KERNEL, "内核", ARCH, "架构",
+		NCPU, "处理器", VCPU, "虚拟核", MHZ, "频率",
 		MEM, "内存", DISK, "磁盘", NETWORK, "流量",
 		LISTEN, "服务", SOCKET, "连接", PROC, "进程",
-		"when", "发布时间",
+		nfs.COMMIT, "发布时间", code.COMPILE, "编译时间",
 	)
 	msg := m.Spawn(ice.Maps{ice.MSG_FIELDS: ""})
-	m.GoSleep("3s", func() { s.Hash.List(msg).Table(func(value ice.Maps) { s.xterm(m.Spawn(value)) }) })
+	m.GoSleep3s(func() { s.Hash.List(msg).Table(func(value ice.Maps) { s.xterm(m.Spawn(value)) }) })
 }
 func (s relay) Inputs(m *ice.Message, arg ...string) {
 	switch s.Hash.Inputs(m, arg...); arg[0] {
@@ -133,11 +140,13 @@ func (s relay) Stats(m *ice.Message) {
 		return nil
 	}).ProcessInner()
 	s.ForEach(m.Spawn(ice.Maps{MACHINE: "", ice.CMD: "contexts/bin/ice.bin web.admin runtime"})).Table(func(value ice.Maps) {
-		data := kit.Value(kit.UnMarshal(value[ice.RES]), "make")
-		s.Modify(m, kit.Simple(MACHINE, value[MACHINE], nfs.MODULE, kit.Value(data, nfs.MODULE),
-			nfs.VERSION, kit.Join(kit.TrimArg(kit.Simple(kit.Value(data, nfs.VERSION), kit.Value(data, "forword"))...), "-"),
-			"when", kit.Value(data, "when"),
-		)...)
+		res := kit.UnMarshal(value[ice.RES])
+		data := kit.Value(res, cli.MAKE)
+		s.Modify(m, kit.Simple(MACHINE, value[MACHINE], kit.Dict(
+			nfs.MODULE, kit.Value(data, nfs.MODULE), nfs.VERSION, kit.Join(kit.TrimArg(kit.Simple(kit.Value(data, nfs.VERSION), kit.Value(data, "forword"))...), "-"),
+			nfs.COMMIT, kit.Value(data, "when"), code.COMPILE, kit.Value(data, mdb.TIME),
+			SHELL, kit.Value(res, "conf.SHELL"), KERNEL, kit.Value(res, "host.GOOS"), ARCH, kit.Value(res, "host.GOARCH"),
+		))...)
 	})
 }
 func (s relay) ForFlow(m *ice.Message) {
@@ -164,7 +173,7 @@ func (s relay) List(m *ice.Message, arg ...string) *ice.Message {
 		if m.Length() == 0 {
 			m.Action(s.Create, s.Compile, s.Publish, s.Pubkey)
 		} else {
-			m.Action(s.Create, s.Compile, s.Publish, s.Pubkey, s.Stats, s.Upgrade, s.ForFlow, s.ForEach)
+			m.Action(s.Create, s.Compile, s.Publish, s.Pubkey, s.Stats, s.Upgrade, s.Version, s.ForFlow, s.ForEach)
 		}
 	}
 	stats := map[string]int{}
@@ -208,27 +217,31 @@ func (s relay) List(m *ice.Message, arg ...string) *ice.Message {
 	return m
 }
 func (s relay) Install(m *ice.Message, arg ...string) {
-	s.shell(m, m.Template("install.sh"), arg...)
+	s.shell(m, m.Template(INSTALL_SH), arg...)
 }
 func (s relay) Upgrade(m *ice.Message, arg ...string) {
 	if len(arg) == 0 && m.Option(MACHINE) == "" {
-		m.Options(ice.CMD, m.Template("upgrade.sh"), "delay", "0")
+		m.Options(ice.CMD, m.Template(UPGRADE_SH), cli.DELAY, "0")
 		s.ForFlow(m)
 	} else {
-		s.shell(m, m.Template("upgrade.sh"), arg...)
+		s.shell(m, m.Template(UPGRADE_SH), arg...)
 	}
+}
+func (s relay) Version(m *ice.Message, arg ...string) {
+	m.Options(ice.CMD, m.Template(VERSION_SH), cli.DELAY, "0")
+	s.ForFlow(m)
 }
 func (s relay) Pushbin(m *ice.Message, arg ...string) {
 	if len(arg) == 0 {
 		p := "ice.linux.amd64"
 		switch m.Option(ARCH) {
-		case "i686":
+		case "i686", "386":
 			p = "ice.linux.386"
 		}
 		m.Options(nfs.FROM, ice.USR_PUBLISH+p, nfs.PATH, "contexts/demo/", nfs.FILE, ice.BIN_ICE_BIN)
 		m.Cmd(SSH_TRANS, tcp.SEND)
 	}
-	s.shell(m, m.Template("pushbin.sh"), arg...)
+	s.shell(m, m.Template(PUSHBIN_SH), arg...)
 }
 
 func (s relay) Xterm(m *ice.Message, arg ...string) { s.Code.Xterm(m, m.Option(MACHINE), arg...) }
@@ -248,7 +261,7 @@ func (s relay) xterm(m *ice.Message) {
 			})
 			if e != nil {
 				defer done()
-				x, e = xterm.Command(m.Message, "", "sh")
+				x, e = xterm.Command(m.Message, "", m.OptionDefault(SHELL, "sh"))
 				m.GoSleep300ms(func() { x.Write([]byte(kit.Format("ssh-copy-id %s@%s\n", m.Option(aaa.USERNAME), m.Option(tcp.HOST)))) })
 			}
 		})
@@ -265,9 +278,8 @@ func (s relay) foreach(m *ice.Message, cb func(*ice.Message, []string)) {
 func (s relay) foreachModify(m *ice.Message, key, cmd string, cb func([]string) string) {
 	kit.If(cb == nil, func() { cb = func(ls []string) string { return kit.Join(ls) } })
 	s.ForEach(m.Spawn(ice.Maps{MACHINE: "", ice.CMD: cmd, ice.MSG_DAEMON: ""})).Table(func(value ice.Maps) {
-		s.Modify(m, MACHINE, value[MACHINE], key, cb(kit.Split(value[ice.RES])))
-		m.Push(mdb.TIME, time.Now().Format(ice.MOD_TIME))
-		m.Push(MACHINE, value[MACHINE]).Push(tcp.HOST, value[tcp.HOST])
+		s.Modify(m, MACHINE, value[MACHINE], key, cb(kit.Split(value[ice.RES])), mdb.TIME, time.Now().Format(ice.MOD_TIME))
+		m.Push(mdb.TIME, time.Now().Format(ice.MOD_TIME)).Push(MACHINE, value[MACHINE]).Push(tcp.HOST, value[tcp.HOST])
 		m.Push(ice.CMD, cmd).Push(ice.RES, value[ice.RES]).PushButton(s.ForFlow, s.ForEach)
 	})
 }

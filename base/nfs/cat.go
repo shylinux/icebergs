@@ -75,6 +75,7 @@ const (
 	REPOS   = "repos"
 	REMOTE  = "remote"
 	ORIGIN  = "origin"
+	COMMIT  = "commit"
 	BRANCH  = "branch"
 	MASTER  = "master"
 	VERSION = "version"

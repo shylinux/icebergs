@@ -61,8 +61,8 @@ type relay struct {
 	field   string `data:"time,machine,username,password,host,port,portal,module,version,commit,compile,package,shell,kernel,arch,ncpu,vcpu,mhz,mem,disk,network,listen,socket,proc,vendor"`
 	create  string `name:"create machine* username* password host* port*=22 portal vendor"`
 	pubkey  string `name:"pubkey" help:"公钥"`
-	stats   string `name:"stats machine" help:"采集"`
 	version string `name:"version" help:"版本"`
+	stats   string `name:"stats machine" help:"采集"`
 	forEach string `name:"forEach machine cmd*:textarea=pwd" help:"遍历"`
 	forFlow string `name:"forFlow machine cmd*:textarea=pwd" help:"流程"`
 	list    string `name:"list machine auto" help:"代理"`
@@ -149,11 +149,6 @@ func (s relay) Stats(m *ice.Message) {
 		))...)
 	})
 }
-func (s relay) ForFlow(m *ice.Message) {
-	s.foreach(m, func(msg *ice.Message, cmd []string) {
-		ssh.PushShell(msg.Message, cmd, func(res string) { web.PushNoticeGrow(m.Options(ctx.DISPLAY, web.PLUGIN_XTERM), res) })
-	})
-}
 func (s relay) ForEach(m *ice.Message, arg ...string) *ice.Message {
 	s.foreach(m, func(msg *ice.Message, cmd []string) {
 		kit.For(cmd, func(cmd string) {
@@ -168,12 +163,17 @@ func (s relay) ForEach(m *ice.Message, arg ...string) *ice.Message {
 	})
 	return m
 }
+func (s relay) ForFlow(m *ice.Message) {
+	s.foreach(m, func(msg *ice.Message, cmd []string) {
+		ssh.PushShell(msg.Message, cmd, func(res string) { web.PushNoticeGrow(m.Options(ctx.DISPLAY, web.PLUGIN_XTERM), res) })
+	})
+}
 func (s relay) List(m *ice.Message, arg ...string) *ice.Message {
 	if s.Hash.List(m, arg...); len(arg) == 0 {
 		if m.Length() == 0 {
 			m.Action(s.Create, s.Compile, s.Publish, s.Pubkey)
 		} else {
-			m.Action(s.Create, s.Compile, s.Publish, s.Pubkey, s.Stats, s.Upgrade, s.Version, s.ForFlow, s.ForEach)
+			m.Action(s.Create, s.Compile, s.Publish, s.Pubkey, s.Upgrade, s.Version, s.Stats, s.ForEach, s.ForFlow)
 		}
 	}
 	stats := map[string]int{}
@@ -190,10 +190,10 @@ func (s relay) List(m *ice.Message, arg ...string) *ice.Message {
 			stats[DISK_TOTAL] += kit.Int(ls[1])
 		}
 		if value[web.PORTAL] == "" {
-			m.Push(web.LINK, "").PushButton(s.Xterm, s.Install, s.Pushbin, s.Remove)
+			m.Push(web.LINK, "").PushButton(s.Xterm, s.Pushbin, s.Install, s.Remove)
 			return
 		}
-		m.PushButton(s.Admin, s.Vimer, s.Repos, s.Xterm, s.Upgrade, s.Pushbin, s.Remove)
+		m.PushButton(s.Admin, s.Vimer, s.Repos, s.Xterm, s.Pushbin, s.Upgrade, s.Remove)
 		switch value[web.PORTAL] {
 		case tcp.PORT_443:
 			m.Push(web.LINK, kit.Format("https://%s", value[tcp.HOST]))

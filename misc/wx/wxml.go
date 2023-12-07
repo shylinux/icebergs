@@ -6,9 +6,11 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
+const WXML = "wxml"
+
 func init() {
 	Index.MergeCommands(ice.Commands{
-		"wxml": {Actions: code.PlugAction(code.PLUG, kit.Dict(
+		WXML: {Actions: code.PlugAction(code.PLUG, kit.Dict(
 			code.INCLUDE, code.HTML,
 			code.KEYWORD, kit.Dict(
 				"page", code.KEYWORD,

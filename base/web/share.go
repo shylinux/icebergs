@@ -82,12 +82,12 @@ func init() {
 				m.EchoQRCode(m.Cmd(SHARE, mdb.CREATE, mdb.TYPE, LOGIN).Option(mdb.LINK)).ProcessInner()
 			}},
 			ctx.COMMAND: {Hand: func(m *ice.Message, arg ...string) {
-				if msg := mdb.HashSelect(m.Spawn(), m.Option(SHARE)); !IsNotValidFieldShare(m, msg) {
-					m.Cmdy(ctx.COMMAND, msg.Append(mdb.NAME))
+				if msg := mdb.HashSelects(m.Spawn(), m.Option(SHARE)); !IsNotValidFieldShare(m, msg) {
+					m.Cmdy(Space(m, msg.Append(SPACE)), ctx.COMMAND, msg.Append(mdb.NAME))
 				}
 			}},
 			ctx.RUN: {Hand: func(m *ice.Message, arg ...string) {
-				if msg := mdb.HashSelect(m.Spawn(), m.Option(SHARE)); !IsNotValidFieldShare(m, msg) {
+				if msg := mdb.HashSelects(m.Spawn(), m.Option(SHARE)); !IsNotValidFieldShare(m, msg) {
 					aaa.SessAuth(m, kit.Dict(msg.AppendSimple(aaa.USERNICK, aaa.USERNAME, aaa.USERROLE)))
 					m.Cmdy(Space(m, msg.Append(SPACE)), msg.Append(mdb.NAME), arg[1:])
 				}

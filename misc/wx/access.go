@@ -137,6 +137,7 @@ func Meta() ice.Map {
 		SEX, "性别", TAGS, "标签", REMARK, "备注",
 		"subscribe", "订阅", "subscribe_time", "时间",
 		"nickname", "昵称", "headimgurl", "头像",
+		"projectname", "项目",
 		ENV, "环境", PAGES, "页面",
 	)))
 }

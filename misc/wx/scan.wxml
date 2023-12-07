@@ -1,0 +1,45 @@
+<import src="../../app.wxml"/>
+<view class="page action">
+	<template is="action" data="{{action}}"></template>
+	<template is="debug" data="{{conf}}"></template>
+	<view class="output">
+		<view class="field {{field.index}}" wx:for="{{list}}" wx:for-index="order" wx:for-item="field" wx:key="index">
+			<view class="legend"><text>{{field.name}}({{field.help}})</text></view>
+			<view class="option"> <!-- 参数 -->
+				<view class="item {{item.type}}" wx:for="{{field.inputs}}" wx:key="name">
+					<!-- 文本 -->
+					<textarea wx:if="{{item.type == 'textarea'}}" placeholder="{{item.name}}" value="{{item.value}}"
+						bindinput="onInputs" data-index="{{index}}" data-order="{{order}}"></textarea>
+					<!-- 文本 -->
+					<input wx:elif="{{item.type == 'text'}}" placeholder="{{item.placeholder||item.name}}" value="{{item.value}}" type="text"
+						bindinput="onInputs" data-index="{{index}}" data-order="{{order}}"/>
+					<!-- 列表 -->
+					<picker wx:elif="{{item.type == 'select'}}" range="{{item.values}}" value="{{item.index||0}}"
+						bindchange="onChange" data-index="{{index}}" data-order="{{order}}">{{item.value||item.values[item.index||0]}}</picker>
+					<!-- 按钮 -->
+					<button wx:elif="{{item.type == 'button'}}" size="mini"
+						bindtap="onAction" data-index="{{index}}" data-order="{{order}}" data-name="{{item.name}}">{{item.value||item.name}}</button>
+				</view>
+			</view>
+			<view class="action"> <!-- 参数 -->
+				<view class="item {{item.type}}" wx:for="{{field.msg._action}}" wx:key="name">
+					<!-- 按钮 -->
+					<button wx:if="{{item.type == 'button'}}" size="mini"
+						bindtap="onAction" data-index="{{index}}" data-order="{{order}}" data-name="{{item.name}}">{{item.value||item.name}}</button>
+				</view>
+			</view>
+			<view class="output"> <!-- 输出 -->
+				<!-- 表格 -->
+				<template is="table" data="{{order: order, msg: field.msg}}"></template>
+				<!-- 文本 -->
+				<view class="code"><rich-text wx:for="{{field.msg.result}}" wx:key="index" nodes="{{item}}"></rich-text></view>
+			</view>
+			<view class="status"> <!-- 参数 -->
+				<view class="item {{item.name}}" wx:for="{{field.msg._status}}" wx:key="name">
+					<text class="name">{{item.name}}</text>: <text class="value">{{item.value}}</text>
+				</view>
+			</view>
+		</view>
+	</view>
+</view>
+

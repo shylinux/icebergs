@@ -131,6 +131,7 @@ const ( // DIR
 	USR_INSTALL  = "usr/install/"
 	USR_REQUIRE  = "usr/require/"
 	USR_PUBLISH  = "usr/publish/"
+	USR_PROGRAM  = "usr/program/"
 	USR_PORTAL   = "usr/portal/"
 	USR_LOCAL    = "usr/local/"
 	USR_ICONS    = "usr/icons/"

@@ -71,6 +71,7 @@ func init() {
 					m.Echo(msg.Result())
 				}
 			}},
+			PAGES: {Name: "scan.js"},
 		}, mdb.ExportHashAction(mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,name,text,icons,space,index,args,type,image,link")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				m.Cmdy(ACCESS).PushAction("").Option(ice.MSG_ACTION, "")

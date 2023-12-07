@@ -6,9 +6,11 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
+const WXSS = "wxss"
+
 func init() {
 	Index.MergeCommands(ice.Commands{
-		"wxss": {Actions: code.PlugAction(code.PLUG, kit.Dict(
+		WXSS: {Actions: code.PlugAction(code.PLUG, kit.Dict(
 			code.INCLUDE, code.CSS,
 			code.KEYWORD, kit.Dict(
 				"page", code.KEYWORD,

@@ -292,8 +292,8 @@ func PushShell(m *ice.Message, cmds []string, cb func(string)) {
 					defer lock.Lock()()
 					list = append(list, []string{cmd})
 				})
-				m.Sleep3s()
-				fmt.Fprintln(w, cli.EXIT)
+				defer fmt.Fprintln(w, cli.EXIT)
+				m.Sleep(m.OptionDefault("interval", "3s"))
 			})
 			kit.For(r, func(res []byte) {
 				m.Debug("res %v", string(res))

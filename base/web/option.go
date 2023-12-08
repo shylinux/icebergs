@@ -151,18 +151,21 @@ func ToastProcess(m *ice.Message, arg ...ice.Any) func() {
 }
 func GoToast(m *ice.Message, title string, cb func(toast func(name string, count, total int)) []string) *ice.Message {
 	_total := 0
+	icon := "🕑"
 	toast := func(name string, count, total int) {
 		kit.If(total == 0, func() { total = 1 })
 		Toast(m,
-			kit.Format("%s %s/%s", name, strings.TrimSuffix(kit.FmtSize(int64(count)), "B"), strings.TrimSuffix(kit.FmtSize(int64(total)), "B")),
-			kit.Format("%s %d%%", kit.Select(m.ActionKey(), title), count*100/total), "3000", count*100/total,
+			kit.Format("%s %s %s/%s", icon, kit.JoinWord(m.ActionKey(), name), strings.TrimSuffix(kit.FmtSize(int64(count)), "B"), strings.TrimSuffix(kit.FmtSize(int64(total)), "B")),
+			kit.Format("%s %d%%", kit.Select(m.ActionKey(), title), count*100/total), m.OptionDefault(ice.TOAST_DURATION, "30000"), count*100/total,
 		)
 		_total = total
 	}
 	if list := cb(toast); len(list) > 0 {
 		Toast(m, strings.Join(list, lex.NL), ice.FAILURE, "30s")
 	} else {
-		toast(kit.JoinWord(m.ActionKey(), ice.SUCCESS, "✅"), _total, _total)
+		m.Option(ice.TOAST_DURATION, "3000")
+		icon = "✅"
+		toast(ice.SUCCESS, _total, _total)
 	}
 	return m
 }

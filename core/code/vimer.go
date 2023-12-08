@@ -162,6 +162,7 @@ func init() {
 			}},
 			ice.APP: {Help: "本机", Hand: func(m *ice.Message, arg ...string) {
 				cli.OpenCmds(m, "cd "+kit.Path(""), "vim "+path.Join(arg[0], arg[1])+" +"+arg[2]).ProcessHold()
+				m.ProcessHold()
 			}},
 			COMPILE: {Help: "编译", Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(nfs.PATH) != "" && nfs.ExistsFile(m, path.Join(m.Option(nfs.PATH), ice.MAKEFILE)) {

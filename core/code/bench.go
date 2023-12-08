@@ -11,6 +11,7 @@ import (
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 	"shylinux.com/x/toolkits/util/bench"
 )
@@ -64,8 +65,10 @@ const BENCH = "bench"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		BENCH: {Help: "压测", Actions: ice.MergeActions(ice.Actions{
+			mdb.CREATE: {Name: "create zone*=demo"},
 			mdb.INSERT: {Name: "insert zone*=demo type*=http,redis name=demo text*='http://localhost:9020/chat/cmd/web.chat.favor' nconn=10 nreqs=100"},
 			cli.START: {Hand: func(m *ice.Message, arg ...string) {
+				defer web.ToastProcess(m)()
 				switch m.Option(mdb.TYPE) {
 				case HTTP:
 					_bench_http(m, m.Option(mdb.TEXT))

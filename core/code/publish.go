@@ -111,6 +111,7 @@ func init() {
 				m.Cmdy(nfs.DIR, arg[0], "time,path,size,hash,link,action", ice.OptionFields(mdb.DETAIL))
 				web.PushImages(m, web.P(PUBLISH, arg[0]))
 			}
+			m.PushAction(nfs.TRASH)
 		}},
 	})
 }

@@ -60,7 +60,7 @@ func init() {
 	)
 	Index.MergeCommands(ice.Commands{
 		IDE: {Name: "ide hash auto", Help: "集成开发环境", Meta: Meta(), Actions: ice.MergeActions(ice.Actions{
-			code.AUTOGEN: {Name: "autogen projectname*=demo appid*='wxf4e5104d83476ed6' serve*='https://2021.shylinux.com'", Help: "生成", Hand: func(m *ice.Message, arg ...string) {
+			code.AUTOGEN: {Name: "autogen projectname*='终端工具链' appid*='wxf4e5104d83476ed6' serve*='https://2021.shylinux.com'", Help: "生成", Hand: func(m *ice.Message, arg ...string) {
 				const (
 					CONF_JS                     = "conf.js"
 					APP_JSON                    = "app.json"
@@ -93,6 +93,7 @@ func init() {
 				kit.Value(app, PAGES, kit.AddUniq(kit.Simple(kit.Value(app, PAGES)), list...))
 				m.Cmd(nfs.SAVE, p+APP_JSON, kit.Formats(app))
 				IdeCli(m.Sleep3s(), cli.OPEN, "--project", kit.Path(mdb.Config(m, PROJECT, p)))
+				m.ProcessInner()
 			}},
 			aaa.LOGIN: {Help: "登录", Hand: func(m *ice.Message, arg ...string) {
 				p := nfs.TempName(m)

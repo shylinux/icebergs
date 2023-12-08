@@ -25,7 +25,7 @@ const WORD = "word"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		WORD: {Name: "word path=src/main.shy@key auto favor play", Help: "上下文", Icon: "Books.png", Actions: ice.MergeActions(ice.Actions{
+		WORD: {Name: "word path=src/main.shy@key auto play favor", Help: "上下文", Icon: "Books.png", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				WordAlias(m, NAVMENU, TITLE, NAVMENU)
 				WordAlias(m, PREMENU, TITLE, PREMENU)

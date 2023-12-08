@@ -171,9 +171,9 @@ func (s relay) ForFlow(m *ice.Message) {
 func (s relay) List(m *ice.Message, arg ...string) *ice.Message {
 	if s.Hash.List(m, arg...); len(arg) == 0 {
 		if m.Length() == 0 {
-			m.Action(s.Create, s.Compile, s.Publish, s.Pubkey)
+			m.Action(s.Compile, s.Publish, s.Pubkey, s.Create)
 		} else {
-			m.Action(s.Create, s.Compile, s.Publish, s.Pubkey, s.Upgrade, s.Version, s.Stats, s.ForEach, s.ForFlow)
+			m.Action(s.Compile, s.Publish, s.Pubkey, s.Create, s.Upgrade, s.Version, s.Stats, s.ForEach, s.ForFlow)
 		}
 	}
 	stats := map[string]int{}

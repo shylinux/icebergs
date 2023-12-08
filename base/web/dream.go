@@ -272,7 +272,7 @@ func init() {
 					PushStats(m, kit.Keys(m.CommandKey(), mdb.TOTAL), msg.Length(), "")
 				}
 			}},
-		}, aaa.RoleAction(), StatsAction(), DreamAction(), mdb.ImportantHashAction(ctx.TOOLS, "web.space,web.route,web.code.git.search",
+		}, aaa.RoleAction(), StatsAction(), DreamAction(), mdb.ImportantHashAction(ctx.TOOLS, "web.route",
 			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icon,repos,binary,template,restart")), Hand: func(m *ice.Message, arg ...string) {
 			if ice.Info.NodeType == WORKER {
 				return

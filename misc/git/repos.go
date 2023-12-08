@@ -106,10 +106,10 @@ func _repos_each(m *ice.Message, title string, cb func(*git.Repository, ice.Maps
 	if msg.Length() == 0 {
 		return
 	}
-	web.GoToast(m, kit.Select(m.CommandKey()+lex.SP+m.ActionKey(), title), func(toast func(string, int, int)) (list []string) {
+	web.GoToast(m, kit.Select(m.CommandKey(), title), func(toast func(string, int, int)) (list []string) {
 		count, total := 0, msg.Length()
 		msg.Table(func(value ice.Maps) {
-			toast(value[REPOS], count, total)
+			toast(kit.JoinWord(m.ActionKey(), value[REPOS]), count, total)
 			if err := cb(_repos_open(m, value[REPOS]), value); err != nil && err != git.NoErrAlreadyUpToDate {
 				web.Toast(m, err.Error(), "error: "+value[REPOS], "", "3s").Sleep3s()
 				list = append(list, value[REPOS])

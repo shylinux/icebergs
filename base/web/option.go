@@ -155,14 +155,14 @@ func GoToast(m *ice.Message, title string, cb func(toast func(name string, count
 		kit.If(total == 0, func() { total = 1 })
 		Toast(m,
 			kit.Format("%s %s/%s", name, strings.TrimSuffix(kit.FmtSize(int64(count)), "B"), strings.TrimSuffix(kit.FmtSize(int64(total)), "B")),
-			kit.Format("%s %d%%", kit.Select(m.ActionKey(), title), count*100/total), kit.Select("1000", "30000", count < total), count*100/total,
+			kit.Format("%s %d%%", kit.Select(m.ActionKey(), title), count*100/total), "3000", count*100/total,
 		)
 		_total = total
 	}
 	if list := cb(toast); len(list) > 0 {
 		Toast(m, strings.Join(list, lex.NL), ice.FAILURE, "30s")
 	} else {
-		toast(ice.SUCCESS, _total, _total)
+		toast(kit.JoinWord(m.ActionKey(), ice.SUCCESS, "✅"), _total, _total)
 	}
 	return m
 }

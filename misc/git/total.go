@@ -50,6 +50,9 @@ func init() {
 			defer web.ToastProcess(m)()
 			from, days, commit, adds, dels, rest := "", 0, 0, 0, 0, 0
 			TableGo(ReposList(m.Spawn()), func(value ice.Maps, lock *task.Lock) {
+				if kit.IsIn(value[REPOS], "websocket", "go-qrcode", "go-git", "icons", "geoarea") {
+					return
+				}
 				msg := m.Cmd("_sum", value[nfs.PATH], mdb.TOTAL, "10000")
 				defer lock.Lock()()
 				msg.Table(func(value ice.Maps) {

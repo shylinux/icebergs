@@ -268,8 +268,8 @@ func init() {
 							stats[cli.START]++
 						}
 					})
-					PushStats(m, kit.Keys(m.CommandKey(), cli.START), stats[cli.START], "")
-					PushStats(m, kit.Keys(m.CommandKey(), mdb.TOTAL), msg.Length(), "")
+					PushStats(m, kit.Keys(m.CommandKey(), cli.START), stats[cli.START], "", "空间总数")
+					PushStats(m, kit.Keys(m.CommandKey(), mdb.TOTAL), msg.Length(), "", "已启动空间")
 				}
 			}},
 		}, aaa.RoleAction(), StatsAction(), DreamAction(), mdb.ImportantHashAction(ctx.TOOLS, "web.route",

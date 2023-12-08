@@ -57,16 +57,17 @@ const (
 type relay struct {
 	ice.Hash
 	ice.Code
-	short   string `data:"machine"`
-	field   string `data:"time,machine,username,password,host,port,portal,module,version,commit,compile,package,shell,kernel,arch,ncpu,vcpu,mhz,mem,disk,network,listen,socket,proc,vendor"`
-	create  string `name:"create machine* username* password host* port*=22 portal vendor"`
-	pubkey  string `name:"pubkey" help:"公钥"`
-	version string `name:"version" help:"版本"`
-	stats   string `name:"stats machine" help:"采集"`
-	forEach string `name:"forEach machine cmd*:textarea=pwd" help:"遍历"`
-	forFlow string `name:"forFlow machine cmd*:textarea=pwd" help:"流程"`
-	list    string `name:"list machine auto" help:"代理"`
-	pushbin string `name:"pushbin" help:"部署"`
+	short       string `data:"machine"`
+	field       string `data:"time,machine,username,password,host,port,portal,module,version,commit,compile,package,shell,kernel,arch,ncpu,vcpu,mhz,mem,disk,network,listen,socket,proc,vendor"`
+	statsTables string `name:"statsTables" event:"stats.tables"`
+	create      string `name:"create machine* username* password host* port*=22 portal vendor"`
+	pubkey      string `name:"pubkey" help:"公钥"`
+	version     string `name:"version" help:"版本"`
+	stats       string `name:"stats machine" help:"采集"`
+	forEach     string `name:"forEach machine cmd*:textarea=pwd" help:"遍历"`
+	forFlow     string `name:"forFlow machine cmd*:textarea=pwd" help:"流程"`
+	list        string `name:"list machine auto" help:"代理"`
+	pushbin     string `name:"pushbin" help:"部署"`
 }
 
 func (s relay) Init(m *ice.Message, arg ...string) {
@@ -79,6 +80,11 @@ func (s relay) Init(m *ice.Message, arg ...string) {
 	)
 	msg := m.Spawn(ice.Maps{ice.MSG_FIELDS: ""})
 	m.GoSleep3s(func() { s.Hash.List(msg).Table(func(value ice.Maps) { s.xterm(m.Spawn(value)) }) })
+}
+func (s relay) StatsTables(m *ice.Message, arg ...string) {
+	if msg := mdb.HashSelects(m.Spawn().Message); msg.Length() > 0 {
+		web.PushStats(m.Message, "relay.total", msg.Length(), "", "服务器数量")
+	}
 }
 func (s relay) Inputs(m *ice.Message, arg ...string) {
 	switch s.Hash.Inputs(m, arg...); arg[0] {

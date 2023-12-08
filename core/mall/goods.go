@@ -32,8 +32,8 @@ func init() {
 			web.STATS_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				if msg := mdb.HashSelects(m.Spawn()); msg.Length() > 0 {
 					amount := msg.TableAmount(func(value ice.Maps) float64 { return kit.Float(value[mdb.COUNT]) * kit.Float(value[PRICE]) })
-					web.PushStats(m, kit.Keys(m.CommandKey(), AMOUNT), amount, "元")
-					web.PushStats(m, kit.Keys(m.CommandKey(), mdb.COUNT), msg.Length(), "")
+					web.PushStats(m, kit.Keys(m.CommandKey(), AMOUNT), amount, "元", "商品总额")
+					web.PushStats(m, kit.Keys(m.CommandKey(), mdb.COUNT), msg.Length(), "", "商品数量")
 				}
 			}},
 		}, aaa.RoleAction(), web.StatsAction(), web.ExportCacheAction(nfs.IMAGE), mdb.ExportHashAction(ctx.TOOLS, kit.Fields(Prefix(CART), Prefix(ORDER)), mdb.FIELD, "time,hash,zone,name,text,price,count,units,image")), Hand: func(m *ice.Message, arg ...string) {

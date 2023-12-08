@@ -101,8 +101,8 @@ func init() {
 			web.STATS_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				if msg := mdb.HashSelects(m.Spawn()); msg.Length() > 0 {
 					amount := msg.TableAmount(func(value ice.Maps) float64 { return kit.Float(value[AMOUNT]) })
-					web.PushStats(m, kit.Keys(m.CommandKey(), AMOUNT), amount, "元")
-					web.PushStats(m, kit.Keys(m.CommandKey(), mdb.COUNT), msg.Length(), "")
+					web.PushStats(m, kit.Keys(m.CommandKey(), AMOUNT), amount, "元", "资产总额")
+					web.PushStats(m, kit.Keys(m.CommandKey(), mdb.COUNT), msg.Length(), "", "资产数量")
 				}
 			}},
 		}, web.StatsAction(), mdb.ExportZoneAction(mdb.SHORT, ACCOUNT, mdb.FIELD, "time,account,type,amount,count", mdb.FIELDS, "time,id,type,amount,name,text")), Hand: func(m *ice.Message, arg ...string) {

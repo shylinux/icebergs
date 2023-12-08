@@ -143,7 +143,7 @@ func init() {
 				defer web.ToastProcess(m)()
 				m.Cmd(web.SPACE, m.Option(web.WEIXIN), lex.PARSE, m.Cmdx("", m.Option(mdb.HASH)))
 			}},
-		}, mdb.ExportHashAction(
+		}, web.StatsAction("", "小程序场景数"), mdb.ExportHashAction(
 			mdb.FIELD, "time,hash,name,pages,space,index,args,wifi",
 			cli.DARWIN, "/Applications/wechatwebdevtools.app/Contents/MacOS/cli",
 		)), Hand: func(m *ice.Message, arg ...string) {

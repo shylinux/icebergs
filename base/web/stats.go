@@ -6,7 +6,6 @@ import (
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
-	"shylinux.com/x/icebergs/base/web/html"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -17,56 +16,34 @@ const STATS = "stats"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		STATS: {Help: "汇总量", Meta: kit.Dict(
-			ice.CTX_TRANS, kit.Dict(html.INPUT, kit.Dict(
-				"goods.amount", "商品总额",
-				"goods.count", "商品数量",
-				"asset.amount", "资产总额",
-				"asset.count", "资产数量",
-				"task.total", "任务总数",
-				"dream.total", "空间总数",
-				"dream.start", "已启动空间",
-				"repos.total", "代码库总数",
-				"command.total", "命令总数",
-				"share.total", "共享总数",
-				"token.total", "令牌总数",
-				"user.total", "用户总数",
-				"sess.total", "会话总数",
-				"cpu.total", "处理器核数",
-				"cpu.used", "处理器使用率",
-				"mem.used", "内存用量",
-				"mem.total", "内存总量",
-				"disk.used", "磁盘用量",
-				"disk.total", "磁盘总量",
-			)),
-		), Hand: func(m *ice.Message, arg ...string) {
+		STATS: {Help: "汇总量", Hand: func(m *ice.Message, arg ...string) {
 			defer ctx.DisplayStory(m, "")
 			if m.Option(ice.MSG_USERPOD) == "" {
-				PushStats(m, kit.Keys(aaa.SESS, mdb.TOTAL), m.Cmd(aaa.SESS).Length(), "")
+				PushStats(m, kit.Keys(aaa.SESS, mdb.TOTAL), m.Cmd(aaa.SESS).Length(), "", "会话总数")
 				if ice.Info.Username == ice.Info.Make.Username {
-					PushStats(m, kit.Keys(aaa.USER, mdb.TOTAL), m.Cmd(aaa.USER).Length()-1, "")
+					PushStats(m, kit.Keys(aaa.USER, mdb.TOTAL), m.Cmd(aaa.USER).Length()-1, "", "用户总数")
 				} else {
-					PushStats(m, kit.Keys(aaa.USER, mdb.TOTAL), m.Cmd(aaa.USER).Length()-2, "")
+					PushStats(m, kit.Keys(aaa.USER, mdb.TOTAL), m.Cmd(aaa.USER).Length()-2, "", "用户总数")
 				}
-				PushStats(m, kit.Keys(ctx.COMMAND, mdb.TOTAL), m.Cmd(ctx.COMMAND).Length(), "")
+				PushStats(m, kit.Keys(ctx.COMMAND, mdb.TOTAL), m.Cmd(ctx.COMMAND).Length(), "", "命令总数")
 			}
 			gdb.Event(m, STATS_TABLES)
 			PushPodCmd(m, "", arg...)
 		}},
 	})
 }
-func StatsAction() ice.Actions {
+func StatsAction(arg ...string) ice.Actions {
 	return ice.MergeActions(ice.Actions{
-		STATS_TABLES: {Hand: func(m *ice.Message, arg ...string) {
+		STATS_TABLES: {Hand: func(m *ice.Message, _ ...string) {
 			if msg := mdb.HashSelects(m.Spawn()); msg.Length() > 0 {
-				PushStats(m, kit.Keys(m.CommandKey(), mdb.TOTAL), msg.Length(), "")
+				PushStats(m, kit.Keys(m.CommandKey(), mdb.TOTAL), msg.Length(), arg...)
 			}
 		}},
 	}, gdb.EventsAction(STATS_TABLES))
 }
-func PushStats(m *ice.Message, name string, value ice.Any, units string) {
+func PushStats(m *ice.Message, name string, value ice.Any, arg ...string) {
 	kit.If(value != 0, func() {
-		m.Push(mdb.NAME, name).Push(mdb.VALUE, value).Push(mdb.UNITS, units)
+		m.Push(mdb.NAME, name).Push(mdb.VALUE, value).Push(mdb.UNITS, kit.Select("", arg, 0)).Push(ctx.TRANS, kit.Select("", arg, 1))
 		m.Push(ctx.INDEX, m.PrefixKey())
 	})
 }

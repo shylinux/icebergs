@@ -124,7 +124,8 @@ func _space_domain(m *ice.Message) (link string) {
 			return ""
 		},
 		func() string { return tcp.PublishLocalhost(m, m.Option(ice.MSG_USERWEB)) },
-		func() string { return Domain(m.Cmdv(tcp.HOST, aaa.IP), m.Cmdv(SERVE, tcp.PORT)) })
+		func() string { return Domain(m.Cmdv(tcp.HOST, aaa.IP), m.Cmdv(SERVE, tcp.PORT)) },
+	)
 }
 func _space_exec(m *ice.Message, source, target []string, c *websocket.Conn) {
 	switch kit.Select(cli.PWD, m.Detailv(), 0) {

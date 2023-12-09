@@ -149,7 +149,9 @@ func (s relay) Stats(m *ice.Message) {
 		res := kit.UnMarshal(value[ice.RES])
 		data := kit.Value(res, cli.MAKE)
 		s.Modify(m, kit.Simple(MACHINE, value[MACHINE], kit.Dict(
-			nfs.MODULE, kit.Value(data, nfs.MODULE), nfs.VERSION, kit.Join(kit.TrimArg(kit.Simple(kit.Value(data, nfs.VERSION), kit.Value(data, "forword"))...), "-"),
+			nfs.MODULE, kit.Value(data, nfs.MODULE), nfs.VERSION, kit.Join(kit.TrimArg(kit.Simple(
+				kit.Value(data, nfs.VERSION), kit.Value(data, "forword"), kit.Cut(kit.Format(kit.Value(data, mdb.HASH)), 6),
+			)...), "-"),
 			nfs.COMMIT, kit.Value(data, "when"), code.COMPILE, kit.Value(data, mdb.TIME),
 			SHELL, kit.Value(res, "conf.SHELL"), KERNEL, kit.Value(res, "host.GOOS"), ARCH, kit.Value(res, "host.GOARCH"),
 		))...)

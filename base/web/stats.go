@@ -42,6 +42,7 @@ func StatsAction(arg ...string) ice.Actions {
 	}, gdb.EventsAction(STATS_TABLES))
 }
 func PushStats(m *ice.Message, name string, value ice.Any, arg ...string) {
+	kit.If(name == "", func() { name = kit.Keys(m.CommandKey(), mdb.TOTAL) })
 	kit.If(value != 0, func() {
 		m.Push(mdb.NAME, name).Push(mdb.VALUE, value).Push(mdb.UNITS, kit.Select("", arg, 0)).Push(ctx.TRANS, kit.Select("", arg, 1))
 		m.Push(ctx.INDEX, m.PrefixKey())

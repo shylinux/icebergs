@@ -58,8 +58,8 @@ func _dream_start(m *ice.Message, name string) {
 	}
 	defer m.ProcessOpen(m.MergePod(m.Option(mdb.NAME, name)))
 	p := path.Join(ice.USR_LOCAL_WORK, name)
-	if pid := m.Cmdx(nfs.CAT, path.Join(p, ice.Info.PidPath), kit.Dict(ice.MSG_USERROLE, aaa.TECH)); pid != "" {
-		if nfs.Exists(m, "/proc/"+pid) {
+	if p := path.Join(p, ice.Info.PidPath); nfs.Exists(m, p) {
+		if pid := m.Cmdx(nfs.CAT, p, kit.Dict(ice.MSG_USERROLE, aaa.TECH)); pid != "" && nfs.Exists(m, "/proc/"+pid) {
 			m.Info("already exists %v", pid)
 			return
 		}
@@ -72,15 +72,15 @@ func _dream_start(m *ice.Message, name string) {
 		m.Sleep300ms()
 	}
 	defer ToastProcess(m)()
+	defer m.Options(cli.CMD_DIR, "", cli.CMD_ENV, "", cli.CMD_OUTPUT, "")
+	bin := kit.Select(kit.Path(os.Args[0]), cli.SystemFind(m, ice.ICE_BIN, nfs.PWD+path.Join(p, ice.BIN), nfs.PWD+ice.BIN))
+	if strings.Count(m.Cmdx(cli.SYSTEM, "sh", "-c", "ps aux | grep "+bin+" | grep -v grep"), bin) > 0 {
+		return
+	}
 	m.Options(cli.CMD_DIR, kit.Path(p), cli.CMD_ENV, kit.EnvList(kit.Simple(
 		cli.CTX_OPS, Domain(tcp.LOCALHOST, m.Cmdv(SERVE, tcp.PORT)), cli.CTX_LOG, ice.VAR_LOG_BOOT_LOG, cli.CTX_PID, ice.VAR_LOG_ICE_PID,
 		cli.CTX_ROOT, kit.Path(""), cli.PATH, cli.BinPath(p, ""), cli.USER, ice.Info.Username,
 	)...), cli.CMD_OUTPUT, path.Join(p, ice.VAR_LOG_BOOT_LOG), mdb.CACHE_CLEAR_ONEXIT, ice.TRUE)
-	defer m.Options(cli.CMD_DIR, "", cli.CMD_ENV, "", cli.CMD_OUTPUT, "")
-	bin := kit.Select(kit.Path(os.Args[0]), cli.SystemFind(m, ice.ICE_BIN, nfs.PWD+path.Join(p, ice.BIN), nfs.PWD+ice.BIN))
-	if strings.Count(m.Cmdx(cli.SYSTEM, "sh", "-c", "ps aux | grep "+bin), bin) > 0 {
-		return
-	}
 	defer m.Sleep3s()
 	gdb.Event(m, DREAM_CREATE, m.OptionSimple(mdb.NAME, mdb.TYPE))
 	kit.If(m.Option(nfs.BINARY), func(p string) { _dream_binary(m, p) })
@@ -291,7 +291,8 @@ func init() {
 			} else if arg[0] == ctx.ACTION {
 				gdb.Event(m, DREAM_ACTION, arg)
 			} else {
-				m.EchoIFrame(m.MergePod(arg[0]))
+				mdb.HashSelects(m, arg[0])
+				// m.EchoIFrame(m.MergePod(arg[0]))
 			}
 		}},
 	})

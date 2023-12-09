@@ -215,7 +215,9 @@ func (m *Message) EchoImages(src string) *Message    { return m.Echo(Render(m, R
 func (m *Message) EchoVideos(src string) *Message    { return m.Echo(Render(m, RENDER_VIDEOS, src)) }
 func (m *Message) EchoAudios(src string) *Message    { return m.Echo(Render(m, RENDER_AUDIOS, src)) }
 func (m *Message) EchoIFrame(src string) *Message {
-	kit.If(src, func() { m.Echo(Render(m, RENDER_IFRAME, src)) })
+	kit.If(!m.IsCliUA(), func() {
+		kit.If(src, func() { m.Echo(Render(m, RENDER_IFRAME, src)) })
+	})
 	return m
 }
 func (m *Message) EchoScript(arg ...string) *Message {

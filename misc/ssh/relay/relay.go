@@ -82,9 +82,7 @@ func (s relay) Init(m *ice.Message, arg ...string) {
 	m.GoSleep3s(func() { s.Hash.List(msg).Table(func(value ice.Maps) { s.xterm(m.Spawn(value)) }) })
 }
 func (s relay) StatsTables(m *ice.Message, arg ...string) {
-	if msg := mdb.HashSelects(m.Spawn().Message); msg.Length() > 0 {
-		web.PushStats(m.Message, "relay.total", msg.Length(), "", "服务器数量")
-	}
+	web.PushStats(m.Message, "", mdb.HashSelects(m.Spawn().Message).Length(), "", "服务器数量")
 }
 func (s relay) Inputs(m *ice.Message, arg ...string) {
 	switch s.Hash.Inputs(m, arg...); arg[0] {
@@ -229,7 +227,7 @@ func (s relay) Install(m *ice.Message, arg ...string) {
 }
 func (s relay) Upgrade(m *ice.Message, arg ...string) {
 	if len(arg) == 0 && m.Option(MACHINE) == "" {
-		m.Options(ice.CMD, m.Template(UPGRADE_SH), cli.DELAY, "0", "interval", "15s")
+		m.Options(ice.CMD, m.Template(UPGRADE_SH), cli.DELAY, "0", "interval", "3s")
 		s.ForFlow(m)
 	} else {
 		s.shell(m, m.Template(UPGRADE_SH), arg...)
@@ -246,7 +244,7 @@ func (s relay) Pushbin(m *ice.Message, arg ...string) {
 		case "i686", "386":
 			p = "ice.linux.386"
 		}
-		m.Options(nfs.FROM, ice.USR_PUBLISH+p, nfs.PATH, "contexts/demo/", nfs.FILE, ice.BIN_ICE_BIN)
+		m.Options(nfs.FROM, ice.USR_PUBLISH+p, nfs.PATH, "contexts/", nfs.FILE, ice.BIN_ICE_BIN)
 		m.Cmd(SSH_TRANS, tcp.SEND)
 	}
 	s.shell(m, m.Template(PUSHBIN_SH), arg...)
@@ -269,7 +267,7 @@ func (s relay) xterm(m *ice.Message) {
 			})
 			if e != nil {
 				defer done()
-				x, e = xterm.Command(m.Message, "", m.OptionDefault(SHELL, "sh"))
+				x, e = xterm.Command(m.Message, "", m.OptionDefault(SHELL, code.SH))
 				m.GoSleep300ms(func() { x.Write([]byte(kit.Format("ssh-copy-id %s@%s\n", m.Option(aaa.USERNAME), m.Option(tcp.HOST)))) })
 			}
 		})

@@ -111,13 +111,13 @@ func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.Response
 		case SHARE:
 			add(arg[0], arg[1])
 		}
-		kit.For(u.Query(), func(k string, v []string) { _log(ctx.ARGS, k, v).Optionv(k, v) })
+		kit.For(u.Query(), func(k string, v []string) { m.Optionv(k, v) })
 	}
 	kit.For(kit.ParseQuery(r.URL.RawQuery), func(k string, v []string) { m.Optionv(k, v) })
 	if r.Method == http.MethodGet && m.Option(ice.MSG_CMDS) != "" {
 		_log(ctx.ARGS, ice.MSG_CMDS, m.Optionv(ice.MSG_CMDS))
 	}
-	switch r.Header.Get(ContentType) {
+	switch kit.Select("", kit.Split(r.Header.Get(ContentType)), 0) {
 	case ApplicationJSON:
 		kit.For(kit.UnMarshal(r.Body), func(k string, v ice.Any) { m.Optionv(k, v) })
 	default:
@@ -125,8 +125,8 @@ func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.Response
 		kit.For(r.PostForm, func(k string, v []string) { _log(FORM, k, kit.Join(v, lex.SP)).Optionv(k, v) })
 	}
 	kit.For(r.Cookies(), func(k, v string) { m.Optionv(k, v) })
-	m.Options(ice.MSG_REFERER, r.Header.Get(Referer))
 	m.Options(ice.MSG_METHOD, r.Method, ice.MSG_COUNT, "0")
+	m.Options(ice.MSG_REFERER, r.Header.Get(Referer))
 	m.Options(ice.MSG_USERWEB, _serve_domain(m), ice.MSG_USERPOD, m.Option(ice.POD))
 	m.Options(ice.MSG_USERUA, r.Header.Get(UserAgent), ice.MSG_USERIP, r.Header.Get(ice.MSG_USERIP))
 	m.Options(ice.MSG_SESSID, kit.Select(m.Option(ice.MSG_SESSID), m.Option(CookieName(m.Option(ice.MSG_USERWEB)))))
@@ -139,6 +139,7 @@ func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.Response
 		defer func() {
 			kit.If(m.Option(ice.MSG_STATUS) == "", func() { m.StatusTimeCount() })
 			m.Cost(kit.Format("%s: %s %v", r.Method, r.URL.String(), m.FormatSize()))
+			m.Options(ice.MSG_COST, m.FormatCost(), ice.MSG_OPTION, kit.Simple(m.Optionv(ice.MSG_OPTION), ice.MSG_COST))
 		}()
 		m.Option(ice.MSG_OPTS, kit.Simple(m.Optionv(ice.MSG_OPTION), func(k string) bool { return !strings.HasPrefix(k, ice.MSG_SESSID) }))
 		if m.Detailv(m.PrefixKey(), cmds); len(cmds) > 1 && cmds[0] == ctx.ACTION && cmds[1] != ctx.ACTION {

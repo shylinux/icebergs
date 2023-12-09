@@ -73,6 +73,7 @@ func (m *Message) setDetail(key string, arg ...string) *Message {
 	return m
 }
 func (m *Message) Optionv(key string, arg ...Any) Any {
+	key = kit.Select(MSG_OPTION, key)
 	var unlock func()
 	if len(arg) > 0 {
 		unlock = m.lock.Lock()

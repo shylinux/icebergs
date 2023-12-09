@@ -178,7 +178,9 @@ func (m *Message) FormatShip(traceid ...string) string {
 	return kit.Format("%s%02d %4s->%-4s", _traceid, m.code, m.source.Name, m.target.Name)
 }
 func (m *Message) FormatSize() string {
-	return kit.Format("%dx%d %v %v", m.Length(), len(m.value(MSG_APPEND)), kit.Simple(m.value(MSG_APPEND)), kit.FmtSize(len(m.Result())))
+	n := len(m.value(MSG_APPEND))
+	kit.If(m.FieldsIsDetail(), func() { n = len(m.value(KEY)) })
+	return kit.Format("%dx%d %v %v", m.Length(), n, kit.Simple(m.value(MSG_APPEND)), kit.FmtSize(len(m.Result())))
 }
 func (m *Message) FormatCost() string { return kit.FmtDuration(time.Since(m.time)) }
 func (m *Message) FormatMeta() string {
@@ -195,17 +197,19 @@ func (m *Message) FormatsMeta(w io.Writer, arg ...string) (res string) {
 		ls := m.value(k)
 		kit.If(len(ls) == 0 || len(ls) == 1 && ls[0] == "", func() { m.index(MSG_OPTION, i, "") })
 	})
-	m.value(MSG_OPTION, kit.Filters(m.value(MSG_OPTION), MSG_CMDS, MSG_FIELDS, MSG_SESSID, MSG_OPTS, MSG_INDEX, "", "aaa.checker")...)
-	kit.If(len(arg) == 0 && m.Option(DEBUG) == TRUE, func() { arg = []string{SP, SP, NL} })
-	bio, count, NL := bufio.NewWriter(w), 0, kit.Select("", arg, 2)
+	kit.For(m.Optionv(""), func(key string) { kit.If(strings.HasPrefix(key, "sessid_"), func() { arg = append(arg, key) }) })
+	m.value(MSG_OPTION, kit.Filters(m.value(MSG_OPTION), kit.Simple(MSG_CMDS, MSG_SESSID, MSG_OPTS, "", MSG_COUNT, MSG_CHECKER, arg)...)...)
+	bio, count := bufio.NewWriter(w), 0
 	defer bio.Flush()
+	SP, NL := SP, NL
+	kit.If(m.Option(MSG_DEBUG) != TRUE, func() { SP, NL = "", "" })
 	echo := func(arg ...Any) { fmt.Fprint(bio, arg...) }
 	push := func(k string) {
 		if len(m.value(k)) == 0 {
 			return
 		}
 		kit.If(count > 0, func() { echo(FS, NL) })
-		echo(kit.Format("%s%q:%s", kit.Select("", arg, 0), k, kit.Select("", arg, 1)))
+		echo(kit.Format("%s%q:%s", SP, k, SP))
 		b, _ := json.Marshal(m.value(k))
 		bio.Write(b)
 		count++

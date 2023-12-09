@@ -68,7 +68,8 @@ func init() {
 			code.COMPLETE: {Hand: func(m *ice.Message, arg ...string) {
 				kit.If(kit.IsIn(kit.Split(m.Option(mdb.TEXT))[0], IMAGE, VIDEO, AUDIO), func() { m.Cmdy(FEEL).CutTo(nfs.PATH, mdb.NAME) })
 			}},
-			"favor": {Help: "收藏", Icon: "bi bi-star", Hand: func(m *ice.Message, arg ...string) {
+			// "favor": {Help: "收藏", Icon: "bi bi-star", Hand: func(m *ice.Message, arg ...string) {
+			"favor": {Help: "收藏", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(web.CHAT_FAVOR, mdb.CREATE, mdb.TYPE, nfs.SHY, mdb.NAME, path.Base(arg[0]), mdb.TEXT, arg[0])
 				m.ProcessHold("favor success")
 			}},

@@ -140,24 +140,34 @@ func _space_exec(m *ice.Message, source, target []string, c *websocket.Conn) {
 func _space_echo(m *ice.Message, source, target []string, c *websocket.Conn) {
 	defer func() { m.Warn(recover()) }()
 	if m.Options(ice.MSG_SOURCE, source, ice.MSG_TARGET, target[1:]); !m.Warn(c.WriteMessage(1, []byte(m.FormatMeta()))) {
-		m.Log(tcp.SEND, "%v->%v %v %v", source, target, m.Detailv(), m.FormatsMeta(nil))
+		if source != nil {
+			m.Log(tcp.SEND, "%v->%v %v %v", source, target, m.Detailv(), m.FormatsMeta(nil))
+		}
 	}
 }
 func _space_send(m *ice.Message, name string, arg ...string) (h string) {
-	wait, done := m.Wait("180s", func(msg *ice.Message, arg ...string) {
+	withecho := true
+	kit.If(len(arg) > 0 && arg[0] == "toast", func() { withecho = false; m.Option(ice.MSG_DEBUG, ice.FALSE) })
+	wait, done := m.Wait(kit.Select("", "180s", withecho), func(msg *ice.Message, arg ...string) {
 		m.Cost(kit.Format("%v->[%v] %v %v", m.Optionv(ice.MSG_SOURCE), name, m.Detailv(), msg.FormatSize())).Copy(msg)
 	})
-	h = mdb.HashCreate(m.Spawn(), mdb.TYPE, tcp.SEND, mdb.NAME, kit.Keys(name, m.Target().ID()), mdb.TEXT, kit.Join(arg, lex.SP), kit.Dict(mdb.TARGET, done))
-	defer mdb.HashRemove(m.Spawn(), mdb.HASH, h)
+	if withecho {
+		h = mdb.HashCreate(m.Spawn(), mdb.TYPE, tcp.SEND, mdb.NAME, kit.Keys(name, m.Target().ID()), mdb.TEXT, kit.Join(arg, lex.SP), kit.Dict(mdb.TARGET, done))
+		defer mdb.HashRemove(m.Spawn(), mdb.HASH, h)
+	}
 	if target := kit.Split(name, nfs.PT, nfs.PT); !mdb.HashSelectDetail(m, target[0], func(value ice.Map) {
 		if c, ok := value[mdb.TARGET].(*websocket.Conn); !m.Warn(!ok, ice.ErrNotValid, mdb.TARGET) {
 			kit.For([]string{ice.MSG_USERROLE}, func(k string) { m.Optionv(k, m.Optionv(k)) })
 			kit.For(m.Optionv(ice.MSG_OPTS), func(k string) { m.Optionv(k, m.Optionv(k)) })
-			_space_echo(m.Set(ice.MSG_DETAIL, arg...), []string{h}, target, c)
+			if withecho {
+				_space_echo(m.Set(ice.MSG_DETAIL, arg...), []string{h}, target, c)
+			} else {
+				_space_echo(m.Set(ice.MSG_DETAIL, arg...), nil, target, c)
+			}
 		}
 	}) {
 		m.Warn(kit.IndexOf([]string{ice.OPS, ice.DEV}, target[0]) == -1, ice.ErrNotFound, SPACE, name)
-	} else {
+	} else if withecho {
 		m.Warn(!wait(), "time out")
 	}
 	return

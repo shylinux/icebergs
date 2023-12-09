@@ -76,6 +76,9 @@ func (m *Message) GoWait(cb func(func()), arg ...Any) *Message {
 	return m.Go(func() { cb(func() { res <- true }) }, arg...)
 }
 func (m *Message) Wait(d string, cb ...Handler) (wait func() bool, done Handler) {
+	if d == "" {
+		return nil, nil
+	}
 	sync := make(chan bool, 2)
 	t := time.AfterFunc(kit.Duration(d), func() { sync <- false })
 	return func() bool { return <-sync }, func(msg *Message, arg ...string) {

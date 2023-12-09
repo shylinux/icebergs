@@ -63,26 +63,29 @@ func _dream_start(m *ice.Message, name string) {
 			m.Info("already exists %v", pid)
 			return
 		}
-		for i := 0; i < 3; i++ {
-			if msg := m.Cmd(SPACE, name); msg.Length() > 0 {
-				m.Info("already exists %v", name)
-				return
-			}
-			m.Sleep300ms()
+	}
+	for i := 0; i < 3; i++ {
+		if msg := m.Cmd(SPACE, name); msg.Length() > 0 {
+			m.Info("already exists %v", name)
+			return
 		}
+		m.Sleep300ms()
 	}
 	defer ToastProcess(m)()
-	defer m.Sleep3s()
 	m.Options(cli.CMD_DIR, kit.Path(p), cli.CMD_ENV, kit.EnvList(kit.Simple(
 		cli.CTX_OPS, Domain(tcp.LOCALHOST, m.Cmdv(SERVE, tcp.PORT)), cli.CTX_LOG, ice.VAR_LOG_BOOT_LOG, cli.CTX_PID, ice.VAR_LOG_ICE_PID,
 		cli.CTX_ROOT, kit.Path(""), cli.PATH, cli.BinPath(p, ""), cli.USER, ice.Info.Username,
 	)...), cli.CMD_OUTPUT, path.Join(p, ice.VAR_LOG_BOOT_LOG), mdb.CACHE_CLEAR_ONEXIT, ice.TRUE)
 	defer m.Options(cli.CMD_DIR, "", cli.CMD_ENV, "", cli.CMD_OUTPUT, "")
+	bin := kit.Select(kit.Path(os.Args[0]), cli.SystemFind(m, ice.ICE_BIN, nfs.PWD+path.Join(p, ice.BIN), nfs.PWD+ice.BIN))
+	if strings.Count(m.Cmdx(cli.SYSTEM, "sh", "-c", "ps aux | grep "+bin), bin) > 0 {
+		return
+	}
+	defer m.Sleep3s()
 	gdb.Event(m, DREAM_CREATE, m.OptionSimple(mdb.NAME, mdb.TYPE))
 	kit.If(m.Option(nfs.BINARY), func(p string) { _dream_binary(m, p) })
 	kit.If(m.Option(nfs.TEMPLATE), func(p string) { _dream_template(m, p) })
-	m.Cmd(cli.DAEMON, kit.Select(kit.Path(os.Args[0]), cli.SystemFind(m, ice.ICE_BIN, nfs.PWD+path.Join(p, ice.BIN), nfs.PWD+ice.BIN)),
-		SPACE, tcp.DIAL, ice.DEV, ice.OPS, mdb.TYPE, WORKER, m.OptionSimple(mdb.NAME), cli.DAEMON, ice.OPS)
+	m.Cmd(cli.DAEMON, bin, SPACE, tcp.DIAL, ice.DEV, ice.OPS, mdb.TYPE, WORKER, m.OptionSimple(mdb.NAME), cli.DAEMON, ice.OPS)
 }
 func _dream_binary(m *ice.Message, p string) {
 	if bin := path.Join(m.Option(cli.CMD_DIR), ice.BIN_ICE_BIN); nfs.Exists(m, bin) {

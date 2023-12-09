@@ -120,14 +120,17 @@ func _repos_each(m *ice.Message, title string, cb func(*git.Repository, ice.Maps
 	})
 }
 func _repos_each_origin(m *ice.Message, title string, cb func(*git.Repository, string, *http.BasicAuth, ice.Maps) error) {
-	_repos_each(m, "", func(repos *git.Repository, value ice.Maps) error {
+	m.Option("repos.auth", _repos_credentials(m))
+	_repos_each(m, title, func(repos *git.Repository, value ice.Maps) error {
 		if value[ORIGIN] == "" {
 			return nil
 		} else if remote, err := repos.Remote(ORIGIN); err != nil {
 			return err
 		} else {
 			remoteURL := _repos_remote(m, remote.Config().URLs[0])
-			return cb(repos, remoteURL, _repos_auth(m, remoteURL), value)
+			auth := _repos_auth(m, remoteURL)
+			m.Info("%s: %s %s", m.ActionKey(), auth.Username, remoteURL)
+			return cb(repos, remoteURL, auth, value)
 		}
 	})
 }
@@ -140,13 +143,13 @@ func _repos_credentials(m *ice.Message) map[string]*url.URL {
 	return list
 }
 func _repos_auth(m *ice.Message, origin string) *http.BasicAuth {
-	list := _repos_credentials(m)
+	list, ok := m.Optionv("repos.auth").(map[string]*url.URL)
+	kit.If(!ok, func() { list = _repos_credentials(m) })
 	if u, ok := list[kit.ParseURL(_repos_remote(m, origin)).Host]; !ok {
 		return nil
 	} else if password, ok := u.User.Password(); !ok {
 		return nil
 	} else {
-		m.Debug("auth %v:%v", u.User.Username(), password)
 		return &http.BasicAuth{Username: u.User.Username(), Password: password}
 	}
 }
@@ -538,6 +541,7 @@ func init() {
 								kit.If(_last > last, func() { last = _last })
 							}
 						}
+						m.Info("%s: %s", m.ActionKey(), value[REPOS])
 						return _repos_status(m, value[REPOS], repos)
 					})
 					remote := ice.Info.Make.Remote

@@ -76,6 +76,7 @@ func init() {
 			}},
 			web.PREVIEW: {Hand: FavorPreview},
 			cli.OPENS:   {Hand: func(m *ice.Message, arg ...string) { cli.Opens(m, m.Option(mdb.TEXT)) }},
+			web.PAGES:   {Name: "favor.js"},
 		}, FavorAction(), mdb.ExportHashAction(mdb.SHORT, mdb.TEXT, mdb.FIELD, "time,hash,type,name,text")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 && arg[0] == ctx.ACTION {
 				if m.Option(ice.MSG_INDEX) == m.PrefixKey() {

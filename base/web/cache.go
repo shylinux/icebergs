@@ -104,6 +104,7 @@ const (
 	UPLOAD   = "upload"
 	DOWNLOAD = "download"
 	PREVIEW  = "preview"
+	PAGES    = "pages"
 
 	IMAGE = "image"
 	VIDEO = "video"

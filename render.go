@@ -149,7 +149,8 @@ func (m *Message) PushAction(arg ...Any) *Message {
 	if len(m.value(MSG_APPEND)) == 0 {
 		return m
 	}
-	return m.Set(MSG_APPEND, ACTION).Table(func(value Maps) { m.PushButton(arg...) })
+	m.Set(MSG_APPEND, ACTION)
+	return m.Table(func(value Maps) { m.PushButton(arg...) })
 }
 func (m *Message) PushButton(arg ...Any) *Message {
 	if !m.IsCliUA() {

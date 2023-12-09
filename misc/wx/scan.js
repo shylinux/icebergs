@@ -124,4 +124,3 @@ Volcanos(chat.ONACTION, {list: ["刷新", "扫码", "清屏"],
 	},
 })
 Volcanos._init()
-

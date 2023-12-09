@@ -234,7 +234,14 @@ func HashSelect(m *ice.Message, arg ...string) *ice.Message {
 	if m.FieldsIsDetail() {
 		m.Table(func(value ice.Maps) {
 			m.SetAppend().OptionFields(ice.FIELDS_DETAIL)
-			kit.For(kit.Split(HashField(m)), func(key string) { m.Push(key, value[key]); delete(value, key) })
+			kit.For(kit.Split(HashField(m)), func(key string) {
+				if key == HASH {
+					m.Push(key, arg[0])
+				} else {
+					m.Push(key, value[key])
+				}
+				delete(value, key)
+			})
 			kit.For(kit.SortedKey(value), func(k string) { m.Push(k, value[k]) })
 		})
 	}

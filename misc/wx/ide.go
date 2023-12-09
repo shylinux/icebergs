@@ -33,6 +33,44 @@ func _ide_args_cli(m *ice.Message) []string {
 func _ide_args_qrcode(m *ice.Message, p string) []string {
 	return []string{"--qr-format", nfs.IMAGE, "--qr-output", kit.Path(p)}
 }
+func _ide_autogen_utils(m *ice.Message) {
+	p, mp := ice.USR_PROGRAM, ice.USR_VOLCANOS+PUBLISH_CLIENT_MP
+	nfs.DirDeepAll(m, mp, "", func(value ice.Maps) {
+		if !kit.IsIn(value[nfs.PATH], PROJECT_CONFIG_JSON, PROJECT_PRIVATE_CONFIG_JSON, CONF_JS) {
+			m.Cmd(nfs.COPY, p+value[nfs.PATH], path.Join(mp, value[nfs.PATH]), ice.Maps{nfs.DIR_ROOT: ""})
+		}
+	})
+}
+func _ide_autogen_pages(m *ice.Message) {
+	p := ice.USR_PROGRAM
+	list := []string{}
+	head_wxml, foot_wxml := nfs.TemplateText(m, "pages_head.wxml"), nfs.TemplateText(m, "pages_foot.wxml")
+	head, foot := nfs.TemplateText(m, "pages_head.js"), nfs.TemplateText(m, "pages_foot.js")
+	wxml := nfs.TemplateText(m, "pages.wxml")
+	m.Travel(func(_ *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
+		if h, ok := cmd.Actions[PAGES]; ok {
+			file := path.Join(path.Dir(strings.TrimPrefix(m.Resource(ctx.FileURI(cmd.FileLine())), nfs.REQUIRE)), kit.Select(key+".js", h.Name))
+			if !nfs.Exists(m, file) {
+				return
+			}
+			prefix := strings.ReplaceAll(s.Prefix(), nfs.PT, "-")
+			list = append(list, path.Join(PAGES, prefix, kit.TrimExt(path.Base(file), nfs.JS)))
+			kit.For([]string{WXML, WXSS, nfs.JS, nfs.JSON}, func(ext string) {
+				file = kit.ExtChange(file, ext)
+				if kit.Ext(file) == nfs.JS {
+					m.Cmd(nfs.SAVE, path.Join(p, PAGES, prefix, path.Base(file)), head, lex.NL, m.Cmdx(nfs.CAT, file), lex.NL, foot)
+				} else if kit.Ext(file) == WXML {
+					m.Cmd(nfs.SAVE, path.Join(p, PAGES, prefix, path.Base(file)), head_wxml, lex.NL, kit.Select(wxml, m.Cmdx(nfs.CAT, file)), lex.NL, foot_wxml)
+				} else {
+					m.Cmd(nfs.COPY, path.Join(p, PAGES, prefix, path.Base(file)), file)
+				}
+			})
+		}
+	})
+	app := kit.UnMarshal(m.Cmdx(nfs.CAT, p+APP_JSON))
+	kit.Value(app, PAGES, kit.AddUniq(kit.Simple(kit.Value(app, PAGES)), list...))
+	m.Cmd(nfs.SAVE, p+APP_JSON, kit.Formats(app))
+}
 
 const (
 	PAGES_RIVER       = "pages/river/river"
@@ -45,55 +83,33 @@ const (
 	PAGES   = "pages"
 	ENV     = "env"
 )
+const (
+	AUTO_PREVIEW = "auto-preview"
+	PREVIEW      = "preview"
+	PUSH         = "push"
+	DOC          = "doc"
+
+	APP_JSON = "app.json"
+	CONF_JS  = "conf.js"
+	CURRENT  = "current"
+	ISLOGIN  = "islogin"
+)
+const (
+	PROJECT_CONFIG_JSON         = "project.config.json"
+	PROJECT_PRIVATE_CONFIG_JSON = "project.private.config.json"
+)
 const IDE = "ide"
 
 func init() {
-	const (
-		AUTO_PREVIEW = "auto-preview"
-		PREVIEW      = "preview"
-		PUSH         = "push"
-		DOC          = "doc"
-
-		APP_JSON = "app.json"
-		CURRENT  = "current"
-		ISLOGIN  = "islogin"
-	)
 	Index.MergeCommands(ice.Commands{
 		IDE: {Name: "ide hash auto", Help: "集成开发环境", Meta: Meta(), Actions: ice.MergeActions(ice.Actions{
 			code.AUTOGEN: {Name: "autogen projectname*='终端工具链' appid*='wxf4e5104d83476ed6' serve*='https://2021.shylinux.com'", Help: "生成", Hand: func(m *ice.Message, arg ...string) {
-				const (
-					CONF_JS                     = "conf.js"
-					APP_JSON                    = "app.json"
-					PROJECT_CONFIG_JSON         = "project.config.json"
-					PROJECT_PRIVATE_CONFIG_JSON = "project.private.config.json"
-				)
-				p, mp := ice.USR_PROGRAM, ice.USR_VOLCANOS+PUBLISH_CLIENT_MP
-				nfs.DirDeepAll(m, mp, "", func(value ice.Maps) {
-					if !kit.IsIn(value[nfs.PATH], PROJECT_CONFIG_JSON, PROJECT_PRIVATE_CONFIG_JSON) {
-						m.Cmd(nfs.COPY, p+value[nfs.PATH], path.Join(mp, value[nfs.PATH]), ice.Maps{nfs.DIR_ROOT: ""})
-					}
-				})
-				m.Cmd(nfs.SAVE, p+CONF_JS, `module.exports = `+kit.Formats(kit.Dict(
-					m.OptionSimple(APPID, web.SERVE), nfs.MODULE, ice.Info.Make.Module, nfs.VERSION, ice.Info.Make.Versions(),
-				)))
+				_ide_autogen_utils(m)
+				_ide_autogen_pages(m)
+				p := ice.USR_PROGRAM
+				m.Cmd(nfs.SAVE, p+CONF_JS, `module.exports = `+kit.Formats(kit.Dict(m.OptionSimple(APPID, web.SERVE), nfs.MODULE, ice.Info.Make.Module, nfs.VERSION, ice.Info.Make.Versions())))
 				m.Cmd(nfs.DEFS, p+PROJECT_CONFIG_JSON, kit.Formats(kit.Dict(m.OptionSimple(APPID, "projectname"))))
-				list := []string{}
-				m.Travel(func(_ *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
-					if h, ok := cmd.Actions[PAGES]; ok {
-						prefix := strings.ReplaceAll(s.Prefix(), nfs.PT, "-")
-						file := strings.TrimPrefix(m.Resource(kit.Select(key+".js", h.Name)), nfs.REQUIRE)
-						list = append(list, path.Join(PAGES, prefix, kit.TrimExt(path.Base(file), nfs.JS)))
-						kit.For([]string{WXML, WXSS, nfs.JS}, func(ext string) {
-							file = kit.ExtChange(file, ext)
-							m.Cmd(nfs.COPY, path.Join(p, PAGES, prefix, path.Base(file)), file)
-						})
-					}
-				})
-				app := kit.UnMarshal(m.Cmdx(nfs.CAT, p+APP_JSON))
-				kit.Value(app, PAGES, kit.AddUniq(kit.Simple(kit.Value(app, PAGES)), list...))
-				m.Cmd(nfs.SAVE, p+APP_JSON, kit.Formats(app))
-				IdeCli(m.Sleep3s(), cli.OPEN, "--project", kit.Path(mdb.Config(m, PROJECT, p)))
-				m.ProcessInner()
+				IdeCli(m.Sleep3s(), cli.OPEN, "--project", kit.Path(mdb.Config(m, PROJECT, p))).ProcessInner()
 			}},
 			aaa.LOGIN: {Help: "登录", Hand: func(m *ice.Message, arg ...string) {
 				p := nfs.TempName(m)
@@ -125,8 +141,11 @@ func init() {
 			}},
 			cli.MAKE: {Help: "构建", Hand: func(m *ice.Message, arg ...string) {
 				kit.If(m.Option(mdb.HASH), func(p string) { mdb.Config(m, CURRENT, p) })
-				msg := m.Cmd("", kit.Select(mdb.Config(m, CURRENT), arg, 0))
-				m.Options(msg.AppendSimple()).Cmd("", AUTO_PREVIEW)
+				m.Options(m.Cmd("", kit.Select(mdb.Config(m, CURRENT), arg, 0)).AppendSimple())
+				kit.If(m.Option(cli.PWD), func(p string) {
+					kit.If(p == kit.Path(ice.USR_VOLCANOS+PUBLISH_CLIENT_MP), func() { _ide_autogen_utils(m); _ide_autogen_pages(m) })
+				})
+				m.Cmd("", AUTO_PREVIEW)
 			}},
 			AUTO_PREVIEW: {Help: "预览", Hand: func(m *ice.Message, arg ...string) {
 				kit.If(m.Option(mdb.HASH), func(p string) { mdb.Config(m, CURRENT, p) })

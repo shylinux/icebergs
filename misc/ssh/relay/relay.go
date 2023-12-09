@@ -229,7 +229,7 @@ func (s relay) Install(m *ice.Message, arg ...string) {
 }
 func (s relay) Upgrade(m *ice.Message, arg ...string) {
 	if len(arg) == 0 && m.Option(MACHINE) == "" {
-		m.Options(ice.CMD, m.Template(UPGRADE_SH), cli.DELAY, "0", "interval", "10s")
+		m.Options(ice.CMD, m.Template(UPGRADE_SH), cli.DELAY, "0", "interval", "15s")
 		s.ForFlow(m)
 	} else {
 		s.shell(m, m.Template(UPGRADE_SH), arg...)

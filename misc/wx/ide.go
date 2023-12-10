@@ -38,13 +38,19 @@ func _ide_autogen_utils(m *ice.Message) {
 		m.Cmd(nfs.COPY, to+value[nfs.PATH], path.Join(from, value[nfs.PATH]), ice.Maps{nfs.DIR_ROOT: ""})
 	})
 	to += "utils/"
-	m.Cmd(nfs.COPY, to+"const.js", path.Join(ice.USR_VOLCANOS, "const.js"))
-	head := nfs.TemplateText(m, "lib_head.js")
-	for _, from := range []string{path.Join(ice.USR_VOLCANOS, ice.LIB), path.Join(nfs.SRC_TEMPLATE, web.CHAT_HEADER, aaa.LANGUAGE)} {
+	kit.For([]string{"const.js"}, func(from string) {
+		m.Cmd(nfs.COPY, to+from, path.Join(ice.USR_VOLCANOS, from))
+	})
+	head, foot := nfs.TemplateText(m, "frame_head.js"), nfs.TemplateText(m, "frame_foot.js")
+	kit.For([]string{"frame.js"}, func(from string) {
+		m.Cmd(nfs.SAVE, to+from, head, lex.NL, m.Cmdx(nfs.CAT, path.Join(ice.USR_VOLCANOS, from)), lex.NL, foot)
+	})
+	head, foot = nfs.TemplateText(m, "lib_head.js"), nfs.TemplateText(m, "lib_foot.js")
+	kit.For([]string{path.Join(ice.USR_VOLCANOS, ice.LIB), path.Join(nfs.SRC_TEMPLATE, web.CHAT_HEADER, aaa.LANGUAGE)}, func(from string) {
 		nfs.DirDeepAll(m, from, "", func(value ice.Maps) {
-			m.Cmd(nfs.SAVE, path.Join(to, ice.LIB, value[nfs.PATH]), head, lex.SP, m.Cmdx(nfs.CAT, value[nfs.PATH]), ice.Maps{nfs.DIR_ROOT: ""})
+			m.Cmd(nfs.SAVE, path.Join(to, ice.LIB, value[nfs.PATH]), head, lex.NL, m.Cmdx(nfs.CAT, value[nfs.PATH]), ice.Maps{nfs.DIR_ROOT: ""}, lex.NL, foot)
 		})
-	}
+	})
 }
 func _ide_autogen_pages(m *ice.Message) {
 	to, list := ice.USR_PROGRAM, []string{}

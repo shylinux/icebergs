@@ -69,6 +69,7 @@ Volcanos(chat.ONIMPORT, {
 		if (can.ConfWidth() > 1400) { item.width = can.base.Min(can.ConfWidth()-600, 640, 1400), item.left = (can.ConfWidth()-item.width)/2 }
 		if (can.ConfHeight() > 800) { item.height = can.base.Min(can.ConfHeight()-200, 320, 800), item.top = 50 }
 		if (can.user.isMobile) { item.left = 0, item.top = 25, item.height = can.ConfHeight()-125, item.width = can.ConfWidth() }
+		item.height = can.base.Max(html.DESKTOP_HEIGHT, item.height), item.width = can.base.Max(html.DESKTOP_WIDTH, item.width)
 		can.onappend.plugin(can, item, function(sub) { can.ondetail.select(can, sub._target)
 			var index = 0; can.core.Item({
 				close: {color: "#f95f57", inner: "x", onclick: function(event) { sub.onaction._close(event, sub) }},

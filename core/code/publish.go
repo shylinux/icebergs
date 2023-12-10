@@ -25,7 +25,14 @@ func _publish_bin_list(m *ice.Message) *ice.Message {
 func _publish_list(m *ice.Message, arg ...string) *ice.Message {
 	defer m.SortStrR(mdb.TIME)
 	m.Option(nfs.DIR_REG, kit.Select("", arg, 0))
-	return nfs.DirDeepAll(m, ice.USR_PUBLISH, nfs.PWD, nil, nfs.DIR_WEB_FIELDS)
+	defer m.Table(func(value ice.Maps) {
+		if p := value[nfs.PATH]; strings.Contains(p, "ice.windows.") {
+			m.PushDownload(mdb.LINK, "ice.exe", p)
+		} else {
+			m.Push(mdb.LINK, kit.MergeURL2(web.UserHost(m), "/publish/"+p))
+		}
+	})
+	return nfs.DirDeepAll(m, ice.USR_PUBLISH, nfs.PWD, nil)
 }
 func _publish_file(m *ice.Message, file string, arg ...string) string {
 	if strings.HasSuffix(file, ice.ICE_BIN) {

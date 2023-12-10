@@ -49,11 +49,14 @@ func SessCreate(m *ice.Message, username string) string {
 	return m.Option(ice.MSG_SESSID, m.Cmdx(SESS, mdb.CREATE, username))
 }
 func SessCheck(m *ice.Message, sessid string) bool {
-	m.Options(ice.MSG_USERNICK, "", ice.MSG_USERNAME, "", ice.MSG_USERROLE, VOID, ice.MSG_LANGUAGE, "", "aaa.checker", logs.FileLine(-1))
+	m.Options(ice.MSG_USERNICK, "", ice.MSG_USERNAME, "", ice.MSG_USERROLE, VOID, ice.MSG_CHECKER, logs.FileLine(-1))
 	return sessid != "" && m.Cmdy(SESS, CHECK, sessid, logs.FileLineMeta(-1)).Option(ice.MSG_USERNAME) != ""
 }
 func SessAuth(m *ice.Message, value ice.Any, arg ...string) *ice.Message {
-	language := kit.Format(kit.Value(value, LANGUAGE))
+	language := kit.Select(m.Option(ice.MSG_LANGUAGE), kit.Format(kit.Value(value, LANGUAGE)))
+	kit.If(language == "", func() {
+		kit.If(kit.Format(kit.Value(value, USERNAME)), func(p string) { language = m.Cmdv(USER, p, LANGUAGE) })
+	})
 	kit.If(language == "", func() { language = kit.Select("", "zh-cn", strings.Contains(m.Option(ice.MSG_USERUA), "zh_CN")) })
 	kit.If(language == "" && m.R != nil, func() { language = kit.Select("", kit.Split(m.R.Header.Get(html.AcceptLanguage), ",;"), 0) })
 	kit.If(language == "", func() { language = ice.Info.Lang })
@@ -62,8 +65,8 @@ func SessAuth(m *ice.Message, value ice.Any, arg ...string) *ice.Message {
 		USERNICK, m.Option(ice.MSG_USERNICK, kit.Format(kit.Value(value, USERNICK))),
 		USERNAME, m.Option(ice.MSG_USERNAME, kit.Format(kit.Value(value, USERNAME))),
 		USERROLE, m.Option(ice.MSG_USERROLE, kit.Format(kit.Value(value, USERROLE))),
-		LANGUAGE, m.Option(ice.MSG_LANGUAGE, language),
-		arg, logs.FileLineMeta(kit.Select(logs.FileLine(-1), m.Option("aaa.checker"))),
+		LANGUAGE, m.Option(ice.MSG_LANGUAGE, language), arg,
+		logs.FileLineMeta(kit.Select(logs.FileLine(-1), m.Option("aaa.checker"))),
 	)
 }
 func SessLogout(m *ice.Message, arg ...string) {

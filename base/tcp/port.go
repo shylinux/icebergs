@@ -70,10 +70,7 @@ func init() {
 				}
 			}},
 			SOCKET: {Hand: func(m *ice.Message, arg ...string) {
-				parse := func(str string) int64 {
-					port, _ := strconv.ParseInt(str, 16, 32)
-					return port
-				}
+				parse := func(str string) int64 { port, _ := strconv.ParseInt(str, 16, 32); return port }
 				trans := func(str string) string {
 					switch str {
 					case "0A":

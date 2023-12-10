@@ -46,6 +46,7 @@ func install(m *ice.Message, cmd, icon, index string, arg ...string) {
 	if icon != "" {
 		nfs.Exists(m, ice.USR_ICONS+icon, func(p string) { icon = p })
 		if m.Warn(!strings.HasPrefix(icon, web.HTTP) && !nfs.Exists(m, icon)) {
+			m.Info("what %s", m.FormatStack(1, 100))
 			return
 		}
 	}

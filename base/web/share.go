@@ -18,9 +18,9 @@ import (
 
 func _share_link(m *ice.Message, p string, arg ...ice.Any) string {
 	if strings.HasPrefix(p, ice.USR_PUBLISH) {
-		return tcp.PublishLocalhost(m, MergeLink(m, strings.TrimPrefix(p, ice.USR), arg...))
+		return kit.MergeURL2(UserHost(m), strings.TrimPrefix(p, ice.USR), arg...)
 	}
-	return tcp.PublishLocalhost(m, MergeLink(m, kit.Select("", PP(SHARE, LOCAL), !strings.HasPrefix(p, nfs.PS) && !strings.HasPrefix(p, HTTP))+p, arg...))
+	return kit.MergeURL2(UserHost(m), kit.Select("", PP(SHARE, LOCAL), !strings.HasPrefix(p, nfs.PS) && !strings.HasPrefix(p, HTTP))+p, arg...)
 }
 func _share_cache(m *ice.Message, arg ...string) {
 	if m.Cmdy(CACHE, arg[0]); m.Length() == 0 {

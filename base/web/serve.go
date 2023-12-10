@@ -28,7 +28,7 @@ func _serve_start(m *ice.Message) {
 	kit.If(m.Option(aaa.USERNAME), func() { aaa.UserRoot(m, m.Option(aaa.USERNICK), m.Option(aaa.USERNAME)) })
 	kit.If(m.Option(tcp.PORT) == tcp.RANDOM, func() { m.Option(tcp.PORT, m.Cmdx(tcp.PORT, aaa.RIGHT)) })
 	kit.If(runtime.GOOS == cli.WINDOWS || m.Cmdx(cli.SYSTEM, "lsof", "-i", ":"+m.Option(tcp.PORT)) != "", func() {
-		m.Go(func() { m.Cmd(SPIDE, ice.OPS, _serve_address(m)+"/exit", ice.Maps{CLIENT_TIMEOUT: "300ms"}) }).Sleep300ms()
+		m.Go(func() { m.Cmd(SPIDE, ice.OPS, _serve_address(m)+"/exit", ice.Maps{CLIENT_TIMEOUT: "30ms"}) }).Sleep300ms()
 	})
 	cli.NodeInfo(m, kit.Select(ice.Info.Hostname, m.Option(tcp.NODENAME)), SERVER)
 	m.Start("", m.OptionSimple(tcp.HOST, tcp.PORT)...)
@@ -178,15 +178,13 @@ func _serve_auth(m *ice.Message, key string, cmds []string, w http.ResponseWrite
 		ls := kit.Simple(mdb.Cache(m, m.Option(ice.MSG_USERIP), func() ice.Any {
 			if IsLocalHost(m) {
 				aaa.UserRoot(m)
-				return kit.Simple(m.Time(), m.OptionSplit(ice.MSG_USERNICK, ice.MSG_USERNAME, ice.MSG_USERROLE, ice.MSG_LANGUAGE))
+				return kit.Simple(m.Time(), m.OptionSplit(ice.MSG_USERNICK), m.OptionSplit(ice.MSG_USERNAME), m.OptionSplit(ice.MSG_USERROLE))
+			} else {
+				return nil
 			}
-			return nil
 		}))
 		if len(ls) > 0 {
-			m.Auth(aaa.USERNICK, m.Option(ice.MSG_USERNICK, ls[1]),
-				aaa.USERNAME, m.Option(ice.MSG_USERNAME, ls[2]),
-				aaa.USERROLE, m.Option(ice.MSG_USERROLE, ls[3]),
-				aaa.LANGUAGE, m.Option(ice.MSG_LANGUAGE, ls[4]), CACHE, ls[0])
+			aaa.SessAuth(m, kit.Dict(aaa.USERNICK, ls[1], aaa.USERNAME, ls[2], aaa.USERROLE, ls[3]), CACHE, ls[0])
 		}
 	}
 	m.Cmd(COUNT, mdb.CREATE, aaa.IP, m.Option(ice.MSG_USERIP), m.Option(ice.MSG_USERUA), kit.Dict(ice.LOG_DISABLE, ice.TRUE))

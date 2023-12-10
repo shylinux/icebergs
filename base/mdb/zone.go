@@ -95,7 +95,7 @@ func _zone_import(m *ice.Message, prefix, chain, file string) {
 	if os.IsNotExist(e) {
 		return
 	}
-	if m.Warn(e) {
+	if e != nil {
 		return
 	}
 	defer f.Close()

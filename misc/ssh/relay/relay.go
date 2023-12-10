@@ -131,9 +131,24 @@ func (s relay) Stats(m *ice.Message) {
 		PROC, `ps aux | wc -l`,
 	}
 	trans := map[string]func([]string) string{
-		MEM:     func(ls []string) string { return kit.FmtSize(kit.Int(ls[1])*1024, kit.Int(ls[0])*1024) },
-		DISK:    func(ls []string) string { return kit.FmtSize(kit.Int(ls[2])*1024, kit.Int(ls[1])*1024) },
-		NETWORK: func(ls []string) string { return kit.FmtSize(kit.Int(ls[1]), kit.Int(ls[9])) },
+		MEM: func(ls []string) string {
+			if len(ls) < 2 {
+				return ""
+			}
+			return kit.FmtSize(kit.Int(ls[1])*1024, kit.Int(ls[0])*1024)
+		},
+		DISK: func(ls []string) string {
+			if len(ls) < 2 {
+				return ""
+			}
+			return kit.FmtSize(kit.Int(ls[2])*1024, kit.Int(ls[1])*1024)
+		},
+		NETWORK: func(ls []string) string {
+			if len(ls) < 2 {
+				return ""
+			}
+			return kit.FmtSize(kit.Int(ls[1]), kit.Int(ls[9]))
+		},
 	}
 	web.GoToast(m.Message, "", func(toast func(string, int, int)) []string {
 		for i := 0; i < len(cmds); i += 2 {

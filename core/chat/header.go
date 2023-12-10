@@ -1,8 +1,6 @@
 package chat
 
 import (
-	"strings"
-
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
@@ -131,13 +129,9 @@ func init() {
 				return
 			}
 			msg := m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME))
-			kit.For([]string{aaa.LANGUAGE, aaa.USERNICK, aaa.EMAIL}, func(k string) { m.Option(k, msg.Append(k)) })
+			m.Option(aaa.LANGUAGE, m.Option(ice.MSG_LANGUAGE))
+			kit.For([]string{aaa.USERNICK, aaa.EMAIL}, func(k string) { m.Option(k, msg.Append(k)) })
 			kit.For([]string{aaa.AVATAR, aaa.BACKGROUND}, func(k string) { m.Option(k, web.RequireFile(m, msg.Append(k))) })
-			kit.If(m.Option(aaa.LANGUAGE) == "", func() {
-				m.Option(aaa.LANGUAGE, kit.Select("", "zh-cn", strings.Contains(m.Option(ice.MSG_USERUA), "zh_CN")))
-			})
-			kit.If(m.Option(aaa.LANGUAGE) == "", func() { m.Option(aaa.LANGUAGE, kit.Select("", kit.Split(m.R.Header.Get(web.AcceptLanguage), ",;"), 0)) })
-			kit.If(m.Option(aaa.LANGUAGE) == "", func() { m.Option(aaa.LANGUAGE, ice.Info.Lang) })
 		}},
 	})
 }

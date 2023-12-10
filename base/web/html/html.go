@@ -77,3 +77,7 @@ func FormatDanger(value string) string {
 		COLOR, "var(--danger-fg-color)",
 	))
 }
+
+const (
+	AcceptLanguage = "Accept-Language"
+)

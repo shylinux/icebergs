@@ -1,8 +1,11 @@
 package aaa
 
 import (
+	"strings"
+
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/web/html"
 	kit "shylinux.com/x/toolkits"
 	"shylinux.com/x/toolkits/logs"
 )
@@ -46,14 +49,20 @@ func SessCreate(m *ice.Message, username string) string {
 	return m.Option(ice.MSG_SESSID, m.Cmdx(SESS, mdb.CREATE, username))
 }
 func SessCheck(m *ice.Message, sessid string) bool {
-	m.Options(ice.MSG_USERNICK, "", ice.MSG_USERNAME, "", ice.MSG_USERROLE, VOID, "aaa.checker", logs.FileLine(-1))
+	m.Options(ice.MSG_USERNICK, "", ice.MSG_USERNAME, "", ice.MSG_USERROLE, VOID, ice.MSG_LANGUAGE, "", "aaa.checker", logs.FileLine(-1))
 	return sessid != "" && m.Cmdy(SESS, CHECK, sessid, logs.FileLineMeta(-1)).Option(ice.MSG_USERNAME) != ""
 }
 func SessAuth(m *ice.Message, value ice.Any, arg ...string) *ice.Message {
+	language := kit.Format(kit.Value(value, LANGUAGE))
+	kit.If(language == "", func() { language = kit.Select("", "zh-cn", strings.Contains(m.Option(ice.MSG_USERUA), "zh_CN")) })
+	kit.If(language == "" && m.R != nil, func() { language = kit.Select("", kit.Split(m.R.Header.Get(html.AcceptLanguage), ",;"), 0) })
+	kit.If(language == "", func() { language = ice.Info.Lang })
+	language = strings.ReplaceAll(strings.ToLower(kit.Split(language, " .")[0]), "_", "-")
 	return m.Auth(
 		USERNICK, m.Option(ice.MSG_USERNICK, kit.Format(kit.Value(value, USERNICK))),
 		USERNAME, m.Option(ice.MSG_USERNAME, kit.Format(kit.Value(value, USERNAME))),
 		USERROLE, m.Option(ice.MSG_USERROLE, kit.Format(kit.Value(value, USERROLE))),
+		LANGUAGE, m.Option(ice.MSG_LANGUAGE, language),
 		arg, logs.FileLineMeta(kit.Select(logs.FileLine(-1), m.Option("aaa.checker"))),
 	)
 }

@@ -18,14 +18,16 @@ func init() {
 				mdb.HashSelects(m).Sort(mdb.COUNT, ice.INT_R)
 				GoToast(m, "", func(toast func(string, int, int)) []string {
 					m.Table(func(index int, value ice.Maps) {
-						location := kit.Format(kit.Value(SpideGet(m, "http://opendata.baidu.com/api.php?query=%s&co=&resource_id=6006&oe=utf8", value["name"]), "data.0.location"))
-						toast(location, index, m.Length())
-						mdb.HashModify(m, mdb.HASH, value[mdb.HASH], "location", location)
-						m.Sleep("500ms")
+						if value["location"] == "" {
+							location := kit.Format(kit.Value(SpideGet(m, "http://opendata.baidu.com/api.php?co=&resource_id=6006&oe=utf8", "query", value[mdb.NAME]), "data.0.location"))
+							mdb.HashModify(m, mdb.HASH, value[mdb.HASH], "location", location)
+							toast(location, index, m.Length())
+							m.Sleep300ms()
+						}
 					})
 					return nil
 				})
 			}},
-		}, mdb.HashAction(mdb.LIMIT, 1000, mdb.LEAST, 500, mdb.SHORT, "type,name", mdb.FIELD, "time,hash,count,type,name,text", mdb.SORT, "type,name,text,location"))},
+		}, mdb.HashAction(mdb.LIMIT, 1000, mdb.LEAST, 500, mdb.SHORT, "type,name", mdb.FIELD, "time,hash,count,location,type,name,text", mdb.SORT, "type,name,text,location"))},
 	})
 }

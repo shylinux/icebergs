@@ -69,7 +69,8 @@ func (g *Group) EchoPath(group string, str string, arg ...ice.Any) *ice.Message 
 	return g.Echo(group, `<path d="%s"></path>`, kit.Format(str, arg...))
 }
 func (g *Group) EchoText(group string, x, y int, text string, arg ...string) *ice.Message {
-	offset := kit.Int(kit.Select("8", "4", g.Get(group).IsMobileUA()))
+	m := g.Get(group)
+	offset := kit.Int(kit.Select("8", "4", m.IsMobileUA()))
 	return g.Echo(group, "<text x=%d y=%d %s>%s</text>", x, y+offset, formatStyle(arg...), text)
 }
 func (g *Group) EchoArrowLine(group string, x1, y1, x2, y2 int, arg ...string) *ice.Message { // marker-end

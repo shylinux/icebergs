@@ -28,7 +28,7 @@ const TRASH = "trash"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		TRASH: {Name: "trash hash auto prunes", Help: "回收站", Actions: ice.MergeActions(ice.Actions{
+		TRASH: {Name: "trash hash auto", Help: "回收站", Actions: ice.MergeActions(ice.Actions{
 			mdb.CREATE: {Hand: func(m *ice.Message, arg ...string) {
 				_trash_create(m, kit.Paths(m.Option(FROM)))
 			}},

@@ -158,7 +158,7 @@ func (s relay) Stats(m *ice.Message) {
 		}
 		return nil
 	}).ProcessInner()
-	s.ForEach(m.Spawn(ice.Maps{MACHINE: "", ice.CMD: "contexts/bin/ice.bin web.admin runtime"})).Table(func(value ice.Maps) {
+	s.ForEach(m.Spawn(ice.Maps{MACHINE: m.Option(MACHINE), ice.CMD: "contexts/bin/ice.bin web.admin runtime"})).Table(func(value ice.Maps) {
 		res := kit.UnMarshal(value[ice.RES])
 		data := kit.Value(res, cli.MAKE)
 		s.Modify(m, kit.Simple(MACHINE, value[MACHINE], kit.Dict(
@@ -227,6 +227,7 @@ func (s relay) List(m *ice.Message, arg ...string) *ice.Message {
 	})
 	_stats := kit.Dict(MEM, kit.FmtSize(stats[MEM_FREE], stats[MEM_TOTAL]), DISK, kit.FmtSize(stats[DISK_USED], stats[DISK_TOTAL]))
 	m.StatusTimeCount(m.Spawn().Options(stats, _stats).OptionSimple(VCPU, MEM, DISK, SOCKET, PROC))
+	m.Option(ice.TABLE_CHECKBOX, ice.TRUE)
 	m.RewriteAppend(func(value, key string, index int) string {
 		if key == MEM {
 			if ls := kit.Split(value, " /"); len(ls) > 0 && kit.Int(ls[0]) < 256*1024*1024 {
@@ -241,7 +242,7 @@ func (s relay) Install(m *ice.Message, arg ...string) {
 	s.shell(m, m.Template(INSTALL_SH), arg...)
 }
 func (s relay) Upgrade(m *ice.Message, arg ...string) {
-	if len(arg) == 0 && m.Option(MACHINE) == "" {
+	if len(arg) == 0 && (m.Option(MACHINE) == "" || strings.Contains(m.Option(MACHINE), ",")) {
 		m.Options(ice.CMD, m.Template(UPGRADE_SH), cli.DELAY, "0", "interval", "3s")
 		s.ForFlow(m)
 	} else {
@@ -294,7 +295,7 @@ func (s relay) shell(m *ice.Message, init string, arg ...string) {
 }
 func (s relay) foreach(m *ice.Message, cb func(*ice.Message, []string)) {
 	cmd := kit.Filters(strings.Split(m.Option(ice.CMD), lex.NL), "")
-	s.Hash.ForEach(m, "", func(msg *ice.Message) { cb(msg, cmd) })
+	s.Hash.ForEach(m, MACHINE, func(msg *ice.Message) { cb(msg, cmd) })
 }
 func (s relay) foreachModify(m *ice.Message, key, cmd string, cb func([]string) string) {
 	kit.If(cb == nil, func() { cb = func(ls []string) string { return kit.Join(ls) } })

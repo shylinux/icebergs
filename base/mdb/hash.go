@@ -76,6 +76,12 @@ func _hash_select(m *ice.Message, prefix, chain, field, value string) {
 	defer m.SortStrR(TIME)
 	fields := _hash_fields(m)
 	defer RLock(m, prefix)()
+	if strings.Contains(value, ",") {
+		kit.For(kit.Split(value), func(value string) {
+			Richs(m, prefix, chain, value, func(key string, value Map) { _mdb_select(m, m.OptionCB(""), key, value, fields, nil) })
+		})
+		return
+	}
 	Richs(m, prefix, chain, value, func(key string, value Map) { _mdb_select(m, m.OptionCB(""), key, value, fields, nil) })
 }
 func _hash_select_field(m *ice.Message, prefix, chain string, key string, field string) (value string) {
@@ -221,7 +227,7 @@ func HashModify(m *ice.Message, arg ...Any) *ice.Message {
 	return m.Cmd(MODIFY, m.PrefixKey(), m.Option(SUBKEY), HASH, arg)
 }
 func HashSelect(m *ice.Message, arg ...string) *ice.Message {
-	if len(arg) > 0 && arg[0] == FOREACH {
+	if len(arg) > 0 && (arg[0] == FOREACH || strings.Contains(arg[0], ",")) {
 		m.Fields(0, HashField(m))
 	} else {
 		m.Fields(len(kit.Slice(arg, 0, 1)), HashField(m))

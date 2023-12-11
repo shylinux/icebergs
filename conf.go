@@ -247,6 +247,7 @@ const ( // MSG
 	LOG_TRACEID = "log.id"
 
 	TOAST_DURATION = "toast.duration"
+	TABLE_CHECKBOX = "table.checkbox"
 )
 const ( // RENDER
 	RENDER_BUTTON = "_button"

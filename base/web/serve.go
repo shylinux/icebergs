@@ -95,7 +95,7 @@ func _serve_static(msg *ice.Message, w http.ResponseWriter, r *http.Request) boo
 }
 func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.ResponseWriter, r *http.Request) {
 	debug := strings.Contains(r.URL.String(), "debug=true") || strings.Contains(r.Header.Get(Referer), "debug=true")
-	m.Option(ice.LOG_TRACEID, r.Header.Get(ice.LOG_TRACEID))
+	m.Options(ice.LOG_TRACEID, r.Header.Get(ice.LOG_TRACEID), ice.MSG_LANGUAGE, "")
 	_log := func(level string, arg ...ice.Any) *ice.Message {
 		if debug || arg[0] == ice.MSG_CMDS {
 			return m.Logs(strings.Title(level), arg...)
@@ -166,24 +166,20 @@ func _serve_domain(m *ice.Message) string {
 	)
 }
 func _serve_auth(m *ice.Message, key string, cmds []string, w http.ResponseWriter, r *http.Request) ([]string, bool) {
-	if len(cmds) > 0 {
-		cmds = append(kit.Split(cmds[0], ","), cmds[1:]...)
-	}
+	kit.If(len(cmds) > 0, func() { cmds = append(kit.Split(cmds[0], ","), cmds[1:]...) })
 	if r.URL.Path == PP(SPACE) {
 		aaa.SessCheck(m, m.Option(ice.MSG_SESSID))
 		return cmds, true
 	}
 	defer func() { m.Options(ice.MSG_CMDS, "", ice.MSG_SESSID, "") }()
 	if aaa.SessCheck(m, m.Option(ice.MSG_SESSID)); m.Option(ice.MSG_USERNAME) == "" {
-		ls := kit.Simple(mdb.Cache(m, m.Option(ice.MSG_USERIP), func() ice.Any {
-			if IsLocalHost(m) {
-				aaa.UserRoot(m)
-				return kit.Simple(m.Time(), m.OptionSplit(ice.MSG_USERNICK), m.OptionSplit(ice.MSG_USERNAME), m.OptionSplit(ice.MSG_USERROLE))
-			} else {
+		if ls := kit.Simple(mdb.Cache(m, m.Option(ice.MSG_USERIP), func() ice.Any {
+			if !IsLocalHost(m) {
 				return nil
 			}
-		}))
-		if len(ls) > 0 {
+			aaa.UserRoot(m)
+			return kit.Simple(m.Time(), m.OptionSplit(ice.MSG_USERNICK, ice.MSG_USERNAME, ice.MSG_USERROLE))
+		})); len(ls) > 0 {
 			aaa.SessAuth(m, kit.Dict(aaa.USERNICK, ls[1], aaa.USERNAME, ls[2], aaa.USERROLE, ls[3]), CACHE, ls[0])
 		}
 	}

@@ -113,7 +113,7 @@ const CACHE = "cache"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		CACHE: {Name: "cache hash auto write catch upload", Help: "缓存池", Actions: ice.MergeActions(ice.Actions{
+		CACHE: {Name: "cache hash auto upload", Help: "缓存池", Actions: ice.MergeActions(ice.Actions{
 			ice.RENDER_DOWNLOAD: {Hand: func(m *ice.Message, arg ...string) {
 				m.Echo(_share_link(m, kit.Select(arg[0], arg, 1), ice.POD, m.Option(ice.MSG_USERPOD), nfs.FILENAME, kit.Select("", arg[0], len(arg) > 1)))
 			}},

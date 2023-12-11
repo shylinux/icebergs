@@ -203,7 +203,7 @@ func init() {
 			m.Cmdy(nfs.DIR, ice.USR_ICONS, nfs.PATH).CutTo(nfs.PATH, arg[0])
 		case aaa.PASSWORD:
 			m.SetAppend()
-		case ctx.INDEX:
+		case ctx.INDEX, ice.CMD:
 			if space := m.Option(SPACE); space != "" {
 				m.Options(SPACE, []string{}).Cmdy(SPACE, space, ctx.COMMAND)
 			} else {

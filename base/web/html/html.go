@@ -80,4 +80,5 @@ func FormatDanger(value string) string {
 
 const (
 	AcceptLanguage = "Accept-Language"
+	CHECKBOX       = "checkbox"
 )

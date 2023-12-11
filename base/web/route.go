@@ -11,6 +11,7 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
+	"shylinux.com/x/icebergs/base/web/html"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -25,18 +26,21 @@ func _route_match(m *ice.Message, space string, cb func(ice.Maps, int, []ice.Map
 	if m.Warn(err) {
 		return
 	}
-	list := []ice.Maps{}
+	res := []ice.Maps{}
+	list := kit.Split(space)
 	m.Cmd("").Table(func(value ice.Maps) {
 		if value[mdb.STATUS] == OFFLINE {
 
 		} else if value[SPACE] == space {
-			list = append(list, value)
+			res = append(res, value)
+		} else if kit.IsIn(value[SPACE], list...) {
+			res = append(res, value)
 		} else if reg.MatchString(kit.Format("%s:%s=%s@%s", value[SPACE], value[mdb.TYPE], value[nfs.MODULE], value[nfs.VERSION])) {
-			list = append(list, value)
+			res = append(res, value)
 		}
 	})
-	for i, item := range list {
-		cb(item, i, list)
+	for i, item := range res {
+		cb(item, i, res)
 	}
 }
 func _route_toast(m *ice.Message, space string, args ...string) {
@@ -133,7 +137,7 @@ func init() {
 					kit.If(value[mdb.STATUS] == OFFLINE, func() { mdb.HashRemove(m, SPACE, value[SPACE]) })
 				})
 			}},
-		}, mdb.HashAction(mdb.SHORT, SPACE, mdb.FIELD, "time,space,type,module,version,md5,size,path,hostname", mdb.SORT, "type,space", mdb.ACTION, ice.MAIN)), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.SHORT, SPACE, mdb.FIELD, "time,space,type,module,version,md5,size,path,hostname", mdb.SORT, "type,space", html.CHECKBOX, ice.TRUE, mdb.ACTION, ice.MAIN)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 1 {
 				_route_match(m, arg[0], func(value ice.Maps, i int, list []ice.Maps) {
 					_route_push(m, value[SPACE], m.Cmd(SPACE, value[SPACE], arg[1:]))

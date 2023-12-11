@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/web/html"
 	kit "shylinux.com/x/toolkits"
 	"shylinux.com/x/toolkits/logs"
 	"shylinux.com/x/toolkits/miss"
@@ -235,22 +236,21 @@ func HashSelect(m *ice.Message, arg ...string) *ice.Message {
 	m.Cmdy(SELECT, m.PrefixKey(), m.Option(SUBKEY), HASH, HashShort(m), arg, logs.FileLineMeta(-1))
 	kit.If(kit.Select(Config(m, SHORT), Config(m, SORT)), func(sort string) { kit.If(sort != UNIQ, func() { m.Sort(sort) }) })
 	if m.PushAction(Config(m, ACTION), REMOVE); !m.FieldsIsDetail() {
+		m.Options(ice.TABLE_CHECKBOX, Config(m, html.CHECKBOX))
 		return m.Action(CREATE, PRUNES)
 	}
-	if m.FieldsIsDetail() {
-		m.Table(func(value ice.Maps) {
-			m.SetAppend().OptionFields(ice.FIELDS_DETAIL)
-			kit.For(kit.Split(HashField(m)), func(key string) {
-				if key == HASH {
-					m.Push(key, arg[0])
-				} else {
-					m.Push(key, value[key])
-				}
-				delete(value, key)
-			})
-			kit.For(kit.SortedKey(value), func(k string) { m.Push(k, value[k]) })
+	m.Table(func(value ice.Maps) {
+		m.SetAppend().OptionFields(ice.FIELDS_DETAIL)
+		kit.For(kit.Split(HashField(m)), func(key string) {
+			if key == HASH {
+				m.Push(key, arg[0])
+			} else {
+				m.Push(key, value[key])
+			}
+			delete(value, key)
 		})
-	}
+		kit.For(kit.SortedKey(value), func(k string) { m.Push(k, value[k]) })
+	})
 	return m
 }
 func HashPrunes(m *ice.Message, cb func(Map) bool) *ice.Message {

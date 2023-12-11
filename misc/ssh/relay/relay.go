@@ -57,6 +57,7 @@ const (
 type relay struct {
 	ice.Hash
 	ice.Code
+	checkbox    string `data:"true"`
 	short       string `data:"machine"`
 	field       string `data:"time,machine,username,password,host,port,portal,module,version,commit,compile,boot,package,shell,kernel,arch,ncpu,vcpu,mhz,mem,disk,network,listen,socket,proc,vendor"`
 	statsTables string `name:"statsTables" event:"stats.tables"`
@@ -68,6 +69,7 @@ type relay struct {
 	forFlow     string `name:"forFlow machine cmd*:textarea=pwd" help:"流程"`
 	list        string `name:"list machine auto" help:"代理"`
 	pushbin     string `name:"pushbin" help:"部署"`
+	adminCmd    string `name:"adminCmd cmd" help:"命令"`
 }
 
 func (s relay) Init(m *ice.Message, arg ...string) {
@@ -203,10 +205,10 @@ func (s relay) List(m *ice.Message, arg ...string) *ice.Message {
 			stats[DISK_TOTAL] += kit.Int(ls[1])
 		}
 		if value[web.PORTAL] == "" {
-			m.Push(web.LINK, "").PushButton(s.Xterm, s.Pushbin, s.Install, s.Remove)
+			m.Push(web.LINK, "").PushButton(s.Xterm, s.AdminCmd, s.Pushbin, s.Install, s.Remove)
 			return
 		}
-		m.PushButton(s.Admin, s.Vimer, s.Repos, s.Xterm, s.Pushbin, s.Upgrade, s.Remove)
+		m.PushButton(s.Admin, s.Vimer, s.Repos, s.Xterm, s.AdminCmd, s.Pushbin, s.Upgrade, s.Remove)
 		switch value[web.PORTAL] {
 		case tcp.PORT_443:
 			m.Push(web.LINK, kit.Format("https://%s", value[tcp.HOST]))
@@ -219,7 +221,6 @@ func (s relay) List(m *ice.Message, arg ...string) *ice.Message {
 	})
 	_stats := kit.Dict(MEM, kit.FmtSize(stats[MEM_FREE], stats[MEM_TOTAL]), DISK, kit.FmtSize(stats[DISK_USED], stats[DISK_TOTAL]))
 	m.StatusTimeCount(m.Spawn().Options(stats, _stats).OptionSimple(VCPU, MEM, DISK, SOCKET, PROC))
-	m.Options(ice.TABLE_CHECKBOX, ice.TRUE)
 	m.RewriteAppend(func(value, key string, index int) string {
 		if key == MEM {
 			if ls := kit.Split(value, " /"); len(ls) > 0 && kit.Int(ls[0]) < 256*1024*1024 {
@@ -256,6 +257,9 @@ func (s relay) Pushbin(m *ice.Message, arg ...string) {
 		m.Cmd(SSH_TRANS, tcp.SEND)
 	}
 	s.shell(m, m.Template(PUSHBIN_SH), arg...)
+}
+func (s relay) AdminCmd(m *ice.Message, arg ...string) {
+	s.shell(m, kit.JoinWord("contexts/"+ice.BIN_ICE_BIN, web.ADMIN, m.Option(ice.CMD)), arg...)
 }
 
 func (s relay) Xterm(m *ice.Message, arg ...string) { s.Code.Xterm(m, m.Option(MACHINE), arg...) }

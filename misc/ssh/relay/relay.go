@@ -58,7 +58,7 @@ type relay struct {
 	ice.Hash
 	ice.Code
 	short       string `data:"machine"`
-	field       string `data:"time,machine,username,password,host,port,portal,module,version,commit,compile,package,shell,kernel,arch,ncpu,vcpu,mhz,mem,disk,network,listen,socket,proc,vendor"`
+	field       string `data:"time,machine,username,password,host,port,portal,module,version,commit,compile,boot,package,shell,kernel,arch,ncpu,vcpu,mhz,mem,disk,network,listen,socket,proc,vendor"`
 	statsTables string `name:"statsTables" event:"stats.tables"`
 	create      string `name:"create machine* username* password host* port*=22 portal vendor"`
 	pubkey      string `name:"pubkey" help:"公钥"`
@@ -77,6 +77,7 @@ func (s relay) Init(m *ice.Message, arg ...string) {
 		MEM, "内存", DISK, "磁盘", NETWORK, "流量",
 		LISTEN, "服务", SOCKET, "连接", PROC, "进程",
 		nfs.COMMIT, "发布时间", code.COMPILE, "编译时间",
+		"boot", "启动时间",
 	)
 	msg := m.Spawn(ice.Maps{ice.MSG_FIELDS: ""})
 	m.GoSleep3s(func() { s.Hash.List(msg).Table(func(value ice.Maps) { s.xterm(m.Spawn(value)) }) })
@@ -132,40 +133,31 @@ func (s relay) Stats(m *ice.Message) {
 	}
 	trans := map[string]func([]string) string{
 		MEM: func(ls []string) string {
-			if len(ls) < 2 {
-				return ""
-			}
-			return kit.FmtSize(kit.Int(ls[1])*1024, kit.Int(ls[0])*1024)
+			return kit.FmtSize(kit.Int(kit.Select("", ls, 1))*1024, kit.Int(kit.Select("", ls, 0))*1024)
 		},
 		DISK: func(ls []string) string {
-			if len(ls) < 2 {
-				return ""
-			}
-			return kit.FmtSize(kit.Int(ls[2])*1024, kit.Int(ls[1])*1024)
+			return kit.FmtSize(kit.Int(kit.Select("", ls, 2))*1024, kit.Int(kit.Select("", ls, 1))*1024)
 		},
 		NETWORK: func(ls []string) string {
-			if len(ls) < 2 {
-				return ""
-			}
-			return kit.FmtSize(kit.Int(ls[1]), kit.Int(ls[9]))
+			return kit.FmtSize(kit.Int(kit.Select("", ls, 1)), kit.Int(kit.Select("", ls, 9)))
 		},
 	}
+	machine := m.Option(MACHINE)
 	web.GoToast(m.Message, "", func(toast func(string, int, int)) []string {
-		for i := 0; i < len(cmds); i += 2 {
-			key := cmds[i]
-			toast(key, i/2, len(cmds)/2)
-			s.foreachModify(m, key, cmds[i+1], trans[key])
-		}
+		kit.For(cmds, func(key, value string, index int) {
+			toast(key, index/2, len(cmds)/2)
+			s.foreachModify(m, key, value, trans[key])
+		})
 		return nil
 	}).ProcessInner()
-	s.ForEach(m.Spawn(ice.Maps{MACHINE: m.Option(MACHINE), ice.CMD: "contexts/bin/ice.bin web.admin runtime"})).Table(func(value ice.Maps) {
+	s.ForEach(m.Spawn(ice.Maps{MACHINE: machine, ice.CMD: kit.JoinWord("contexts/"+ice.BIN_ICE_BIN, web.ADMIN, cli.RUNTIME)})).Table(func(value ice.Maps) {
 		res := kit.UnMarshal(value[ice.RES])
 		data := kit.Value(res, cli.MAKE)
 		s.Modify(m, kit.Simple(MACHINE, value[MACHINE], kit.Dict(
 			nfs.MODULE, kit.Value(data, nfs.MODULE), nfs.VERSION, kit.Join(kit.TrimArg(kit.Simple(
 				kit.Value(data, nfs.VERSION), kit.Value(data, "forword"), kit.Cut(kit.Format(kit.Value(data, mdb.HASH)), 6),
 			)...), "-"),
-			nfs.COMMIT, kit.Value(data, "when"), code.COMPILE, kit.Value(data, mdb.TIME),
+			nfs.COMMIT, kit.Value(data, "when"), code.COMPILE, kit.Value(data, mdb.TIME), "boot", kit.Value(res, "boot.time"),
 			SHELL, kit.Value(res, "conf.SHELL"), KERNEL, kit.Value(res, "host.GOOS"), ARCH, kit.Value(res, "host.GOARCH"),
 		))...)
 	})
@@ -227,7 +219,7 @@ func (s relay) List(m *ice.Message, arg ...string) *ice.Message {
 	})
 	_stats := kit.Dict(MEM, kit.FmtSize(stats[MEM_FREE], stats[MEM_TOTAL]), DISK, kit.FmtSize(stats[DISK_USED], stats[DISK_TOTAL]))
 	m.StatusTimeCount(m.Spawn().Options(stats, _stats).OptionSimple(VCPU, MEM, DISK, SOCKET, PROC))
-	m.Option(ice.TABLE_CHECKBOX, ice.TRUE)
+	m.Options(ice.TABLE_CHECKBOX, ice.TRUE)
 	m.RewriteAppend(func(value, key string, index int) string {
 		if key == MEM {
 			if ls := kit.Split(value, " /"); len(ls) > 0 && kit.Int(ls[0]) < 256*1024*1024 {
@@ -243,7 +235,7 @@ func (s relay) Install(m *ice.Message, arg ...string) {
 }
 func (s relay) Upgrade(m *ice.Message, arg ...string) {
 	if len(arg) == 0 && (m.Option(MACHINE) == "" || strings.Contains(m.Option(MACHINE), ",")) {
-		m.Options(ice.CMD, m.Template(UPGRADE_SH), cli.DELAY, "0", "interval", "3s")
+		m.Options(ice.CMD, m.Template(UPGRADE_SH), cli.DELAY, "0", cli.INTERVAL, "3s")
 		s.ForFlow(m)
 	} else {
 		s.shell(m, m.Template(UPGRADE_SH), arg...)

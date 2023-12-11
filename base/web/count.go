@@ -1,6 +1,8 @@
 package web
 
 import (
+	"strings"
+
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/mdb"
 	kit "shylinux.com/x/toolkits"
@@ -28,6 +30,17 @@ func init() {
 					return nil
 				})
 			}},
-		}, mdb.HashAction(mdb.LIMIT, 1000, mdb.LEAST, 500, mdb.SHORT, "type,name", mdb.FIELD, "time,hash,count,location,type,name,text", mdb.SORT, "type,name,text,location"))},
+		}, mdb.HashAction(mdb.LIMIT, 1000, mdb.LEAST, 500, mdb.SHORT, "type,name", mdb.FIELD, "time,hash,count,location,type,name,text", mdb.SORT, "type,name,text,location")), Hand: func(m *ice.Message, arg ...string) {
+			mdb.HashSelect(m, arg...)
+			stat := map[string]int{}
+			m.Table(func(value ice.Maps) {
+				for _, agent := range []string{"GoModuleMirror"} {
+					if strings.Contains(value[mdb.TEXT], agent) {
+						stat[agent]++
+					}
+				}
+			})
+			m.StatusTimeCount(stat)
+		}},
 	})
 }

@@ -29,6 +29,7 @@ func (f *Frame) Begin(m *ice.Message, arg ...string) {}
 func (f *Frame) Start(m *ice.Message, arg ...string) {
 	f.Message, f.Server = m, &http.Server{Handler: f}
 	list := map[*ice.Context]string{}
+	m.Options(ice.MSG_LANGUAGE, "")
 	m.Travel(func(p *ice.Context, c *ice.Context) {
 		f, ok := c.Server().(*Frame)
 		if !ok || f.ServeMux != nil {

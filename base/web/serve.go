@@ -95,7 +95,7 @@ func _serve_static(msg *ice.Message, w http.ResponseWriter, r *http.Request) boo
 }
 func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.ResponseWriter, r *http.Request) {
 	debug := strings.Contains(r.URL.String(), "debug=true") || strings.Contains(r.Header.Get(html.Referer), "debug=true")
-	m.Options(ice.LOG_TRACEID, r.Header.Get(ice.LOG_TRACEID), ice.MSG_LANGUAGE, "")
+	m.Options(ice.LOG_TRACEID, r.Header.Get(ice.LOG_TRACEID))
 	_log := func(level string, arg ...ice.Any) *ice.Message {
 		if debug || arg[0] == ice.MSG_CMDS {
 			return m.Logs(strings.Title(level), arg...)
@@ -167,6 +167,11 @@ func _serve_domain(m *ice.Message) string {
 }
 func _serve_auth(m *ice.Message, key string, cmds []string, w http.ResponseWriter, r *http.Request) ([]string, bool) {
 	kit.If(len(cmds) > 0, func() { cmds = append(kit.Split(cmds[0], ","), cmds[1:]...) })
+	defer func() {
+		kit.For(m.Optionv(""), func(key string) {
+			kit.If(strings.HasPrefix(key, ice.MSG_SESSID), func() { m.Set(ice.MSG_OPTION, key) })
+		})
+	}()
 	if r.URL.Path == PP(SPACE) {
 		aaa.SessCheck(m, m.Option(ice.MSG_SESSID))
 		return cmds, true

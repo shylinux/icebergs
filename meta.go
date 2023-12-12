@@ -21,6 +21,18 @@ func (m *Message) Set(key string, arg ...string) *Message {
 		} else if len(arg) > 0 {
 			if m.delete(arg[0]); len(arg) > 1 {
 				m.value(arg[0], arg[1:]...)
+			} else {
+				list := m.value(key)
+				for i, k := range list {
+					if k == arg[0] {
+						for ; i < len(list)-1; i++ {
+							list[i] = list[i+1]
+						}
+						list = list[:len(list)-1]
+						m.value(key, list...)
+						break
+					}
+				}
 			}
 		} else {
 			kit.For(m.value(key), func(k string) { m.delete(k) })

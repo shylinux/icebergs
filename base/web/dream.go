@@ -283,7 +283,13 @@ func init() {
 			if len(arg) == 0 {
 				_dream_list(m).RewriteAppend(func(value, key string, index int) string {
 					if key == mdb.ICON {
-						return kit.MergeURL(ctx.FileURI(value), ice.POD, m.Appendv(mdb.NAME)[index])
+						if kit.HasPrefix(value, HTTP, nfs.PS) {
+							return value
+						}
+						if nfs.ExistsFile(m, path.Join(ice.USR_LOCAL_WORK, m.Appendv(mdb.NAME)[index], value)) {
+							return kit.MergeURL(ctx.FileURI(value), ice.POD, m.Appendv(mdb.NAME)[index])
+						}
+						return kit.MergeURL(ctx.FileURI(nfs.USR_ICONS_ICEBERGS))
 					}
 					return value
 				}).Option(ice.MSG_ACTION, "")

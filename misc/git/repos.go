@@ -146,7 +146,7 @@ func _repos_auth(m *ice.Message, origin string) *http.BasicAuth {
 	list, ok := m.Optionv("repos.auth").(map[string]*url.URL)
 	kit.If(!ok, func() { list = _repos_credentials(m) })
 	if u, ok := list[kit.ParseURL(_repos_remote(m, origin)).Host]; !ok {
-		return nil
+		return &http.BasicAuth{}
 	} else if password, ok := u.User.Password(); !ok {
 		return nil
 	} else {

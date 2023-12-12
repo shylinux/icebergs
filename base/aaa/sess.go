@@ -60,7 +60,7 @@ func SessAuth(m *ice.Message, value ice.Any, arg ...string) *ice.Message {
 	kit.If(language == "", func() { language = kit.Select("", "zh-cn", strings.Contains(m.Option(ice.MSG_USERUA), "zh_CN")) })
 	kit.If(language == "" && m.R != nil, func() { language = kit.Select("", kit.Split(m.R.Header.Get(html.AcceptLanguage), ",;"), 0) })
 	kit.If(language == "", func() { language = ice.Info.Lang })
-	language = strings.ReplaceAll(strings.ToLower(kit.Split(language, " .")[0]), "_", "-")
+	language = strings.ReplaceAll(strings.ToLower(kit.Select("", kit.Split(language, " ."), 0)), "_", "-")
 	return m.Auth(
 		USERNICK, m.Option(ice.MSG_USERNICK, kit.Format(kit.Value(value, USERNICK))),
 		USERNAME, m.Option(ice.MSG_USERNAME, kit.Format(kit.Value(value, USERNAME))),

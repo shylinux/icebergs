@@ -74,7 +74,7 @@ func _dream_start(m *ice.Message, name string) {
 	defer ToastProcess(m)()
 	defer m.Options(cli.CMD_DIR, "", cli.CMD_ENV, "", cli.CMD_OUTPUT, "")
 	bin := kit.Select(kit.Path(os.Args[0]), cli.SystemFind(m, ice.ICE_BIN, nfs.PWD+path.Join(p, ice.BIN), nfs.PWD+ice.BIN))
-	if strings.Count(m.Cmdx(cli.SYSTEM, "sh", "-c", "ps aux | grep "+bin+" | grep -v grep"), bin) > 0 {
+	if bin != kit.Path(ice.BIN_ICE_BIN) && strings.Count(m.Cmdx(cli.SYSTEM, "sh", "-c", "ps aux | grep "+bin+" | grep -v grep"), bin) > 0 {
 		return
 	}
 	m.Options(cli.CMD_DIR, kit.Path(p), cli.CMD_ENV, kit.EnvList(kit.Simple(

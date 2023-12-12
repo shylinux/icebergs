@@ -4,7 +4,9 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/web/html"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -49,9 +51,9 @@ func init() {
 			mdb.CREATE: {Name: "create type name text", Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashSelectUpdate(m, mdb.HashCreate(m), func(value ice.Map) { value[mdb.COUNT] = kit.Int(value[mdb.COUNT]) + 1 })
 			}},
-			"valid": {Hand: func(m *ice.Message, arg ...string) {
+			mdb.VALID: {Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashSelect(m.Spawn(), arg...).Table(func(value ice.Maps) {
-					if !strings.HasPrefix(value[mdb.TEXT], "Mozilla/") {
+					if !strings.HasPrefix(value[mdb.TEXT], html.Mozilla) {
 						return
 					} else if count := kit.Int(value[mdb.COUNT]); count < 3 {
 						return
@@ -61,23 +63,26 @@ func init() {
 				})
 				m.StatusTimeCount(_count_stat(m))
 			}},
-			"location": {Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashSelects(m).Sort(mdb.COUNT, ice.INT_R)
-				GoToast(m, "", func(toast func(string, int, int)) []string {
+			aaa.LOCATION: {Hand: func(m *ice.Message, arg ...string) {
+				GoToast(mdb.HashSelects(m).Sort(mdb.COUNT, ice.INT_R), "", func(toast func(string, int, int)) []string {
 					m.Table(func(index int, value ice.Maps) {
-						if value["location"] == "" {
+						if value[aaa.LOCATION] == "" {
 							location := kit.Format(kit.Value(SpideGet(m, "http://opendata.baidu.com/api.php?co=&resource_id=6006&oe=utf8", "query", value[mdb.NAME]), "data.0.location"))
-							mdb.HashModify(m, mdb.HASH, value[mdb.HASH], "location", location)
-							toast(location, index, m.Length())
+							mdb.HashModify(m, mdb.HASH, value[mdb.HASH], aaa.LOCATION, location)
+							toast(kit.Select(value[mdb.NAME], location), index, m.Length())
 							m.Sleep300ms()
 						}
 					})
 					return nil
 				})
 			}},
-		}, mdb.HashAction(mdb.LIMIT, 1000, mdb.LEAST, 500, mdb.SHORT, "type,name", mdb.FIELD, "time,hash,count,location,type,name,text", mdb.SORT, "type,name,text,location")), Hand: func(m *ice.Message, arg ...string) {
-			mdb.HashSelect(m, arg...)
-			m.StatusTimeCount(_count_stat(m))
+		}, mdb.HashAction(mdb.LIMIT, 1000, mdb.LEAST, 500, mdb.SHORT, "type,name", mdb.FIELD, "time,hash,count,location,type,name,text")), Hand: func(m *ice.Message, arg ...string) {
+			mdb.HashSelect(m, arg...).Sort(mdb.TIME, ice.STR_R).StatusTimeCount(_count_stat(m))
 		}},
 	})
+}
+
+func Count(m *ice.Message, arg ...string) *ice.Message {
+	m.Cmd(COUNT, mdb.CREATE, arg, kit.Dict(ice.LOG_DISABLE, ice.TRUE))
+	return m
 }

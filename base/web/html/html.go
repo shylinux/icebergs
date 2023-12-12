@@ -7,10 +7,29 @@ import (
 )
 
 const (
-	H1   = "h1"
-	H2   = "h2"
-	H3   = "h3"
-	SPAN = "span"
+	Mozilla        = "Mozilla"
+	UserAgent      = "User-Agent"
+	Referer        = "Referer"
+	Authorization  = "Authorization"
+	Bearer         = "Bearer"
+	Basic          = "Basic"
+	Accept         = "Accept"
+	AcceptLanguage = "Accept-Language"
+	ContentLength  = "Content-Length"
+	ContentType    = "Content-Type"
+	XForwardedFor  = "X-Forwarded-For"
+	XHost          = "X-Host"
+
+	ApplicationForm  = "application/x-www-form-urlencoded"
+	ApplicationOctet = "application/octet-stream"
+	ApplicationJSON  = "application/json"
+)
+const (
+	H1       = "h1"
+	H2       = "h2"
+	H3       = "h3"
+	SPAN     = "span"
+	CHECKBOX = "checkbox"
 
 	STYLE  = "style"
 	WIDTH  = "width"
@@ -77,8 +96,3 @@ func FormatDanger(value string) string {
 		COLOR, "var(--danger-fg-color)",
 	))
 }
-
-const (
-	AcceptLanguage = "Accept-Language"
-	CHECKBOX       = "checkbox"
-)

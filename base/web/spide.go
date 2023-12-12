@@ -19,6 +19,7 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
+	"shylinux.com/x/icebergs/base/web/html"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -61,7 +62,7 @@ func _spide_show(m *ice.Message, name string, arg ...string) {
 		return
 	}
 	defer res.Body.Close()
-	m.Cost(cli.STATUS, res.Status, nfs.SIZE, kit.FmtSize(kit.Int64(res.Header.Get(ContentLength))), mdb.TYPE, res.Header.Get(ContentType))
+	m.Cost(cli.STATUS, res.Status, nfs.SIZE, kit.FmtSize(kit.Int64(res.Header.Get(html.ContentLength))), mdb.TYPE, res.Header.Get(html.ContentType))
 	m.Push(mdb.TYPE, STATUS).Push(mdb.NAME, res.StatusCode).Push(mdb.VALUE, res.Status)
 	m.Options(STATUS, res.Status)
 	kit.For(res.Header, func(k string, v []string) {
@@ -104,16 +105,16 @@ func _spide_body(m *ice.Message, method string, arg ...string) (io.Reader, ice.M
 	case SPIDE_FORM:
 		arg = kit.Simple(arg, func(v string) string { return url.QueryEscape(v) })
 		_data := kit.JoinKV("=", "&", arg[1:]...)
-		head[ContentType], body = ApplicationForm, bytes.NewBufferString(_data)
+		head[html.ContentType], body = html.ApplicationForm, bytes.NewBufferString(_data)
 	case SPIDE_PART:
-		head[ContentType], body = _spide_part(m, arg...)
+		head[html.ContentType], body = _spide_part(m, arg...)
 	case SPIDE_FILE:
 		if f, e := nfs.OpenFile(m, arg[1]); m.Assert(e) {
 			m.Logs(nfs.LOAD, nfs.FILE, arg[1])
 			body = f
 		}
 	case SPIDE_DATA:
-		head[ContentType], body = ApplicationJSON, bytes.NewBufferString(kit.Select("{}", arg, 1))
+		head[html.ContentType], body = html.ApplicationJSON, bytes.NewBufferString(kit.Select("{}", arg, 1))
 	case SPIDE_JSON:
 		arg = arg[1:]
 		fallthrough
@@ -121,7 +122,7 @@ func _spide_body(m *ice.Message, method string, arg ...string) (io.Reader, ice.M
 		data := ice.Map{}
 		kit.For(arg, func(k, v string) { kit.Value(data, k, v) })
 		_data := kit.Format(data)
-		head[ContentType], body = ApplicationJSON, bytes.NewBufferString(_data)
+		head[html.ContentType], body = html.ApplicationJSON, bytes.NewBufferString(_data)
 	}
 	return body, head, arg[:0]
 }
@@ -170,7 +171,9 @@ func _spide_head(m *ice.Message, req *http.Request, head ice.Maps, value ice.Map
 	kit.For(value[SPIDE_COOKIE], func(k string, v string) { req.AddCookie(&http.Cookie{Name: k, Value: v}) })
 	kit.For(kit.Simple(m.Optionv(SPIDE_COOKIE)), func(k, v string) { req.AddCookie(&http.Cookie{Name: k, Value: v}) })
 	kit.For(kit.Simple(m.Optionv(SPIDE_HEADER)), func(k, v string) { req.Header.Set(k, v) })
-	kit.If(req.Method == http.MethodPost, func() { m.Logs(kit.Select(ice.AUTO, req.Header.Get(ContentLength)), req.Header.Get(ContentType)) })
+	kit.If(req.Method == http.MethodPost, func() {
+		m.Logs(kit.Select(ice.AUTO, req.Header.Get(html.ContentLength)), req.Header.Get(html.ContentType))
+	})
 }
 func _spide_send(m *ice.Message, name string, req *http.Request, timeout string) (*http.Response, error) {
 	client := mdb.HashSelectTarget(m, name, func() ice.Any { return &http.Client{Timeout: kit.Duration(timeout)} }).(*http.Client)
@@ -184,7 +187,7 @@ func _spide_save(m *ice.Message, action, file, uri string, res *http.Response) {
 	}
 	switch action {
 	case SPIDE_RAW:
-		if b, _ := ioutil.ReadAll(res.Body); strings.HasPrefix(res.Header.Get(ContentType), ApplicationJSON) {
+		if b, _ := ioutil.ReadAll(res.Body); strings.HasPrefix(res.Header.Get(html.ContentType), html.ApplicationJSON) {
 			// m.Echo(kit.Formats(kit.UnMarshal(string(b))))
 			m.Echo(string(b))
 		} else {
@@ -198,7 +201,7 @@ func _spide_save(m *ice.Message, action, file, uri string, res *http.Response) {
 	case SPIDE_SAVE:
 		_cache_download(m, res, file, m.OptionCB(SPIDE))
 	case SPIDE_CACHE:
-		m.Cmdy(CACHE, DOWNLOAD, res.Header.Get(ContentType), uri, kit.Dict(RESPONSE, res), m.OptionCB(SPIDE))
+		m.Cmdy(CACHE, DOWNLOAD, res.Header.Get(html.ContentType), uri, kit.Dict(RESPONSE, res), m.OptionCB(SPIDE))
 		m.Echo(m.Append(mdb.HASH))
 	default:
 		var data ice.Any
@@ -225,21 +228,6 @@ const (
 	SPIDE_DATA = "data"
 	SPIDE_JSON = "json"
 	SPIDE_RES  = "content_data"
-
-	Basic          = "Basic"
-	Bearer         = "Bearer"
-	Authorization  = "Authorization"
-	AcceptLanguage = "Accept-Language"
-	ContentLength  = "Content-Length"
-	ContentType    = "Content-Type"
-	UserAgent      = "User-Agent"
-	Referer        = "Referer"
-	Accept         = "Accept"
-	Mozilla        = "Mozilla"
-
-	ApplicationForm  = "application/x-www-form-urlencoded"
-	ApplicationOctet = "application/octet-stream"
-	ApplicationJSON  = "application/json"
 
 	IMAGE_JPEG = "image/jpeg"
 	IMAGE_PNG  = "image/png"
@@ -332,7 +320,7 @@ func init() {
 				case HEADER:
 					switch arg[0] {
 					case mdb.KEY:
-						m.Push(arg[0], Authorization)
+						m.Push(arg[0], html.Authorization)
 					}
 				default:
 					mdb.HashSelectValue(m.Spawn(), func(value ice.Map) { m.Push(kit.Select(ORIGIN, arg, 0), kit.Value(value, CLIENT_ORIGIN)) })

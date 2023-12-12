@@ -10,6 +10,7 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
+	"shylinux.com/x/icebergs/base/web/html"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -32,7 +33,7 @@ func init() {
 				if m.Warn(m.R.Method != http.MethodPost, ice.ErrNotAllow) {
 					return
 				}
-				msg := m.Cmd("", mdb.CREATE, mdb.TYPE, Basic, mdb.NAME, m.Option(ice.MSG_USERNAME), mdb.TEXT, m.Option(tcp.HOST))
+				msg := m.Cmd("", mdb.CREATE, mdb.TYPE, html.Basic, mdb.NAME, m.Option(ice.MSG_USERNAME), mdb.TEXT, m.Option(tcp.HOST))
 				m.ProcessReplace(kit.MergeURL2(m.Option(tcp.HOST), ChatCmdPath(m, m.PrefixKey(), SET),
 					TOKEN, strings.Replace(UserHost(m), "://", kit.Format("://%s:%s@", m.Option(ice.MSG_USERNAME), msg.Result()), 1)))
 			}},

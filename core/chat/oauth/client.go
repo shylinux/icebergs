@@ -10,6 +10,7 @@ import (
 	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/web"
+	"shylinux.com/x/icebergs/base/web/html"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -177,7 +178,7 @@ func (s Client) request(m *ice.Message, hash, api string, arg ...string) []strin
 		m.Option(ACCESS_TOKEN, msg.Append(ACCESS_TOKEN))
 	})
 	kit.If(m.Option(ACCESS_TOKEN), func(p string) {
-		m.Options(web.SPIDE_HEADER, ice.Maps{web.Authorization: msg.Append(TOKEN_PREFIX) + lex.SP + p})
+		m.Options(web.SPIDE_HEADER, ice.Maps{html.Authorization: msg.Append(TOKEN_PREFIX) + lex.SP + p})
 		arg = append(arg, ACCESS_TOKEN, p)
 	})
 	kit.If(api == "", func() { api = path.Join(msg.Append(API_PREFIX), m.ActionKey()) })

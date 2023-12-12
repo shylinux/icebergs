@@ -14,6 +14,7 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
+	"shylinux.com/x/icebergs/base/web/html"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -98,7 +99,7 @@ func RenderType(w http.ResponseWriter, name, mime string) {
 			mime = "application/" + kit.Ext(name)
 		}
 	}
-	RenderHeader(w, ContentType, mime)
+	RenderHeader(w, html.ContentType, mime)
 }
 func RenderOrigin(w http.ResponseWriter, origin string) {
 	RenderHeader(w, "Access-Control-Allow-Origin", origin)

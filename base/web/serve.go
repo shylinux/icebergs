@@ -19,6 +19,7 @@ import (
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/ssh"
 	"shylinux.com/x/icebergs/base/tcp"
+	"shylinux.com/x/icebergs/base/web/html"
 	kit "shylinux.com/x/toolkits"
 	"shylinux.com/x/toolkits/logs"
 )
@@ -38,10 +39,9 @@ func _serve_start(m *ice.Message) {
 }
 func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	const (
-		X_REAL_IP       = "X-Real-Ip"
-		X_REAL_PORT     = "X-Real-Port"
-		X_FORWARDED_FOR = "X-Forwarded-For"
-		INDEX_MODULE    = "Index-Module"
+		X_REAL_IP    = "X-Real-Ip"
+		X_REAL_PORT  = "X-Real-Port"
+		INDEX_MODULE = "Index-Module"
 	)
 	if r.Header.Get(INDEX_MODULE) == "" {
 		r.Header.Set(INDEX_MODULE, m.Prefix())
@@ -52,7 +52,7 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 		if r.Header.Set(ice.MSG_USERIP, ip); r.Header.Get(X_REAL_PORT) != "" {
 			r.Header.Set(ice.MSG_USERADDR, ip+nfs.DF+r.Header.Get(X_REAL_PORT))
 		}
-	} else if ip := r.Header.Get(X_FORWARDED_FOR); ip != "" {
+	} else if ip := r.Header.Get(html.XForwardedFor); ip != "" {
 		r.Header.Set(ice.MSG_USERIP, kit.Split(ip)[0])
 	} else if strings.HasPrefix(r.RemoteAddr, "[") {
 		r.Header.Set(ice.MSG_USERIP, strings.Split(r.RemoteAddr, "]")[0][1:])
@@ -63,7 +63,7 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 		r.Header.Set(ice.LOG_TRACEID, log.Traceid())
 		m.Logs(r.Header.Get(ice.MSG_USERIP), r.Method, r.URL.String(), logs.TraceidMeta(r.Header.Get(ice.LOG_TRACEID)))
 	}
-	if path.Join(r.URL.Path) == nfs.PS && strings.HasPrefix(r.UserAgent(), Mozilla) {
+	if path.Join(r.URL.Path) == nfs.PS && strings.HasPrefix(r.UserAgent(), html.Mozilla) {
 		r.URL.Path = kit.Select(nfs.PS, mdb.Config(m, ice.MAIN))
 	}
 	if r.Method == http.MethodGet {
@@ -85,7 +85,7 @@ func _serve_static(msg *ice.Message, w http.ResponseWriter, r *http.Request) boo
 	} else if p = path.Join(nfs.USR, r.URL.Path); kit.HasPrefix(r.URL.Path, nfs.VOLCANOS, nfs.INTSHELL) && nfs.Exists(msg, p) {
 		return Render(msg, ice.RENDER_DOWNLOAD, p)
 	} else if p = strings.TrimPrefix(r.URL.Path, nfs.REQUIRE); kit.HasPrefix(r.URL.Path, ice.REQUIRE_SRC, nfs.REQUIRE+ice.USR_ICONS, nfs.REQUIRE+ice.USR_ICEBERGS) && nfs.Exists(msg, p) {
-		ispod := kit.Contains(r.URL.String(), CHAT_POD, "pod=") || kit.Contains(r.Header.Get(Referer), CHAT_POD, "pod=")
+		ispod := kit.Contains(r.URL.String(), CHAT_POD, "pod=") || kit.Contains(r.Header.Get(html.Referer), CHAT_POD, "pod=")
 		return !ispod && Render(msg, ice.RENDER_DOWNLOAD, p)
 	} else if p = path.Join(ice.USR_MODULES, strings.TrimPrefix(r.URL.Path, ice.REQUIRE_MODULES)); kit.HasPrefix(r.URL.Path, ice.REQUIRE_MODULES) && nfs.Exists(msg, p) {
 		return Render(msg, ice.RENDER_DOWNLOAD, p)
@@ -94,7 +94,7 @@ func _serve_static(msg *ice.Message, w http.ResponseWriter, r *http.Request) boo
 	}
 }
 func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.ResponseWriter, r *http.Request) {
-	debug := strings.Contains(r.URL.String(), "debug=true") || strings.Contains(r.Header.Get(Referer), "debug=true")
+	debug := strings.Contains(r.URL.String(), "debug=true") || strings.Contains(r.Header.Get(html.Referer), "debug=true")
 	m.Options(ice.LOG_TRACEID, r.Header.Get(ice.LOG_TRACEID), ice.MSG_LANGUAGE, "")
 	_log := func(level string, arg ...ice.Any) *ice.Message {
 		if debug || arg[0] == ice.MSG_CMDS {
@@ -102,8 +102,8 @@ func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.Response
 		}
 		return m
 	}
-	kit.If(r.Header.Get(Referer), func(p string) { _log("page", Referer, p) })
-	if u, e := url.Parse(r.Header.Get(Referer)); e == nil {
+	kit.If(r.Header.Get(html.Referer), func(p string) { _log("page", html.Referer, p) })
+	if u, e := url.Parse(r.Header.Get(html.Referer)); e == nil {
 		add := func(k, v string) { _log(nfs.PATH, k, m.Option(k, v)) }
 		switch arg := strings.Split(strings.TrimPrefix(u.Path, nfs.PS), nfs.PS); arg[0] {
 		case CHAT:
@@ -117,18 +117,18 @@ func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.Response
 	if r.Method == http.MethodGet && m.Option(ice.MSG_CMDS) != "" {
 		_log(ctx.ARGS, ice.MSG_CMDS, m.Optionv(ice.MSG_CMDS))
 	}
-	switch kit.Select("", kit.Split(r.Header.Get(ContentType)), 0) {
-	case ApplicationJSON:
+	switch kit.Select("", kit.Split(r.Header.Get(html.ContentType)), 0) {
+	case html.ApplicationJSON:
 		kit.For(kit.UnMarshal(r.Body), func(k string, v ice.Any) { m.Optionv(k, v) })
 	default:
-		r.ParseMultipartForm(kit.Int64(kit.Select("4096", r.Header.Get(ContentLength))))
+		r.ParseMultipartForm(kit.Int64(kit.Select("4096", r.Header.Get(html.ContentLength))))
 		kit.For(r.PostForm, func(k string, v []string) { _log(FORM, k, kit.Join(v, lex.SP)).Optionv(k, v) })
 	}
 	kit.For(r.Cookies(), func(k, v string) { m.Optionv(k, v) })
 	m.Options(ice.MSG_METHOD, r.Method, ice.MSG_COUNT, "0")
-	m.Options(ice.MSG_REFERER, r.Header.Get(Referer))
+	m.Options(ice.MSG_REFERER, r.Header.Get(html.Referer))
 	m.Options(ice.MSG_USERWEB, _serve_domain(m), ice.MSG_USERPOD, m.Option(ice.POD))
-	m.Options(ice.MSG_USERUA, r.Header.Get(UserAgent), ice.MSG_USERIP, r.Header.Get(ice.MSG_USERIP))
+	m.Options(ice.MSG_USERUA, r.Header.Get(html.UserAgent), ice.MSG_USERIP, r.Header.Get(ice.MSG_USERIP))
 	m.Options(ice.MSG_SESSID, kit.Select(m.Option(ice.MSG_SESSID), m.Option(CookieName(m.Option(ice.MSG_USERWEB)))))
 	kit.If(m.Optionv(ice.MSG_CMDS) == nil, func() {
 		kit.If(strings.TrimPrefix(r.URL.Path, key), func(p string) { m.Optionv(ice.MSG_CMDS, strings.Split(p, nfs.PS)) })
@@ -154,8 +154,8 @@ func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.Response
 }
 func _serve_domain(m *ice.Message) string {
 	return kit.GetValid(
-		func() string { return kit.Select("", m.R.Header.Get(Referer), m.R.Method == http.MethodPost) },
-		func() string { return m.R.Header.Get("X-Host") },
+		func() string { return kit.Select("", m.R.Header.Get(html.Referer), m.R.Method == http.MethodPost) },
+		func() string { return m.R.Header.Get(html.XHost) },
 		func() string { return ice.Info.Domain },
 		func() string {
 			if b, e := regexp.MatchString("^[0-9.]+$", m.R.Host); b && e == nil {
@@ -183,7 +183,7 @@ func _serve_auth(m *ice.Message, key string, cmds []string, w http.ResponseWrite
 			aaa.SessAuth(m, kit.Dict(aaa.USERNICK, ls[1], aaa.USERNAME, ls[2], aaa.USERROLE, ls[3]), CACHE, ls[0])
 		}
 	}
-	m.Cmd(COUNT, mdb.CREATE, aaa.IP, m.Option(ice.MSG_USERIP), m.Option(ice.MSG_USERUA), kit.Dict(ice.LOG_DISABLE, ice.TRUE))
+	Count(m, aaa.IP, m.Option(ice.MSG_USERIP), m.Option(ice.MSG_USERUA))
 	return cmds, aaa.Right(m, key, cmds)
 }
 
@@ -275,5 +275,5 @@ func RequireFile(m *ice.Message, file string) string {
 	return ""
 }
 func IsLocalHost(m *ice.Message) bool {
-	return (m.R == nil || m.R.Header.Get("X-Forwarded-For") == "") && tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP))
+	return (m.R == nil || m.R.Header.Get(html.XForwardedFor) == "") && tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP))
 }

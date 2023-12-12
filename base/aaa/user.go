@@ -22,6 +22,7 @@ const (
 	THEME      = "theme"
 
 	LANGUAGE  = "language"
+	LOCATION  = "location"
 	LONGITUDE = "longitude"
 	LATITUDE  = "latitude"
 	PROVINCE  = "province"

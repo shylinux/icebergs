@@ -18,7 +18,7 @@ import (
 
 func _cache_name(m *ice.Message, h string) string { return path.Join(ice.VAR_FILE, h[:2], h) }
 func _cache_mime(m *ice.Message, mime, name string) string {
-	if mime == ApplicationOctet {
+	if mime == html.ApplicationOctet {
 		if kit.ExtIsImage(name) {
 			mime = IMAGE + nfs.PS + kit.Ext(name)
 		} else if kit.ExtIsVideo(name) {
@@ -64,7 +64,7 @@ func _cache_upload(m *ice.Message, r *http.Request) (mime, name, file, size stri
 			b.Seek(0, os.SEEK_SET)
 			if n, e := io.Copy(f, b); !m.Warn(e, ice.ErrNotValid, UPLOAD) {
 				m.Logs(nfs.SAVE, nfs.FILE, p, nfs.SIZE, kit.FmtSize(int64(n)))
-				return h.Header.Get(ContentType), h.Filename, p, kit.Format(n)
+				return h.Header.Get(html.ContentType), h.Filename, p, kit.Format(n)
 			}
 		}
 	}
@@ -79,7 +79,7 @@ func _cache_download(m *ice.Message, r *http.Response, file string, cb ice.Any) 
 		}()
 		defer f.Close()
 		last, base := 0, 10
-		nfs.CopyStream(m, f, r.Body, base*ice.MOD_BUFS, kit.Int(kit.Select("100", r.Header.Get(ContentLength))), func(count, total, value int) {
+		nfs.CopyStream(m, f, r.Body, base*ice.MOD_BUFS, kit.Int(kit.Select("100", r.Header.Get(html.ContentLength))), func(count, total, value int) {
 			if value/base == last {
 				return
 			}

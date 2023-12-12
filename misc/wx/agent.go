@@ -11,7 +11,7 @@ import (
 	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
-	"shylinux.com/x/icebergs/base/web"
+	"shylinux.com/x/icebergs/base/web/html"
 	"shylinux.com/x/icebergs/core/chat"
 	"shylinux.com/x/icebergs/core/chat/location"
 	kit "shylinux.com/x/toolkits"
@@ -20,7 +20,7 @@ import (
 func _wx_sign(m *ice.Message, nonce, stamp string) string {
 	return kit.Format(sha1.Sum([]byte(kit.Join(kit.Sort(kit.Simple(
 		kit.Format("jsapi_ticket=%s", m.Cmdx(ACCESS, TICKET)),
-		kit.Format("url=%s", m.R.Header.Get(web.Referer)),
+		kit.Format("url=%s", m.R.Header.Get(html.Referer)),
 		kit.Format("timestamp=%s", stamp),
 		kit.Format("noncestr=%s", nonce),
 	)), "&"))))

@@ -62,7 +62,7 @@ func init() {
 				msg := spidePost(m, WXACODE_UNLIMIT, web.SPIDE_DATA, kit.Format(kit.Dict(
 					"env_version", m.Option(ENV), "page", info.Append(PAGES), SCENE, meta, IS_HYALINE, m.Option(IS_HYALINE) == ice.TRUE, html.WIDTH, 320,
 				)))
-				switch kit.Select("", kit.Split(msg.Option(web.ContentType), "; "), 0) {
+				switch kit.Select("", kit.Split(msg.Option(html.ContentType), "; "), 0) {
 				case web.IMAGE_JPEG:
 					image := m.Cmd(web.CACHE, web.WRITE, mdb.TYPE, web.IMAGE_JPEG, mdb.NAME, scene, kit.Dict(mdb.TEXT, msg.Result())).Append(mdb.HASH)
 					mdb.HashSelects(m, mdb.HashCreate(m.Spawn(), m.OptionSimple(mdb.NAME), mdb.TEXT, meta, nfs.IMAGE, image, ctx.INDEX, m.Prefix(IDE), ctx.ARGS, scene, mdb.TYPE, m.Option(ENV)))

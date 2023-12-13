@@ -289,6 +289,9 @@ func init() {
 						if nfs.ExistsFile(m, path.Join(ice.USR_LOCAL_WORK, m.Appendv(mdb.NAME)[index], value)) {
 							return kit.MergeURL(ctx.FileURI(value), ice.POD, m.Appendv(mdb.NAME)[index])
 						}
+						if nfs.ExistsFile(m, value) {
+							return kit.MergeURL(ctx.FileURI(value))
+						}
 						return kit.MergeURL(ctx.FileURI(nfs.USR_ICONS_ICEBERGS))
 					}
 					return value

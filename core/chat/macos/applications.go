@@ -20,7 +20,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		APPLICATIONS: {Help: "应用", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				FinderAppend(m, "", m.PrefixKey())
+				FinderAppend(m, APPLICATIONS, m.PrefixKey())
 				defer Notify(m, "Infomation.png", cli.RUNTIME, "系统启动成功", ctx.INDEX, cli.RUNTIME)
 				m.Travel(func(p *ice.Context, c *ice.Context, key string, cmd *ice.Command) {
 					kit.If(cmd.Icon, func() {

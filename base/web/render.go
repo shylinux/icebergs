@@ -123,9 +123,6 @@ func RenderResult(m *ice.Message, arg ...ice.Any) {
 func RenderTemplate(m *ice.Message, file string, arg ...ice.Any) *ice.Message {
 	return m.RenderResult(kit.Renders(kit.Format(m.Cmdx(nfs.CAT, path.Join(ice.SRC_TEMPLATE, WEB, file)), arg...), m))
 }
-func RenderRefresh(m *ice.Message, arg ...string) { // url text delay
-	RenderTemplate(m, "refresh.html", kit.Select("3", arg, 2), kit.Select(m.Option(ice.MSG_USERWEB), arg, 0), kit.Select("loading...", arg, 1))
-}
 func RenderMain(m *ice.Message) *ice.Message {
 	if m.IsCliUA() {
 		return m.RenderDownload(path.Join(ice.USR_INTSHELL, ice.INDEX_SH))

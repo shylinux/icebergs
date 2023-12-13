@@ -25,11 +25,9 @@ func init() {
 				m.Travel(func(p *ice.Context, c *ice.Context, key string, cmd *ice.Command) {
 					kit.If(cmd.Icon, func() {
 						if !kit.HasPrefix(cmd.Icon, nfs.PS, web.HTTP) {
-							kit.If(!nfs.Exists(m, cmd.Icon), func() { nfs.Exists(m, ice.USR_ICONS+cmd.Icon, func(p string) { cmd.Icon = p }) })
-							kit.If(!nfs.Exists(m, cmd.Icon), func() {
-								nfs.Exists(m, ctx.GetCmdFile(m, m.PrefixKey()), func(p string) {
-									cmd.Icon = path.Join(path.Dir(strings.TrimPrefix(p, kit.Path(""))), cmd.Icon)
-								})
+							nfs.Exists(m, ice.USR_ICONS+cmd.Icon, func(p string) { cmd.Icon = p })
+							nfs.Exists(m, path.Join(path.Dir(strings.TrimPrefix(ctx.GetCmdFile(m, m.PrefixKey()), kit.Path(""))), cmd.Icon), func(p string) {
+								cmd.Icon = p
 							})
 						}
 						AppInstall(m, cmd.Icon, m.PrefixKey())
@@ -42,14 +40,11 @@ func init() {
 	})
 }
 func install(m *ice.Message, cmd, icon, index string, arg ...string) {
-	name := kit.TrimExt(path.Base(icon), nfs.PNG, nfs.JPG, nfs.JPEG)
-	if icon != "" {
-		nfs.Exists(m, ice.USR_ICONS+icon, func(p string) { icon = p })
-		if m.Warn(!strings.HasPrefix(icon, web.HTTP) && !nfs.Exists(m, icon)) {
-			m.Info("what %s", m.FormatStack(1, 100))
-			return
-		}
+	if icon == "" {
+		return
 	}
+	nfs.Exists(m, ice.USR_ICONS+icon, func(p string) { icon = p })
+	name := kit.TrimExt(path.Base(icon), nfs.PNG, nfs.JPG, nfs.JPEG)
 	m.Cmd(Prefix(cmd), mdb.CREATE, mdb.NAME, name, mdb.ICON, icon, ctx.INDEX, index, arg)
 }
 func AppInstall(m *ice.Message, icon, index string, arg ...string) {

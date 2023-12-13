@@ -199,8 +199,12 @@ func init() {
 			})
 		case tcp.WIFI:
 			m.Cmdy(tcp.WIFI).CutTo(tcp.SSID, arg[0])
-		case mdb.ICON:
-			m.Cmdy(nfs.DIR, ice.USR_ICONS, nfs.PATH).CutTo(nfs.PATH, arg[0])
+		case mdb.ICONS:
+			m.Options(nfs.DIR_REG, kit.ExtReg(nfs.PNG, nfs.JPG, nfs.JPEG), nfs.DIR_DEEP, ice.TRUE)
+			m.Cmdy(nfs.DIR, nfs.SRC, nfs.PATH)
+			m.Cmdy(nfs.DIR, ice.USR_LOCAL_IMAGE, nfs.PATH)
+			m.Cmdy(nfs.DIR, ice.USR_ICONS, nfs.PATH)
+			m.CutTo(nfs.PATH, arg[0])
 		case aaa.PASSWORD:
 			m.SetAppend()
 		case ctx.INDEX, ice.CMD:

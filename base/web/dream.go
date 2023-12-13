@@ -168,6 +168,9 @@ func init() {
 					case mdb.NAME, nfs.TEMPLATE:
 						_dream_list(m).Cut("name,status,time")
 						return
+					case mdb.ICONS:
+						mdb.HashInputs(m, arg)
+						return
 					}
 				case "startall":
 					DreamEach(m, "", cli.STOP, func(name string) { m.Push(arg[0], name) })

@@ -225,10 +225,8 @@ func init() {
 				if ls := kit.Simple(m.Optionv(ice.MSG_UPLOAD)); len(ls) > 1 {
 					m.Cmd(SPACE, pod, SPIDE, ice.DEV, CACHE, SHARE_CACHE+ls[0])
 				}
-				m.Options(key, []string{}, ice.MSG_USERPOD, pod).Cmdy(append(kit.List(ice.SPACE, pod), arg...)...)
-				if m.IsErr() {
-					m.Warn(m.IsErr(), kit.Select("", m.Resultv(), 1), kit.Slice(m.Resultv(), 2))
-				}
+				msg := m.Options(key, []string{}, ice.MSG_USERPOD, pod).Cmd(append(kit.List(ice.SPACE, pod), arg...)...)
+				kit.If(!msg.IsErr(), func() { m.Copy(msg) })
 				return true
 			}
 		}

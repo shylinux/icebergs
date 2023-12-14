@@ -80,6 +80,7 @@ func (m *Message) Status(arg ...Any) *Message {
 }
 func (m *Message) StatusTime(arg ...Any) *Message {
 	args := []string{}
+	kit.If(m.Option(MSG_DEBUG) == TRUE, func() { args = append(args, SIZE, "") })
 	kit.If(m.Option(MSG_DEBUG) == TRUE, func() { args = append(args, m.OptionSimple(LOG_TRACEID)...) })
 	kit.If(m.Option(MSG_USERPOD), func(p string) { args = append(args, SPACE, p) })
 	return m.Status(TIME, m.Time(), arg, kit.MDB_COST, m.FormatCost(), args)

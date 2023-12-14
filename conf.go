@@ -364,6 +364,7 @@ const ( // gdb
 	ROUTINE = "routine"
 )
 const ( // nfs
+	SIZE   = "size"
 	SOURCE = "source"
 	SCRIPT = "script"
 )

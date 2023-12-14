@@ -3,7 +3,7 @@ Volcanos(chat.ONIMPORT, {
 		can.isCmdMode() && (can.user.toast = function() {})
 		can.db.prefix = location.pathname.indexOf(p) > 0? location.pathname.split(p)[0]+p: "/wiki/portal/"
 		can.db.current = can.isCmdMode()? can.base.trimPrefix(location.pathname, can.db.prefix+"/", can.db.prefix): can.Option(nfs.PATH)
-		can.sup.onexport.link = function() { return can.db.prefix }
+		can.sup.onexport.link = function() { return can.misc.MergeURL(can, {pod: can.ConfSpace(), cmd: can.ConfIndex()}) }
 		can.require(["/plugin/local/wiki/word.js"])
 		can.Conf(html.PADDING, can.page.styleValueInt(can, "--portal-main-padding", can._output))
 		can.onmotion.clear(can), can.isCmdMode() && can.onappend.style(can, html.OUTPUT)
@@ -31,7 +31,7 @@ Volcanos(chat.ONIMPORT, {
 			select = target, can.onmotion.select(can, can.ui.aside, html.DIV_ITEM, target._menu)
 		} })
 	} },
-	navmenu: function(can, meta, target) { var link 
+	navmenu: function(can, meta, target) { var link
 		can.onimport.list(can, can.base.Obj(meta.data), function(event, item) {
 			can.page.Select(can, target, html.DIV_ITEM, function(target) { target != event.target && can.page.ClassList.del(can, target, html.SELECT) })
 			item.list && item.list.length > 0 || can.onaction.route(event, can, item.meta.link)

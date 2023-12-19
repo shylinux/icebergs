@@ -56,6 +56,10 @@ func _space_fork(m *ice.Message) {
 		!(IsLocalHost(m) || m.Option(TOKEN) != "" && m.Cmdv(TOKEN, m.Option(TOKEN), mdb.TIME) > m.Time()) {
 		name, text = kit.Hashs(name), kit.Select(addr, m.Option(mdb.NAME), m.Option(mdb.TEXT))
 	}
+	if m.Option(TOKEN) != "" {
+		msg := m.Cmd(TOKEN, m.Option(TOKEN))
+		aaa.SessAuth(m, kit.Dict(m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME, msg.Append(mdb.NAME))).AppendSimple()))
+	}
 	if m.Option(mdb.TYPE) == WORKER {
 		if p := nfs.USR_LOCAL_WORK + m.Option(mdb.NAME); nfs.Exists(m, p) {
 			text = p

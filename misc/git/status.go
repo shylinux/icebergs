@@ -36,14 +36,16 @@ func init() {
 				switch m.Option(ctx.ACTION) {
 				case INIT:
 					m.Cmd("web.spide", ice.OptionFields(web.CLIENT_ORIGIN), func(value ice.Maps) { m.Push(arg[0], value[web.CLIENT_ORIGIN]+"/x/"+path.Base(kit.Path(""))) })
+					m.Push(arg[0], web.UserHost(m)+"/x/")
 				case INSTEADOF:
 					m.Cmd("web.spide", ice.OptionFields(web.CLIENT_ORIGIN), func(value ice.Maps) { m.Push(arg[0], value[web.CLIENT_ORIGIN]+"/x/") })
+					m.Push(arg[0], web.UserHost(m)+"/x/")
 				default:
 					switch arg[0] {
-					case aaa.EMAIL:
-						m.Push(arg[0], _configs_get(m, USER_EMAIL), ice.Info.Make.Email)
 					case aaa.USERNAME:
 						m.Push(arg[0], kit.Select(m.Option(ice.MSG_USERNAME), _configs_get(m, USER_NAME)), ice.Info.Make.Username)
+					case aaa.EMAIL:
+						m.Push(arg[0], _configs_get(m, USER_EMAIL), ice.Info.Make.Email)
 					default:
 						m.Cmdy(REPOS, mdb.INPUTS, arg)
 					}

@@ -12,6 +12,12 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
+func _host_publish(m *ice.Message) string {
+	if p := mdb.Config(m, DOMAIN); p != "" {
+		return p
+	}
+	return m.Cmdv(HOST, mdb.Config(m, ice.MAIN), aaa.IP)
+}
 func _host_list(m *ice.Message, name string) {
 	if ifs, e := net.Interfaces(); m.Assert(e) {
 		for _, v := range ifs {
@@ -33,6 +39,7 @@ func _host_list(m *ice.Message, name string) {
 		m.Push(mdb.INDEX, -1).Push(mdb.NAME, LOCALHOST).Push(aaa.IP, "127.0.0.1").Push("mask", "255.0.0.0").Push("hard", "")
 	}
 	m.SortInt(mdb.INDEX)
+	m.StatusTimeCount(mdb.ConfigSimple(m, ice.MAIN, DOMAIN))
 }
 
 const (
@@ -41,12 +48,13 @@ const (
 	ISLOCAL = "islocal"
 	PUBLISH = "publish"
 	GATEWAY = "gateway"
+	DOMAIN  = "domain"
 )
 const HOST = "host"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		HOST: {Name: "host name auto", Help: "主机", Actions: ice.MergeActions(ice.Actions{
+		HOST: {Name: "host name auto domain", Help: "主机", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd("", func(value ice.Maps) { m.Cmd("", aaa.WHITE, LOCALHOST, value[aaa.IP]) })
 			}},
@@ -71,14 +79,18 @@ func init() {
 			}},
 			PUBLISH: {Hand: func(m *ice.Message, arg ...string) {
 				if strings.Contains(arg[0], LOCALHOST) {
-					arg[0] = strings.Replace(arg[0], LOCALHOST, m.Cmdv(HOST, mdb.Config(m, "publish"), aaa.IP), 1)
+					arg[0] = strings.Replace(arg[0], LOCALHOST, _host_publish(m), 1)
 				} else if strings.Contains(arg[0], "127.0.0.1") {
-					arg[0] = strings.Replace(arg[0], "127.0.0.1", m.Cmdv(HOST, mdb.Config(m, "publish"), aaa.IP), 1)
+					arg[0] = strings.Replace(arg[0], "127.0.0.1", _host_publish(m), 1)
 				}
 				m.Echo(arg[0])
 			}},
 			GATEWAY: {Hand: func(m *ice.Message, arg ...string) {
 				m.Push(aaa.IP, kit.Keys(kit.Slice(strings.Split(m.Cmdv(HOST, aaa.IP), nfs.PT), 0, 3), "1"))
+			}},
+			DOMAIN: {Name: "domain ip", Hand: func(m *ice.Message, arg ...string) {
+				kit.If(m.Option(aaa.IP), func(p string) { mdb.Config(m, DOMAIN, p) })
+				m.Echo(mdb.Config(m, DOMAIN))
 			}},
 		}, mdb.HashAction(mdb.SHORT, mdb.TEXT), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			_host_list(m, kit.Select("", arg, 0))

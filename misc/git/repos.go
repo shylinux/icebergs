@@ -481,8 +481,8 @@ func init() {
 					switch arg[0] {
 					case ORIGIN:
 						m.Push(arg[0], "https://shylinux.com/x/icons")
-						m.Push(arg[0], "https://shylinux.com/x/volcanos")
-						m.Push(arg[0], "https://shylinux.com/x/icebergs")
+						m.Push(arg[0], "https://shylinux.com/x/geoarea")
+						m.Push(arg[0], "https://shylinux.com/x/node_modules")
 					}
 				}
 				switch arg[0] {
@@ -504,14 +504,20 @@ func init() {
 			}},
 			CLONE: {Name: "clone origin* branch name path", Help: "克隆", Hand: func(m *ice.Message, arg ...string) {
 				m.OptionDefault(mdb.NAME, path.Base(m.Option(ORIGIN)))
-				m.OptionDefault(nfs.PATH, path.Join(nfs.USR, m.Option(mdb.NAME)))
+				m.OptionDefault(nfs.PATH, path.Join(nfs.USR, m.Option(mdb.NAME))+nfs.PS)
 				defer m.Cmdy(nfs.DIR, m.Option(nfs.PATH))
 				if nfs.Exists(m, path.Join(m.Option(nfs.PATH), ".git")) {
 					return
 				}
 				defer web.ToastProcess(m)()
-				if _, err := git.PlainClone(m.Option(nfs.PATH), false, &git.CloneOptions{URL: m.Option(ORIGIN), Auth: _repos_auth(m, m.Option(ORIGIN))}); m.Warn(err) {
-					_repos_insert(m, m.Option(nfs.PATH))
+				for _, dev := range []string{ice.DEV, ice.SHY} {
+					p := m.Option(ORIGIN)
+					kit.If(!kit.HasPrefix(p, nfs.PS, web.HTTP), func() { p = m.Cmdv("web.spide", dev, web.CLIENT_ORIGIN) + "/x/" + p })
+					m.Info("clone %s", p)
+					if _, err := git.PlainClone(m.Option(nfs.PATH), false, &git.CloneOptions{URL: p, Auth: _repos_auth(m, p)}); !m.Warn(err) {
+						_repos_insert(m, m.Option(nfs.PATH))
+						return
+					}
 				}
 			}},
 			PULL: {Help: "下载", Hand: func(m *ice.Message, arg ...string) {
@@ -541,7 +547,6 @@ func init() {
 								kit.If(_last > last, func() { last = _last })
 							}
 						}
-						m.Info("%s: %s", m.ActionKey(), value[REPOS])
 						return _repos_status(m, value[REPOS], repos)
 					})
 					remote := ice.Info.Make.Remote

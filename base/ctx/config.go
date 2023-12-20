@@ -42,14 +42,7 @@ func _config_only(v ice.Any, arg ...string) bool {
 		for k, v := range v {
 			if v, ok := v.(ice.Map); ok && len(v) == 0 {
 				continue
-			} else {
-				for k := range v {
-					if kit.IsIn(k, mdb.IMPORTANT) && len(v) > 1 {
-						return false
-					}
-				}
-			}
-			if kit.IndexOf(arg, k) == -1 {
+			} else if kit.IndexOf(arg, k) == -1 {
 				return false
 			}
 		}
@@ -60,7 +53,7 @@ func _config_only(v ice.Any, arg ...string) bool {
 func _config_save(m *ice.Message, name string, arg ...string) {
 	data, msg := ice.Map{}, m.Spawn(m.Source())
 	for _, k := range arg {
-		if v := mdb.Confv(msg, k); _config_only(v, mdb.META) {
+		if v := mdb.Confv(msg, k); _config_only(v, mdb.META) && _config_only(kit.Value(v, mdb.META), mdb.IMPORTANT, mdb.SHORT, mdb.FIELD, mdb.FIELDS, mdb.ACTION, mdb.SORT, mdb.TOOLS) {
 			continue
 		} else {
 			data[k] = v

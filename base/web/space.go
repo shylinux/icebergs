@@ -29,8 +29,7 @@ func _space_qrcode(m *ice.Message, dev string) {
 func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 	u := kit.ParseURL(kit.MergeURL2(strings.Replace(m.Cmdv(SPIDE, dev, CLIENT_ORIGIN), HTTP, "ws", 1), PP(SPACE), mdb.TYPE, ice.Info.NodeType, mdb.NAME, name,
 		nfs.MODULE, ice.Info.Make.Module, nfs.VERSION, ice.Info.Make.Versions(), arg))
-	args := kit.SimpleKV("type,name,host,port", u.Scheme, dev, u.Hostname(),
-		kit.Select(kit.Select("443", "80", u.Scheme == "ws"), u.Port()))
+	args := kit.SimpleKV("type,name,host,port", u.Scheme, dev, u.Hostname(), kit.Select(kit.Select("443", "80", u.Scheme == "ws"), u.Port()))
 	gdb.Go(m, func() {
 		once := sync.Once{}
 		redial := kit.Dict(mdb.Configv(m, REDIAL))
@@ -294,6 +293,11 @@ func init() {
 			nfs.PS: {Hand: func(m *ice.Message, arg ...string) { _space_fork(m) }},
 		}, mdb.HashAction(mdb.LIMIT, 1000, mdb.LEAST, 500, mdb.SHORT, mdb.NAME, mdb.FIELD, "time,type,name,text,module,version,ip,usernick,username,userrole", ctx.ACTION, OPEN, REDIAL, kit.Dict("a", 3000, "b", 1000, "c", 1000)), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 {
+				if len(arg) == 1 && strings.Contains(arg[0], nfs.PT) {
+					ls := kit.Split(arg[0], nfs.PT)
+					m.Cmdy(SPACE, ls[0], SPACE, kit.Keys(ls[1:]))
+					return
+				}
 				defer m.StatusTimeCount(kit.Dict(ice.MAIN, mdb.Config(m, ice.MAIN)))
 				m.Option(ice.MSG_USERWEB, tcp.PublishLocalhost(m, m.Option(ice.MSG_USERWEB)))
 				kit.If(len(arg) > 0 && arg[0] != "", func() { m.OptionFields(ice.MSG_DETAIL) })
@@ -311,7 +315,7 @@ func init() {
 					}
 					m.PushButton(kit.Select(OPEN, LOGIN, value[mdb.TYPE] == LOGIN), mdb.REMOVE)
 				})
-				m.Sort("type,name,text", kit.Simple(WEIXIN, PORTAL, WORKER, SERVER))
+				m.Sort("", kit.Simple(WEIXIN, PORTAL, WORKER, SERVER))
 			} else {
 				_space_send(m, arg[0], kit.Simple(kit.Split(arg[1]), arg[2:])...)
 			}

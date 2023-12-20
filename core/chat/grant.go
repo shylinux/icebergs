@@ -7,6 +7,7 @@ import (
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/gdb"
+	"shylinux.com/x/icebergs/base/log"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
@@ -21,7 +22,8 @@ func init() {
 		GRANT: {Name: "grant space auto", Help: "授权", Actions: ice.MergeActions(ice.Actions{
 			web.SPACE_LOGIN: {Hand: func(m *ice.Message, arg ...string) {
 				m.GoSleep30ms(func() {
-					link := tcp.PublishLocalhost(m, m.MergePodCmd("", "", web.SPACE, m.Option(mdb.NAME)))
+					p := m.Cmdx(web.SPACE, web.DOMAIN)
+					link := tcp.PublishLocalhost(m, m.Options(ice.MSG_USERWEB, p).MergePodCmd("", "", web.SPACE, kit.Keys(web.ParseLink(m, p)[ice.POD], m.Option(mdb.NAME)), log.DEBUG, m.Option(ice.MSG_DEBUG)))
 					m.Cmd(web.SPACE, m.Option(mdb.NAME), cli.PWD, m.Option(mdb.NAME), link, m.Cmdx(cli.QRCODE, link))
 				})
 			}},
@@ -41,8 +43,15 @@ func init() {
 					} else {
 						kit.If(m.Option(ice.MSG_SESSID) == "", func() { web.RenderCookie(m, aaa.SessCreate(m, m.Option(ice.MSG_USERNAME))) })
 						m.Option(ice.MSG_USERUA, msg.Append(ice.MSG_USERUA))
-						m.Cmd(web.SPACE, m.Option(web.SPACE), ice.MSG_SESSID, aaa.SessCreate(m, m.Option(ice.MSG_USERNAME)))
-						m.ProcessLocation(web.MergeURL2(m, msg.Append(mdb.TEXT)))
+						if ls := kit.Split(m.Option(web.SPACE), nfs.PT); len(ls) > 1 {
+							space := kit.Keys(kit.Slice(ls, 0, -1))
+							m.Option(ice.MSG_SESSID, m.Cmdx(web.SPACE, space, aaa.SESS, mdb.CREATE, m.Option(ice.MSG_USERNAME)))
+							m.ProcessLocation(web.MergeURL2(m, msg.Append(mdb.TEXT), ice.POD, space))
+						} else {
+							aaa.SessCreate(m, m.Option(ice.MSG_USERNAME))
+							m.ProcessLocation(web.MergeURL2(m, msg.Append(mdb.TEXT)))
+						}
+						m.Cmd(web.SPACE, m.Option(web.SPACE), ice.MSG_SESSID, m.Option(ice.MSG_SESSID))
 					}
 					gdb.Event(m, web.SPACE_GRANT, m.OptionSimple(web.SPACE))
 				}

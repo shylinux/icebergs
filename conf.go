@@ -301,6 +301,7 @@ const ( // CTX
 	CTX_CLOSE = "close"
 
 	CTX_INIT  = "_init"
+	CTX_OPEN  = "_open"
 	CTX_EXIT  = "_exit"
 	CTX_ICONS = "_icons"
 	CTX_TRANS = "_trans"

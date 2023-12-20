@@ -52,11 +52,17 @@ var Index = &Context{Name: ICE, Help: "冰山模块", Commands: Commands{
 			kit.If(p != nil, func() { c._command(m.Spawn(c), c.Commands[CTX_INIT], CTX_INIT, arg...) })
 		})
 	}},
+	CTX_OPEN: {Hand: func(m *Message, arg ...string) {
+		m.Travel(func(p *Context, c *Context) {
+			kit.If(p != nil, func() { c._command(m.Spawn(c), c.Commands[CTX_OPEN], CTX_OPEN, arg...) })
+		})
+	}},
 	INIT: {Hand: func(m *Message, arg ...string) {
 		m.Cmd(kit.Keys(MDB, CTX_INIT))
 		m.Cmd(CTX_INIT)
 		m.Cmd(SOURCE, ETC_INIT_SHY)
 		loadImportant(m)
+		m.Cmd(CTX_OPEN)
 	}},
 	QUIT: {Hand: func(m *Message, arg ...string) {
 		m.GoSleep300ms(func() { os.Exit(kit.Int(kit.Select("0", arg, 0))) })

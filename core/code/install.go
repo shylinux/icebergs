@@ -175,9 +175,9 @@ func init() {
 			cli.BUILD: {Name: "build link*", Hand: func(m *ice.Message, arg ...string) {
 				web.PushStream(m)
 				if err := _install_build(m, arg...); m.Warn(err != "", err) {
-					web.ToastFailure(m, cli.BUILD, err)
+					web.ToastFailure(m, err)
 				} else {
-					web.ToastSuccess(m, cli.BUILD)
+					web.ToastSuccess(m)
 				}
 			}},
 			cli.ORDER: {Name: "order link* path", Hand: func(m *ice.Message, arg ...string) { _install_order(m, arg...) }},

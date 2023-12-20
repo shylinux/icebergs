@@ -58,7 +58,8 @@ func init() {
 			}},
 			INSTEADOF: {Name: "insteadof remote", Help: "代理", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(REPOS, INSTEADOF, arg) }},
 			OAUTH: {Help: "授权", Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessOpen(kit.MergeURL2(kit.Select(ice.Info.Make.Domain, m.Cmdx(REPOS, "remoteURL")), web.ChatCmdPath(m, web.TOKEN, "gen"), tcp.HOST, m.Option(ice.MSG_USERWEB)))
+				m.ProcessOpen(kit.MergeURL2(kit.Select(ice.Info.Make.Domain, m.Cmdx(REPOS, "remoteURL")), web.ChatCmdPath(m, web.TOKEN, "gen"),
+					mdb.TYPE, "web.code.git.status", tcp.HOST, m.Option(ice.MSG_USERWEB)))
 			}},
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				if !kit.IsIn(m.Option(mdb.TYPE), web.WORKER, web.SERVER) {

@@ -111,7 +111,7 @@ func _repos_each(m *ice.Message, title string, cb func(*git.Repository, ice.Maps
 		msg.Table(func(value ice.Maps) {
 			toast(value[REPOS], count, total)
 			if err := cb(_repos_open(m, value[REPOS]), value); err != nil && err != git.NoErrAlreadyUpToDate {
-				web.Toast(m, err.Error(), "error: "+value[REPOS], "", "3s").Sleep3s()
+				web.ToastFailure(m, value[REPOS], err.Error())
 				list = append(list, value[REPOS])
 			}
 			count++

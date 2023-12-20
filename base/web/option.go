@@ -9,7 +9,6 @@ import (
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
-	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/log"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -140,34 +139,40 @@ func Toast(m *ice.Message, text string, arg ...ice.Any) *ice.Message { // [title
 	PushNoticeToast(m, text, arg)
 	return m
 }
-func toastContent(m *ice.Message, state string) string {
-	return kit.Join([]string{map[string]string{ice.PROCESS: "🕑", ice.FAILURE: "❌", ice.SUCCESS: "✅"}[state], state, m.ActionKey()}, " ")
+
+var Icons = map[string]string{ice.PROCESS: "🕑", ice.FAILURE: "❌", ice.SUCCESS: "✅"}
+
+func toastContent(m *ice.Message, state string, arg ...ice.Any) string {
+	return kit.JoinWord(kit.Simple(Icons[state], m.ActionKey(), state, arg)...)
 }
-func ToastSuccess(m *ice.Message, arg ...ice.Any) { Toast(m, toastContent(m, ice.SUCCESS), arg...) }
-func ToastFailure(m *ice.Message, arg ...ice.Any) { Toast(m, toastContent(m, ice.FAILURE), arg...) }
+func ToastSuccess(m *ice.Message, arg ...ice.Any) {
+	Toast(m, toastContent(m, ice.SUCCESS, arg...))
+}
+func ToastFailure(m *ice.Message, arg ...ice.Any) {
+	Toast(m, toastContent(m, ice.FAILURE, arg...), "", m.OptionDefault(ice.TOAST_DURATION, "3s")).Sleep(m.OptionDefault(ice.TOAST_DURATION, "3s"))
+}
 func ToastProcess(m *ice.Message, arg ...ice.Any) func() {
-	kit.If(len(arg) == 0, func() { arg = kit.List("", "-1") })
-	kit.If(len(arg) == 1, func() { arg = append(arg, "-1") })
-	Toast(m, toastContent(m, ice.PROCESS), arg...)
-	return func() { Toast(m, toastContent(m, ice.SUCCESS)) }
+	Toast(m, toastContent(m, ice.PROCESS, arg...))
+	return func() { Toast(m, toastContent(m, ice.SUCCESS, arg...)) }
 }
 func GoToast(m *ice.Message, title string, cb func(toast func(name string, count, total int)) []string) *ice.Message {
 	_total := 0
-	icon := "🕑"
+	icon := Icons[ice.PROCESS]
 	toast := func(name string, count, total int) {
 		kit.If(total == 0, func() { total = 1 })
-		Toast(m,
-			kit.Format("%s %s %s/%s", icon, kit.JoinWord(m.ActionKey(), name), strings.TrimSuffix(kit.FmtSize(int64(count)), "B"), strings.TrimSuffix(kit.FmtSize(int64(total)), "B")),
-			kit.Format("%s %d%%", kit.Select(m.ActionKey(), title), count*100/total), m.OptionDefault(ice.TOAST_DURATION, "30000"), count*100/total,
-		)
+		Toast(m, kit.Format("%s %s %s/%s", icon, kit.JoinWord(m.ActionKey(), name), strings.TrimSuffix(kit.FmtSize(int64(count)), "B"), strings.TrimSuffix(kit.FmtSize(int64(total)), "B")),
+			"", m.OptionDefault(ice.TOAST_DURATION, "30s"), count*100/total)
 		_total = total
 	}
 	if list := cb(toast); len(list) > 0 {
-		Toast(m, strings.Join(list, lex.NL), ice.FAILURE, "30s")
+		icon = Icons[ice.FAILURE]
+		m.Option(ice.TOAST_DURATION, "30s")
+		toast(kit.JoinWord(list...), len(list), _total)
 	} else {
-		m.Option(ice.TOAST_DURATION, "3000")
-		icon = "✅"
+		icon = Icons[ice.SUCCESS]
+		m.Option(ice.TOAST_DURATION, "3s")
 		toast(ice.SUCCESS, _total, _total)
 	}
+	m.Sleep(m.Option(ice.TOAST_DURATION))
 	return m
 }

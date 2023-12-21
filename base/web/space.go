@@ -58,7 +58,7 @@ func _space_agent(m *ice.Message, args ...string) []string {
 	}
 	for _, p := range []string{"MicroMessenger", "Alipay", "Edg", "Chrome", "Safari", "Go-http-client"} {
 		if strings.Contains(m.Option(ice.MSG_USERUA), p) {
-			args = append(args, "agent", p)
+			args = append(args, AGENT, p)
 			break
 		}
 	}
@@ -89,16 +89,20 @@ func _space_fork(m *ice.Message) {
 		gdb.Go(m, func() {
 			defer mdb.HashCreateDeferRemove(m, args, kit.Dict(mdb.TARGET, c))()
 			switch m.Option(mdb.TYPE) {
-			case WORKER:
-				defer gdb.EventDeferEvent(m, DREAM_OPEN, args)(DREAM_CLOSE, args)
-			case PORTAL:
-				m.Go(func() { m.Cmd(SPACE, name, cli.PWD, name) })
 			case LOGIN:
 				if m.Option(ice.MSG_SESSID) != "" && m.Option(ice.MSG_USERNAME) != "" {
 					m.Cmd(SPACE, name, ice.MSG_SESSID, m.Option(ice.MSG_SESSID))
 				}
 				gdb.Event(m, SPACE_LOGIN, args)
 				defer gdb.Event(m, SPACE_LOGIN_CLOSE, args)
+			case PORTAL:
+				m.Go(func() { m.Cmd(SPACE, name, cli.PWD, name) })
+			case WORKER:
+				defer gdb.EventDeferEvent(m, DREAM_OPEN, args)(DREAM_CLOSE, args)
+			case SERVER:
+				m.Go(func() {
+					m.Cmd(SPACE, name, cli.PWD, name, kit.Dict(nfs.MODULE, ice.Info.Make.Module, nfs.VERSION, ice.Info.Make.Versions(), AGENT, "Go-http-client", cli.SYSTEM, runtime.GOOS))
+				})
 			}
 			_space_handle(m, false, name, c)
 		}, kit.Join(kit.Simple(SPACE, name), lex.SP))
@@ -121,7 +125,7 @@ func _space_handle(m *ice.Message, safe bool, name string, c *websocket.Conn) {
 		source, target := kit.Simple(msg.Optionv(ice.MSG_SOURCE), name), kit.Simple(msg.Optionv(ice.MSG_TARGET))
 		msg.Log(tcp.RECV, "%v->%v %v %v", source, target, msg.Detailv(), msg.FormatsMeta(nil))
 		if next := msg.Option(ice.MSG_TARGET); next == "" || len(target) == 0 {
-			m.Go(func() { _space_exec(msg, source, target, c) }, strings.Join(kit.Simple(SPACE, name, msg.Detailv()), lex.SP))
+			m.Go(func() { _space_exec(msg, name, source, target, c) }, strings.Join(kit.Simple(SPACE, name, msg.Detailv()), lex.SP))
 		} else {
 			m.Warn(!mdb.HashSelectDetail(m, next, func(value ice.Map) {
 				switch c := value[mdb.TARGET].(type) {
@@ -148,9 +152,16 @@ func _space_domain(m *ice.Message) (link string) {
 		func() string { return Domain(m.Cmdv(tcp.HOST, aaa.IP), m.Cmdv(SERVE, tcp.PORT)) },
 	)
 }
-func _space_exec(m *ice.Message, source, target []string, c *websocket.Conn) {
+func _space_exec(m *ice.Message, name string, source, target []string, c *websocket.Conn) {
 	switch kit.Select(cli.PWD, m.Detailv(), 0) {
 	case cli.PWD:
+		mdb.HashModify(m, mdb.HASH, name,
+			aaa.USERNICK, m.Option(ice.MSG_USERNICK),
+			aaa.USERNAME, m.Option(ice.MSG_USERNAME),
+			aaa.USERROLE, m.Option(ice.MSG_USERROLE),
+			aaa.IP, m.Option(ice.MSG_USERIP),
+			m.OptionSimple(nfs.MODULE, nfs.VERSION, AGENT, cli.SYSTEM),
+		)
 		m.Push(mdb.LINK, m.MergePod(kit.Select("", source, -1)))
 	default:
 		m.Options("__target", kit.Reverse(kit.Simple(source))).OptionDefault(ice.MSG_COUNT, "0")
@@ -203,6 +214,7 @@ const (
 	MASTER = "master"
 
 	REDIAL = "redial"
+	AGENT  = "agent"
 )
 const (
 	SPACE_LOGIN       = "space.login"
@@ -324,10 +336,12 @@ func init() {
 						m.Push(mdb.STATUS, value[mdb.STATUS])
 						m.Push(aaa.UA, value[aaa.UA])
 					}
-					if kit.IsIn(value[mdb.TYPE], WORKER, SERVER) {
-						m.Push(mdb.LINK, m.MergePod(value[mdb.NAME]))
-					} else if kit.IsIn(value[mdb.TYPE], PORTAL, WEIXIN) && value[mdb.NAME] != html.CHROME {
+					if kit.IsIn(value[mdb.TYPE], WEIXIN, PORTAL) && value[mdb.NAME] != html.CHROME {
 						m.Push(mdb.LINK, MergeURL2(m, value[mdb.TEXT]))
+					} else if kit.IsIn(value[mdb.TYPE], WORKER, SERVER) {
+						m.Push(mdb.LINK, m.MergePod(value[mdb.NAME]))
+					} else if kit.IsIn(value[mdb.TYPE], MASTER) {
+						m.Push(mdb.LINK, "http://"+value[mdb.TEXT])
 					} else {
 						m.Push(mdb.LINK, "")
 					}

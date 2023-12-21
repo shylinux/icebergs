@@ -62,7 +62,7 @@ func (f *Frame) Start(m *ice.Message, arg ...string) {
 	default:
 		m.Cmd(tcp.SERVER, tcp.LISTEN, mdb.TYPE, HTTP, mdb.NAME, logs.FileLine(1), m.OptionSimple(tcp.HOST, tcp.PORT), func(l net.Listener) {
 			defer mdb.HashCreateDeferRemove(m, m.OptionSimple(mdb.NAME, tcp.PROTO), arg, cli.STATUS, tcp.START)()
-			gdb.Event(m, SERVE_START, arg)
+			gdb.Event(m.Spawn(), SERVE_START, arg)
 			m.Warn(f.Server.Serve(l))
 		})
 		kit.If(m.IsErr(), func() { fmt.Println(); fmt.Println(m.Result()); m.Cmd(ice.QUIT) })

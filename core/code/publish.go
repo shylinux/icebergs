@@ -47,6 +47,7 @@ func _publish_contexts(m *ice.Message, arg ...string) {
 	m.Options(nfs.DIR_ROOT, "").OptionDefault(ice.MSG_USERNAME, "demo")
 	for _, k := range kit.Default(arg, ice.MISC) {
 		m.Options(web.DOMAIN, web.UserHost(m), cli.CTX_ENV, kit.Select("", lex.SP+kit.JoinKV(mdb.EQ, lex.SP, cli.CTX_POD, m.Option(ice.MSG_USERPOD)), m.Option(ice.MSG_USERPOD) != ""))
+		m.Option("tcp_domain", kit.ParseURL(web.UserHost(m)).Hostname())
 		switch k {
 		case INSTALL:
 			m.Option("format", "raw")
@@ -57,6 +58,7 @@ func _publish_contexts(m *ice.Message, arg ...string) {
 		case nfs.SOURCE, ice.DEV:
 			m.Options(nfs.SOURCE, ice.Info.Make.Remote)
 		case nfs.BINARY, ice.APP:
+
 		case "curl", "wget":
 		case "manual":
 			m.Options(nfs.BINARY, "ice.linux.amd64")

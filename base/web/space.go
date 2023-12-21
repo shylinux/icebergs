@@ -3,6 +3,7 @@ package web
 import (
 	"math/rand"
 	"net"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -28,7 +29,7 @@ func _space_qrcode(m *ice.Message, dev string) {
 }
 func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 	u := kit.ParseURL(kit.MergeURL2(strings.Replace(m.Cmdv(SPIDE, dev, CLIENT_ORIGIN), HTTP, "ws", 1), PP(SPACE), mdb.TYPE, ice.Info.NodeType, mdb.NAME, name,
-		nfs.MODULE, ice.Info.Make.Module, nfs.VERSION, ice.Info.Make.Versions(), arg))
+		nfs.MODULE, ice.Info.Make.Module, nfs.VERSION, ice.Info.Make.Versions(), "goos", runtime.GOOS, "goarch", runtime.GOARCH, arg))
 	args := kit.SimpleKV("type,name,host,port", u.Scheme, dev, u.Hostname(), kit.Select(kit.Select("443", "80", u.Scheme == "ws"), u.Port()))
 	gdb.Go(m, func() {
 		once := sync.Once{}
@@ -46,6 +47,22 @@ func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 			}).Cost(mdb.COUNT, i, mdb.NEXT, next, tcp.DIAL, dev, LINK, u.String()).Sleep(next)
 		}
 	}, kit.Join(kit.Simple(SPACE, name), lex.SP))
+}
+func _space_agent(m *ice.Message, args ...string) []string {
+	kit.If(m.Option("goos"), func(p string) { args = append(args, "system", p) })
+	for _, p := range []string{"Android", "iPhone", "Mac", "Windows"} {
+		if strings.Contains(m.Option(ice.MSG_USERUA), p) {
+			args = append(args, "system", p)
+			break
+		}
+	}
+	for _, p := range []string{"MicroMessenger", "Alipay", "Edg", "Chrome", "Safari", "Go-http-client"} {
+		if strings.Contains(m.Option(ice.MSG_USERUA), p) {
+			args = append(args, "agent", p)
+			break
+		}
+	}
+	return args
 }
 func _space_fork(m *ice.Message) {
 	addr := kit.Select(m.R.RemoteAddr, m.R.Header.Get(ice.MSG_USERADDR))
@@ -67,6 +84,7 @@ func _space_fork(m *ice.Message) {
 	args := kit.Simple(mdb.TYPE, kit.Select(WORKER, m.Option(mdb.TYPE)), mdb.NAME, name, mdb.TEXT, text, m.OptionSimple(nfs.MODULE, nfs.VERSION, cli.DAEMON))
 	args = append(args, aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERROLE, m.Option(ice.MSG_USERROLE))
 	args = append(args, aaa.UA, m.Option(ice.MSG_USERUA), aaa.IP, m.Option(ice.MSG_USERIP))
+	args = _space_agent(m, args...)
 	if c, e := websocket.Upgrade(m.W, m.R); !m.Warn(e) {
 		gdb.Go(m, func() {
 			defer mdb.HashCreateDeferRemove(m, args, kit.Dict(mdb.TARGET, c))()
@@ -291,7 +309,7 @@ func init() {
 				}
 			}},
 			nfs.PS: {Hand: func(m *ice.Message, arg ...string) { _space_fork(m) }},
-		}, mdb.HashAction(mdb.LIMIT, 1000, mdb.LEAST, 500, mdb.SHORT, mdb.NAME, mdb.FIELD, "time,type,name,text,module,version,ip,usernick,username,userrole", ctx.ACTION, OPEN, REDIAL, kit.Dict("a", 3000, "b", 1000, "c", 1000)), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.LIMIT, 1000, mdb.LEAST, 500, mdb.SHORT, mdb.NAME, mdb.FIELD, "time,type,name,text,module,version,agent,system,ip,usernick,username,userrole", ctx.ACTION, OPEN, REDIAL, kit.Dict("a", 3000, "b", 1000, "c", 1000)), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 {
 				if len(arg) == 1 && strings.Contains(arg[0], nfs.PT) {
 					ls := kit.Split(arg[0], nfs.PT)

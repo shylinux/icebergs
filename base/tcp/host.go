@@ -3,6 +3,7 @@ package tcp
 import (
 	"fmt"
 	"net"
+	"os"
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
@@ -12,11 +13,18 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _host_publish(m *ice.Message) string {
-	if p := mdb.Config(m, DOMAIN); p != "" {
-		return p
-	}
-	return m.Cmdv(HOST, mdb.Config(m, ice.MAIN), aaa.IP)
+func _host_domain(m *ice.Message) string {
+	return kit.GetValid(
+		func() string { return m.Option("tcp_domain") },
+		func() string { return mdb.Config(m, DOMAIN) },
+		func() string { return os.Getenv("tcp_domain") },
+		func() string {
+			if !kit.IsIn(m.ActionKey(), "", ice.LIST) {
+				return m.Cmdv(HOST, mdb.Config(m, ice.MAIN), aaa.IP)
+			}
+			return ""
+		},
+	)
 }
 func _host_list(m *ice.Message, name string) {
 	if ifs, e := net.Interfaces(); m.Assert(e) {
@@ -39,7 +47,7 @@ func _host_list(m *ice.Message, name string) {
 		m.Push(mdb.INDEX, -1).Push(mdb.NAME, LOCALHOST).Push(aaa.IP, "127.0.0.1").Push("mask", "255.0.0.0").Push("hard", "")
 	}
 	m.SortInt(mdb.INDEX)
-	m.StatusTimeCount(mdb.ConfigSimple(m, ice.MAIN, DOMAIN))
+	m.StatusTimeCount(DOMAIN, _host_domain(m))
 }
 
 const (
@@ -79,9 +87,9 @@ func init() {
 			}},
 			PUBLISH: {Hand: func(m *ice.Message, arg ...string) {
 				if strings.Contains(arg[0], LOCALHOST) {
-					arg[0] = strings.Replace(arg[0], LOCALHOST, _host_publish(m), 1)
+					arg[0] = strings.Replace(arg[0], LOCALHOST, _host_domain(m), 1)
 				} else if strings.Contains(arg[0], "127.0.0.1") {
-					arg[0] = strings.Replace(arg[0], "127.0.0.1", _host_publish(m), 1)
+					arg[0] = strings.Replace(arg[0], "127.0.0.1", _host_domain(m), 1)
 				}
 				m.Echo(arg[0])
 			}},

@@ -1,6 +1,8 @@
 package gdb
 
 import (
+	"sync"
+
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/mdb"
 	kit "shylinux.com/x/toolkits"
@@ -26,6 +28,7 @@ func init() {
 				mdb.ZoneSelect(m.Spawn(ice.OptionFields("")), arg[1]).Table(func(value ice.Maps) {
 					m.Cmdy(kit.Split(value[ice.CMD]), arg[1], arg[2:], ice.OptionFields(""))
 				})
+				_waitMap.Range(func(key, cb ice.Any) bool { cb.(func(*ice.Message, ...string))(m, arg...); return true })
 			}},
 		}, mdb.ZoneAction(mdb.SHORT, EVENT, mdb.FIELDS, "time,id,cmd"), mdb.ClearOnExitHashAction())},
 	})
@@ -55,4 +58,18 @@ func Event(m *ice.Message, key string, arg ...ice.Any) *ice.Message {
 func EventDeferEvent(m *ice.Message, key string, arg ...ice.Any) func(string, ...ice.Any) {
 	Event(m, key, arg...)
 	return func(key string, args ...ice.Any) { Event(m, key, args...) }
+}
+
+var _waitMap = sync.Map{}
+
+func WaitEvent(m *ice.Message, key string, cb func(*ice.Message, ...string) bool) {
+	wg := sync.WaitGroup{}
+	h := kit.HashsUniq()
+	defer _waitMap.Delete(h)
+	_waitMap.Store(h, func(m *ice.Message, arg ...string) {
+		m.Info("WaitEvent %v %v", key, kit.FileLine(cb, 3))
+		kit.If((key == "" || m.Option(EVENT) == key) && cb(m, arg...), func() { wg.Done() })
+	})
+	wg.Add(1)
+	defer wg.Wait()
 }

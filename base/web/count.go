@@ -16,7 +16,7 @@ func _count_stat(m *ice.Message, arg ...string) map[string]int {
 		count := kit.Int(value[mdb.COUNT])
 		stat[mdb.TOTAL] += count
 		for _, agent := range []string{"美国", "电信", "联通", "移动", "阿里云", "腾讯云"} {
-			if strings.Contains(value["location"], agent) {
+			if strings.Contains(value[aaa.LOCATION], agent) {
 				stat[agent] += count
 				break
 			}
@@ -27,7 +27,7 @@ func _count_stat(m *ice.Message, arg ...string) map[string]int {
 				return
 			}
 		}
-		for _, agent := range []string{"Chrome", "Safari", "MSIE", "Firefox"} {
+		for _, agent := range []string{"Edg", "Chrome", "Safari", "MSIE", "Firefox"} {
 			if strings.Contains(value[mdb.TEXT], agent) {
 				stat[agent] += count
 				break
@@ -47,7 +47,9 @@ const COUNT = "count"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		COUNT: &ice.Command{Name: "count hash auto valid location", Help: "计数", Actions: ice.MergeActions(ice.Actions{
+		COUNT: &ice.Command{Name: "count hash auto group valid location", Help: "计数", Meta: kit.Dict(
+			ice.CTX_TRANS, kit.Dict(html.INPUT, kit.Dict(aaa.LOCATION, "地理位置")),
+		), Actions: ice.MergeActions(ice.Actions{
 			mdb.CREATE: {Name: "create type name text", Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashSelectUpdate(m, mdb.HashCreate(m), func(value ice.Map) { value[mdb.COUNT] = kit.Int(value[mdb.COUNT]) + 1 })
 			}},
@@ -55,13 +57,34 @@ func init() {
 				mdb.HashSelect(m.Spawn(), arg...).Table(func(value ice.Maps) {
 					if !strings.HasPrefix(value[mdb.TEXT], html.Mozilla) {
 						return
-					} else if count := kit.Int(value[mdb.COUNT]); count < 3 {
+					} else if count := kit.Int(value[mdb.COUNT]); count < 1 {
 						return
 					} else {
 						m.Push("", value, kit.Split(mdb.Config(m, mdb.FIELD)))
 					}
 				})
 				m.StatusTimeCount(_count_stat(m))
+			}},
+			"group": {Hand: func(m *ice.Message, arg ...string) {
+				count := map[string]int{}
+				list := map[string]map[string]string{}
+				m.Cmd("", mdb.VALID).Table(func(value ice.Maps) {
+					count[value[aaa.LOCATION]] += kit.Int(value[mdb.COUNT])
+					list[value[aaa.LOCATION]] = value
+				})
+				stat := map[string]int{}
+				for _, v := range list {
+					func() {
+						for _, agent := range []string{"美国", "电信", "联通", "移动", "阿里云", "腾讯云", "北京市", "香港"} {
+							if strings.Contains(v[aaa.LOCATION], agent) {
+								stat[agent] += kit.Int(v[mdb.COUNT])
+								return
+							}
+						}
+						m.Push("", v, kit.Split(mdb.Config(m, mdb.FIELD)))
+					}()
+				}
+				m.StatusTimeCount(stat)
 			}},
 			aaa.LOCATION: {Hand: func(m *ice.Message, arg ...string) {
 				GoToast(mdb.HashSelects(m).Sort(mdb.COUNT, ice.INT_R), "", func(toast func(string, int, int)) []string {

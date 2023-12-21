@@ -615,6 +615,10 @@ func init() {
 			web.DREAM_TRASH: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd("", mdb.REMOVE, kit.Dict(REPOS, m.Option(mdb.NAME)))
 			}},
+			web.SERVE_START: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd("", CLONE, ORIGIN, "node_modules", mdb.NAME, "", nfs.PATH, "")
+				m.Cmd("", CLONE, ORIGIN, "icons", mdb.NAME, "", nfs.PATH, "")
+			}},
 		}, aaa.RoleAction(REMOTE), web.StatsAction("", "代码库总数"), web.DreamAction(), mdb.HashAction(mdb.SHORT, REPOS, mdb.FIELD, "time,repos,branch,version,message,origin"), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				mdb.HashSelect(m, arg...).Sort(REPOS).PushAction(STATUS, mdb.REMOVE).Action(CLONE, PULL, PUSH, STATUS)

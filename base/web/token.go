@@ -45,7 +45,7 @@ func init() {
 				m.Cmd(cli.SYSTEM, "git", "config", "--global", "credential.helper", "store")
 				m.ProcessClose()
 			}},
-		}, StatsAction("", "令牌总数"), mdb.HashAction(mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,type,name,text,username", mdb.EXPIRE, mdb.MONTH)), Hand: func(m *ice.Message, arg ...string) {
+		}, StatsAction("", "令牌总数"), mdb.HashAction(mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,type,name,text", mdb.EXPIRE, mdb.MONTH)), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, arg...)
 			if len(arg) > 0 {
 				m.EchoScript(kit.Format("ish_miss_serve_log dev %s token %s", UserHost(m), arg[0]))

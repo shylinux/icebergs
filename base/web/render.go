@@ -142,6 +142,7 @@ func RenderPodCmd(m *ice.Message, pod, cmd string, arg ...ice.Any) {
 	RenderCmds(m, kit.Dict(msg.AppendSimple(mdb.NAME, mdb.HELP),
 		ctx.INDEX, msg.Append(ctx.INDEX), ctx.ARGS, kit.Simple(arg), ctx.DISPLAY, m.Option(ice.MSG_DISPLAY),
 		mdb.LIST, kit.UnMarshal(msg.Append(mdb.LIST)), mdb.META, kit.UnMarshal(msg.Append(mdb.META)),
+		"_help", msg.Append("_help"),
 	))
 }
 func RenderCmd(m *ice.Message, cmd string, arg ...ice.Any) {

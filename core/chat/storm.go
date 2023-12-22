@@ -48,6 +48,7 @@ func init() {
 					m.Push(mdb.HELP, msg.Append(mdb.HELP))
 					m.Push(mdb.META, msg.Append(mdb.META))
 					m.Push(mdb.LIST, msg.Append(mdb.LIST))
+					m.Push("_help", msg.Append("_help"))
 				})
 				m.Action(mdb.INSERT)
 			} else if aaa.Right(m, arg) {

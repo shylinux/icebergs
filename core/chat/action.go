@@ -75,11 +75,7 @@ func init() {
 				return
 			}
 			if web.PodCmd(m, web.SPACE, arg...) {
-				m.Table(func(value ice.Maps) {
-					m.StatusTimeCount()
-					m.Push(web.SPACE, m.Option(ice.MSG_USERPOD))
-				})
-				return
+				m.Table(func(value ice.Maps) { m.Push(web.SPACE, m.Option(ice.MSG_USERPOD)) })
 			} else if len(arg) == 2 {
 				ctx.OptionFromConfig(m, MENUS)
 				_action_list(m, arg[0], arg[1])

@@ -149,6 +149,8 @@ const (
 	USR_LOCAL      = ice.USR_LOCAL
 	SRC_DOCUMENT   = ice.SRC_DOCUMENT
 	SRC_TEMPLATE   = ice.SRC_TEMPLATE
+	REQUIRE_SRC    = "/require/src/"
+	REQUIRE_USR    = "/require/usr/"
 	REQUIRE        = "/require/"
 	VOLCANOS       = "/volcanos/"
 	INTSHELL       = "/intshell/"

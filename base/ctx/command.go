@@ -23,6 +23,7 @@ func _command_list(m *ice.Message, name string) *ice.Message {
 		m.Push(mdb.HELP, kit.Format(cmd.Help))
 		m.Push(mdb.META, kit.Format(cmd.Meta))
 		m.Push(mdb.LIST, kit.Format(cmd.List))
+		m.Push("_help", GetCmdHelp(m, name))
 	})
 	return m
 }
@@ -170,10 +171,17 @@ func GetFileCmd(dir string) string {
 	}
 	return ""
 }
+func GetCmdHelp(m *ice.Message, cmds string) (file string) {
+	file = strings.TrimPrefix(FileURI(kit.ExtChange(GetCmdFile(m, cmds), nfs.SHY)), "/require/")
+	if !nfs.Exists(m, path.Join(nfs.SRC_DOCUMENT, "commands", strings.TrimPrefix(file, "usr/icebergs/")), func(p string) { file = p }) {
+		kit.If(!nfs.Exists(m, file), func() { file = "" })
+	}
+	return
+}
 func GetCmdFile(m *ice.Message, cmds string) (file string) {
 	m.Search(kit.Select(m.PrefixKey(), cmds), func(key string, cmd *ice.Command) {
 		if file = strings.TrimPrefix(FileURI(kit.Split(cmd.FileLine(), nfs.DF)[0]), "/require/"); !nfs.Exists(m, file) {
-			file = path.Join(ice.ISH_PLUGED, file)
+			file = path.Join("/require/", file)
 		}
 	})
 	return

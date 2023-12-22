@@ -103,6 +103,15 @@ func init() {
 			}},
 		}, aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
 			if kit.HasPrefix(arg[0], "/volcanos/", "/require/", ice.HTTP) {
+				if kit.HasPrefix(arg[0], nfs.REQUIRE_SRC) {
+					m.Option(nfs.FILE, strings.Split(strings.TrimPrefix(arg[0], nfs.REQUIRE_SRC), "?")[0])
+					m.Option(nfs.PATH, nfs.SRC)
+				}
+				if kit.HasPrefix(arg[0], nfs.REQUIRE_USR) {
+					ls := kit.Split(arg[0], nfs.PS)
+					m.Option(nfs.FILE, strings.Split(strings.TrimPrefix(arg[0], nfs.REQUIRE_USR+ls[2]+nfs.PS), "?")[0])
+					m.Option(nfs.PATH, nfs.USR+ls[2]+nfs.PS)
+				}
 				m.Echo(m.Cmdx(web.SPIDE, ice.OPS, web.SPIDE_RAW, http.MethodGet, arg[0]))
 				m.Options("mode", "simple", lex.PARSE, kit.Ext(kit.ParseURL(arg[0]).Path))
 				ctx.DisplayLocal(m, "")

@@ -21,7 +21,7 @@ func init() {
 			}},
 			nfs.SOURCE: {Hand: func(m *ice.Message, arg ...string) {
 				if !web.PodCmd(m, ice.POD, kit.Simple(m.ActionKey(), arg)...) {
-					ctx.ProcessField(m, web.CODE_VIMER, func() []string { return nfs.SplitPath(m, ctx.GetCmdFile(m, arg[0])) }, arg...)
+					ctx.ProcessField(m, web.CODE_INNER, func() []string { return nfs.SplitPath(m, ctx.GetCmdFile(m, arg[0])) }, arg...)
 				}
 			}},
 			ctx.CONFIG: {Hand: func(m *ice.Message, arg ...string) { ctx.ProcessField(m, ctx.CONFIG, arg, arg...) }},

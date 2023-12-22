@@ -90,6 +90,9 @@ func init() {
 				case nfs.MODULE:
 					m.Cmdy(AUTOGEN, mdb.INPUTS, arg)
 				case nfs.SCRIPT, mdb.CREATE:
+					if strings.HasSuffix(m.Option(nfs.FILE), nfs.PS) {
+						m.Option(nfs.FILE, path.Join(m.Option(nfs.FILE), path.Base(strings.TrimSuffix(m.Option(nfs.FILE), nfs.PS)+".go")))
+					}
 					kit.For([]string{SH, SHY, PY, JS, CSS, HTML}, func(ext string) {
 						m.Push(nfs.PATH, kit.ExtChange(m.Option(nfs.FILE), ext))
 					})
@@ -148,7 +151,7 @@ func init() {
 			nfs.MODULE: {Name: "create name*=h2 help=示例 type*=Hash,Zone,Data,Code main*=main.go zone key", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(AUTOGEN, nfs.MODULE, arg)
 			}},
-			nfs.SCRIPT: {Name: "script file*=hi/hi.js", Help: "脚本", Hand: func(m *ice.Message, arg ...string) {
+			nfs.SCRIPT: {Name: "script file*", Help: "脚本", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(nfs.DEFS, path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)), m.Cmdx("", TEMPLATE))
 			}},
 			nfs.REPOS: {Help: "仓库"}, web.SPACE: {Help: "空间"}, web.DREAM: {Help: "空间"},

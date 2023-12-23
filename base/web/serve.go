@@ -95,7 +95,7 @@ func _serve_static(msg *ice.Message, w http.ResponseWriter, r *http.Request) boo
 }
 func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.ResponseWriter, r *http.Request) {
 	debug := strings.Contains(r.URL.String(), "debug=true") || strings.Contains(r.Header.Get(html.Referer), "debug=true")
-	m.Options(ice.LOG_TRACEID, r.Header.Get(ice.LOG_TRACEID))
+	m.Options(ice.LOG_DEBUG, ice.FALSE, ice.LOG_TRACEID, r.Header.Get(ice.LOG_TRACEID))
 	_log := func(level string, arg ...ice.Any) *ice.Message {
 		if debug || arg[0] == ice.MSG_CMDS {
 			return m.Logs(strings.Title(level), arg...)
@@ -136,10 +136,10 @@ func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.Response
 	m.W.Header().Add(strings.ReplaceAll(ice.LOG_TRACEID, ".", "-"), m.Option(ice.LOG_TRACEID))
 	defer func() { Render(m, m.Option(ice.MSG_OUTPUT), kit.List(m.Optionv(ice.MSG_ARGS))...) }()
 	if cmds, ok := _serve_auth(m, key, kit.Simple(m.Optionv(ice.MSG_CMDS)), w, r); ok {
+		m.Option(ice.MSG_COST, "")
 		defer func() {
 			kit.If(m.Option(ice.MSG_STATUS) == "", func() { m.StatusTimeCount() })
-			m.Cost(kit.Format("%s: %s %v", r.Method, r.URL.String(), m.FormatSize()))
-			m.Options(ice.MSG_COST, m.FormatCost(), ice.MSG_OPTION, kit.Simple(m.Optionv(ice.MSG_OPTION), ice.MSG_COST))
+			m.Cost(kit.Format("%s: %s %v", r.Method, r.URL.String(), m.FormatSize())).Options(ice.MSG_COST, m.FormatCost())
 		}()
 		m.Option(ice.MSG_OPTS, kit.Simple(m.Optionv(ice.MSG_OPTION), func(k string) bool { return !strings.HasPrefix(k, ice.MSG_SESSID) }))
 		if m.Detailv(m.PrefixKey(), cmds); len(cmds) > 1 && cmds[0] == ctx.ACTION && cmds[1] != ctx.ACTION {

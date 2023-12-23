@@ -138,6 +138,7 @@ func init() {
 			} else {
 				_config_make(m, arg[0], arg[1:]...)
 				m.Action(mdb.EXPORT, mdb.IMPORT, nfs.TRASH)
+				DisplayStoryJSON(m)
 			}
 		}},
 	})

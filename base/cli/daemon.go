@@ -185,3 +185,6 @@ end tell
 `, strings.Join(arg, "; ")))
 	return m
 }
+func OSAScript(m *ice.Message, arg ...string) {
+	m.Cmd(SYSTEM, "osascript", "-e", arg)
+}

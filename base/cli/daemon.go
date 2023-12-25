@@ -177,13 +177,15 @@ func OpenCmds(m *ice.Message, arg ...string) *ice.Message {
 	if len(arg) == 0 || arg[0] == "" {
 		return m
 	}
-	m.Cmd(SYSTEM, "osascript", "-e", kit.Format(`
-tell application "Terminal"
-	do script "%s"
-	activate
-end tell
-`, strings.Join(arg, "; ")))
+	TellApp(m, "Terminal", kit.Format(`do script %s`, strings.Join(arg, "; ")), "activate")
 	return m
+}
+func TellApp(m *ice.Message, app string, arg ...string) {
+	OSAScript(m, kit.Format(`
+tell application "%s"
+	%s
+end tell
+`, app, strings.Join(arg, lex.NL)))
 }
 func OSAScript(m *ice.Message, arg ...string) {
 	m.Cmd(SYSTEM, "osascript", "-e", arg)

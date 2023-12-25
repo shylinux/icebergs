@@ -105,10 +105,18 @@ func init() {
 					switch key {
 					case mdb.TIME:
 						m.Push(key, ice.Info.Make.Time)
+					case mdb.TYPE:
+						m.Push(key, ice.Info.NodeType)
 					case nfs.MODULE:
 						m.Push(key, ice.Info.Make.Module)
 					case nfs.VERSION:
 						m.Push(key, ice.Info.Make.Versions())
+					case "commit":
+						m.Push(key, ice.Info.Make.When)
+					case "compile":
+						m.Push(key, ice.Info.Make.Time)
+					case "boot":
+						m.Push(key, m.Cmdx(cli.RUNTIME, "boot.time"))
 					case "md5":
 						m.Push(key, ice.Info.Hash)
 					case nfs.SIZE:
@@ -118,8 +126,6 @@ func init() {
 						var stats runtime.MemStats
 						runtime.ReadMemStats(&stats)
 						m.Push(key, kit.Format("%s/%s/%s", kit.FmtSize(int64(stats.Sys)), ice.Info.Size, m.Cmdx(nfs.DIR, nfs.SIZE)))
-					case mdb.TYPE:
-						m.Push(key, ice.Info.NodeType)
 					case nfs.PATH:
 						m.Push(key, kit.Path(""))
 					case tcp.HOSTNAME:
@@ -137,7 +143,7 @@ func init() {
 					kit.If(value[mdb.STATUS] == OFFLINE, func() { mdb.HashRemove(m, SPACE, value[SPACE]) })
 				})
 			}},
-		}, mdb.HashAction(mdb.SHORT, SPACE, mdb.FIELD, "time,space,type,module,version,md5,size,path,hostname", mdb.SORT, "type,space", html.CHECKBOX, ice.TRUE, mdb.ACTION, ice.MAIN)), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.SHORT, SPACE, mdb.FIELD, "time,space,type,module,version,commit,compile,boot,md5,size,path,hostname", mdb.SORT, "type,space", html.CHECKBOX, ice.TRUE, mdb.ACTION, ice.MAIN)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 1 {
 				_route_match(m, arg[0], func(value ice.Maps, i int, list []ice.Maps) {
 					_route_push(m, value[SPACE], m.Cmd(SPACE, value[SPACE], arg[1:]))

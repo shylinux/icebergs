@@ -65,6 +65,7 @@ type relay struct {
 	pubkey      string `name:"pubkey" help:"公钥"`
 	version     string `name:"version" help:"版本"`
 	stats       string `name:"stats machine" help:"采集"`
+	dream       string `name:"dream" help:"空间"`
 	forEach     string `name:"forEach machine cmd*:textarea=pwd" help:"遍历"`
 	forFlow     string `name:"forFlow machine cmd*:textarea=pwd" help:"流程"`
 	list        string `name:"list machine auto" help:"代理"`
@@ -164,6 +165,27 @@ func (s relay) Stats(m *ice.Message) {
 		))...)
 	})
 }
+func (s relay) Dream(m *ice.Message) {
+	s.foreach(m, func(msg *ice.Message, cmd []string) {
+		ssh.CombinedOutput(msg.Message, "contexts/bin/ice.bin web.admin web.route", func(res string) {
+			_msg := m.Spawn().SplitIndex(res)
+			_msg.Table(func(value ice.Maps) {
+				_msg.Push(MACHINE, msg.Option(MACHINE)).Push(tcp.HOST, msg.Option(tcp.HOST))
+				switch msg.Option(web.PORTAL) {
+				case "":
+					_msg.Push(web.LINK, "")
+				case tcp.PORT_443:
+					_msg.Push(web.LINK, kit.Format("https://%s/chat/pod/%s", msg.Option(tcp.HOST), value[web.SPACE]))
+				case tcp.PORT_80:
+					_msg.Push(web.LINK, kit.Format("http://%s/chat/pod/%s", msg.Option(tcp.HOST), value[web.SPACE]))
+				default:
+					_msg.Push(web.LINK, kit.Format("http://%s:%s/chat/pod/%s", msg.Option(tcp.HOST), msg.Option(web.PORTAL), value[web.SPACE]))
+				}
+			})
+			m.Copy(_msg.Cut("time,machine,host,space,type,status,module,version,link"))
+		})
+	})
+}
 func (s relay) ForEach(m *ice.Message, arg ...string) *ice.Message {
 	s.foreach(m, func(msg *ice.Message, cmd []string) {
 		kit.For(cmd, func(cmd string) {
@@ -188,7 +210,7 @@ func (s relay) List(m *ice.Message, arg ...string) *ice.Message {
 		if m.Length() == 0 {
 			m.Action(s.Create, s.Compile, s.Publish, s.Pubkey)
 		} else {
-			m.Action(s.Create, s.Upgrade, s.Version, s.Stats, s.ForEach, s.ForFlow, s.Compile, s.Publish, s.Pubkey)
+			m.Action(s.Create, s.Upgrade, s.Version, s.Stats, s.Dream, s.ForEach, s.ForFlow, s.Compile, s.Publish, s.Pubkey)
 		}
 	}
 	stats := map[string]int{}

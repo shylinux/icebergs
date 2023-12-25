@@ -364,9 +364,9 @@ func init() {
 
 func HostPort(m *ice.Message, host, port string) string {
 	kit.If(host == "", func() { host = kit.ParseURL(UserHost(m)).Hostname() })
-	if port == "443" {
+	if port == tcp.PORT_443 {
 		return kit.Format("https://%s", host)
-	} else if port == "80" || port == "" {
+	} else if port == tcp.PORT_80 || port == "" {
 		return kit.Format("http://%s", host)
 	} else {
 		return kit.Format("http://%s:%s", host, port)

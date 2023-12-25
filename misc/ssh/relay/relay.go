@@ -27,6 +27,7 @@ const (
 	RELAY        = "relay"
 	SSH_RELAY    = "ssh.relay"
 	SRC_RELAY_GO = "src/relay.go"
+	CONTEXTS     = "contexts/"
 
 	INSTALL_SH = "install.sh"
 	UPGRADE_SH = "upgrade.sh"
@@ -153,7 +154,7 @@ func (s relay) Stats(m *ice.Message) {
 		})
 		return nil
 	}).ProcessInner()
-	s.ForEach(m.Spawn(ice.Maps{MACHINE: machine, ice.CMD: kit.JoinWord("contexts/"+ice.BIN_ICE_BIN, web.ADMIN, cli.RUNTIME)})).Table(func(value ice.Maps) {
+	s.ForEach(m.Spawn(ice.Maps{MACHINE: machine, ice.CMD: s.admins(m, cli.RUNTIME)})).Table(func(value ice.Maps) {
 		res := kit.UnMarshal(value[ice.RES])
 		data := kit.Value(res, cli.MAKE)
 		s.Modify(m, kit.Simple(MACHINE, value[MACHINE], kit.Dict(
@@ -166,25 +167,29 @@ func (s relay) Stats(m *ice.Message) {
 	})
 }
 func (s relay) Dream(m *ice.Message) {
+	fields := "time,machine,host,space,type,status,module,version,commit,compile,boot,link"
 	s.foreach(m, func(msg *ice.Message, cmd []string) {
-		ssh.CombinedOutput(msg.Message, "contexts/bin/ice.bin web.admin web.route", func(res string) {
+		m.Push("", kit.Dict(msg.OptionSimple(fields), mdb.TYPE, web.SERVER, mdb.STATUS, web.ONLINE, web.SPACE, ice.CONTEXTS, web.LINK, web.HostPort(m.Message, msg.Option(tcp.HOST), msg.Option(web.PORTAL))), kit.Split(fields))
+		ssh.CombinedOutput(msg.Message, s.admins(m, web.ROUTE), func(res string) {
 			_msg := m.Spawn().SplitIndex(res)
-			_msg.Table(func(value ice.Maps) {
-				_msg.Push(MACHINE, msg.Option(MACHINE)).Push(tcp.HOST, msg.Option(tcp.HOST))
-				switch msg.Option(web.PORTAL) {
+			m.Copy(_msg.Table(func(value ice.Maps) {
+				switch _msg.Push(MACHINE, msg.Option(MACHINE)).Push(tcp.HOST, msg.Option(tcp.HOST)); msg.Option(web.PORTAL) {
 				case "":
 					_msg.Push(web.LINK, "")
-				case tcp.PORT_443:
-					_msg.Push(web.LINK, kit.Format("https://%s/chat/pod/%s", msg.Option(tcp.HOST), value[web.SPACE]))
-				case tcp.PORT_80:
-					_msg.Push(web.LINK, kit.Format("http://%s/chat/pod/%s", msg.Option(tcp.HOST), value[web.SPACE]))
 				default:
-					_msg.Push(web.LINK, kit.Format("http://%s:%s/chat/pod/%s", msg.Option(tcp.HOST), msg.Option(web.PORTAL), value[web.SPACE]))
+					_msg.Push(web.LINK, kit.Format("%s/chat/pod/%s", web.HostPort(m.Message, msg.Option(tcp.HOST), msg.Option(web.PORTAL)), value[web.SPACE]))
 				}
-			})
-			m.Copy(_msg.Cut("time,machine,host,space,type,status,module,version,link"))
+			}).Cut(fields))
 		})
 	})
+	m.Options(ice.MSG_PROCESS, "")
+	if m.Action(s.Dream, "filter:text"); tcp.IsLocalHost(m.Message, m.Option(ice.MSG_USERIP)) {
+		_msg := m.Spawn().SplitIndex(m.Cmdx(cli.SYSTEM, kit.Split(s.admin(m, web.ROUTE))))
+		m.Copy(_msg.Table(func(value ice.Maps) {
+			_msg.Push(MACHINE, tcp.LOCALHOST).Push(tcp.HOST, tcp.PublishLocalhost(m.Message, tcp.LOCALHOST))
+			_msg.Push(web.LINK, kit.Format("%s/chat/pod/%s", web.UserHost(m.Message), value[web.SPACE]))
+		}).Cut(fields))
+	}
 }
 func (s relay) ForEach(m *ice.Message, arg ...string) *ice.Message {
 	s.foreach(m, func(msg *ice.Message, cmd []string) {
@@ -275,13 +280,13 @@ func (s relay) Pushbin(m *ice.Message, arg ...string) {
 		case "i686", "386":
 			p = "ice.linux.386"
 		}
-		m.Options(nfs.FROM, ice.USR_PUBLISH+p, nfs.PATH, "contexts/", nfs.FILE, ice.BIN_ICE_BIN)
+		m.Options(nfs.FROM, ice.USR_PUBLISH+p, nfs.PATH, CONTEXTS, nfs.FILE, ice.BIN_ICE_BIN)
 		m.Cmd(SSH_TRANS, tcp.SEND)
 	}
 	s.shell(m, m.Template(PUSHBIN_SH), arg...)
 }
 func (s relay) AdminCmd(m *ice.Message, arg ...string) {
-	s.shell(m, kit.JoinWord("contexts/"+ice.BIN_ICE_BIN, web.ADMIN, m.Option(ice.CMD)), arg...)
+	s.shell(m, s.admins(m, m.Option(ice.CMD)), arg...)
 }
 
 func (s relay) Xterm(m *ice.Message, arg ...string) { s.Code.Xterm(m, m.Option(MACHINE), arg...) }
@@ -329,4 +334,10 @@ func (s relay) iframeCmd(m *ice.Message, cmd string, arg ...string) {
 	} else {
 		m.ProcessOpen(p)
 	}
+}
+func (s relay) admin(m *ice.Message, arg ...string) string {
+	return kit.JoinWord(kit.Simple(ice.BIN_ICE_BIN, web.ADMIN, arg)...)
+}
+func (s relay) admins(m *ice.Message, arg ...string) string {
+	return CONTEXTS + s.admin(m, arg...)
 }

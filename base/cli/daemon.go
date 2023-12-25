@@ -151,8 +151,7 @@ func init() {
 func Opens(m *ice.Message, arg ...string) {
 	if !tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) {
 		return
-	}
-	if len(arg) == 0 || arg[0] == "" {
+	} else if len(arg) == 0 || arg[0] == "" {
 		return
 	}
 	switch runtime.GOOS {
@@ -173,11 +172,10 @@ func Opens(m *ice.Message, arg ...string) {
 func OpenCmds(m *ice.Message, arg ...string) *ice.Message {
 	if !tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) {
 		return m
-	}
-	if len(arg) == 0 || arg[0] == "" {
+	} else if len(arg) == 0 || arg[0] == "" {
 		return m
 	}
-	TellApp(m, "Terminal", kit.Format(`do script %s`, strings.Join(arg, "; ")), "activate")
+	TellApp(m, "Terminal", kit.Format(`do script %q`, strings.Join(arg, "; ")), "activate")
 	return m
 }
 func TellApp(m *ice.Message, app string, arg ...string) {

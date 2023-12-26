@@ -69,7 +69,7 @@ type relay struct {
 	dream       string `name:"dream" help:"空间"`
 	forEach     string `name:"forEach machine cmd*:textarea=pwd" help:"遍历"`
 	forFlow     string `name:"forFlow machine cmd*:textarea=pwd" help:"流程"`
-	list        string `name:"list machine auto" help:"代理"`
+	list        string `name:"list machine auto" help:"代理" icon:"relay.png"`
 	pushbin     string `name:"pushbin" help:"部署"`
 	adminCmd    string `name:"adminCmd cmd" help:"命令"`
 }

@@ -78,7 +78,7 @@ Volcanos(chat.ONIMPORT, {
 				}}])._target; sub.onmotion.hidden(sub, sub._target) }},
 				full: {color: "#32c840", inner: "+", onclick: function(event) { sub.onaction.full(event, sub) }},
 			}, function(name, item) {
-				can.page.insertBefore(can, [{view: [[html.ITEM, html.BUTTON, name], ""], title: name, list: [{text: item.inner}], style: {"background-color": item.color, right: 10+25*index++}, onclick: item.onclick}], sub._output)
+				can.page.insertBefore(can, [{view: [[html.ITEM, html.BUTTON, "window", name], ""], title: name, list: [{text: item.inner}], style: {"background-color": item.color, right: 10+25*index++}, onclick: item.onclick}], sub._output)
 			})
 			sub.onexport.marginTop = function() { return 25 }, sub.onexport.marginBottom = function() { return 100 }
 			sub.onexport.actionHeight = function(sub) { return can.page.ClassList.has(can, sub._target, html.OUTPUT)? 0: html.ACTION_HEIGHT+20 }

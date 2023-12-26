@@ -107,7 +107,7 @@ const IDE = "ide"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		IDE: {Name: "ide hash auto", Help: "集成开发环境", Meta: Meta(), Actions: ice.MergeActions(ice.Actions{
+		IDE: {Name: "ide hash auto", Help: "集成开发环境", Icon: "wxdev.png", Meta: Meta(), Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch mdb.HashInputs(m, arg); arg[0] {
 				case PAGES:
@@ -152,16 +152,16 @@ func init() {
 				})
 				m.Cmd("", AUTO_PREVIEW)
 			}},
-			AUTO_PREVIEW: {Help: "预览", Hand: func(m *ice.Message, arg ...string) {
+			AUTO_PREVIEW: {Help: "预览", Icon: "bi bi-wechat", Hand: func(m *ice.Message, arg ...string) {
 				kit.If(m.Option(mdb.HASH), func(p string) { mdb.Config(m, CURRENT, p) })
 				IdeCli(m, "", _ide_args_cli(m)).ProcessInner()
 			}},
-			PREVIEW: {Help: "体验", Hand: func(m *ice.Message, arg ...string) {
+			PREVIEW: {Help: "体验", Icon: "bi bi-qr-code-scan", Hand: func(m *ice.Message, arg ...string) {
 				kit.If(m.Option(mdb.HASH), func(p string) { mdb.Config(m, CURRENT, p) })
 				p := nfs.TempName(m)
 				IdeCli(m, "", _ide_args_cli(m), _ide_args_qrcode(m, p)).EchoImages(web.SHARE_LOCAL + p).ProcessInner()
 			}},
-			PUSH: {Name: "push weixin", Help: "推送", Hand: func(m *ice.Message, arg ...string) {
+			PUSH: {Name: "push weixin", Help: "推送", Icon: "bi bi-arrow-up-right-square", Hand: func(m *ice.Message, arg ...string) {
 				defer m.ProcessHold()
 				defer web.ToastProcess(m)()
 				m.Cmd(web.SPACE, m.Option(web.WEIXIN), lex.PARSE, m.Cmdx("", m.Option(mdb.HASH)))

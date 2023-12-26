@@ -59,7 +59,7 @@ Volcanos(chat.ONIMPORT, {
 		can.page.SelectChild(can, can.ui.desktop, html.DIV_ITEM, function(target) { can.page.Remove(can, target) }), can.onimport.__item(can, msg, can.ui.desktop)
 	}) }) },
 	__item: function(can, msg, target) { var index = 0; can.onimport.icon(can, msg = msg||can._msg, target, function(target, item) { can.page.Modify(can, target, {
-		onclick: function(event) { can.onimport._window(can, item) }, style: can.onexport.position(can, index++),
+		onclick: function(event) { can.onimport._window(can, item) },
 		oncontextmenu: function(event) { var carte = can.user.carteRight(event, can, {
 			remove: function() { can.runAction(event, mdb.REMOVE, [item.hash]) },
 		}); can.page.style(can, carte._target, html.TOP, event.y) },
@@ -138,10 +138,6 @@ Volcanos(chat.ONDETAIL, {
 	select: function(can, target) { can.onmotion.select(can, can.ui.desktop, html.FIELDSET, target) },
 })
 Volcanos(chat.ONEXPORT, {
-	position: function(can, index) { var top = 25, margin = 20, height = 100, width = 80
-		var n = parseInt((can.ConfHeight()-top)/(height+margin))
-		return {top: index%n*height+top+margin/2, left: parseInt(index/n)*(width+margin)+margin/2}
-	},
 	tabs: function(can) {
 		var list = can.page.Select(can, can.ui.menu._output, html.DIV_TABS, function(target) { return {
 			select: can.page.ClassList.has(can, target, html.SELECT),

@@ -269,7 +269,7 @@ func init() {
 			"conf": {Help: "配置", Hand: func(m *ice.Message, arg ...string) {
 				OpenCmds(m, kit.Format("cd %s", kit.Path("")), "vim etc/init.shy")
 			}},
-			"lock": {Help: "锁屏", Hand: func(m *ice.Message, arg ...string) {
+			"lock": {Help: "锁屏", Icon: "bi bi-file-lock", Hand: func(m *ice.Message, arg ...string) {
 				switch runtime.GOOS {
 				case DARWIN:
 					TellApp(m, "System Events", `keystroke "q" using {control down, command down}`)

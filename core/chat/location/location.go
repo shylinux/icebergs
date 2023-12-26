@@ -29,6 +29,7 @@ func init() {
 				LONGITUDE, "经度", LATITUDE, "纬度", PROVINCE, "省份", CITY, "城市", DISTRICT, "区域", STREET, "街路",
 			)),
 		), Actions: ice.MergeActions(ice.Actions{
+			"current": {Icon: "bi bi-pin-map"},
 			chat.FAVOR_INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				kit.If(arg[0] == mdb.TYPE, func() { m.Push(arg[0], LOCATION) })
 			}},

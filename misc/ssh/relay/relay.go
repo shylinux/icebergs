@@ -63,12 +63,12 @@ type relay struct {
 	field       string `data:"time,machine,username,password,host,port,portal,module,version,commit,compile,boot,package,shell,kernel,arch,ncpu,vcpu,mhz,mem,disk,network,listen,socket,proc,vendor"`
 	statsTables string `name:"statsTables" event:"stats.tables"`
 	create      string `name:"create machine* username* password host* port*=22 portal vendor"`
-	pubkey      string `name:"pubkey" help:"公钥"`
+	pubkey      string `name:"pubkey" help:"公钥" icon:"bi bi-person-vcard"`
 	version     string `name:"version" help:"版本"`
-	stats       string `name:"stats machine" help:"采集"`
-	dream       string `name:"dream" help:"空间"`
-	forEach     string `name:"forEach machine cmd*:textarea=pwd" help:"遍历"`
-	forFlow     string `name:"forFlow machine cmd*:textarea=pwd" help:"流程"`
+	stats       string `name:"stats machine" help:"采集" icon:"bi bi-pc-display"`
+	dream       string `name:"dream" help:"空间" icon:"bi bi-grid-3x3-gap"`
+	forEach     string `name:"forEach machine cmd*:textarea=pwd" help:"遍历" icon:"bi bi-card-list"`
+	forFlow     string `name:"forFlow machine cmd*:textarea=pwd" help:"流程" icon:"bi bi-terminal"`
 	list        string `name:"list machine auto" help:"代理" icon:"relay.png"`
 	pushbin     string `name:"pushbin" help:"部署"`
 	adminCmd    string `name:"adminCmd cmd" help:"命令"`

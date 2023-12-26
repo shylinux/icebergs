@@ -208,32 +208,32 @@ func init() {
 					_dream_start(m, m.Option(mdb.NAME))
 				}
 			}},
-			nfs.REPOS: {Help: "仓库", Hand: func(m *ice.Message, arg ...string) {
+			nfs.REPOS: {Help: "仓库", Icon: "bi bi-git", Hand: func(m *ice.Message, arg ...string) {
 				m.ProcessOpen(m.MergePodCmd("", CODE_GIT_SEARCH, nfs.REPOS, nfs.REPOS))
 			}},
-			"startall": {Name: "startall name", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+			"startall": {Name: "startall name", Help: "启动", Icon: "bi bi-play-circle", Hand: func(m *ice.Message, arg ...string) {
 				DreamEach(m, m.Option(mdb.NAME), cli.STOP, func(name string) {
 					m.Cmd("", cli.START, ice.Maps{mdb.NAME: name, ice.MSG_DAEMON: ""})
 				})
 			}},
-			"stopall": {Name: "stopall name", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
+			"stopall": {Name: "stopall name", Help: "停止", Icon: "bi bi-stop-circle", Hand: func(m *ice.Message, arg ...string) {
 				DreamEach(m, m.Option(mdb.NAME), "", func(name string) {
 					m.Cmd("", cli.STOP, ice.Maps{mdb.NAME: name, ice.MSG_DAEMON: ""})
 				})
 			}},
-			"publish": {Name: "publish name", Help: "发布", Hand: func(m *ice.Message, arg ...string) {
+			"publish": {Name: "publish name", Help: "发布", Icon: "bi bi-send-check", Hand: func(m *ice.Message, arg ...string) {
 				DreamEach(m, m.Option(mdb.NAME), "", func(name string) {
 					m.Push(mdb.NAME, name).Push(mdb.TEXT, m.Cmdx(SPACE, name, "compile", cli.LINUX))
 					m.Push(mdb.NAME, name).Push(mdb.TEXT, m.Cmdx(SPACE, name, "compile", cli.DARWIN))
 					m.Push(mdb.NAME, name).Push(mdb.TEXT, m.Cmdx(SPACE, name, "compile", cli.WINDOWS))
 				})
 			}},
-			ice.CMD: {Name: "cmd name cmd*", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
+			ice.CMD: {Name: "cmd name cmd*", Help: "命令", Icon: "bi bi-terminal", Hand: func(m *ice.Message, arg ...string) {
 				DreamEach(m, m.Option(mdb.NAME), "", func(name string) {
 					m.Push(mdb.NAME, name).Push(mdb.TEXT, m.Cmdx(SPACE, name, kit.Split(m.Option(ice.CMD))))
 				}).StatusTimeCount(ice.CMD, m.Option(ice.CMD))
 			}},
-			nfs.CAT: {Name: "cat name file*", Help: "文件", Hand: func(m *ice.Message, arg ...string) {
+			nfs.CAT: {Name: "cat name file*", Help: "文件", Icon: "bi bi-file-earmark-code", Hand: func(m *ice.Message, arg ...string) {
 				DreamEach(m, m.Option(mdb.NAME), "", func(name string) {
 					m.Push(mdb.NAME, name).Push(mdb.TEXT, m.Cmdx(SPACE, name, nfs.CAT, m.Option(nfs.FILE)))
 				}).StatusTimeCount(nfs.FILE, m.Option(nfs.FILE))

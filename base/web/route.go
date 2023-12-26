@@ -80,7 +80,7 @@ func init() {
 					kit.For([]string{WORKER, SERVER}, func(key string) { push(kit.Format(":%s=", key)) })
 				}
 			}},
-			"spide": {Help: "导图", Hand: func(m *ice.Message, arg ...string) {
+			"spide": {Help: "导图", Icon: "bi bi-diagram-3", Hand: func(m *ice.Message, arg ...string) {
 				ctx.DisplayStorySpide(m.Cmdy(""), nfs.DIR_ROOT, ice.Info.NodeName, mdb.FIELD, SPACE, lex.SPLIT, nfs.PT, ctx.ACTION, ice.MAIN)
 			}},
 			ctx.CMDS: {Name: "cmds space index* args", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
@@ -100,7 +100,7 @@ func init() {
 					m.Cmdy(ice.EXIT, "1")
 				}
 			}},
-			"travel": {Help: "遍历", Hand: func(m *ice.Message, arg ...string) {
+			"travel": {Help: "遍历", Icon: "bi bi-card-list", Hand: func(m *ice.Message, arg ...string) {
 				kit.For(kit.Split(m.OptionDefault(ice.MSG_FIELDS, mdb.Config(m, mdb.FIELD))), func(key string) {
 					switch key {
 					case mdb.TIME:

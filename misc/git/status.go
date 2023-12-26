@@ -58,8 +58,8 @@ func init() {
 				mdb.Config(m, aaa.USERNAME, m.Option(aaa.USERNAME))
 				mdb.Config(m, aaa.EMAIL, m.Option(aaa.EMAIL))
 			}},
-			INSTEADOF: {Name: "insteadof remote", Help: "代理", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(REPOS, INSTEADOF, arg) }},
-			OAUTH: {Help: "授权", Hand: func(m *ice.Message, arg ...string) {
+			INSTEADOF: {Name: "insteadof remote", Help: "代理", Icon: "bi bi-clouds", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(REPOS, INSTEADOF, arg) }},
+			OAUTH: {Help: "授权", Icon: "bi bi-person-check", Hand: func(m *ice.Message, arg ...string) {
 				m.ProcessOpen(kit.MergeURL2(kit.Select(ice.Info.Make.Domain, m.Cmdx(REPOS, "remoteURL")), web.ChatCmdPath(m, web.TOKEN, "gen"),
 					mdb.TYPE, "web.code.git.status", tcp.HOST, m.Option(ice.MSG_USERWEB)))
 			}},

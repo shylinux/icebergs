@@ -38,7 +38,7 @@ func init() {
 			CLONE:     {Name: "clone name*", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(REPOS, CLONE, m.Option(REPOS)) }},
 			HTML_URL:  {Help: "源码", Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen(m.Option(HTML_URL)) }},
 			WEBSITE:   {Help: "官网", Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen(m.Option(WEBSITE)) }},
-			ORIGIN: {Help: "平台", Hand: func(m *ice.Message, arg ...string) {
+			ORIGIN: {Help: "平台", Icon: "bi bi-box-arrow-up-right", Hand: func(m *ice.Message, arg ...string) {
 				m.ProcessOpen(web.SpideOrigin(m, kit.Select(m.Option(REPOS), arg, 0)) + EXPLORE_REPOS)
 			}},
 			web.DREAM_INPUTS: {Hand: func(m *ice.Message, arg ...string) {

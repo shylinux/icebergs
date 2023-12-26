@@ -130,7 +130,7 @@ func init() {
 				m.GoSleep3s(func() { web.PushNoticeGrow(m, ice.Render(m, ice.RENDER_IMAGES, web.SHARE_LOCAL+p)) })
 				IdeCli(m, "", _ide_args_cli(m), _ide_args_qrcode(m, p)).ProcessRefresh()
 			}},
-			code.AUTOGEN: {Name: "autogen projectname*='终端工具链' appid*='wxf4e5104d83476ed6' serve*='https://2021.shylinux.com'", Help: "生成", Hand: func(m *ice.Message, arg ...string) {
+			code.AUTOGEN: {Name: "autogen projectname*='终端工具链' appid*='wxf4e5104d83476ed6' serve*='https://2021.shylinux.com'", Help: "生成", Icon: "bi bi-tools", Hand: func(m *ice.Message, arg ...string) {
 				_ide_autogen_utils(m)
 				_ide_autogen_pages(m)
 				p := ice.USR_PROGRAM

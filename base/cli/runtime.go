@@ -163,7 +163,7 @@ const RUNTIME = "runtime"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		RUNTIME: {Name: "runtime info=bootinfo,ifconfig,diskinfo,hostinfo,userinfo,procstat,procinfo,bootinfo,role,api,cli,cmd,mod,env,path,chain,routine auto upgrade restart reboot logs conf", Icon: "Infomation.png", Help: "运行环境", Actions: ice.MergeActions(ice.Actions{
+		RUNTIME: {Name: "runtime info=bootinfo,ifconfig,diskinfo,hostinfo,userinfo,procstat,procinfo,bootinfo,role,api,cli,cmd,mod,env,path,chain,routine auto upgrade reboot stash logs conf", Icon: "Infomation.png", Help: "运行环境", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				aaa.White(m, ice.LICENSE)
 				_runtime_init(m)
@@ -256,10 +256,10 @@ func init() {
 					m.Cmdy("web.code.upgrade")
 				}
 			}},
-			RESTART: {Help: "重启", Hand: func(m *ice.Message, arg ...string) {
+			"reboot": {Help: "重启", Icon: "bi bi-bootstrap-reboot", Hand: func(m *ice.Message, arg ...string) {
 				m.Go(func() { m.Sleep30ms(ice.EXIT, 1) })
 			}},
-			"reboot": {Help: "清空", Hand: func(m *ice.Message, arg ...string) {
+			"stash": {Help: "清空", Icon: "bi bi-trash", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(SYSTEM, "git", "stash")
 				m.Go(func() { m.Sleep30ms(ice.QUIT, 1) })
 			}},

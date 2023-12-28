@@ -29,8 +29,8 @@ func init() {
 				if m.Cmd(web.SPACE, arg[0]).Length() == 0 && nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, arg[0])) {
 					m.Cmd(web.DREAM, cli.START, kit.Dict(mdb.NAME, arg[0]))
 				}
-				if len(arg) == 1 {
-					m.Cmdy(web.SPACE, arg[0], web.SPACE, ice.MAIN, kit.Dict(ice.MSG_USERPOD, arg[0]))
+				if m.Option(ice.MSG_USERPOD, arg[0]); len(arg) == 1 {
+					m.Cmdy(web.SPACE, arg[0], web.SPACE, ice.MAIN)
 				} else if arg[1] == CMD {
 					web.RenderPodCmd(m, arg[0], arg[2], arg[3:])
 				}

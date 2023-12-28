@@ -79,9 +79,8 @@ func (s trans) Trash(m *ice.Message, arg ...string) {
 func init() { ice.Cmd(SSH_TRANS, trans{}) }
 
 func (s trans) open(m *ice.Message, cb func(*ssh.FileSystem), arg ...string) {
-	ssh.Open(m.Options(m.Cmd(SSH_RELAY, kit.Select(m.Option(MACHINE), arg, 0)).AppendSimple()), func(fs *ssh.FileSystem) {
-		defer m.Options(ice.MSG_FILES, nil)
-		m.Options(ice.MSG_FILES, fs)
+	ssh.Open(m.Options(m.Cmd(SSH_RELAY, kit.Select(m.Option(MACHINE), arg, 0)).AppendSimple()).Message, func(fs *ssh.FileSystem) {
+		defer m.Options(ice.MSG_FILES, fs).Options(ice.MSG_FILES, nil)
 		cb(fs)
 	})
 }

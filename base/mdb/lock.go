@@ -24,7 +24,9 @@ func getLock(m configMessage, arg ...string) *task.Lock {
 	kit.If(!ok, func() { l = &task.Lock{}; _locks[key] = l })
 	return l
 }
-func Lock(m configMessage, arg ...string) func()  { return getLock(m, arg...).Lock() }
+func Lock(m configMessage, arg ...string) func() {
+	return getLock(m, arg...).Lock()
+}
 func RLock(m configMessage, arg ...string) func() { return getLock(m, arg...).RLock() }
 
 func Config(m configMessage, key string, arg ...Any) string {

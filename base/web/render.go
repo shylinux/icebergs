@@ -134,16 +134,11 @@ func RenderCmds(m *ice.Message, cmds ...ice.Any) {
 	RenderMain(m.Options(ctx.CMDS, kit.Format(cmds)))
 }
 func RenderPodCmd(m *ice.Message, pod, cmd string, arg ...ice.Any) {
-	msg := m.Cmd(Space(m, pod), ctx.COMMAND, kit.Select(m.PrefixKey(), cmd))
-	if msg.Length() == 0 {
+	if msg := m.Cmd(Space(m, pod), ctx.COMMAND, kit.Select(m.PrefixKey(), cmd)); msg.Length() == 0 {
 		RenderResult(m, kit.Format("not found command %s", cmd))
-		return
+	} else {
+		RenderCmds(m, kit.Dict(msg.AppendSimple(), ctx.ARGS, kit.Simple(arg), ctx.DISPLAY, m.Option(ice.MSG_DISPLAY)))
 	}
-	RenderCmds(m, kit.Dict(msg.AppendSimple(mdb.NAME, mdb.HELP),
-		ctx.INDEX, msg.Append(ctx.INDEX), ctx.ARGS, kit.Simple(arg), ctx.DISPLAY, m.Option(ice.MSG_DISPLAY),
-		mdb.LIST, kit.UnMarshal(msg.Append(mdb.LIST)), mdb.META, kit.UnMarshal(msg.Append(mdb.META)),
-		"_help", msg.Append("_help"),
-	))
 }
 func RenderCmd(m *ice.Message, cmd string, arg ...ice.Any) {
 	RenderPodCmd(m, "", cmd, arg...)

@@ -62,18 +62,22 @@ type relay struct {
 	short       string `data:"machine"`
 	field       string `data:"time,machine,username,password,host,port,portal,module,version,commit,compile,boot,package,shell,kernel,arch,ncpu,vcpu,mhz,mem,disk,network,listen,socket,proc,vendor"`
 	statsTables string `name:"statsTables" event:"stats.tables"`
-	create      string `name:"create machine* username* password host* port*=22 portal vendor"`
+	create      string `name:"create machine* username* password host* port*=22"`
 	pubkey      string `name:"pubkey" help:"公钥" icon:"bi bi-person-vcard"`
 	version     string `name:"version" help:"版本"`
 	stats       string `name:"stats machine" help:"采集" icon:"bi bi-pc-display"`
 	dream       string `name:"dream" help:"空间" icon:"bi bi-grid-3x3-gap"`
 	forEach     string `name:"forEach machine cmd*:textarea=pwd" help:"遍历" icon:"bi bi-card-list"`
 	forFlow     string `name:"forFlow machine cmd*:textarea=pwd" help:"流程" icon:"bi bi-terminal"`
+	publish     string `name:"publish" help:"发布"`
 	list        string `name:"list machine auto" help:"代理" icon:"relay.png"`
 	pushbin     string `name:"pushbin" help:"部署"`
 	adminCmd    string `name:"adminCmd cmd" help:"命令"`
 }
 
+func (s relay) StatsTables(m *ice.Message, arg ...string) {
+	web.PushStats(m.Message, "", mdb.HashSelects(m.Spawn().Message).Length(), "", "服务器数量")
+}
 func (s relay) Init(m *ice.Message, arg ...string) {
 	s.Hash.Init(m).TransInput(MACHINE, "机器",
 		PACKAGE, "软件包", SHELL, "命令行", KERNEL, "内核", ARCH, "架构",
@@ -84,9 +88,6 @@ func (s relay) Init(m *ice.Message, arg ...string) {
 	)
 	msg := m.Spawn(ice.Maps{ice.MSG_FIELDS: ""})
 	m.GoSleep3s(func() { s.Hash.List(msg).Table(func(value ice.Maps) { s.xterm(m.Spawn(value)) }) })
-}
-func (s relay) StatsTables(m *ice.Message, arg ...string) {
-	web.PushStats(m.Message, "", mdb.HashSelects(m.Spawn().Message).Length(), "", "服务器数量")
 }
 func (s relay) Inputs(m *ice.Message, arg ...string) {
 	switch s.Hash.Inputs(m, arg...); arg[0] {
@@ -103,22 +104,6 @@ func (s relay) Inputs(m *ice.Message, arg ...string) {
 	case web.PORTAL:
 		m.Push(arg[0], tcp.PORT_443, tcp.PORT_80, tcp.PORT_9020)
 	}
-}
-func (s relay) Compile(m *ice.Message) {
-	m.Cmdy(code.COMPILE, SRC_RELAY_GO, path.Join(ice.USR_PUBLISH, RELAY)).ProcessInner()
-}
-func (s relay) Publish(m *ice.Message, arg ...string) {
-	if m.Option(MACHINE) == "" {
-		s.Hash.ForEach(m, "", func(msg *ice.Message) { s.Publish(msg) })
-		m.Cmdy(nfs.DIR, ice.USR_PUBLISH).Set(ctx.ACTION)
-		return
-	}
-	kit.If(!nfs.Exists(m, path.Join(ice.USR_PUBLISH, RELAY)), func() { s.Compile(m) })
-	os.Symlink(RELAY, ice.USR_PUBLISH+m.Option(MACHINE))
-	m.Cmd(nfs.SAVE, kit.HomePath(".ssh/"+m.Option(MACHINE)+".json"), kit.Formats(kit.Dict(m.OptionSimple("username,password,host,port")))+ice.NL)
-}
-func (s relay) Pubkey(m *ice.Message, arg ...string) {
-	m.EchoScript(m.Cmdx(nfs.CAT, kit.HomePath(ssh.ID_RSA_PUB))).ProcessInner()
 }
 func (s relay) Stats(m *ice.Message) {
 	cmds := []string{
@@ -166,6 +151,10 @@ func (s relay) Stats(m *ice.Message) {
 	})
 }
 func (s relay) Dream(m *ice.Message) {
+	if m.Option(web.PORTAL) != "" {
+		m.ProcessOpen(web.HostPort(m.Message, m.Option(tcp.HOST), m.Option(web.PORTAL), "", web.DREAM))
+		return
+	}
 	fields := "time,machine,host,space,type,status,module,version,commit,compile,boot,link"
 	s.foreach(m, func(msg *ice.Message, cmd []string) {
 		m.Push("", kit.Dict(msg.OptionSimple(fields), mdb.TYPE, web.SERVER, mdb.STATUS, web.ONLINE, web.SPACE, ice.CONTEXTS, web.LINK, web.HostPort(m.Message, msg.Option(tcp.HOST), msg.Option(web.PORTAL))), kit.Split(fields))
@@ -176,7 +165,7 @@ func (s relay) Dream(m *ice.Message) {
 				case "":
 					_msg.Push(web.LINK, "")
 				default:
-					_msg.Push(web.LINK, kit.Format("%s/chat/pod/%s", web.HostPort(m.Message, msg.Option(tcp.HOST), msg.Option(web.PORTAL)), value[web.SPACE]))
+					_msg.Push(web.LINK, web.HostPort(m.Message, msg.Option(tcp.HOST), msg.Option(web.PORTAL), value[web.SPACE]))
 				}
 			}).Cut(fields))
 		})
@@ -206,15 +195,31 @@ func (s relay) ForEach(m *ice.Message, arg ...string) *ice.Message {
 }
 func (s relay) ForFlow(m *ice.Message) {
 	s.foreach(m, func(msg *ice.Message, cmd []string) {
-		ssh.PushShell(msg.Message, cmd, func(res string) { web.PushNoticeGrow(m.Options(ctx.DISPLAY, web.PLUGIN_XTERM), res) })
+		ssh.PushShell(msg.Message, cmd, func(res string) { web.PushNoticeGrow(m.Options(ctx.DISPLAY, web.PLUGIN_XTERM).Message, res) })
 	})
+}
+func (s relay) Compile(m *ice.Message) {
+	m.Cmdy(code.COMPILE, SRC_RELAY_GO, path.Join(ice.USR_PUBLISH, RELAY)).ProcessInner()
+}
+func (s relay) Publish(m *ice.Message, arg ...string) {
+	if m.Option(MACHINE) == "" {
+		s.Hash.ForEach(m, "", func(msg *ice.Message) { s.Publish(msg) })
+		m.Cmdy(nfs.DIR, ice.USR_PUBLISH).Set(ctx.ACTION)
+		return
+	}
+	kit.If(!nfs.Exists(m, path.Join(ice.USR_PUBLISH, RELAY)), func() { s.Compile(m) })
+	os.Symlink(RELAY, ice.USR_PUBLISH+m.Option(MACHINE))
+	m.Cmd(nfs.SAVE, kit.HomePath(".ssh/"+m.Option(MACHINE)+".json"), kit.Formats(kit.Dict(m.OptionSimple("username,password,host,port")))+ice.NL)
+}
+func (s relay) Pubkey(m *ice.Message, arg ...string) {
+	m.EchoScript(m.Cmdx(nfs.CAT, kit.HomePath(ssh.ID_RSA_PUB))).ProcessInner()
 }
 func (s relay) List(m *ice.Message, arg ...string) *ice.Message {
 	if s.Hash.List(m, arg...); len(arg) == 0 {
 		if m.Length() == 0 {
-			m.Action(s.Create, s.Compile, s.Publish, s.Pubkey)
+			m.Action(s.Create)
 		} else {
-			m.Action(s.Create, s.Upgrade, s.Version, s.Stats, s.Dream, s.ForEach, s.ForFlow, s.Compile, s.Publish, s.Pubkey)
+			m.Action(s.Create, s.Upgrade, s.Version, s.Stats, s.Dream)
 		}
 	}
 	stats := map[string]int{}
@@ -234,15 +239,8 @@ func (s relay) List(m *ice.Message, arg ...string) *ice.Message {
 			m.Push(web.LINK, "").PushButton(s.Xterm, s.AdminCmd, s.Pushbin, s.Install, s.Remove)
 			return
 		}
-		m.PushButton(s.Admin, s.Vimer, s.Repos, s.Xterm, s.AdminCmd, s.Pushbin, s.Upgrade, s.Remove)
-		switch value[web.PORTAL] {
-		case tcp.PORT_443:
-			m.Push(web.LINK, kit.Format("https://%s", value[tcp.HOST]))
-		case tcp.PORT_80:
-			m.Push(web.LINK, kit.Format("http://%s", value[tcp.HOST]))
-		default:
-			m.Push(web.LINK, kit.Format("http://%s:%s", value[tcp.HOST], value[web.PORTAL]))
-		}
+		m.Push(web.LINK, web.HostPort(m.Message, value[tcp.HOST], value[web.PORTAL]))
+		m.PushButton(s.Admin, s.Dream, s.Xterm, s.Vimer, s.AdminCmd, s.Pushbin, s.Upgrade, s.Remove)
 		kit.If(len(arg) > 0, func() { m.PushQRCode(cli.QRCODE, m.Append(web.LINK)) })
 	})
 	_stats := kit.Dict(MEM, kit.FmtSize(stats[MEM_FREE], stats[MEM_TOTAL]), DISK, kit.FmtSize(stats[DISK_USED], stats[DISK_TOTAL]))
@@ -287,7 +285,6 @@ func (s relay) Pushbin(m *ice.Message, arg ...string) {
 func (s relay) AdminCmd(m *ice.Message, arg ...string) {
 	s.shell(m, s.admins(m, m.Option(ice.CMD)), arg...)
 }
-
 func (s relay) Xterm(m *ice.Message, arg ...string) { s.Code.Xterm(m, m.Option(MACHINE), arg...) }
 func (s relay) Repos(m *ice.Message, arg ...string) { s.iframeCmd(m, web.CODE_GIT_STATUS, arg...) }
 func (s relay) Vimer(m *ice.Message, arg ...string) { s.iframeCmd(m, web.CODE_VIMER, arg...) }

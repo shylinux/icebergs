@@ -56,9 +56,10 @@ func _dream_start(m *ice.Message, name string) {
 	if m.Warn(name == "", ice.ErrNotValid, mdb.NAME) {
 		return
 	}
+	defer mdb.Lock(m, m.PrefixKey(), cli.START, name)()
 	defer m.ProcessOpen(m.MergePod(m.Option(mdb.NAME, name)))
 	p := path.Join(ice.USR_LOCAL_WORK, name)
-	if p := path.Join(p, ice.Info.PidPath); nfs.Exists(m, p) {
+	if p := path.Join(p, ice.Info.PidPath); nfs.Exists(m, p) && nfs.Exists(m, "/proc/") {
 		if pid := m.Cmdx(nfs.CAT, p, kit.Dict(ice.MSG_USERROLE, aaa.TECH)); pid != "" && nfs.Exists(m, "/proc/"+pid) {
 			m.Info("already exists %v", pid)
 			return

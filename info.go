@@ -3,6 +3,7 @@ package ice
 import (
 	"io"
 	"os"
+	"path"
 	"reflect"
 	"strings"
 
@@ -291,5 +292,25 @@ func Module(prefix string, arg ...Any) {
 			m.ErrorNotImplement(key)
 		}
 		return m
+	}
+}
+func FileURI(dir string) string {
+	if dir == "" {
+		return ""
+	} else if strings.Contains(dir, "/pkg/mod/") {
+		dir = strings.Split(dir, "/pkg/mod/")[1]
+	} else if Info.Make.Path != "" && strings.HasPrefix(dir, Info.Make.Path) {
+		dir = strings.TrimPrefix(dir, Info.Make.Path)
+	} else if strings.HasPrefix(dir, kit.Path("")+PS) {
+		dir = strings.TrimPrefix(dir, kit.Path("")+PS)
+	} else if strings.HasPrefix(dir, ISH_PLUGED) {
+		dir = strings.TrimPrefix(dir, ISH_PLUGED)
+	} else if kit.HasPrefix(dir, PS, HTTP) {
+		return dir
+	}
+	if strings.HasPrefix(dir, USR_VOLCANOS) {
+		return strings.TrimPrefix(dir, USR)
+	} else {
+		return path.Join(PS, REQUIRE, dir)
 	}
 }

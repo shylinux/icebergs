@@ -37,7 +37,8 @@ func Template(m *ice.Message, p string, data ...ice.Any) string {
 }
 
 var TemplateText = func(m *ice.Message, p string) string {
-	return m.Cmdx(CAT, TemplatePath(m, path.Base(p)))
+	m.Debug("what %v", m.Option("_template"))
+	return m.Cmdx(CAT, kit.Select(TemplatePath(m, path.Base(p)), m.Option("_template")))
 }
 var TemplatePath = func(m *ice.Message, arg ...string) string {
 	if p := path.Join(ice.SRC_TEMPLATE, m.PrefixKey(), path.Join(arg...)); Exists(m, p) {

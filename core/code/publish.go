@@ -63,10 +63,12 @@ func _publish_contexts(m *ice.Message, arg ...string) {
 		case "manual":
 			m.Options(nfs.BINARY, "ice.linux.amd64")
 		}
+		m.Debug("what %v", m.Option("_template"))
+		template := strings.TrimSpace(nfs.Template(m, kit.Keys(k, SH)))
 		if m.Option("format") == "raw" {
-			m.Echo(strings.TrimSpace(nfs.Template(m, kit.Keys(k, SH))))
+			m.Echo(template)
 		} else {
-			m.EchoScript(strings.TrimSpace(nfs.Template(m, kit.Keys(k, SH))))
+			m.EchoScript(template)
 		}
 	}
 }

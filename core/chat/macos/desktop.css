@@ -83,6 +83,6 @@ body:not(.mobile) fieldset.macos.dock>div.output>div.item:hover { background-col
 body:not(.mobile) fieldset.macos.dock>div.output>div.item img:hover { width:160px; transition:width 0.3s; }
 body:not(.mobile) fieldset.macos.desktop>div.output>fieldset.macos.dock:hover { margin-left:-40px; transition:margin-left 0.3s; }
 body:not(.mobile) fieldset.macos.desktop>div.output>div.desktop>fieldset:not(:hover)>form.option>div.icon { visibility:hidden; }
-body:not(.mobile) fieldset.macos.desktop>div.output>div.desktop>div.item { margin:10px; }
+body:not(.mobile) fieldset.macos.desktop>div.output>div.desktop>div.item { margin:var(--desktop-icon-margin); }
 body.mobile fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>div.item.text>input { width:60px; }
 body.mobile fieldset.macos.dock>div.output { overflow-y:hidden; }

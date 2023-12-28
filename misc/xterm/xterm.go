@@ -1,14 +1,17 @@
 package xterm
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"path"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
+	"shylinux.com/x/toolkits/task"
 )
 
 type Winsize struct {
@@ -35,7 +38,7 @@ func (s xterm) Setsize(rows, cols string) error {
 func (s xterm) Writeln(str string, arg ...ice.Any) { s.Write([]byte(kit.Format(str, arg...) + lex.NL)) }
 func (s xterm) Write(buf []byte) (int, error)      { return s.File.Write(buf) }
 func (s xterm) Read(buf []byte) (int, error)       { return s.File.Read(buf) }
-func (s xterm) Close() error                       { return s.Cmd.Process.Kill() }
+func (s xterm) Close() error                       { s.Cmd.Process.Kill(); return s.File.Close() }
 
 type handler func(m *ice.Message, arg ...string) (XTerm, error)
 
@@ -58,4 +61,33 @@ func Command(m *ice.Message, dir string, cli string, arg ...string) (XTerm, erro
 		cmd.Stdin, cmd.Stdout, cmd.Stderr = tty, tty, tty
 		return &xterm{cmd, pty}, cmd.Start()
 	}
+}
+func PushShell(m *ice.Message, xterm XTerm, cmds []string, cb func(string)) {
+	list := [][]string{}
+	list = append(list, []string{""})
+	lock := task.Lock{}
+	m.Go(func() {
+		kit.For(cmds, func(cmd string) {
+			for {
+				m.Sleep300ms()
+				if func() bool { defer lock.Lock()(); return len(list[len(list)-1]) > 1 }() {
+					break
+				}
+			}
+			m.Debug("cmd %v", cmd)
+			fmt.Fprintln(xterm, cmd)
+			defer lock.Lock()()
+			list = append(list, []string{cmd})
+		})
+		defer fmt.Fprintln(xterm, cli.EXIT)
+		m.Sleep(m.OptionDefault("interval", "3s"))
+	})
+	kit.For(xterm, func(res []byte) {
+		m.Debug("res %v", string(res))
+		m.Debug("res %v", res)
+		cb(string(res))
+		defer lock.Lock()()
+		list[len(list)-1] = append(list[len(list)-1], string(res))
+	})
+	m.Debug("res %v", 123)
 }

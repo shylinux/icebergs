@@ -52,7 +52,7 @@ func init() {
 		PORT: {Name: "port port path auto socket", Help: "端口", Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
-				case SERVER:
+				case HOST, SERVER:
 					m.Cmd(PORT, SOCKET, func(value ice.Maps) {
 						switch value[mdb.STATUS] {
 						case "LISTEN":

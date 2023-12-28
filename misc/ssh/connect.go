@@ -270,12 +270,13 @@ func PushShell(m *ice.Message, cmds []string, cb func(string)) {
 			s.RequestPty(kit.Env(cli.TERM), height, width, ssh.TerminalModes{ssh.ECHO: 1, ssh.TTY_OP_ISPEED: 14400, ssh.TTY_OP_OSPEED: 14400})
 			defer s.Wait()
 			s.Shell()
-			lock := task.Lock{}
+
 			list := [][]string{}
 			cmd := kit.Format("%s@%s[%s]%s$ ssh %s@%s\r\n",
 				m.Option(aaa.USERNAME), ice.Info.Hostname, kit.Split(time.Now().Format(ice.MOD_TIME))[1], path.Base(kit.Path("")),
 				m.Option(aaa.USERNAME), m.Option(tcp.HOST))
 			list = append(list, []string{cmd})
+			lock := task.Lock{}
 			m.Debug("cmd %v", cmd)
 			cb(cmd)
 			defer cb("\r\n\r\n")

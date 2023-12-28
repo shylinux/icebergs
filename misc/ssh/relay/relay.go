@@ -80,8 +80,7 @@ func (s relay) Init(m *ice.Message, arg ...string) {
 		NCPU, "处理器", VCPU, "虚拟核", MHZ, "频率",
 		MEM, "内存", DISK, "磁盘", NETWORK, "流量",
 		LISTEN, "服务", SOCKET, "连接", PROC, "进程",
-		nfs.COMMIT, "发布时间", code.COMPILE, "编译时间",
-		"boot", "启动时间",
+		nfs.COMMIT, "发布时间", code.COMPILE, "编译时间", "boot", "启动时间",
 	)
 	msg := m.Spawn(ice.Maps{ice.MSG_FIELDS: ""})
 	m.GoSleep3s(func() { s.Hash.List(msg).Table(func(value ice.Maps) { s.xterm(m.Spawn(value)) }) })

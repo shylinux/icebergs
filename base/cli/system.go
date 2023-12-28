@@ -142,6 +142,7 @@ const (
 	KILL  = "kill"
 	FIND  = "find"
 	GREP  = "grep"
+	SUDO  = "sudo"
 	EXEC  = "exec"
 	EXIT  = "exit"
 	ECHO  = "echo"

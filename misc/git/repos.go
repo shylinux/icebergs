@@ -467,7 +467,7 @@ func init() {
 					if commit, err := repos.CommitObject(refer.Hash()); err == nil {
 						m.Push(aaa.EMAIL, commit.Author.Email)
 						m.Push(AUTHOR, commit.Author.Name)
-						m.Push(WHEN, commit.Author.When)
+						m.Push(WHEN, strings.TrimSuffix(commit.Author.When.Format(ice.MOD_TIME), ".000"))
 						m.Push(MESSAGE, commit.Message)
 					}
 				}

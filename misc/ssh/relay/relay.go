@@ -70,7 +70,7 @@ type relay struct {
 	forEach     string `name:"forEach machine cmd*:textarea=pwd" help:"遍历" icon:"bi bi-card-list"`
 	forFlow     string `name:"forFlow machine cmd*:textarea=pwd" help:"流程" icon:"bi bi-terminal"`
 	publish     string `name:"publish" help:"发布"`
-	list        string `name:"list machine auto" help:"代理" icon:"relay.png"`
+	list        string `name:"list machine auto" help:"机器" icon:"relay.png"`
 	pushbin     string `name:"pushbin" help:"部署"`
 	adminCmd    string `name:"adminCmd cmd" help:"命令"`
 }
@@ -163,16 +163,16 @@ func (s relay) Dream(m *ice.Message) {
 	})
 	m.Options(ice.MSG_PROCESS, "")
 	if m.Action(s.Dream, "filter:text"); tcp.IsLocalHost(m.Message, m.Option(ice.MSG_USERIP)) {
+		if _msg := m.Cmd(cli.SYSTEM, ice.BIN_ICE_BIN, web.ADMIN, cli.RUNTIME); len(_msg.Result()) > 0 {
+			m.Push(MACHINE, tcp.LOCALHOST).Push(tcp.HOST, tcp.PublishLocalhost(m.Message, tcp.LOCALHOST))
+			m.Push("", kit.Dict(cli.ParseMake(_msg.Result())), kit.Split("time,space,module,version,commitTime,compileTime,bootTime"))
+			m.Push(mdb.TYPE, web.SERVER).Push(mdb.STATUS, web.ONLINE).Push(web.LINK, web.UserHost(m.Message))
+		}
 		if _msg := m.Spawn().SplitIndex(m.Cmdx(cli.SYSTEM, kit.Split(s.admin(m, web.ROUTE)))); _msg.Length() > 0 {
 			m.Copy(_msg.Table(func(value ice.Maps) {
 				_msg.Push(MACHINE, tcp.LOCALHOST).Push(tcp.HOST, tcp.PublishLocalhost(m.Message, tcp.LOCALHOST))
 				_msg.Push(web.LINK, web.UserHost(m.Message)+web.S(value[web.SPACE]))
 			}).Cut(fields))
-		}
-		if _msg := m.Cmd(cli.SYSTEM, ice.BIN_ICE_BIN, web.ADMIN, cli.RUNTIME); len(_msg.Result()) > 0 {
-			m.Push(MACHINE, tcp.LOCALHOST).Push(tcp.HOST, tcp.PublishLocalhost(m.Message, tcp.LOCALHOST))
-			m.Push("", kit.Dict(cli.ParseMake(_msg.Result())), kit.Split("time,space,module,version,commitTime,compileTime,bootTime"))
-			m.Push(mdb.TYPE, web.SERVER).Push(mdb.STATUS, web.ONLINE).Push(web.LINK, web.UserHost(m.Message))
 		}
 	}
 }
@@ -322,7 +322,7 @@ func (s relay) foreachModify(m *ice.Message, key, cmd string, cb func([]string) 
 	})
 }
 func (s relay) iframeCmd(m *ice.Message, cmd string, arg ...string) {
-	if p := kit.MergeURL2(m.Option(web.LINK), web.CHAT_CMD+cmd); kit.HasPrefix(m.Option(ice.MSG_USERWEB), "https://") {
+	if p := kit.MergeURL2(m.Option(web.LINK), web.C(cmd)); kit.HasPrefix(m.Option(ice.MSG_USERWEB), "https://") {
 		s.Code.Iframe(m, m.Option(MACHINE), p, arg...)
 	} else {
 		m.ProcessOpen(p)

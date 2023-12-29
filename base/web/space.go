@@ -72,7 +72,9 @@ func _space_fork(m *ice.Message) {
 		!(IsLocalHost(m) || m.Option(TOKEN) != "" && m.Cmdv(TOKEN, m.Option(TOKEN), mdb.TIME) > m.Time()) {
 		name, text = kit.Hashs(name), kit.Select(addr, m.Option(mdb.NAME), m.Option(mdb.TEXT))
 	}
-	if m.Option(TOKEN) != "" {
+	if kit.IsIn(m.Option(mdb.TYPE), WORKER, PORTAL) && tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) {
+		aaa.SessAuth(m, kit.Dict(m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME, ice.Info.Username)).AppendSimple()))
+	} else if m.Option(TOKEN) != "" {
 		msg := m.Cmd(TOKEN, m.Option(TOKEN))
 		aaa.SessAuth(m, kit.Dict(m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME, msg.Append(mdb.NAME))).AppendSimple()))
 	}
@@ -101,12 +103,19 @@ func _space_fork(m *ice.Message) {
 				defer gdb.EventDeferEvent(m, DREAM_OPEN, args)(DREAM_CLOSE, args)
 			case SERVER:
 				m.Go(func() {
+					m.Cmd(SPACE, name, cli.PWD, name, kit.Dict(nfs.MODULE, ice.Info.Make.Module, nfs.VERSION, ice.Info.Make.Versions(), AGENT, "Go-http-client", cli.SYSTEM, runtime.GOOS))
 					m.Cmd(SPACE).Table(func(value ice.Maps) {
 						if kit.IsIn(value[mdb.TYPE], WORKER, SERVER) {
-							m.Cmd(SPACE, value[mdb.NAME], gdb.EVENT, gdb.HAPPEN, gdb.EVENT, OPS_SERVE_START, args, kit.Dict(ice.MSG_USERROLE, aaa.TECH))
+							m.Cmd(SPACE, value[mdb.NAME], gdb.EVENT, gdb.HAPPEN, gdb.EVENT, OPS_SERVER_START, args, kit.Dict(ice.MSG_USERROLE, aaa.TECH))
 						}
 					})
-					m.Cmd(SPACE, name, cli.PWD, name, kit.Dict(nfs.MODULE, ice.Info.Make.Module, nfs.VERSION, ice.Info.Make.Versions(), AGENT, "Go-http-client", cli.SYSTEM, runtime.GOOS))
+					m.Cmd(DREAM).Table(func(value ice.Maps) {
+						if value["restart"] == "always" {
+							value[nfs.BINARY] = UserHost(m) + S(value[mdb.NAME])
+							value[mdb.ICON] = strings.TrimPrefix(kit.Split(value[mdb.ICON], "?")[0], "/require/")
+							m.Cmd(SPACE, name, DREAM, mdb.CREATE, mdb.NAME, value[mdb.NAME], value)
+						}
+					})
 				})
 			}
 			_space_handle(m, false, name, c)

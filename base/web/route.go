@@ -69,7 +69,7 @@ const ROUTE = "route"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		ROUTE: {Name: "route space:text cmds:text auto diagram build travel prunes", Help: "路由表", Icon: "Podcasts.png", Actions: ice.MergeActions(ice.Actions{
+		ROUTE: {Name: "route space:text cmds:text auto build travel diagram prunes", Help: "路由表", Icon: "Podcasts.png", Actions: ice.MergeActions(ice.Actions{
 			ice.MAIN: {Help: "首页", Hand: func(m *ice.Message, arg ...string) { ctx.ProcessField(m, CHAT_IFRAME, m.MergePod(""), arg...) }},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch mdb.HashInputs(m, arg); arg[0] {
@@ -82,9 +82,6 @@ func init() {
 			}},
 			ctx.CMDS: {Name: "cmds space index* args", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 				_route_toast(m, m.Option(SPACE), append([]string{m.Option(ctx.INDEX)}, kit.Split(m.Option(ctx.ARGS))...)...)
-			}},
-			"diagram": {Help: "导图", Icon: "bi bi-diagram-3", Hand: func(m *ice.Message, arg ...string) {
-				ctx.DisplayStorySpide(m.Cmdy(""), nfs.DIR_ROOT, ice.Info.NodeName, mdb.FIELD, SPACE, lex.SPLIT, nfs.PT, ctx.ACTION, ice.MAIN)
 			}},
 			cli.BUILD: {Name: "build space", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
 				_route_toast(m, m.Option(SPACE), m.PrefixKey(), "_build")
@@ -99,6 +96,9 @@ func init() {
 				} else {
 					m.Cmdy(ice.EXIT, "1")
 				}
+			}},
+			"diagram": {Help: "导图", Icon: "bi bi-diagram-3", Hand: func(m *ice.Message, arg ...string) {
+				ctx.DisplayStorySpide(m.Cmdy(""), nfs.DIR_ROOT, ice.Info.NodeName, mdb.FIELD, SPACE, lex.SPLIT, nfs.PT, ctx.ACTION, ice.MAIN)
 			}},
 			"travel": {Help: "遍历", Icon: "bi bi-card-list", Hand: func(m *ice.Message, arg ...string) {
 				kit.For(kit.Split(m.OptionDefault(ice.MSG_FIELDS, mdb.Config(m, mdb.FIELD))), func(key string) {

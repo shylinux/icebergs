@@ -116,14 +116,13 @@ Volcanos(chat.ONIMPORT, {
 		can.ui.dock && can.page.style(can, can.ui.dock._target, html.LEFT, can.base.Min((can.ConfWidth()-(can.ui.dock._target.offsetWidth||502))/2, 0))
 	},
 }, [""])
-Volcanos(chat.ONACTION, {list: ["full"],
+Volcanos(chat.ONACTION, {
 	_search: function(can) { var sub = can.ui.searchs; if (can.onmotion.toggle(can, sub._target)) {
 		sub.onimport.size(sub, can.ConfHeight()/2, can.ConfWidth()/2, true)
 		sub.onimport.size(sub, can.ConfHeight()/2, can.base.Min(sub._target.offsetWidth, can.ConfWidth()/2, can.ConfWidth()), true)
 		can.page.style(can, sub._target, html.LEFT, (can.ConfWidth()-sub._target.offsetWidth)/2, html.TOP, can.ConfHeight()/4)
 		can.page.Select(can, sub._option, "input[name=keyword]", function(target) { can.onmotion.focus(can, target) })
 	} },
-	full: function(event, can) { document.body.requestFullscreen() },
 	create: function(event, can) { can.onimport._desktop(can) },
 })
 Volcanos(chat.ONKEYMAP, {

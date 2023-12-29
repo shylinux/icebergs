@@ -79,6 +79,7 @@ const (
 	BRANCH  = "branch"
 	MASTER  = "master"
 	VERSION = "version"
+	COMPILE = "compile"
 )
 const (
 	HTML = ice.HTML

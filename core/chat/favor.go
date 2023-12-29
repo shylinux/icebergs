@@ -54,9 +54,9 @@ func init() {
 				}
 				gdb.Event(m, "", arg)
 			}},
-			html.GetLocation:      {Name: "favor create", Help: "定位"},
-			html.GetClipboardData: {Name: "favor create", Help: "粘贴"},
-			html.ScanQRCode:       {Name: "favor create", Help: "扫码"},
+			html.GetLocation:      {Name: "favor create", Help: "定位", Icon: "bi bi-geo-alt"},
+			html.GetClipboardData: {Name: "favor create", Help: "粘贴", Icon: "bi bi-copy"},
+			html.ScanQRCode:       {Name: "favor create", Help: "扫码", Icon: "bi bi-qr-code-scan"},
 			html.Record1:          {Name: "favor upload", Help: "截图"},
 			html.Record2:          {Name: "favor upload", Help: "录屏"},
 			mdb.CREATE: {Hand: func(m *ice.Message, arg ...string) {

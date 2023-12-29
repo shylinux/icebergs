@@ -24,7 +24,11 @@ func _command_list(m *ice.Message, name string) *ice.Message {
 		m.Push(mdb.META, kit.Format(cmd.Meta))
 		m.Push(mdb.LIST, kit.Format(cmd.List))
 		m.Push("_help", GetCmdHelp(m, name))
-		m.Push("_fileline", kit.MergeURL(FileURI(kit.Split(cmd.FileLine(), ":")[0]), ice.POD, m.Option(ice.MSG_USERPOD)))
+		if !nfs.Exists(m, kit.Split(cmd.FileLine(), ":")[0], func(p string) {
+			m.Push("_fileline", kit.MergeURL(FileURI(p), ice.POD, m.Option(ice.MSG_USERPOD)))
+		}) {
+			m.Push("_fileline", "")
+		}
 	})
 	return m
 }

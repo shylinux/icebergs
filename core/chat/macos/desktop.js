@@ -10,7 +10,7 @@ Volcanos(chat.ONIMPORT, {
 			var sess = can.misc.SearchHash(can)[0]||can.Conf("session")
 			sess? can.runActionCommand(event, "session", [sess], function(msg) {
 				var item = msg.TableDetail(); can.onimport.session(can, can.base.Obj(item.args))
-			}): can.isCmdMode() && can.onimport.session(can, tabs)
+			}): !window.parent && can.isCmdMode() && can.onimport.session(can, tabs)
 		}
 		sub.onexport.record = function(sub, value, key, item) { delete(can.onfigure._path)
 			switch (value) {

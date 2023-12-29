@@ -99,5 +99,8 @@ func Prefix(arg ...string) string {
 	return kit.Keys(WEB, arg)
 }
 
+func X(arg ...string) string  { return "/x/" + path.Join(arg...) }
+func S(arg ...string) string  { return "/s/" + path.Join(arg...) }
+func C(arg ...string) string  { return "/c/" + path.Join(arg...) }
 func P(arg ...string) string  { return path.Join(nfs.PS, path.Join(arg...)) }
 func PP(arg ...string) string { return P(arg...) + nfs.PS }

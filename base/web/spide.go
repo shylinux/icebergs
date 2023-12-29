@@ -365,9 +365,12 @@ func init() {
 func HostPort(m *ice.Message, host, port string, arg ...string) string {
 	p := ""
 	if len(arg) > 0 {
-		kit.If(kit.Select("", arg, 0), func(pod string) { p += "/pod/" + pod })
-		kit.If(kit.Select("", arg, 1), func(cmd string) { p += "/cmd/" + cmd })
-		kit.If(p, func() { p = "/chat" + p })
+		kit.If(kit.Select("", arg, 0), func(pod string) { p += S(pod) })
+		kit.If(kit.Select("", arg, 1), func(cmd string) { p += C(cmd) })
+		// kit.If(p, func() { p = "/chat" + p })
+		// kit.If(kit.Select("", arg, 0), func(pod string) { p += "/pod/" + pod })
+		// kit.If(kit.Select("", arg, 1), func(cmd string) { p += "/cmd/" + cmd })
+		// kit.If(p, func() { p = "/chat" + p })
 	}
 	kit.If(host == "", func() { host = kit.ParseURL(UserHost(m)).Hostname() })
 	if port == tcp.PORT_443 {

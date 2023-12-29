@@ -434,7 +434,7 @@ func init() {
 					}
 				})
 			}},
-			INSTEADOF: {Name: "insteadof remote", Help: "代理", Hand: func(m *ice.Message, arg ...string) {
+			INSTEADOF: {Name: "insteadof remote", Help: "代理", Icon: "bi bi-clouds", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(CONFIGS, func(value ice.Maps) {
 					if strings.HasSuffix(value[mdb.NAME], ".insteadof") && strings.HasPrefix(ice.Info.Make.Remote, value[mdb.VALUE]) {
 						_git_cmd(m, CONFIG, "--global", "--unset", value[mdb.NAME])
@@ -502,7 +502,7 @@ func init() {
 					mdb.HashRemove(m, m.Option(REPOS))
 				}
 			}},
-			CLONE: {Name: "clone origin* branch name path", Help: "克隆", Hand: func(m *ice.Message, arg ...string) {
+			CLONE: {Name: "clone origin* branch name path", Help: "克隆", Icon: "bi bi-copy", Hand: func(m *ice.Message, arg ...string) {
 				m.OptionDefault(mdb.NAME, path.Base(m.Option(ORIGIN)))
 				m.OptionDefault(nfs.PATH, path.Join(nfs.USR, m.Option(mdb.NAME))+nfs.PS)
 				defer m.Cmdy(nfs.DIR, m.Option(nfs.PATH))
@@ -512,7 +512,7 @@ func init() {
 				defer web.ToastProcess(m)()
 				for _, dev := range []string{ice.DEV, ice.SHY} {
 					p := m.Option(ORIGIN)
-					kit.If(!kit.HasPrefix(p, nfs.PS, web.HTTP), func() { p = m.Cmdv("web.spide", dev, web.CLIENT_ORIGIN) + "/x/" + p })
+					kit.If(!kit.HasPrefix(p, nfs.PS, web.HTTP), func() { p = m.Cmdv("web.spide", dev, web.CLIENT_ORIGIN) + web.X(p) })
 					m.Info("clone %s", p)
 					if _, err := git.PlainClone(m.Option(nfs.PATH), false, &git.CloneOptions{URL: p, Auth: _repos_auth(m, p)}); !m.Warn(err) {
 						_repos_insert(m, m.Option(nfs.PATH))
@@ -535,7 +535,7 @@ func init() {
 					return repos.Push(&git.PushOptions{RemoteURL: remoteURL, Auth: auth, FollowTags: true})
 				})
 			}},
-			STATUS: {Help: "状态", Hand: func(m *ice.Message, arg ...string) {
+			STATUS: {Help: "状态", Icon: "bi bi-app-indicator", Hand: func(m *ice.Message, arg ...string) {
 				if repos := kit.Select(m.Option(REPOS), arg, 0); repos != "" {
 					_repos_status(m, repos, _repos_open(m, repos))
 				} else {
@@ -564,7 +564,7 @@ func init() {
 					)
 				}
 			}},
-			ADD: {Hand: func(m *ice.Message, arg ...string) {
+			ADD: {Icon: "bi bi-plus-square", Hand: func(m *ice.Message, arg ...string) {
 				if work, err := _repos_open(m, m.Option(REPOS)).Worktree(); !m.Warn(err) {
 					m.Warn(kit.Lasterr(work.Add(m.Option(nfs.FILE))))
 				}
@@ -574,7 +574,7 @@ func init() {
 					nfs.Trash(m, _repos_path(m, m.Option(REPOS), m.Option(nfs.FILE)))
 				}
 			}},
-			COMMIT: {Name: "commit actions=add,opt,fix message*=some", Help: "提交", Hand: func(m *ice.Message, arg ...string) {
+			COMMIT: {Name: "commit actions=add,opt,fix message*=some", Help: "提交", Icon: "bi bi-check2-square", Hand: func(m *ice.Message, arg ...string) {
 				if work, err := _repos_open(m, m.Option(REPOS)).Worktree(); !m.Warn(err) {
 					opt := &git.CommitOptions{All: true}
 					if cfg, err := config.LoadConfig(config.GlobalScope); err == nil {
@@ -607,7 +607,7 @@ func init() {
 			web.DREAM_CREATE: {Hand: func(m *ice.Message, arg ...string) {
 				kit.If(m.Option(REPOS), func(p string) {
 					p = strings.Split(p, mdb.QS)[0]
-					kit.If(!strings.Contains(p, "://"), func() { p = web.UserHost(m) + "/x/" + p })
+					kit.If(!strings.Contains(p, "://"), func() { p = kit.MergeURL2(web.UserHost(m), web.X(p)) })
 					kit.If(ice.Info.System == cli.LINUX, func() { p = strings.Replace(p, ice.HTTPS, ice.HTTP, 1) })
 					m.Cmd("", CLONE, ORIGIN, p, nfs.PATH, m.Option(cli.CMD_DIR), ice.Maps{cli.CMD_DIR: ""})
 				})

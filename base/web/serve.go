@@ -110,6 +110,8 @@ func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.Response
 			kit.For(arg[1:], func(k, v string) { add(k, v) })
 		case SHARE:
 			add(arg[0], arg[1])
+		case "s":
+			add(ice.POD, kit.Select("", arg, 1))
 		}
 		kit.For(u.Query(), func(k string, v []string) { m.Optionv(k, v) })
 	}
@@ -203,7 +205,8 @@ const (
 	BODY   = "body"
 	HOME   = "home"
 
-	SERVE_START = "serve.start"
+	OPS_SERVE_START = "ops.serve.start"
+	SERVE_START     = "serve.start"
 )
 const SERVE = "serve"
 

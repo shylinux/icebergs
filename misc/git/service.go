@@ -31,7 +31,7 @@ func _service_path(m *ice.Message, p string, arg ...string) string {
 	return kit.Path(ice.USR_LOCAL_REPOS, kit.TrimExt(p, GIT), path.Join(arg...))
 }
 func _service_link(m *ice.Message, p string, arg ...string) string {
-	return kit.MergeURL2(web.UserHost(m), path.Join("/x/", p)+".git")
+	return kit.MergeURL2(web.UserHost(m), web.X(p)+".git")
 }
 func _service_param(m *ice.Message, arg ...string) (string, string) {
 	repos, service := arg[0], kit.Select(arg[len(arg)-1], m.Option(SERVICE))
@@ -107,7 +107,10 @@ const SERVICE = "service"
 
 func init() {
 	web.Index.MergeCommands(ice.Commands{"/x/": {Actions: aaa.WhiteAction(), Hand: func(m *ice.Message, arg ...string) {
-		if len(arg) == 0 {
+		if !m.IsCliUA() {
+			web.RenderCmd(m, "web.code.git.service", arg)
+			return
+		} else if len(arg) == 0 {
 			return
 		} else if arg[0] == ice.LIST {
 			m.Cmd(Prefix(SERVICE), func(value ice.Maps) { m.Push(nfs.REPOS, _service_link(m, value[nfs.REPOS])) })
@@ -155,14 +158,24 @@ func init() {
 				_repos_inner(m, _service_path, arg...)
 			}},
 			web.DREAM_INPUTS: {Hand: func(m *ice.Message, arg ...string) {
-				kit.If(arg[0] == REPOS, func() { mdb.HashSelect(m).Sort(REPOS).Cut("repos,version,time") })
+				kit.If(arg[0] == REPOS, func() {
+					mdb.HashSelect(m).Sort(REPOS).Cut("repos,version,time")
+					p := m.Cmdv("web.spide", ice.DEV, web.CLIENT_ORIGIN)
+					m.Spawn().SplitIndex(m.Cmdx("web.spide", ice.DEV, web.SPIDE_RAW, http.MethodGet, web.C(web.CODE_GIT_SERVICE))).Table(func(value ice.Maps) {
+						value[nfs.REPOS] = p + web.X(value[nfs.REPOS])
+						m.Push("", value, kit.Split("repos,version,time"))
+					})
+				})
 			}},
 		}, web.DreamAction(), mdb.HashAction(mdb.SHORT, REPOS, mdb.FIELD, "time,repos,branch,version,message"), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				mdb.HashSelect(m, arg...).Table(func(value ice.Maps) {
 					m.Push(nfs.SIZE, kit.Split(m.Cmdx(cli.SYSTEM, "du", "-sh", path.Join(ice.USR_LOCAL_REPOS, value[REPOS])))[0])
 					m.PushScript(kit.Format("git clone %s", _service_link(m, value[REPOS])))
-				}).Sort(REPOS).Cmdy(web.CODE_PUBLISH, ice.CONTEXTS, ice.DEV)
+				}).Sort(REPOS)
+				if !m.IsCliUA() {
+					m.Cmdy(web.CODE_PUBLISH, ice.CONTEXTS, ice.DEV)
+				}
 				kit.If(mdb.Config(m, aaa.AUTH) == aaa.PRIVATE, func() { m.StatusTimeCount(aaa.AUTH, aaa.PRIVATE) })
 			} else if repos := _repos_open(m, arg[0]); len(arg) == 1 {
 				defer m.PushScript(kit.Format("git clone %s", _service_link(m, arg[0])))

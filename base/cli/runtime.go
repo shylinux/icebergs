@@ -295,11 +295,11 @@ func IsWindows() bool { return runtime.GOOS == WINDOWS }
 func ParseMake(str string) []string {
 	res := kit.UnMarshal(str)
 	data := kit.Value(res, MAKE)
-	return kit.Simple(
+	return kit.Simple(mdb.TIME, kit.Value(res, "boot.time"), ice.SPACE, kit.Format(kit.Value(res, "node.name")),
 		nfs.MODULE, kit.Value(data, nfs.MODULE), nfs.VERSION, kit.Join(kit.TrimArg(kit.Simple(
 			kit.Value(data, nfs.VERSION), kit.Value(data, "forword"), kit.Cut(kit.Format(kit.Value(data, mdb.HASH)), 6),
 		)...), "-"),
-		nfs.COMMIT, kit.Value(data, "when"), "compile", kit.Value(data, mdb.TIME), BOOT, kit.Value(res, "boot.time"),
-		ice.SPACE, kit.Value(res, "node.name"),
+		"commitTime", kit.Value(data, "when"), "compileTime", kit.Value(data, mdb.TIME), "bootTime", kit.Value(res, "boot.time"),
+		SHELL, kit.Format(kit.Value(res, "conf.SHELL")), "kernel", kit.Format(kit.Value(res, "host.GOOS")), "arch", kit.Format(kit.Value(res, "host.GOARCH")),
 	)
 }

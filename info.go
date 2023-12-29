@@ -162,7 +162,7 @@ func MergeActions(arg ...Any) Actions {
 					for k, v := range cmd.Actions {
 						func(k string) {
 							if h, ok := list[k]; !ok {
-								list[k] = &Action{Name: v.Name, Help: v.Help, Hand: func(m *Message, arg ...string) { m.Cmdy(from, k, arg) }}
+								list[k] = &Action{Name: v.Name, Help: v.Help, Icon: v.Icon, Hand: func(m *Message, arg ...string) { m.Cmdy(from, k, arg) }}
 							} else if h.Hand == nil {
 								h.Hand = func(m *Message, arg ...string) { m.Cmdy(from, k, arg) }
 							}
@@ -171,6 +171,7 @@ func MergeActions(arg ...Any) Actions {
 									kit.Value(_cmd.Meta, kit.Keys(CTX_TITLE, k), help[1])
 								}
 							}
+							kit.Value(_cmd.Meta, kit.Keys(CTX_ICONS, k), kit.Select(v.Icon, h.Icon))
 							kit.If(len(v.List) > 0, func() { _cmd.Meta[k] = v.List })
 						}(k)
 					}

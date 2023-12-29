@@ -60,7 +60,7 @@ type relay struct {
 	ice.Code
 	checkbox    string `data:"true"`
 	short       string `data:"machine"`
-	field       string `data:"time,machine,username,password,host,port,portal,module,version,commit,compile,boot,package,shell,kernel,arch,ncpu,vcpu,mhz,mem,disk,network,listen,socket,proc,vendor"`
+	field       string `data:"time,machine,username,password,host,port,portal,module,version,commitTime,compileTime,bootTime,package,shell,kernel,arch,ncpu,vcpu,mhz,mem,disk,network,listen,socket,proc,vendor"`
 	statsTables string `name:"statsTables" event:"stats.tables"`
 	create      string `name:"create machine* username* password host* port*=22"`
 	pubkey      string `name:"pubkey" help:"公钥" icon:"bi bi-person-vcard"`
@@ -84,7 +84,6 @@ func (s relay) Init(m *ice.Message, arg ...string) {
 		NCPU, "处理器", VCPU, "虚拟核", MHZ, "频率",
 		MEM, "内存", DISK, "磁盘", NETWORK, "流量",
 		LISTEN, "服务", SOCKET, "连接", PROC, "进程",
-		nfs.COMMIT, "发布时间", code.COMPILE, "编译时间", "boot", "启动时间",
 	)
 	msg := m.Spawn(ice.Maps{ice.MSG_FIELDS: ""})
 	m.GoSleep3s(func() { s.Hash.List(msg).Table(func(value ice.Maps) { s.xterm(m.Spawn(value)) }) })
@@ -139,15 +138,7 @@ func (s relay) Stats(m *ice.Message) {
 		return nil
 	}).ProcessInner()
 	s.ForEach(m.Spawn(ice.Maps{MACHINE: machine, ice.CMD: s.admins(m, cli.RUNTIME)})).Table(func(value ice.Maps) {
-		res := kit.UnMarshal(value[ice.RES])
-		data := kit.Value(res, cli.MAKE)
-		s.Modify(m, kit.Simple(MACHINE, value[MACHINE], kit.Dict(
-			nfs.MODULE, kit.Value(data, nfs.MODULE), nfs.VERSION, kit.Join(kit.TrimArg(kit.Simple(
-				kit.Value(data, nfs.VERSION), kit.Value(data, "forword"), kit.Cut(kit.Format(kit.Value(data, mdb.HASH)), 6),
-			)...), "-"),
-			nfs.COMMIT, kit.Value(data, "when"), code.COMPILE, kit.Value(data, mdb.TIME), "boot", kit.Value(res, "boot.time"),
-			SHELL, kit.Value(res, "conf.SHELL"), KERNEL, kit.Value(res, "host.GOOS"), ARCH, kit.Value(res, "host.GOARCH"),
-		))...)
+		s.Modify(m, kit.Simple(MACHINE, value[MACHINE], kit.Dict(cli.ParseMake(value[ice.RES])))...)
 	})
 }
 func (s relay) Dream(m *ice.Message) {
@@ -155,7 +146,7 @@ func (s relay) Dream(m *ice.Message) {
 		m.ProcessOpen(web.HostPort(m.Message, m.Option(tcp.HOST), m.Option(web.PORTAL), "", web.DREAM))
 		return
 	}
-	fields := "time,machine,host,space,type,status,module,version,commit,compile,boot,link"
+	fields := "time,machine,host,space,type,status,module,version,commitTime,compileTime,bootTime,link"
 	s.foreach(m, func(msg *ice.Message, cmd []string) {
 		m.Push("", kit.Dict(msg.OptionSimple(fields), mdb.TYPE, web.SERVER, mdb.STATUS, web.ONLINE, web.SPACE, ice.CONTEXTS, web.LINK, web.HostPort(m.Message, msg.Option(tcp.HOST), msg.Option(web.PORTAL))), kit.Split(fields))
 		ssh.CombinedOutput(msg.Message, s.admins(m, web.ROUTE), func(res string) {
@@ -172,11 +163,17 @@ func (s relay) Dream(m *ice.Message) {
 	})
 	m.Options(ice.MSG_PROCESS, "")
 	if m.Action(s.Dream, "filter:text"); tcp.IsLocalHost(m.Message, m.Option(ice.MSG_USERIP)) {
-		_msg := m.Spawn().SplitIndex(m.Cmdx(cli.SYSTEM, kit.Split(s.admin(m, web.ROUTE))))
-		m.Copy(_msg.Table(func(value ice.Maps) {
-			_msg.Push(MACHINE, tcp.LOCALHOST).Push(tcp.HOST, tcp.PublishLocalhost(m.Message, tcp.LOCALHOST))
-			_msg.Push(web.LINK, kit.Format("%s/chat/pod/%s", web.UserHost(m.Message), value[web.SPACE]))
-		}).Cut(fields))
+		if _msg := m.Spawn().SplitIndex(m.Cmdx(cli.SYSTEM, kit.Split(s.admin(m, web.ROUTE)))); _msg.Length() > 0 {
+			m.Copy(_msg.Table(func(value ice.Maps) {
+				_msg.Push(MACHINE, tcp.LOCALHOST).Push(tcp.HOST, tcp.PublishLocalhost(m.Message, tcp.LOCALHOST))
+				_msg.Push(web.LINK, web.UserHost(m.Message)+web.S(value[web.SPACE]))
+			}).Cut(fields))
+		}
+		if _msg := m.Cmd(cli.SYSTEM, ice.BIN_ICE_BIN, web.ADMIN, cli.RUNTIME); len(_msg.Result()) > 0 {
+			m.Push(MACHINE, tcp.LOCALHOST).Push(tcp.HOST, tcp.PublishLocalhost(m.Message, tcp.LOCALHOST))
+			m.Push("", kit.Dict(cli.ParseMake(_msg.Result())), kit.Split("time,space,module,version,commitTime,compileTime,bootTime"))
+			m.Push(mdb.TYPE, web.SERVER).Push(mdb.STATUS, web.ONLINE).Push(web.LINK, web.UserHost(m.Message))
+		}
 	}
 }
 func (s relay) ForEach(m *ice.Message, arg ...string) *ice.Message {

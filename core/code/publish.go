@@ -58,12 +58,10 @@ func _publish_contexts(m *ice.Message, arg ...string) {
 		case nfs.SOURCE, ice.DEV:
 			m.Options(nfs.SOURCE, ice.Info.Make.Remote)
 		case nfs.BINARY, ice.APP:
-
 		case "curl", "wget":
 		case "manual":
 			m.Options(nfs.BINARY, "ice.linux.amd64")
 		}
-		m.Debug("what %v", m.Option("_template"))
 		template := strings.TrimSpace(nfs.Template(m, kit.Keys(k, SH)))
 		if m.Option("format") == "raw" {
 			m.Echo(template)

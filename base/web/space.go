@@ -101,6 +101,11 @@ func _space_fork(m *ice.Message) {
 				defer gdb.EventDeferEvent(m, DREAM_OPEN, args)(DREAM_CLOSE, args)
 			case SERVER:
 				m.Go(func() {
+					m.Cmd(SPACE).Table(func(value ice.Maps) {
+						if kit.IsIn(value[mdb.TYPE], WORKER, SERVER) {
+							m.Cmd(SPACE, value[mdb.NAME], gdb.EVENT, gdb.HAPPEN, gdb.EVENT, OPS_SERVE_START, args, kit.Dict(ice.MSG_USERROLE, aaa.TECH))
+						}
+					})
 					m.Cmd(SPACE, name, cli.PWD, name, kit.Dict(nfs.MODULE, ice.Info.Make.Module, nfs.VERSION, ice.Info.Make.Versions(), AGENT, "Go-http-client", cli.SYSTEM, runtime.GOOS))
 				})
 			}
@@ -270,6 +275,8 @@ func init() {
 		return false
 	}
 	Index.MergeCommands(ice.Commands{
+		"s": {Help: "空间", Actions: ApiWhiteAction(), Hand: func(m *ice.Message, arg ...string) { m.Cmdy("web.chat.pod", arg) }},
+		"c": {Help: "命令", Actions: ApiWhiteAction(), Hand: func(m *ice.Message, arg ...string) { m.Cmdy("web.chat.cmd", arg) }},
 		SPACE: {Name: "space name cmds auto", Help: "空间站", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { aaa.White(m, SPACE, ice.MAIN) }},
 			ice.MAIN: {Name: "main index", Help: "首页", Hand: func(m *ice.Message, arg ...string) {

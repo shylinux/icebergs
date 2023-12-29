@@ -61,7 +61,7 @@ func _autogen_import(m *ice.Message, main string, ctx string, mod string) {
 }
 func _autogen_version(m *ice.Message) string {
 	if mod := _autogen_mod(m, ice.GO_MOD); !nfs.Exists(m, ".git") {
-		m.Cmd(REPOS, INIT, nfs.ORIGIN, strings.Split(kit.MergeURL2(kit.Select(m.Option(ice.MSG_USERWEB), ice.Info.Make.Remote), "/x/"+path.Base(mod)), mdb.QS)[0], mdb.NAME, path.Base(mod), nfs.PATH, nfs.PWD)
+		m.Cmd(REPOS, INIT, nfs.ORIGIN, strings.Split(kit.MergeURL2(kit.Select(m.Option(ice.MSG_USERWEB), ice.Info.Make.Remote), web.X(path.Base(mod))), mdb.QS)[0], mdb.NAME, path.Base(mod), nfs.PATH, nfs.PWD)
 		defer m.Cmd(REPOS, ADD, kit.Dict(nfs.REPOS, path.Base(mod), nfs.FILE, ice.GO_MOD))
 		defer m.Cmd(REPOS, ADD, kit.Dict(nfs.REPOS, path.Base(mod), nfs.FILE, nfs.SRC))
 	}

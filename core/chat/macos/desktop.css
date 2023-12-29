@@ -16,7 +16,7 @@ fieldset.macos.desktop>div.output>fieldset.macos.searchs { position:absolute; z-
 fieldset.macos.desktop>div.output>fieldset.macos.searchs>form.option>div.item.keyword input { background-color:transparent; width:var(--river-width); }
 fieldset.macos.desktop>div.output>fieldset.macos.notifications { height:calc(100% - 125px); width:320px; overflow:auto; position:absolute; top:var(--desktop-menu-height); left:calc(100% - 320px); z-index:11; }
 fieldset.macos.desktop>div.output>fieldset.macos.notifications>div.action>div.item { padding:0; }
-fieldset.macos.desktop>div.output>fieldset.macos.notifications>div.action>div.item.refresh>span { font-size:var(--action-height); margin-top:-5px; }
+fieldset.macos.desktop>div.output>fieldset.macos.notifications>div.action>div.item.refresh>span { font-size:24px; }
 fieldset.macos.desktop>div.output>fieldset.macos.notifications>div.output>div.item { clear:both; display:flex; padding:var(--input-padding)}
 fieldset.macos.desktop>div.output>fieldset.macos.notifications>div.output>div.item:not(:last-child) { border-bottom:var(--box-border); }
 fieldset.macos.desktop>div.output>fieldset.macos.notifications>div.output>div.item.read { color:var(--disable-fg-color); }

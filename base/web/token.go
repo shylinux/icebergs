@@ -26,7 +26,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		TOKEN: {Help: "令牌", Actions: ice.MergeActions(ice.Actions{
 			GEN: {Hand: func(m *ice.Message, arg ...string) {
-				m.Echo("请授权 %s %s 代码权限\n", m.Option(tcp.HOST), m.Option(mdb.TYPE)).EchoButton(CONFIRM)
+				m.EchoInfoButton(kit.Format("请授权 %s\n访问 %s\n", m.Option(tcp.HOST), m.Option(mdb.TYPE)), CONFIRM)
 			}},
 			CONFIRM: {Hand: func(m *ice.Message, arg ...string) {
 				if m.Warn(m.R.Method != http.MethodPost, ice.ErrNotAllow) {
@@ -46,8 +46,7 @@ func init() {
 				m.ProcessClose()
 			}},
 		}, StatsAction("", "令牌总数"), mdb.HashAction(mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,type,name,text", mdb.EXPIRE, mdb.MONTH)), Hand: func(m *ice.Message, arg ...string) {
-			mdb.HashSelect(m, arg...)
-			if len(arg) > 0 {
+			if mdb.HashSelect(m, arg...); len(arg) > 0 {
 				m.EchoScript(kit.Format("ish_miss_serve_log dev %s token %s", UserHost(m), arg[0]))
 			}
 		}},

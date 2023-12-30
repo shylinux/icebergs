@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"io"
 	"net/http"
+	"os"
 	"os/exec"
 	"path"
 	"strings"
@@ -137,6 +138,7 @@ const (
 	CMD_ERR = "cmd_err"
 	CMD_OUT = "cmd_out"
 
+	SH    = "sh"
 	MAN   = "man"
 	RUN   = "run"
 	KILL  = "kill"
@@ -191,6 +193,9 @@ func IsSuccess(m *ice.Message) bool { return m.Append(CODE) == "" || m.Append(CO
 
 var _cache_path []string
 
+func Shell(m *ice.Message) string {
+	return kit.Select("/bin/sh", os.Getenv("SHELL"))
+}
 func EtcPath(m *ice.Message) (res []string) {
 	if len(_cache_path) > 0 {
 		return _cache_path

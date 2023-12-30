@@ -1,8 +1,8 @@
 Volcanos(chat.ONIMPORT, {
-	_init: function(can, msg) { var p = "/cmd/web.wiki.portal"
-		can.isCmdMode() && (can.user.toast = function() {})
-		can.db.prefix = location.pathname.indexOf(p) > 0? location.pathname.split(p)[0]+p: "/wiki/portal/"
-		can.db.current = can.isCmdMode()? can.base.trimPrefix(location.pathname, can.db.prefix+"/", can.db.prefix): can.Option(nfs.PATH)
+	_init: function(can, msg) { can.isCmdMode() && (can.user.toast = function() {})
+		var p = "/cmd/"+web.WIKI_PORTAL; can.db.prefix = location.pathname.indexOf(p) > -1? location.pathname.split(p)[0]+p: nfs.WIKI_PORTAL
+		var p = "/c/"+web.WIKI_PORTAL; can.db.prefix = location.pathname.indexOf(p) > -1? location.pathname.split(p)[0]+p: nfs.WIKI_PORTAL
+		can.db.current = can.isCmdMode()? can.base.trimPrefix(location.pathname, can.db.prefix+nfs.PS, can.db.prefix): can.Option(nfs.PATH)
 		can.sup.onexport.link = function() { return can.misc.MergeURL(can, {pod: can.ConfSpace(), cmd: can.ConfIndex()}) }
 		can.require(["/plugin/local/wiki/word.js"])
 		can.Conf(html.PADDING, can.page.styleValueInt(can, "--portal-main-padding", can._output))
@@ -11,7 +11,7 @@ Volcanos(chat.ONIMPORT, {
 		can.ui.header.innerHTML = msg.Append(html.HEADER), can.ui.nav.innerHTML = msg.Append(html.NAV)
 		if (msg.Append(html.NAV) == "") {
 			can.onmotion.hidden(can, can.ui.nav), can.onmotion.hidden(can, can.ui.aside)
-			can.base.isIn(can.db.current, "", "/") && can.onappend.style(can, ice.HOME), can.onimport.content(can, "content.shy")
+			can.base.isIn(can.db.current, "", nfs.PS) && can.onappend.style(can, ice.HOME), can.onimport.content(can, "content.shy")
 		} else {
 			can.page.styleWidth(can, can.ui.nav, 230), can.page.styleWidth(can, can.ui.aside, 200)
 			if (can.ConfWidth() < 1000) { can.onmotion.hidden(can, can.ui.aside) }
@@ -45,7 +45,7 @@ Volcanos(chat.ONIMPORT, {
 		target.onclick = function(event) { can.onaction.route(event, can, item.route) }
 	},
 	content: function(can, file) {
-		can.runActionCommand(event, web.WIKI_WORD, [(can.base.beginWith(file, "usr/", "src/")? "": nfs.SRC_DOCUMENT+can.db.current)+file], function(msg) { can.ui.main.innerHTML = msg.Result(), can.onmotion.clear(can, can.ui.aside)
+		can.runActionCommand(event, web.WIKI_WORD, [(can.base.beginWith(file, nfs.USR, nfs.SRC)? "": nfs.SRC_DOCUMENT+can.db.current)+file], function(msg) { can.ui.main.innerHTML = msg.Result(), can.onmotion.clear(can, can.ui.aside)
 			can.onimport._content(can, can.ui.main, function(target, meta) {
 				meta.type == wiki.TITLE && can.onappend.style(can, meta.name, target._menu = can.onimport.item(can, {name: meta.text}, function(event) { target.scrollIntoView() }, function() {}, can.ui.aside))
 			}), can.onmotion.select(can, can.ui.aside, html.DIV_ITEM, 0)

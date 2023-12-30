@@ -148,7 +148,7 @@ func init() {
 					USR_RELEASE_CONF_GO    = "usr/release/conf.go"
 					USR_RELEASE_BINPACK_GO = "usr/release/binpack.go"
 				)
-				if m.Cmd(BINPACK, mdb.CREATE); nfs.Exists(m, ice.USR_RELEASE) && m.Option(ice.MSG_USERPOD) == "" {
+				if m.Cmd(BINPACK, mdb.CREATE); ice.Info.NodeType == web.SERVER && nfs.Exists(m, ice.USR_RELEASE) {
 					nfs.CopyFile(m, USR_RELEASE_BINPACK_GO, ice.SRC_BINPACK_GO, func(buf []byte, offset int) []byte {
 						kit.If(offset == 0, func() { buf = bytes.Replace(buf, []byte("package main"), []byte("package ice"), 1) })
 						return buf

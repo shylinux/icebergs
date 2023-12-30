@@ -56,11 +56,9 @@ func _dream_start(m *ice.Message, name string) {
 	defer m.ProcessOpen(kit.MergeURL(S(name), m.OptionSimple(ice.MSG_DEBUG)))
 	p := path.Join(ice.USR_LOCAL_WORK, name)
 	if p := path.Join(p, ice.Info.PidPath); nfs.Exists(m, p) {
-		if nfs.Exists(m, "/proc/") {
-			if pid := m.Cmdx(nfs.CAT, p, kit.Dict(ice.MSG_USERROLE, aaa.TECH)); pid != "" && nfs.Exists(m, "/proc/"+pid) {
-				m.Info("already exists %v", pid)
-				return
-			}
+		if pid := m.Cmdx(nfs.CAT, p, kit.Dict(ice.MSG_USERROLE, aaa.TECH)); pid != "" && nfs.Exists(m, "/proc/"+pid) {
+			m.Info("already exists %v", pid)
+			return
 		}
 		for i := 0; i < 10; i++ {
 			if m.Cmd(SPACE, name).Length() > 0 {
@@ -71,7 +69,7 @@ func _dream_start(m *ice.Message, name string) {
 		}
 	}
 	defer m.Options(cli.CMD_DIR, "", cli.CMD_ENV, "", cli.CMD_OUTPUT, "")
-	m.Options(cli.CMD_DIR, kit.Path(p), cli.CMD_ENV, kit.EnvList(kit.Simple(m.OptionSimple("tcp_domain"),
+	m.Options(cli.CMD_DIR, kit.Path(p), cli.CMD_ENV, kit.EnvList(kit.Simple(m.OptionSimple(ice.TCP_DOMAIN),
 		cli.CTX_OPS, Domain(tcp.LOCALHOST, m.Cmdv(SERVE, tcp.PORT)), cli.CTX_LOG, ice.VAR_LOG_BOOT_LOG, cli.CTX_PID, ice.VAR_LOG_ICE_PID,
 		cli.CTX_ROOT, kit.Path(""), cli.PATH, cli.BinPath(p, ""), cli.USER, ice.Info.Username,
 	)...), cli.CMD_OUTPUT, path.Join(p, ice.VAR_LOG_BOOT_LOG), mdb.CACHE_CLEAR_ONEXIT, ice.TRUE)
@@ -232,15 +230,17 @@ func init() {
 				})
 			}},
 			cli.BUILD: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd("", FOR_FLOW, kit.JoinWord("sh", ice.ETC_MISS_SH))
+				m.Cmd("", FOR_FLOW, kit.JoinWord(cli.SH, ice.ETC_MISS_SH))
 				m.Sleep3s().Cmdy(ROUTE, cli.BUILD).ProcessInner()
 			}},
 			PUBLISH: {Name: "publish name", Help: "发布", Icon: "bi bi-send-check", Hand: func(m *ice.Message, arg ...string) {
 				DreamEach(m, m.Option(mdb.NAME), "", func(name string) {
-					m.Push(mdb.NAME, name).Push(mdb.TEXT, m.Cmdx(SPACE, name, "compile", cli.LINUX))
-					m.Push(mdb.NAME, name).Push(mdb.TEXT, m.Cmdx(SPACE, name, "compile", cli.DARWIN))
-					m.Push(mdb.NAME, name).Push(mdb.TEXT, m.Cmdx(SPACE, name, "compile", cli.WINDOWS))
+					PushNoticeRich(m, mdb.NAME, name, mdb.TEXT, m.Cmdx(SPACE, name, CODE_AUTOGEN, "binpack"))
+					PushNoticeRich(m, mdb.NAME, name, mdb.TEXT, m.Cmdx(SPACE, name, CODE_COMPILE, cli.LINUX))
+					PushNoticeRich(m, mdb.NAME, name, mdb.TEXT, m.Cmdx(SPACE, name, CODE_COMPILE, cli.DARWIN))
+					PushNoticeRich(m, mdb.NAME, name, mdb.TEXT, m.Cmdx(SPACE, name, CODE_COMPILE, cli.WINDOWS))
 				})
+				m.ProcessHold()
 			}},
 			FOR_FLOW: {Name: "forFlow cmd*='sh etc/miss.sh'", Help: "流程", Icon: "bi bi-terminal", Hand: func(m *ice.Message, arg ...string) {
 				m.Options(ctx.DISPLAY, PLUGIN_XTERM, cli.CMD_OUTPUT, nfs.NewWriteCloser(func(buf []byte) (int, error) {
@@ -254,6 +254,7 @@ func init() {
 						p := path.Join(ice.USR_LOCAL_WORK, value[mdb.NAME])
 						PushNoticeGrow(m, strings.ReplaceAll(kit.Format("[%s]%s$ %s\n", time.Now().Format(ice.MOD_TIME_ONLY), value[mdb.NAME], m.Option(ice.CMD)), lex.NL, "\r\n"))
 						m.Cmd(cli.SYSTEM, kit.Split(m.Option(ice.CMD)), kit.Dict(cli.CMD_DIR, p)).Sleep300ms()
+						PushNoticeGrow(m, "\r\n\r\n\r\n")
 					})
 					return nil
 				})

@@ -45,21 +45,7 @@ field "状态机" web.code.git.status
 field "配置键" web.code.git.configs
 field "服务器" web.code.git.service
 field "代码源" web.code.git.search args `repos`
-field "架构图" web.code.git.spide args `icebergs`
-field "趋势图" web.code.git.trend args `icebergs`
-return
-field "代码行" web.code.git.count
-field "统计量" web.code.git.total
-
-repos.go
-status.go
-configs.go
-service.go
-search.go
-search.js
-search.css
-
-spide.go
-trend.go
-count.go
-total.go
+field "趋势图" web.code.git.trends args `icebergs`
+field "架构图" web.code.git.spides args `icebergs`
+field "代码行" web.code.git.counts
+field "统计量" web.code.git.totals

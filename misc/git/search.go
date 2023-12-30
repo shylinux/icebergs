@@ -21,7 +21,6 @@ func init() {
 		REPOS_SEARCH  = "/api/v1/repos/search"
 	)
 	const (
-		WEB_SPIDE   = "web.spide"
 		DESCRIPTION = "description"
 		UPDATED_AT  = "updated_at"
 		CLONE_URL   = "clone_url"
@@ -50,10 +49,10 @@ func init() {
 			}},
 		}, web.DreamAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
-				m.Cmdy(WEB_SPIDE).RenameAppend(web.CLIENT_NAME, REPOS, web.CLIENT_URL, ORIGIN).Cut("time,repos,origin")
+				m.Cmdy(web.SPIDE).RenameAppend(web.CLIENT_NAME, REPOS, web.CLIENT_URL, ORIGIN).Cut("time,repos,origin")
 				return
 			}
-			kit.For(kit.Value(kit.UnMarshal(m.Cmdx(WEB_SPIDE, arg[0], web.SPIDE_RAW, http.MethodGet, REPOS_SEARCH,
+			kit.For(kit.Value(kit.UnMarshal(m.Cmdx(web.SPIDE, arg[0], web.SPIDE_RAW, http.MethodGet, REPOS_SEARCH,
 				"q", kit.Select("", arg, 1), mdb.SORT, "updated", mdb.ORDER, "desc", mdb.PAGE, "1", mdb.LIMIT, "30")), mdb.DATA), func(value ice.Map) {
 				value[nfs.SIZE] = kit.FmtSize(kit.Int(value[nfs.SIZE]) * 1000)
 				if t, e := time.Parse(time.RFC3339, kit.Format(value[UPDATED_AT])); e == nil {

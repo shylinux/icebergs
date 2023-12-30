@@ -247,6 +247,7 @@ const ( // MSG
 
 	TOAST_DURATION = "toast.duration"
 	TABLE_CHECKBOX = "table.checkbox"
+	TCP_DOMAIN     = "tcp_domain"
 )
 const ( // RENDER
 	RENDER_BUTTON = "_button"

@@ -41,7 +41,7 @@ func init() {
 				mdb.HashRemove(m, m.Option(mdb.NAME))
 			}},
 			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashCreate(m.Spawn(), m.OptionSimple(mdb.NAME, mdb.VALUE))
+				mdb.HashCreate(m, m.OptionSimple(mdb.NAME, mdb.VALUE))
 				_configs_set(m, UNSET, m.Option(mdb.NAME))
 			}},
 			mdb.MODIFY: {Hand: func(m *ice.Message, arg ...string) {
@@ -57,10 +57,10 @@ func init() {
 		))), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				_configs_list(m).Action(mdb.CREATE, ice.INIT)
-				return
+			} else {
+				kit.If(len(arg) > 1, func() { _configs_set(m, arg[0], arg[1]) })
+				m.Echo(_configs_get(m, arg[0]))
 			}
-			kit.If(len(arg) > 1, func() { _configs_set(m, arg[0], arg[1]) })
-			m.Echo(_configs_get(m, arg[0]))
 		}},
 	})
 }

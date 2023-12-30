@@ -23,6 +23,7 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
+	"shylinux.com/x/icebergs/base/web/html"
 	"shylinux.com/x/icebergs/core/code"
 	kit "shylinux.com/x/toolkits"
 )
@@ -31,7 +32,7 @@ func _service_path(m *ice.Message, p string, arg ...string) string {
 	return kit.Path(ice.USR_LOCAL_REPOS, kit.TrimExt(p, GIT), path.Join(arg...))
 }
 func _service_link(m *ice.Message, p string, arg ...string) string {
-	return kit.MergeURL2(web.UserHost(m), web.X(p)+".git")
+	return kit.MergeURL2(web.UserHost(m), web.X(p)+_GIT)
 }
 func _service_param(m *ice.Message, arg ...string) (string, string) {
 	repos, service := arg[0], kit.Select(arg[len(arg)-1], m.Option(SERVICE))
@@ -54,9 +55,9 @@ func _service_repos(m *ice.Message, arg ...string) error {
 	if mdb.Conf(m, web.CODE_GIT_SERVICE, kit.Keym(ice.CMD)) == GIT {
 		return _service_repos0(m, arg...)
 	}
-	if service == RECEIVE_PACK && m.R.Method == http.MethodPost {
-		return _service_repos0(m, arg...)
-	}
+	// if service == RECEIVE_PACK && m.R.Method == http.MethodPost {
+	// 	return _service_repos0(m, arg...)
+	// }
 	reader, err := _service_reader(m)
 	if err != nil {
 		return err
@@ -89,7 +90,7 @@ func _service_writer(m *ice.Message, cmd string, str ...string) {
 	m.W.Write([]byte(s + cmd + "0000" + strings.Join(str, "")))
 }
 func _service_reader(m *ice.Message) (io.ReadCloser, error) {
-	switch m.R.Header.Get("content-encoding") {
+	switch m.R.Header.Get(html.ContentEncoding) {
 	case "deflate":
 		return flate.NewReader(m.R.Body), nil
 	case "gzip":
@@ -108,7 +109,7 @@ const SERVICE = "service"
 func init() {
 	web.Index.MergeCommands(ice.Commands{"/x/": {Actions: aaa.WhiteAction(), Hand: func(m *ice.Message, arg ...string) {
 		if !m.IsCliUA() {
-			web.RenderCmd(m, "web.code.git.service", arg)
+			web.RenderCmd(m, web.CODE_GIT_SERVICE, arg)
 			return
 		} else if len(arg) == 0 {
 			return
@@ -154,14 +155,12 @@ func init() {
 				mdb.HashRemove(m, m.Option(REPOS))
 				nfs.Trash(m, _service_path(m, m.Option(REPOS)))
 			}},
-			code.INNER: {Hand: func(m *ice.Message, arg ...string) {
-				_repos_inner(m, _service_path, arg...)
-			}},
+			code.INNER: {Hand: func(m *ice.Message, arg ...string) { _repos_inner(m, _service_path, arg...) }},
 			web.DREAM_INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				kit.If(arg[0] == REPOS, func() {
 					mdb.HashSelect(m).Sort(REPOS).Cut("repos,version,time")
-					p := m.Cmdv("web.spide", ice.DEV, web.CLIENT_ORIGIN)
-					m.Spawn().SplitIndex(m.Cmdx("web.spide", ice.DEV, web.SPIDE_RAW, http.MethodGet, web.C(web.CODE_GIT_SERVICE))).Table(func(value ice.Maps) {
+					p := m.Cmdv(web.SPIDE, ice.DEV, web.CLIENT_ORIGIN)
+					m.Spawn().SplitIndex(m.Cmdx(web.SPIDE, ice.DEV, web.SPIDE_RAW, http.MethodGet, web.C(web.CODE_GIT_SERVICE))).Table(func(value ice.Maps) {
 						value[nfs.REPOS] = p + web.X(value[nfs.REPOS])
 						m.Push("", value, kit.Split("repos,version,time"))
 					})
@@ -173,9 +172,7 @@ func init() {
 					m.Push(nfs.SIZE, kit.Split(m.Cmdx(cli.SYSTEM, "du", "-sh", path.Join(ice.USR_LOCAL_REPOS, value[REPOS])))[0])
 					m.PushScript(kit.Format("git clone %s", _service_link(m, value[REPOS])))
 				}).Sort(REPOS)
-				if !m.IsCliUA() {
-					m.Cmdy(web.CODE_PUBLISH, ice.CONTEXTS, ice.DEV)
-				}
+				kit.If(!m.IsCliUA(), func() { m.Cmdy(web.CODE_PUBLISH, ice.CONTEXTS, ice.DEV) })
 				kit.If(mdb.Config(m, aaa.AUTH) == aaa.PRIVATE, func() { m.StatusTimeCount(aaa.AUTH, aaa.PRIVATE) })
 			} else if repos := _repos_open(m, arg[0]); len(arg) == 1 {
 				defer m.PushScript(kit.Format("git clone %s", _service_link(m, arg[0])))

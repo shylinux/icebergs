@@ -15,9 +15,9 @@ import (
 
 func _host_domain(m *ice.Message) string {
 	return kit.GetValid(
-		func() string { return m.Option("tcp_domain") },
+		func() string { return m.Option(ice.TCP_DOMAIN) },
 		func() string { return mdb.Config(m, DOMAIN) },
-		func() string { return os.Getenv("tcp_domain") },
+		func() string { return os.Getenv(ice.TCP_DOMAIN) },
 		func() string {
 			if !kit.IsIn(m.ActionKey(), "", ice.LIST) {
 				return m.Cmdv(HOST, mdb.Config(m, ice.MAIN), aaa.IP)

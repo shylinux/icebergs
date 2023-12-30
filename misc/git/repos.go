@@ -29,10 +29,11 @@ import (
 func _repos_insert(m *ice.Message, p string) {
 	if repos, err := git.PlainOpen(p); err == nil {
 		args := []string{REPOS, path.Base(p), nfs.PATH, p}
+		args = append(args, ORIGIN, _repos_origin(m, repos))
 		if head, err := repos.Head(); err == nil {
 			args = append(args, BRANCH, head.Name().Short())
 			if commit, err := repos.CommitObject(head.Hash()); err == nil {
-				args = append(args, mdb.TIME, commit.Author.When.Format(ice.MOD_TIME), MESSAGE, strings.TrimSuffix(commit.Message, lex.NL))
+				args = append(args, mdb.TIME, _repos_when(m, commit), MESSAGE, strings.TrimSuffix(commit.Message, lex.NL))
 			}
 		}
 		if refer := _repos_recent(m, repos); refer != nil {
@@ -42,7 +43,6 @@ func _repos_insert(m *ice.Message, p string) {
 				args = append(args, VERSION, refer.Name().Short())
 			}
 		}
-		args = append(args, ORIGIN, _repos_origin(m, repos))
 		mdb.HashCreate(m.Options(mdb.TARGET, repos), args)
 	}
 }
@@ -61,7 +61,11 @@ func _repos_remote(m *ice.Message, remote string) string {
 	if remote == "" {
 		return ""
 	} else if insteadof := mdb.Config(m, INSTEADOF); insteadof != "" {
-		remote = insteadof + path.Base(remote)
+		if p := kit.ParseURL(insteadof); kit.IsIn(p.Path, "", nfs.PS) {
+			remote = kit.MergeURL2(insteadof, kit.ParseURL(remote).Path)
+		} else {
+			remote = kit.MergeURL2(insteadof, path.Base(remote))
+		}
 	}
 	return remote
 }
@@ -71,9 +75,9 @@ func _repos_recent(m *ice.Message, repos *git.Repository) (r *plumbing.Reference
 		for {
 			if refer, err := iter.Next(); err != nil {
 				break
-			} else if ls := kit.Split(refer.Name().Short(), "v."); len(ls) < 2 {
+			} else if ls := kit.Split(refer.Name().Short(), "v."); len(ls) == 0 {
 				continue
-			} else if n := kit.Int(ls[0])*1000000 + kit.Int(ls[1])*1000 + kit.Int(ls[2]); n > max {
+			} else if n := kit.Int(ls[0])*1000000 + kit.Int(kit.Select("0", ls, 1))*1000 + kit.Int(kit.Select("0", ls, 2)); n > max {
 				max, r = n, refer
 			}
 		}
@@ -98,23 +102,21 @@ func _repos_forword(m *ice.Message, repos *git.Repository, version string) int {
 	}
 	return 0
 }
+func _repos_when(m *ice.Message, commit *object.Commit) string {
+	return strings.TrimSuffix(commit.Author.When.Format(ice.MOD_TIME), ".000")
+}
 func _repos_open(m *ice.Message, p string) *git.Repository {
 	return mdb.HashSelectTarget(m, p, nil).(*git.Repository)
 }
 func _repos_each(m *ice.Message, title string, cb func(*git.Repository, ice.Maps) error) {
 	msg := m.Cmd("")
-	if msg.Length() == 0 {
-		return
-	}
-	web.GoToast(m, kit.Select(m.CommandKey(), title), func(toast func(string, int, int)) (list []string) {
-		count, total := 0, msg.Length()
-		msg.Table(func(value ice.Maps) {
-			toast(value[REPOS], count, total)
+	web.GoToast(m, title, func(toast func(string, int, int)) (list []string) {
+		msg.Table(func(index int, value ice.Maps) {
+			toast(value[REPOS], index, msg.Length())
 			if err := cb(_repos_open(m, value[REPOS]), value); err != nil && err != git.NoErrAlreadyUpToDate {
 				web.ToastFailure(m, value[REPOS], err.Error())
 				list = append(list, value[REPOS])
 			}
-			count++
 		})
 		return
 	})
@@ -122,23 +124,16 @@ func _repos_each(m *ice.Message, title string, cb func(*git.Repository, ice.Maps
 func _repos_each_origin(m *ice.Message, title string, cb func(*git.Repository, string, *http.BasicAuth, ice.Maps) error) {
 	m.Option("repos.auth", _repos_credentials(m))
 	_repos_each(m, title, func(repos *git.Repository, value ice.Maps) error {
-		if value[ORIGIN] == "" {
-			return nil
-		} else if remote, err := repos.Remote(ORIGIN); err != nil {
-			return err
-		} else {
-			remoteURL := _repos_remote(m, remote.Config().URLs[0])
-			auth := _repos_auth(m, remoteURL)
-			m.Info("%s: %s %s", m.ActionKey(), auth.Username, remoteURL)
-			return cb(repos, remoteURL, auth, value)
-		}
+		remote := _repos_remote(m, _repos_origin(m, repos))
+		auth := _repos_auth(m, remote)
+		m.Info("%s: %s %s", m.ActionKey(), auth.Username, remote)
+		return cb(repos, remote, auth, value)
 	})
 }
 func _repos_credentials(m *ice.Message) map[string]*url.URL {
 	list := map[string]*url.URL{}
-	m.Cmd(nfs.CAT, kit.HomePath(".git-credentials"), func(line string) {
-		u := kit.ParseURL(strings.ReplaceAll(line, "%3a", ":"))
-		list[u.Host] = u
+	nfs.Exists(m, kit.HomePath(_GITCREDENTIALS), func(p string) {
+		m.Cmd(nfs.CAT, p, func(text string) { u := kit.ParseURL(strings.ReplaceAll(text, "%3a", ":")); list[u.Host] = u })
 	})
 	return list
 }
@@ -156,9 +151,9 @@ func _repos_auth(m *ice.Message, origin string) *http.BasicAuth {
 func _repos_path(m *ice.Message, p string, arg ...string) string {
 	if p == path.Base(kit.Path("")) {
 		return kit.Path("", arg...)
-	} else if nfs.Exists(m, path.Join(nfs.USR, p, ".git")) {
+	} else if nfs.Exists(m, path.Join(nfs.USR, p, _GIT)) {
 		return path.Join(nfs.USR, p, path.Join(arg...))
-	} else if nfs.Exists(m, path.Join(nfs.USR_LOCAL_WORK, p, ".git")) {
+	} else if nfs.Exists(m, path.Join(nfs.USR_LOCAL_WORK, p, _GIT)) {
 		return path.Join(nfs.USR_LOCAL_WORK, p, path.Join(arg...))
 	} else {
 		return p
@@ -172,7 +167,7 @@ func _repos_branch(m *ice.Message, repos *git.Repository) error {
 	}
 	iter.ForEach(func(refer *plumbing.Reference) error {
 		if commit, err := repos.CommitObject(refer.Hash()); err == nil {
-			m.Push(mdb.TIME, commit.Author.When.Format(ice.MOD_TIME))
+			m.Push(mdb.TIME, _repos_when(m, commit))
 			m.Push(BRANCH, refer.Name().Short())
 			m.Push(aaa.USERNAME, commit.Author.Name)
 			m.Push(mdb.TEXT, commit.Message)
@@ -195,7 +190,7 @@ func _repos_log(m *ice.Message, hash plumbing.Hash, repos *git.Repository) error
 		if m.Length() > limit {
 			return nil
 		}
-		m.Push(mdb.TIME, commit.Author.When)
+		m.Push(mdb.TIME, _repos_when(m, commit))
 		m.Push(COMMIT, commit.Hash.String())
 		m.Push(aaa.USERNAME, commit.Author.Name)
 		m.Push(mdb.TEXT, commit.Message)
@@ -390,6 +385,13 @@ const (
 	MESSAGE = "message"
 	AUTHOR  = "author"
 	WHEN    = "when"
+
+	REMOTE_URL      = "remoteURL"
+	_INSTEADOF      = ".insteadof"
+	_GIT            = ".git"
+	_GITCONFIG      = ".gitconfig"
+	_GITIGNORE      = ".gitignore"
+	_GITCREDENTIALS = ".git-credentials"
 )
 const REPOS = "repos"
 
@@ -429,25 +431,25 @@ func init() {
 				m.Cmd(nfs.DIR, nfs.USR, func(value ice.Maps) { _repos_insert(m, value[nfs.PATH]) })
 				m.Cmd(nfs.DIR, nfs.USR_LOCAL_WORK, func(value ice.Maps) { _repos_insert(m, value[nfs.PATH]) })
 				m.Cmd(CONFIGS, func(value ice.Maps) {
-					if strings.HasSuffix(value[mdb.NAME], ".insteadof") && strings.HasPrefix(ice.Info.Make.Remote, value[mdb.VALUE]) {
-						mdb.Config(m, INSTEADOF, strings.TrimPrefix(strings.TrimSuffix(value[mdb.NAME], ".insteadof"), "url."))
+					if strings.HasSuffix(value[mdb.NAME], _INSTEADOF) && strings.HasPrefix(ice.Info.Make.Remote, value[mdb.VALUE]) {
+						mdb.Config(m, INSTEADOF, strings.TrimPrefix(strings.TrimSuffix(value[mdb.NAME], _INSTEADOF), "url."))
 					}
 				})
 			}},
 			INSTEADOF: {Name: "insteadof remote", Help: "代理", Icon: "bi bi-clouds", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(CONFIGS, func(value ice.Maps) {
-					if strings.HasSuffix(value[mdb.NAME], ".insteadof") && strings.HasPrefix(ice.Info.Make.Remote, value[mdb.VALUE]) {
-						_git_cmd(m, CONFIG, "--global", "--unset", value[mdb.NAME])
+					if strings.HasSuffix(value[mdb.NAME], _INSTEADOF) && strings.HasPrefix(ice.Info.Make.Remote, value[mdb.VALUE]) {
+						_git_cmd(m, CONFIG, GLOBAL, UNSET, value[mdb.NAME])
 					}
 				})
 				if mdb.Config(m, INSTEADOF, m.Option(REMOTE)); m.Option(REMOTE) != "" {
-					_git_cmd(m, CONFIG, "--global", "url."+m.Option(REMOTE)+".insteadof", strings.TrimSuffix(ice.Info.Make.Remote, path.Base(ice.Info.Make.Remote)))
+					_git_cmd(m, CONFIG, GLOBAL, "url."+m.Option(REMOTE)+_INSTEADOF, strings.TrimSuffix(ice.Info.Make.Remote, path.Base(ice.Info.Make.Remote)))
 				}
 			}},
 			INIT: {Name: "init origin* path", Hand: func(m *ice.Message, arg ...string) {
 				m.OptionDefault(nfs.PATH, kit.Path(""))
 				m.Cmd(nfs.DEFS, path.Join(m.Option(nfs.PATH), ".git/config"), kit.Format(nfs.Template(m, CONFIG), m.Option(ORIGIN)))
-				m.Cmd(nfs.DEFS, path.Join(m.Option(nfs.PATH), ".gitignore"), nfs.Template(m, IGNORE))
+				m.Cmd(nfs.DEFS, path.Join(m.Option(nfs.PATH), _GITIGNORE), nfs.Template(m, IGNORE))
 				git.PlainInit(m.Option(nfs.PATH), false)
 				_repos_insert(m, m.Option(nfs.PATH))
 				m.ProcessRefresh()
@@ -467,24 +469,15 @@ func init() {
 					if commit, err := repos.CommitObject(refer.Hash()); err == nil {
 						m.Push(aaa.EMAIL, commit.Author.Email)
 						m.Push(AUTHOR, commit.Author.Name)
-						m.Push(WHEN, strings.TrimSuffix(commit.Author.When.Format(ice.MOD_TIME), ".000"))
+						m.Push(WHEN, _repos_when(m, commit))
 						m.Push(MESSAGE, commit.Message)
 					}
 				}
 			}},
-			"remoteURL": {Hand: func(m *ice.Message, arg ...string) {
+			REMOTE_URL: {Hand: func(m *ice.Message, arg ...string) {
 				m.Echo(_repos_remote(m, _repos_origin(m, _repos_open(m, path.Base(kit.Path(""))))))
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
-				switch m.Option(ctx.ACTION) {
-				case CLONE:
-					switch arg[0] {
-					case ORIGIN:
-						m.Push(arg[0], "https://shylinux.com/x/icons")
-						m.Push(arg[0], "https://shylinux.com/x/geoarea")
-						m.Push(arg[0], "https://shylinux.com/x/node_modules")
-					}
-				}
 				switch arg[0] {
 				case MESSAGE:
 					ls := kit.Split(m.Option(nfs.FILE), " /")
@@ -506,13 +499,13 @@ func init() {
 				m.OptionDefault(mdb.NAME, path.Base(m.Option(ORIGIN)))
 				m.OptionDefault(nfs.PATH, path.Join(nfs.USR, m.Option(mdb.NAME))+nfs.PS)
 				defer m.Cmdy(nfs.DIR, m.Option(nfs.PATH))
-				if nfs.Exists(m, path.Join(m.Option(nfs.PATH), ".git")) {
+				if nfs.Exists(m, path.Join(m.Option(nfs.PATH), _GIT)) {
 					return
 				}
 				defer web.ToastProcess(m)()
 				for _, dev := range []string{ice.DEV, ice.SHY} {
 					p := m.Option(ORIGIN)
-					kit.If(!kit.HasPrefix(p, nfs.PS, web.HTTP), func() { p = m.Cmdv("web.spide", dev, web.CLIENT_ORIGIN) + web.X(p) })
+					kit.If(!kit.HasPrefix(p, nfs.PS, web.HTTP), func() { p = m.Cmdv(web.SPIDE, dev, web.CLIENT_ORIGIN) + web.X(p) })
 					m.Info("clone %s", p)
 					if _, err := git.PlainClone(m.Option(nfs.PATH), false, &git.CloneOptions{URL: p, Auth: _repos_auth(m, p)}); !m.Warn(err) {
 						_repos_insert(m, m.Option(nfs.PATH))
@@ -543,7 +536,7 @@ func init() {
 					_repos_each(m, "", func(repos *git.Repository, value ice.Maps) error {
 						if refer, err := repos.Head(); err == nil {
 							if commit, err := repos.CommitObject(refer.Hash()); err == nil {
-								_last := commit.Author.When.Format(ice.MOD_TIME)
+								_last := _repos_when(m, commit)
 								kit.If(_last > last, func() { last = _last })
 							}
 						}
@@ -585,7 +578,7 @@ func init() {
 							}
 						}
 					}
-					m.Warn(kit.Lasterr(work.Commit(m.Option("actions")+lex.SP+m.Option(MESSAGE), opt)))
+					m.Warn(kit.Lasterr(work.Commit(kit.JoinWord(m.Option("actions"), m.Option(MESSAGE)), opt)))
 				}
 			}},
 			LOG: {Hand: func(m *ice.Message, arg ...string) {
@@ -622,17 +615,16 @@ func init() {
 		}, aaa.RoleAction(REMOTE), web.StatsAction("", "代码库总数"), web.DreamAction(), mdb.HashAction(mdb.SHORT, REPOS, mdb.FIELD, "time,repos,branch,version,message,origin"), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				mdb.HashSelect(m, arg...).Sort(REPOS).PushAction(STATUS, mdb.REMOVE).Action(CLONE, PULL, PUSH, STATUS)
-			} else if len(arg) == 1 {
-				_repos_branch(m, _repos_open(m, arg[0]))
+			} else if repos := _repos_open(m, arg[0]); len(arg) == 1 {
+				_repos_branch(m, repos)
 			} else if len(arg) == 2 {
-				repos := _repos_open(m, arg[0])
 				if branch, err := repos.Branch(arg[1]); !m.Warn(err) {
 					if refer, err := repos.Reference(branch.Merge, true); !m.Warn(err) {
 						_repos_log(m, refer.Hash(), repos)
 					}
 				}
 			} else if len(arg) == 3 {
-				if repos := _repos_open(m, arg[0]); arg[2] == INDEX {
+				if arg[2] == INDEX {
 					_repos_status(m, arg[0], repos)
 				} else {
 					_repos_stats(m, repos, arg[2])
@@ -643,12 +635,13 @@ func init() {
 		}},
 	})
 }
-func ReposList(m *ice.Message) *ice.Message {
-	return m.Cmdy(web.CODE_GIT_REPOS, ice.OptionFields("repos,path"))
-}
+
 func ReposClone(m *ice.Message, arg ...string) *ice.Message {
 	return m.Cmdy(web.CODE_GIT_REPOS, CLONE, arg)
 }
 func ReposInit(m *ice.Message, arg ...string) *ice.Message {
 	return m.Cmdy(web.CODE_GIT_REPOS, INIT, arg)
+}
+func ReposList(m *ice.Message) *ice.Message {
+	return m.Cmdy(web.CODE_GIT_REPOS, ice.OptionFields("repos,path,origin"))
 }

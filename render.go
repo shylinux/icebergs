@@ -5,6 +5,7 @@ import (
 	"path"
 	"strings"
 
+	"shylinux.com/x/icebergs/base/web/html"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -209,7 +210,8 @@ func (m *Message) EchoFields(cmd string, arg ...string) *Message {
 `, cmd, kit.Join(arg))
 }
 func (m *Message) EchoInfoButton(info string, arg ...Any) *Message {
-	return m.Echo(info).EchoButton(arg...).Echo(NL).Action(arg...)
+	m.Display("/plugin/story/table.js", "style", "form")
+	return m.Echo(html.Format("div", info, "class", "info", "style", kit.JoinCSS())).EchoButton(arg...).Echo(NL).Action(arg...)
 }
 func (m *Message) EchoButton(arg ...Any) *Message    { return m.Echo(Render(m, RENDER_BUTTON, arg...)) }
 func (m *Message) EchoAnchor(arg ...string) *Message { return m.Echo(Render(m, RENDER_ANCHOR, arg)) }

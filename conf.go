@@ -36,8 +36,6 @@ const (
 
 	SHY  = "shy"
 	DEV  = "dev"
-	COM  = "com"
-	HUB  = "hub"
 	OPS  = "ops"
 	DEMO = "demo"
 	MAIL = "mail"
@@ -72,12 +70,13 @@ const ( // REPOS
 	LOCAL   = "local"
 )
 const ( // MOD
-	MOD_DIR   = 0750
-	MOD_FILE  = 0640
-	MOD_BUFS  = 4096
-	MOD_DATE  = kit.MOD_DATE
-	MOD_TIME  = kit.MOD_TIME
-	MOD_TIMES = kit.MOD_TIMES
+	MOD_DIR       = 0750
+	MOD_FILE      = 0640
+	MOD_BUFS      = 4096
+	MOD_DATE      = kit.MOD_DATE
+	MOD_TIME      = kit.MOD_TIME
+	MOD_TIMES     = kit.MOD_TIMES
+	MOD_TIME_ONLY = "15:04:05"
 )
 
 const ( // DIR

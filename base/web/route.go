@@ -86,7 +86,7 @@ func init() {
 			cli.BUILD: {Name: "build space", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
 				_route_toast(m, m.Option(SPACE), m.PrefixKey(), "_build")
 				func() { defer ToastProcess(m)(); m.Sleep3s() }()
-				m.Cmdy("", "travel")
+				m.SetAppend().Cmdy("", "travel")
 			}},
 			"_build": {Hand: func(m *ice.Message, arg ...string) {
 				if _, err := nfs.DiskFile.StatFile(ice.SRC_MAIN_GO); err == nil && nfs.Exists(m, ".git") {

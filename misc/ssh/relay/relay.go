@@ -192,7 +192,9 @@ func (s relay) ForEach(m *ice.Message, arg ...string) *ice.Message {
 }
 func (s relay) ForFlow(m *ice.Message) {
 	s.foreach(m, func(msg *ice.Message, cmd []string) {
-		ssh.PushShell(msg.Message, cmd, func(res string) { web.PushNoticeGrow(m.Options(ctx.DISPLAY, web.PLUGIN_XTERM).Message, res) })
+		ssh.PushShell(msg.Message, cmd, func(res string) {
+			web.PushNoticeGrow(m.Options(ctx.DISPLAY, web.PLUGIN_XTERM).Message, res)
+		})
 	})
 }
 func (s relay) Compile(m *ice.Message) {

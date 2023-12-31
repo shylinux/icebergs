@@ -33,34 +33,23 @@ func init() {
 			ice.CTX_TRANS, kit.Dict(html.INPUT, kit.Dict("actions", "操作", "message", "信息")),
 		), Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
-				switch m.Option(ctx.ACTION) {
-				case INIT:
-					m.Cmd(web.SPIDE, ice.OptionFields(web.CLIENT_ORIGIN), func(value ice.Maps) { m.Push(arg[0], value[web.CLIENT_ORIGIN]+web.X(path.Base(kit.Path("")))) })
-					m.Push(arg[0], kit.MergeURL2(web.UserHost(m), web.X(path.Base(kit.Path("")))))
-				case INSTEADOF, OAUTH:
-					m.Cmd(web.SPIDE, ice.OptionFields(web.CLIENT_ORIGIN), func(value ice.Maps) { m.Push(arg[0], value[web.CLIENT_ORIGIN]+web.X()) })
-					m.Push(arg[0], kit.MergeURL2(web.UserHost(m), web.X()))
+				switch arg[0] {
+				case aaa.EMAIL:
+					m.Push(arg[0], _configs_get(m, USER_EMAIL), ice.Info.Make.Email)
+				case aaa.USERNAME:
+					m.Push(arg[0], kit.Select(m.Option(ice.MSG_USERNAME), _configs_get(m, USER_NAME)), ice.Info.Make.Username)
 				default:
-					switch arg[0] {
-					case aaa.USERNAME:
-						m.Push(arg[0], kit.Select(m.Option(ice.MSG_USERNAME), _configs_get(m, USER_NAME)), ice.Info.Make.Username)
-					case aaa.EMAIL:
-						m.Push(arg[0], _configs_get(m, USER_EMAIL), ice.Info.Make.Email)
-					default:
-						m.Cmdy(REPOS, mdb.INPUTS, arg)
-					}
+					m.Cmdy(REPOS, mdb.INPUTS, arg)
 				}
 			}},
-			INIT: {Name: "init origin*", Help: "初始化", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(REPOS, INIT) }},
+			OAUTH: {Name: "oauth remote", Help: "授权", Icon: "bi bi-person-check", Hand: func(m *ice.Message, arg ...string) {
+				m.ProcessOpen(kit.MergeURL2(kit.Select(ice.Info.Make.Domain, m.Cmdx(REPOS, REMOTE_URL), m.Option(REMOTE)), web.ChatCmdPath(m, web.TOKEN, "gen"),
+					mdb.TYPE, web.CODE_GIT_STATUS, tcp.HOST, m.Option(ice.MSG_USERWEB)))
+			}},
 			CONFIGS: {Name: "configs email* username*", Help: "配置", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.DEFS, kit.HomePath(_GITCONFIG), kit.Format(nfs.Template(m, "gitconfig"), m.Option(aaa.USERNAME), m.Option(aaa.EMAIL)))
 				mdb.Config(m, aaa.USERNAME, m.Option(aaa.USERNAME))
 				mdb.Config(m, aaa.EMAIL, m.Option(aaa.EMAIL))
-			}},
-			INSTEADOF: {Name: "insteadof remote", Help: "代理", Icon: "bi bi-clouds", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(REPOS, INSTEADOF, arg) }},
-			OAUTH: {Name: "oauth remote", Help: "授权", Icon: "bi bi-person-check", Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessOpen(kit.MergeURL2(kit.Select(ice.Info.Make.Domain, m.Cmdx(REPOS, REMOTE_URL), m.Option(REMOTE)), web.ChatCmdPath(m, web.TOKEN, "gen"),
-					mdb.TYPE, web.CODE_GIT_STATUS, tcp.HOST, m.Option(ice.MSG_USERWEB)))
 			}},
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				if !nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME), _GIT)) {

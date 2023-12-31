@@ -102,18 +102,12 @@ func _space_fork(m *ice.Message) {
 			case WORKER:
 				defer gdb.EventDeferEvent(m, DREAM_OPEN, args)(DREAM_CLOSE, args)
 			case SERVER:
+				defer gdb.EventDeferEvent(m, SPACE_OPEN, args)(SPACE_CLOSE, args)
 				m.Go(func() {
 					m.Cmd(SPACE, name, cli.PWD, name, kit.Dict(nfs.MODULE, ice.Info.Make.Module, nfs.VERSION, ice.Info.Make.Versions(), AGENT, "Go-http-client", cli.SYSTEM, runtime.GOOS))
 					m.Cmd(SPACE).Table(func(value ice.Maps) {
 						if kit.IsIn(value[mdb.TYPE], WORKER, SERVER) {
-							m.Cmd(SPACE, value[mdb.NAME], gdb.EVENT, gdb.HAPPEN, gdb.EVENT, OPS_SERVER_START, args, kit.Dict(ice.MSG_USERROLE, aaa.TECH))
-						}
-					})
-					m.Cmd(DREAM).Table(func(value ice.Maps) {
-						if value["restart"] == "always" {
-							value[nfs.BINARY] = UserHost(m) + S(value[mdb.NAME])
-							value[mdb.ICON] = strings.TrimPrefix(kit.Split(value[mdb.ICON], "?")[0], "/require/")
-							m.Cmd(SPACE, name, DREAM, mdb.CREATE, mdb.NAME, value[mdb.NAME], value)
+							m.Cmd(SPACE, value[mdb.NAME], gdb.EVENT, gdb.HAPPEN, gdb.EVENT, OPS_SERVER_OPEN, args, kit.Dict(ice.MSG_USERROLE, aaa.TECH))
 						}
 					})
 				})
@@ -234,6 +228,8 @@ const (
 	SPACE_LOGIN       = "space.login"
 	SPACE_LOGIN_CLOSE = "space.login.close"
 	SPACE_GRANT       = "space.grant"
+	SPACE_OPEN        = "space.open"
+	SPACE_CLOSE       = "space.close"
 )
 const SPACE = "space"
 

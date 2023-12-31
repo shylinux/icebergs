@@ -144,7 +144,7 @@ func MergeActions(arg ...Any) Actions {
 					h.Hand = MergeHand(v.Hand, h.Hand)
 				} else if k == CTX_EXIT {
 					h.Hand = MergeHand(h.Hand, v.Hand)
-				} else if h.Name, h.Help = kit.Select(v.Name, h.Name), kit.Select(v.Help, h.Help); h.Hand == nil {
+				} else if h.Name, h.Help, h.Icon = kit.Select(v.Name, h.Name), kit.Select(v.Help, h.Help), kit.Select(v.Icon, h.Icon); h.Hand == nil {
 					h.Hand = v.Hand
 				}
 			}
@@ -166,12 +166,12 @@ func MergeActions(arg ...Any) Actions {
 							} else if h.Hand == nil {
 								h.Hand = func(m *Message, arg ...string) { m.Cmdy(from, k, arg) }
 							}
+							kit.Value(_cmd.Meta, kit.Keys(CTX_ICONS, k), v.Icon)
 							if help := kit.Split(v.Help, " :："); len(help) > 0 {
 								if kit.Value(_cmd.Meta, kit.Keys(CTX_TRANS, strings.TrimPrefix(k, "_")), help[0]); len(help) > 1 {
 									kit.Value(_cmd.Meta, kit.Keys(CTX_TITLE, k), help[1])
 								}
 							}
-							kit.Value(_cmd.Meta, kit.Keys(CTX_ICONS, k), kit.Select(v.Icon, h.Icon))
 							kit.If(len(v.List) > 0, func() { _cmd.Meta[k] = v.List })
 						}(k)
 					}

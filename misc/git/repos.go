@@ -436,6 +436,14 @@ func init() {
 					}
 				})
 			}},
+			INIT: {Name: "init origin*", Help: "初始化", Hand: func(m *ice.Message, arg ...string) {
+				m.OptionDefault(nfs.PATH, kit.Path(""))
+				m.Cmd(nfs.DEFS, path.Join(m.Option(nfs.PATH), ".git/config"), kit.Format(nfs.Template(m, CONFIG), m.Option(ORIGIN)))
+				m.Cmd(nfs.DEFS, path.Join(m.Option(nfs.PATH), _GITIGNORE), nfs.Template(m, IGNORE))
+				git.PlainInit(m.Option(nfs.PATH), false)
+				_repos_insert(m, m.Option(nfs.PATH))
+				m.ProcessRefresh()
+			}},
 			INSTEADOF: {Name: "insteadof remote", Help: "代理", Icon: "bi bi-clouds", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(CONFIGS, func(value ice.Maps) {
 					if strings.HasSuffix(value[mdb.NAME], _INSTEADOF) && strings.HasPrefix(ice.Info.Make.Remote, value[mdb.VALUE]) {
@@ -445,14 +453,6 @@ func init() {
 				if mdb.Config(m, INSTEADOF, m.Option(REMOTE)); m.Option(REMOTE) != "" {
 					_git_cmd(m, CONFIG, GLOBAL, "url."+m.Option(REMOTE)+_INSTEADOF, strings.TrimSuffix(ice.Info.Make.Remote, path.Base(ice.Info.Make.Remote)))
 				}
-			}},
-			INIT: {Name: "init origin* path", Hand: func(m *ice.Message, arg ...string) {
-				m.OptionDefault(nfs.PATH, kit.Path(""))
-				m.Cmd(nfs.DEFS, path.Join(m.Option(nfs.PATH), ".git/config"), kit.Format(nfs.Template(m, CONFIG), m.Option(ORIGIN)))
-				m.Cmd(nfs.DEFS, path.Join(m.Option(nfs.PATH), _GITIGNORE), nfs.Template(m, IGNORE))
-				git.PlainInit(m.Option(nfs.PATH), false)
-				_repos_insert(m, m.Option(nfs.PATH))
-				m.ProcessRefresh()
 			}},
 			REMOTE: {Hand: func(m *ice.Message, arg ...string) {
 				repos := _repos_open(m, kit.Select(path.Base(kit.Path("")), kit.Select(m.Option(REPOS), arg, 0)))
@@ -474,19 +474,28 @@ func init() {
 					}
 				}
 			}},
-			REMOTE_URL: {Hand: func(m *ice.Message, arg ...string) {
+			REMOTE_URL: {Name: "remoteURL", Hand: func(m *ice.Message, arg ...string) {
 				m.Echo(_repos_remote(m, _repos_origin(m, _repos_open(m, path.Base(kit.Path(""))))))
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
-				switch arg[0] {
-				case MESSAGE:
-					ls := kit.Split(m.Option(nfs.FILE), " /")
-					m.Push(arg[0], kit.Select("", ls, -2))
-					m.Push(arg[0], kit.Join(kit.Slice(ls, -1), nfs.PS))
-					m.Push(arg[0], kit.Join(kit.Slice(ls, -2), nfs.PS))
-					m.Push(arg[0], m.Option(nfs.FILE))
-				case VERSION:
-					m.Push(arg[0], _repos_tag(m, m.Option(TAGS)))
+				switch m.Option(ctx.ACTION) {
+				case INIT:
+					m.Cmd(web.SPIDE, ice.OptionFields(web.CLIENT_ORIGIN), func(value ice.Maps) { m.Push(arg[0], value[web.CLIENT_ORIGIN]+web.X(path.Base(kit.Path("")))) })
+					m.Push(arg[0], kit.MergeURL2(web.UserHost(m), web.X(path.Base(kit.Path("")))))
+				case INSTEADOF, OAUTH:
+					m.Cmd(web.SPIDE, ice.OptionFields(web.CLIENT_ORIGIN), func(value ice.Maps) { m.Push(arg[0], value[web.CLIENT_ORIGIN]+web.X()) })
+					m.Push(arg[0], kit.MergeURL2(web.UserHost(m), web.X()))
+				default:
+					switch arg[0] {
+					case MESSAGE:
+						ls := kit.Split(m.Option(nfs.FILE), " /")
+						m.Push(arg[0], kit.Select("", ls, -2))
+						m.Push(arg[0], kit.Join(kit.Slice(ls, -1), nfs.PS))
+						m.Push(arg[0], kit.Join(kit.Slice(ls, -2), nfs.PS))
+						m.Push(arg[0], m.Option(nfs.FILE))
+					case VERSION:
+						m.Push(arg[0], _repos_tag(m, m.Option(TAGS)))
+					}
 				}
 			}},
 			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) {
@@ -495,9 +504,9 @@ func init() {
 					mdb.HashRemove(m, m.Option(REPOS))
 				}
 			}},
-			CLONE: {Name: "clone origin* branch name path", Help: "克隆", Icon: "bi bi-copy", Hand: func(m *ice.Message, arg ...string) {
+			CLONE: {Name: "clone origin* name", Help: "克隆", Icon: "bi bi-copy", Hand: func(m *ice.Message, arg ...string) {
 				m.OptionDefault(mdb.NAME, path.Base(m.Option(ORIGIN)))
-				m.OptionDefault(nfs.PATH, path.Join(nfs.USR, m.Option(mdb.NAME))+nfs.PS)
+				m.Option(nfs.PATH, path.Join(nfs.USR, m.Option(mdb.NAME))+nfs.PS)
 				defer m.Cmdy(nfs.DIR, m.Option(nfs.PATH))
 				if nfs.Exists(m, path.Join(m.Option(nfs.PATH), _GIT)) {
 					return
@@ -607,6 +616,18 @@ func init() {
 			}},
 			web.DREAM_TRASH: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd("", mdb.REMOVE, kit.Dict(REPOS, m.Option(mdb.NAME)))
+			}},
+			web.SPACE_OPEN: {Hand: func(m *ice.Message, arg ...string) {
+				if m.Option(mdb.TYPE) == web.SERVER {
+					m.Cmd(web.DREAM).Table(func(value ice.Maps) {
+						if value[cli.RESTART] == "always" {
+							value[nfs.BINARY] = web.UserHost(m) + web.S(value[mdb.NAME])
+							value[mdb.ICON] = strings.TrimPrefix(kit.Split(value[mdb.ICON], "?")[0], "/require/")
+							value[nfs.REPOS] = _repos_remote(m, _repos_origin(m, _repos_open(m, path.Join(ice.USR_LOCAL_WORK, value[mdb.NAME]))))
+							m.Cmd(web.SPACE, m.Option(mdb.NAME), web.DREAM, mdb.CREATE, mdb.NAME, value[mdb.NAME], value)
+						}
+					})
+				}
 			}},
 			web.SERVE_START: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd("", CLONE, ORIGIN, "node_modules", mdb.NAME, "", nfs.PATH, "")

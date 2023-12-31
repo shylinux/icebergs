@@ -205,8 +205,8 @@ const (
 	BODY   = "body"
 	HOME   = "home"
 
-	OPS_SERVER_START = "ops.server.start"
-	SERVE_START      = "serve.start"
+	OPS_SERVER_OPEN = "ops.server.open"
+	SERVE_START     = "serve.start"
 )
 const SERVE = "serve"
 

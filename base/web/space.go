@@ -133,7 +133,12 @@ func _space_handle(m *ice.Message, safe bool, name string, c *websocket.Conn) {
 		source, target := kit.Simple(msg.Optionv(ice.MSG_SOURCE), name), kit.Simple(msg.Optionv(ice.MSG_TARGET))
 		msg.Log(tcp.RECV, "%v->%v %v %v", source, target, msg.Detailv(), msg.FormatsMeta(nil))
 		if next := msg.Option(ice.MSG_TARGET); next == "" || len(target) == 0 {
-			m.Go(func() { _space_exec(msg, name, source, target, c) }, strings.Join(kit.Simple(SPACE, name, msg.Detailv()), lex.SP))
+			m.Go(func() {
+				if k := kit.Keys(msg.Option(ice.MSG_USERPOD), "_token"); msg.Option(k) != "" {
+					aaa.SessCheck(msg, msg.Option(k))
+				}
+				_space_exec(msg, name, source, target, c)
+			}, strings.Join(kit.Simple(SPACE, name, msg.Detailv()), lex.SP))
 		} else {
 			m.Warn(!mdb.HashSelectDetail(m, next, func(value ice.Map) {
 				switch c := value[mdb.TARGET].(type) {

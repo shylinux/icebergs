@@ -55,14 +55,15 @@ func (m *Message) MergePod(pod string, arg ...Any) string {
 }
 func (m *Message) MergePodCmd(pod, cmd string, arg ...Any) string {
 	ls := []string{"chat"}
-	kit.If(kit.Keys(m.Option(MSG_USERPOD), pod), func(p string) { ls = append(ls, POD, p) })
+	kit.If(kit.Keys(m.Option(MSG_USERPOD), pod), func(p string) { ls = append(ls, "s", p) })
 	if cmd == "" {
-		_, ok := Info.Index[m.CommandKey()]
-		cmd = kit.Select(m.PrefixKey(), m.CommandKey(), ok)
+		p, ok := Info.Index[m.CommandKey()]
+		cmd = kit.Select(m.PrefixKey(), m.CommandKey(), ok && p == m.target)
 	}
-	ls = append(ls, CMD, cmd)
+	ls = append(ls, "c", cmd)
 	kit.If(m.Option(DEBUG) == TRUE, func() { arg = append([]Any{DEBUG, TRUE}, arg...) })
-	return kit.MergeURL2(strings.Split(kit.Select(Info.Domain, m.Option(MSG_USERWEB)), QS)[0], PS+kit.Join(ls, PS), arg...)
+	return kit.MergeURL2(strings.Split(kit.Select(Info.Domain, m.Option(MSG_USERWEB)), QS)[0], PS+kit.Join(ls[1:], PS), arg...)
+	// return kit.MergeURL2(strings.Split(kit.Select(Info.Domain, m.Option(MSG_USERWEB)), QS)[0], PS+kit.Join(ls, PS), arg...)
 }
 func (m *Message) FieldsIsDetail() bool {
 	ls := m.value(MSG_APPEND)
@@ -101,6 +102,12 @@ func (m *Message) Process(cmd string, arg ...Any) *Message {
 	} else {
 		return m.Options(MSG_PROCESS, cmd, PROCESS_ARG, kit.Simple(arg...))
 	}
+}
+func (m *Message) ProcessCookie(arg ...Any) {
+	m.Process(PROCESS_COOKIE, arg...)
+}
+func (m *Message) ProcessSession(arg ...Any) {
+	m.Process(PROCESS_SESSION, arg...)
 }
 func (m *Message) ProcessLocation(arg ...Any) { m.Process(PROCESS_LOCATION, arg...) }
 func (m *Message) ProcessReplace(url string, arg ...Any) {

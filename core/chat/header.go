@@ -94,7 +94,7 @@ func init() {
 				m.Cmdy(aaa.EMAIL, aaa.SEND, arg, aaa.CONTENT, nfs.Template(m, "email.html"))
 			}},
 			aaa.LOGOUT: {Hand: aaa.SessLogout},
-			mdb.CREATE: {Name: "create type*=oauth,plugin,qrcode name* icons link order space index args", Hand: func(m *ice.Message, arg ...string) { mdb.HashCreate(m, m.OptionSimple()) }},
+			mdb.CREATE: {Name: "create type*=plugin,qrcode,oauth name* icons link order space index args", Hand: func(m *ice.Message, arg ...string) { mdb.HashCreate(m, m.OptionSimple()) }},
 			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) { mdb.HashRemove(m, m.OptionSimple(mdb.NAME)) }},
 			mdb.MODIFY: {Hand: func(m *ice.Message, arg ...string) { mdb.HashModify(m, m.OptionSimple(mdb.NAME), arg) }},
 			ice.DEMO: {Help: "体验", Hand: func(m *ice.Message, arg ...string) {
@@ -118,7 +118,7 @@ func init() {
 			mdb.HashSelect(m, arg...).Sort(mdb.ORDER, ice.INT)
 			m.Table(func(value ice.Maps) { m.Push(mdb.STATUS, kit.Select(mdb.ENABLE, mdb.DISABLE, value[mdb.ORDER] == "")) })
 			kit.If(m.Length() == 0, func() {
-				m.Push(mdb.TIME, m.Time()).Push(mdb.NAME, "扫码登录").Push(mdb.ICONS, nfs.USR_ICONS_VOLCANOS).Push(mdb.TYPE, cli.QRCODE).Push(web.LINK, "").Push(mdb.ORDER, "1")
+				m.Push(mdb.TIME, m.Time()).Push(mdb.NAME, "扫码登录").Push(mdb.ICONS, nfs.USR_ICONS_VOLCANOS).Push(mdb.TYPE, cli.QRCODE).Push(web.LINK, "").Push(mdb.ORDER, "10")
 			})
 			kit.If(GetSSO(m), func(p string) {
 				m.Push(mdb.TIME, m.Time()).Push(mdb.NAME, web.SERVE).Push(mdb.ICONS, nfs.USR_ICONS_ICEBERGS).Push(mdb.TYPE, "oauth").Push(web.LINK, p)

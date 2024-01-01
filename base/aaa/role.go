@@ -35,13 +35,17 @@ func _role_check(value ice.Map, key []string, ok bool) bool {
 func _role_right(m *ice.Message, role string, key ...string) (ok bool) {
 	return role == ROOT || len(mdb.HashSelectDetails(m, kit.Select(VOID, role), func(value ice.Map) bool { return _role_check(value, key, role == TECH) })) > 0
 }
-func _role_list(m *ice.Message, role string) *ice.Message {
+func _role_list(m *ice.Message, role string, arg ...string) *ice.Message {
 	mdb.HashSelectDetail(m, kit.Select(VOID, role), func(value ice.Map) {
 		kit.For(value[WHITE], func(k string, v ice.Any) {
-			m.Push(ROLE, kit.Value(value, mdb.NAME)).Push(mdb.ZONE, WHITE).Push(mdb.KEY, k).Push(mdb.STATUS, v)
+			if len(arg) == 0 || k == arg[0] {
+				m.Push(ROLE, kit.Value(value, mdb.NAME)).Push(mdb.ZONE, WHITE).Push(mdb.KEY, k).Push(mdb.STATUS, v)
+			}
 		})
 		kit.For(value[BLACK], func(k string, v ice.Any) {
-			m.Push(ROLE, kit.Value(value, mdb.NAME)).Push(mdb.ZONE, BLACK).Push(mdb.KEY, k).Push(mdb.STATUS, v)
+			if len(arg) == 0 || k == arg[0] {
+				m.Push(ROLE, kit.Value(value, mdb.NAME)).Push(mdb.ZONE, BLACK).Push(mdb.KEY, k).Push(mdb.STATUS, v)
+			}
 		})
 	})
 	return m.Sort(mdb.KEY)
@@ -67,7 +71,7 @@ const ROLE = "role"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		ROLE: {Name: "role role auto insert filter:text", Help: "角色", Actions: ice.MergeActions(ice.Actions{
+		ROLE: {Name: "role role key auto insert filter:text", Help: "角色", Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case mdb.KEY:
@@ -94,7 +98,7 @@ func init() {
 				kit.For(arg, func(cmd string) { m.Cmd(ROLE, WHITE, VOID, cmd); m.Cmd(ROLE, BLACK, VOID, cmd, ice.ACTION) })
 			}},
 		}, mdb.HashAction(mdb.SHORT, mdb.NAME)), Hand: func(m *ice.Message, arg ...string) {
-			_role_list(m, kit.Select("", arg, 0)).PushAction(mdb.DELETE)
+			_role_list(m, kit.Select("", arg, 0), kit.Slice(arg, 1)...).PushAction(mdb.DELETE)
 		}},
 	})
 }

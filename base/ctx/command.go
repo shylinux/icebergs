@@ -29,6 +29,12 @@ func _command_list(m *ice.Message, name string) *ice.Message {
 		}) {
 			m.Push("_fileline", "")
 		}
+		msg := m.Cmd(aaa.ROLE, kit.Select(aaa.VOID, m.Option(ice.MSG_USERROLE)), name)
+		if msg.Append(mdb.ZONE) == aaa.WHITE && msg.Append(mdb.STATUS) == ice.TRUE {
+			m.Push("_role", "ok")
+		} else {
+			m.Push("_role", "")
+		}
 	})
 	return m
 }

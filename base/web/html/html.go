@@ -53,6 +53,8 @@ const (
 	DISPLAY = "display"
 
 	VIEW   = "view"
+	TEXT   = "text"
+	BUTTON = "button"
 	INPUT  = "input"
 	VALUE  = "value"
 	OUTPUT = "output"

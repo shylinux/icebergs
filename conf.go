@@ -269,6 +269,8 @@ const ( // RENDER
 	RENDER_RAW      = "_raw"
 )
 const ( // PROCESS
+	PROCESS_COOKIE   = "_cookie"
+	PROCESS_SESSION  = "_session"
 	PROCESS_LOCATION = "_location"
 	PROCESS_REPLACE  = "_replace"
 	PROCESS_HISTORY  = "_history"

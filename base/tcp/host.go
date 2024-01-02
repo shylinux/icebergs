@@ -100,8 +100,9 @@ func init() {
 				kit.If(m.Option(aaa.IP), func(p string) { mdb.Config(m, DOMAIN, p) })
 				m.Echo(mdb.Config(m, DOMAIN))
 			}},
-		}, mdb.HashAction(mdb.SHORT, mdb.TEXT), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.SHORT, mdb.TEXT)), Hand: func(m *ice.Message, arg ...string) {
 			_host_list(m, kit.Select("", arg, 0))
+			m.PushAction(DOMAIN)
 		}},
 	})
 }

@@ -36,7 +36,7 @@ func init() {
 				} else if msg := m.Cmd(web.SPACE, m.Option(web.SPACE)); m.Warn(msg.Append(mdb.TYPE) != aaa.LOGIN, ice.ErrNotFound, m.Option(web.SPACE)) {
 					return
 				} else {
-					kit.If(m.Option(ice.MSG_SESSID) == "" || m.Cmd(aaa.SESS, m.Option(ice.MSG_SESSID)).Length() == 0, func() { web.RenderCookie(m, aaa.SessCreate(m, m.Option(ice.MSG_USERNAME))) })
+					web.RenderCookie(m, aaa.SessValid(m))
 					m.Option(ice.MSG_USERUA, msg.Append(aaa.UA))
 					if ls := kit.Split(m.Option(web.SPACE), nfs.PT); len(ls) > 1 {
 						m.Option(ice.MSG_SESSID, m.Cmdx(web.SPACE, kit.Keys(kit.Slice(ls, 0, -1)), aaa.SESS, mdb.CREATE, m.Option(ice.MSG_USERNAME)))

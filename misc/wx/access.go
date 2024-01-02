@@ -93,17 +93,17 @@ func init() {
 				if m.Cmd("", m.Option(ACCESS, arg[0])).Append(mdb.TYPE) == ice.WEB {
 					m.Cmdy(SCAN, mdb.CREATE, mdb.TYPE, QR_STR_SCENE, mdb.NAME, "请授权登录", mdb.TEXT, m.Option(web.SPACE), ctx.INDEX, web.CHAT_GRANT, ctx.ARGS, m.Option(web.SPACE))
 				} else {
-					h := m.Cmdx(IDE, mdb.CREATE, mdb.NAME, m.Option(web.SPACE), PAGES, PAGES_ACTION, tcp.WIFI, kit.Select("", arg, 1),
+					h := m.Cmdx(IDE, mdb.CREATE, mdb.NAME, "请授权登录", mdb.TEXT, m.Option(web.SPACE), PAGES, PAGES_ACTION, tcp.WIFI, kit.Select("", arg, 1),
 						ctx.INDEX, web.CHAT_GRANT, ctx.ARGS, kit.JoinQuery(m.OptionSimple(web.SPACE, log.DEBUG)...),
 					)
 					m.Echo(m.Cmdx(SCAN, UNLIMIT, SCENE, h, ENV, kit.Select("release", arg, 2), IS_HYALINE, ice.FALSE, mdb.NAME, m.Option(web.SPACE)))
 				}
 			}},
 			web.SPACE_GRANT: {Hand: func(m *ice.Message, arg ...string) {
-				if strings.HasPrefix(m.Option(ice.MSG_REFERER), "https://servicewechat.com/") {
-					m.Cmd(mdb.PRUNES, m.Prefix(SCAN), "", mdb.HASH, mdb.NAME, m.Option(web.SPACE))
-					m.Cmd(mdb.PRUNES, m.Prefix(IDE), "", mdb.HASH, mdb.NAME, m.Option(web.SPACE))
-				}
+				m.Cmd(mdb.PRUNES, m.Prefix(SCAN), "", mdb.HASH, mdb.TEXT, m.Option(web.SPACE))
+				m.Cmd(mdb.PRUNES, m.Prefix(SCAN), "", mdb.HASH, mdb.NAME, m.Option(web.SPACE))
+				m.Cmd(mdb.PRUNES, m.Prefix(IDE), "", mdb.HASH, mdb.TEXT, m.Option(web.SPACE))
+				m.Cmd(mdb.PRUNES, web.SHARE, "", mdb.HASH, mdb.TEXT, m.Option(web.SPACE))
 			}},
 			web.SPACE_LOGIN_CLOSE: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(mdb.PRUNES, m.Prefix(SCAN), "", mdb.HASH, m.OptionSimple(mdb.NAME))

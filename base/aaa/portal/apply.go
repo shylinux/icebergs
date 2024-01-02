@@ -35,7 +35,7 @@ func (s apply) Input(m *ice.Message, arg ...string) {
 	}
 }
 func (s apply) Apply(m *ice.Message, arg ...string) {
-	if m.Warn(m.Options(arg).Cmd(aaa.USER, m.Option(aaa.EMAIL)).Length() > 0, "already exists") {
+	if m.Warn(m.Options(arg).Cmd(aaa.USER, m.Option(aaa.EMAIL)).Length() > 0, ice.ErrAlreadyExists) {
 		return
 	}
 	m.ProcessCookie(_cookie_key(m), s.Hash.Create(m, kit.Simple(append(arg, aaa.USERNAME, m.Option(aaa.EMAIL)), mdb.STATUS, s.Apply,
@@ -53,9 +53,9 @@ func (s apply) Login(m *ice.Message, arg ...string) {
 		m.OptionDefault(mdb.HASH, m.Option(_cookie_key(m)))
 		s.Hash.Modify(m, kit.Simple(m.OptionSimple(mdb.HASH), mdb.STATUS, s.Login)...)
 		web.RenderCookie(m.Message, m.Cmdx(aaa.SESS, mdb.CREATE, s.Hash.List(m.Spawn(), m.Option(mdb.HASH)).Append(aaa.USERNAME)))
-		m.ProcessLocation("/c/web.chat.portal")
+		m.ProcessLocation(nfs.PS)
 	} else {
-		if m.Warn(m.Cmd(aaa.USER, m.Option(aaa.EMAIL)).Length() == 0, "user not exists") {
+		if m.Warn(m.Cmd(aaa.USER, m.Option(aaa.EMAIL)).Length() == 0, ice.ErrNotFound) {
 			return
 		}
 		m.Options(ice.MSG_USERNAME, m.Option(aaa.EMAIL))
@@ -66,7 +66,7 @@ func (s apply) Login(m *ice.Message, arg ...string) {
 	}
 }
 func (s apply) Email(m *ice.Message, arg ...string) {
-	ctx.DisplayStoryForm(m.Message, "email*", s.Login).Echo("邮件发送成功后，请在邮箱中授权登录")
+	ctx.DisplayStoryForm(m.Message, "email*", s.Login).Echo("please auth login in mailbox, after email sent")
 }
 func (s apply) List(m *ice.Message, arg ...string) *ice.Message {
 	kit.If(m.Option(_cookie_key(m)), func(p string) { arg = []string{p} })

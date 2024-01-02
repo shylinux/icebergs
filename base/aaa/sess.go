@@ -52,6 +52,12 @@ func SessCheck(m *ice.Message, sessid string) bool {
 	m.Options(ice.MSG_USERNICK, "", ice.MSG_USERNAME, "", ice.MSG_USERROLE, VOID, ice.MSG_CHECKER, logs.FileLine(-1))
 	return sessid != "" && m.Cmdy(SESS, CHECK, sessid, logs.FileLineMeta(-1)).Option(ice.MSG_USERNAME) != ""
 }
+func SessValid(m *ice.Message) string {
+	if m.Option(ice.MSG_SESSID) == "" || m.Cmd(SESS, m.Option(ice.MSG_SESSID)).Length() == 0 {
+		return m.Option(ice.MSG_SESSID, SessCreate(m, m.Option(ice.MSG_USERNAME)))
+	}
+	return m.Option(ice.MSG_SESSID)
+}
 func SessAuth(m *ice.Message, value ice.Any, arg ...string) *ice.Message {
 	language := kit.Select(m.Option(ice.MSG_LANGUAGE), kit.Format(kit.Value(value, LANGUAGE)))
 	kit.If(language == "", func() {

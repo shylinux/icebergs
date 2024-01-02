@@ -113,7 +113,7 @@ func init() {
 					RenderMain(m)
 				}
 			}},
-		}, aaa.WhiteAction(), StatsAction("", "共享总数"), mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,usernick,username,userrole", mdb.EXPIRE, mdb.DAYS)), Hand: func(m *ice.Message, arg ...string) {
+		}, aaa.WhiteAction(), mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,usernick,username,userrole", mdb.EXPIRE, mdb.DAYS)), Hand: func(m *ice.Message, arg ...string) {
 			if kit.IsIn(m.Option(ice.MSG_USERROLE), aaa.ROOT, aaa.TECH) || len(arg) > 0 && arg[0] != "" {
 				mdb.HashSelect(m, arg...)
 			}

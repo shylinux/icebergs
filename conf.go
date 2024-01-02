@@ -328,8 +328,9 @@ const ( // Err
 	ErrNotFound = "not found: "
 	ErrNotStart = "not start: "
 
-	ErrNotImplement = "not implement: "
-	ErrTooDeepCount = "too deep count: "
+	ErrAlreadyExists = "already exists: "
+	ErrNotImplement  = "not implement: "
+	ErrTooDeepCount  = "too deep count: "
 )
 const ( // ctx
 	COMMAND = "command"

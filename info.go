@@ -270,7 +270,7 @@ func Module(prefix string, arg ...Any) {
 				m, arg = v, arg[1:]
 			}
 		}
-		if v, ok := list[key]; ok {
+		if v, ok := list[kit.LowerCapital(key)]; ok {
 			switch v := v.(type) {
 			case func(m *Message):
 				v(m)

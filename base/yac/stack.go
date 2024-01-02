@@ -452,8 +452,6 @@ func (s *Stack) calls(m *ice.Message, obj Any, key string, cb func(*Frame, Funct
 		}
 		m.Debug("calls %s %s %s %#v", Format(s), Format(obj), key, arg)
 		kit.For(arg, func(i int, v Any) { arg[i] = Trans(arg[i]) })
-		m.Debug("calls %s %s %s %s", Format(s), Format(obj), key, Format(arg...))
-		m.Debug("calls %s %s %s %#v", Format(s), Format(obj), key, arg)
 		return Wraps(obj(m, kit.Format(key), arg...))
 	case func():
 		obj()

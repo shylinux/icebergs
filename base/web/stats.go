@@ -6,6 +6,7 @@ import (
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -19,17 +20,17 @@ func init() {
 		STATS: {Help: "汇总量", Hand: func(m *ice.Message, arg ...string) {
 			defer ctx.DisplayStory(m, "")
 			if m.Option(ice.MSG_USERPOD) == "" {
-				PushStats(m, kit.Keys(aaa.APPLY, mdb.TOTAL), m.Cmd(aaa.APPLY).Length(), "", "注册总数")
-				PushStats(m, kit.Keys(aaa.OFFER, mdb.TOTAL), m.Cmd(aaa.OFFER).Length(), "", "邀请总数")
+				PushStats(m, "", "", "", "注册总数", aaa.APPLY)
+				PushStats(m, "", "", "", "邀请总数", aaa.OFFER)
 				if ice.Info.Username == ice.Info.Make.Username {
-					PushStats(m, kit.Keys(aaa.USER, mdb.TOTAL), m.Cmd(aaa.USER).Length()-1, "", "用户总数")
+					PushStats(m, "", m.Cmd(aaa.USER).Length()-1, "", "用户总数", aaa.USER)
 				} else {
-					PushStats(m, kit.Keys(aaa.USER, mdb.TOTAL), m.Cmd(aaa.USER).Length()-2, "", "用户总数")
+					PushStats(m, "", m.Cmd(aaa.USER).Length()-2, "", "用户总数", aaa.USER)
 				}
-				PushStats(m, kit.Keys(aaa.SESS, mdb.TOTAL), m.Cmd(aaa.SESS).Length(), "", "会话总数")
-				PushStats(m, kit.Keys(TOKEN, mdb.TOTAL), m.Cmd(TOKEN).Length(), "", "令牌总数")
-				PushStats(m, kit.Keys(SHARE, mdb.TOTAL), m.Cmd(SHARE).Length(), "", "共享总数")
-				PushStats(m, kit.Keys(ctx.COMMAND, mdb.TOTAL), m.Cmd(ctx.COMMAND).Length(), "", "命令总数")
+				PushStats(m, "", "", "", "会话总数", aaa.SESS)
+				PushStats(m, "", "", "", "令牌总数", TOKEN)
+				PushStats(m, "", "", "", "共享总数", SHARE)
+				PushStats(m, "", "", "", "命令总数", ctx.COMMAND)
 			}
 			gdb.Event(m, STATS_TABLES)
 			PushPodCmd(m, "", arg...)
@@ -46,9 +47,10 @@ func StatsAction(arg ...string) ice.Actions {
 	}, gdb.EventsAction(STATS_TABLES))
 }
 func PushStats(m *ice.Message, name string, value ice.Any, arg ...string) {
-	kit.If(name == "", func() { name = kit.Keys(m.CommandKey(), mdb.TOTAL) })
+	index := kit.Select(m.PrefixKey(), arg, 2)
+	kit.If(name == "", func() { name = kit.Keys(kit.Select("", kit.Split(index, nfs.PT), -1), mdb.TOTAL) })
+	kit.If(value == "", func() { value = m.Cmd(index).Length() })
 	kit.If(value != 0, func() {
-		m.Push(mdb.NAME, name).Push(mdb.VALUE, value).Push(mdb.UNITS, kit.Select("", arg, 0)).Push(ctx.TRANS, kit.Select("", arg, 1))
-		m.Push(ctx.INDEX, m.PrefixKey())
+		m.Push(mdb.NAME, name).Push(mdb.VALUE, value).Push(mdb.UNITS, kit.Select("", arg, 0)).Push(ctx.TRANS, kit.Select("", arg, 1)).Push(ctx.INDEX, index)
 	})
 }

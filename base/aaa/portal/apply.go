@@ -53,8 +53,11 @@ func (s apply) Login(m *ice.Message, arg ...string) {
 		m.OptionDefault(mdb.HASH, m.Option(_cookie_key(m)))
 		s.Hash.Modify(m, kit.Simple(m.OptionSimple(mdb.HASH), mdb.STATUS, s.Login)...)
 		web.RenderCookie(m.Message, m.Cmdx(aaa.SESS, mdb.CREATE, s.Hash.List(m.Spawn(), m.Option(mdb.HASH)).Append(aaa.USERNAME)))
-		m.ProcessLocation(nfs.PS)
+		m.ProcessLocation("/c/web.chat.portal")
 	} else {
+		if m.Warn(m.Cmd(aaa.USER, m.Option(aaa.EMAIL)).Length() == 0, "user not exists") {
+			return
+		}
 		m.Options(ice.MSG_USERNAME, m.Option(aaa.EMAIL))
 		space := kit.Keys(kit.Slice(kit.Split(m.Option(ice.MSG_DAEMON), nfs.PT), 0, -1))
 		share := m.Cmd(web.SHARE, mdb.CREATE, mdb.TYPE, web.FIELD, mdb.NAME, web.CHAT_GRANT, mdb.TEXT, space).Append(mdb.LINK)
@@ -79,7 +82,7 @@ func (s apply) List(m *ice.Message, arg ...string) *ice.Message {
 	})
 	if len(arg) == 0 {
 		m.EchoQRCode(m.MergePodCmd("", "", ctx.ACTION, s.Input))
-	} else if !kit.IsIn(m.ActionKey(), "", ice.LIST, mdb.SELECT) {
+	} else if m.Option(_cookie_key(m)) != "" || !kit.IsIn(m.ActionKey(), "", ice.LIST, mdb.SELECT) {
 		switch m.Append(mdb.STATUS) {
 		case kit.FuncName(s.Login):
 			if m.ActionKey() == kit.FuncName(s.Input) {

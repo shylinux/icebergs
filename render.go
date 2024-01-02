@@ -210,7 +210,7 @@ func (m *Message) EchoFields(cmd string, arg ...string) *Message {
 `, cmd, kit.Join(arg))
 }
 func (m *Message) EchoInfoButton(info string, arg ...Any) *Message {
-	m.Display("/plugin/story/table.js", "style", "form")
+	m.Display("/plugin/table.js", "style", "form")
 	return m.Echo(html.Format("div", info, "class", "info", "style", kit.JoinCSS())).EchoButton(arg...).Echo(NL).Action(arg...)
 }
 func (m *Message) EchoButton(arg ...Any) *Message    { return m.Echo(Render(m, RENDER_BUTTON, arg...)) }

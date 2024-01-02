@@ -52,15 +52,16 @@ const (
 	PROFILE = "profile"
 	DISPLAY = "display"
 
-	VIEW   = "view"
-	TEXT   = "text"
-	BUTTON = "button"
-	INPUT  = "input"
-	VALUE  = "value"
-	OUTPUT = "output"
-	LAYOUT = "layout"
-	RESIZE = "resize"
-	FILTER = "filter"
+	VIEW    = "view"
+	TEXT    = "text"
+	BUTTON  = "button"
+	INPUT   = "input"
+	VALUE   = "value"
+	OUTPUT  = "output"
+	LAYOUT  = "layout"
+	RESIZE  = "resize"
+	REFRESH = "refresh"
+	FILTER  = "filter"
 )
 
 const (
@@ -93,9 +94,9 @@ const (
 func Format(tag string, inner string, arg ...string) string {
 	return kit.Format("<%s %s>%s</%s>", tag, kit.JoinProperty(arg...), inner, tag)
 }
+func FormatA(inner string, arg ...string) string {
+	return kit.Format(`<a href="%s">%s</a>`, kit.Select(inner, arg, 0), inner)
+}
 func FormatDanger(value string) string {
-	return Format(SPAN, value, STYLE, kit.JoinCSS(
-		BACKGROUND_COLOR, "var(--danger-bg-color)",
-		COLOR, "var(--danger-fg-color)",
-	))
+	return Format(SPAN, value, STYLE, kit.JoinCSS(BACKGROUND_COLOR, "var(--danger-bg-color)", COLOR, "var(--danger-fg-color)"))
 }

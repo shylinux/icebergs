@@ -169,16 +169,11 @@ func _serve_domain(m *ice.Message) string {
 }
 func _serve_auth(m *ice.Message, key string, cmds []string, w http.ResponseWriter, r *http.Request) ([]string, bool) {
 	kit.If(len(cmds) > 0, func() { cmds = append(kit.Split(cmds[0], ","), cmds[1:]...) })
-	defer func() {
-		kit.For(m.Optionv(""), func(key string) {
-			kit.If(strings.HasPrefix(key, ice.MSG_SESSID), func() { m.Set(ice.MSG_OPTION, key) })
-		})
-	}()
 	if r.URL.Path == PP(SPACE) {
 		aaa.SessCheck(m, m.Option(ice.MSG_SESSID))
 		return cmds, true
 	}
-	defer func() { m.Options(ice.MSG_CMDS, "", ice.MSG_SESSID, "") }()
+	defer func() { m.Options(ice.MSG_CMDS, "") }()
 	if aaa.SessCheck(m, m.Option(ice.MSG_SESSID)); m.Option(ice.MSG_USERNAME) == "" {
 		if ls := kit.Simple(mdb.Cache(m, m.Option(ice.MSG_USERIP), func() ice.Any {
 			if !IsLocalHost(m) {

@@ -60,7 +60,8 @@ func init() {
 					meta = path.Join("s", u.Host, scene)
 				}
 				msg := spidePost(m, WXACODE_UNLIMIT, web.SPIDE_DATA, kit.Format(kit.Dict(
-					"env_version", m.Option(ENV), "page", info.Append(PAGES), SCENE, meta, IS_HYALINE, m.Option(IS_HYALINE) == ice.TRUE, html.WIDTH, 320,
+					"env_version", m.Option(ENV), "page", info.Append(PAGES), SCENE, meta, IS_HYALINE, m.Option(IS_HYALINE) == ice.TRUE,
+					html.WIDTH, kit.Int(kit.Select("360", "280", m.IsMobileUA())),
 				)))
 				switch kit.Select("", kit.Split(msg.Option(html.ContentType), "; "), 0) {
 				case web.IMAGE_JPEG:

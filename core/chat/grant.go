@@ -36,39 +36,29 @@ func init() {
 				} else if msg := m.Cmd(web.SPACE, m.Option(web.SPACE)); m.Warn(msg.Append(mdb.TYPE) != aaa.LOGIN, ice.ErrNotFound, m.Option(web.SPACE)) {
 					return
 				} else {
-					if m.IsWeixinUA() {
-						m.Options(ice.MSG_USERIP, msg.Append(aaa.IP), ice.MSG_USERUA, msg.Append(aaa.UA))
-						m.Cmd(web.SPACE, m.Option(web.SPACE), ice.MSG_SESSID, aaa.SessCreate(m, m.Option(ice.MSG_USERNAME)))
-						m.Echo(ice.SUCCESS)
+					kit.If(m.Option(ice.MSG_SESSID) == "" || m.Cmd(aaa.SESS, m.Option(ice.MSG_SESSID)).Length() == 0, func() { web.RenderCookie(m, aaa.SessCreate(m, m.Option(ice.MSG_USERNAME))) })
+					m.Option(ice.MSG_USERUA, msg.Append(aaa.UA))
+					if ls := kit.Split(m.Option(web.SPACE), nfs.PT); len(ls) > 1 {
+						m.Option(ice.MSG_SESSID, m.Cmdx(web.SPACE, kit.Keys(kit.Slice(ls, 0, -1)), aaa.SESS, mdb.CREATE, m.Option(ice.MSG_USERNAME)))
 					} else {
-						kit.If(m.Option(ice.MSG_SESSID) == "", func() { web.RenderCookie(m, aaa.SessCreate(m, m.Option(ice.MSG_USERNAME))) })
-						m.Option(ice.MSG_USERUA, msg.Append(ice.MSG_USERUA))
-						if ls := kit.Split(m.Option(web.SPACE), nfs.PT); len(ls) > 1 {
-							space := kit.Keys(kit.Slice(ls, 0, -1))
-							m.Option(ice.MSG_SESSID, m.Cmdx(web.SPACE, space, aaa.SESS, mdb.CREATE, m.Option(ice.MSG_USERNAME)))
-							m.ProcessLocation(web.MergeURL2(m, msg.Append(mdb.TEXT), ice.POD, space))
-						} else {
-							aaa.SessCreate(m, m.Option(ice.MSG_USERNAME))
-							m.ProcessLocation(web.MergeURL2(m, msg.Append(mdb.TEXT)))
-						}
-						m.Cmd(web.SPACE, m.Option(web.SPACE), ice.MSG_SESSID, m.Option(ice.MSG_SESSID))
+						aaa.SessCreate(m, m.Option(ice.MSG_USERNAME))
 					}
+					m.Cmd(web.SPACE, m.Option(web.SPACE), ice.MSG_SESSID, m.Option(ice.MSG_SESSID))
+					m.ProcessLocation(web.MergeLink(m, msg.Append(mdb.TEXT)))
+					kit.If(m.IsWeixinUA(), func() { m.Echo(ice.SUCCESS) })
 					gdb.Event(m, web.SPACE_GRANT, m.OptionSimple(web.SPACE))
 				}
 			}},
 		}, aaa.RoleAction(aaa.CONFIRM), gdb.EventsAction(web.SPACE_LOGIN)), Hand: func(m *ice.Message, arg ...string) {
 			msg := m.Cmd(web.SPACE, m.Option(web.SPACE, arg[0]))
-			m.Option(tcp.HOSTNAME, ice.Info.Hostname)
-			m.Option(nfs.PATH, msg.Append(mdb.TEXT))
+			m.Options(tcp.HOSTNAME, ice.Info.Hostname, nfs.PATH, msg.Append(mdb.TEXT))
 			if !m.Warn(m.Option(nfs.PATH) == "", ice.ErrNotFound, arg[0]) {
-				if m.IsWeixinUA() {
-					m.Push(aaa.IP, msg.Append(aaa.IP))
+				if m.EchoInfoButton(nfs.Template(m, "auth.html"), aaa.CONFIRM); m.IsWeixinUA() {
+					m.OptionFields(mdb.DETAIL)
 					m.Push(web.SPACE, arg[0])
+					m.Push(aaa.IP, msg.Append(aaa.IP))
+					m.Push(aaa.UA, msg.Append(aaa.UA))
 					m.PushAction(aaa.CONFIRM)
-				} else {
-					m.Option(aaa.UA, msg.Append(aaa.UA))
-					m.Option(aaa.IP, msg.Append(aaa.IP))
-					m.Echo(nfs.Template(m, "auth.html"))
 				}
 			}
 		}},

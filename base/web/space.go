@@ -68,8 +68,9 @@ func _space_fork(m *ice.Message) {
 	addr := kit.Select(m.R.RemoteAddr, m.R.Header.Get(ice.MSG_USERADDR))
 	text := strings.ReplaceAll(kit.Select(addr, m.Option(mdb.TEXT)), "%2F", nfs.PS)
 	name := kit.ReplaceAll(kit.Select(addr, m.Option(mdb.NAME)), "[", "_", "]", "_", nfs.DF, "_", nfs.PT, "_")
-	if kit.IsIn(m.Option(mdb.TYPE), PORTAL) && m.Option(mdb.NAME) != html.CHROME || mdb.HashSelect(m.Spawn(), name).Length() > 0 ||
-		!(IsLocalHost(m) || m.Option(TOKEN) != "" && m.Cmdv(TOKEN, m.Option(TOKEN), mdb.TIME) > m.Time()) {
+	if kit.IsIn(m.Option(mdb.TYPE), PORTAL, aaa.LOGIN) && len(m.Option(mdb.NAME)) == 32 && kit.IsIn(mdb.HashSelects(m.Spawn(), name).Append(aaa.IP), "", m.Option(ice.MSG_USERIP)) {
+
+	} else if mdb.HashSelect(m.Spawn(), name).Length() > 0 || !(IsLocalHost(m) || m.Option(TOKEN) != "" && m.Cmdv(TOKEN, m.Option(TOKEN), mdb.TIME) > m.Time()) {
 		name, text = kit.Hashs(name), kit.Select(addr, m.Option(mdb.NAME), m.Option(mdb.TEXT))
 	}
 	if kit.IsIn(m.Option(mdb.TYPE), WORKER, PORTAL) && tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) {

@@ -85,14 +85,13 @@ func init() {
 				}
 				m.Echo(msg.Append(TICKET)).Status(msg.AppendSimple(EXPIRE))
 			}},
-			web.SSO: {Name: "sso name*=微信扫码 wifi env=release,trial,develop", Help: "登录", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(web.CHAT_HEADER, mdb.CREATE, mdb.TYPE, mdb.PLUGIN, m.OptionSimple(mdb.NAME),
+			web.SSO: {Name: "sso name*=微信扫码 order=11 wifi env=release,trial,develop", Help: "登录", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(web.CHAT_HEADER, mdb.CREATE, mdb.TYPE, mdb.PLUGIN, m.OptionSimple(mdb.NAME, mdb.ORDER),
 					ctx.INDEX, m.PrefixKey(), ctx.ARGS, kit.Join(kit.Simple(aaa.LOGIN, m.Option(ACCESS), m.Option(tcp.WIFI), m.Option(ENV))))
 			}},
 			aaa.LOGIN: {Hand: func(m *ice.Message, arg ...string) {
 				if m.Cmd("", m.Option(ACCESS, arg[0])).Append(mdb.TYPE) == ice.WEB {
-					m.Cmdy(SCAN, mdb.CREATE, mdb.TYPE, QR_STR_SCENE, mdb.NAME, m.Option(web.SPACE), mdb.TEXT, m.Option(web.SPACE),
-						ctx.INDEX, web.CHAT_GRANT, ctx.ARGS, m.Option(web.SPACE))
+					m.Cmdy(SCAN, mdb.CREATE, mdb.TYPE, QR_STR_SCENE, mdb.NAME, "请授权登录", mdb.TEXT, m.Option(web.SPACE), ctx.INDEX, web.CHAT_GRANT, ctx.ARGS, m.Option(web.SPACE))
 				} else {
 					h := m.Cmdx(IDE, mdb.CREATE, mdb.NAME, m.Option(web.SPACE), PAGES, PAGES_ACTION, tcp.WIFI, kit.Select("", arg, 1),
 						ctx.INDEX, web.CHAT_GRANT, ctx.ARGS, kit.JoinQuery(m.OptionSimple(web.SPACE, log.DEBUG)...),

@@ -25,8 +25,8 @@ type apply struct {
 
 func (s apply) Sso(m *ice.Message, arg ...string) {
 	m.Cmd(web.CHAT_HEADER, mdb.CREATE, mdb.TYPE, cli.QRCODE, mdb.NAME, "扫码登录", mdb.ORDER, "10")
-	m.Cmd(web.CHAT_HEADER, mdb.CREATE, mdb.TYPE, mdb.PLUGIN, mdb.NAME, "邮箱登录", mdb.ORDER, "11", ctx.INDEX, m.PrefixKey(), ctx.ARGS, kit.FuncName(s.Email))
-	m.Cmd(web.CHAT_HEADER, mdb.CREATE, mdb.TYPE, mdb.PLUGIN, mdb.NAME, "注册用户", mdb.ORDER, "12", ctx.INDEX, m.PrefixKey(), ctx.ARGS, kit.FuncName(s.Input))
+	m.Cmd(web.CHAT_HEADER, mdb.CREATE, mdb.TYPE, mdb.PLUGIN, mdb.NAME, "邮箱登录", mdb.ORDER, "20", ctx.INDEX, m.PrefixKey(), ctx.ARGS, kit.FuncName(s.Email))
+	m.Cmd(web.CHAT_HEADER, mdb.CREATE, mdb.TYPE, mdb.PLUGIN, mdb.NAME, "注册用户", mdb.ORDER, "30", ctx.INDEX, m.PrefixKey(), ctx.ARGS, kit.FuncName(s.Input))
 }
 func (s apply) Input(m *ice.Message, arg ...string) {
 	kit.If(m.Option(mdb.HASH) == kit.FuncName(s.Input), func() { m.Options(mdb.HASH, "") })

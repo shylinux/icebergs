@@ -13,7 +13,7 @@ const CART = "cart"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		CART: {Name: "cart list", Help: "购物车", Actions: ice.MergeActions(ice.Actions{
+		CART: {Name: "cart list", Help: "购物车", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
 			mdb.INSERT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Options(mdb.SUBKEY, kit.Keys(mdb.HASH, mdb.HashCreate(m.Spawn(), aaa.USERNAME, m.Option(ice.MSG_USERNAME), mdb.SHORT, GOODS)))
 				mdb.HashCreate(m.Spawn(), GOODS, m.Option(mdb.HASH), m.OptionSimple(mdb.COUNT))
@@ -31,7 +31,7 @@ func init() {
 				m.Options(mdb.HASH, m.Cmdx(ORDER, mdb.CREATE, aaa.USERNAME, m.Option(ice.MSG_USERNAME), mdb.STATUS, ORDER_CONFIRM, AMOUNT, amount))
 				msg.Table(func(value ice.Maps) { m.Cmd(ORDER, mdb.INSERT, kit.Simple(value)) })
 			}},
-		}, aaa.RoleAction(), mdb.ExportHashAction(mdb.SHORT, aaa.USERNAME, mdb.FIELD, "time,username", mdb.FIELDS, "time,goods,count")), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.ExportHashAction(mdb.SHORT, aaa.USERNAME, mdb.FIELD, "time,username", mdb.FIELDS, "time,goods,count")), Hand: func(m *ice.Message, arg ...string) {
 			m.Options(mdb.SUBKEY, kit.KeyHash(m.Option(ice.MSG_USERNAME))).OptionFields(mdb.Config(m, mdb.FIELDS))
 			mdb.HashSelect(m, arg...).Options(mdb.SUBKEY, "").Table(func(value ice.Maps) {
 				m.Cmd(GOODS, value[GOODS], func(value ice.Maps) {

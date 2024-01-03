@@ -76,7 +76,7 @@ func init() {
 	)
 	if false {
 		web.Index.MergeCommands(ice.Commands{
-			"/MP_verify_0xp0zkW3fIzIq2Bo.txt": {Actions: aaa.WhiteAction(), Hand: func(m *ice.Message, arg ...string) { m.RenderResult("0xp0zkW3fIzIq2Bo") }},
+			"/MP_verify_0xp0zkW3fIzIq2Bo.txt": {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) { m.RenderResult("0xp0zkW3fIzIq2Bo") }},
 		})
 	}
 	Index.MergeCommands(ice.Commands{
@@ -98,7 +98,7 @@ func init() {
 			}},
 			SCENE: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(IDE, m.Option(SCENE)) }},
 			SCAN:  {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(web.CHAT_FAVOR, mdb.CREATE, mdb.TYPE, "", arg) }},
-		}, aaa.WhiteAction(aaa.SESS, aaa.USER, SCENE)), Hand: func(m *ice.Message, arg ...string) {
+		}, aaa.WhiteAction("", aaa.SESS, aaa.USER, SCENE)), Hand: func(m *ice.Message, arg ...string) {
 			if m.Cmdx(ACCESS, aaa.CHECK) == "" {
 				return
 			} else if m.Option("echostr") != "" {

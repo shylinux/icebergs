@@ -57,7 +57,7 @@ const PLAN = "plan"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		PLAN: {Name: "plan scale=month,day,week,month,year,long begin_time@date list insert prev next", Icon: "Calendar.png", Help: "计划表", Meta: kit.Dict(
+		PLAN: {Name: "plan scale=month,day,week,month,year,long begin_time@date list insert prev next", Help: "计划表", Icon: "Calendar.png", Role: aaa.VOID, Meta: kit.Dict(
 			ctx.TRANS, kit.Dict(html.INPUT, kit.Dict(
 				SCALE, "跨度", "view", "视图",
 				DAY, "日", WEEK, "周", MONTH, "月", YEAR, "年", LONG, "代",
@@ -77,7 +77,7 @@ func init() {
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				kit.Switch(m.Option(mdb.TYPE), kit.Simple(web.WORKER, web.SERVER), func() { m.PushButton(kit.Dict(m.CommandKey(), "计划")) })
 			}},
-		}, aaa.RoleAction(), ctx.ConfAction(mdb.TOOLS, "todo,epic"), TASK), Hand: func(m *ice.Message, arg ...string) {
+		}, ctx.ConfAction(mdb.TOOLS, "todo,epic"), TASK), Hand: func(m *ice.Message, arg ...string) {
 			begin_time, end_time := _plan_scope(m, kit.Slice(arg, 0, 2)...)
 			_plan_list(m, begin_time.Format(ice.MOD_TIME), end_time.Format(ice.MOD_TIME))
 			web.PushPodCmd(m, "", arg...)

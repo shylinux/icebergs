@@ -10,7 +10,7 @@ const DOCK = "dock"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		DOCK: {Help: "工具栏", Actions: ice.MergeActions(ice.Actions{}, aaa.RoleAction(), CmdHashAction(), mdb.ExportHashAction())},
+		DOCK: {Help: "工具栏", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{}, CmdHashAction(), mdb.ExportHashAction())},
 	})
 }
 

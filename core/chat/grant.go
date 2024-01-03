@@ -19,7 +19,7 @@ const GRANT = "grant"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		GRANT: {Name: "grant space auto", Help: "授权", Actions: ice.MergeActions(ice.Actions{
+		GRANT: {Name: "grant space auto", Help: "授权", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
 			web.SPACE_LOGIN: {Hand: func(m *ice.Message, arg ...string) {
 				m.GoSleep30ms(func() {
 					p := m.Cmdx(web.SPACE, web.DOMAIN)
@@ -28,7 +28,7 @@ func init() {
 				})
 			}},
 			web.HOME: {Help: "首页", Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen(web.MergeLink(m, web.CHAT_PORTAL)) }},
-			aaa.CONFIRM: {Help: "授权", Hand: func(m *ice.Message, arg ...string) {
+			aaa.CONFIRM: {Help: "授权", Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
 				if m.Warn(m.R.Method == http.MethodGet, ice.ErrNotAllow) {
 					return
 				} else if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin) || m.Warn(m.Option(web.SPACE) == "", ice.ErrNotValid, web.SPACE) {
@@ -49,7 +49,7 @@ func init() {
 					gdb.Event(m, web.SPACE_GRANT, m.OptionSimple(web.SPACE))
 				}
 			}},
-		}, aaa.RoleAction(aaa.CONFIRM), gdb.EventsAction(web.SPACE_LOGIN)), Hand: func(m *ice.Message, arg ...string) {
+		}, gdb.EventsAction(web.SPACE_LOGIN)), Hand: func(m *ice.Message, arg ...string) {
 			msg := m.Cmd(web.SPACE, m.Option(web.SPACE, arg[0]))
 			m.Options(tcp.HOSTNAME, ice.Info.Hostname, nfs.PATH, msg.Append(mdb.TEXT))
 			if !m.Warn(m.Option(nfs.PATH) == "", ice.ErrNotFound, arg[0]) {

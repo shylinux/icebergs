@@ -71,7 +71,22 @@ const ROLE = "role"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		ROLE: {Name: "role role key auto insert filter:text", Help: "角色", Actions: ice.MergeActions(ice.Actions{
+		ROLE: {Name: "role role key auto insert filter:text simple", Help: "角色", Actions: ice.MergeActions(ice.Actions{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(ROLE, mdb.CREATE, VOID, TECH)
+				has := map[string]bool{VOID: true, TECH: true}
+				m.Travel(func(p *ice.Context, c *ice.Context, key string, cmd *ice.Command) {
+					role := map[string][]string{}
+					kit.For(kit.Split(cmd.Role), func(k string) { role[k] = []string{} })
+					for sub, action := range cmd.Actions {
+						kit.For(kit.Split(action.Role), func(k string) { role[k] = append(role[k], sub) })
+					}
+					kit.For(role, func(role string, list []string) {
+						kit.If(!has[role], func() { m.Cmd(ROLE, mdb.CREATE, role); has[role] = true })
+						roleHandle(m, role, list...)
+					})
+				})
+			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case mdb.KEY:
@@ -83,7 +98,7 @@ func init() {
 					mdb.Rich(m, ROLE, nil, kit.Dict(mdb.NAME, role, BLACK, kit.Dict(), WHITE, kit.Dict()))
 				})
 			}},
-			mdb.INSERT: {Name: "insert role*=void,tech zone*=white,black key*", Hand: func(m *ice.Message, arg ...string) {
+			mdb.INSERT: {Name: "insert role*=void zone*=white,black key*", Hand: func(m *ice.Message, arg ...string) {
 				_role_set(m, m.Option(ROLE), m.Option(mdb.ZONE), m.Option(mdb.KEY), true)
 			}},
 			mdb.DELETE: {Hand: func(m *ice.Message, arg ...string) {
@@ -94,30 +109,44 @@ func init() {
 			RIGHT: {Hand: func(m *ice.Message, arg ...string) {
 				kit.If(_role_right(m, arg[0], kit.Split(_role_keys(arg[1:]...), ice.PT)...), func() { m.Echo(ice.OK) })
 			}},
-			"whiteblack": {Hand: func(m *ice.Message, arg ...string) {
-				kit.For(arg, func(cmd string) { m.Cmd(ROLE, WHITE, VOID, cmd); m.Cmd(ROLE, BLACK, VOID, cmd, ice.ACTION) })
+			"simple": {Hand: func(m *ice.Message, arg ...string) {
+				list := map[string][]string{}
+				m.Cmd("", func(value ice.Maps) {
+					if value[mdb.ZONE] == WHITE {
+						if strings.Contains(value[mdb.KEY], ".action.") {
+							ls := strings.Split(value[mdb.KEY], ".action.")
+							list[ls[0]] = append(list[ls[0]], ls[1])
+						} else {
+							list[value[mdb.KEY]] = []string{}
+						}
+					}
+				})
+				kit.For(list, func(cmd string, action []string) {
+					m.Push(ice.CMD, cmd).Push("actions", kit.Join(action))
+				})
 			}},
 		}, mdb.HashAction(mdb.SHORT, mdb.NAME)), Hand: func(m *ice.Message, arg ...string) {
 			_role_list(m, kit.Select("", arg, 0), kit.Slice(arg, 1)...).PushAction(mdb.DELETE)
 		}},
 	})
 }
-func RoleAction(key ...string) ice.Actions {
-	return ice.Actions{ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-		cmd := m.PrefixKey()
-		if c, ok := ice.Info.Index[m.CommandKey()].(*ice.Context); ok && c == m.Target() {
-			cmd = m.CommandKey()
-		}
-		m.Cmd(ROLE, WHITE, VOID, cmd)
-		m.Cmd(ROLE, BLACK, VOID, cmd, ice.ACTION)
-		kit.For(key, func(key string) { m.Cmd(ROLE, WHITE, VOID, cmd, ice.ACTION, key) })
-	}}}
+func roleHandle(m *ice.Message, role string, key ...string) {
+	role = kit.Select(VOID, role)
+	cmd := m.PrefixKey()
+	if c, ok := ice.Info.Index[m.CommandKey()].(*ice.Context); ok && c == m.Target() {
+		cmd = m.CommandKey()
+	}
+	m.Cmd(ROLE, WHITE, role, cmd)
+	m.Cmd(ROLE, BLACK, role, cmd, ice.ACTION)
+	kit.For(key, func(key string) { m.Cmd(ROLE, WHITE, role, cmd, ice.ACTION, key) })
 }
-func WhiteAction(key ...string) ice.Actions {
+func WhiteAction(role string, key ...string) ice.Actions {
+	role = kit.Select(VOID, role)
 	return ice.Actions{ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-		m.Cmd(ROLE, WHITE, VOID, m.CommandKey())
-		m.Cmd(ROLE, BLACK, VOID, m.CommandKey(), ice.ACTION)
-		kit.For(key, func(key string) { m.Cmd(ROLE, WHITE, VOID, m.CommandKey(), ice.ACTION, key) })
+		cmd := m.CommandKey()
+		m.Cmd(ROLE, WHITE, role, cmd)
+		m.Cmd(ROLE, BLACK, role, cmd, ice.ACTION)
+		kit.For(key, func(key string) { m.Cmd(ROLE, WHITE, role, cmd, ice.ACTION, key) })
 	}}}
 }
 func White(m *ice.Message, key ...string) {

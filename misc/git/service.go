@@ -107,7 +107,7 @@ const (
 const SERVICE = "service"
 
 func init() {
-	web.Index.MergeCommands(ice.Commands{"/x/": {Actions: aaa.WhiteAction(), Hand: func(m *ice.Message, arg ...string) {
+	web.Index.MergeCommands(ice.Commands{"/x/": {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
 		if !m.IsCliUA() {
 			web.RenderCmd(m, web.CODE_GIT_SERVICE, arg)
 			return

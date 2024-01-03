@@ -71,7 +71,7 @@ const SHARE = "share"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		SHARE: {Name: "share hash auto login", Help: "共享链", Actions: ice.MergeActions(ice.Actions{
+		SHARE: {Name: "share hash auto login", Help: "共享链", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
 			mdb.CREATE: {Name: "create type name text", Hand: func(m *ice.Message, arg ...string) {
 				// kit.If(m.Option(mdb.TYPE) == LOGIN, func() { arg = append(arg, mdb.TEXT, tcp.PublishLocalhost(m, m.Option(mdb.TEXT))) })
 				kit.If(m.Option(mdb.TYPE) == LOGIN && m.Option(mdb.TEXT) == "", func() { arg = append(arg, mdb.TEXT, tcp.PublishLocalhost(m, m.Option(ice.MSG_USERWEB))) })
@@ -113,7 +113,7 @@ func init() {
 					RenderMain(m)
 				}
 			}},
-		}, aaa.WhiteAction(), mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,usernick,username,userrole", mdb.EXPIRE, mdb.DAYS)), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,usernick,username,userrole", mdb.EXPIRE, mdb.DAYS)), Hand: func(m *ice.Message, arg ...string) {
 			if kit.IsIn(m.Option(ice.MSG_USERROLE), aaa.ROOT, aaa.TECH) || len(arg) > 0 && arg[0] != "" {
 				mdb.HashSelect(m, arg...)
 			}

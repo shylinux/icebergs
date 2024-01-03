@@ -29,7 +29,7 @@ func init() {
 		DF      = ": "
 	)
 	Index.MergeCommands(ice.Commands{
-		EMAIL: {Help: "邮件", Actions: ice.MergeActions(ice.Actions{
+		EMAIL: {Help: "邮件", Role: VOID, Actions: ice.MergeActions(ice.Actions{
 			mdb.CREATE: {Name: "create name*=admin service*='mail.shylinux.com:25' username*='shy@shylinux.com' password*"},
 			MAILBOX: {Help: "邮箱", Hand: func(m *ice.Message, arg ...string) {
 				if p := mdb.Config(m, MAILBOX); !m.Warn(p == "", ice.ErrNotValid, MAILBOX) {
@@ -47,9 +47,9 @@ func init() {
 				auth := smtp.PlainAuth("", msg.Append(USERNAME), msg.Append(PASSWORD), kit.Split(msg.Append(SERVICE), ice.DF)[0])
 				m.Logs(EMAIL, SEND, string(content)).Warn(smtp.SendMail(msg.Append(SERVICE), auth, msg.Append(USERNAME), kit.Split(m.Option(TO)), content))
 			}},
-			LOGIN: {Hand: func(m *ice.Message, arg ...string) {
+			LOGIN: {Role: VOID, Hand: func(m *ice.Message, arg ...string) {
 				m.Echo("input email: ")
 			}},
-		}, RoleAction(LOGIN), mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,service,username", ice.ACTION, SEND))},
+		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,service,username", ice.ACTION, SEND))},
 	})
 }

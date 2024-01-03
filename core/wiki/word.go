@@ -25,7 +25,7 @@ const WORD = "word"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		WORD: {Name: "word path=src/main.shy@key auto play favor", Help: "上下文", Icon: "Books.png", Actions: ice.MergeActions(ice.Actions{
+		WORD: {Name: "word path=src/main.shy@key auto play favor", Help: "上下文", Icon: "Books.png", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				WordAlias(m, NAVMENU, TITLE, NAVMENU)
 				WordAlias(m, PREMENU, TITLE, PREMENU)
@@ -73,7 +73,7 @@ func init() {
 				m.Cmd(web.CHAT_FAVOR, mdb.CREATE, mdb.TYPE, nfs.SHY, mdb.NAME, path.Base(arg[0]), mdb.TEXT, arg[0])
 				m.ProcessHold("favor success")
 			}},
-		}, aaa.RoleAction(), WikiAction("", nfs.SHY), mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path")), Hand: func(m *ice.Message, arg ...string) {
+		}, WikiAction("", nfs.SHY), mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 {
 				mdb.HashCreate(m.Spawn(), nfs.PATH, arg[0])
 			}

@@ -50,7 +50,7 @@ const ACCESS = "access"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		ACCESS: {Help: "认证", Meta: Meta(), Actions: ice.MergeActions(ice.Actions{
+		ACCESS: {Help: "认证", Role: aaa.VOID, Meta: Meta(), Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(web.SPIDE, mdb.CREATE, WX, mdb.Config(m, tcp.SERVER))
 			}},
@@ -89,7 +89,7 @@ func init() {
 				m.Cmd(web.CHAT_HEADER, mdb.CREATE, mdb.TYPE, mdb.PLUGIN, m.OptionSimple(mdb.NAME, mdb.ORDER),
 					ctx.INDEX, m.PrefixKey(), ctx.ARGS, kit.Join(kit.Simple(aaa.LOGIN, m.Option(ACCESS), m.Option(tcp.WIFI), m.Option(ENV))))
 			}},
-			aaa.LOGIN: {Hand: func(m *ice.Message, arg ...string) {
+			aaa.LOGIN: {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
 				if m.Cmd("", m.Option(ACCESS, arg[0])).Append(mdb.TYPE) == ice.WEB {
 					m.Cmdy(SCAN, mdb.CREATE, mdb.TYPE, QR_STR_SCENE, mdb.NAME, "请授权登录", mdb.TEXT, m.Option(web.SPACE), ctx.INDEX, web.CHAT_GRANT, ctx.ARGS, m.Option(web.SPACE))
 				} else {
@@ -109,7 +109,7 @@ func init() {
 				m.Cmd(mdb.PRUNES, m.Prefix(SCAN), "", mdb.HASH, m.OptionSimple(mdb.NAME))
 				m.Cmd(mdb.PRUNES, m.Prefix(IDE), "", mdb.HASH, m.OptionSimple(mdb.NAME))
 			}},
-		}, aaa.RoleAction(aaa.LOGIN), gdb.EventsAction(web.SPACE_GRANT, web.SPACE_LOGIN_CLOSE), mdb.ImportantHashAction(mdb.SHORT, ACCESS, mdb.FIELD, "time,type,access,icons,usernick,appid", tcp.SERVER, CGI_BIN)), Hand: func(m *ice.Message, arg ...string) {
+		}, gdb.EventsAction(web.SPACE_GRANT, web.SPACE_LOGIN_CLOSE), mdb.ImportantHashAction(mdb.SHORT, ACCESS, mdb.FIELD, "time,type,access,icons,usernick,appid", tcp.SERVER, CGI_BIN)), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, arg...).PushAction(web.SSO, mdb.REMOVE).StatusTimeCount(mdb.ConfigSimple(m, ACCESS, APPID), web.SERVE, web.MergeLink(m, "/chat/wx/login/"))
 			m.RewriteAppend(func(value, key string, index int) string {
 				kit.If(key == cli.QRCODE, func() { value = ice.Render(m, ice.RENDER_QRCODE, value) })

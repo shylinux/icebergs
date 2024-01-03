@@ -87,7 +87,7 @@ func init() {
 
 func ApiAction(arg ...string) ice.Actions { return ice.Actions{kit.Select(nfs.PS, arg, 0): {}} }
 func ApiWhiteAction() ice.Actions {
-	return ice.MergeActions(ApiAction(), aaa.WhiteAction())
+	return ice.MergeActions(ApiAction(), aaa.WhiteAction(""))
 }
 func Prefix(arg ...string) string {
 	for i, k := range arg {

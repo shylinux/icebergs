@@ -27,7 +27,7 @@ const ORDER = "order"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		ORDER: {Help: "订单", Actions: ice.MergeActions(ice.Actions{
+		ORDER: {Help: "订单", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
 			mdb.INSERT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Options(mdb.SUBKEY, kit.Keys(mdb.HASH, m.Option(mdb.HASH)))
 				mdb.HashCreate(m, arg)
@@ -38,7 +38,7 @@ func init() {
 			RECEIVE:  {Help: "收货", Hand: func(m *ice.Message, arg ...string) { mdb.HashModify(m, mdb.STATUS, ORDER_RECEIVED) }},
 			RETURN:   {Help: "退货", Hand: func(m *ice.Message, arg ...string) { mdb.HashModify(m, mdb.STATUS, ORDER_RETURNED) }},
 			REFUND:   {Help: "退钱", Hand: func(m *ice.Message, arg ...string) { mdb.HashModify(m, mdb.STATUS, ORDER_REFUNDED) }},
-		}, aaa.RoleAction(), mdb.ExportHashAction(mdb.FIELD, "time,hash,username,status,amount", mdb.FIELDS, "time,goods,price,count,units,name,text,image")), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.ExportHashAction(mdb.FIELD, "time,hash,username,status,amount", mdb.FIELDS, "time,goods,price,count,units,name,text,image")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				stats := map[string]int{}
 				mdb.HashSelect(m, arg...).Table(func(value ice.Maps) {

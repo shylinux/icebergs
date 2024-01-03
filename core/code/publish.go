@@ -75,12 +75,12 @@ const PUBLISH = "publish"
 
 func init() {
 	web.Index.MergeCommands(ice.Commands{
-		web.PP(ice.PUBLISH): {Actions: aaa.WhiteAction(), Hand: func(m *ice.Message, arg ...string) {
+		web.PP(ice.PUBLISH): {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
 			web.ShareLocalFile(m, ice.USR_PUBLISH, path.Join(arg...))
 		}},
 	})
 	Index.MergeCommands(ice.Commands{
-		PUBLISH: {Name: "publish path auto create volcanos icebergs intshell", Help: "发布", Actions: ice.MergeActions(ice.Actions{
+		PUBLISH: {Name: "publish path auto create volcanos icebergs intshell", Help: "发布", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
 			ice.VOLCANOS: {Help: "火山架", Hand: func(m *ice.Message, arg ...string) { _publish_list(m, kit.ExtReg(HTML, CSS, JS)) }},
 			ice.ICEBERGS: {Help: "冰山架", Hand: func(m *ice.Message, arg ...string) { _publish_bin_list(m).Cmdy("", ice.CONTEXTS) }},
 			ice.INTSHELL: {Help: "神农架", Hand: func(m *ice.Message, arg ...string) { _publish_list(m, kit.ExtReg(SH, VIM, CONF)) }},
@@ -113,7 +113,7 @@ func init() {
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(nfs.DIR, arg[1:], nfs.DIR_CLI_FIELDS) }},
 			mdb.CREATE: {Hand: func(m *ice.Message, arg ...string) { _publish_file(m, m.Option(nfs.PATH)) }},
 			nfs.TRASH:  {Hand: func(m *ice.Message, arg ...string) { nfs.Trash(m, path.Join(ice.USR_PUBLISH, m.Option(nfs.PATH))) }},
-		}, aaa.RoleAction(), ctx.ConfAction(mdb.FIELD, nfs.PATH)), Hand: func(m *ice.Message, arg ...string) {
+		}, ctx.ConfAction(mdb.FIELD, nfs.PATH)), Hand: func(m *ice.Message, arg ...string) {
 			if m.Option(nfs.DIR_ROOT, ice.USR_PUBLISH); len(arg) == 0 {
 				_publish_list(m).Cmdy("", ice.CONTEXTS, ice.APP)
 			} else {

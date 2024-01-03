@@ -11,7 +11,7 @@ import (
 
 func init() {
 	web.Index.MergeCommands(ice.Commands{
-		web.PP(PAGES): {Actions: aaa.WhiteAction(ctx.ACTION), Hand: func(m *ice.Message, arg ...string) {
+		web.PP(PAGES): {Actions: aaa.WhiteAction("", ctx.ACTION), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg[0]) == 0 || arg[0] == "" || arg[0] == chat.RIVER {
 				web.RenderMain(m)
 			} else {

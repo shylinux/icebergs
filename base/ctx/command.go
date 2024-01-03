@@ -75,7 +75,7 @@ const COMMAND = "command"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		COMMAND: {Name: "command key auto", Help: "命令", Actions: ice.MergeActions(ice.Actions{
+		COMMAND: {Name: "command key auto", Help: "命令", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				TravelCmd(m, func(key, file, line string) { AddFileCmd(file, key) })
 				m.Travel(func(p *ice.Context, c *ice.Context, key string, cmd *ice.Command) {
@@ -111,7 +111,7 @@ func init() {
 					m.Echo(`%s	%s	%s;" f`+lex.NL, value[mdb.NAME], value[nfs.FILE], value[nfs.LINE])
 				}).Cmd(nfs.SAVE, nfs.TAGS, m.Result())
 			}},
-		}, aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
+		}), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				m.Cmdy("", mdb.SEARCH, COMMAND, ice.OptionFields(INDEX)).Action(mdb.EXPORT)
 				DisplayStory(m.Options(nfs.DIR_ROOT, "ice."), "spide.js?split=.")

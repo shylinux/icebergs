@@ -425,7 +425,7 @@ func init() {
 		}},
 	})
 	Index.MergeCommands(ice.Commands{
-		REPOS: {Name: "repos repos branch:text commit:text file:text auto", Help: "代码库", Actions: ice.MergeActions(ice.Actions{
+		REPOS: {Name: "repos repos branch:text commit:text file:text auto", Help: "代码库", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				_repos_insert(m, kit.Path(""))
 				m.Cmd(nfs.DIR, nfs.USR, func(value ice.Maps) { _repos_insert(m, value[nfs.PATH]) })
@@ -454,7 +454,7 @@ func init() {
 					_git_cmd(m, CONFIG, GLOBAL, "url."+m.Option(REMOTE)+_INSTEADOF, strings.TrimSuffix(ice.Info.Make.Remote, path.Base(ice.Info.Make.Remote)))
 				}
 			}},
-			REMOTE: {Hand: func(m *ice.Message, arg ...string) {
+			REMOTE: {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
 				repos := _repos_open(m, kit.Select(path.Base(kit.Path("")), kit.Select(m.Option(REPOS), arg, 0)))
 				if _remote, err := repos.Remote(ORIGIN); err == nil {
 					m.Push(REMOTE, kit.Select("", _remote.Config().URLs, 0))
@@ -635,7 +635,14 @@ func init() {
 				m.Cmd("", CLONE, ORIGIN, "node_modules", mdb.NAME, "", nfs.PATH, "")
 				m.Cmd("", CLONE, ORIGIN, "icons", mdb.NAME, "", nfs.PATH, "")
 			}},
-		}, aaa.RoleAction(REMOTE), web.StatsAction("", "代码库总数"), web.DreamAction(), mdb.HashAction(mdb.SHORT, REPOS, mdb.FIELD, "time,repos,branch,version,message,origin"), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
+			web.STATS_TABLES: {Hand: func(m *ice.Message, _ ...string) {
+				if ice.Info.NodeType == web.SERVER {
+					if msg := mdb.HashSelects(m.Spawn()); msg.Length() > 0 {
+						web.PushStats(m, kit.Keys(m.CommandKey(), mdb.TOTAL), msg.Length(), "", "代码库总数")
+					}
+				}
+			}},
+		}, web.StatsAction("", "代码库总数"), web.DreamAction(), mdb.HashAction(mdb.SHORT, REPOS, mdb.FIELD, "time,repos,branch,version,message,origin"), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				mdb.HashSelect(m, arg...).Sort(REPOS).PushAction(STATUS, mdb.REMOVE).Action(CLONE, PULL, PUSH, STATUS)
 			} else if repos := _repos_open(m, arg[0]); len(arg) == 1 {

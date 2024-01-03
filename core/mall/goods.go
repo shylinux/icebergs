@@ -19,7 +19,7 @@ const GOODS = "goods"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		GOODS: {Help: "商品", Icon: "mall.png", Actions: ice.MergeActions(ice.Actions{
+		GOODS: {Help: "商品", Icon: "mall.png", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
 			mdb.CREATE: {Name: "create zone* name* text price* count*=1 units*=件 image*=4@img"},
 			// mdb.MODIFY: {Name: "modify zone* name* text price* count*=1 units*=件 image*=4@img"},
 			ORDER: {Name: "order count*=1", Help: "选购", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(CART, mdb.INSERT, arg) }},
@@ -36,7 +36,7 @@ func init() {
 					web.PushStats(m, kit.Keys(m.CommandKey(), mdb.COUNT), msg.Length(), "", "商品数量")
 				}
 			}},
-		}, aaa.RoleAction(), web.StatsAction(), web.ExportCacheAction(nfs.IMAGE), mdb.ExportHashAction(ctx.TOOLS, kit.Fields(Prefix(CART), Prefix(ORDER)), mdb.FIELD, "time,hash,zone,name,text,price,count,units,image")), Hand: func(m *ice.Message, arg ...string) {
+		}, web.StatsAction(), web.ExportCacheAction(nfs.IMAGE), mdb.ExportHashAction(ctx.TOOLS, kit.Fields(Prefix(CART), Prefix(ORDER)), mdb.FIELD, "time,hash,zone,name,text,price,count,units,image")), Hand: func(m *ice.Message, arg ...string) {
 			kit.If(len(arg) == 0 && m.IsMobileUA(), func() { m.OptionDefault(ice.MSG_FIELDS, "zone,name,price,count,units,text,hash,time,image") })
 			mdb.HashSelect(m, arg...).PushAction(ORDER).Action("filter:text")
 			web.PushPodCmd(m, "", arg...).Sort("zone,name")

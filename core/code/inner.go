@@ -87,7 +87,7 @@ const INNER = "inner"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		INNER: {Name: "inner path=src/ file=main.go line=1 auto", Help: "源代码", Actions: ice.MergeActions(ice.Actions{
+		INNER: {Name: "inner path=src/ file=main.go line=1 auto", Help: "源代码", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(FAVOR, mdb.INPUTS, arg) }},
 			mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) {
 				if m.Cmdy(mdb.PLUGIN, arg); m.Result() == "" {
@@ -101,7 +101,7 @@ func init() {
 			NAVIGATE: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(NAVIGATE, kit.Ext(m.Option(mdb.FILE)), m.Option(nfs.FILE), m.Option(nfs.PATH))
 			}},
-		}, aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
+		}), Hand: func(m *ice.Message, arg ...string) {
 			if kit.HasPrefix(arg[0], "/volcanos/", "/require/", ice.HTTP) {
 				if kit.HasPrefix(arg[0], nfs.REQUIRE_SRC) {
 					m.Option(nfs.FILE, strings.Split(strings.TrimPrefix(arg[0], nfs.REQUIRE_SRC), "?")[0])

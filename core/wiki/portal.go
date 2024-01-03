@@ -70,7 +70,7 @@ const PORTAL = "portal"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		PORTAL: {Name: "portal path auto", Help: "网站门户", Actions: ice.MergeActions(ice.Actions{
+		PORTAL: {Name: "portal path auto", Help: "网站门户", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
 			nfs.PS: {Hand: func(m *ice.Message, arg ...string) { web.RenderCmd(m, "", arg) }},
 			ctx.RUN: {Hand: func(m *ice.Message, arg ...string) {
 				if p := path.Join(ice.USR_PORTAL, path.Join(arg...)); (m.Option(ice.DEBUG) == ice.TRUE || !nfs.ExistsFile(m, p)) && aaa.Right(m.Spawn(), arg) {
@@ -82,7 +82,7 @@ func init() {
 			}},
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) { m.PushButton(kit.Dict(PORTAL, "官网")) }},
 			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { web.DreamProcess(m, nil, arg...) }},
-		}, aaa.WhiteAction(), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, aaa.WhiteAction("")), Hand: func(m *ice.Message, arg ...string) {
 			if m.Push(HEADER, m.Cmdx(WORD, path.Join(nfs.SRC_DOCUMENT, INDEX_SHY))); len(arg) > 0 {
 				kit.If(path.Join(arg...) == "commands", func() { _portal_commands(m, arg...) })
 				m.Push(NAV, m.Cmdx(WORD, path.Join(nfs.SRC_DOCUMENT, path.Join(arg...), INDEX_SHY)))

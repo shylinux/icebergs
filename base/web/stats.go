@@ -28,6 +28,7 @@ func init() {
 					PushStats(m, "", m.Cmd(aaa.USER).Length()-2, "", "用户总数", aaa.USER)
 				}
 				PushStats(m, "", "", "", "会话总数", aaa.SESS)
+				PushStats(m, "", m.Cmd(mdb.SELECT, aaa.ROLE, "", mdb.HASH).Length(), "", "角色总数", aaa.ROLE)
 				PushStats(m, "", "", "", "令牌总数", TOKEN)
 				PushStats(m, "", "", "", "共享总数", SHARE)
 				PushStats(m, "", "", "", "命令总数", ctx.COMMAND)

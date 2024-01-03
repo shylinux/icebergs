@@ -49,7 +49,7 @@ const QRCODE = "qrcode"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		QRCODE: {Name: "qrcode text fg@key bg@key size auto", Help: "二维码", Meta: kit.Dict(
+		QRCODE: {Name: "qrcode text fg@key bg@key size auto", Help: "二维码", Role: aaa.VOID, Meta: kit.Dict(
 			ice.CTX_TRANS, kit.Dict(html.INPUT, kit.Dict(
 				mdb.TEXT, "文本", BG, "背景色", FG, "字体色",
 			)),
@@ -65,7 +65,7 @@ func init() {
 					m.Push(arg[0], BLACK, WHITE)
 				}
 			}},
-		}, aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
+		}), Hand: func(m *ice.Message, arg ...string) {
 			if m.IsCliUA() {
 				m.OptionDefault(FG, BLACK, BG, WHITE)
 				_qrcode_cli(m, kit.Select(kit.Select(ice.Info.Make.Domain, ice.Info.Domain), arg, 0))

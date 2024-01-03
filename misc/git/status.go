@@ -29,7 +29,7 @@ const STATUS = "status"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		STATUS: {Name: "status repos:text auto", Help: "代码库", Icon: "git.png", Meta: kit.Dict(
+		STATUS: {Name: "status repos:text auto", Help: "代码库", Icon: "git.png", Role: aaa.VOID, Meta: kit.Dict(
 			ice.CTX_TRANS, kit.Dict(html.INPUT, kit.Dict("actions", "操作", "message", "信息")),
 		), Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
@@ -70,7 +70,7 @@ func init() {
 				m.PushButton(kit.Dict(m.CommandKey(), "源码"))
 			}},
 			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { web.DreamProcess(m, nil, arg...) }},
-		}, aaa.RoleAction(), Prefix(REPOS)), Hand: func(m *ice.Message, arg ...string) {
+		}, Prefix(REPOS)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 && arg[0] == ctx.ACTION {
 				m.Cmdy(REPOS, arg)
 			} else if config, err := config.LoadConfig(config.GlobalScope); err == nil && config.User.Email == "" && mdb.Config(m, aaa.EMAIL) == "" {

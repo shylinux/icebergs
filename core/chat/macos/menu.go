@@ -10,7 +10,7 @@ const MENU = "menu"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		MENU: {Help: "菜单栏", Actions: ice.MergeActions(aaa.RoleAction(), CmdHashAction(), mdb.ClearOnExitHashAction())},
+		MENU: {Help: "菜单栏", Role: aaa.VOID, Actions: ice.MergeActions(CmdHashAction(), mdb.ClearOnExitHashAction())},
 	})
 }
 

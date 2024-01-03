@@ -143,7 +143,7 @@ const DREAM = "dream"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		DREAM: {Name: "dream name@key auto create repos startall stopall build publish", Help: "梦想家", Icon: "Launchpad.png", Actions: ice.MergeActions(ice.Actions{
+		DREAM: {Name: "dream name@key auto create repos startall stopall build publish", Help: "梦想家", Icon: "Launchpad.png", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m = m.Spawn()
 				m.GoSleep("10s", func() {
@@ -310,7 +310,7 @@ func init() {
 					PushStats(m, kit.Keys(m.CommandKey(), mdb.TOTAL), msg.Length(), "", "已启动空间")
 				}
 			}},
-		}, aaa.RoleAction(), StatsAction(), DreamAction(), mdb.ImportantHashAction(ctx.TOOLS, ROUTE, mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icon,repos,binary,template,restart")), Hand: func(m *ice.Message, arg ...string) {
+		}, StatsAction(), DreamAction(), mdb.ImportantHashAction(ctx.TOOLS, ROUTE, mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icon,repos,binary,template,restart")), Hand: func(m *ice.Message, arg ...string) {
 			if ice.Info.NodeType == WORKER {
 				return
 			} else if len(arg) == 0 {

@@ -36,13 +36,13 @@ const AGENT = "agent"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		AGENT: {Name: "agent auto", Help: "代理", Actions: ice.MergeActions(ice.Actions{
+		AGENT: {Name: "agent auto", Help: "代理", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
 			chat.HEADER_AGENT: {Hand: func(m *ice.Message, arg ...string) {
 				kit.If(strings.Index(m.Option(ice.MSG_USERUA), "MicroMessenger") > -1, func() { m.Option(mdb.PLUGIN, m.PrefixKey()) })
 			}},
 			"getLocation": {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(location.LOCATION, mdb.CREATE, arg) }},
 			"scanQRCode1": {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(chat.FAVOR, mdb.CREATE, arg) }},
-		}, aaa.RoleAction(), gdb.EventsAction(chat.HEADER_AGENT), ctx.ConfAction(nfs.SCRIPT, "https://res.wx.qq.com/open/js/jweixin-1.6.0.js")), Hand: func(m *ice.Message, arg ...string) {
+		}, gdb.EventsAction(chat.HEADER_AGENT), ctx.ConfAction(nfs.SCRIPT, "https://res.wx.qq.com/open/js/jweixin-1.6.0.js")), Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(ACCESS, AGENT).Options(SIGNATURE, _wx_sign(m, m.Option(NONCESTR, ice.Info.Pathname), m.Option(TIMESTAMP, kit.Format(time.Now().Unix())))).Display("")
 			ctx.OptionFromConfig(m, nfs.SCRIPT)
 		}},

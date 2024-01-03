@@ -37,7 +37,7 @@ func init() {
 				}
 			}},
 			SEND: {Name: "send to*='shy@shylinux.com' cc subject*=hi content*:textarea=hello", Help: "发送", Hand: func(m *ice.Message, arg ...string) {
-				msg := mdb.HashSelect(m.Spawn(), m.OptionDefault(mdb.NAME, ADMIN))
+				msg := mdb.HashSelects(m.Spawn(), ADMIN)
 				if m.Warn(msg.Append(SERVICE) == "", ice.ErrNotValid, SERVICE) {
 					return
 				}

@@ -26,16 +26,20 @@ func init() {
 				if m.Warn(m.Option(mdb.HASH) == "", ice.ErrNotValid, mdb.HASH) {
 					return
 				}
-				msg := m.Cmd("", m.Option(mdb.HASH))
+				msg := mdb.HashSelect(m.Spawn(), m.Option(mdb.HASH))
 				if ls := kit.Split(msg.Append(EMAIL), mdb.AT); !m.Warn(msg.Length() == 0 || len(ls) < 2, ice.ErrNotValid, m.Option(mdb.HASH)) {
 					m.Cmd(USER, mdb.CREATE, USERNICK, ls[0], USERNAME, msg.Append(EMAIL), USERZONE, ls[1])
-					m.ProcessOpen(kit.MergeURL2(m.Option(ice.MSG_USERWEB), ice.PS, ice.MSG_SESSID, SessValid(m.Options(ice.MSG_USERNAME, msg.Append(EMAIL))), mdb.HASH, ""))
+					m.ProcessLocation(kit.MergeURL2(m.Option(ice.MSG_USERWEB), ice.PS, ice.MSG_SESSID, SessValid(m.Options(ice.MSG_USERNAME, msg.Append(EMAIL))), mdb.HASH, ""))
 					mdb.HashModify(m, m.OptionSimple(mdb.HASH), mdb.STATUS, ACCEPT)
 				}
 			}},
 		}, mdb.ImportantHashAction(mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,status,invite,email,title,content")), Hand: func(m *ice.Message, arg ...string) {
 			if !m.Warn(len(arg) == 0 && m.Option(ice.MSG_USERROLE) == VOID, ice.ErrNotRight) {
-				kit.If(mdb.HashSelect(m, arg...).FieldsIsDetail(), func() { m.PushAction(ACCEPT) })
+				kit.If(mdb.HashSelect(m, arg...).FieldsIsDetail(), func() {
+					m.SetAppend()
+					m.EchoInfoButton("welcome to contexts, please continue", ACCEPT)
+					// m.PushAction(ACCEPT)
+				})
 			}
 		}},
 	})

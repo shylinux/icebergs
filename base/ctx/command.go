@@ -21,20 +21,15 @@ func _command_list(m *ice.Message, name string) *ice.Message {
 		m.Push(mdb.INDEX, kit.Keys(s.Prefix(), key))
 		m.Push(mdb.NAME, kit.Format(cmd.Name))
 		m.Push(mdb.HELP, kit.Format(cmd.Help))
-		m.Push(mdb.META, kit.Format(cmd.Meta))
 		m.Push(mdb.LIST, kit.Format(cmd.List))
+		m.Push(mdb.META, kit.Format(cmd.Meta))
 		m.Push("_help", GetCmdHelp(m, name))
 		if !nfs.Exists(m, kit.Split(cmd.FileLine(), ":")[0], func(p string) {
 			m.Push("_fileline", kit.MergeURL(FileURI(p), ice.POD, m.Option(ice.MSG_USERPOD)))
 		}) {
 			m.Push("_fileline", "")
 		}
-		msg := m.Cmd(aaa.ROLE, kit.Select(aaa.VOID, m.Option(ice.MSG_USERROLE)), name)
-		if msg.Append(mdb.ZONE) == aaa.WHITE && msg.Append(mdb.STATUS) == ice.TRUE {
-			m.Push("_role", "ok")
-		} else {
-			m.Push("_role", "")
-		}
+		m.Push("_role", kit.Select("", ice.OK, aaa.Right(m.Spawn(), name)))
 	})
 	return m
 }

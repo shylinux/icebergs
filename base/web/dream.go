@@ -235,14 +235,14 @@ func init() {
 			}},
 			PUBLISH: {Name: "publish name", Help: "发布", Icon: "bi bi-send-check", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(CODE_AUTOGEN, "binpack")
-				PushNoticeRich(m, mdb.NAME, ice.Info.NodeName, m.Cmd(CODE_COMPILE, cli.LINUX).AppendSimple())
-				PushNoticeRich(m, mdb.NAME, ice.Info.NodeName, m.Cmd(CODE_COMPILE, cli.DARWIN).AppendSimple())
-				PushNoticeRich(m, mdb.NAME, ice.Info.NodeName, m.Cmd(CODE_COMPILE, cli.WINDOWS).AppendSimple())
+				PushNoticeRich(m, mdb.NAME, ice.Info.NodeName, m.Cmd(CODE_COMPILE, cli.LINUX, cli.AMD64).AppendSimple())
+				PushNoticeRich(m, mdb.NAME, ice.Info.NodeName, m.Cmd(CODE_COMPILE, cli.DARWIN, cli.AMD64).AppendSimple())
+				PushNoticeRich(m, mdb.NAME, ice.Info.NodeName, m.Cmd(CODE_COMPILE, cli.WINDOWS, cli.AMD64).AppendSimple())
 				DreamEach(m, m.Option(mdb.NAME), "", func(name string) {
 					m.Cmd(SPACE, name, CODE_AUTOGEN, "binpack")
-					PushNoticeRich(m, mdb.NAME, name, m.Cmd(SPACE, name, CODE_COMPILE, cli.LINUX).AppendSimple())
-					PushNoticeRich(m, mdb.NAME, name, m.Cmd(SPACE, name, CODE_COMPILE, cli.DARWIN).AppendSimple())
-					PushNoticeRich(m, mdb.NAME, name, m.Cmd(SPACE, name, CODE_COMPILE, cli.WINDOWS).AppendSimple())
+					PushNoticeRich(m, mdb.NAME, name, m.Cmd(SPACE, name, CODE_COMPILE, cli.LINUX, cli.AMD64).AppendSimple())
+					PushNoticeRich(m, mdb.NAME, name, m.Cmd(SPACE, name, CODE_COMPILE, cli.DARWIN, cli.AMD64).AppendSimple())
+					PushNoticeRich(m, mdb.NAME, name, m.Cmd(SPACE, name, CODE_COMPILE, cli.WINDOWS, cli.AMD64).AppendSimple())
 				})
 				m.ProcessHold()
 			}},

@@ -39,11 +39,14 @@ func _runtime_init(m *ice.Message) {
 	if name, e := os.Hostname(); e == nil && name != "" {
 		m.Conf(RUNTIME, kit.Keys(BOOT, HOSTNAME), name)
 	}
-	m.Conf(RUNTIME, kit.Keys(BOOT, PATHNAME), path.Base(kit.Path("")))
 	m.Conf(RUNTIME, kit.Keys(BOOT, USERNAME), kit.UserName())
+	m.Conf(RUNTIME, kit.Keys(BOOT, PATHNAME), path.Base(kit.Path("")))
 	ice.Info.Hostname = m.Conf(RUNTIME, kit.Keys(BOOT, HOSTNAME))
-	ice.Info.Pathname = m.Conf(RUNTIME, kit.Keys(BOOT, PATHNAME))
 	ice.Info.Username = m.Conf(RUNTIME, kit.Keys(BOOT, USERNAME))
+	ice.Info.Pathname = m.Conf(RUNTIME, kit.Keys(BOOT, PATHNAME))
+	kit.HashSeed = append(kit.HashSeed, ice.Info.Hostname)
+	kit.HashSeed = append(kit.HashSeed, ice.Info.Username)
+	kit.HashSeed = append(kit.HashSeed, ice.Info.Pathname)
 	ice.Info.System = m.Conf(RUNTIME, kit.Keys(HOST, OSID))
 	aaa.UserRoot(ice.Pulse, "", ice.Info.Make.Username, aaa.TECH, ice.DEV)
 	aaa.UserRoot(ice.Pulse, "", ice.Info.Username, aaa.ROOT, ice.OPS)

@@ -10,6 +10,7 @@ import (
 )
 
 const (
+	ADMIN   = "admin"
 	SEND    = "send"
 	DATE    = "date"
 	FROM    = "from"
@@ -36,8 +37,8 @@ func init() {
 					m.EchoIFrame(p).ProcessInner()
 				}
 			}},
-			SEND: {Name: "send to*='shy@shylinux.com' cc subject*=hi content*:textarea=hello", Help: "发送", Hand: func(m *ice.Message, arg ...string) {
-				msg := mdb.HashSelects(m.Spawn(), ADMIN)
+			SEND: {Name: "send from=admin to*='shy@shylinux.com' cc subject*=hi content*:textarea=hello", Help: "发送", Hand: func(m *ice.Message, arg ...string) {
+				msg := mdb.HashSelects(m.Spawn(), m.OptionDefault(FROM, ADMIN))
 				if m.Warn(msg.Append(SERVICE) == "", ice.ErrNotValid, SERVICE) {
 					return
 				}

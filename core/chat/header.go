@@ -84,14 +84,13 @@ func init() {
 						kit.Select(ice.TRUE, ice.FALSE, kit.IsIn(kit.Select(html.LIGHT, arg, 0), html.LIGHT, html.WHITE)))
 				}
 			}},
-			aaa.EMAIL: {Name: "email to subject content", Hand: func(m *ice.Message, arg ...string) {
+			aaa.EMAIL: {Name: "email to='shy@shylinux.com' subject content", Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(nfs.TO) != aaa.UserEmail(m, "") && !aaa.Right(m, aaa.EMAIL, m.Option(nfs.TO)) {
 					return
 				}
 				m.Options("volcano", web.UserHost(m), nfs.VERSION, web.RenderVersion(m))
-				m.Options(ice.MSG_USERWEB, tcp.PublishLocalhost(m, m.Option(ice.MSG_USERWEB)))
-				m.Options(ice.MSG_USERWEB, kit.MergeURL(m.Option(ice.MSG_USERWEB), web.SHARE, m.Cmdx(web.SHARE, mdb.CREATE, mdb.TYPE, web.LOGIN)))
-				m.Cmdy(aaa.EMAIL, aaa.SEND, arg, aaa.CONTENT, nfs.Template(m, "email.html"))
+				m.Cmdy(web.SHARE, mdb.CREATE, mdb.TYPE, web.LOGIN, mdb.TEXT, tcp.PublishLocalhost(m, m.Option(ice.MSG_USERWEB)))
+				m.Cmdy(aaa.EMAIL, aaa.SEND, aaa.FROM, aaa.ADMIN, arg, aaa.CONTENT, nfs.Template(m, "email.html"))
 			}},
 			aaa.LOGOUT: {Hand: aaa.SessLogout},
 			mdb.CREATE: {Name: "create type*=plugin,qrcode,oauth name* icons link order space index args", Hand: func(m *ice.Message, arg ...string) { mdb.HashCreate(m, m.OptionSimple()) }},

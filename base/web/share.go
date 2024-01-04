@@ -105,6 +105,9 @@ func init() {
 				case LOGIN:
 					RenderCookie(m, aaa.SessCreate(m, msg.Append(aaa.USERNAME)))
 					m.RenderRedirect(msg.Append(mdb.TEXT))
+				case STORM:
+					RenderCookie(m, aaa.SessCreate(m, msg.Append(aaa.USERNAME)))
+					m.RenderRedirect(kit.MergeURL(kit.Select(nfs.PS, msg.Append(mdb.TEXT)), msg.AppendSimple(RIVER, STORM)))
 				case FIELD:
 					RenderPodCmd(m, msg.Append(SPACE), msg.Append(mdb.NAME), kit.UnMarshal(msg.Append(mdb.TEXT)))
 				case DOWNLOAD:

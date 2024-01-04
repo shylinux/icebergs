@@ -250,16 +250,12 @@ func init() {
 			m.Cmd(SPACE, func(value ice.Maps) {
 				kit.If(kit.IsIn(value[mdb.TYPE], WORKER, SERVER), func() { m.Push(arg[0], value[mdb.NAME]) })
 			})
-		case tcp.WIFI:
-			m.Cmdy(tcp.WIFI).CutTo(tcp.SSID, arg[0])
 		case mdb.ICONS:
 			m.Options(nfs.DIR_REG, kit.ExtReg(nfs.PNG, nfs.JPG, nfs.JPEG), nfs.DIR_DEEP, ice.TRUE)
 			m.Cmdy(nfs.DIR, nfs.SRC, nfs.PATH)
 			m.Cmdy(nfs.DIR, ice.USR_LOCAL_IMAGE, nfs.PATH)
 			m.Cmdy(nfs.DIR, ice.USR_ICONS, nfs.PATH)
 			m.CutTo(nfs.PATH, arg[0])
-		case aaa.PASSWORD:
-			m.SetAppend()
 		case ctx.INDEX, ice.CMD:
 			if space := m.Option(SPACE); space != "" {
 				m.Options(SPACE, []string{}).Cmdy(SPACE, space, ctx.COMMAND)
@@ -273,6 +269,18 @@ func init() {
 			} else {
 				m.Cmdy(ctx.COMMAND, mdb.INPUTS, m.Option(ctx.INDEX))
 			}
+		case tcp.WIFI:
+			m.Cmdy(tcp.WIFI).CutTo(tcp.SSID, arg[0])
+		case aaa.TO:
+			if m.Option(ctx.ACTION) != aaa.EMAIL {
+				break
+			}
+			fallthrough
+		case aaa.EMAIL:
+			m.Push(arg[0], "shy@shylinux.com")
+			m.Push(arg[0], "shylinux@163.com")
+		case aaa.PASSWORD:
+			m.SetAppend()
 		}
 	})
 	ctx.PodCmd = func(m *ice.Message, arg ...ice.Any) bool {

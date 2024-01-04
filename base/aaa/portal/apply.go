@@ -14,6 +14,7 @@ import (
 
 type apply struct {
 	ice.Hash
+	email string `data:"admin"`
 	field string `data:"time,hash,mobile,email,usernick,username,userrole,status"`
 	sso   string `name:"sso" help:"登录"`
 	input string `name:"input" help:"注册" role:"void"`
@@ -61,7 +62,7 @@ func (s apply) Login(m *ice.Message, arg ...string) {
 		m.Options(ice.MSG_USERNAME, m.Option(aaa.EMAIL))
 		space := kit.Keys(kit.Slice(kit.Split(m.Option(ice.MSG_DAEMON), nfs.PT), 0, -1))
 		share := m.Cmd(web.SHARE, mdb.CREATE, mdb.TYPE, web.FIELD, mdb.NAME, web.CHAT_GRANT, mdb.TEXT, space).Append(mdb.LINK)
-		m.Cmdy(aaa.EMAIL, aaa.SEND, m.Option(aaa.EMAIL), "", "login contexts, please grant", html.FormatA(share))
+		m.Cmdy(aaa.EMAIL, aaa.SEND, mdb.Config(m.Message, aaa.EMAIL), m.Option(aaa.EMAIL), "", "login contexts, please grant", html.FormatA(share))
 		m.ProcessHold()
 	}
 }
@@ -69,6 +70,10 @@ func (s apply) Email(m *ice.Message, arg ...string) {
 	ctx.DisplayStoryForm(m.Message, "email*", s.Login).Echo("please auth login in mailbox, after email sent")
 }
 func (s apply) List(m *ice.Message, arg ...string) *ice.Message {
+	if m.Cmd(aaa.EMAIL, mdb.Config(m.Message, aaa.EMAIL)).Length() == 0 {
+		m.Echo("please add admin email")
+		return m
+	}
 	kit.If(m.Option(_cookie_key(m)), func(p string) { arg = []string{p} })
 	s.Hash.List(m, arg...).Table(func(value ice.Maps) {
 		switch value[mdb.STATUS] {

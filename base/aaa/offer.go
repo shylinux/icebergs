@@ -18,7 +18,7 @@ func init() {
 		OFFER: {Help: "邀请", Role: VOID, Actions: ice.MergeActions(ice.Actions{
 			mdb.CREATE: {Name: "create email*='shy@shylinux.com' subject content", Help: "邀请", Hand: func(m *ice.Message, arg ...string) {
 				h := mdb.HashCreate(m.Spawn(), m.OptionSimple(EMAIL, SUBJECT, CONTENT), INVITE, m.Option(ice.MSG_USERNAME), mdb.STATUS, INVITE)
-				m.Cmd(EMAIL, SEND, m.Option(EMAIL), "", m.OptionDefault(SUBJECT, "welcome to contexts, please continue"),
+				m.Cmd(EMAIL, SEND, mdb.Config(m, EMAIL), m.Option(EMAIL), "", m.OptionDefault(SUBJECT, "welcome to contexts, please continue"),
 					m.OptionDefault(CONTENT, ice.Render(m, ice.RENDER_ANCHOR, m.Cmdx("host", "publish", m.MergePodCmd("", "", mdb.HASH, h)))),
 				)
 			}},
@@ -33,12 +33,12 @@ func init() {
 					mdb.HashModify(m, m.OptionSimple(mdb.HASH), mdb.STATUS, ACCEPT)
 				}
 			}},
-		}, mdb.ImportantHashAction(mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,status,invite,email,title,content")), Hand: func(m *ice.Message, arg ...string) {
-			if !m.Warn(len(arg) == 0 && m.Option(ice.MSG_USERROLE) == VOID, ice.ErrNotRight) {
+		}, mdb.ImportantHashAction(EMAIL, ADMIN, mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,status,invite,email,title,content")), Hand: func(m *ice.Message, arg ...string) {
+			if m.Cmd(EMAIL, mdb.Config(m, EMAIL)).Length() == 0 {
+				m.Echo("please add admin email")
+			} else if !m.Warn(len(arg) == 0 && m.Option(ice.MSG_USERROLE) == VOID, ice.ErrNotRight) {
 				kit.If(mdb.HashSelect(m, arg...).FieldsIsDetail(), func() {
-					m.SetAppend()
-					m.EchoInfoButton("welcome to contexts, please continue", ACCEPT)
-					// m.PushAction(ACCEPT)
+					m.SetAppend().EchoInfoButton("welcome to contexts, please continue", ACCEPT)
 				})
 			}
 		}},

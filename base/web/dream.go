@@ -288,7 +288,7 @@ func init() {
 				gdb.Event(m, DREAM_TRASH, arg)
 				nfs.Trash(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME)))
 			}},
-			OPEN: {Hand: func(m *ice.Message, arg ...string) {
+			OPEN: {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
 				m.ProcessOpen(kit.MergeURL(S(m.Option(mdb.NAME)), m.OptionSimple(ice.MSG_DEBUG)))
 			}},
 			MAIN: {Name: "main index", Help: "首页", Hand: func(m *ice.Message, arg ...string) {

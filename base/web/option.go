@@ -118,7 +118,7 @@ func PushNotice(m *ice.Message, arg ...ice.Any) {
 }
 func PushNoticeToast(m *ice.Message, arg ...ice.Any) { PushNotice(m, kit.List("toast", arg)...) }
 func PushNoticeGrow(m *ice.Message, arg ...ice.Any)  { PushNotice(m, kit.List("grow", arg)...) }
-func PushNoticeRich(m *ice.Message, arg ...ice.Any)  { PushNotice(m, kit.List("rich", arg)...) }
+func PushNoticeRich(m *ice.Message, arg ...ice.Any)  { PushNotice(m, kit.Simple("rich", arg)) }
 func PushStream(m *ice.Message) *ice.Message {
 	m.Options(cli.CMD_OUTPUT, file.NewWriteCloser(func(buf []byte) { PushNoticeGrow(m, string(buf)) }, nil)).ProcessHold(toastContent(m, ice.SUCCESS))
 	return m

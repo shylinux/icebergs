@@ -234,11 +234,15 @@ func init() {
 				m.Sleep3s().Cmdy(ROUTE, cli.BUILD).ProcessInner()
 			}},
 			PUBLISH: {Name: "publish name", Help: "发布", Icon: "bi bi-send-check", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(CODE_AUTOGEN, "binpack")
+				PushNoticeRich(m, mdb.NAME, ice.Info.NodeName, m.Cmd(CODE_COMPILE, cli.LINUX).AppendSimple())
+				PushNoticeRich(m, mdb.NAME, ice.Info.NodeName, m.Cmd(CODE_COMPILE, cli.DARWIN).AppendSimple())
+				PushNoticeRich(m, mdb.NAME, ice.Info.NodeName, m.Cmd(CODE_COMPILE, cli.WINDOWS).AppendSimple())
 				DreamEach(m, m.Option(mdb.NAME), "", func(name string) {
-					PushNoticeRich(m, mdb.NAME, name, mdb.TEXT, m.Cmdx(SPACE, name, CODE_AUTOGEN, "binpack"))
-					PushNoticeRich(m, mdb.NAME, name, mdb.TEXT, m.Cmdx(SPACE, name, CODE_COMPILE, cli.LINUX))
-					PushNoticeRich(m, mdb.NAME, name, mdb.TEXT, m.Cmdx(SPACE, name, CODE_COMPILE, cli.DARWIN))
-					PushNoticeRich(m, mdb.NAME, name, mdb.TEXT, m.Cmdx(SPACE, name, CODE_COMPILE, cli.WINDOWS))
+					m.Cmd(SPACE, name, CODE_AUTOGEN, "binpack")
+					PushNoticeRich(m, mdb.NAME, name, m.Cmd(SPACE, name, CODE_COMPILE, cli.LINUX).AppendSimple())
+					PushNoticeRich(m, mdb.NAME, name, m.Cmd(SPACE, name, CODE_COMPILE, cli.DARWIN).AppendSimple())
+					PushNoticeRich(m, mdb.NAME, name, m.Cmd(SPACE, name, CODE_COMPILE, cli.WINDOWS).AppendSimple())
 				})
 				m.ProcessHold()
 			}},

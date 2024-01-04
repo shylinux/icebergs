@@ -19,7 +19,7 @@ func init() {
 				return
 			}
 			appid := m.Cmd(APP).Append(APPID)
-			home := web.MergeURL2(m, "/chat/lark/sso")
+			home := m.MergeLink("/chat/lark/sso")
 			if m.Option(cli.CODE) == "" {
 				m.RenderRedirect(kit.MergeURL2(m.Cmd(web.SPIDE, LARK).Append("client.url"), "/open-apis/authen/v1/index"),
 					"redirect_uri", kit.MergeURL(home, cli.BACK, m.R.Header.Get("Referer")), APP_ID, appid)
@@ -31,7 +31,7 @@ func init() {
 			m.Cmd(aaa.USER, mdb.CREATE, m.Option(aaa.USERNAME), "", msg.Append(mdb.NAME), LARK, kit.Select(aaa.VOID, aaa.TECH, msg.Append("is_tenant_manager") == ice.TRUE))
 			m.Cmd(aaa.USER, mdb.MODIFY, aaa.AVATAR, msg.Append("avatar_url"), aaa.GENDER, kit.Select("女", "男", msg.Append(aaa.GENDER) == "1"),
 				msg.AppendSimple(aaa.MOBILE, aaa.EMAIL, aaa.CITY, aaa.COUNTRY))
-			m.RenderRedirect(kit.MergeURL(kit.Select(home, m.Option(cli.BACK)), ice.MSG_SESSID, aaa.SessCreate(m, m.Option(aaa.USERNAME))))
+			m.RenderRedirect(m.MergeLink(kit.Select(home, m.Option(cli.BACK)), ice.MSG_SESSID, aaa.SessCreate(m, m.Option(aaa.USERNAME))))
 		}},
 	})
 }

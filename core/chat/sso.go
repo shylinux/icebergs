@@ -30,9 +30,9 @@ func init() {
 
 func GetSSO(m *ice.Message) string {
 	link := m.Cmdx(web.SPACE, web.DOMAIN)
-	if !strings.Contains(link, web.PP(CHAT, POD)) {
+	if !strings.Contains(link, web.S()) {
 		return ""
 	}
 	ls := strings.Split(kit.ParseURL(link).Path, nfs.PS)
-	return kit.MergeURL2(link, web.PP(CHAT, SSO), web.SPACE, kit.Select("", ls, 3), cli.BACK, m.R.Header.Get(html.Referer))
+	return kit.MergeURL2(link, web.PP(CHAT, SSO), web.SPACE, kit.Select("", ls, 2), cli.BACK, m.R.Header.Get(html.Referer))
 }

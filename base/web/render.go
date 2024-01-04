@@ -45,7 +45,7 @@ func Render(m *ice.Message, cmd string, args ...ice.Any) bool {
 	case STATUS, ice.RENDER_STATUS: // [code [text]]
 		RenderStatus(m.W, kit.Int(kit.Select("200", arg, 0)), kit.Select(m.Result(), strings.Join(kit.Slice(arg, 1), " ")))
 	case ice.RENDER_REDIRECT: // url [arg...]
-		http.Redirect(m.W, m.R, kit.MergeURL(arg[0], arg[1:]), http.StatusTemporaryRedirect)
+		http.Redirect(m.W, m.R, m.MergeLink(arg[0], arg[1:]), http.StatusTemporaryRedirect)
 	case ice.RENDER_DOWNLOAD: // file [type [name]]
 		if strings.HasPrefix(arg[0], HTTP) {
 			RenderRedirect(m, arg[0])

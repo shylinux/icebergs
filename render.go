@@ -233,7 +233,7 @@ func (m *Message) EchoDownload(arg ...string) *Message {
 }
 func (m *Message) Display(file string, arg ...Any) *Message {
 	file = m.resource(file)
-	m.Option(MSG_DISPLAY, kit.MergeURL(kit.Select(kit.ExtChange(file, JS), file, strings.Contains(file, QS)), arg...))
+	m.Option(MSG_DISPLAY, m.MergeLink(kit.Select(kit.ExtChange(file, JS), file, strings.Contains(file, QS)), arg...))
 	return m
 }
 func (m *Message) Resource(file string) string { return m.resource(file) }
@@ -246,5 +246,5 @@ func (m *Message) resource(file string) string {
 		p = strings.Split(p, "/pkg/mod/")[1]
 	}
 	kit.If(file == "", func() { p = kit.ExtChange(p, JS) }, func() { p = path.Join(path.Dir(p), file) })
-	return kit.MergeURL("/require/"+p, POD, m.Option(MSG_USERPOD))
+	return m.MergeLink("/require/"+p, POD, m.Option(MSG_USERPOD))
 }

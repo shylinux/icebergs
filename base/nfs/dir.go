@@ -103,7 +103,7 @@ func _dir_list(m *ice.Message, root string, dir string, level int, deep bool, di
 						m.PushDownload(mdb.LINK, p)
 					}
 				case mdb.SHOW:
-					switch p := kit.MergeURL(ice.SHARE_LOCAL+p, ice.POD, m.Option(ice.MSG_USERPOD)); kit.Ext(s.Name()) {
+					switch p := m.MergeLink(ice.SHARE_LOCAL+p, ice.POD, m.Option(ice.MSG_USERPOD)); kit.Ext(s.Name()) {
 					case PNG, JPG:
 						m.PushImages(field, p)
 					case MP4:

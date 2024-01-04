@@ -72,7 +72,7 @@ func init() {
 				m.Cmd("", mdb.CREATE, m.OptionSimple(mdb.TYPE, mdb.NAME, mdb.TEXT))
 			}},
 			web.DOWNLOAD: {Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessOpen(web.MergeURL2(m, web.SHARE_LOCAL+m.Option(mdb.TEXT), nfs.FILENAME, m.Option(mdb.NAME)))
+				m.ProcessOpen(m.MergeLink(web.SHARE_LOCAL+m.Option(mdb.TEXT), nfs.FILENAME, m.Option(mdb.NAME)))
 			}},
 			web.PREVIEW: {Hand: FavorPreview},
 			cli.OPENS:   {Hand: func(m *ice.Message, arg ...string) { cli.Opens(m, m.Option(mdb.TEXT)) }},

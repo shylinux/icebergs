@@ -45,25 +45,23 @@ func (m *Message) OptionCB(key string, cb ...Any) Any {
 }
 
 func (m *Message) MergePod(pod string, arg ...Any) string {
-	ls := []string{"chat"}
-	kit.If(kit.Keys(m.Option(MSG_USERPOD), pod), func(p string) { ls = append(ls, POD, p) })
-	kit.If(len(ls) == 1, func() { ls = ls[:0] })
-	// ls := []string{}
-	// kit.If(kit.Keys(m.Option(MSG_USERPOD), pod), func(p string) { ls = append(ls, "/s/", p) })
-	kit.If(m.Option(DEBUG) == TRUE, func() { arg = append([]Any{DEBUG, TRUE}, arg...) })
-	return kit.MergeURL2(strings.Split(kit.Select("http://localhost:9020", Info.Domain, m.Option(MSG_USERWEB)), QS)[0], path.Join(PS, path.Join(ls...)), arg...)
+	ls := []string{}
+	kit.If(kit.Keys(m.Option(MSG_USERPOD), pod), func(p string) { ls = append(ls, "s", p) })
+	return m.MergeLink(PS+path.Join(ls...), arg...)
 }
 func (m *Message) MergePodCmd(pod, cmd string, arg ...Any) string {
-	ls := []string{"chat"}
+	ls := []string{}
 	kit.If(kit.Keys(m.Option(MSG_USERPOD), pod), func(p string) { ls = append(ls, "s", p) })
 	if cmd == "" {
 		p, ok := Info.Index[m.CommandKey()]
 		cmd = kit.Select(m.PrefixKey(), m.CommandKey(), ok && p == m.target)
 	}
 	ls = append(ls, "c", cmd)
+	return m.MergeLink(PS+path.Join(ls...), arg...)
+}
+func (m *Message) MergeLink(url string, arg ...Any) string {
 	kit.If(m.Option(DEBUG) == TRUE, func() { arg = append([]Any{DEBUG, TRUE}, arg...) })
-	return kit.MergeURL2(strings.Split(kit.Select(Info.Domain, m.Option(MSG_USERWEB)), QS)[0], PS+kit.Join(ls[1:], PS), arg...)
-	// return kit.MergeURL2(strings.Split(kit.Select(Info.Domain, m.Option(MSG_USERWEB)), QS)[0], PS+kit.Join(ls, PS), arg...)
+	return kit.MergeURL2(strings.Split(kit.Select(Info.Domain, m.Option(MSG_USERWEB)), QS)[0], url, arg...)
 }
 func (m *Message) FieldsIsDetail() bool {
 	ls := m.value(MSG_APPEND)
@@ -84,8 +82,7 @@ func (m *Message) Status(arg ...Any) *Message {
 }
 func (m *Message) StatusTime(arg ...Any) *Message {
 	args := []string{}
-	kit.If(m.Option(MSG_DEBUG) == TRUE, func() { args = append(args, kit.MDB_COST, m.FormatCost()) })
-	kit.If(m.Option(MSG_DEBUG) == TRUE, func() { args = append(args, "msg", "") })
+	kit.If(m.Option(MSG_DEBUG) == TRUE, func() { args = append(args, kit.MDB_COST, m.FormatCost(), "msg", "") })
 	kit.If(m.Option(MSG_DEBUG) == TRUE, func() { args = append(args, m.OptionSimple(LOG_TRACEID)...) })
 	return m.Status(TIME, m.Time(), arg, args)
 }
@@ -111,7 +108,7 @@ func (m *Message) ProcessSession(arg ...Any) {
 }
 func (m *Message) ProcessLocation(arg ...Any) { m.Process(PROCESS_LOCATION, arg...) }
 func (m *Message) ProcessReplace(url string, arg ...Any) {
-	m.Process(PROCESS_REPLACE, kit.MergeURL(url, arg...))
+	m.Process(PROCESS_REPLACE, m.MergeLink(url, arg...))
 }
 func (m *Message) ProcessHistory(arg ...Any) { m.Process(PROCESS_HISTORY, arg...) }
 func (m *Message) ProcessConfirm(arg ...Any) { m.Process(PROCESS_CONFIRM, arg...) }

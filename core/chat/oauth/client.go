@@ -149,7 +149,7 @@ func (s Client) OAuthURL(m *ice.Message) string {
 	return kit.MergeURL2(m.Option(web.DOMAIN), m.Option(OAUTH_URL), RESPONSE_TYPE, CODE, m.OptionSimple(CLIENT_ID), REDIRECT_URI, s.RedirectURI(m), m.OptionSimple(SCOPE), STATE, m.Option(mdb.HASH))
 }
 func (s Client) RedirectURI(m *ice.Message) string {
-	return strings.Split(web.MergeURL2(m.Message, web.ChatCmdPath(m.Message, m.PrefixKey(), ctx.ACTION, aaa.LOGIN)), web.QS)[0]
+	return strings.Split(m.MergeLink(web.ChatCmdPath(m.Message, m.PrefixKey(), ctx.ACTION, aaa.LOGIN)), web.QS)[0]
 }
 
 func (s Client) Get(m *ice.Message, hash, api string, arg ...string) ice.Any {

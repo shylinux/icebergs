@@ -60,7 +60,7 @@ func init() {
 		}, mdb.ZoneAction(mdb.FIELD, "time,zone,count,binnary,service,seconds", mdb.FIELDS, "time,id,text,file", PPROF, kit.List(GO, "tool", PPROF))), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.ZoneSelect(m, arg...); len(arg) == 0 {
 				m.PushAction(cli.START, mdb.REMOVE).Action(mdb.CREATE)
-				m.StatusTimeCount(web.LINK, web.MergeLink(m, "/debug/pprof/"))
+				m.StatusTimeCount(web.LINK, m.MergeLink("/debug/pprof/"))
 			} else {
 				m.Table(func(value ice.Maps) { m.PushDownload(mdb.LINK, "pprof.pd.gz", value[nfs.FILE]).PushButton(web.SERVE) })
 				m.Action(cli.START)

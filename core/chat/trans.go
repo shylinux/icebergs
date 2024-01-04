@@ -27,7 +27,7 @@ func init() {
 				p := web.ProxyUpload(m, m.Option(FROM), m.Option(nfs.PATH))
 				h := m.Cmdx(web.SHARE, mdb.CREATE, mdb.TYPE, web.DOWNLOAD, mdb.TEXT, p)
 				defer m.Cmd(web.SHARE, mdb.REMOVE, mdb.HASH, h)
-				m.Cmdy(web.SPACE, m.Option(TO), web.SPIDE, ice.DEV, web.SPIDE_SAVE, path.Join(m.Option("to_path"), path.Base(m.Option(nfs.PATH))), web.MergeLink(m, "/share/"+h))
+				m.Cmdy(web.SPACE, m.Option(TO), web.SPIDE, ice.DEV, web.SPIDE_SAVE, path.Join(m.Option("to_path"), path.Base(m.Option(nfs.PATH))), m.MergeLink(web.PP(web.SHARE, h)))
 			}},
 			ctx.RUN: {Hand: func(m *ice.Message, arg ...string) {
 				m.Options(ice.MSG_USERPOD, m.Option(FROM), ice.POD, m.Option(FROM))

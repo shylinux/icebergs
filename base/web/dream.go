@@ -52,8 +52,8 @@ func _dream_start(m *ice.Message, name string) {
 		return
 	}
 	defer ToastProcess(m)()
+	defer m.ProcessOpen(m.MergePod(name))
 	defer mdb.Lock(m, m.PrefixKey(), cli.START, name)()
-	defer m.ProcessOpen(kit.MergeURL(S(name), m.OptionSimple(ice.MSG_DEBUG)))
 	p := path.Join(ice.USR_LOCAL_WORK, name)
 	if p := path.Join(p, ice.Info.PidPath); nfs.Exists(m, p) {
 		if pid := m.Cmdx(nfs.CAT, p, kit.Dict(ice.MSG_USERROLE, aaa.TECH)); pid != "" && nfs.Exists(m, "/proc/"+pid) {
@@ -289,7 +289,7 @@ func init() {
 				nfs.Trash(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME)))
 			}},
 			OPEN: {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessOpen(kit.MergeURL(S(m.Option(mdb.NAME)), m.OptionSimple(ice.MSG_DEBUG)))
+				m.ProcessOpen(m.MergePod(m.Option(mdb.NAME)))
 			}},
 			MAIN: {Name: "main index", Help: "首页", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(SPACE, m.Option(mdb.NAME), SPACE, ice.MAIN, m.Option(ctx.INDEX))

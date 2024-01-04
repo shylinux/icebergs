@@ -6,10 +6,8 @@ import (
 	"time"
 
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
-	"shylinux.com/x/icebergs/base/log"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
@@ -41,17 +39,6 @@ func AgentIs(m Message, arg ...string) bool {
 		}
 	}
 	return false
-}
-func MergeURL2(m *ice.Message, url string, arg ...ice.Any) string {
-	kit.If(m.Option(log.DEBUG) == ice.TRUE, func() { arg = append(arg, log.DEBUG, ice.TRUE) })
-	kit.If(m.Option(ice.MSG_USERWEB) == "", func() {
-		m.Option(ice.MSG_USERWEB, Domain(ice.Pulse.Cmdv(tcp.HOST, aaa.IP), ice.Pulse.Cmdv(SERVE, tcp.PORT)))
-	})
-	return kit.MergeURL2(m.Option(ice.MSG_USERWEB), url, arg...)
-}
-func MergeLink(m *ice.Message, url string, arg ...ice.Any) string {
-	kit.If(m.Option(log.DEBUG) == ice.TRUE, func() { arg = append(arg, log.DEBUG, ice.TRUE) })
-	return kit.MergeURL(strings.Split(MergeURL2(m, url), QS)[0], arg...)
 }
 func ParseLink(m *ice.Message, url string) ice.Maps {
 	list := ice.Maps{}

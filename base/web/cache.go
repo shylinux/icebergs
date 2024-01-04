@@ -160,7 +160,7 @@ func init() {
 			} else if m.Append(nfs.FILE) == "" {
 				m.PushScript(mdb.TEXT, m.Append(mdb.TEXT))
 			} else {
-				PushDisplay(m, m.Append(mdb.TYPE), m.Append(mdb.NAME), MergeURL2(m, P(SHARE, CACHE, arg[0])))
+				PushDisplay(m, m.Append(mdb.TYPE), m.Append(mdb.NAME), m.MergeLink(P(SHARE, CACHE, arg[0])))
 			}
 		}},
 	})
@@ -175,7 +175,7 @@ func init() {
 				up := Upload(m)
 				m.Assert(len(up) > 1)
 				if m.Cmd(CACHE, m.Option(ice.MSG_UPLOAD)).Table(func(value ice.Maps) { m.Options(value) }).Length() == 0 {
-					SpideCache(m.Spawn(), kit.MergeURL2(m.Option(ice.MSG_USERWEB), SHARE_CACHE+up[0]))
+					SpideCache(m.Spawn(), m.MergeLink(SHARE_CACHE+up[0]))
 				}
 				if m.Options(mdb.HASH, up[0], mdb.NAME, up[1]); watch {
 					m.Cmdy(CACHE, WATCH, m.Option(mdb.HASH), path.Join(m.Option(nfs.PATH), up[1]))
@@ -187,7 +187,7 @@ func init() {
 func Upload(m *ice.Message) []string {
 	if up := kit.Simple(m.Optionv(ice.MSG_UPLOAD)); len(up) == 1 {
 		if m.Cmdy(CACHE, UPLOAD).Optionv(ice.MSG_UPLOAD, kit.Simple(m.Append(mdb.HASH), m.Append(mdb.NAME), m.Append(nfs.SIZE))); m.Option(ice.MSG_USERPOD) != "" {
-			m.Cmd(SPACE, m.Option(ice.MSG_USERPOD), SPIDE, ice.DEV, SPIDE_CACHE, http.MethodGet, tcp.PublishLocalhost(m, MergeURL2(m, PP(SHARE, CACHE, m.Append(mdb.HASH)))))
+			m.Cmd(SPACE, m.Option(ice.MSG_USERPOD), SPIDE, ice.DEV, SPIDE_CACHE, http.MethodGet, tcp.PublishLocalhost(m, m.MergeLink(PP(SHARE, CACHE, m.Append(mdb.HASH)))))
 		}
 		return kit.Simple(m.Optionv(ice.MSG_UPLOAD))
 	} else {

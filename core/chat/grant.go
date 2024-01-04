@@ -7,7 +7,6 @@ import (
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/gdb"
-	"shylinux.com/x/icebergs/base/log"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
@@ -23,11 +22,11 @@ func init() {
 			web.SPACE_LOGIN: {Hand: func(m *ice.Message, arg ...string) {
 				m.GoSleep30ms(func() {
 					p := m.Cmdx(web.SPACE, web.DOMAIN)
-					link := tcp.PublishLocalhost(m, m.Options(ice.MSG_USERWEB, p).MergePodCmd("", "", web.SPACE, kit.Keys(web.ParseLink(m, p)[ice.POD], m.Option(mdb.NAME)), log.DEBUG, m.Option(ice.MSG_DEBUG)))
+					link := tcp.PublishLocalhost(m, m.Options(ice.MSG_USERWEB, p).MergePodCmd("", "", web.SPACE, kit.Keys(web.ParseLink(m, p)[ice.POD], m.Option(mdb.NAME))))
 					m.Cmd(web.SPACE, m.Option(mdb.NAME), cli.PWD, m.Option(mdb.NAME), link, m.Cmdx(cli.QRCODE, link))
 				})
 			}},
-			web.HOME: {Help: "首页", Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen(web.MergeLink(m, web.CHAT_PORTAL)) }},
+			web.HOME: {Help: "首页", Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen(m.MergeLink(web.CHAT_PORTAL)) }},
 			aaa.CONFIRM: {Help: "授权", Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
 				if m.Warn(m.R.Method == http.MethodGet, ice.ErrNotAllow) {
 					return
@@ -44,7 +43,7 @@ func init() {
 						aaa.SessCreate(m, m.Option(ice.MSG_USERNAME))
 					}
 					m.Cmd(web.SPACE, m.Option(web.SPACE), ice.MSG_SESSID, m.Option(ice.MSG_SESSID))
-					m.ProcessLocation(web.MergeLink(m, msg.Append(mdb.TEXT)))
+					m.ProcessLocation(m.MergeLink(msg.Append(mdb.TEXT)))
 					kit.If(m.IsWeixinUA(), func() { m.Echo(ice.SUCCESS) })
 					gdb.Event(m, web.SPACE_GRANT, m.OptionSimple(web.SPACE))
 				}

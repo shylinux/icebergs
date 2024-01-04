@@ -78,7 +78,7 @@ func DisplayLocalInner(m *ice.Message, arg ...ice.Any) *ice.Message {
 	return DisplayLocal(m, "code/inner.js", arg...)
 }
 func DisplayBase(m *ice.Message, file string, arg ...ice.Any) *ice.Message {
-	m.Option(ice.MSG_DISPLAY, kit.MergeURL(kit.Select(kit.ExtChange(file, nfs.JS), file, strings.Contains(file, mdb.QS)), arg...))
+	m.Option(ice.MSG_DISPLAY, m.MergeLink(kit.Select(kit.ExtChange(file, nfs.JS), file, strings.Contains(file, mdb.QS)), arg...))
 	Toolkit(m, "")
 	return m
 }

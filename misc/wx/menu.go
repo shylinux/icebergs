@@ -29,7 +29,7 @@ func init() {
 					if value[SCENE] == m.Option(SCENE) {
 						key := kit.Keys("button", kit.Int(value[RIVER])-1)
 						kit.If(value[STORM] != "1", func() { key = kit.Keys(key, "sub_button", kit.Int(value[STORM])-2) })
-						kit.If(value[mdb.TYPE] == "view", func() { value[mdb.TEXT] = web.MergeLink(m, value[mdb.TEXT]) })
+						kit.If(value[mdb.TYPE] == "view", func() { value[mdb.TEXT] = m.MergeLink(value[mdb.TEXT]) })
 						kit.Value(list, key, kit.Dict(mdb.TYPE, value[mdb.TYPE], mdb.NAME, value[mdb.NAME], mdb.KEY, value[mdb.HASH], web.URL, value[mdb.TEXT]))
 					}
 				})

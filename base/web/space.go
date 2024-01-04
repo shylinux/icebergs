@@ -367,7 +367,7 @@ func init() {
 						m.Push(aaa.UA, value[aaa.UA])
 					}
 					if kit.IsIn(value[mdb.TYPE], WEIXIN, PORTAL) && value[mdb.NAME] != html.CHROME {
-						m.Push(mdb.LINK, MergeURL2(m, value[mdb.TEXT]))
+						m.Push(mdb.LINK, m.MergeLink(value[mdb.TEXT]))
 					} else if kit.IsIn(value[mdb.TYPE], WORKER, SERVER) {
 						m.Push(mdb.LINK, m.MergePod(value[mdb.NAME]))
 					} else if kit.IsIn(value[mdb.TYPE], MASTER) {

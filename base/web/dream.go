@@ -73,7 +73,7 @@ func _dream_start(m *ice.Message, name string) {
 		cli.CTX_OPS, Domain(tcp.LOCALHOST, m.Cmdv(SERVE, tcp.PORT)), cli.CTX_LOG, ice.VAR_LOG_BOOT_LOG, cli.CTX_PID, ice.VAR_LOG_ICE_PID,
 		cli.CTX_ROOT, kit.Path(""), cli.PATH, cli.BinPath(p, ""), cli.USER, ice.Info.Username,
 	)...), cli.CMD_OUTPUT, path.Join(p, ice.VAR_LOG_BOOT_LOG), mdb.CACHE_CLEAR_ONEXIT, ice.TRUE)
-	gdb.Event(m, DREAM_CREATE, m.OptionSimple(mdb.NAME, mdb.TYPE))
+	gdb.Event(m, DREAM_CREATE, m.OptionSimple(mdb.NAME, mdb.TYPE, cli.CMD_DIR))
 	// if m.Option(nfs.BINARY) == "" && os.Getenv(cli.CTX_DEV) != "" && os.Getenv(cli.CTX_POD) != "" {
 	// 	m.Option(nfs.BINARY, os.Getenv(cli.CTX_DEV)+S(os.Getenv(cli.CTX_POD)))
 	// }
@@ -234,20 +234,23 @@ func init() {
 				m.Sleep3s().Cmdy(ROUTE, cli.BUILD).ProcessInner()
 			}},
 			PUBLISH: {Name: "publish name", Help: "发布", Icon: "bi bi-send-check", Hand: func(m *ice.Message, arg ...string) {
+				defer ToastProcess(m)()
 				m.Cmd(CODE_AUTOGEN, "binpack")
-				PushNoticeRich(m, mdb.NAME, ice.Info.NodeName, m.Cmd(CODE_COMPILE, cli.LINUX, cli.AMD64).AppendSimple())
-				PushNoticeRich(m, mdb.NAME, ice.Info.NodeName, m.Cmd(CODE_COMPILE, cli.DARWIN, cli.AMD64).AppendSimple())
-				PushNoticeRich(m, mdb.NAME, ice.Info.NodeName, m.Cmd(CODE_COMPILE, cli.WINDOWS, cli.AMD64).AppendSimple())
+				msg := m.Spawn(ice.Maps{ice.MSG_DAEMON: ""})
+				PushNoticeRich(m, mdb.NAME, ice.Info.NodeName, msg.Cmd(CODE_COMPILE, cli.LINUX, cli.AMD64).AppendSimple())
+				PushNoticeRich(m, mdb.NAME, ice.Info.NodeName, msg.Cmd(CODE_COMPILE, cli.DARWIN, cli.AMD64).AppendSimple())
+				PushNoticeRich(m, mdb.NAME, ice.Info.NodeName, msg.Cmd(CODE_COMPILE, cli.WINDOWS, cli.AMD64).AppendSimple())
 				DreamEach(m, m.Option(mdb.NAME), "", func(name string) {
 					m.Cmd(SPACE, name, CODE_AUTOGEN, "binpack")
-					PushNoticeRich(m, mdb.NAME, name, m.Cmd(SPACE, name, CODE_COMPILE, cli.LINUX, cli.AMD64).AppendSimple())
-					PushNoticeRich(m, mdb.NAME, name, m.Cmd(SPACE, name, CODE_COMPILE, cli.DARWIN, cli.AMD64).AppendSimple())
-					PushNoticeRich(m, mdb.NAME, name, m.Cmd(SPACE, name, CODE_COMPILE, cli.WINDOWS, cli.AMD64).AppendSimple())
+					PushNoticeRich(m, mdb.NAME, name, msg.Cmd(SPACE, name, CODE_COMPILE, cli.LINUX, cli.AMD64).AppendSimple())
+					PushNoticeRich(m, mdb.NAME, name, msg.Cmd(SPACE, name, CODE_COMPILE, cli.DARWIN, cli.AMD64).AppendSimple())
+					PushNoticeRich(m, mdb.NAME, name, msg.Cmd(SPACE, name, CODE_COMPILE, cli.WINDOWS, cli.AMD64).AppendSimple())
 				})
 				m.ProcessHold()
 			}},
 			FOR_FLOW: {Name: "forFlow cmd*='sh etc/miss.sh'", Help: "流程", Icon: "bi bi-terminal", Hand: func(m *ice.Message, arg ...string) {
 				m.Options(ctx.DISPLAY, PLUGIN_XTERM, cli.CMD_OUTPUT, nfs.NewWriteCloser(func(buf []byte) (int, error) {
+					m.Option(ice.MSG_COUNT, "0")
 					PushNoticeGrow(m, strings.ReplaceAll(string(buf), lex.NL, "\r\n"))
 					return len(buf), nil
 				}, func() error { return nil }))

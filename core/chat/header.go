@@ -98,7 +98,7 @@ func init() {
 			mdb.MODIFY: {Hand: func(m *ice.Message, arg ...string) { mdb.HashModify(m, m.OptionSimple(mdb.NAME), arg) }},
 			ice.DEMO: {Help: "体验", Hand: func(m *ice.Message, arg ...string) {
 				if kit.IsIn(m.Option(ice.MSG_USERROLE), aaa.TECH, aaa.ROOT) {
-					m.Cmd("", mdb.CREATE, mdb.TYPE, mdb.PLUGIN, mdb.NAME, "免登录体验", mdb.ORDER, "2", ctx.INDEX, HEADER, ctx.ARGS, ice.DEMO)
+					m.Cmd("", mdb.CREATE, mdb.TYPE, mdb.PLUGIN, mdb.NAME, "免登录体验", mdb.ORDER, "12", ctx.INDEX, HEADER, ctx.ARGS, ice.DEMO)
 					mdb.Config(m, ice.DEMO, ice.TRUE)
 				} else if mdb.Config(m, ice.DEMO) == ice.TRUE {
 					web.RenderCookie(m, aaa.SessCreate(m, ice.Info.Username))

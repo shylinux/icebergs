@@ -68,7 +68,6 @@ func _space_fork(m *ice.Message) {
 	addr := kit.Select(m.R.RemoteAddr, m.R.Header.Get(ice.MSG_USERADDR))
 	text := strings.ReplaceAll(kit.Select(addr, m.Option(mdb.TEXT)), "%2F", nfs.PS)
 	name := kit.ReplaceAll(kit.Select(addr, m.Option(mdb.NAME)), "[", "_", "]", "_", nfs.DF, "_", nfs.PT, "_")
-
 	if kit.IsIn(m.Option(mdb.TYPE), WORKER) && IsLocalHost(m) || m.Option(TOKEN) != "" && m.Cmdv(TOKEN, m.Option(TOKEN), mdb.TIME) > m.Time() {
 
 	} else if kit.IsIn(m.Option(mdb.TYPE), PORTAL, aaa.LOGIN) && len(name) == 32 && kit.IsIn(mdb.HashSelects(m.Spawn(), name).Append(aaa.IP), "", m.Option(ice.MSG_USERIP)) {
@@ -77,11 +76,15 @@ func _space_fork(m *ice.Message) {
 		name, text = kit.Hashs(name), kit.Select(addr, m.Option(mdb.NAME), m.Option(mdb.TEXT))
 	}
 
-	if kit.IsIn(m.Option(mdb.TYPE), WORKER, PORTAL) && tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) {
-		aaa.SessAuth(m, kit.Dict(m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME, ice.Info.Username)).AppendSimple()))
+	if kit.IsIn(m.Option(mdb.TYPE), WORKER, PORTAL) {
+		if tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) {
+			aaa.SessAuth(m, kit.Dict(m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME, ice.Info.Username)).AppendSimple()))
+		}
 	} else if m.Option(TOKEN) != "" {
 		msg := m.Cmd(TOKEN, m.Option(TOKEN))
 		aaa.SessAuth(m, kit.Dict(m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME, msg.Append(mdb.NAME))).AppendSimple()))
+	} else {
+		m.Option(ice.MSG_USERNAME, "")
 	}
 	if m.Option(mdb.TYPE) == WORKER {
 		if p := nfs.USR_LOCAL_WORK + m.Option(mdb.NAME); nfs.Exists(m, p) {
@@ -183,6 +186,7 @@ func _space_exec(m *ice.Message, name string, source, target []string, c *websoc
 		m.Push(mdb.LINK, m.MergePod(kit.Select("", source, -1)))
 	default:
 		m.Options("__target", kit.Reverse(kit.Simple(source))).OptionDefault(ice.MSG_COUNT, "0")
+		m.Option(ice.MSG_DAEMON, kit.Keys(kit.Slice(kit.Simple(m.Optionv("__target")), 0, -1), m.Option(ice.MSG_DAEMON)))
 		kit.If(aaa.Right(m, m.Detailv()), func() { m.TryCatch(true, func(_ *ice.Message) { m = m.Cmd() }) })
 	}
 	defer m.Cost(kit.Format("%v->%v %v %v", source, target, m.Detailv(), m.FormatSize()))

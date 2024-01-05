@@ -97,15 +97,14 @@ func PushNotice(m *ice.Message, arg ...ice.Any) {
 	})
 	if m.Option(ice.MSG_DAEMON) == "" {
 		return
-	} else if m.Option(ice.MSG_USERPOD) == "" {
-		m.Cmd(SPACE, m.Option(ice.MSG_DAEMON), arg, opts)
 	} else {
-		m.Cmd(SPACE, kit.Keys(m.Option("__target"), m.Option(ice.MSG_DAEMON)), arg, opts)
+		m.Cmd(SPACE, m.Option(ice.MSG_DAEMON), arg, opts)
 	}
 }
-func PushNoticeToast(m *ice.Message, arg ...ice.Any) { PushNotice(m, kit.List("toast", arg)...) }
-func PushNoticeGrow(m *ice.Message, arg ...ice.Any)  { PushNotice(m, kit.List("grow", arg)...) }
-func PushNoticeRich(m *ice.Message, arg ...ice.Any)  { PushNotice(m, kit.Simple("rich", arg)) }
+func PushNoticeRefresh(m *ice.Message, arg ...ice.Any) { PushNotice(m, kit.List("refresh", arg)...) }
+func PushNoticeToast(m *ice.Message, arg ...ice.Any)   { PushNotice(m, kit.List("toast", arg)...) }
+func PushNoticeGrow(m *ice.Message, arg ...ice.Any)    { PushNotice(m, kit.List("grow", arg)...) }
+func PushNoticeRich(m *ice.Message, arg ...ice.Any)    { PushNotice(m, kit.Simple("rich", arg)) }
 func PushStream(m *ice.Message) *ice.Message {
 	m.Options(cli.CMD_OUTPUT, file.NewWriteCloser(func(buf []byte) { PushNoticeGrow(m, string(buf)) }, nil)).ProcessHold(toastContent(m, ice.SUCCESS))
 	return m

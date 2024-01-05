@@ -14,9 +14,8 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _port_right(m *ice.Message, arg ...string) string {
-	current, end := kit.Int(kit.Select(mdb.Config(m, CURRENT), arg, 0)), kit.Int(mdb.Config(m, END))
-	kit.If(current >= end, func() { current = kit.Int(mdb.Config(m, BEGIN)) })
+func _port_right(m *ice.Message, current, begin, end int) string {
+	kit.If(current >= end, func() { current = begin })
 	for i := current; i < end; i++ {
 		if p := path.Join(ice.USR_LOCAL_DAEMON, kit.Format(i)); nfs.Exists(m, p) {
 
@@ -106,9 +105,11 @@ func init() {
 				m.Assert(m.Option(PORT) != "")
 				nfs.Trash(m, path.Join(ice.USR_LOCAL_DAEMON, m.Option(PORT)))
 			}},
-			aaa.RIGHT: {Hand: func(m *ice.Message, arg ...string) { m.Echo(_port_right(m, arg...)) }},
-			CURRENT:   {Hand: func(m *ice.Message, arg ...string) { m.Echo(mdb.Config(m, CURRENT)) }},
-		}, mdb.HashAction(BEGIN, 10000, CURRENT, 10000, END, 20000)), Hand: func(m *ice.Message, arg ...string) {
+			aaa.RIGHT: {Hand: func(m *ice.Message, arg ...string) {
+				m.Echo(PortRight(m, arg...))
+			}},
+			CURRENT: {Hand: func(m *ice.Message, arg ...string) { m.Echo(mdb.Config(m, CURRENT)) }},
+		}, mdb.HashAction(BEGIN, 10000, END, 20000)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 {
 				m.Cmdy(nfs.DIR, arg[1:], kit.Dict(nfs.DIR_ROOT, path.Join(ice.USR_LOCAL_DAEMON, arg[0])))
 				return
@@ -125,4 +126,8 @@ func init() {
 			mdb.Config(m, CURRENT, current)
 		}},
 	})
+}
+func PortRight(m *ice.Message, arg ...string) string {
+	current, begin, end := mdb.Config(m, CURRENT), mdb.Config(m, BEGIN), mdb.Config(m, END)
+	return _port_right(m, kit.Int(kit.Select(kit.Select(begin, current), arg, 0)), kit.Int(kit.Select(begin, arg, 1)), kit.Int(kit.Select(end, arg, 2)))
 }

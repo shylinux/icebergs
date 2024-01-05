@@ -185,8 +185,11 @@ func _space_exec(m *ice.Message, name string, source, target []string, c *websoc
 		)
 		m.Push(mdb.LINK, m.MergePod(kit.Select("", source, -1)))
 	default:
-		m.Options("__target", kit.Reverse(kit.Simple(source))).OptionDefault(ice.MSG_COUNT, "0")
-		m.Option(ice.MSG_DAEMON, kit.Keys(kit.Slice(kit.Simple(m.Optionv("__target")), 0, -1), m.Option(ice.MSG_DAEMON)))
+		if m.IsErr() {
+			return
+		}
+		m.OptionDefault(ice.MSG_COUNT, "0")
+		m.Option(ice.MSG_DAEMON, kit.Keys(kit.Slice(kit.Reverse(kit.Simple(source)), 0, -1), m.Option(ice.MSG_DAEMON)))
 		kit.If(aaa.Right(m, m.Detailv()), func() { m.TryCatch(true, func(_ *ice.Message) { m = m.Cmd() }) })
 	}
 	defer m.Cost(kit.Format("%v->%v %v %v", source, target, m.Detailv(), m.FormatSize()))

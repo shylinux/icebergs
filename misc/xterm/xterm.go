@@ -78,15 +78,12 @@ func PushShell(m *ice.Message, xterm XTerm, cmds []string, cb func(string)) {
 			defer lock.Lock()()
 			list = append(list, []string{cmd})
 		})
-		// defer fmt.Fprintln(xterm, cli.EXIT)
 		m.Sleep(m.OptionDefault("interval", "3s"))
 	})
 	kit.For(xterm, func(res []byte) {
-		m.Debug("res %v", string(res))
-		m.Debug("res %v", res)
+		m.Debug("res %v %v", string(res), res)
 		cb(string(res))
 		defer lock.Lock()()
 		list[len(list)-1] = append(list[len(list)-1], string(res))
 	})
-	m.Debug("res %v", 123)
 }

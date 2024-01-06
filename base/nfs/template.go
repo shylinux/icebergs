@@ -37,7 +37,6 @@ func Template(m *ice.Message, p string, data ...ice.Any) string {
 }
 
 var TemplateText = func(m *ice.Message, p string) string {
-	m.Debug("what %v", m.Option("_template"))
 	return m.Cmdx(CAT, kit.Select(TemplatePath(m, path.Base(p)), m.Option("_template")))
 }
 var TemplatePath = func(m *ice.Message, arg ...string) string {

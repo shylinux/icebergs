@@ -42,6 +42,7 @@ func (s trans) Send(m *ice.Message, arg ...string) {
 	nfs.Open(m.Message, m.Option(nfs.FROM), func(r io.Reader, info os.FileInfo) {
 		s.open(m, func(fs *ssh.FileSystem) {
 			nfs.Create(m.Message, path.Join(m.Option(nfs.PATH), m.OptionDefault(nfs.FILE, path.Base(m.Option(nfs.FROM)))), func(w io.Writer, p string) {
+				m.Logs(tcp.SEND, nfs.TO, p, m.OptionSimple(tcp.HOST, nfs.FROM), nfs.SIZE, kit.FmtSize(info.Size()))
 				web.GoToast(m.Message, "", func(toast func(name string, count, total int)) []string {
 					last := 0
 					nfs.CopyStream(m.Message, w, r, 81920, int(info.Size()), func(count, total int) {
@@ -50,7 +51,6 @@ func (s trans) Send(m *ice.Message, arg ...string) {
 							last = size
 						}
 					})
-					m.Logs(tcp.SEND, nfs.TO, p, m.OptionSimple(tcp.HOST, nfs.FROM), nfs.SIZE, kit.FmtSize(info.Size()))
 					return nil
 				})
 			})

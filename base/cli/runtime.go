@@ -298,11 +298,20 @@ func IsWindows() bool { return runtime.GOOS == WINDOWS }
 func ParseMake(str string) []string {
 	res := kit.UnMarshal(str)
 	data := kit.Value(res, MAKE)
-	return kit.Simple(mdb.TIME, kit.Value(res, "boot.time"), ice.SPACE, kit.Format(kit.Value(res, "node.name")),
-		nfs.MODULE, kit.Value(data, nfs.MODULE), nfs.VERSION, kit.Join(kit.TrimArg(kit.Simple(
-			kit.Value(data, nfs.VERSION), kit.Value(data, "forword"), kit.Cut(kit.Format(kit.Value(data, mdb.HASH)), 6),
+	return kit.Simple(
+		mdb.TIME, kit.Format(kit.Value(res, "boot.time")),
+		ice.SPACE, kit.Format(kit.Value(res, "node.name")),
+		nfs.MODULE, kit.Format(kit.Value(data, nfs.MODULE)),
+		nfs.VERSION, kit.Join(kit.TrimArg(kit.Simple(
+			kit.Format(kit.Value(data, nfs.VERSION)),
+			kit.Format(kit.Value(data, "forword")),
+			kit.Cut(kit.Format(kit.Value(data, mdb.HASH)), 6),
 		)...), "-"),
-		"commitTime", kit.Value(data, "when"), "compileTime", kit.Value(data, mdb.TIME), "bootTime", kit.Value(res, "boot.time"),
-		SHELL, kit.Format(kit.Value(res, "conf.SHELL")), "kernel", kit.Format(kit.Value(res, "host.GOOS")), "arch", kit.Format(kit.Value(res, "host.GOARCH")),
+		"commitTime", kit.Format(kit.Value(data, "when")),
+		"compileTime", kit.Format(kit.Value(data, mdb.TIME)),
+		"bootTime", kit.Format(kit.Value(res, "boot.time")),
+		SHELL, kit.Format(kit.Value(res, "conf.SHELL")),
+		"kernel", kit.Format(kit.Value(res, "host.GOOS")),
+		"arch", kit.Format(kit.Value(res, "host.GOARCH")),
 	)
 }

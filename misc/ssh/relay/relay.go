@@ -60,18 +60,18 @@ type relay struct {
 	ice.Code
 	checkbox    string `data:"true"`
 	short       string `data:"machine"`
-	field       string `data:"time,machine,username,password,host,port,portal,module,version,commitTime,compileTime,bootTime,package,shell,kernel,arch,ncpu,vcpu,mhz,mem,disk,network,listen,socket,proc,vendor"`
+	field       string `data:"time,machine,username,host,port,portal,dream,module,version,commitTime,compileTime,bootTime,package,shell,kernel,arch,ncpu,vcpu,mhz,mem,disk,network,listen,socket,proc,vendor"`
 	statsTables string `name:"statsTables" event:"stats.tables"`
-	create      string `name:"create machine* username* password host* port*=22"`
-	pubkey      string `name:"pubkey" help:"公钥" icon:"bi bi-person-vcard"`
-	version     string `name:"version" help:"版本"`
+	create      string `name:"create machine* username* host* port*=22"`
 	stats       string `name:"stats machine" help:"采集" icon:"bi bi-pc-display"`
 	dream       string `name:"dream" help:"空间" icon:"bi bi-grid-3x3-gap"`
 	forEach     string `name:"forEach machine cmd*:textarea=pwd" help:"遍历" icon:"bi bi-card-list"`
 	forFlow     string `name:"forFlow machine cmd*:textarea=pwd" help:"流程" icon:"bi bi-terminal"`
-	publish     string `name:"publish" help:"发布"`
+	pubkey      string `name:"pubkey" help:"公钥" icon:"bi bi-person-vcard"`
+	publish     string `name:"publish" help:"发布" icon:"bi bi-send-check"`
 	list        string `name:"list machine auto" help:"机器" icon:"relay.png"`
-	pushbin     string `name:"pushbin" help:"部署"`
+	install     string `name:"install dream param" help:"安装"`
+	pushbin     string `name:"pushbin dream param" help:"部署"`
 	adminCmd    string `name:"adminCmd cmd" help:"命令"`
 }
 
@@ -101,22 +101,23 @@ func (s relay) Inputs(m *ice.Message, arg ...string) {
 	case tcp.PORT:
 		m.Push(arg[0], tcp.PORT_22, tcp.PORT_9022)
 	case web.PORTAL:
+		kit.If(m.Option(tcp.LISTEN), func(p string) { m.Push(arg[0], kit.Split(p)) })
 		m.Push(arg[0], tcp.PORT_443, tcp.PORT_80, tcp.PORT_9020)
+	case cli.PARAM:
+		m.Push(arg[0], `forever start dev "" port 9020`)
 	}
 }
 func (s relay) Stats(m *ice.Message) {
 	cmds := []string{
 		PACKAGE, `if yum -h &>/dev/null; then echo yum; elif apk version &>/dev/null; then echo apk; elif apt -h &>/dev/null; then echo apt; fi`,
-		KERNEL, `uname -s`, ARCH, `uname -m`,
+		SHELL, `echo $SHELL`, KERNEL, `uname -s`, ARCH, `uname -m`,
 		NCPU, `cat /proc/cpuinfo | grep "physical id" | sort | uniq | wc -l`,
 		VCPU, `cat /proc/cpuinfo | grep "processor" | sort | uniq | wc -l`,
 		MHZ, `cat /proc/cpuinfo | grep "cpu MHz" | grep -o "[0-9.]\+" | sort -nr | head -n1`,
-		MEM, `cat /proc/meminfo | head -n2 | grep -o "[0-9.]*"`,
-		DISK, `df | grep "^/dev/"`,
+		MEM, `cat /proc/meminfo | head -n2 | grep -o "[0-9.]*"`, DISK, `df | grep "^/dev/"`,
 		NETWORK, `cat /proc/net/dev | grep "eth0\|eth1" | sort -r | head -n1`,
 		LISTEN, `netstat -ntl 2>/dev/null | grep "^tcp" | grep -o ":[0-9]\+" | grep -o "[0-9]\+" | sort -n | uniq`,
-		SOCKET, `netstat -nt 2>/dev/null | grep "^tcp" | wc -l`,
-		PROC, `ps aux | wc -l`,
+		SOCKET, `netstat -nt 2>/dev/null | grep "^tcp" | wc -l`, PROC, `ps aux | wc -l`,
 	}
 	trans := map[string]func([]string) string{
 		MEM: func(ls []string) string {
@@ -133,12 +134,16 @@ func (s relay) Stats(m *ice.Message) {
 	web.GoToast(m.Message, "", func(toast func(string, int, int)) []string {
 		kit.For(cmds, func(key, value string, index int) {
 			toast(key, index/2, len(cmds)/2)
-			s.foreachModify(m, key, value, trans[key])
+			s.foreachModify(m, machine, key, value, trans[key])
 		})
 		return nil
 	}).ProcessInner()
-	s.ForEach(m.Spawn(ice.Maps{MACHINE: machine, ice.CMD: s.admins(m, cli.RUNTIME)})).Table(func(value ice.Maps) {
-		s.Modify(m, kit.Simple(MACHINE, value[MACHINE], kit.Dict(cli.ParseMake(value[ice.RES])))...)
+	s.foreach(m.Spawn(ice.Maps{MACHINE: machine}), func(msg *ice.Message, cmd []string) {
+		ssh.CombinedOutput(msg.Message, s.admins(msg, cli.RUNTIME), func(res string) {
+			if !strings.HasPrefix(res, "warn: ") {
+				s.Modify(m, kit.Simple(MACHINE, msg.Option(MACHINE), kit.Dict(cli.ParseMake(res)))...)
+			}
+		})
 	})
 }
 func (s relay) Dream(m *ice.Message) {
@@ -149,7 +154,7 @@ func (s relay) Dream(m *ice.Message) {
 	fields := "time,machine,host,space,type,status,module,version,commitTime,compileTime,bootTime,link"
 	s.foreach(m, func(msg *ice.Message, cmd []string) {
 		m.Push("", kit.Dict(msg.OptionSimple(fields), mdb.TYPE, web.SERVER, mdb.STATUS, web.ONLINE, web.SPACE, ice.CONTEXTS, web.LINK, web.HostPort(m.Message, msg.Option(tcp.HOST), msg.Option(web.PORTAL))), kit.Split(fields))
-		ssh.CombinedOutput(msg.Message, s.admins(m, web.ROUTE), func(res string) {
+		ssh.CombinedOutput(msg.Message, s.admins(msg, web.ROUTE), func(res string) {
 			_msg := m.Spawn().SplitIndex(res)
 			m.Copy(_msg.Table(func(value ice.Maps) {
 				switch _msg.Push(MACHINE, msg.Option(MACHINE)).Push(tcp.HOST, msg.Option(tcp.HOST)); msg.Option(web.PORTAL) {
@@ -208,7 +213,7 @@ func (s relay) Publish(m *ice.Message, arg ...string) {
 	}
 	kit.If(!nfs.Exists(m, path.Join(ice.USR_PUBLISH, RELAY)), func() { s.Compile(m) })
 	os.Symlink(RELAY, ice.USR_PUBLISH+m.Option(MACHINE))
-	m.Cmd(nfs.SAVE, kit.HomePath(".ssh/"+m.Option(MACHINE)+".json"), kit.Formats(kit.Dict(m.OptionSimple("username,password,host,port")))+ice.NL)
+	m.Cmd(nfs.SAVE, kit.HomePath(".ssh/"+m.Option(MACHINE)+".json"), kit.Formats(kit.Dict(m.OptionSimple("username,host,port")))+ice.NL)
 }
 func (s relay) Pubkey(m *ice.Message, arg ...string) {
 	m.EchoScript(m.Cmdx(nfs.CAT, kit.HomePath(ssh.ID_RSA_PUB))).ProcessInner()
@@ -235,11 +240,11 @@ func (s relay) List(m *ice.Message, arg ...string) *ice.Message {
 			stats[DISK_TOTAL] += kit.Int(ls[1])
 		}
 		if value[web.PORTAL] == "" {
-			m.Push(web.LINK, "").PushButton(s.Xterm, s.AdminCmd, s.Pushbin, s.Install, s.Remove)
+			m.Push(web.LINK, "").PushButton(s.Install, s.Pushbin, s.Xterm, s.Remove)
 			return
 		}
 		m.Push(web.LINK, web.HostPort(m.Message, value[tcp.HOST], value[web.PORTAL]))
-		m.PushButton(s.Admin, s.Dream, s.Vimer, s.Xterm, s.AdminCmd, s.Pushbin, s.Upgrade, s.Remove)
+		m.PushButton(s.Admin, s.Dream, s.Vimer, s.AdminCmd, s.Upgrade, s.Pushbin, s.Xterm, s.Remove)
 		kit.If(len(arg) > 0, func() { m.PushQRCode(cli.QRCODE, m.Append(web.LINK)) })
 	})
 	_stats := kit.Dict(MEM, kit.FmtSize(stats[MEM_FREE], stats[MEM_TOTAL]), DISK, kit.FmtSize(stats[DISK_USED], stats[DISK_TOTAL]))
@@ -254,32 +259,48 @@ func (s relay) List(m *ice.Message, arg ...string) *ice.Message {
 	})
 	return m
 }
+func (s relay) Pushbin(m *ice.Message, arg ...string) {
+	bin := "ice"
+	switch m.Option(KERNEL) {
+	case "Linux", cli.LINUX:
+		bin = kit.Keys(bin, cli.LINUX)
+	default:
+		bin = kit.Keys(bin, cli.LINUX)
+	}
+	switch m.Option(ARCH) {
+	case "i686", cli.X86:
+		bin = kit.Keys(bin, cli.X86)
+	default:
+		bin = kit.Keys(bin, cli.AMD64)
+	}
+	kit.If(m.Option(web.DREAM), func() {
+		m.Options(nfs.FROM, path.Join(kit.Select(ice.USR_LOCAL_WORK, "..", ice.Info.NodeType == web.WORKER), m.Option(web.DREAM), ice.USR_PUBLISH+bin))
+		m.Options(nfs.PATH, m.Option(web.DREAM), nfs.FILE, ice.BIN_ICE_BIN)
+	}, func() {
+		m.Options(nfs.FROM, ice.USR_PUBLISH+bin, nfs.PATH, path.Base(kit.Path("")), nfs.FILE, ice.BIN_ICE_BIN)
+	})
+	m.Cmd(SSH_TRANS, tcp.SEND)
+	s.shell(m, m.Template(PUSHBIN_SH), arg...)
+	s.Modify(m, kit.Simple(m.OptionSimple(MACHINE, web.DREAM))...)
+}
 func (s relay) Install(m *ice.Message, arg ...string) {
-	s.shell(m, m.Template(INSTALL_SH), arg...)
+	m.Options(web.DOMAIN, "https://shylinux.com", ice.MSG_USERPOD, m.Option(web.DREAM))
+	m.Options(nfs.SOURCE, kit.Value(kit.UnMarshal(web.AdminCmd(m.Message, cli.RUNTIME)), "make.remote"))
+	web.DreamList(m.Spawn().Message).Table(func(value ice.Maps) {
+		kit.If(value[mdb.NAME] == m.Option(web.DREAM), func() { m.Option(nfs.SOURCE, value[nfs.REPOS]) })
+	})
+	s.shell(m, m.Cmdx(web.CODE_PUBLISH, ice.CONTEXTS, nfs.SOURCE, kit.Dict("format", "raw")), arg...)
+	s.Modify(m, kit.Simple(m.OptionSimple(MACHINE, web.DREAM))...)
 }
 func (s relay) Upgrade(m *ice.Message, arg ...string) {
 	if len(arg) == 0 && (m.Option(MACHINE) == "" || strings.Contains(m.Option(MACHINE), ",")) {
-		m.Options(ice.CMD, m.Template(UPGRADE_SH), cli.DELAY, "0", cli.INTERVAL, "3s")
-		s.ForFlow(m)
+		s.ForFlow(m.Options(ice.CMD, m.Template(UPGRADE_SH), cli.INTERVAL, "3s"))
 	} else {
 		s.shell(m, m.Template(UPGRADE_SH), arg...)
 	}
 }
 func (s relay) Version(m *ice.Message, arg ...string) {
-	m.Options(ice.CMD, m.Template(VERSION_SH), cli.DELAY, "0")
-	s.ForFlow(m)
-}
-func (s relay) Pushbin(m *ice.Message, arg ...string) {
-	if len(arg) == 0 {
-		p := "ice.linux.amd64"
-		switch m.Option(ARCH) {
-		case "i686", "386":
-			p = "ice.linux.386"
-		}
-		m.Options(nfs.FROM, ice.USR_PUBLISH+p, nfs.PATH, CONTEXTS, nfs.FILE, ice.BIN_ICE_BIN)
-		m.Cmd(SSH_TRANS, tcp.SEND)
-	}
-	s.shell(m, m.Template(PUSHBIN_SH), arg...)
+	s.ForFlow(m.Options(ice.CMD, m.Template(VERSION_SH)))
 }
 func (s relay) AdminCmd(m *ice.Message, arg ...string) {
 	s.shell(m, s.admins(m, m.Option(ice.CMD)), arg...)
@@ -315,9 +336,9 @@ func (s relay) foreach(m *ice.Message, cb func(*ice.Message, []string)) {
 	cmd := kit.Filters(strings.Split(m.Option(ice.CMD), lex.NL), "")
 	s.Hash.ForEach(m, MACHINE, func(msg *ice.Message) { cb(msg, cmd) })
 }
-func (s relay) foreachModify(m *ice.Message, key, cmd string, cb func([]string) string) {
+func (s relay) foreachModify(m *ice.Message, machine, key, cmd string, cb func([]string) string) {
 	kit.If(cb == nil, func() { cb = func(ls []string) string { return kit.Join(ls) } })
-	s.ForEach(m.Spawn(ice.Maps{MACHINE: "", ice.CMD: cmd, ice.MSG_DAEMON: ""})).Table(func(value ice.Maps) {
+	s.ForEach(m.Spawn(ice.Maps{MACHINE: machine, ice.CMD: cmd, ice.MSG_DAEMON: ""})).Table(func(value ice.Maps) {
 		s.Modify(m, MACHINE, value[MACHINE], key, cb(kit.Split(value[ice.RES])), mdb.TIME, time.Now().Format(ice.MOD_TIME))
 		m.Push(mdb.TIME, time.Now().Format(ice.MOD_TIME)).Push(MACHINE, value[MACHINE]).Push(tcp.HOST, value[tcp.HOST])
 		m.Push(ice.CMD, cmd).Push(ice.RES, value[ice.RES]).PushButton(s.ForFlow, s.ForEach)
@@ -334,5 +355,5 @@ func (s relay) admin(m *ice.Message, arg ...string) string {
 	return kit.JoinWord(kit.Simple(ice.BIN_ICE_BIN, web.ADMIN, arg)...)
 }
 func (s relay) admins(m *ice.Message, arg ...string) string {
-	return CONTEXTS + s.admin(m, arg...)
+	return kit.Select(ice.CONTEXTS, m.Option(web.DREAM)) + nfs.PS + s.admin(m, arg...)
 }

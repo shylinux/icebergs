@@ -612,7 +612,6 @@ func init() {
 				kit.If(m.Option(REPOS), func(p string) {
 					p = strings.Split(p, mdb.QS)[0]
 					kit.If(!strings.Contains(p, "://"), func() { p = kit.MergeURL2(web.UserHost(m), web.X(p)) })
-					// kit.If(ice.Info.System == cli.LINUX, func() { p = strings.Replace(p, ice.HTTPS, ice.HTTP, 1) })
 					m.Cmd("", CLONE, ORIGIN, p, nfs.PATH, m.Option(cli.CMD_DIR), ice.Maps{cli.CMD_DIR: ""})
 				})
 			}},

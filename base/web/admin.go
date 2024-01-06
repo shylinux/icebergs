@@ -18,3 +18,6 @@ func init() {
 		}},
 	})
 }
+func AdminCmd(m *ice.Message, cmd string) string {
+	return m.Cmdx(SPIDE, ice.OPS, SPIDE_RAW, http.MethodGet, C(cmd))
+}

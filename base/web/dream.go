@@ -74,9 +74,6 @@ func _dream_start(m *ice.Message, name string) {
 		cli.CTX_ROOT, kit.Path(""), cli.PATH, cli.BinPath(p, ""), cli.USER, ice.Info.Username,
 	)...), cli.CMD_OUTPUT, path.Join(p, ice.VAR_LOG_BOOT_LOG), mdb.CACHE_CLEAR_ONEXIT, ice.TRUE)
 	gdb.Event(m, DREAM_CREATE, m.OptionSimple(mdb.NAME, mdb.TYPE, cli.CMD_DIR))
-	// if m.Option(nfs.BINARY) == "" && os.Getenv(cli.CTX_DEV) != "" && os.Getenv(cli.CTX_POD) != "" {
-	// 	m.Option(nfs.BINARY, os.Getenv(cli.CTX_DEV)+S(os.Getenv(cli.CTX_POD)))
-	// }
 	kit.If(m.Option(nfs.BINARY), func(p string) { _dream_binary(m, p) })
 	kit.If(m.Option(nfs.TEMPLATE), func(p string) { _dream_template(m, p) })
 	bin := kit.Select(kit.Path(os.Args[0]), cli.SystemFind(m, ice.ICE_BIN, nfs.PWD+path.Join(p, ice.BIN), nfs.PWD+ice.BIN))
@@ -384,4 +381,7 @@ func DreamEach(m *ice.Message, name string, status string, cb func(string)) *ice
 		return nil
 	})
 	return m
+}
+func DreamList(m *ice.Message) *ice.Message {
+	return m.SplitIndex(AdminCmd(m, DREAM))
 }

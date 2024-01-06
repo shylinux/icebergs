@@ -150,6 +150,7 @@ const (
 	ECHO  = "echo"
 	REST  = "rest"
 	OPENS = "opens"
+	PARAM = "param"
 )
 
 const SYSTEM = "system"

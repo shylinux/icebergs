@@ -294,13 +294,21 @@ func (s relay) Install(m *ice.Message, arg ...string) {
 }
 func (s relay) Upgrade(m *ice.Message, arg ...string) {
 	if len(arg) == 0 && (m.Option(MACHINE) == "" || strings.Contains(m.Option(MACHINE), ",")) {
-		s.ForFlow(m.Options(ice.CMD, m.Template(UPGRADE_SH), cli.INTERVAL, "3s"))
+		s.foreach(m, func(msg *ice.Message, cmd []string) {
+			ssh.PushShell(msg.Message, strings.Split(msg.Template(UPGRADE_SH), lex.NL), func(res string) {
+				web.PushNoticeGrow(m.Options(ctx.DISPLAY, web.PLUGIN_XTERM).Message, res)
+			})
+		})
 	} else {
 		s.shell(m, m.Template(UPGRADE_SH), arg...)
 	}
 }
 func (s relay) Version(m *ice.Message, arg ...string) {
-	s.ForFlow(m.Options(ice.CMD, m.Template(VERSION_SH)))
+	s.foreach(m, func(msg *ice.Message, cmd []string) {
+		ssh.PushShell(msg.Message, strings.Split(msg.Template(VERSION_SH), lex.NL), func(res string) {
+			web.PushNoticeGrow(m.Options(ctx.DISPLAY, web.PLUGIN_XTERM).Message, res)
+		})
+	})
 }
 func (s relay) AdminCmd(m *ice.Message, arg ...string) {
 	s.shell(m, s.admins(m, m.Option(ice.CMD)), arg...)

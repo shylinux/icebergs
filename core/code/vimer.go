@@ -214,7 +214,7 @@ func init() {
 		}, chat.FavorAction(), ctx.ConfAction(ctx.TOOLS, "xterm,compile,runtime")), Hand: func(m *ice.Message, arg ...string) {
 			if m.Cmdy(INNER, arg); arg[0] != ctx.ACTION {
 				if web.IsLocalHost(m) {
-					m.Action(nfs.SAVE, COMPILE, mdb.SHOW, cli.EXEC, ice.APP)
+					m.Action(nfs.SAVE, COMPILE, mdb.SHOW, ice.APP)
 				} else {
 					m.Action(nfs.SAVE, COMPILE, mdb.SHOW)
 				}

@@ -233,15 +233,16 @@ func init() {
 			PUBLISH: {Name: "publish name", Help: "发布", Icon: "bi bi-send-check", Hand: func(m *ice.Message, arg ...string) {
 				defer ToastProcess(m)()
 				m.Cmd(CODE_AUTOGEN, "binpack")
+				list := []string{cli.LINUX, cli.DARWIN, cli.WINDOWS}
 				msg := m.Spawn(ice.Maps{ice.MSG_DAEMON: ""})
-				PushNoticeRich(m, mdb.NAME, ice.Info.NodeName, msg.Cmd(CODE_COMPILE, cli.LINUX, cli.AMD64).AppendSimple())
-				PushNoticeRich(m, mdb.NAME, ice.Info.NodeName, msg.Cmd(CODE_COMPILE, cli.DARWIN, cli.AMD64).AppendSimple())
-				PushNoticeRich(m, mdb.NAME, ice.Info.NodeName, msg.Cmd(CODE_COMPILE, cli.WINDOWS, cli.AMD64).AppendSimple())
+				kit.For(list, func(goos string) {
+					PushNoticeRich(m, mdb.NAME, ice.Info.NodeName, msg.Cmd(CODE_COMPILE, goos, cli.AMD64).AppendSimple())
+				})
 				DreamEach(m, m.Option(mdb.NAME), "", func(name string) {
 					m.Cmd(SPACE, name, CODE_AUTOGEN, "binpack")
-					PushNoticeRich(m, mdb.NAME, name, msg.Cmd(SPACE, name, CODE_COMPILE, cli.LINUX, cli.AMD64).AppendSimple())
-					PushNoticeRich(m, mdb.NAME, name, msg.Cmd(SPACE, name, CODE_COMPILE, cli.DARWIN, cli.AMD64).AppendSimple())
-					PushNoticeRich(m, mdb.NAME, name, msg.Cmd(SPACE, name, CODE_COMPILE, cli.WINDOWS, cli.AMD64).AppendSimple())
+					kit.For(list, func(goos string) {
+						PushNoticeRich(m, mdb.NAME, name, msg.Cmd(SPACE, name, CODE_COMPILE, goos, cli.AMD64).AppendSimple())
+					})
 				})
 				m.ProcessHold()
 			}},

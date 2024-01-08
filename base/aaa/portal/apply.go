@@ -62,7 +62,7 @@ func (s apply) Login(m *ice.Message, arg ...string) {
 		m.Options(ice.MSG_USERNAME, m.Option(aaa.EMAIL))
 		space := kit.Keys(kit.Slice(kit.Split(m.Option(ice.MSG_DAEMON), nfs.PT), 0, -1))
 		share := m.Cmd(web.SHARE, mdb.CREATE, mdb.TYPE, web.FIELD, mdb.NAME, web.CHAT_GRANT, mdb.TEXT, space).Append(mdb.LINK)
-		m.Cmdy(aaa.EMAIL, aaa.SEND, mdb.Config(m.Message, aaa.EMAIL), m.Option(aaa.EMAIL), "", "login contexts, please grant", html.FormatA(share))
+		aaa.SendEmail(m.Options(web.LINK, share).Message, "", "", "")
 		m.ProcessHold()
 	}
 }

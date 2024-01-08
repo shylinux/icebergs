@@ -2,6 +2,7 @@ package aaa
 
 import (
 	"net/smtp"
+	"strings"
 	"time"
 
 	ice "shylinux.com/x/icebergs"
@@ -53,4 +54,11 @@ func init() {
 			}},
 		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,service,username", ice.ACTION, SEND))},
 	})
+}
+func SendEmail(m *ice.Message, from, to, cc string, arg ...string) {
+	m.Option(ice.MSG_USERHOST, strings.Split(m.Option(ice.MSG_USERHOST), "://")[1])
+	m.Cmdy(EMAIL, SEND, kit.Select(mdb.Config(m, EMAIL), from), kit.Select(m.Option(EMAIL), to), cc,
+		kit.Select(ice.Render(m, ice.RENDER_TEMPLATE, "subject.html"), arg, 0),
+		kit.Select(ice.Render(m, ice.RENDER_TEMPLATE, "content.html"), arg, 1),
+	)
 }

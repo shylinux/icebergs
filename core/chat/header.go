@@ -93,6 +93,10 @@ func init() {
 				m.Cmdy(aaa.EMAIL, aaa.SEND, aaa.FROM, aaa.ADMIN, arg, aaa.CONTENT, nfs.Template(m, "email.html"))
 			}},
 			aaa.LOGOUT: {Hand: aaa.SessLogout},
+			cli.QRCODE: {Hand: func(m *ice.Message, arg ...string) {
+				m.Push(web.LINK, tcp.PublishLocalhost(m, m.Option(ice.MSG_USERWEB)))
+				m.EchoQRCode(tcp.PublishLocalhost(m, m.Option(ice.MSG_USERWEB)))
+			}},
 			mdb.CREATE: {Name: "create type*=plugin,qrcode,oauth name* icons link order space index args", Hand: func(m *ice.Message, arg ...string) { mdb.HashCreate(m, m.OptionSimple()) }},
 			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) { mdb.HashRemove(m, m.OptionSimple(mdb.NAME)) }},
 			mdb.MODIFY: {Hand: func(m *ice.Message, arg ...string) { mdb.HashModify(m, m.OptionSimple(mdb.NAME), arg) }},

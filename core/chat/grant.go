@@ -32,7 +32,7 @@ func init() {
 					return
 				} else if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin) || m.Warn(m.Option(web.SPACE) == "", ice.ErrNotValid, web.SPACE) {
 					return
-				} else if msg := m.Cmd(web.SPACE, m.Option(web.SPACE)); m.Warn(msg.Append(mdb.TYPE) != aaa.LOGIN, ice.ErrNotFound, m.Option(web.SPACE)) {
+				} else if msg := m.Cmd(web.SPACE, m.Option(web.SPACE)); m.Warn(msg.Append(mdb.TYPE) == "", ice.ErrNotFound, m.Option(web.SPACE)) {
 					return
 				} else {
 					web.RenderCookie(m, aaa.SessValid(m))

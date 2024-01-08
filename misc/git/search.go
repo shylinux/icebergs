@@ -47,7 +47,7 @@ func init() {
 					})
 				})
 			}},
-		}, web.DreamAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, web.DreamAction(), ctx.ConfAction(ctx.TOOLS, web.DREAM)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				m.Cmdy(web.SPIDE).RenameAppend(web.CLIENT_NAME, REPOS, web.CLIENT_URL, ORIGIN).Cut("time,repos,origin")
 				return
@@ -70,6 +70,7 @@ func init() {
 				// m.Echo(kit.Formats(value))
 			})
 			m.RenameAppend(CLONE_URL, REPOS).Action(ORIGIN).Display("")
+			ctx.Toolkit(m, "")
 		}},
 	})
 }

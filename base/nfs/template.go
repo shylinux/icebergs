@@ -11,7 +11,13 @@ const TEMPLATE = "template"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		TEMPLATE: {Name: "template index path auto", Help: "模板", Actions: ice.MergeActions(ice.Actions{}), Hand: func(m *ice.Message, arg ...string) {
+		TEMPLATE: {Name: "template index path auto", Help: "模板", Actions: ice.MergeActions(ice.Actions{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				ice.AddRender(ice.RENDER_TEMPLATE, func(m *ice.Message, args ...ice.Any) string {
+					return Template(m, kit.Format(args[0]), args[1:]...)
+				})
+			}},
+		}), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				m.Cmdy(ice.COMMAND).Action("filter:text").Option(ice.MSG_DISPLAY, "")
 				return

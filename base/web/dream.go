@@ -140,7 +140,7 @@ const DREAM = "dream"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		DREAM: {Name: "dream name@key auto create repos startall stopall build publish", Help: "梦想家", Icon: "Launchpad.png", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
+		DREAM: {Name: "dream name@key auto create startall stopall build publish", Help: "梦想家", Icon: "Launchpad.png", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m = m.Spawn()
 				m.GoSleep("10s", func() {

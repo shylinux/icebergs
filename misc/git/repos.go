@@ -220,6 +220,9 @@ func _repos_tag(m *ice.Message, tags string) string {
 	}
 }
 func _repos_status(m *ice.Message, p string, repos *git.Repository) error {
+	if kit.IsIn(p, "go-git") {
+		return nil
+	}
 	work, err := repos.Worktree()
 	if err != nil {
 		return err

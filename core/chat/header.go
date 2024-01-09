@@ -89,10 +89,7 @@ func init() {
 					return
 				}
 				m.Cmdy(web.SHARE, mdb.CREATE, mdb.TYPE, web.LOGIN, mdb.TEXT, tcp.PublishLocalhost(m, m.Option(ice.MSG_USERWEB)))
-				aaa.SendEmail(m, aaa.ADMIN, m.Option("to"), "", m.Option("subject"))
-
-				// m.Options("volcano", web.UserHost(m), nfs.VERSION, web.RenderVersion(m))
-				// m.Cmdy(aaa.EMAIL, aaa.SEND, aaa.FROM, aaa.ADMIN, arg, aaa.CONTENT, nfs.Template(m, "email.html"))
+				aaa.SendEmail(m, aaa.ADMIN, m.Option(aaa.TO), "")
 			}},
 			aaa.LOGOUT: {Hand: aaa.SessLogout},
 			cli.QRCODE: {Hand: func(m *ice.Message, arg ...string) {

@@ -1,8 +1,6 @@
 package chat
 
 import (
-	"net/http"
-
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
@@ -28,9 +26,10 @@ func init() {
 			}},
 			web.HOME: {Help: "首页", Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen(m.MergeLink(web.CHAT_PORTAL)) }},
 			aaa.CONFIRM: {Help: "授权", Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
-				if m.Warn(m.R.Method == http.MethodGet, ice.ErrNotAllow) {
-					return
-				} else if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin) || m.Warn(m.Option(web.SPACE) == "", ice.ErrNotValid, web.SPACE) {
+				// if m.Warn(m.R.Method == http.MethodGet, ice.ErrNotAllow) {
+				// 	return
+				// } else
+				if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin) || m.Warn(m.Option(web.SPACE) == "", ice.ErrNotValid, web.SPACE) {
 					return
 				} else if msg := m.Cmd(web.SPACE, m.Option(web.SPACE)); m.Warn(msg.Append(mdb.TYPE) == "", ice.ErrNotFound, m.Option(web.SPACE)) {
 					return

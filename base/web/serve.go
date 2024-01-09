@@ -260,15 +260,15 @@ func init() {
 		}
 	})
 }
-func Domain(host, port string) string { return kit.Format("%s://%s:%s", HTTP, host, port) }
+
+func Domain(host, port string) string {
+	return kit.Format("%s://%s:%s", HTTP, host, port)
+}
 func Script(m *ice.Message, str string, arg ...ice.Any) string {
 	return ice.Render(m, ice.RENDER_SCRIPT, kit.Format(str, arg...))
 }
 func ChatCmdPath(m *ice.Message, arg ...string) string {
-	if p := m.Option(ice.MSG_USERPOD); p != "" {
-		return path.Join(CHAT_POD, p, "/cmd/", kit.Select(m.PrefixKey(), path.Join(arg...)))
-	}
-	return path.Join(CHAT_CMD, kit.Select(m.PrefixKey(), path.Join(arg...)))
+	return m.MergePodCmd("", kit.Select(m.PrefixKey(), path.Join(arg...)))
 }
 func RequireFile(m *ice.Message, file string) string {
 	if strings.HasPrefix(file, nfs.PS) || strings.HasPrefix(file, ice.HTTP) {

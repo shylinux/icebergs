@@ -1,5 +1,5 @@
 Volcanos(chat.ONIMPORT, {
-	_init: function(can, msg) { if (!can.Option(nfs.REPOS)) { return can.onappend.table(can, msg) }
+	_init: function(can, msg) {
 		if (can.isZoneMode()) { return can.onimport._vimer_zone(can, msg, can._output) }
 		can.onappend.style(can, "card", can._output)
 		can.page.Appends(can, can._output, msg.Table(function(value) { value.language == "JavaScript" && (value.language = "JS")

@@ -214,7 +214,7 @@ func init() {
 				}
 			}},
 			nfs.REPOS: {Help: "仓库", Icon: "bi bi-git", Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessOpen(m.MergePodCmd("", CODE_GIT_SEARCH, nfs.REPOS, nfs.REPOS))
+				m.ProcessOpen(m.MergePodCmd("", CODE_GIT_SEARCH))
 			}},
 			STARTALL: {Name: "startall name", Help: "启动", Icon: "bi bi-play-circle", Hand: func(m *ice.Message, arg ...string) {
 				DreamEach(m, m.Option(mdb.NAME), cli.STOP, func(name string) {
@@ -315,7 +315,7 @@ func init() {
 					PushStats(m, kit.Keys(m.CommandKey(), mdb.TOTAL), msg.Length(), "", "已启动空间")
 				}
 			}},
-		}, StatsAction(), DreamAction(), mdb.ImportantHashAction(ctx.TOOLS, ROUTE, mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icon,repos,binary,template,restart")), Hand: func(m *ice.Message, arg ...string) {
+		}, StatsAction(), DreamAction(), mdb.ImportantHashAction(ctx.TOOLS, "web.code.git.search,route", mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icon,repos,binary,template,restart")), Hand: func(m *ice.Message, arg ...string) {
 			if ice.Info.NodeType == WORKER {
 				return
 			} else if len(arg) == 0 {
@@ -334,6 +334,17 @@ func init() {
 					return value
 				}).Option(ice.MSG_ACTION, "")
 				ctx.DisplayTableCard(m)
+				return
+				m.Cmds(SPACE, func(value ice.Maps) {
+					if value[mdb.TYPE] == SERVER {
+						m.Push(mdb.TYPE, value[mdb.TYPE])
+						m.Push(mdb.NAME, value[mdb.NAME])
+						m.Push(mdb.ICON, nfs.USR_ICONS_ICEBERGS)
+						m.Push(mdb.TEXT, SERVER)
+						msg := gdb.Event(m.Spawn(value), DREAM_TABLES)
+						m.PushButton(strings.Join(msg.Appendv(ctx.ACTION), ""))
+					}
+				})
 			} else if arg[0] == ctx.ACTION {
 				gdb.Event(m, DREAM_ACTION, arg)
 			} else {

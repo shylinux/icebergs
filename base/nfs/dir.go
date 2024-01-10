@@ -103,7 +103,7 @@ func _dir_list(m *ice.Message, root string, dir string, level int, deep bool, di
 						m.PushDownload(mdb.LINK, p)
 					}
 				case mdb.SHOW:
-					switch p := m.MergeLink(ice.SHARE_LOCAL+p, ice.POD, m.Option(ice.MSG_USERPOD)); kit.Ext(s.Name()) {
+					switch p := m.MergeLink(SHARE_LOCAL+p, ice.POD, m.Option(ice.MSG_USERPOD)); kit.Ext(s.Name()) {
 					case PNG, JPG:
 						m.PushImages(field, p)
 					case MP4:
@@ -136,26 +136,31 @@ func _dir_list(m *ice.Message, root string, dir string, level int, deep bool, di
 }
 
 const (
-	PWD            = "./"
-	SRC            = "src/"
-	ETC            = "etc/"
-	BIN            = "bin/"
-	VAR            = "var/"
-	USR            = "usr/"
-	USR_PORTAL     = ice.USR_PORTAL
-	USR_PUBLISH    = ice.USR_PUBLISH
-	USR_ICEBERGS   = ice.USR_ICEBERGS
-	USR_LOCAL_WORK = ice.USR_LOCAL_WORK
-	USR_LOCAL      = ice.USR_LOCAL
-	SRC_DOCUMENT   = ice.SRC_DOCUMENT
-	SRC_TEMPLATE   = ice.SRC_TEMPLATE
-	REQUIRE_SRC    = "/require/src/"
-	REQUIRE_USR    = "/require/usr/"
-	REQUIRE        = "/require/"
-	VOLCANOS       = "/volcanos/"
-	INTSHELL       = "/intshell/"
-	PATHNAME       = "pathname"
-	FILENAME       = "filename"
+	PWD = "./"
+	SRC = "src/"
+	ETC = "etc/"
+	BIN = "bin/"
+	VAR = "var/"
+	USR = "usr/"
+
+	USR_PORTAL      = ice.USR_PORTAL
+	USR_PUBLISH     = ice.USR_PUBLISH
+	USR_ICEBERGS    = ice.USR_ICEBERGS
+	USR_LOCAL_WORK  = ice.USR_LOCAL_WORK
+	USR_LOCAL       = ice.USR_LOCAL
+	SRC_DOCUMENT    = ice.SRC_DOCUMENT
+	SRC_TEMPLATE    = ice.SRC_TEMPLATE
+	USR_PACKAGE     = "usr/package.json"
+	USR_MODULES     = "usr/node_modules/"
+	SHARE_LOCAL     = "/share/local/"
+	REQUIRE_MODULES = "/require/modules/"
+	REQUIRE_SRC     = "/require/src/"
+	REQUIRE_USR     = "/require/usr/"
+	REQUIRE         = "/require/"
+	VOLCANOS        = "/volcanos/"
+	INTSHELL        = "/intshell/"
+	PATHNAME        = "pathname"
+	FILENAME        = "filename"
 
 	USR_ICONS_AVATAR   = "usr/icons/avatar.jpg"
 	USR_ICONS_CONTEXTS = "usr/icons/contexts.png"
@@ -230,7 +235,7 @@ func Relative(m *ice.Message, p string) string {
 	}
 }
 func SplitPath(m *ice.Message, p string) []string {
-	if kit.HasPrefix(p, ice.REQUIRE_SRC, ice.REQUIRE_USR) {
+	if kit.HasPrefix(p, REQUIRE_SRC, REQUIRE_USR) {
 		p = strings.TrimPrefix(p, REQUIRE)
 	} else if kit.HasPrefix(p, REQUIRE) {
 		ls := kit.Split(p, PS)
@@ -262,7 +267,7 @@ func DirDeepAll(m *ice.Message, root, dir string, cb func(ice.Maps), arg ...stri
 	}
 }
 func Show(m *ice.Message, file string) bool {
-	p := ice.SHARE_LOCAL + file
+	p := SHARE_LOCAL + file
 	kit.If(m.Option(ice.MSG_USERPOD), func(pod string) {
 		p += "?" + kit.JoinKV("=", "&", ice.POD, pod)
 	})

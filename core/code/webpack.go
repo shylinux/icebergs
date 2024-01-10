@@ -19,8 +19,8 @@ import (
 func _volcanos(m *ice.Message, p ...string) string { return ice.USR_VOLCANOS + path.Join(p...) }
 func _publish(m *ice.Message, p ...string) string  { return ice.USR_PUBLISH + path.Join(p...) }
 func _require(m *ice.Message, p string) string {
-	if kit.HasPrefix(p, ice.USR_MODULES) {
-		return path.Join("/require/modules/", strings.TrimPrefix(p, ice.USR_MODULES))
+	if kit.HasPrefix(p, nfs.USR_MODULES) {
+		return path.Join("/require/modules/", strings.TrimPrefix(p, nfs.USR_MODULES))
 	} else if kit.HasPrefix(p, ice.USR_VOLCANOS) {
 		return path.Join("/volcanos/", strings.TrimPrefix(p, ice.USR_VOLCANOS))
 	} else if kit.HasPrefix(p, nfs.SRC, nfs.USR) {
@@ -83,10 +83,10 @@ func _webpack_cache(m *ice.Message, dir string, write bool) {
 	mdb.HashSelects(m).Sort(nfs.PATH).Table(func(value ice.Maps) {
 		defer fmt.Fprintln(js, "")
 		if p := value[nfs.PATH]; kit.Ext(p) == nfs.CSS {
-			_webpack_css(m, css, js, path.Join(ice.USR_MODULES, p))
+			_webpack_css(m, css, js, path.Join(nfs.USR_MODULES, p))
 		} else {
 			p = kit.Select(path.Join(p, LIB, kit.Keys(p, JS)), p, kit.Ext(p) == nfs.JS)
-			_webpack_node(m, js, path.Join(ice.USR_MODULES, p))
+			_webpack_node(m, js, path.Join(nfs.USR_MODULES, p))
 		}
 	})
 }

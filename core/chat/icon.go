@@ -16,7 +16,7 @@ const ICON = "icon"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		ICON: {Help: "图标", Actions: ctx.ConfAction(nfs.PATH, "bootstrap-icons/font/bootstrap-icons.css"), Hand: func(m *ice.Message, arg ...string) {
-			m.Cmd(lex.SPLIT, ice.USR_MODULES+mdb.Config(m, nfs.PATH), kit.Dict(lex.SPLIT_SPACE, " {:;}"), func(text string, ls []string) {
+			m.Cmd(lex.SPLIT, nfs.USR_MODULES+mdb.Config(m, nfs.PATH), kit.Dict(lex.SPLIT_SPACE, " {:;}"), func(text string, ls []string) {
 				if len(ls) > 2 && ls[2] == nfs.CONTENT {
 					name := "bi " + strings.TrimPrefix(ls[0], nfs.PT)
 					m.Push(mdb.NAME, name).Push(mdb.ICON, kit.Format(`<i class="%s"></i>`, name))

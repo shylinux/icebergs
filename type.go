@@ -90,8 +90,7 @@ func (c *Context) ID() int32      { return atomic.AddInt32(&c.id, 1) }
 func (c *Context) Register(s *Context, x Server, cmd ...string) *Context {
 	kit.For(cmd, func(cmd string) {
 		if s, ok := Info.Index[cmd].(*Context); ok {
-			println(kit.Format("%s %s registed by %v", ErrWarn, cmd, s.Name))
-			// panic(kit.Format("%s %s registed by %v", ErrWarn, cmd, s.Name))
+			panic(kit.Format("%s %s registed by %v", ErrWarn, cmd, s.Name))
 		}
 		Info.Index[cmd] = s
 	})

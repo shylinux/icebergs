@@ -87,7 +87,7 @@ func init() {
 					}
 					m.Append(web.LINK, arg[0])
 				})
-				m.Action(web.FULL, web.OPEN, ice.APP).StatusTime(m.AppendSimple(web.LINK))
+				m.StatusTime(m.AppendSimple(web.LINK))
 				ctx.DisplayLocal(m, "")
 			}
 		}},

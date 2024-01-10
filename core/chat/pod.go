@@ -46,7 +46,7 @@ func init() {
 					m.Cmdy(web.SPACE, arg[0], web.SPACE, ice.MAIN)
 				} else if kit.IsIn(arg[1], CMD, "c") {
 					if arg[2] == web.CHAT_PORTAL {
-						m.Cmdy(web.SPACE, arg[0], web.SPACE, ice.MAIN)
+						m.Cmdy(web.SPACE, arg[0], arg[2])
 					} else {
 						web.RenderPodCmd(m, arg[0], arg[2], arg[3:])
 					}

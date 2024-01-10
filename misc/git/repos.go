@@ -615,12 +615,10 @@ func init() {
 				kit.If(m.Option(REPOS), func(p string) {
 					p = strings.Split(p, mdb.QS)[0]
 					kit.If(!strings.Contains(p, "://"), func() { p = kit.MergeURL2(web.UserHost(m), web.X(p)) })
-					m.Cmd("", CLONE, ORIGIN, p, nfs.PATH, m.Option(cli.CMD_DIR), ice.Maps{cli.CMD_DIR: ""})
+					m.Cmd("", CLONE, ORIGIN, p, nfs.PATH, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME)), ice.Maps{cli.CMD_DIR: ""})
 				})
 			}},
-			web.DREAM_TRASH: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd("", mdb.REMOVE, kit.Dict(REPOS, m.Option(mdb.NAME)))
-			}},
+			web.DREAM_TRASH: {Hand: func(m *ice.Message, arg ...string) { m.Cmd("", mdb.REMOVE, kit.Dict(REPOS, m.Option(mdb.NAME))) }},
 			web.SPACE_OPEN: {Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(mdb.TYPE) == web.SERVER {
 					m.Cmd(web.DREAM).Table(func(value ice.Maps) {

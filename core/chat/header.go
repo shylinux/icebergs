@@ -80,7 +80,7 @@ func init() {
 			aaa.BACKGROUND: {Hand: _header_users},
 			aaa.THEME: {Hand: func(m *ice.Message, arg ...string) {
 				if tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) {
-					m.Cmd(cli.SYSTEM, "osascript", "-e", `tell app "System Events" to tell appearance preferences to set dark mode to `+
+					cli.TellApp(m, "System Events", `tell appearance preferences to set dark mode to `+
 						kit.Select(ice.TRUE, ice.FALSE, kit.IsIn(kit.Select(html.LIGHT, arg, 0), html.LIGHT, html.WHITE)))
 				}
 			}},

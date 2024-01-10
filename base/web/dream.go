@@ -18,6 +18,7 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
+	"shylinux.com/x/icebergs/base/web/html"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -149,13 +150,14 @@ func init() {
 							m.Cmd(DREAM, cli.START, kit.Dict(mdb.NAME, value[mdb.NAME]))
 						}
 					})
+					for _, cmd := range kit.Reverse(kit.Split(mdb.Config(m, html.BUTTON))) {
+						m.Cmd(gdb.EVENT, gdb.LISTEN, gdb.EVENT, DREAM_TABLES, ice.CMD, cmd)
+						m.Cmd(gdb.EVENT, gdb.LISTEN, gdb.EVENT, DREAM_ACTION, ice.CMD, cmd)
+					}
 				})
 			}},
-			ctx.CONFIG: {Hand: func(m *ice.Message, arg ...string) {
-				for _, cmd := range kit.Reverse(arg) {
-					m.Cmd(gdb.EVENT, gdb.LISTEN, gdb.EVENT, DREAM_TABLES, ice.CMD, cmd)
-					m.Cmd(gdb.EVENT, gdb.LISTEN, gdb.EVENT, DREAM_ACTION, ice.CMD, cmd)
-				}
+			html.BUTTON: {Hand: func(m *ice.Message, arg ...string) {
+				mdb.Config(m, html.BUTTON, kit.Join(arg))
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if mdb.IsSearchPreview(m, arg) {
@@ -315,10 +317,10 @@ func init() {
 					PushStats(m, kit.Keys(m.CommandKey(), mdb.TOTAL), msg.Length(), "", "已启动空间")
 				}
 			}},
-		}, StatsAction(), DreamAction(), mdb.ImportantHashAction(ctx.TOOLS, "web.code.git.search,route", mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icon,repos,binary,template,restart")), Hand: func(m *ice.Message, arg ...string) {
-			if ice.Info.NodeType == WORKER {
-				return
-			} else if len(arg) == 0 {
+		}, StatsAction(), DreamAction(), mdb.ImportantHashAction(
+			html.BUTTON, "web.wiki.portal web.chat.portal web.chat.macos.desktop web.code.git.status web.code.vimer web.code.xterm web.code.compile",
+			ctx.TOOLS, "web.code.git.search,route", mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icon,repos,binary,template,restart")), Hand: func(m *ice.Message, arg ...string) {
+			if len(arg) == 0 {
 				_dream_list(m).RewriteAppend(func(value, key string, index int) string {
 					if key == mdb.ICON {
 						if kit.HasPrefix(value, HTTP, nfs.PS) {

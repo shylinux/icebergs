@@ -294,7 +294,7 @@ func init() {
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				conf := mdb.Confm(m, cli.RUNTIME, cli.CONF)
 				m.Cmd("", mdb.CREATE, ice.SHY, kit.Select("https://shylinux.com", conf[cli.CTX_SHY]))
-				m.Cmd("", mdb.CREATE, ice.DEV, kit.Select(kit.Select("https://2021.shylinux.com", ice.Info.Make.Domain), conf[cli.CTX_DEV]))
+				m.Cmd("", mdb.CREATE, ice.DEV, kit.Select("https://2021.shylinux.com", ice.Info.Make.Domain, conf[cli.CTX_DEV]))
 				m.Cmd("", mdb.CREATE, ice.OPS, kit.Select("http://localhost:9020", conf[cli.CTX_OPS]))
 				m.Cmd("", mdb.CREATE, ice.DEMO, kit.Select("http://localhost:20000", conf[cli.CTX_DEMO]))
 				m.Cmd("", mdb.CREATE, ice.MAIL, kit.Select("https://mail.shylinux.com", conf[cli.CTX_MAIL]))

@@ -45,7 +45,7 @@ func init() {
 				if m.Option(ice.MSG_USERPOD, arg[0]); len(arg) == 1 {
 					m.Cmdy(web.SPACE, arg[0], web.SPACE, ice.MAIN)
 				} else if kit.IsIn(arg[1], CMD, "c") {
-					if arg[2] == web.CHAT_PORTAL {
+					if kit.IsIn(arg[2], web.ADMIN) {
 						m.Cmdy(web.SPACE, arg[0], arg[2])
 					} else {
 						web.RenderPodCmd(m, arg[0], arg[2], arg[3:])

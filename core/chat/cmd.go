@@ -12,7 +12,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		CMD: {Help: "命令", Actions: web.ApiWhiteAction(), Hand: func(m *ice.Message, arg ...string) {
 			switch cmd := kit.Select(web.WIKI_WORD, arg, 0); cmd {
-			case web.CHAT_PORTAL:
+			case web.ADMIN:
 				web.RenderMain(m)
 			default:
 				if m.IsCliUA() {

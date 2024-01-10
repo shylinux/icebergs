@@ -157,14 +157,7 @@ func RenderVersion(m *ice.Message) string {
 }
 
 const (
-	CHAT            = "chat"
-	CHAT_POD        = "/chat/pod/"
-	CHAT_CMD        = "/chat/cmd/"
-	REQUIRE_SRC     = "/require/src/"
-	REQUIRE_USR     = "/require/usr/"
-	REQUIRE_MODULES = "/require/modules/"
-	VOLCANOS        = "/volcanos/"
-	INTSHELL        = "/intshell/"
+	CHAT = "chat"
 
 	CODE_GIT_SERVICE  = "web.code.git.service"
 	CODE_GIT_SEARCH   = "web.code.git.search"
@@ -181,7 +174,6 @@ const (
 	WIKI_DRAW         = "web.wiki.draw"
 	WIKI_WORD         = "web.wiki.word"
 	WIKI_PORTAL       = "web.wiki.portal"
-	CHAT_PORTAL       = "web.chat.portal"
 	CHAT_HEADER       = "web.chat.header"
 	CHAT_IFRAME       = "web.chat.iframe"
 	CHAT_OAUTH_CLIENT = "web.chat.oauth.client"

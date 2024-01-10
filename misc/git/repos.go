@@ -509,9 +509,9 @@ func init() {
 					mdb.HashRemove(m, m.Option(REPOS))
 				}
 			}},
-			CLONE: {Name: "clone origin* name", Help: "克隆", Icon: "bi bi-copy", Hand: func(m *ice.Message, arg ...string) {
+			CLONE: {Name: "clone origin* name path", Help: "克隆", Icon: "bi bi-copy", Hand: func(m *ice.Message, arg ...string) {
 				m.OptionDefault(mdb.NAME, path.Base(m.Option(ORIGIN)))
-				m.Option(nfs.PATH, path.Join(nfs.USR, m.Option(mdb.NAME))+nfs.PS)
+				m.OptionDefault(nfs.PATH, path.Join(nfs.USR, m.Option(mdb.NAME))+nfs.PS)
 				defer m.Cmdy(nfs.DIR, m.Option(nfs.PATH))
 				if nfs.Exists(m, path.Join(m.Option(nfs.PATH), _GIT)) {
 					return

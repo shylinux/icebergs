@@ -152,13 +152,13 @@ const (
 	SRC_TEMPLATE    = ice.SRC_TEMPLATE
 	USR_PACKAGE     = "usr/package.json"
 	USR_MODULES     = "usr/node_modules/"
-	SHARE_LOCAL     = "/share/local/"
 	REQUIRE_MODULES = "/require/modules/"
 	REQUIRE_SRC     = "/require/src/"
 	REQUIRE_USR     = "/require/usr/"
 	REQUIRE         = "/require/"
 	VOLCANOS        = "/volcanos/"
 	INTSHELL        = "/intshell/"
+	SHARE_LOCAL     = "/share/local/"
 	PATHNAME        = "pathname"
 	FILENAME        = "filename"
 

@@ -18,7 +18,7 @@ func (s npm) Init(m *ice.Message) {
 	cli.IsRedhat(m.Message, NPM, "nodejs")
 }
 func (s npm) List(m *ice.Message) {
-	m.Cmdy(nfs.DIR, ice.USR_MODULES)
+	m.Cmdy(nfs.DIR, nfs.USR_MODULES)
 }
 
 func init() { ice.CodeCtxCmd(npm{}) }

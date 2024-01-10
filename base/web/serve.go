@@ -59,7 +59,7 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	} else {
 		r.Header.Set(ice.MSG_USERIP, strings.Split(r.RemoteAddr, nfs.DF)[0])
 	}
-	if !kit.HasPrefix(r.URL.String(), VOLCANOS, REQUIRE_MODULES, INTSHELL) {
+	if !kit.HasPrefix(r.URL.String(), nfs.VOLCANOS, nfs.REQUIRE_MODULES, nfs.INTSHELL) {
 		r.Header.Set(ice.LOG_TRACEID, log.Traceid())
 		m.Logs(r.Header.Get(ice.MSG_USERIP), r.Method, r.URL.String(), logs.TraceidMeta(r.Header.Get(ice.LOG_TRACEID)))
 	}
@@ -85,7 +85,7 @@ func _serve_static(msg *ice.Message, w http.ResponseWriter, r *http.Request) boo
 	} else if p = path.Join(nfs.USR, r.URL.Path); kit.HasPrefix(r.URL.Path, nfs.VOLCANOS, nfs.INTSHELL) && nfs.Exists(msg, p) {
 		return Render(msg, ice.RENDER_DOWNLOAD, p)
 	} else if p = strings.TrimPrefix(r.URL.Path, nfs.REQUIRE); kit.HasPrefix(r.URL.Path, nfs.REQUIRE_SRC, nfs.REQUIRE+ice.USR_ICONS, nfs.REQUIRE+ice.USR_ICEBERGS) && nfs.Exists(msg, p) {
-		ispod := kit.Contains(r.URL.String(), CHAT_POD, "pod=") || kit.Contains(r.Header.Get(html.Referer), CHAT_POD, "pod=")
+		ispod := kit.Contains(r.URL.String(), "/s/", "pod=") || kit.Contains(r.Header.Get(html.Referer), "/s/", "pod=")
 		return !ispod && Render(msg, ice.RENDER_DOWNLOAD, p)
 	} else if p = path.Join(nfs.USR_MODULES, strings.TrimPrefix(r.URL.Path, nfs.REQUIRE_MODULES)); kit.HasPrefix(r.URL.Path, nfs.REQUIRE_MODULES) && nfs.Exists(msg, p) {
 		return Render(msg, ice.RENDER_DOWNLOAD, p)
@@ -214,7 +214,7 @@ func init() {
 				if m.Option(ctx.INDEX) == "" {
 					mdb.Config(m, ice.MAIN, "")
 				} else {
-					mdb.Config(m, ice.MAIN, CHAT_CMD+m.Option(ctx.INDEX)+nfs.PS)
+					mdb.Config(m, ice.MAIN, C(m.Option(ctx.INDEX)+nfs.PS))
 				}
 			}},
 			log.TRACEID: {Help: "日志", Hand: func(m *ice.Message, arg ...string) {

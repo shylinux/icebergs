@@ -316,7 +316,7 @@ func (s relay) AdminCmd(m *ice.Message, arg ...string) {
 func (s relay) Xterm(m *ice.Message, arg ...string) { s.Code.Xterm(m, m.Option(MACHINE), arg...) }
 func (s relay) Repos(m *ice.Message, arg ...string) { s.iframeCmd(m, web.CODE_GIT_STATUS, arg...) }
 func (s relay) Vimer(m *ice.Message, arg ...string) { s.iframeCmd(m, web.CODE_VIMER, arg...) }
-func (s relay) Admin(m *ice.Message, arg ...string) { s.iframeCmd(m, web.CHAT_PORTAL, arg...) }
+func (s relay) Admin(m *ice.Message, arg ...string) { s.iframeCmd(m, web.ADMIN, arg...) }
 
 func init() { ice.Cmd(SSH_RELAY, relay{}) }
 

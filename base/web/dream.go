@@ -75,6 +75,7 @@ func _dream_start(m *ice.Message, name string) {
 		cli.CTX_ROOT, kit.Path(""), cli.PATH, cli.BinPath(p, ""), cli.USER, ice.Info.Username,
 	)...), cli.CMD_OUTPUT, path.Join(p, ice.VAR_LOG_BOOT_LOG), mdb.CACHE_CLEAR_ONEXIT, ice.TRUE)
 	gdb.Event(m, DREAM_CREATE, m.OptionSimple(mdb.NAME, mdb.TYPE, cli.CMD_DIR))
+	kit.If(m.Option(nfs.BINARY) == "", func(p string) { m.Option(nfs.BINARY, SpideOrigin(m, ice.DEV)+S(name)) })
 	kit.If(m.Option(nfs.BINARY), func(p string) { _dream_binary(m, p) })
 	kit.If(m.Option(nfs.TEMPLATE), func(p string) { _dream_template(m, p) })
 	bin := kit.Select(kit.Path(os.Args[0]), cli.SystemFind(m, ice.ICE_BIN, nfs.PWD+path.Join(p, ice.BIN), nfs.PWD+ice.BIN))
@@ -141,7 +142,7 @@ const DREAM = "dream"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		DREAM: {Name: "dream name@key auto create startall stopall build publish", Help: "梦想家", Icon: "Launchpad.png", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
+		DREAM: {Name: "dream refresh", Help: "梦想家", Icon: "Launchpad.png", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m = m.Spawn()
 				m.GoSleep("10s", func() {
@@ -228,15 +229,15 @@ func init() {
 					m.Cmd("", cli.STOP, ice.Maps{mdb.NAME: name, ice.MSG_DAEMON: ""})
 				})
 			}},
-			cli.BUILD: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd("", FOR_FLOW, kit.JoinWord(cli.SH, ice.ETC_MISS_SH))
+			cli.BUILD: {Name: "build name", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd("", FOR_FLOW, m.Option(mdb.NAME), kit.JoinWord(cli.SH, ice.ETC_MISS_SH))
 				m.Sleep3s().Cmdy(ROUTE, cli.BUILD).ProcessInner()
 			}},
 			PUBLISH: {Name: "publish name", Help: "发布", Icon: "bi bi-send-check", Hand: func(m *ice.Message, arg ...string) {
 				defer ToastProcess(m)()
-				m.Cmd(CODE_AUTOGEN, "binpack")
 				list := []string{cli.LINUX, cli.DARWIN, cli.WINDOWS}
 				msg := m.Spawn(ice.Maps{ice.MSG_DAEMON: ""})
+				m.Cmd(CODE_AUTOGEN, "binpack")
 				kit.For(list, func(goos string) {
 					PushNoticeRich(m, mdb.NAME, ice.Info.NodeName, msg.Cmd(CODE_COMPILE, goos, cli.AMD64).AppendSimple())
 				})
@@ -248,13 +249,13 @@ func init() {
 				})
 				m.ProcessHold()
 			}},
-			FOR_FLOW: {Name: "forFlow cmd*='sh etc/miss.sh'", Help: "流程", Icon: "bi bi-terminal", Hand: func(m *ice.Message, arg ...string) {
+			FOR_FLOW: {Name: "forFlow name cmd*='sh etc/miss.sh'", Help: "流程", Icon: "bi bi-terminal", Hand: func(m *ice.Message, arg ...string) {
 				m.Options(ctx.DISPLAY, PLUGIN_XTERM, cli.CMD_OUTPUT, nfs.NewWriteCloser(func(buf []byte) (int, error) {
 					m.Option(ice.MSG_COUNT, "0")
 					PushNoticeGrow(m, strings.ReplaceAll(string(buf), lex.NL, "\r\n"))
 					return len(buf), nil
 				}, func() error { return nil }))
-				msg := mdb.HashSelects(m.Spawn())
+				msg := mdb.HashSelects(m.Spawn(), m.Option(mdb.NAME))
 				GoToast(m, "", func(toast func(string, int, int)) []string {
 					msg.Table(func(index int, value ice.Maps) {
 						toast(value[mdb.NAME], index, msg.Length())
@@ -318,7 +319,7 @@ func init() {
 				}
 			}},
 		}, StatsAction(), DreamAction(), mdb.ImportantHashAction(
-			html.BUTTON, "web.wiki.portal web.chat.portal web.chat.macos.desktop web.code.git.status web.code.vimer web.code.xterm web.code.compile",
+			html.BUTTON, "web.wiki.portal web.admin web.chat.macos.desktop web.code.git.status web.code.vimer web.code.xterm web.code.compile",
 			ctx.TOOLS, "web.code.git.search,route", mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icon,repos,binary,template,restart")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				_dream_list(m).RewriteAppend(func(value, key string, index int) string {
@@ -334,8 +335,13 @@ func init() {
 						}
 					}
 					return value
-				}).Option(ice.MSG_ACTION, "")
+				})
 				ctx.DisplayTableCard(m)
+				kit.If(cli.SystemFind(m, "go"), func() {
+					m.Action(mdb.CREATE, STARTALL, STOPALL, cli.BUILD, PUBLISH)
+				}, func() {
+					m.Action(mdb.CREATE, STARTALL, STOPALL)
+				})
 				return
 				m.Cmds(SPACE, func(value ice.Maps) {
 					if value[mdb.TYPE] == SERVER {

@@ -24,7 +24,7 @@ func init() {
 					m.Cmd(web.SPACE, m.Option(mdb.NAME), cli.PWD, m.Option(mdb.NAME), link, m.Cmdx(cli.QRCODE, link))
 				})
 			}},
-			web.HOME: {Help: "首页", Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen(m.MergeLink(web.CHAT_PORTAL)) }},
+			web.HOME: {Help: "首页", Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen(web.C(web.ADMIN)) }},
 			aaa.CONFIRM: {Help: "授权", Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
 				// if m.Warn(m.R.Method == http.MethodGet, ice.ErrNotAllow) {
 				// 	return

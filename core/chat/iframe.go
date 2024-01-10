@@ -65,7 +65,7 @@ func init() {
 			}},
 		}, FavorAction(), mdb.HashAction(mdb.SHORT, web.LINK, mdb.FIELD, "time,hash,type,name,link")), Hand: func(m *ice.Message, arg ...string) {
 			list := []string{m.MergePodCmd("", web.WIKI_PORTAL)}
-			list = append(list, m.MergePodCmd("", web.CHAT_PORTAL))
+			list = append(list, m.MergePodCmd("", web.ADMIN))
 			if mdb.HashSelect(m, arg...); len(arg) == 0 {
 				for _, link := range list {
 					if u := kit.ParseURL(link); u != nil {

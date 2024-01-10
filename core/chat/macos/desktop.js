@@ -3,6 +3,7 @@ Volcanos(chat.ONIMPORT, {
 	_init: function(can, msg) { can.isCmdMode() && can.onappend.style(can, html.OUTPUT)
 		can.onlayout.background(can, can.user.info.background||"/require/usr/icons/background.jpg", can._fields)
 		can.onimport._menu(can), can.onimport._notifications(can), can.onimport._searchs(can), can.onimport._dock(can)
+		can.sup.onexport.link = function() { return can.misc.MergeURL(can, {pod: can.ConfSpace(), cmd: web.DESKTOP}) }
 	},
 	_menu: function(can) { can.onappend.plugin(can, {index: "web.chat.macos.menu", style: html.OUTPUT}, function(sub) { can.ui.menu = sub
 		var tabs = can.misc.sessionStorage(can, [can.ConfIndex(), html.TABS])

@@ -292,6 +292,8 @@ func init() {
 			m.Push(arg[0], "shylinux@163.com")
 		case aaa.PASSWORD:
 			m.SetAppend()
+		case "origin":
+			m.Cmdy(SPIDE, kit.Dict(ice.MSG_FIELDS, CLIENT_ORIGIN)).CutTo(CLIENT_ORIGIN, arg[0])
 		}
 	})
 	ctx.PodCmd = func(m *ice.Message, arg ...ice.Any) bool {

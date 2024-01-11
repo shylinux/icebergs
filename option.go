@@ -126,4 +126,4 @@ func (m *Message) ProcessBack()              { m.Process(PROCESS_BACK) }
 func (m *Message) ProcessRich(arg ...Any)    { m.Process(PROCESS_RICH, arg...) }
 func (m *Message) ProcessGrow(arg ...Any)    { m.Process(PROCESS_GROW, arg...) }
 func (m *Message) ProcessOpen(url string)    { kit.If(url, func() { m.Process(PROCESS_OPEN, url) }) }
-func (m *Message) ProcessClose()             { m.Process(PROCESS_CLOSE) }
+func (m *Message) ProcessClose() *Message    { return m.Process(PROCESS_CLOSE) }

@@ -2,6 +2,7 @@ package chat
 
 import (
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
@@ -13,7 +14,7 @@ const IFRAME = "iframe"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		IFRAME: {Name: "iframe hash@key auto", Help: "浏览器", Icon: "Safari.png", Actions: ice.MergeActions(ice.Actions{
+		IFRAME: {Name: "iframe hash@key auto", Help: "浏览器", Icon: "Safari.png", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch mdb.HashInputs(m, arg); arg[0] {
 				case mdb.NAME:
@@ -64,8 +65,7 @@ func init() {
 				kit.If(m.Option(mdb.TYPE) == web.LINK, func() { ctx.ProcessField(m, m.PrefixKey(), m.Option(mdb.TEXT)) })
 			}},
 		}, FavorAction(), mdb.HashAction(mdb.SHORT, web.LINK, mdb.FIELD, "time,hash,type,name,link")), Hand: func(m *ice.Message, arg ...string) {
-			list := []string{m.MergePodCmd("", web.WIKI_PORTAL)}
-			list = append(list, m.MergePodCmd("", web.ADMIN))
+			list := []string{m.MergePodCmd("", web.PORTAL), m.MergePodCmd("", web.ADMIN)}
 			if mdb.HashSelect(m, arg...); len(arg) == 0 {
 				for _, link := range list {
 					if u := kit.ParseURL(link); u != nil {

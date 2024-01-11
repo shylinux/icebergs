@@ -38,9 +38,7 @@ func init() {
 				}
 			}},
 		}, mdb.ImportantHashAction(EMAIL, ADMIN, mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,status,invite,email,title,content")), Hand: func(m *ice.Message, arg ...string) {
-			if m.Cmd(EMAIL, mdb.Config(m, EMAIL)).Length() == 0 {
-				m.Echo("please add admin email")
-			} else if !m.Warn(len(arg) == 0 && m.Option(ice.MSG_USERROLE) == VOID, ice.ErrNotRight) {
+			if !m.Warn(len(arg) == 0 && m.Option(ice.MSG_USERROLE) == VOID, ice.ErrNotRight) {
 				kit.If(mdb.HashSelect(m, arg...).FieldsIsDetail(), func() {
 					m.Option(ice.MSG_USERHOST, strings.Split(m.Option(ice.MSG_USERHOST), "://")[1])
 					m.SetAppend().EchoInfoButton(ice.Render(m, ice.RENDER_TEMPLATE, SUBJECT_HTML), ACCEPT)

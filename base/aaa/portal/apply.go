@@ -70,10 +70,6 @@ func (s apply) Email(m *ice.Message, arg ...string) {
 	ctx.DisplayStoryForm(m.Message, "email*", s.Login).Echo("please auth login in mailbox, after email sent")
 }
 func (s apply) List(m *ice.Message, arg ...string) *ice.Message {
-	if m.Cmd(aaa.EMAIL, mdb.Config(m.Message, aaa.EMAIL)).Length() == 0 {
-		m.Echo("please add admin email")
-		return m
-	}
 	kit.If(m.Option(_cookie_key(m)), func(p string) { arg = []string{p} })
 	s.Hash.List(m, arg...).Table(func(value ice.Maps) {
 		switch value[mdb.STATUS] {

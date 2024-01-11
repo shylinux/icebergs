@@ -47,6 +47,7 @@ fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>div.item:last
 fieldset.macos.desktop>div.output>div.desktop>fieldset>div.action>div.item:last-child { margin-right:100px; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>div.action>* { margin:var(--button-margin) var(--input-margin); }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>div.action>div.tabs { display:none; }
+fieldset.macos.desktop>div.output>div.desktop>fieldset>div.output { min-height:240px; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>div.output>table.content { width:100%; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>div.output>table.content th { padding:var(--table-padding); }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>div.output>table.content td { padding:var(--table-padding); }

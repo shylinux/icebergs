@@ -72,7 +72,7 @@ type relay struct {
 	list        string `name:"list machine auto" help:"机器" icon:"relay.png"`
 	install     string `name:"install dream param" help:"安装"`
 	pushbin     string `name:"pushbin dream param" help:"部署"`
-	adminCmd    string `name:"adminCmd cmd" help:"命令"`
+	adminCmd    string `name:"adminCmd cmd" help:"命令" icon:"bi bi-terminal-plus"`
 }
 
 func (s relay) StatsTables(m *ice.Message, arg ...string) {

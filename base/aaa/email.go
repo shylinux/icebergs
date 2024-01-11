@@ -38,7 +38,7 @@ func init() {
 					m.EchoIFrame(p).ProcessInner()
 				}
 			}},
-			SEND: {Name: "send from=admin to*='shy@shylinux.com' cc subject*=hi content*:textarea=hello", Help: "发送", Hand: func(m *ice.Message, arg ...string) {
+			SEND: {Name: "send from=admin to*='shy@shylinux.com' cc subject*=hi content*:textarea=hello", Help: "发送", Icon: "bi bi-send-plus", Hand: func(m *ice.Message, arg ...string) {
 				msg := mdb.HashSelects(m.Spawn(), m.OptionDefault(FROM, ADMIN))
 				if m.Warn(msg.Append(SERVICE) == "", ice.ErrNotValid, SERVICE) {
 					return
@@ -49,12 +49,11 @@ func init() {
 				auth := smtp.PlainAuth("", msg.Append(USERNAME), msg.Append(PASSWORD), kit.Split(msg.Append(SERVICE), ice.DF)[0])
 				m.Logs(EMAIL, SEND, string(content)).Warn(smtp.SendMail(msg.Append(SERVICE), auth, msg.Append(USERNAME), kit.Split(m.Option(TO)), content))
 			}},
-			LOGIN: {Role: VOID, Hand: func(m *ice.Message, arg ...string) {
-				m.Echo("input email: ")
-			}},
-		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,service,username", ice.ACTION, SEND)), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.DevDataAction("name,service,username,password"), mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,service,username", ice.ACTION, SEND)), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) == 0 && m.Length() == 0 {
-				m.EchoInfoButton("please add admin email", mdb.CREATE)
+				m.EchoInfoButton("please add admin email", mdb.CREATE, mdb.DEV_REQUEST)
+			} else if len(arg) == 0 {
+				m.Action(mdb.CREATE, mdb.DEV_REQUEST)
 			}
 		}},
 	})

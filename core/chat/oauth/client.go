@@ -44,8 +44,8 @@ type Client struct {
 	short string `data:"domain,client_id"`
 	field string `data:"time,hash,domain,client_id,client_secret,oauth_url,grant_url,token_url,users_url,scope,user_key,nick_key,api_prefix,token_prefix"`
 	sso   string `name:"sso name* icons*" help:"登录"`
-	auth  string `name:"auth" help:"授权"`
-	user  string `name:"user" help:"用户"`
+	auth  string `name:"auth" help:"授权" icon:"bi bi-person-check"`
+	user  string `name:"user" help:"用户" icon:"bi bi-person-vcard"`
 	orgs  string `name:"orgs" help:"组织"`
 	repo  string `name:"repo" help:"资源"`
 	list  string `name:"list hash auto" help:"授权" icon:"oauth.png"`

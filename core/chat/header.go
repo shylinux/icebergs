@@ -99,7 +99,7 @@ func init() {
 			mdb.CREATE: {Name: "create type*=plugin,qrcode,oauth name* icons link order space index args", Hand: func(m *ice.Message, arg ...string) { mdb.HashCreate(m, m.OptionSimple()) }},
 			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) { mdb.HashRemove(m, m.OptionSimple(mdb.NAME)) }},
 			mdb.MODIFY: {Hand: func(m *ice.Message, arg ...string) { mdb.HashModify(m, m.OptionSimple(mdb.NAME), arg) }},
-			ice.DEMO: {Help: "体验", Hand: func(m *ice.Message, arg ...string) {
+			ice.DEMO: {Help: "体验", Icon: "bi bi-shield-fill-check", Hand: func(m *ice.Message, arg ...string) {
 				if kit.IsIn(m.Option(ice.MSG_USERROLE), aaa.TECH, aaa.ROOT) {
 					m.Cmd("", mdb.CREATE, mdb.TYPE, mdb.PLUGIN, mdb.NAME, "免登录体验", mdb.ORDER, "12", ctx.INDEX, HEADER, ctx.ARGS, ice.DEMO)
 					mdb.Config(m, ice.DEMO, ice.TRUE)

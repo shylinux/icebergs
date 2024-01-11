@@ -52,7 +52,11 @@ func init() {
 			LOGIN: {Role: VOID, Hand: func(m *ice.Message, arg ...string) {
 				m.Echo("input email: ")
 			}},
-		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,service,username", ice.ACTION, SEND))},
+		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,service,username", ice.ACTION, SEND)), Hand: func(m *ice.Message, arg ...string) {
+			if mdb.HashSelect(m, arg...); len(arg) == 0 && m.Length() == 0 {
+				m.EchoInfoButton("please add admin email", mdb.CREATE)
+			}
+		}},
 	})
 }
 func SendEmail(m *ice.Message, from, to, cc string, arg ...string) {

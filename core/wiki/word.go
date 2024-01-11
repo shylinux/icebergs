@@ -73,6 +73,8 @@ func init() {
 				m.Cmd(web.CHAT_FAVOR, mdb.CREATE, mdb.TYPE, nfs.SHY, mdb.NAME, path.Base(arg[0]), mdb.TEXT, arg[0])
 				m.ProcessHold("favor success")
 			}},
+			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) { m.PushButton(kit.Dict(m.CommandKey(), "文档")) }},
+			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { web.DreamProcess(m, nil, arg...) }},
 		}, WikiAction("", nfs.SHY), mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 {
 				mdb.HashCreate(m.Spawn(), nfs.PATH, arg[0])

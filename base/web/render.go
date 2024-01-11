@@ -157,7 +157,8 @@ func RenderVersion(m *ice.Message) string {
 }
 
 const (
-	CHAT = "chat"
+	CHAT    = "chat"
+	DESKTOP = "desktop"
 
 	CODE_GIT_SERVICE  = "web.code.git.service"
 	CODE_GIT_SEARCH   = "web.code.git.search"

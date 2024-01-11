@@ -319,8 +319,9 @@ func init() {
 				}
 			}},
 		}, StatsAction(), DreamAction(), mdb.ImportantHashAction(
-			html.BUTTON, "web.wiki.portal web.admin web.chat.macos.desktop web.code.git.status web.code.vimer web.code.xterm web.code.compile",
-			ctx.TOOLS, "web.code.git.search,route", mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icon,repos,binary,template,restart")), Hand: func(m *ice.Message, arg ...string) {
+			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icon,repos,binary,template,restart", ctx.TOOLS, kit.Simple(CODE_GIT_SEARCH, ROUTE),
+			html.BUTTON, kit.JoinWord(PORTAL, ADMIN, DESKTOP, WIKI_WORD, CODE_GIT_STATUS, CODE_VIMER, CODE_XTERM, CODE_COMPILE),
+		)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				_dream_list(m).RewriteAppend(func(value, key string, index int) string {
 					if key == mdb.ICON {

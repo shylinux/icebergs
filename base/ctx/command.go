@@ -18,6 +18,11 @@ func _command_list(m *ice.Message, name string) *ice.Message {
 		return m.Push(mdb.INDEX, name).Push(mdb.NAME, name).Push(mdb.HELP, "").Push(mdb.META, "").Push(mdb.LIST, "")
 	}
 	m.Spawn(m.Source()).Search(name, func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
+		// if _p, ok := ice.Info.Index[key].(*ice.Context); ok && _p.Prefix() == s.Prefix() {
+		// 	m.Push(mdb.INDEX, key)
+		// } else {
+		// 	m.Push(mdb.INDEX, kit.Keys(s.Prefix(), key))
+		// }
 		m.Push(mdb.INDEX, kit.Keys(s.Prefix(), key))
 		m.Push(mdb.NAME, kit.Format(cmd.Name))
 		m.Push(mdb.HELP, kit.Format(cmd.Help))

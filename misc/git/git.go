@@ -15,6 +15,6 @@ const GIT = "git"
 
 var Index = &ice.Context{Name: GIT, Help: "代码库"}
 
-func init() { code.Index.Register(Index, &web.Frame{}) }
+func init() { code.Index.Register(Index, &web.Frame{}, STATUS, REPOS) }
 
 func Prefix(arg ...string) string { return code.Prefix(GIT, kit.Keys(arg)) }

@@ -128,6 +128,9 @@ func Toast(m *ice.Message, text string, arg ...ice.Any) *ice.Message { // [title
 var Icons = map[string]string{ice.PROCESS: "🕑", ice.FAILURE: "❌", ice.SUCCESS: "✅"}
 
 func toastContent(m *ice.Message, state string, arg ...ice.Any) string {
+	if len(arg) > 0 {
+		return kit.JoinWord(kit.Simple(Icons[state], arg)...)
+	}
 	return kit.JoinWord(kit.Simple(Icons[state], m.ActionKey(), state, arg)...)
 }
 func ToastSuccess(m *ice.Message, arg ...ice.Any) {
@@ -137,7 +140,7 @@ func ToastFailure(m *ice.Message, arg ...ice.Any) {
 	Toast(m, toastContent(m, ice.FAILURE, arg...), "", m.OptionDefault(ice.TOAST_DURATION, "3s")).Sleep(m.OptionDefault(ice.TOAST_DURATION, "3s"))
 }
 func ToastProcess(m *ice.Message, arg ...ice.Any) func() {
-	Toast(m, toastContent(m, ice.PROCESS, arg...), "", "30s")
+	Toast(m, toastContent(m, ice.PROCESS, arg...), "", "180s")
 	return func() { Toast(m, toastContent(m, ice.SUCCESS, arg...), "", "1s") }
 }
 func GoToast(m *ice.Message, title string, cb func(toast func(name string, count, total int)) []string) *ice.Message {

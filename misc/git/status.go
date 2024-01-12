@@ -44,7 +44,7 @@ func init() {
 			}},
 			OAUTH: {Name: "oauth remote", Help: "授权", Icon: "bi bi-person-check", Hand: func(m *ice.Message, arg ...string) {
 				m.ProcessOpen(kit.MergeURL2(kit.Select(ice.Info.Make.Domain, m.Cmdx(REPOS, REMOTE_URL), m.Option(REMOTE)),
-					kit.MergeURL(web.C(web.TOKEN), ctx.ACTION, "gen"), mdb.TYPE, web.CODE_GIT_STATUS, tcp.HOST, web.UserHost(m)))
+					web.ChatCmdPath(m, web.TOKEN, "gen"), mdb.TYPE, web.CODE_GIT_STATUS, tcp.HOST, web.UserHost(m)))
 			}},
 			CONFIGS: {Name: "configs email* username*", Help: "配置", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.DEFS, kit.HomePath(_GITCONFIG), kit.Format(nfs.Template(m, "gitconfig"), m.Option(aaa.USERNAME), m.Option(aaa.EMAIL)))

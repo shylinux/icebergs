@@ -119,7 +119,6 @@ func _space_fork(m *ice.Message) {
 							m.Cmd(SPACE, value[mdb.NAME], gdb.EVENT, gdb.HAPPEN, gdb.EVENT, OPS_SERVER_OPEN, args, kit.Dict(ice.MSG_USERROLE, aaa.TECH))
 						}
 					})
-					m.Cmd(gdb.EVENT, gdb.HAPPEN, gdb.EVENT, OPS_SERVER_OPEN, args)
 				})
 			}
 			_space_handle(m, false, name, c)

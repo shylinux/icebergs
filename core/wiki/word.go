@@ -76,7 +76,7 @@ func init() {
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) { m.PushButton(kit.Dict(m.CommandKey(), "文档")) }},
 			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { web.DreamProcess(m, nil, arg...) }},
 		}, WikiAction("", nfs.SHY), mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path")), Hand: func(m *ice.Message, arg ...string) {
-			if len(arg) > 0 {
+			if len(arg) > 0 && !strings.HasPrefix(arg[0], nfs.SRC_DOCUMENT) {
 				mdb.HashCreate(m.Spawn(), nfs.PATH, arg[0])
 			}
 			if len(arg) > 0 && strings.Contains(arg[0], nfs.DF) {

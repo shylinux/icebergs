@@ -79,10 +79,9 @@ func init() {
 		), Actions: ice.MergeActions(ice.Actions{
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if mdb.IsSearchPreview(m, arg) {
-					m.PushSearch(mdb.TYPE, nfs.FILE, mdb.NAME, ice.MAIN, mdb.TEXT, ice.SRC_MAIN_SH)
-					m.PushSearch(mdb.TYPE, nfs.FILE, mdb.NAME, ice.MAIN, mdb.TEXT, ice.SRC_MAIN_SHY)
-					m.PushSearch(mdb.TYPE, nfs.FILE, mdb.NAME, ice.MAIN, mdb.TEXT, ice.SRC_MAIN_GO)
-					m.PushSearch(mdb.TYPE, nfs.FILE, mdb.NAME, ice.MAIN, mdb.TEXT, ice.SRC_MAIN_JS)
+					kit.For([]string{ice.SRC_MAIN_SHY, ice.SRC_MAIN_SH, ice.SRC_MAIN_GO, ice.SRC_MAIN_JS}, func(p string) {
+						m.PushSearch(mdb.TYPE, nfs.FILE, mdb.NAME, path.Base(p), mdb.TEXT, p)
+					})
 				}
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {

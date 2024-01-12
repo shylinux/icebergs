@@ -288,8 +288,7 @@ func init() {
 			}
 			fallthrough
 		case aaa.EMAIL:
-			m.Push(arg[0], "shy@shylinux.com")
-			m.Push(arg[0], "shylinux@163.com")
+			m.Push(arg[0], "shy@shylinux.com", "shylinux@163.com")
 		case aaa.PASSWORD:
 			m.SetAppend()
 		case "origin":
@@ -304,7 +303,8 @@ func init() {
 					m.Cmd(SPACE, pod, SPIDE, ice.DEV, CACHE, SHARE_CACHE+ls[0])
 				}
 				msg := m.Options(key, []string{}, ice.MSG_USERPOD, pod).Cmd(append(kit.List(ice.SPACE, pod), arg...)...)
-				kit.If(!msg.IsErr(), func() { m.Copy(msg) })
+				m.Copy(msg)
+				// kit.If(!msg.IsErr(), func() { m.Copy(msg) })
 				return true
 			}
 		}

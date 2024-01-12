@@ -21,7 +21,9 @@ func _action_exec(m *ice.Message, river, storm, index string, arg ...string) {
 	}).Length() == 0, ice.ErrNotRight, index, arg) {
 		return
 	}
-	kit.If(!ctx.PodCmd(m, index, arg), func() { m.Cmdy(index, arg) })
+	kit.If(!ctx.PodCmd(m, index, arg), func() {
+		m.Cmdy(index, arg)
+	})
 }
 func _action_auth(m *ice.Message, share string) *ice.Message {
 	msg := m.Cmd(web.SHARE, share)

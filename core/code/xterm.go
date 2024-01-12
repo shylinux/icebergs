@@ -76,8 +76,11 @@ func init() {
 				})
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				mdb.IsSearchPreview(m, arg, func() []string { return []string{ssh.SHELL, SH, shell} })
-				mdb.IsSearchPreview(m, arg, func() []string { return []string{ssh.SHELL, ISH, "/bin/ish"} })
+				if mdb.IsSearchPreview(m, arg) {
+					kit.For([]string{shell, "/bin/ish"}, func(p string) {
+						m.PushSearch(mdb.TYPE, ssh.SHELL, mdb.NAME, path.Base(p), mdb.TEXT, p)
+					})
+				}
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch mdb.HashInputs(m, arg); arg[0] {

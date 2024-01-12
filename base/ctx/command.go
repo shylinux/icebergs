@@ -18,23 +18,23 @@ func _command_list(m *ice.Message, name string) *ice.Message {
 		return m.Push(mdb.INDEX, name).Push(mdb.NAME, name).Push(mdb.HELP, "").Push(mdb.META, "").Push(mdb.LIST, "")
 	}
 	m.Spawn(m.Source()).Search(name, func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
-		// if _p, ok := ice.Info.Index[key].(*ice.Context); ok && _p.Prefix() == s.Prefix() {
-		// 	m.Push(mdb.INDEX, key)
-		// } else {
-		// 	m.Push(mdb.INDEX, kit.Keys(s.Prefix(), key))
-		// }
 		m.Push(mdb.INDEX, kit.Keys(s.Prefix(), key))
 		m.Push(mdb.NAME, kit.Format(cmd.Name))
 		m.Push(mdb.HELP, kit.Format(cmd.Help))
 		m.Push(mdb.LIST, kit.Format(cmd.List))
 		m.Push(mdb.META, kit.Format(cmd.Meta))
-		m.Push("_help", GetCmdHelp(m, name))
+		if _p, ok := ice.Info.Index[key].(*ice.Context); ok && _p.Prefix() == s.Prefix() {
+			m.Push("_command", key)
+		} else {
+			m.Push("_command", kit.Keys(s.Prefix(), key))
+		}
 		if !nfs.Exists(m, kit.Split(cmd.FileLine(), ":")[0], func(p string) {
 			m.Push("_fileline", kit.MergeURL(FileURI(p), ice.POD, m.Option(ice.MSG_USERPOD)))
 		}) {
 			m.Push("_fileline", "")
 		}
 		m.Push("_role", kit.Select("", ice.OK, aaa.Right(m.Spawn(), name)))
+		m.Push("_help", GetCmdHelp(m, name))
 	})
 	return m
 }

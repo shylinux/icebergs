@@ -26,8 +26,8 @@ func _river_list(m *ice.Message) {
 			return
 		}
 	}
-	m.Cmd(mdb.SELECT, m.PrefixKey(), "", mdb.HASH, ice.OptionFields(mdb.HASH, mdb.NAME, mdb.ICON), func(value ice.Maps) {
-		kit.If(_river_right(m, value[mdb.HASH]), func() { m.PushRecord(value, mdb.HASH, mdb.NAME, mdb.ICON) })
+	m.Cmd(mdb.SELECT, m.PrefixKey(), "", mdb.HASH, ice.OptionFields(mdb.HASH, mdb.NAME, mdb.ICON, "main"), func(value ice.Maps) {
+		kit.If(_river_right(m, value[mdb.HASH]), func() { m.PushRecord(value, mdb.HASH, mdb.NAME, mdb.ICON, "main") })
 	})
 	m.Sort(mdb.NAME)
 }

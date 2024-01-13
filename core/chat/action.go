@@ -82,6 +82,9 @@ func init() {
 				ctx.OptionFromConfig(m, MENUS)
 				_action_list(m, arg[0], arg[1])
 			} else {
+				if arg[2] == "web.chat.island.portal" {
+					m.Option(ice.MSG_USERROLE, aaa.VOID)
+				}
 				_action_exec(m, arg[0], arg[1], arg[2], arg[3:]...)
 			}
 		}},

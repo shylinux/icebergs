@@ -128,7 +128,11 @@ func Toast(m *ice.Message, text string, arg ...ice.Any) *ice.Message { // [title
 var Icons = map[string]string{ice.PROCESS: "🕑", ice.FAILURE: "❌", ice.SUCCESS: "✅"}
 
 func toastContent(m *ice.Message, state string, arg ...ice.Any) string {
-	return kit.JoinWord(kit.Simple(Icons[state], m.ActionKey(), state, arg)...)
+	if len(arg) == 0 {
+		return kit.JoinWord(kit.Simple(Icons[state], m.ActionKey(), state)...)
+	} else {
+		return kit.JoinWord(kit.Simple(Icons[state], arg)...)
+	}
 }
 func ToastSuccess(m *ice.Message, arg ...ice.Any) {
 	Toast(m, toastContent(m, ice.SUCCESS, arg...), "", "1s")

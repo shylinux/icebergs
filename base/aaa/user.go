@@ -59,7 +59,7 @@ func init() {
 }
 
 func UserInfo(m *ice.Message, name ice.Any, key, meta string) (value string) {
-	if m.Cmd(USER, kit.Select(m.Option(ice.MSG_USERNAME), name), func(val ice.Maps) { value = val[key] }).Length() == 0 && kit.Format(name) == m.Option(ice.MSG_USERNAME) {
+	if m.Cmd(USER, kit.Select(m.Option(ice.MSG_USERNAME), name), func(val ice.Maps) { value = val[key] }).Length() == 0 || value == "" {
 		return m.Option(meta)
 	}
 	return

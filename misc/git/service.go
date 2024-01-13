@@ -124,14 +124,18 @@ func init() {
 		}
 		switch repos, service := _service_param(m, arg...); service {
 		case RECEIVE_PACK:
-			if !web.BasicCheck(m, "git server") {
+			if !web.BasicCheck(m, "git server", func(msg *ice.Message) bool {
+				return msg.Append(mdb.TYPE) == "web.code.git.status" || (msg.Append(mdb.TYPE) == web.SERVER && msg.Append(mdb.TEXT) == path.Base(repos))
+			}) {
 				return
 			} else if !nfs.Exists(m, repos) {
 				m.Cmd(Prefix(SERVICE), mdb.CREATE, mdb.NAME, path.Base(repos))
 			}
 		case UPLOAD_PACK:
 			if mdb.Conf(m, Prefix(SERVICE), kit.Keym(aaa.AUTH)) == aaa.PRIVATE {
-				if !web.BasicCheck(m, "git server") {
+				if !web.BasicCheck(m, "git server", func(msg *ice.Message) bool {
+					return msg.Append(mdb.TYPE) == "web.code.git.status" || msg.Append(mdb.TYPE) == web.SERVER && msg.Append(mdb.TEXT) == path.Base(repos)
+				}) {
 					return
 				}
 			}

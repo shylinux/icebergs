@@ -140,9 +140,9 @@ func ToastSuccess(m *ice.Message, arg ...ice.Any) {
 func ToastFailure(m *ice.Message, arg ...ice.Any) {
 	Toast(m, toastContent(m, ice.FAILURE, arg...), "", m.OptionDefault(ice.TOAST_DURATION, "3s")).Sleep(m.OptionDefault(ice.TOAST_DURATION, "3s"))
 }
-func ToastProcess(m *ice.Message, arg ...ice.Any) func() {
+func ToastProcess(m *ice.Message, arg ...ice.Any) func(...ice.Any) {
 	Toast(m, toastContent(m, ice.PROCESS, arg...), "", "30s")
-	return func() { Toast(m, toastContent(m, ice.SUCCESS, arg...), "", "1s") }
+	return func(arg ...ice.Any) { Toast(m, toastContent(m, ice.SUCCESS, arg...), "", "1s") }
 }
 func GoToast(m *ice.Message, title string, cb func(toast func(name string, count, total int)) []string) *ice.Message {
 	_total := 0

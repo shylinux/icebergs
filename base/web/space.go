@@ -69,23 +69,22 @@ func _space_fork(m *ice.Message) {
 	addr := kit.Select(m.R.RemoteAddr, m.R.Header.Get(ice.MSG_USERADDR))
 	text := strings.ReplaceAll(kit.Select(addr, m.Option(mdb.TEXT)), "%2F", nfs.PS)
 	name := kit.ReplaceAll(kit.Select(addr, m.Option(mdb.NAME)), "[", "_", "]", "_", nfs.DF, "_", nfs.PT, "_")
-	if kit.IsIn(m.Option(mdb.TYPE), WORKER) && IsLocalHost(m) || m.Option(TOKEN) != "" && m.Cmdv(TOKEN, m.Option(TOKEN), mdb.TIME) > m.Time() {
+	if kit.IsIn(m.Option(mdb.TYPE), WORKER) && IsLocalHost(m) {
 
 	} else if kit.IsIn(m.Option(mdb.TYPE), PORTAL, aaa.LOGIN) && len(name) == 32 && kit.IsIn(mdb.HashSelects(m.Spawn(), name).Append(aaa.IP), "", m.Option(ice.MSG_USERIP)) {
 
 	} else {
 		name, text = kit.Hashs(name), kit.Select(addr, m.Option(mdb.NAME), m.Option(mdb.TEXT))
 	}
-
-	if kit.IsIn(m.Option(mdb.TYPE), WORKER, PORTAL) {
+	if m.Option(ice.MSG_USERNAME, ""); kit.IsIn(m.Option(mdb.TYPE), WORKER, PORTAL) {
 		if tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) {
 			aaa.SessAuth(m, kit.Dict(m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME, ice.Info.Username)).AppendSimple()))
 		}
 	} else if m.Option(TOKEN) != "" {
-		msg := m.Cmd(TOKEN, m.Option(TOKEN))
-		aaa.SessAuth(m, kit.Dict(m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME, msg.Append(mdb.NAME))).AppendSimple()))
-	} else {
-		m.Option(ice.MSG_USERNAME, "")
+		if msg := m.Cmd(TOKEN, m.Option(TOKEN)); msg.Append(mdb.TIME) > m.Time() && msg.Append(mdb.TYPE) == SERVER {
+			aaa.SessAuth(m, kit.Dict(m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME, msg.Append(mdb.NAME))).AppendSimple()))
+			name = kit.Select(name, msg.Append(mdb.TEXT))
+		}
 	}
 	if m.Option(mdb.TYPE) == WORKER {
 		if p := nfs.USR_LOCAL_WORK + m.Option(mdb.NAME); nfs.Exists(m, p) {
@@ -115,10 +114,11 @@ func _space_fork(m *ice.Message) {
 				m.Go(func() {
 					m.Cmd(SPACE, name, cli.PWD, name, kit.Dict(nfs.MODULE, ice.Info.Make.Module, nfs.VERSION, ice.Info.Make.Versions(), AGENT, "Go-http-client", cli.SYSTEM, runtime.GOOS))
 					m.Cmd(SPACE).Table(func(value ice.Maps) {
-						if kit.IsIn(value[mdb.TYPE], WORKER, SERVER) {
+						if kit.IsIn(value[mdb.TYPE], WORKER, SERVER) && value[mdb.NAME] != name {
 							m.Cmd(SPACE, value[mdb.NAME], gdb.EVENT, gdb.HAPPEN, gdb.EVENT, OPS_SERVER_OPEN, args, kit.Dict(ice.MSG_USERROLE, aaa.TECH))
 						}
 					})
+					m.Cmd(gdb.EVENT, gdb.HAPPEN, gdb.EVENT, OPS_SERVER_OPEN, args, kit.Dict(ice.MSG_USERROLE, aaa.TECH))
 				})
 			}
 			_space_handle(m, false, name, c)
@@ -226,7 +226,9 @@ func _space_send(m *ice.Message, name string, arg ...string) (h string) {
 			}
 		}
 	}) {
-		m.Warn(kit.IndexOf([]string{ice.OPS, ice.DEV}, target[0]) == -1, ice.ErrNotFound, SPACE, name)
+		kit.If(m.IsDebug(), func() {
+			m.Warn(kit.IndexOf([]string{ice.OPS, ice.DEV}, target[0]) == -1, ice.ErrNotFound, SPACE, name)
+		})
 	} else if withecho {
 		m.Warn(!wait(), "time out")
 	}

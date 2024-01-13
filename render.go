@@ -114,7 +114,9 @@ func (m *Message) RenderJson(arg ...Any) *Message {
 func (m *Message) RenderVoid(arg ...Any) *Message {
 	return m.Render(RENDER_VOID, arg...)
 }
-
+func (m *Message) IsDebug() bool {
+	return m.Option(MSG_DEBUG) == TRUE
+}
 func (m *Message) IsCliUA() bool {
 	return m.Option(MSG_USERUA) == "" || !strings.HasPrefix(m.Option(MSG_USERUA), "Mozilla")
 }

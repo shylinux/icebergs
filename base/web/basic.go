@@ -33,13 +33,15 @@ func BasicSess(m *ice.Message) {
 	m.Options(ice.MSG_SESSID, kit.Select(m.Option(ice.MSG_SESSID), m.Option(CookieName(m.Option(ice.MSG_USERWEB)))))
 	aaa.SessCheck(m, m.Option(ice.MSG_SESSID))
 }
-func BasicCheck(m *ice.Message, realm string) bool {
+func BasicCheck(m *ice.Message, realm string, check ...func(*ice.Message) bool) bool {
 	switch ls := kit.Split(m.R.Header.Get(html.Authorization)); kit.Select("", ls, 0) {
 	case html.Basic:
 		if buf, err := base64.StdEncoding.DecodeString(kit.Select("", ls, 1)); !m.Warn(err) {
 			if ls := strings.SplitN(string(buf), ":", 2); !m.Warn(len(ls) < 2 || ls[1] == "", ice.ErrNotValid, html.Basic) {
 				if msg := m.Cmd(TOKEN, ls[1]); !m.Warn(msg.Time() > msg.Append(mdb.TIME), ice.ErrNotValid) {
-					return true
+					if len(check) == 0 || check[0](msg) {
+						return true
+					}
 				}
 			}
 		}

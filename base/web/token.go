@@ -34,7 +34,7 @@ func init() {
 					return
 				}
 				msg := m.Cmd("", mdb.CREATE, mdb.TYPE, m.Option(mdb.TYPE), mdb.NAME, m.Option(ice.MSG_USERNAME), mdb.TEXT, m.Option(tcp.HOST))
-				m.ProcessReplace(kit.MergeURL2(m.Option(tcp.HOST), kit.MergeURL(C(m.PrefixKey()), ctx.ACTION, SET),
+				m.ProcessReplace(kit.MergeURL2(m.Option(tcp.HOST), C(m.PrefixKey()), ctx.ACTION, SET,
 					TOKEN, strings.Replace(UserHost(m), "://", kit.Format("://%s:%s@", m.Option(ice.MSG_USERNAME), msg.Result()), 1)))
 			}},
 			SET: {Hand: func(m *ice.Message, arg ...string) {

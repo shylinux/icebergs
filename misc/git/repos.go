@@ -126,7 +126,7 @@ func _repos_each_origin(m *ice.Message, title string, cb func(*git.Repository, s
 	_repos_each(m, title, func(repos *git.Repository, value ice.Maps) error {
 		remote := _repos_remote(m, _repos_origin(m, repos))
 		auth := _repos_auth(m, remote)
-		m.Info("%s: %s %s", m.ActionKey(), auth.Username, remote)
+		m.Info("%s: %s %s %v", m.ActionKey(), auth.Username, remote, auth)
 		return cb(repos, remote, auth, value)
 	})
 }
@@ -543,7 +543,12 @@ func init() {
 			PUSH: {Help: "上传", Hand: func(m *ice.Message, arg ...string) {
 				_repos_each_origin(m, "", func(repos *git.Repository, remoteURL string, auth *http.BasicAuth, value ice.Maps) error {
 					defer _git_cmd(m.Spawn(kit.Dict(cli.CMD_DIR, value[nfs.PATH])), PUSH, "--tags")
-					return repos.Push(&git.PushOptions{RemoteURL: remoteURL, Auth: auth, FollowTags: true})
+					err := repos.Push(&git.PushOptions{RemoteURL: remoteURL, Auth: auth, FollowTags: true})
+					switch kit.Format(err) {
+					case "empty input":
+						return nil
+					}
+					return err
 				})
 			}},
 			STATUS: {Help: "状态", Icon: "bi bi-app-indicator", Hand: func(m *ice.Message, arg ...string) {

@@ -21,7 +21,7 @@ func _action_exec(m *ice.Message, river, storm, index string, arg ...string) {
 	}).Length() == 0, ice.ErrNotRight, index, arg) {
 		return
 	}
-	kit.If(index == "web.chat.island.portal", func() { m.Option(ice.MSG_USERROLE, aaa.VOID) })
+	// kit.If(index == "web.chat.island.portal", func() { m.Option(ice.MSG_USERROLE, aaa.VOID) })
 	kit.If(!ctx.PodCmd(m, index, arg), func() { m.Cmdy(index, arg) })
 }
 func _action_auth(m *ice.Message, share string) *ice.Message {

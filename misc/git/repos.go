@@ -521,7 +521,7 @@ func init() {
 					return
 				}
 				defer web.ToastProcess(m)()
-				for _, dev := range []string{ice.DEV, ice.SHY} {
+				for _, dev := range []string{"dev_ip", ice.DEV, ice.SHY} {
 					p := m.Option(ORIGIN)
 					kit.If(!kit.HasPrefix(p, nfs.PS, web.HTTP), func() { p = m.Cmdv(web.SPIDE, dev, web.CLIENT_ORIGIN) + web.X(p) })
 					m.Info("clone %s", p)
@@ -641,8 +641,10 @@ func init() {
 				}
 			}},
 			web.SERVE_START: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd("", CLONE, ORIGIN, "node_modules", mdb.NAME, "", nfs.PATH, "")
-				m.Cmd("", CLONE, ORIGIN, "icons", mdb.NAME, "", nfs.PATH, "")
+				m.Go(func() {
+					m.Cmd("", CLONE, ORIGIN, "node_modules", mdb.NAME, "", nfs.PATH, "")
+					m.Cmd("", CLONE, ORIGIN, "icons", mdb.NAME, "", nfs.PATH, "")
+				})
 			}},
 			web.STATS_TABLES: {Hand: func(m *ice.Message, _ ...string) {
 				if ice.Info.NodeType == web.SERVER {

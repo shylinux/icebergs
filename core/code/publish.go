@@ -48,6 +48,7 @@ func _publish_contexts(m *ice.Message, arg ...string) {
 	for _, k := range kit.Default(arg, ice.MISC) {
 		m.OptionDefault(web.DOMAIN, web.UserHost(m))
 		m.Options(cli.CTX_ENV, kit.Select("", lex.SP+kit.JoinKV(mdb.EQ, lex.SP, cli.CTX_POD, m.Option(ice.MSG_USERPOD)), m.Option(ice.MSG_USERPOD) != ""))
+		kit.If(m.Option("ctx_dev_ip"), func(p string) { m.Option(cli.CTX_ENV, m.Option(cli.CTX_DEV)+" "+"ctx_dev_ip="+p) })
 		m.Option(ice.TCP_DOMAIN, kit.ParseURL(web.UserHost(m)).Hostname())
 		switch k {
 		case INSTALL:

@@ -80,6 +80,7 @@ func (m *Message) PushDetail(value Any, arg ...string) *Message {
 	case string:
 		value = kit.UnMarshal(v)
 	}
+	m.Option(MSG_FIELDS, FIELDS_DETAIL)
 	return m.Push(FIELDS_DETAIL, value, kit.Split(kit.Join(arg)))
 }
 func (m *Message) RenameOption(from, to string) *Message {

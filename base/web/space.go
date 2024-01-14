@@ -90,7 +90,7 @@ func _space_fork(m *ice.Message) {
 	} else if m.Option(TOKEN) != "" {
 		if msg := m.Cmd(TOKEN, m.Option(TOKEN)); msg.Append(mdb.TIME) > m.Time() && kit.IsIn(msg.Append(mdb.TYPE), SERVER, SPIDE) {
 			aaa.SessAuth(m, kit.Dict(m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME, msg.Append(mdb.NAME))).AppendSimple()))
-			name = kit.Select(name, msg.Append(mdb.TEXT))
+			name = kit.ReplaceAll(kit.Select(name, msg.Append(mdb.TEXT)), "[", "_", "]", "_", nfs.DF, "_", nfs.PT, "_")
 		}
 	}
 	args := kit.Simple(mdb.TYPE, m.Option(mdb.TYPE), mdb.NAME, name, mdb.TEXT, text, m.OptionSimple(nfs.MODULE, nfs.VERSION, cli.DAEMON))

@@ -25,7 +25,7 @@ func init() {
 		LOCAL   = "http://localhost:9020"
 	)
 	Index.MergeCommands(ice.Commands{
-		TOKEN: {Help: "令牌", Actions: ice.MergeActions(ice.Actions{
+		TOKEN: {Help: "令牌桶", Actions: ice.MergeActions(ice.Actions{
 			GEN: {Hand: func(m *ice.Message, arg ...string) {
 				m.EchoInfoButton(kit.Format("请授权 %s\n访问 %s\n", m.Option(tcp.HOST), m.Option(mdb.TYPE)), CONFIRM)
 			}},

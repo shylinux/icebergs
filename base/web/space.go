@@ -97,6 +97,7 @@ func _space_fork(m *ice.Message) {
 	args = _space_agent(m, args...)
 	if c, e := websocket.Upgrade(m.W, m.R); !m.Warn(e) {
 		gdb.Go(m, func() {
+			safe := false
 			defer mdb.HashCreateDeferRemove(m, args, kit.Dict(mdb.TARGET, c))()
 			switch m.Option(mdb.TYPE) {
 			case LOGIN:
@@ -109,6 +110,7 @@ func _space_fork(m *ice.Message) {
 				m.Go(func() { m.Cmd(SPACE, name, cli.PWD, name) })
 			case WORKER:
 				defer gdb.EventDeferEvent(m, DREAM_OPEN, args)(DREAM_CLOSE, args)
+				safe = true
 			case SERVER:
 				defer gdb.EventDeferEvent(m, SPACE_OPEN, args)(SPACE_CLOSE, args)
 				m.Go(func() {
@@ -121,7 +123,7 @@ func _space_fork(m *ice.Message) {
 					m.Cmd(gdb.EVENT, gdb.HAPPEN, gdb.EVENT, OPS_SERVER_OPEN, args, kit.Dict(ice.MSG_USERROLE, aaa.TECH))
 				})
 			}
-			_space_handle(m, false, name, c)
+			_space_handle(m, safe, name, c)
 		}, kit.Join(kit.Simple(SPACE, name), lex.SP))
 	}
 }
@@ -217,7 +219,10 @@ func _space_send(m *ice.Message, name string, arg ...string) (h string) {
 	}
 	if target := kit.Split(name, nfs.PT, nfs.PT); !mdb.HashSelectDetail(m, target[0], func(value ice.Map) {
 		if c, ok := value[mdb.TARGET].(*websocket.Conn); !m.Warn(!ok, ice.ErrNotValid, mdb.TARGET) {
-			kit.For([]string{ice.MSG_USERROLE}, func(k string) { m.Optionv(k, m.Optionv(k)) })
+			kit.For([]string{
+				ice.LOG_TRACEID,
+				ice.MSG_USERROLE,
+			}, func(k string) { m.Optionv(k, m.Optionv(k)) })
 			kit.For(m.Optionv(ice.MSG_OPTS), func(k string) { m.Optionv(k, m.Optionv(k)) })
 			if withecho {
 				_space_echo(m.Set(ice.MSG_DETAIL, arg...), []string{h}, target, c)

@@ -29,7 +29,7 @@ func init() {
 	)
 	const SEARCH = "search"
 	Index.MergeCommands(ice.Commands{
-		SEARCH: {Name: "search keyword auto", Help: "代码源", Actions: ice.MergeActions(ice.Actions{
+		SEARCH: {Name: "search keyword auto", Help: "源码库", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				macos.AppInstall(m, "App Store.png", m.PrefixKey())
 			}},

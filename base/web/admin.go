@@ -32,6 +32,10 @@ func init() {
 		}},
 	})
 }
-func AdminCmd(m *ice.Message, cmd string) string {
-	return m.Cmdx(SPIDE, ice.OPS, SPIDE_RAW, http.MethodGet, C(cmd))
+func AdminCmd(m *ice.Message, cmd string, arg ...string) string {
+	if ice.Info.NodeType == WORKER {
+		return m.Cmdx(SPIDE, ice.OPS, SPIDE_RAW, http.MethodGet, path.Join(C(cmd), path.Join(arg...)))
+	} else {
+		return m.Cmdx(cmd, arg)
+	}
 }

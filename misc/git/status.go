@@ -71,7 +71,7 @@ func init() {
 				m.PushButton(kit.Dict(m.CommandKey(), "源码"))
 			}},
 			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { web.DreamProcess(m, nil, arg...) }},
-		}, Prefix(REPOS)), Hand: func(m *ice.Message, arg ...string) {
+		}, ctx.ConfAction(ctx.TOOLS, "xterm,compile"), Prefix(REPOS)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 && arg[0] == ctx.ACTION {
 				m.Cmdy(REPOS, arg)
 			} else if config, err := config.LoadConfig(config.GlobalScope); err == nil && config.User.Email == "" && mdb.Config(m, aaa.EMAIL) == "" {
@@ -82,6 +82,7 @@ func init() {
 				kit.If(config != nil, func() { m.Option(aaa.EMAIL, kit.Select(mdb.Config(m, aaa.EMAIL), config.User.Email)) })
 				m.Cmdy(REPOS, STATUS).Action(PULL, PUSH, INSTEADOF, OAUTH, CONFIGS)
 				kit.If(!m.IsCliUA(), func() { m.Cmdy(code.PUBLISH, ice.CONTEXTS, ice.DEV) })
+				ctx.Toolkit(m)
 			} else {
 				_repos_cmd(m, arg[0], DIFF)
 			}

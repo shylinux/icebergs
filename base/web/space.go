@@ -30,7 +30,8 @@ func _space_qrcode(m *ice.Message, dev string) {
 	ssh.PrintQRCode(m, m.Cmdv(SPACE, dev, cli.PWD, mdb.LINK))
 }
 func _space_dial(m *ice.Message, dev, name string, arg ...string) {
-	u := kit.ParseURL(kit.MergeURL2(strings.Replace(m.Cmdv(SPIDE, dev, CLIENT_ORIGIN), HTTP, "ws", 1), PP(SPACE), mdb.TYPE, ice.Info.NodeType, mdb.NAME, name,
+	origin := m.Cmdv(SPIDE, dev, CLIENT_ORIGIN)
+	u := kit.ParseURL(kit.MergeURL2(strings.Replace(origin, HTTP, "ws", 1), PP(SPACE), mdb.TYPE, ice.Info.NodeType, mdb.NAME, name,
 		nfs.MODULE, ice.Info.Make.Module, nfs.VERSION, ice.Info.Make.Versions(), "goos", runtime.GOOS, "goarch", runtime.GOARCH, arg))
 	args := kit.SimpleKV("type,name,host,port", u.Scheme, dev, u.Hostname(), kit.Select(kit.Select("443", "80", u.Scheme == "ws"), u.Port()))
 	gdb.Go(m, func() {
@@ -41,7 +42,7 @@ func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 			next := time.Duration(rand.Intn(a*(i+1))+b*i) * time.Millisecond
 			m.Cmd(tcp.CLIENT, tcp.DIAL, args, func(c net.Conn) {
 				if c, e := websocket.NewClient(c, u); !m.Warn(e, tcp.DIAL, dev, SPACE, u.String()) {
-					defer mdb.HashCreateDeferRemove(m, kit.SimpleKV("", MASTER, dev, u.Host), kit.Dict(mdb.TARGET, c))()
+					defer mdb.HashCreateDeferRemove(m, kit.SimpleKV("", MASTER, dev, origin), kit.Dict(mdb.TARGET, c))()
 					kit.If(ice.Info.Colors, func() { once.Do(func() { m.Go(func() { _space_qrcode(m, dev) }) }) })
 					if _space_handle(m.Spawn(), true, dev, c); mdb.HashSelect(m, mdb.NAME, dev).Length() == 0 {
 						i = _c
@@ -90,7 +91,7 @@ func _space_fork(m *ice.Message) {
 	} else if m.Option(TOKEN) != "" {
 		if msg := m.Cmd(TOKEN, m.Option(TOKEN)); msg.Append(mdb.TIME) > m.Time() && kit.IsIn(msg.Append(mdb.TYPE), SERVER, SPIDE) {
 			aaa.SessAuth(m, kit.Dict(m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME, msg.Append(mdb.NAME))).AppendSimple()))
-			name = kit.ReplaceAll(kit.Select(name, msg.Append(mdb.TEXT)), "[", "_", "]", "_", nfs.DF, "_", nfs.PT, "_")
+			name = kit.ReplaceAll(kit.Select(name, msg.Append(mdb.TEXT)), "[", "_", "]", "_", nfs.DF, "_", nfs.PT, "_", nfs.PS, "_")
 		}
 	}
 	args := kit.Simple(mdb.TYPE, m.Option(mdb.TYPE), mdb.NAME, name, mdb.TEXT, text, m.OptionSimple(nfs.MODULE, nfs.VERSION, cli.DAEMON))
@@ -396,7 +397,7 @@ func init() {
 					} else if kit.IsIn(value[mdb.TYPE], WORKER, SERVER) {
 						m.Push(mdb.LINK, m.MergePod(value[mdb.NAME]))
 					} else if kit.IsIn(value[mdb.TYPE], MASTER) {
-						m.Push(mdb.LINK, "http://"+value[mdb.TEXT])
+						m.Push(mdb.LINK, value[mdb.TEXT])
 					} else {
 						m.Push(mdb.LINK, "")
 					}

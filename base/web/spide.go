@@ -301,6 +301,9 @@ func init() {
 				m.Cmd("", mdb.CREATE, ice.DEMO, kit.Select("http://localhost:20000", conf[cli.CTX_DEMO]))
 				m.Cmd("", mdb.CREATE, ice.MAIL, kit.Select("https://mail.shylinux.com", conf[cli.CTX_MAIL]))
 				m.Cmd("", mdb.CREATE, nfs.REPOS, kit.Select("https://repos.shylinux.com", conf[cli.CTX_HUB]))
+				mdb.HashSelects(m.Spawn()).Table(func(value ice.Maps) {
+					kit.If(value[TOKEN], func() { m.Cmd(SPACE, tcp.DIAL, ice.DEV, value[CLIENT_NAME], TOKEN, value[TOKEN], mdb.TYPE, SERVER) })
+				})
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if mdb.IsSearchPreview(m, arg) {
@@ -338,9 +341,26 @@ func init() {
 			PROXY: {Name: "proxy url size cache upload", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(SPIDE, ice.DEV, SPIDE_RAW, http.MethodPost, m.Option(URL), SPIDE_PART, arg[2:])
 			}},
-		}, mdb.HashAction(mdb.SHORT, CLIENT_NAME, mdb.FIELD, "time,client.name,client.url")), Hand: func(m *ice.Message, arg ...string) {
+			"dev.create.token": {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(SPACE, tcp.DIAL, ice.DEV, m.Option(CLIENT_NAME), m.OptionSimple(TOKEN))
+			}},
+			"disconn": {Name: "断连", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(SPACE, cli.CLOSE, kit.Dict(mdb.NAME, m.Option(CLIENT_NAME)))
+				mdb.HashModify(m, mdb.NAME, m.Option(CLIENT_NAME), TOKEN, "")
+			}},
+		}, devTokenAction(CLIENT_NAME, CLIENT_URL), mdb.HashAction(mdb.SHORT, CLIENT_NAME, mdb.FIELD, "time,client.name,client.url,token")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 || arg[0] == "" || (len(arg) > 3 && arg[3] == "") {
+				list := m.CmdMap(SPACE, mdb.NAME)
 				mdb.HashSelect(m, kit.Slice(arg, 0, 1)...).Sort(CLIENT_NAME)
+				m.Table(func(value ice.Maps) {
+					if _, ok := list[value[CLIENT_NAME]]; ok {
+						m.Push(mdb.STATUS, "online")
+						m.PushButton("disconn", mdb.REMOVE)
+					} else {
+						m.Push(mdb.STATUS, "")
+						m.PushButton(mdb.DEV_REQUEST, mdb.REMOVE)
+					}
+				})
 				kit.If(len(arg) > 0 && arg[0] != "", func() { m.Action(COOKIE, HEADER) })
 			} else {
 				_spide_show(m, arg[0], arg[1:]...)

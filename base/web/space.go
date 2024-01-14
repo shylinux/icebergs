@@ -4,6 +4,7 @@ import (
 	"math/rand"
 	"net"
 	"net/http"
+	"path"
 	"runtime"
 	"strings"
 	"sync"
@@ -35,15 +36,18 @@ func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 	gdb.Go(m, func() {
 		once := sync.Once{}
 		redial := kit.Dict(mdb.Configv(m, REDIAL))
-		a, b, c := kit.Int(redial["a"]), kit.Int(redial["b"]), kit.Int(redial["c"])
-		for i := 1; i < c; i++ {
+		a, b, _c := kit.Int(redial["a"]), kit.Int(redial["b"]), kit.Int(redial["c"])
+		for i := 1; i < _c; i++ {
 			next := time.Duration(rand.Intn(a*(i+1))+b*i) * time.Millisecond
 			m.Cmd(tcp.CLIENT, tcp.DIAL, args, func(c net.Conn) {
 				if c, e := websocket.NewClient(c, u); !m.Warn(e, tcp.DIAL, dev, SPACE, u.String()) {
 					defer mdb.HashCreateDeferRemove(m, kit.SimpleKV("", MASTER, dev, u.Host), kit.Dict(mdb.TARGET, c))()
 					kit.If(ice.Info.Colors, func() { once.Do(func() { m.Go(func() { _space_qrcode(m, dev) }) }) })
-					_space_handle(m.Spawn(), true, dev, c)
-					i = 0
+					if _space_handle(m.Spawn(), true, dev, c); mdb.HashSelect(m, mdb.NAME, dev).Length() == 0 {
+						i = _c
+					} else {
+						i = 0
+					}
 				}
 			}).Cost(mdb.COUNT, i, mdb.NEXT, next, tcp.DIAL, dev, LINK, u.String()).Sleep(next)
 		}
@@ -69,8 +73,11 @@ func _space_fork(m *ice.Message) {
 	addr := kit.Select(m.R.RemoteAddr, m.R.Header.Get(ice.MSG_USERADDR))
 	text := strings.ReplaceAll(kit.Select(addr, m.Option(mdb.TEXT)), "%2F", nfs.PS)
 	name := kit.ReplaceAll(kit.Select(addr, m.Option(mdb.NAME)), "[", "_", "]", "_", nfs.DF, "_", nfs.PT, "_")
+	if m.OptionDefault(mdb.TYPE, SERVER) == WORKER && (!nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, name)) || !tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP))) {
+		m.Option(mdb.TYPE, SERVER)
+	}
 	if kit.IsIn(m.Option(mdb.TYPE), WORKER) && IsLocalHost(m) {
-
+		text = nfs.USR_LOCAL_WORK + name
 	} else if kit.IsIn(m.Option(mdb.TYPE), PORTAL, aaa.LOGIN) && len(name) == 32 && kit.IsIn(mdb.HashSelects(m.Spawn(), name).Append(aaa.IP), "", m.Option(ice.MSG_USERIP)) {
 
 	} else {
@@ -81,17 +88,12 @@ func _space_fork(m *ice.Message) {
 			aaa.SessAuth(m, kit.Dict(m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME, ice.Info.Username)).AppendSimple()))
 		}
 	} else if m.Option(TOKEN) != "" {
-		if msg := m.Cmd(TOKEN, m.Option(TOKEN)); msg.Append(mdb.TIME) > m.Time() && msg.Append(mdb.TYPE) == SERVER {
+		if msg := m.Cmd(TOKEN, m.Option(TOKEN)); msg.Append(mdb.TIME) > m.Time() && kit.IsIn(msg.Append(mdb.TYPE), SERVER, SPIDE) {
 			aaa.SessAuth(m, kit.Dict(m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME, msg.Append(mdb.NAME))).AppendSimple()))
 			name = kit.Select(name, msg.Append(mdb.TEXT))
 		}
 	}
-	if m.Option(mdb.TYPE) == WORKER {
-		if p := nfs.USR_LOCAL_WORK + m.Option(mdb.NAME); nfs.Exists(m, p) {
-			text = p
-		}
-	}
-	args := kit.Simple(mdb.TYPE, kit.Select(WORKER, m.Option(mdb.TYPE)), mdb.NAME, name, mdb.TEXT, text, m.OptionSimple(nfs.MODULE, nfs.VERSION, cli.DAEMON))
+	args := kit.Simple(mdb.TYPE, m.Option(mdb.TYPE), mdb.NAME, name, mdb.TEXT, text, m.OptionSimple(nfs.MODULE, nfs.VERSION, cli.DAEMON))
 	args = append(args, aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERROLE, m.Option(ice.MSG_USERROLE))
 	args = append(args, aaa.UA, m.Option(ice.MSG_USERUA), aaa.IP, m.Option(ice.MSG_USERIP))
 	args = _space_agent(m, args...)
@@ -350,6 +352,9 @@ func init() {
 				}
 				_space_dial(m, m.Option(ice.DEV), kit.Select(ice.Info.NodeName, m.Option(mdb.NAME)), arg...)
 			}},
+			cli.CLOSE: {Hand: func(m *ice.Message, arg ...string) {
+				mdb.HashRemove(m, m.OptionSimple(mdb.NAME))
+			}},
 			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) {
 				defer ToastProcess(m)()
 				mdb.HashModify(m, m.OptionSimple(mdb.NAME), mdb.STATUS, cli.STOP)
@@ -397,7 +402,7 @@ func init() {
 					}
 					m.PushButton(kit.Select(OPEN, LOGIN, value[mdb.TYPE] == LOGIN), mdb.REMOVE)
 				})
-				m.Sort("", kit.Simple(WEIXIN, PORTAL, WORKER, SERVER))
+				m.Sort("", kit.Simple(WEIXIN, PORTAL, MASTER, WORKER, SERVER))
 			} else {
 				_space_send(m, arg[0], kit.Simple(kit.Split(arg[1]), arg[2:])...)
 			}

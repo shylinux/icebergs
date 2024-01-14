@@ -11,6 +11,7 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
+	"shylinux.com/x/icebergs/base/web/html"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -52,4 +53,36 @@ func init() {
 			}
 		}},
 	})
+}
+
+func devTokenAction(name, origin string) ice.Actions {
+	return ice.Actions{
+		"dev.request.text": {Hand: func(m *ice.Message, arg ...string) { m.Echo(ice.Info.NodeName) }},
+		"dev.create.token": {Hand: func(m *ice.Message, arg ...string) {}},
+		mdb.DEV_REQUEST: {Name: "request", Help: "连接", Hand: func(m *ice.Message, arg ...string) {
+			m.ProcessOpen(m.Options(ice.MSG_USERWEB, m.Option(origin)).MergePodCmd("", m.PrefixKey(), ctx.ACTION, mdb.DEV_CHOOSE, cli.BACK, m.Option(ice.MSG_USERHOST), cli.DAEMON, m.Option(ice.MSG_DAEMON),
+				m.OptionSimple(name), mdb.TEXT, m.Cmdx("", "dev.request.text"),
+			))
+		}},
+		mdb.DEV_CHOOSE: {Hand: func(m *ice.Message, arg ...string) {
+			m.EchoInfoButton(kit.Format("save token to %s", m.Option(cli.BACK)), mdb.DEV_RESPONSE)
+		}},
+		mdb.DEV_RESPONSE: {Help: "确认", Hand: func(m *ice.Message, arg ...string) {
+			if !m.Warn(m.Option(ice.MSG_METHOD) != http.MethodPost, ice.ErrNotAllow) {
+				m.ProcessReplace(m.Options(ice.MSG_USERWEB, m.Option(cli.BACK)).MergePodCmd("", m.PrefixKey(), ctx.ACTION, mdb.DEV_CONFIRM, m.OptionSimple(cli.DAEMON),
+					m.OptionSimple(name), TOKEN, m.Cmdx(TOKEN, mdb.CREATE, mdb.TYPE, m.CommandKey(), mdb.NAME, m.Option(ice.MSG_USERNAME), m.OptionSimple(mdb.TEXT))))
+			}
+		}},
+		mdb.DEV_CONFIRM: {Hand: func(m *ice.Message, arg ...string) {
+			m.EchoInfoButton(kit.JoinWord(m.PrefixKey(), "save token for", m.Option(name)), mdb.DEV_CREATE)
+		}},
+		mdb.DEV_CREATE: {Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+			if !m.Warn(m.Option(ice.MSG_METHOD) != http.MethodPost, ice.ErrNotAllow) {
+				defer kit.If(m.Option(cli.DAEMON), func(p string) { m.Cmd(SPACE, p, html.REFRESH) })
+				mdb.HashModify(m, m.OptionSimple(name, TOKEN))
+				m.Cmd("", "dev.create.token")
+				m.ProcessClose()
+			}
+		}},
+	}
 }

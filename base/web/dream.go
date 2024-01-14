@@ -46,7 +46,7 @@ func _dream_list(m *ice.Message) *ice.Message {
 			}
 		}
 	})
-	return m.Sort("status,type,name", []string{cli.START, cli.STOP, cli.BEGIN}, ice.STR, ice.STR_R).StatusTimeCount(stat)
+	return m.Sort("type,status,name", []string{MASTER, SERVER, WORKER}, []string{cli.START, cli.STOP, cli.BEGIN}, ice.STR_R).StatusTimeCount(stat)
 }
 func _dream_start(m *ice.Message, name string) {
 	if m.Warn(name == "", ice.ErrNotValid, mdb.NAME) {
@@ -151,11 +151,11 @@ func init() {
 							m.Cmd(DREAM, cli.START, kit.Dict(mdb.NAME, value[mdb.NAME]))
 						}
 					})
-					for _, cmd := range kit.Reverse(kit.Split(mdb.Config(m, html.BUTTON))) {
-						m.Cmd(gdb.EVENT, gdb.LISTEN, gdb.EVENT, DREAM_TABLES, ice.CMD, cmd)
-						m.Cmd(gdb.EVENT, gdb.LISTEN, gdb.EVENT, DREAM_ACTION, ice.CMD, cmd)
-					}
 				})
+				for _, cmd := range kit.Reverse(kit.Split(mdb.Config(m, html.BUTTON))) {
+					m.Cmd(gdb.EVENT, gdb.LISTEN, gdb.EVENT, DREAM_TABLES, ice.CMD, cmd)
+					m.Cmd(gdb.EVENT, gdb.LISTEN, gdb.EVENT, DREAM_ACTION, ice.CMD, cmd)
+				}
 			}},
 			html.BUTTON: {Hand: func(m *ice.Message, arg ...string) {
 				mdb.Config(m, html.BUTTON, kit.Join(arg))
@@ -293,10 +293,17 @@ func init() {
 				nfs.Trash(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME)))
 			}},
 			OPEN: {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessOpen(m.MergePod(m.Option(mdb.NAME)))
+				if m.Option(mdb.TYPE) == MASTER {
+					m.ProcessOpen(SpideOrigin(m, m.Option(mdb.NAME)) + C(ADMIN))
+				} else {
+					m.ProcessOpen(m.MergePod(m.Option(mdb.NAME)))
+				}
 			}},
 			MAIN: {Name: "main index", Help: "首页", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(SPACE, m.Option(mdb.NAME), SPACE, ice.MAIN, m.Option(ctx.INDEX))
+			}},
+			"grant": {Help: "授权", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(CHAT_GRANT, aaa.CONFIRM, kit.Dict(SPACE, m.Option(mdb.NAME)))
 			}},
 			DREAM_OPEN: {Hand: func(m *ice.Message, arg ...string) {}},
 			DREAM_CLOSE: {Hand: func(m *ice.Message, arg ...string) {
@@ -343,17 +350,32 @@ func init() {
 				}, func() {
 					m.Action(mdb.CREATE, STARTALL, STOPALL)
 				})
-				return
-				m.Cmds(SPACE, func(value ice.Maps) {
-					if value[mdb.TYPE] == SERVER {
+				msg := m.Cmds(SPACE)
+				msg.Table(func(value ice.Maps) {
+					switch value[mdb.TYPE] {
+					case SERVER:
 						m.Push(mdb.TYPE, value[mdb.TYPE])
 						m.Push(mdb.NAME, value[mdb.NAME])
 						m.Push(mdb.ICON, nfs.USR_ICONS_ICEBERGS)
-						m.Push(mdb.TEXT, SERVER)
+						m.Push(mdb.TEXT, value[mdb.TEXT])
 						msg := gdb.Event(m.Spawn(value), DREAM_TABLES)
 						m.PushButton(strings.Join(msg.Appendv(ctx.ACTION), ""))
+					case MASTER:
+						m.Push(mdb.TYPE, value[mdb.TYPE])
+						m.Push(mdb.NAME, value[mdb.NAME])
+						m.Push(mdb.ICON, nfs.USR_ICONS_VOLCANOS)
+						m.Push(mdb.TEXT, value[mdb.TEXT])
+						msg := gdb.Event(m.Spawn(value), DREAM_TABLES)
+						m.PushButton(strings.Join(msg.Appendv(ctx.ACTION), ""))
+					case aaa.LOGIN:
+						m.Push(mdb.TYPE, value[mdb.TYPE])
+						m.Push(mdb.NAME, value[mdb.NAME])
+						m.Push(mdb.ICON, nfs.USR_ICONS_VOLCANOS)
+						m.Push(mdb.TEXT, kit.JoinWord(value["agent"], value["system"], value[aaa.IP]))
+						m.PushButton("grant")
 					}
 				})
+				m.Sort("type,status,name", []string{aaa.LOGIN, WORKER, SERVER, MASTER}, []string{cli.START, cli.STOP, cli.BEGIN}, ice.STR_R)
 			} else if arg[0] == ctx.ACTION {
 				gdb.Event(m, DREAM_ACTION, arg)
 			} else {
@@ -365,14 +387,18 @@ func init() {
 
 func DreamAction() ice.Actions {
 	return ice.MergeActions(ice.Actions{
-		DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { DreamProcess(m, []string{}, arg...) }},
+		DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) {
+			DreamProcess(m, nil, arg...)
+		}},
 	}, gdb.EventsAction(DREAM_OPEN, DREAM_CLOSE, DREAM_INPUTS, DREAM_CREATE, DREAM_TRASH, DREAM_TABLES, DREAM_ACTION, SERVE_START))
 }
 func DreamProcess(m *ice.Message, args ice.Any, arg ...string) {
 	if kit.HasPrefixList(arg, ctx.RUN) {
 		ctx.ProcessField(m, m.PrefixKey(), args, kit.Slice(arg, 1)...)
 	} else if kit.HasPrefixList(arg, ctx.ACTION, m.PrefixKey()) || kit.HasPrefixList(arg, ctx.ACTION, m.CommandKey()) {
-		if arg = kit.Slice(arg, 2); kit.HasPrefixList(arg, DREAM) {
+		if m.Option(mdb.TYPE) == MASTER {
+			m.ProcessOpen(SpideOrigin(m, m.Option(mdb.NAME)) + C(m.PrefixKey()))
+		} else if arg = kit.Slice(arg, 2); kit.HasPrefixList(arg, DREAM) {
 			m.Cmdy(SPACE, m.Option(ice.MSG_USERPOD, arg[1]), m.PrefixKey(), ctx.ACTION, DREAM_ACTION, ctx.RUN, arg[2:])
 		} else if dream := m.Option(mdb.NAME); dream != "" {
 			m.Cmdy(SPACE, dream, m.PrefixKey(), ctx.ACTION, DREAM_ACTION, ctx.RUN, arg).Optionv(ice.FIELD_PREFIX, kit.Simple(ctx.ACTION, m.PrefixKey(), DREAM, dream, ctx.RUN))

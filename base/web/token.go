@@ -59,7 +59,7 @@ func devTokenAction(name, origin string) ice.Actions {
 	return ice.Actions{
 		"dev.request.text": {Hand: func(m *ice.Message, arg ...string) { m.Echo(ice.Info.NodeName) }},
 		"dev.create.token": {Hand: func(m *ice.Message, arg ...string) {}},
-		mdb.DEV_REQUEST: {Name: "request", Help: "连接", Hand: func(m *ice.Message, arg ...string) {
+		mdb.DEV_REQUEST: {Name: "dev.request", Help: "连接", Hand: func(m *ice.Message, arg ...string) {
 			m.ProcessOpen(m.Options(ice.MSG_USERWEB, m.Option(origin)).MergePodCmd("", m.PrefixKey(), ctx.ACTION, mdb.DEV_CHOOSE, cli.BACK, m.Option(ice.MSG_USERHOST), cli.DAEMON, m.Option(ice.MSG_DAEMON),
 				m.OptionSimple(name), mdb.TEXT, m.Cmdx("", "dev.request.text"),
 			))

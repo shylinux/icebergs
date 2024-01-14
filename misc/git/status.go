@@ -53,8 +53,7 @@ func init() {
 			}},
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				if !nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME), _GIT)) {
-					m.Push(mdb.TEXT, "")
-					m.PushButton(kit.Dict(m.CommandKey(), "源码"))
+					m.Push(mdb.TEXT, "").PushButton(kit.Dict(m.CommandKey(), "源码"))
 					return
 				}
 				text := []string{}

@@ -111,7 +111,7 @@ func init() {
 					})
 				})
 			}},
-			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { web.DreamProcess(m, []string{}, arg...) }},
+			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { web.DreamProcess(m, nil, arg...) }},
 		}, ctx.ConfAction(cli.ENV, kit.Dict(GOPRIVATE, "shylinux.com,github.com", GOPROXY, "https://goproxy.cn,direct", CGO_ENABLED, "0"))), Hand: func(m *ice.Message, arg ...string) {
 			defer web.ToastProcess(m)()
 			main, file, goos, arch := _compile_target(m, arg...)

@@ -403,7 +403,7 @@ func init() {
 					}
 					m.PushButton(kit.Select(OPEN, LOGIN, value[mdb.TYPE] == LOGIN), mdb.REMOVE)
 				})
-				m.Sort("", kit.Simple(WEIXIN, PORTAL, MASTER, WORKER, SERVER))
+				m.Sort("", kit.Simple(WEIXIN, PORTAL, WORKER, SERVER, MASTER))
 			} else {
 				_space_send(m, arg[0], kit.Simple(kit.Split(arg[1]), arg[2:])...)
 			}

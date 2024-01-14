@@ -215,3 +215,10 @@ func TravelCmd(m *ice.Message, cb func(key, file, line string)) *ice.Message {
 	return m
 }
 func IsOrderCmd(key string) bool { return key[0] == '/' || key[0] == '_' }
+func ShortCmd(key string) string {
+	_key := kit.Select("", kit.Split(key, "."), -1)
+	if _p, ok := ice.Info.Index[_key].(*ice.Context); ok && _p.Prefix(_key) == key {
+		return _key
+	}
+	return key
+}

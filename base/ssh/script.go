@@ -148,6 +148,7 @@ func (f *Frame) Start(m *ice.Message, arg ...string) {
 		f.pipe, f.stdin, f.stdout = w, r, os.Stdout
 		kit.If(f.target == nil, func() { f.target = m.Target() })
 		m.Optionv(ice.MSG_OPTS, ice.MSG_USERNAME, ice.MSG_USERROLE)
+		m.Option(ice.MSG_USERWEB, "http://localhost:9020")
 		f.scan(m, STDIO, "")
 	default:
 		if m.Option(ice.MSG_SCRIPT) != "" {

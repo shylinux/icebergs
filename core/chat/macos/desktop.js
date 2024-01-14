@@ -17,6 +17,7 @@ Volcanos(chat.ONIMPORT, {
 			switch (value) {
 				case "notifications": can.ui.notifications._output.innerHTML && can.onmotion.toggle(can, can.ui.notifications._target); break
 				case "searchs": can.onaction._search(can); break
+				case "qrcode": can.sup.onaction["生成链接"]({}, can.sup); break
 				case mdb.CREATE: can.onaction.create(event, can); break
 				case html.DESKTOP:
 					var carte = can.user.carte(event, can, {}, can.core.Item(can.onfigure), function(event, button, meta, carte) {

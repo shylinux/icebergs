@@ -61,7 +61,8 @@ fieldset.macos.desktop>div.output>div.desktop>fieldset.web.chat.location>div.act
 fieldset.macos.desktop>div.output>div.desktop>fieldset.web.chat.location>div.action>div.item.feature select { width:60px; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset.web.chat.iframe>form.option>div.item.hash>input { width:var(--river-width); }
 fieldset.macos.desktop>div.output>div.desktop>fieldset.web.chat.macos.finder>div.status { display:none; }
-fieldset.macos.menu>div.output>div.item { padding:0 var(--input-padding); height:var(--desktop-menu-height); float:right; }
+fieldset.macos.menu>div.output>div.item { padding:0 var(--button-padding); height:var(--desktop-menu-height); float:right; }
+fieldset.macos.menu>div.output>div.item.avatar { padding:0; }
 fieldset.macos.menu>div.output>div.item.avatar>img { height:var(--desktop-menu-height); }
 fieldset.macos.menu>div.output>div.menu { padding:0 var(--button-padding); float:left; }
 fieldset.macos.menu>div.output>div.tabs { font-style:italic; padding:0 var(--button-padding); float:left; }

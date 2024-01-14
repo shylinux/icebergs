@@ -61,7 +61,7 @@ func _dream_start(m *ice.Message, name string) {
 			m.Info("already exists %v", pid)
 			return
 		}
-		for i := 0; i < 10; i++ {
+		for i := 0; i < 3; i++ {
 			if m.Cmd(SPACE, name).Length() > 0 {
 				m.Info("already exists %v", name)
 				return

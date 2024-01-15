@@ -23,7 +23,6 @@ import (
 )
 
 func _dream_list(m *ice.Message) *ice.Message {
-	stat := map[string]int{}
 	list := m.CmdMap(SPACE, mdb.NAME)
 	mdb.HashSelect(m).Table(func(value ice.Maps) {
 		if space, ok := list[value[mdb.NAME]]; ok {
@@ -31,22 +30,19 @@ func _dream_list(m *ice.Message) *ice.Message {
 			m.Push(mdb.TYPE, space[mdb.TYPE]).Push(cli.STATUS, cli.START)
 			m.Push(nfs.VERSION, space[nfs.VERSION]).Push(mdb.TEXT, msg.Append(mdb.TEXT))
 			m.PushButton(strings.Join(msg.Appendv(ctx.ACTION), ""))
-			stat[cli.START]++
 		} else {
 			if m.Push(mdb.TYPE, WORKER); nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, value[mdb.NAME])) {
 				m.Push(cli.STATUS, cli.STOP)
 				m.Push(nfs.VERSION, "").Push(mdb.TEXT, "")
 				m.PushButton(cli.START, nfs.TRASH)
-				stat[cli.STOP]++
 			} else {
 				m.Push(cli.STATUS, cli.BEGIN)
 				m.Push(nfs.VERSION, "").Push(mdb.TEXT, "")
 				m.PushButton(cli.START, mdb.REMOVE)
-				stat[cli.BEGIN]++
 			}
 		}
 	})
-	return m.Sort("type,status,name", []string{MASTER, SERVER, WORKER}, []string{cli.START, cli.STOP, cli.BEGIN}, ice.STR_R).StatusTimeCount(stat)
+	return m
 }
 func _dream_start(m *ice.Message, name string) {
 	if m.Warn(name == "", ice.ErrNotValid, mdb.NAME) {
@@ -142,7 +138,11 @@ const DREAM = "dream"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		DREAM: {Name: "dream refresh", Help: "梦想家", Icon: "Launchpad.png", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
+		DREAM: {Name: "dream refresh", Help: "梦想家", Icon: "Launchpad.png", Role: aaa.VOID, Meta: kit.Dict(
+			ice.CTX_TRANS, kit.Dict(html.INPUT, kit.Dict(
+				WORKER, "空间", SERVER, "机器", MASTER, "服务",
+			)),
+		), Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m = m.Spawn()
 				m.GoSleep("10s", func() {
@@ -375,7 +375,10 @@ func init() {
 						m.PushButton("grant")
 					}
 				})
-				m.Sort("type,status,name", []string{aaa.LOGIN, WORKER, SERVER, MASTER}, []string{cli.START, cli.STOP, cli.BEGIN}, ice.STR_R)
+				stat := map[string]int{}
+				m.Table(func(value ice.Maps) { stat[value[mdb.TYPE]]++; stat[value[mdb.STATUS]]++ })
+				kit.If(stat[cli.START] == stat[WORKER], func() { delete(stat, cli.START) })
+				m.Sort("type,status,name", []string{aaa.LOGIN, WORKER, SERVER, MASTER}, []string{cli.START, cli.STOP, cli.BEGIN}, ice.STR_R).StatusTimeCount(stat)
 			} else if arg[0] == ctx.ACTION {
 				gdb.Event(m, DREAM_ACTION, arg)
 			} else {
@@ -396,8 +399,10 @@ func DreamProcess(m *ice.Message, args ice.Any, arg ...string) {
 	if kit.HasPrefixList(arg, ctx.RUN) {
 		ctx.ProcessField(m, m.PrefixKey(), args, kit.Slice(arg, 1)...)
 	} else if kit.HasPrefixList(arg, ctx.ACTION, m.PrefixKey()) || kit.HasPrefixList(arg, ctx.ACTION, m.CommandKey()) {
-		if m.Option(mdb.TYPE) == MASTER {
-			m.ProcessOpen(SpideOrigin(m, m.Option(mdb.NAME)) + C(m.PrefixKey()))
+		if m.Option(mdb.TYPE) == MASTER && (kit.IsIn(ctx.ShortCmd(m.PrefixKey()), PORTAL, DESKTOP)) {
+			// m.ProcessOpen(SpideOrigin(m, m.Option(mdb.NAME)) + C(m.PrefixKey()))
+			ctx.ProcessField(m, CHAT_IFRAME, SpideOrigin(m, m.Option(mdb.NAME))+C(m.PrefixKey()), arg...)
+			m.ProcessField(ctx.ACTION, ctx.RUN, CHAT_IFRAME)
 		} else if arg = kit.Slice(arg, 2); kit.HasPrefixList(arg, DREAM) {
 			m.Cmdy(SPACE, m.Option(ice.MSG_USERPOD, arg[1]), m.PrefixKey(), ctx.ACTION, DREAM_ACTION, ctx.RUN, arg[2:])
 		} else if dream := m.Option(mdb.NAME); dream != "" {

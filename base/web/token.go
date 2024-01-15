@@ -15,11 +15,7 @@ const TOKEN = "token"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		TOKEN: {Help: "令牌桶", Actions: mdb.HashAction(mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,type,name,text", mdb.EXPIRE, mdb.MONTH), Hand: func(m *ice.Message, arg ...string) {
-			if mdb.HashSelect(m, arg...); len(arg) > 0 {
-				m.EchoScript(kit.Format("ish_miss_serve_log dev %s token %s", UserHost(m), arg[0]))
-			}
-		}},
+		TOKEN: {Help: "令牌桶", Actions: mdb.HashAction(mdb.SHORT, mdb.UNIQ, mdb.EXPIRE, mdb.MONTH)},
 	})
 }
 

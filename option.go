@@ -78,7 +78,7 @@ func (m *Message) Action(arg ...Any) *Message {
 }
 func (m *Message) Status(arg ...Any) *Message {
 	list := kit.List()
-	kit.For(kit.Simple(arg), func(k, v string) { list = append(list, kit.Dict(NAME, k, VALUE, v)) })
+	kit.For(kit.Simple(arg), func(k, v string) { kit.If(k, func() { list = append(list, kit.Dict(NAME, k, VALUE, v)) }) })
 	return m.Options(MSG_STATUS, kit.Format(list))
 }
 func (m *Message) StatusTime(arg ...Any) *Message {

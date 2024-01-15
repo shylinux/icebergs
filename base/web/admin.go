@@ -19,9 +19,9 @@ func init() {
 			DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) {
 				if kit.HasPrefixList(arg, ctx.ACTION, ADMIN) && len(arg) == 2 {
 					if m.Option(mdb.TYPE) == MASTER {
-						m.ProcessOpen(SpideOrigin(m, m.Option(mdb.NAME)) + C(m.PrefixKey()))
-						// ctx.ProcessField(m, CHAT_IFRAME, SpideOrigin(m, m.Option(mdb.NAME))+C(m.PrefixKey()), arg...)
-						// m.ProcessField(ctx.ACTION, ctx.RUN, CHAT_IFRAME)
+						// m.ProcessOpen(SpideOrigin(m, m.Option(mdb.NAME)) + C(m.PrefixKey()))
+						ctx.ProcessField(m, CHAT_IFRAME, SpideOrigin(m, m.Option(mdb.NAME))+C(m.PrefixKey()), arg...)
+						m.ProcessField(ctx.ACTION, ctx.RUN, CHAT_IFRAME)
 					} else {
 						ctx.ProcessField(m, CHAT_IFRAME, m.MergePodCmd(m.Option(mdb.NAME), ""), arg...)
 						m.ProcessField(ctx.ACTION, ctx.RUN, CHAT_IFRAME)

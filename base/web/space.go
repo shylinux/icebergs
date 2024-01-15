@@ -81,6 +81,7 @@ func _space_fork(m *ice.Message) {
 	} else {
 		name, text = kit.Hashs(name), kit.Select(addr, m.Option(mdb.NAME), m.Option(mdb.TEXT))
 	}
+	safe := false
 	if m.Option(ice.MSG_USERNAME, ""); kit.IsIn(m.Option(mdb.TYPE), WORKER, PORTAL) {
 		if tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) {
 			aaa.SessAuth(m, kit.Dict(m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME, ice.Info.Username)).AppendSimple()))
@@ -89,6 +90,7 @@ func _space_fork(m *ice.Message) {
 		if msg := m.Cmd(TOKEN, m.Option(TOKEN)); msg.Append(mdb.TIME) > m.Time() && kit.IsIn(msg.Append(mdb.TYPE), SERVER, SPIDE) {
 			aaa.SessAuth(m, kit.Dict(m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME, msg.Append(mdb.NAME))).AppendSimple()))
 			name = SpaceName(kit.Select(name, msg.Append(mdb.TEXT)))
+			safe = true
 		}
 	}
 	args := kit.Simple(mdb.TYPE, m.Option(mdb.TYPE), mdb.NAME, name, mdb.TEXT, text, m.OptionSimple(nfs.MODULE, nfs.VERSION, cli.DAEMON))
@@ -97,7 +99,6 @@ func _space_fork(m *ice.Message) {
 	args = _space_agent(m, args...)
 	if c, e := websocket.Upgrade(m.W, m.R); !m.Warn(e) {
 		gdb.Go(m, func() {
-			safe := false
 			defer mdb.HashCreateDeferRemove(m, args, kit.Dict(mdb.TARGET, c))()
 			switch m.Option(mdb.TYPE) {
 			case LOGIN:

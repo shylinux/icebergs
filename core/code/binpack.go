@@ -50,7 +50,7 @@ func _binpack_all(m *ice.Message) {
 	defer fmt.Fprintln(w, nfs.Template(m, "binpack_end.go"))
 	defer fmt.Fprint(w, lex.TB)
 	nfs.OptionFiles(m, nfs.DiskFile)
-	kit.If(m.Option(ice.MSG_USERPOD) == "", func() {
+	kit.If(isReleaseContexts(m), func() {
 		kit.For([]string{ice.USR_VOLCANOS, ice.USR_INTSHELL}, func(p string) { _binpack_dir(m, w, p) })
 	})
 	kit.For([]string{ice.SRC}, func(p string) { _binpack_dir(m, w, p) })
@@ -72,10 +72,7 @@ func _binpack_all(m *ice.Message) {
 	for _, k := range kit.SortedKey(list) {
 		v := kit.Select(k, list[k])
 		m.Cmd(nfs.DIR, nfs.PWD, nfs.PATH, kit.Dict(nfs.DIR_ROOT, v, nfs.DIR_REG, kit.ExtReg(kit.Split(mdb.Config(m, lex.EXTREG))...))).Table(func(value ice.Maps) {
-			if kit.HasPrefix(k, ice.USR_ICEBERGS) && !nfs.Exists(m, ice.USR_ICEBERGS) || m.Option(ice.MSG_USERPOD) != "" {
-				return
-			}
-			_binpack_file(m, w, kit.Path(v, value[nfs.PATH]), path.Join(k, value[nfs.PATH]))
+			kit.If(isReleaseContexts(m), func() { _binpack_file(m, w, kit.Path(v, value[nfs.PATH]), path.Join(k, value[nfs.PATH])) })
 		})
 	}
 	mdb.HashSelects(m).Sort(nfs.PATH).Table(func(value ice.Maps) {
@@ -85,10 +82,7 @@ func _binpack_all(m *ice.Message) {
 			_binpack_file(m, w, value[nfs.PATH])
 		}
 	})
-	kit.If(nfs.Exists(m, ice.USR_RELEASE) && m.Option(ice.MSG_USERPOD) == "", func() {
-		m.Option(nfs.DIR_REG, kit.ExtReg(nfs.SHY))
-		_binpack_dir(m, w, ice.USR_RELEASE)
-	})
+	kit.If(isReleaseContexts(m), func() { m.Option(nfs.DIR_REG, kit.ExtReg(nfs.SHY)); _binpack_dir(m, w, ice.USR_RELEASE) })
 }
 
 const BINPACK = "binpack"
@@ -107,4 +101,7 @@ func GoCache(m *ice.Message) string {
 		func() string { return kit.Select(kit.HomePath(GO)+nfs.PS, GoEnv(m, GOPATH)) + "/pkg/mod/" },
 		func() string { return ice.USR_REQUIRE },
 	)
+}
+func isReleaseContexts(m *ice.Message) bool {
+	return nfs.Exists(m, ice.USR_RELEASE) && nfs.Exists(m, ice.USR_VOLCANOS) && nfs.Exists(m, ice.USR_INTSHELL) && ice.Info.Make.Module == "shylinux.com/x/contexts"
 }

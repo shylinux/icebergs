@@ -70,7 +70,7 @@ func _space_agent(m *ice.Message, args ...string) []string {
 func _space_fork(m *ice.Message) {
 	addr := kit.Select(m.R.RemoteAddr, m.R.Header.Get(ice.MSG_USERADDR))
 	text := strings.ReplaceAll(kit.Select(addr, m.Option(mdb.TEXT)), "%2F", nfs.PS)
-	name := kit.ReplaceAll(kit.Select(addr, m.Option(mdb.NAME)), "[", "_", "]", "_", nfs.DF, "_", nfs.PT, "_")
+	name := SpaceName(kit.Select(addr, m.Option(mdb.NAME)))
 	if m.OptionDefault(mdb.TYPE, SERVER) == WORKER && (!nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, name)) || !tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP))) {
 		m.Option(mdb.TYPE, SERVER)
 	}
@@ -88,7 +88,7 @@ func _space_fork(m *ice.Message) {
 	} else if m.Option(TOKEN) != "" {
 		if msg := m.Cmd(TOKEN, m.Option(TOKEN)); msg.Append(mdb.TIME) > m.Time() && kit.IsIn(msg.Append(mdb.TYPE), SERVER, SPIDE) {
 			aaa.SessAuth(m, kit.Dict(m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME, msg.Append(mdb.NAME))).AppendSimple()))
-			name = kit.ReplaceAll(kit.Select(name, msg.Append(mdb.TEXT)), "[", "_", "]", "_", nfs.DF, "_", nfs.PT, "_", nfs.PS, "_")
+			name = SpaceName(kit.Select(name, msg.Append(mdb.TEXT)))
 		}
 	}
 	args := kit.Simple(mdb.TYPE, m.Option(mdb.TYPE), mdb.NAME, name, mdb.TEXT, text, m.OptionSimple(nfs.MODULE, nfs.VERSION, cli.DAEMON))
@@ -269,6 +269,8 @@ func init() {
 			m.Cmd(SPACE, func(value ice.Maps) {
 				kit.If(kit.IsIn(value[mdb.TYPE], WORKER, SERVER), func() { m.Push(arg[0], value[mdb.NAME]) })
 			})
+		case ORIGIN:
+			m.Cmdy(SPIDE, kit.Dict(ice.MSG_FIELDS, CLIENT_ORIGIN)).CutTo(CLIENT_ORIGIN, arg[0]).Sort(arg[0])
 		case mdb.ICONS:
 			m.Options(nfs.DIR_REG, kit.ExtReg(nfs.PNG, nfs.JPG, nfs.JPEG), nfs.DIR_DEEP, ice.TRUE)
 			m.Cmdy(nfs.DIR, nfs.SRC, nfs.PATH)
@@ -299,8 +301,6 @@ func init() {
 			m.Push(arg[0], "shy@shylinux.com", "shylinux@163.com")
 		case aaa.PASSWORD:
 			m.SetAppend()
-		case "origin":
-			m.Cmdy(SPIDE, kit.Dict(ice.MSG_FIELDS, CLIENT_ORIGIN)).CutTo(CLIENT_ORIGIN, arg[0])
 		}
 	})
 	ctx.PodCmd = func(m *ice.Message, arg ...ice.Any) bool {
@@ -421,4 +421,7 @@ func PodCmd(m *ice.Message, key string, arg ...string) bool {
 	} else {
 		return false
 	}
+}
+func SpaceName(name string) string {
+	return kit.ReplaceAll(name, nfs.DF, "_", nfs.PS, "_", nfs.PT, "_", "[", "_", "]", "_")
 }

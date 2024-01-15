@@ -9,9 +9,9 @@ import (
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
-	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/base/web"
 	"shylinux.com/x/icebergs/base/web/html"
 	"shylinux.com/x/icebergs/core/code"
@@ -42,10 +42,6 @@ func init() {
 					m.Cmdy(REPOS, mdb.INPUTS, arg)
 				}
 			}},
-			OAUTH: {Name: "oauth remote", Help: "授权", Icon: "bi bi-person-check", Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessOpen(kit.MergeURL2(kit.Select(ice.Info.Make.Domain, m.Cmdx(REPOS, REMOTE_URL), m.Option(REMOTE)),
-					web.C(web.TOKEN), ctx.ACTION, "gen", mdb.TYPE, web.CODE_GIT_STATUS, tcp.HOST, web.UserHost(m)))
-			}},
 			CONFIGS: {Name: "configs email* username*", Help: "配置", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.DEFS, kit.HomePath(_GITCONFIG), kit.Format(nfs.Template(m, "gitconfig"), m.Option(aaa.USERNAME), m.Option(aaa.EMAIL)))
 				mdb.Config(m, aaa.USERNAME, m.Option(aaa.USERNAME))
@@ -70,7 +66,18 @@ func init() {
 				m.PushButton(kit.Dict(m.CommandKey(), "源码"))
 			}},
 			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { web.DreamProcess(m, nil, arg...) }},
-		}, ctx.ConfAction(ctx.TOOLS, "xterm,compile"), Prefix(REPOS)), Hand: func(m *ice.Message, arg ...string) {
+			mdb.DEV_REQUEST:  {Name: "dev.request origin*", Help: "授权"},
+			web.DEV_CREATE_TOKEN: {Hand: func(m *ice.Message, arg ...string) {
+				const FILE = ".git-credentials"
+				host, list := ice.Map{kit.ParseURL(m.Option(web.ORIGIN)).Host: true}, []string{strings.Replace(m.Option(web.ORIGIN), "://", kit.Format("://%s:%s@", m.Option(ice.MSG_USERNAME), m.Option(web.TOKEN)), 1)}
+				m.Cmd(nfs.CAT, kit.HomePath(FILE), func(line string) {
+					line = strings.ReplaceAll(line, "%3a", ":")
+					kit.IfNoKey(host, kit.ParseURL(line).Host, func(p string) { list = append(list, line) })
+				}).Cmd(nfs.SAVE, kit.HomePath(FILE), strings.Join(list, lex.NL)+lex.NL)
+				m.Cmd(CONFIGS, mdb.CREATE, "credential.helper", "store")
+				m.ProcessClose()
+			}},
+		}, web.DevTokenAction(web.ORIGIN, web.ORIGIN), ctx.ConfAction(ctx.TOOLS, "xterm,compile"), Prefix(REPOS)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 && arg[0] == ctx.ACTION {
 				m.Cmdy(REPOS, arg)
 			} else if config, err := config.LoadConfig(config.GlobalScope); err == nil && config.User.Email == "" && mdb.Config(m, aaa.EMAIL) == "" {
@@ -79,7 +86,7 @@ func init() {
 				m.EchoInfoButton("please init repos. ", INIT)
 			} else if len(arg) == 0 {
 				kit.If(config != nil, func() { m.Option(aaa.EMAIL, kit.Select(mdb.Config(m, aaa.EMAIL), config.User.Email)) })
-				m.Cmdy(REPOS, STATUS).Action(PULL, PUSH, INSTEADOF, OAUTH, CONFIGS)
+				m.Cmdy(REPOS, STATUS).Action(PULL, PUSH, INSTEADOF, mdb.DEV_REQUEST, CONFIGS)
 				kit.If(!m.IsCliUA(), func() { m.Cmdy(code.PUBLISH, ice.CONTEXTS, ice.DEV) })
 				ctx.Toolkit(m)
 			} else {

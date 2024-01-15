@@ -481,21 +481,17 @@ func init() {
 				m.Echo(_repos_remote(m, _repos_origin(m, _repos_open(m, path.Base(kit.Path(""))))))
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
-				switch m.Option(ctx.ACTION) {
+				switch mdb.HashInputs(m, arg); m.Option(ctx.ACTION) {
 				case INIT:
 					m.Cmd(web.SPIDE, ice.OptionFields(web.CLIENT_ORIGIN), func(value ice.Maps) { m.Push(arg[0], value[web.CLIENT_ORIGIN]+web.X(path.Base(kit.Path("")))) })
 					m.Push(arg[0], kit.MergeURL2(web.UserHost(m), web.X(path.Base(kit.Path("")))))
 					m.Sort(arg[0])
-				case INSTEADOF, OAUTH:
+				case INSTEADOF:
 					m.Cmd(web.SPIDE, ice.OptionFields(web.CLIENT_ORIGIN), func(value ice.Maps) { m.Push(arg[0], value[web.CLIENT_ORIGIN]+web.X()) })
 					m.Push(arg[0], kit.MergeURL2(web.UserHost(m), web.X()))
 					m.Sort(arg[0])
 				default:
 					switch arg[0] {
-					case ORIGIN:
-						m.Cmd(web.SPIDE, ice.OptionFields(web.CLIENT_ORIGIN), func(value ice.Maps) { m.Push(arg[0], value[web.CLIENT_ORIGIN]+web.X(path.Base(kit.Path("")))) })
-						m.Push(arg[0], kit.MergeURL2(web.UserHost(m), web.X(path.Base(kit.Path("")))))
-						m.Sort(arg[0])
 					case MESSAGE:
 						ls := kit.Split(m.Option(nfs.FILE), " /")
 						m.Push(arg[0], kit.Select("", ls, -2))

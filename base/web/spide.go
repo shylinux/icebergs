@@ -350,10 +350,11 @@ func init() {
 				m.Cmd(SPACE, cli.CLOSE, kit.Dict(mdb.NAME, m.Option(CLIENT_NAME)))
 				mdb.HashModify(m, mdb.NAME, m.Option(CLIENT_NAME), TOKEN, "")
 			}},
-			"devCreateToken": {Hand: func(m *ice.Message, arg ...string) {
+			DEV_REQUEST_TEXT: {Hand: func(m *ice.Message, arg ...string) { m.Echo(SpaceName(ice.Info.NodeName)) }},
+			DEV_CREATE_TOKEN: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(SPACE, tcp.DIAL, ice.DEV, m.Option(CLIENT_NAME), m.OptionSimple(TOKEN))
 			}},
-		}, devTokenAction(CLIENT_NAME, CLIENT_URL), mdb.HashAction(mdb.SHORT, CLIENT_NAME, mdb.FIELD, "time,client.name,client.url,token")), Hand: func(m *ice.Message, arg ...string) {
+		}, DevTokenAction(CLIENT_NAME, CLIENT_URL), mdb.HashAction(mdb.SHORT, CLIENT_NAME, mdb.FIELD, "time,client.name,client.url,token")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 || arg[0] == "" || (len(arg) > 3 && arg[3] == "") {
 				list := m.CmdMap(SPACE, mdb.NAME)
 				mdb.HashSelect(m, kit.Slice(arg, 0, 1)...).Sort(CLIENT_NAME)

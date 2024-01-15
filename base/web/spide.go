@@ -241,13 +241,14 @@ const (
 	SPIDE_COOKIE = "cookie"
 	SPIDE_HEADER = "header"
 
+	CLIENT_URL      = "client.url"
 	CLIENT_NAME     = "client.name"
 	CLIENT_METHOD   = "client.method"
+	CLIENT_ORIGIN   = "client.origin"
 	CLIENT_TIMEOUT  = "client.timeout"
 	CLIENT_PROTOCOL = "client.protocol"
 	CLIENT_HOSTNAME = "client.hostname"
-	CLIENT_ORIGIN   = "client.origin"
-	CLIENT_URL      = "client.url"
+	CLIENT_HOST     = "client.host"
 
 	OPEN   = "open"
 	MAIN   = "main"
@@ -291,7 +292,11 @@ func init() {
 	}
 	Index.MergeCommands(ice.Commands{
 		// SPIDE: {Name: "spide client.name action=raw,msg,save,cache method=GET,PUT,POST,DELETE url format=form,part,json,data,file arg run create", Help: "蜘蛛侠", Actions: ice.MergeActions(ice.Actions{
-		SPIDE: {Help: "蜘蛛侠", Actions: ice.MergeActions(ice.Actions{
+		SPIDE: {Help: "蜘蛛侠", Meta: kit.Dict(ice.CTX_TRANS, kit.Dict(html.INPUT, kit.Dict(
+			CLIENT_NAME, "名称", CLIENT_URL, "地址",
+			CLIENT_METHOD, "方法", CLIENT_ORIGIN, "服务", CLIENT_TIMEOUT, "超时",
+			CLIENT_PROTOCOL, "协议", CLIENT_HOST, "主机", CLIENT_HOSTNAME, "机器",
+		))), Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				conf := mdb.Confm(m, cli.RUNTIME, cli.CONF)
 				m.Cmd("", mdb.CREATE, ice.SHY, kit.Select("https://shylinux.com", conf[cli.CTX_SHY]))
@@ -329,10 +334,10 @@ func init() {
 				}
 			}},
 			mdb.CREATE: {Name: "create name link", Hand: func(m *ice.Message, arg ...string) { _spide_create(m, m.Option(mdb.NAME), m.Option(LINK)) }},
-			COOKIE: {Name: "cookie key* value", Hand: func(m *ice.Message, arg ...string) {
+			COOKIE: {Name: "cookie key* value", Help: "状态量", Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashModify(m, m.OptionSimple(CLIENT_NAME), kit.Keys(COOKIE, m.Option(mdb.KEY)), m.Option(mdb.VALUE))
 			}},
-			HEADER: {Name: "header key* value", Hand: func(m *ice.Message, arg ...string) {
+			HEADER: {Name: "header key* value", Help: "请求头", Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashModify(m, m.OptionSimple(CLIENT_NAME), kit.Keys(HEADER, m.Option(mdb.KEY)), m.Option(mdb.VALUE))
 			}},
 			MERGE: {Hand: func(m *ice.Message, arg ...string) {
@@ -341,12 +346,12 @@ func init() {
 			PROXY: {Name: "proxy url size cache upload", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(SPIDE, ice.DEV, SPIDE_RAW, http.MethodPost, m.Option(URL), SPIDE_PART, arg[2:])
 			}},
-			"dev.create.token": {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(SPACE, tcp.DIAL, ice.DEV, m.Option(CLIENT_NAME), m.OptionSimple(TOKEN))
-			}},
-			"disconn": {Name: "断连", Hand: func(m *ice.Message, arg ...string) {
+			"disconn": {Help: "断连", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(SPACE, cli.CLOSE, kit.Dict(mdb.NAME, m.Option(CLIENT_NAME)))
 				mdb.HashModify(m, mdb.NAME, m.Option(CLIENT_NAME), TOKEN, "")
+			}},
+			"devCreateToken": {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(SPACE, tcp.DIAL, ice.DEV, m.Option(CLIENT_NAME), m.OptionSimple(TOKEN))
 			}},
 		}, devTokenAction(CLIENT_NAME, CLIENT_URL), mdb.HashAction(mdb.SHORT, CLIENT_NAME, mdb.FIELD, "time,client.name,client.url,token")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 || arg[0] == "" || (len(arg) > 3 && arg[3] == "") {
@@ -354,7 +359,7 @@ func init() {
 				mdb.HashSelect(m, kit.Slice(arg, 0, 1)...).Sort(CLIENT_NAME)
 				m.Table(func(value ice.Maps) {
 					if _, ok := list[value[CLIENT_NAME]]; ok {
-						m.Push(mdb.STATUS, "online")
+						m.Push(mdb.STATUS, ONLINE)
 						m.PushButton("disconn", mdb.REMOVE)
 					} else {
 						m.Push(mdb.STATUS, "")

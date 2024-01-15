@@ -190,11 +190,11 @@ func ExportHashAction(arg ...Any) ice.Actions {
 }
 
 const (
-	DEV_REQUEST  = "dev.request"
-	DEV_CHOOSE   = "dev.choose"
-	DEV_RESPONSE = "dev.response"
-	DEV_CONFIRM  = "dev.confirm"
-	DEV_CREATE   = "dev.create"
+	DEV_REQUEST  = "devRequest"
+	DEV_CHOOSE   = "devChoose"
+	DEV_RESPONSE = "devResponse"
+	DEV_CONFIRM  = "devConfirm"
+	DEV_CREATE   = "devCreate"
 )
 
 func DevDataAction(fields ...string) ice.Actions {

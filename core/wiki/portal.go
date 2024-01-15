@@ -44,12 +44,12 @@ func _portal_commands(m *ice.Message, arg ...string) {
 			kit.If(mod != BASE, func() { cmd = strings.TrimPrefix(cmd, "web.") })
 			if !strings.HasPrefix(cmd, last) {
 				last = strings.Split(cmd, nfs.PT)[0]
-				if p := path.Join(nfs.SRC_DOCUMENT, path.Join(arg...), mod, last); nfs.Exists(m, p) {
+				if p := path.Join(nfs.USR_LEARNING_PORTAL, path.Join(arg...), mod, last); nfs.Exists(m, p) {
 					text = append(text, kit.Format("	%s %s/", last, last))
 				}
 			}
 			cmd = strings.TrimPrefix(cmd, last+nfs.PT)
-			if p := path.Join(nfs.SRC_DOCUMENT, path.Join(arg...), mod, last, strings.Replace(cmd, nfs.PT, nfs.PS, -1)+".shy"); nfs.Exists(m, p) {
+			if p := path.Join(nfs.USR_LEARNING_PORTAL, path.Join(arg...), mod, last, strings.Replace(cmd, nfs.PT, nfs.PS, -1)+".shy"); nfs.Exists(m, p) {
 				text = append(text, kit.Format("		%s %s.shy", cmd, cmd))
 			} else if p, ok := help[last+nfs.PT+cmd]; ok {
 				text = append(text, kit.Format("		%s %s", cmd, strings.TrimPrefix(ctx.FileURI(p), "/require/")))
@@ -57,7 +57,7 @@ func _portal_commands(m *ice.Message, arg ...string) {
 		}
 	}
 	text = append(text, "`")
-	m.Cmd(nfs.SAVE, path.Join(nfs.SRC_DOCUMENT, path.Join(arg...), INDEX_SHY), strings.Join(text, lex.NL))
+	m.Cmd(nfs.SAVE, path.Join(nfs.USR_LEARNING_PORTAL, path.Join(arg...), INDEX_SHY), strings.Join(text, lex.NL))
 }
 
 const (
@@ -83,9 +83,9 @@ func init() {
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) { m.PushButton(kit.Dict(PORTAL, "官网")) }},
 			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { web.DreamProcess(m, nil, arg...) }},
 		}, aaa.WhiteAction("")), Hand: func(m *ice.Message, arg ...string) {
-			if m.Push(HEADER, m.Cmdx(WORD, path.Join(nfs.SRC_DOCUMENT, INDEX_SHY))); len(arg) > 0 {
+			if m.Push(HEADER, m.Cmdx(WORD, path.Join(nfs.USR_LEARNING_PORTAL, INDEX_SHY))); len(arg) > 0 {
 				kit.If(path.Join(arg...) == "commands", func() { _portal_commands(m, arg...) })
-				m.Push(NAV, m.Cmdx(WORD, path.Join(nfs.SRC_DOCUMENT, path.Join(arg...), INDEX_SHY)))
+				m.Push(NAV, m.Cmdx(WORD, path.Join(nfs.USR_LEARNING_PORTAL, path.Join(arg...), INDEX_SHY)))
 			}
 			m.Display("")
 		}},

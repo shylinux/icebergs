@@ -184,7 +184,7 @@ func GetFileCmd(dir string) string {
 }
 func GetCmdHelp(m *ice.Message, cmds string) (file string) {
 	file = strings.TrimPrefix(FileURI(kit.ExtChange(GetCmdFile(m, cmds), nfs.SHY)), "/require/")
-	if !nfs.Exists(m, path.Join(nfs.SRC_DOCUMENT, "commands", strings.TrimPrefix(file, "usr/icebergs/")), func(p string) { file = p }) {
+	if !nfs.Exists(m, path.Join(nfs.USR_LEARNING_PORTAL, "commands", strings.TrimPrefix(file, "usr/icebergs/")), func(p string) { file = p }) {
 		kit.If(!nfs.Exists(m, file), func() { file = "" })
 	}
 	return

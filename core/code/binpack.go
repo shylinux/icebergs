@@ -24,7 +24,7 @@ func _binpack_file(m *ice.Message, w io.Writer, arg ...string) {
 		return
 	}
 	switch arg[0] {
-	case ice.GO_MOD, ice.GO_SUM, ice.SRC_VERSION_GO, ice.SRC_BINPACK_GO:
+	case ice.GO_MOD, ice.GO_SUM, ice.SRC_VERSION_GO, ice.SRC_BINPACK_GO, ice.SRC_BINPACK_USR_GO:
 		return
 	case ice.ETC_LOCAL_SHY:
 		fmt.Fprintf(w, "        \"%s\": \"%s\",\n", kit.Select(arg[0], arg, 1), "")
@@ -39,10 +39,12 @@ func _binpack_file(m *ice.Message, w io.Writer, arg ...string) {
 	}
 }
 func _binpack_dir(m *ice.Message, w io.Writer, dir string) {
-	nfs.DirDeepAll(m, dir, nfs.PWD, func(value ice.Maps) { _binpack_file(m, w, path.Join(dir, value[nfs.PATH])) })
+	if nfs.Exists(m, dir) {
+		nfs.DirDeepAll(m, dir, nfs.PWD, func(value ice.Maps) { _binpack_file(m, w, path.Join(dir, value[nfs.PATH])) })
+	}
 }
-func _binpack_all(m *ice.Message) {
-	w, p, e := nfs.CreateFile(m, ice.SRC_BINPACK_GO)
+func _binpack_usr(m *ice.Message) {
+	w, p, e := nfs.CreateFile(m, ice.SRC_BINPACK_USR_GO)
 	m.Assert(e)
 	defer w.Close()
 	defer m.Echo(p)
@@ -50,14 +52,9 @@ func _binpack_all(m *ice.Message) {
 	defer fmt.Fprintln(w, nfs.Template(m, "binpack_end.go"))
 	defer fmt.Fprint(w, lex.TB)
 	nfs.OptionFiles(m, nfs.DiskFile)
-	kit.If(isReleaseContexts(m), func() {
-		kit.For([]string{ice.USR_VOLCANOS, ice.USR_INTSHELL}, func(p string) { _binpack_dir(m, w, p) })
+	kit.For([]string{ice.USR_VOLCANOS, nfs.USR_LEARNING_PORTAL, ice.USR_INTSHELL}, func(p string) {
+		_binpack_dir(m, w, p)
 	})
-	kit.For([]string{ice.SRC}, func(p string) { _binpack_dir(m, w, p) })
-	kit.For([]string{
-		ice.ETC_MISS_SH, ice.ETC_INIT_SHY, ice.ETC_LOCAL_SHY, ice.ETC_EXIT_SHY, ice.ETC_PATH,
-		ice.README_MD, ice.MAKEFILE, ice.LICENSE, ice.GO_MOD, ice.GO_SUM,
-	}, func(p string) { _binpack_file(m, w, p) })
 	list, cache := map[string]string{}, GoCache(m)
 	for k := range ice.Info.File {
 		switch ls := kit.Split(k, nfs.PS); ls[1] {
@@ -72,7 +69,7 @@ func _binpack_all(m *ice.Message) {
 	for _, k := range kit.SortedKey(list) {
 		v := kit.Select(k, list[k])
 		m.Cmd(nfs.DIR, nfs.PWD, nfs.PATH, kit.Dict(nfs.DIR_ROOT, v, nfs.DIR_REG, kit.ExtReg(kit.Split(mdb.Config(m, lex.EXTREG))...))).Table(func(value ice.Maps) {
-			kit.If(isReleaseContexts(m), func() { _binpack_file(m, w, kit.Path(v, value[nfs.PATH]), path.Join(k, value[nfs.PATH])) })
+			_binpack_file(m, w, kit.Path(v, value[nfs.PATH]), path.Join(k, value[nfs.PATH]))
 		})
 	}
 	mdb.HashSelects(m).Sort(nfs.PATH).Table(func(value ice.Maps) {
@@ -82,7 +79,30 @@ func _binpack_all(m *ice.Message) {
 			_binpack_file(m, w, value[nfs.PATH])
 		}
 	})
-	kit.If(isReleaseContexts(m), func() { m.Option(nfs.DIR_REG, kit.ExtReg(nfs.SHY)); _binpack_dir(m, w, ice.USR_RELEASE) })
+	_binpack_dir(m.Options(nfs.DIR_REG, kit.ExtReg(nfs.SHY)), w, ice.USR_RELEASE)
+}
+
+func _binpack_src(m *ice.Message) {
+	w, p, e := nfs.CreateFile(m, ice.SRC_BINPACK_GO)
+	m.Assert(e)
+	defer w.Close()
+	defer m.Echo(p)
+	fmt.Fprintln(w, nfs.Template(m, ice.SRC_BINPACK_GO))
+	defer fmt.Fprintln(w, nfs.Template(m, "binpack_end.go"))
+	defer fmt.Fprint(w, lex.TB)
+	nfs.OptionFiles(m, nfs.DiskFile)
+	kit.For([]string{ice.SRC}, func(p string) { _binpack_dir(m, w, p) })
+	kit.For([]string{
+		ice.ETC_MISS_SH, ice.ETC_INIT_SHY, ice.ETC_LOCAL_SHY, ice.ETC_EXIT_SHY, ice.ETC_PATH,
+		ice.README_MD, ice.MAKEFILE, ice.LICENSE, ice.GO_MOD, ice.GO_SUM,
+	}, func(p string) { _binpack_file(m, w, p) })
+	mdb.HashSelects(m).Sort(nfs.PATH).Table(func(value ice.Maps) {
+		if strings.HasSuffix(value[nfs.PATH], nfs.PS) {
+			_binpack_dir(m, w, value[nfs.PATH])
+		} else {
+			_binpack_file(m, w, value[nfs.PATH])
+		}
+	})
 }
 
 const BINPACK = "binpack"
@@ -90,7 +110,10 @@ const BINPACK = "binpack"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		BINPACK: {Name: "binpack path auto create insert", Help: "打包", Actions: ice.MergeActions(ice.Actions{
-			mdb.CREATE: {Name: "create path", Hand: func(m *ice.Message, arg ...string) { _binpack_all(m) }},
+			mdb.CREATE: {Name: "create path", Hand: func(m *ice.Message, arg ...string) {
+				_binpack_usr(m.Spawn())
+				_binpack_src(m)
+			}},
 			mdb.INSERT: {Name: "insert path*", Hand: func(m *ice.Message, arg ...string) { mdb.HashCreate(m) }},
 		}, mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path", lex.EXTREG, "sh,shy,py,js,css,html,png,jpg"))},
 	})
@@ -101,7 +124,4 @@ func GoCache(m *ice.Message) string {
 		func() string { return kit.Select(kit.HomePath(GO)+nfs.PS, GoEnv(m, GOPATH)) + "/pkg/mod/" },
 		func() string { return ice.USR_REQUIRE },
 	)
-}
-func isReleaseContexts(m *ice.Message) bool {
-	return nfs.Exists(m, ice.USR_RELEASE) && nfs.Exists(m, ice.USR_VOLCANOS) && nfs.Exists(m, ice.USR_INTSHELL) && ice.Info.Make.Module == "shylinux.com/x/contexts"
 }

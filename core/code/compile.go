@@ -120,7 +120,7 @@ func init() {
 			m.Options(cli.CMD_ENV, env).Cmd(AUTOGEN, VERSION)
 			_compile_get(m, main)
 			defer m.StatusTime(VERSION, strings.TrimPrefix(GoVersion(m), "go version"))
-			if msg := GoBuild(m.Spawn(), file, main, ice.SRC_VERSION_GO, ice.SRC_BINPACK_GO); !cli.IsSuccess(msg) {
+			if msg := GoBuild(m.Spawn(), file, main, ice.SRC_VERSION_GO, ice.SRC_BINPACK_GO, ice.SRC_BINPACK_USR_GO); !cli.IsSuccess(msg) {
 				m.Copy(msg)
 			} else {
 				m.Logs(nfs.SAVE, nfs.TARGET, file, nfs.SOURCE, main)

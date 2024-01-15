@@ -54,12 +54,12 @@ func init() {
 				_wiki_list(msg, nfs.SRC)
 				_wiki_list(msg, nfs.USR_ICEBERGS)
 				msg.Table(func(value ice.Maps) {
-					if !kit.HasPrefix(value[nfs.PATH], nfs.SRC_TEMPLATE, nfs.SRC_DOCUMENT) {
+					if !kit.HasPrefix(value[nfs.PATH], nfs.SRC_TEMPLATE, nfs.USR_LEARNING_PORTAL) {
 						m.Push("", value, kit.Split("path,size,time"))
 					}
 				})
 				web.PushPodCmd(m.Spawn(), "").Table(func(value ice.Maps) {
-					if !kit.HasPrefix(value[nfs.PATH], nfs.SRC_TEMPLATE, nfs.SRC_DOCUMENT) {
+					if !kit.HasPrefix(value[nfs.PATH], nfs.SRC_TEMPLATE, nfs.USR_LEARNING_PORTAL) {
 						value[nfs.PATH] = value[web.SPACE] + nfs.DF + value[nfs.PATH]
 						m.Push("", value, kit.Split("path,size,time"))
 					}
@@ -76,7 +76,7 @@ func init() {
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) { m.PushButton(kit.Dict(m.CommandKey(), "文档")) }},
 			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { web.DreamProcess(m, nil, arg...) }},
 		}, WikiAction("", nfs.SHY), mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path")), Hand: func(m *ice.Message, arg ...string) {
-			if len(arg) > 0 && !strings.HasPrefix(arg[0], nfs.SRC_DOCUMENT) {
+			if len(arg) > 0 && !strings.HasPrefix(arg[0], nfs.USR_LEARNING_PORTAL) {
 				mdb.HashCreate(m.Spawn(), nfs.PATH, arg[0])
 			}
 			if len(arg) > 0 && strings.Contains(arg[0], nfs.DF) {

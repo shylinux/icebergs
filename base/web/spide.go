@@ -277,7 +277,7 @@ func init() {
 		}
 	}
 	nfs.DocumentPath = func(m *ice.Message, arg ...string) string {
-		if p := path.Join(ice.SRC_DOCUMENT, m.PrefixKey(), path.Join(arg...)); nfs.Exists(m, p) {
+		if p := path.Join(nfs.USR_LEARNING_PORTAL, m.PrefixKey(), path.Join(arg...)); nfs.Exists(m, p) {
 			return p + kit.Select("", nfs.PS, len(arg) == 0)
 		} else {
 			return path.Join(path.Dir(ctx.GetCmdFile(m, m.PrefixKey())), path.Join(arg...)) + kit.Select("", nfs.PS, len(arg) == 0)

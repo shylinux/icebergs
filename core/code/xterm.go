@@ -129,7 +129,7 @@ func init() {
 				if h := kit.Select(m.Option(mdb.HASH), arg, 0); h == "" {
 					cli.OpenCmds(m, "cd "+kit.Path(""))
 				} else {
-					cli.OpenCmds(m, m.Cmdv("", h, mdb.TYPE))
+					cli.OpenCmds(m, "cd "+kit.Path("")+"; "+m.Cmdv("", h, mdb.TYPE))
 				}
 				m.ProcessHold()
 			}},
@@ -154,9 +154,7 @@ func init() {
 				})
 			}},
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) { m.PushButton(kit.Dict(m.CommandKey(), "终端")) }},
-			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) {
-				web.DreamProcess(m, cli.Shell(m), arg...)
-			}},
+			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { web.DreamProcess(m, cli.Shell(m), arg...) }},
 		}, chat.FavorAction(), ctx.ProcessAction(), mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,path")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) == 0 {
 				if web.IsLocalHost(m) {
@@ -166,7 +164,7 @@ func init() {
 				}
 			} else {
 				kit.If(m.Length() == 0, func() { arg[0] = m.Cmdx("", mdb.CREATE, arg); mdb.HashSelect(m, arg[0]) })
-				m.Push(mdb.HASH, arg[0])
+				m.Push(mdb.HASH, arg[0]).Action(ice.APP)
 				ctx.DisplayLocal(m, "")
 			}
 		}},

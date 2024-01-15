@@ -36,7 +36,7 @@ var DocumentText = func(m *ice.Message, p string) string {
 	return m.Cmdx(CAT, DocumentPath(m, path.Base(p)))
 }
 var DocumentPath = func(m *ice.Message, arg ...string) string {
-	if p := path.Join(ice.SRC_DOCUMENT, m.PrefixKey(), path.Join(arg...)); Exists(m, p) {
+	if p := path.Join(USR_LEARNING_PORTAL, m.PrefixKey(), path.Join(arg...)); Exists(m, p) {
 		return p
 	} else {
 		return p

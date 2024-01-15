@@ -66,8 +66,10 @@ func _autogen_version(m *ice.Message) string {
 		defer m.Cmd(REPOS, ADD, kit.Dict(nfs.REPOS, path.Base(mod), nfs.FILE, nfs.SRC))
 	}
 	m.Cmd(nfs.DEFS, ".gitignore", nfs.Template(m, "gitignore"))
+	m.Cmd(nfs.DEFS, ice.SRC_BINPACK_USR_GO, nfs.Template(m, ice.SRC_BINPACK_GO))
 	m.Cmd(nfs.DEFS, ice.SRC_BINPACK_GO, nfs.Template(m, ice.SRC_BINPACK_GO))
 	m.Cmd(nfs.SAVE, ice.SRC_VERSION_GO, kit.Format(nfs.Template(m, ice.SRC_VERSION_GO), _autogen_gits(m)))
+	m.Cmdy(nfs.DIR, ice.SRC_BINPACK_USR_GO)
 	m.Cmdy(nfs.DIR, ice.SRC_BINPACK_GO)
 	m.Cmdy(nfs.DIR, ice.SRC_VERSION_GO)
 	m.Cmdy(nfs.DIR, ice.SRC_MAIN_GO)
@@ -162,4 +164,7 @@ func init() {
 			VERSION: {Help: "版本", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(nfs.CAT, _autogen_version(m)) }},
 		}},
 	})
+}
+func isReleaseContexts(m *ice.Message) bool {
+	return nfs.Exists(m, ice.USR_RELEASE) && nfs.Exists(m, ice.USR_VOLCANOS) && nfs.Exists(m, ice.USR_INTSHELL) && ice.Info.Make.Module == "shylinux.com/x/contexts"
 }

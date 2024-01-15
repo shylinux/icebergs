@@ -148,6 +148,7 @@ func _space_handle(m *ice.Message, safe bool, name string, c *websocket.Conn) {
 				if k := kit.Keys(msg.Option(ice.MSG_USERPOD), "_token"); msg.Option(k) != "" {
 					aaa.SessCheck(msg, msg.Option(k))
 				}
+				msg.Option(ice.MSG_OPTS, kit.Simple(msg.Optionv(ice.MSG_OPTION), func(k string) bool { return !strings.HasPrefix(k, ice.MSG_SESSID) }))
 				_space_exec(msg, name, source, target, c)
 			}, strings.Join(kit.Simple(SPACE, name, msg.Detailv()), lex.SP))
 		} else {

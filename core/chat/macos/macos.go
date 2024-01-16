@@ -2,6 +2,8 @@ package macos
 
 import (
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/aaa"
+	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -20,12 +22,36 @@ func init() { chat.Index.Register(Index, nil, DESKTOP, APPLICATIONS) }
 
 func Prefix(arg ...string) string { return chat.Prefix(MACOS, kit.Keys(arg)) }
 
+func disableApp(m *ice.Message) *ice.Message {
+	m.Table(func(value ice.Maps) {
+		switch ctx.ShortCmd(value[ctx.INDEX]) {
+		case web.DREAM, web.CODE_GIT_SEARCH:
+			if ice.Info.NodeType == web.WORKER {
+				m.Push(mdb.STATUS, mdb.DISABLE)
+				return
+			}
+		case web.COMPILE:
+			if cli.SystemFind(m, "go") == "" {
+				m.Push(mdb.STATUS, mdb.DISABLE)
+				return
+			}
+			fallthrough
+		case web.XTERM:
+			if !kit.IsIn(m.Option(ice.MSG_USERROLE), aaa.TECH, aaa.ROOT) {
+				m.Push(mdb.STATUS, mdb.DISABLE)
+				return
+			}
+		}
+		m.Push(mdb.STATUS, mdb.ENABLE)
+	})
+	return m
+}
 func PodCmdAction(arg ...string) ice.Actions {
 	file := kit.FileLine(2, 100)
 	return ice.Actions{
 		mdb.SELECT: {Name: "list hash auto create", Hand: func(m *ice.Message, arg ...string) {
 			defer m.Display(ctx.FileURI(file))
-			msg := mdb.HashSelect(m.Spawn(), arg...).Sort(mdb.NAME)
+			msg := disableApp(mdb.HashSelect(m.Spawn(), arg...).Sort(mdb.NAME))
 			web.PushPodCmd(msg, m.PrefixKey(), arg...)
 			has := map[string]bool{}
 			msg.Table(func(index int, value ice.Maps, head []string) {
@@ -46,7 +72,7 @@ func CmdHashAction(arg ...string) ice.Actions {
 			}
 		}},
 		mdb.SELECT: {Hand: func(m *ice.Message, arg ...string) {
-			mdb.HashSelect(m, arg...).Sort(mdb.NAME).Display(ctx.FileURI(file))
+			disableApp(mdb.HashSelect(m, arg...).Sort(mdb.NAME).Display(ctx.FileURI(file)))
 		}},
 	}, mdb.HashAction(mdb.SHORT, kit.Select("", arg, 0), mdb.FIELD, kit.Select("time,hash,icon,name,text,space,index,args", arg, 1), kit.Slice(arg, 2)))
 }

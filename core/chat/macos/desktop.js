@@ -17,7 +17,7 @@ Volcanos(chat.ONIMPORT, {
 			switch (value) {
 				case "notifications": can.ui.notifications._output.innerHTML && can.onmotion.toggle(can, can.ui.notifications._target); break
 				case "searchs": can.onaction._search(can); break
-				case "qrcode": can.sup.onaction["生成链接"]({}, can.sup); break
+				case cli.QRCODE: can.sup.onaction["生成链接"]({}, can.sup); break
 				case mdb.CREATE: can.onaction.create(event, can); break
 				case html.DESKTOP:
 					var carte = can.user.carte(event, can, {}, can.core.Item(can.onfigure), function(event, button, meta, carte) {
@@ -72,7 +72,7 @@ Volcanos(chat.ONIMPORT, {
 		if (can.ConfHeight() > 800) { item.height = can.base.Min(can.ConfHeight()-200, 320, 800), item.top = 50 }
 		if (can.user.isMobile) { item.height = can.ConfHeight()-125, item.top = 25, item.width = can.ConfWidth(), item.left = 0 }
 		item.height = can.base.Max(html.DESKTOP_HEIGHT, item.height), item.width = can.base.Max(html.DESKTOP_WIDTH, item.width)
-		if (can.base.isIn(item.index, "web.code.vimer")) { item.width = can.base.Max(1600, can.ConfWidth()), item.left = (can.ConfWidth()-item.width)/2 }
+		if (can.base.isIn(item.index, web.CODE_VIMER)) { item.width = can.base.Max(1600, can.ConfWidth()), item.left = (can.ConfWidth()-item.width)/2 }
 		can.onappend.plugin(can, item, function(sub) { can.ondetail.select(can, sub._target)
 			var index = 0; can.core.Item({
 				close: {color: "#f95f57", inner: "x", onclick: function(event) { sub.onaction._close(event, sub) }},
@@ -104,7 +104,6 @@ Volcanos(chat.ONIMPORT, {
 		}, can.ui.desktop)
 	},
 	session: function(can, list) { if (!list || list.length == 0) { return }
-		// if (!list || list.length == 0 || !can.isCmdMode() || window != window.parent) { return }
 		can.page.Select(can, can._output, html.DIV_DESKTOP, function(target) { can.page.Remove(can, target) })
 		can.page.Select(can, can.ui.menu._output, html.DIV_TABS, function(target) { can.page.Remove(can, target) })
 		var _select; can.core.Next(list, function(item, next) {
@@ -115,7 +114,6 @@ Volcanos(chat.ONIMPORT, {
 		}, function() { _select && _select.click() })
 	},
 	layout: function(can) { can.page.style(can, can._output, html.HEIGHT, can.ConfHeight(), html.WIDTH, can.ConfWidth())
-		// can.ui.notifications && can.page.style(can, can.ui.notifications._target, html.LEFT, can.ConfWidth()-250)
 		can.ui.dock && can.page.style(can, can.ui.dock._target, html.LEFT, can.base.Min((can.ConfWidth()-(can.ui.dock._target.offsetWidth||502))/2, 0))
 	},
 }, [""])
@@ -159,16 +157,12 @@ Volcanos(chat.ONFIGURE, {
 					})}
 				})
 				can.runActionCommand(event, "session", [ctx.ACTION, mdb.CREATE, mdb.NAME, list[0], ctx.ARGS, JSON.stringify(args)], function(msg) {
-					can.user.toastSuccess(can, "session created")
-					can.misc.SearchHash(can, list[0])
+					can.user.toastSuccess(can, "session created"), can.misc.SearchHash(can, list[0])
 				})
 			})
 		}}].concat("", msg.Table(function(value) {
 			return {view: [html.ITEM, "", value.name+(value.name == hash[0]? " *": "")],
-				onclick: function() {
-					can.onimport.session(can, can.base.Obj(value.args, []))
-					can.misc.SearchHash(can, value.name)
-				},
+				onclick: function() { can.onimport.session(can, can.base.Obj(value.args, [])), can.misc.SearchHash(can, value.name) },
 				oncontextmenu: function(event) { can.user.carteRight(event, can, {
 					open: function() { can.user.open(can.misc.MergePodCmd(can, {cmd: "desktop", session: value.name})) },
 					remove: function() { can.runActionCommand(event, "session", [mdb.REMOVE, value.name], function() { can.user.toastSuccess(can, "session removed") }) },

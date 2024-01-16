@@ -36,9 +36,10 @@ const (
 	CORE = "core"
 	MISC = "misc"
 
-	SHY = "shy"
-	DEV = "dev"
-	OPS = "ops"
+	SHY    = "shy"
+	DEV    = "dev"
+	DEV_IP = "dev_ip"
+	OPS    = "ops"
 
 	ICE = "ice"
 	CAN = "can"

@@ -253,7 +253,7 @@ func init() {
 				m.Echo("%v", string(buf))
 			}},
 			"upgrade": {Help: "升级", Hand: func(m *ice.Message, arg ...string) {
-				if nfs.Exists(m, ".git") {
+				if nfs.Exists(m, ".git") && SystemFind(m, "go") != "" {
 					m.Cmdy("web.code.compile")
 				} else {
 					m.Cmdy("web.code.upgrade")

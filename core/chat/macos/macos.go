@@ -24,7 +24,7 @@ func Prefix(arg ...string) string { return chat.Prefix(MACOS, kit.Keys(arg)) }
 
 func disableApp(m *ice.Message) *ice.Message {
 	m.Table(func(value ice.Maps) {
-		switch ctx.ShortCmd(value[ctx.INDEX]) {
+		switch index := ctx.ShortCmd(value[ctx.INDEX]); index {
 		case web.DREAM, web.CODE_GIT_SEARCH:
 			if ice.Info.NodeType == web.WORKER {
 				m.Push(mdb.STATUS, mdb.DISABLE)
@@ -41,6 +41,9 @@ func disableApp(m *ice.Message) *ice.Message {
 				m.Push(mdb.STATUS, mdb.DISABLE)
 				return
 			}
+		default:
+			m.Push(mdb.STATUS, kit.Select(mdb.DISABLE, mdb.ENABLE, aaa.Right(m.Spawn(), index)))
+			return
 		}
 		m.Push(mdb.STATUS, mdb.ENABLE)
 	})

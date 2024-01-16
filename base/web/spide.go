@@ -418,7 +418,8 @@ func SpideDelete(m *ice.Message, arg ...ice.Any) ice.Any {
 	return kit.UnMarshal(m.Cmdx(http.MethodDelete, arg))
 }
 func SpideSave(m *ice.Message, file, link string, cb func(count, total, value int)) *ice.Message {
-	return m.Cmd(Prefix(SPIDE), ice.DEV, SPIDE_SAVE, file, http.MethodGet, link, cb)
+	return m.Cmd(Prefix(SPIDE), ice.DEV_IP, SPIDE_SAVE, file, http.MethodGet, link, cb)
+	// return m.Cmd(Prefix(SPIDE), ice.DEV, SPIDE_SAVE, file, http.MethodGet, link, cb)
 }
 func SpideCache(m *ice.Message, link string) *ice.Message {
 	return m.Cmd(Prefix(SPIDE), ice.DEV, SPIDE_CACHE, http.MethodGet, link)

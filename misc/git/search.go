@@ -29,14 +29,12 @@ func init() {
 	)
 	const SEARCH = "search"
 	Index.MergeCommands(ice.Commands{
-		SEARCH: {Name: "search keyword auto", Help: "源码库", Actions: ice.MergeActions(ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				macos.AppInstall(m, "App Store.png", m.PrefixKey())
-			}},
-			cli.START: {Name: "start name*", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(web.DREAM, mdb.CREATE); m.Cmdy(web.DREAM, cli.START) }},
-			CLONE:     {Name: "clone name*", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(REPOS, CLONE, m.Option(REPOS)) }},
-			HTML_URL:  {Help: "源码", Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen(m.Option(HTML_URL)) }},
-			WEBSITE:   {Help: "官网", Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen(m.Option(WEBSITE)) }},
+		SEARCH: {Name: "search keyword auto", Help: "源码库", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { macos.AppInstall(m, "App Store.png", m.PrefixKey()) }},
+			cli.START:    {Name: "start name*", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(web.DREAM, mdb.CREATE); m.Cmdy(web.DREAM, cli.START) }},
+			CLONE:        {Name: "clone name*", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(REPOS, CLONE, m.Option(REPOS)) }},
+			HTML_URL:     {Help: "源码", Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen(m.Option(HTML_URL)) }},
+			WEBSITE:      {Help: "官网", Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen(m.Option(WEBSITE)) }},
 			ORIGIN: {Help: "平台", Icon: "bi bi-box-arrow-up-right", Hand: func(m *ice.Message, arg ...string) {
 				m.ProcessOpen(web.SpideOrigin(m, REPOS) + EXPLORE_REPOS)
 			}},

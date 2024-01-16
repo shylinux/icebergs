@@ -71,7 +71,7 @@ func _dream_start(m *ice.Message, name string) {
 		cli.CTX_ROOT, kit.Path(""), cli.PATH, cli.BinPath(p, ""), cli.USER, ice.Info.Username,
 	)...), cli.CMD_OUTPUT, path.Join(p, ice.VAR_LOG_BOOT_LOG), mdb.CACHE_CLEAR_ONEXIT, ice.TRUE)
 	gdb.Event(m, DREAM_CREATE, m.OptionSimple(mdb.NAME, mdb.TYPE, cli.CMD_DIR))
-	kit.If(m.Option(nfs.BINARY) == "", func(p string) { m.Option(nfs.BINARY, SpideOrigin(m, ice.DEV)+S(name)) })
+	kit.If(m.Option(nfs.BINARY) == "" && cli.SystemFind(m, "go") == "", func(p string) { m.Option(nfs.BINARY, SpideOrigin(m, ice.DEV_IP)+S(name)) })
 	kit.If(m.Option(nfs.BINARY), func(p string) { _dream_binary(m, p) })
 	kit.If(m.Option(nfs.TEMPLATE), func(p string) { _dream_template(m, p) })
 	bin := kit.Select(kit.Path(os.Args[0]), cli.SystemFind(m, ice.ICE_BIN, nfs.PWD+path.Join(p, ice.BIN), nfs.PWD+ice.BIN))
@@ -156,10 +156,9 @@ func init() {
 					m.Cmd(gdb.EVENT, gdb.LISTEN, gdb.EVENT, DREAM_TABLES, ice.CMD, cmd)
 					m.Cmd(gdb.EVENT, gdb.LISTEN, gdb.EVENT, DREAM_ACTION, ice.CMD, cmd)
 				}
+				aaa.White(m, kit.Keys(m.PrefixKey(), ctx.ACTION, DREAM_ACTION, ctx.RUN))
 			}},
-			html.BUTTON: {Hand: func(m *ice.Message, arg ...string) {
-				mdb.Config(m, html.BUTTON, kit.Join(arg))
-			}},
+			html.BUTTON: {Hand: func(m *ice.Message, arg ...string) { mdb.Config(m, html.BUTTON, kit.Join(arg)) }},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if mdb.IsSearchPreview(m, arg) {
 					mdb.HashSelects(m.Spawn()).Table(func(value ice.Maps) { m.PushSearch(mdb.TYPE, WORKER, mdb.TEXT, m.MergePod(value[mdb.NAME]), value) })
@@ -251,8 +250,7 @@ func init() {
 			}},
 			FOR_FLOW: {Name: "forFlow name cmd*='sh etc/miss.sh'", Help: "流程", Icon: "bi bi-terminal", Hand: func(m *ice.Message, arg ...string) {
 				m.Options(ctx.DISPLAY, PLUGIN_XTERM, cli.CMD_OUTPUT, nfs.NewWriteCloser(func(buf []byte) (int, error) {
-					m.Option(ice.MSG_COUNT, "0")
-					PushNoticeGrow(m, strings.ReplaceAll(string(buf), lex.NL, "\r\n"))
+					PushNoticeGrow(m.Options(ice.MSG_COUNT, "0"), strings.ReplaceAll(string(buf), lex.NL, "\r\n"))
 					return len(buf), nil
 				}, func() error { return nil }))
 				msg := mdb.HashSelects(m.Spawn(), m.Option(mdb.NAME))
@@ -278,7 +276,7 @@ func init() {
 				}).StatusTimeCount(m.OptionSimple(nfs.FILE))
 			}},
 			cli.START: {Hand: func(m *ice.Message, arg ...string) {
-				gdb.Event(m, DREAM_START, arg)
+				defer gdb.Event(m, DREAM_START, arg)
 				_dream_start(m, m.Option(mdb.NAME))
 			}},
 			cli.STOP: {Hand: func(m *ice.Message, arg ...string) {

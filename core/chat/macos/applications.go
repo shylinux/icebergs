@@ -4,6 +4,7 @@ import (
 	"path"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -16,7 +17,7 @@ const APPLICATIONS = "applications"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		APPLICATIONS: {Help: "应用", Actions: ice.MergeActions(ice.Actions{
+		APPLICATIONS: {Help: "应用", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { FinderAppend(m, APPLICATIONS, m.PrefixKey()) }},
 			code.INSTALL: {Hand: func(m *ice.Message, arg ...string) { AppInstall(m, arg[0], arg[1]) }},
 			mdb.CREATE:   {Name: "create space index args name icon"},

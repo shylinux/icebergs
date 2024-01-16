@@ -30,7 +30,7 @@ func _command_list(m *ice.Message, name string) *ice.Message {
 			m.Push("_fileline", "")
 
 		}
-		m.Push("_role", kit.Select("", ice.OK, kit.IsIn(ShortCmd(kit.Keys(s.Prefix(), key)), "portal", aaa.OFFER) && aaa.Right(m.Spawn(), name)))
+		m.Push("_role", kit.Select("", ice.OK, aaa.Right(m.Spawn(), name)))
 		m.Push("_help", GetCmdHelp(m, name))
 	})
 	return m

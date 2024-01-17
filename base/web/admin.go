@@ -5,6 +5,7 @@ import (
 	"path"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	kit "shylinux.com/x/toolkits"
@@ -14,7 +15,8 @@ const ADMIN = "admin"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		ADMIN: {Name: "admin index list", Help: "管理", Actions: ice.Actions{
+		ADMIN: {Name: "admin index list", Help: "管理", Role: aaa.VOID, Actions: ice.Actions{
+			ice.CTX_INIT: {Hand: DreamWhiteHandle},
 			DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) { m.PushButton(kit.Dict(ADMIN, "后台")) }},
 			DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) {
 				if kit.HasPrefixList(arg, ctx.ACTION, ADMIN) && len(arg) == 2 {

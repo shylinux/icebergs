@@ -36,6 +36,7 @@ func init() {
 				WordAlias(m, LABEL, CHART, LABEL)
 				WordAlias(m, CHAIN, CHART, CHAIN)
 				WordAlias(m, SEQUENCE, CHART, SEQUENCE)
+				web.DreamWhiteHandle(m, arg...)
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if mdb.IsSearchPreview(m, arg) {

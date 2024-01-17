@@ -80,6 +80,7 @@ func init() {
 					m.Copy(m.Spawn([]byte(m.Cmdx(nfs.CAT, p))))
 				}
 			}},
+			ice.CTX_INIT:     {Hand: web.DreamWhiteHandle},
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) { m.PushButton(kit.Dict(PORTAL, "官网")) }},
 			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { web.DreamProcess(m, nil, arg...) }},
 		}, aaa.WhiteAction("")), Hand: func(m *ice.Message, arg ...string) {

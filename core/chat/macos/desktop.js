@@ -9,7 +9,7 @@ Volcanos(chat.ONIMPORT, {
 		var tabs = can.misc.sessionStorage(can, [can.ConfIndex(), html.TABS])
 		sub.onexport.output = function() { can.onimport._desktop(can, can._msg)
 			var sess = can.misc.SearchHash(can)[0]||can.Conf("session")
-			sess? can.runActionCommand(event, "session", [sess], function(msg) {
+			sess? can.runActionCommand(event, "web.chat.macos.session", [sess], function(msg) {
 				var item = msg.TableDetail(); can.onimport.session(can, can.base.Obj(item.args))
 			}): !window.parent && can.isCmdMode() && can.onimport.session(can, tabs)
 		}

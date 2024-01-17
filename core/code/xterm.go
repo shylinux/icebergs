@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/lex"
@@ -153,7 +154,9 @@ func init() {
 					ctx.ProcessField(m, m.PrefixKey(), m.Cmdx("", mdb.CREATE, mdb.TYPE, m.Option(mdb.TEXT), mdb.NAME, m.Option(mdb.NAME), mdb.TEXT, ""))
 				})
 			}},
-			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) { m.PushButton(kit.Dict(m.CommandKey(), "终端")) }},
+			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
+				kit.If(aaa.IsTechOrRoot(m), func() { m.PushButton(kit.Dict(m.CommandKey(), "终端")) })
+			}},
 			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { web.DreamProcess(m, cli.Shell(m), arg...) }},
 		}, chat.FavorAction(), ctx.ProcessAction(), mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,path")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) == 0 {

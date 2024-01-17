@@ -278,7 +278,9 @@ func init() {
 				kit.If(kit.IsIn(value[mdb.TYPE], WORKER, SERVER), func() { m.Push(arg[0], value[mdb.NAME]) })
 			})
 		case ORIGIN:
-			m.Cmdy(SPIDE, kit.Dict(ice.MSG_FIELDS, CLIENT_ORIGIN)).CutTo(CLIENT_ORIGIN, arg[0]).Sort(arg[0])
+			m.SetAppend()
+			m.Push(arg[0], SpideOrigin(m, ice.DEV))
+			m.Copy(m.Cmd(SPIDE, kit.Dict(ice.MSG_FIELDS, CLIENT_ORIGIN)).CutTo(CLIENT_ORIGIN, arg[0]).Sort(arg[0]))
 		case mdb.ICONS:
 			m.Options(nfs.DIR_REG, kit.ExtReg(nfs.PNG, nfs.JPG, nfs.JPEG), nfs.DIR_DEEP, ice.TRUE)
 			m.Cmdy(nfs.DIR, nfs.SRC, nfs.PATH)

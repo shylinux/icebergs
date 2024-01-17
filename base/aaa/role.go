@@ -27,6 +27,9 @@ func _role_black(m *ice.Message, role, key string) { _role_set(m, role, BLACK, k
 func _role_check(value ice.Map, key []string, ok bool) bool {
 	white, black := value[WHITE].(ice.Map), value[BLACK].(ice.Map)
 	for i := 0; i < len(key); i++ {
+		ice.Pulse.Info("debug what %v", kit.Join(key[:i+1], ice.PT))
+		ice.Pulse.Info("debug what %v", white[kit.Join(key[:i+1], ice.PT)])
+		ice.Pulse.Info("debug what %v", black[kit.Join(key[:i+1], ice.PT)])
 		kit.If(white[kit.Join(key[:i+1], ice.PT)], func() { ok = true })
 		kit.If(black[kit.Join(key[:i+1], ice.PT)], func() { ok = false })
 	}
@@ -163,4 +166,7 @@ func Right(m *ice.Message, key ...ice.Any) bool {
 	}
 	return m.Option(ice.MSG_USERROLE) == ROOT || !m.Warn(m.Cmdx(ROLE, RIGHT, m.Option(ice.MSG_USERROLE), key, logs.FileLineMeta(-1)) != ice.OK,
 		ice.ErrNotRight, kit.Keys(key...), USERROLE, m.Option(ice.MSG_USERROLE), logs.FileLineMeta(-1))
+}
+func IsTechOrRoot(m *ice.Message) bool {
+	return kit.IsIn(m.Option(ice.MSG_USERROLE), TECH, ROOT)
 }

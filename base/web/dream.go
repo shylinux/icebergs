@@ -437,3 +437,8 @@ func DreamEach(m *ice.Message, name string, status string, cb func(string)) *ice
 func DreamList(m *ice.Message) *ice.Message {
 	return m.SplitIndex(AdminCmd(m, DREAM))
 }
+func DreamWhiteHandle(m *ice.Message, arg ...string) {
+	aaa.White(m, kit.Keys(DREAM, ctx.ACTION, m.CommandKey()))
+	aaa.White(m, kit.Keys(DREAM, ctx.ACTION, m.PrefixKey()))
+	aaa.White(m, kit.Keys(ctx.ShortCmd(m.PrefixKey()), ctx.ACTION, DREAM_ACTION))
+}

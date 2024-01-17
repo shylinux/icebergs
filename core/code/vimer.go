@@ -202,6 +202,7 @@ func init() {
 					kit.If(m.Option(mdb.TYPE) == nfs.FILE, func() { m.Push(arg[0], ice.SRC_MAIN_SHY, ice.SRC_MAIN_GO, ice.SRC_MAIN_JS) })
 				}
 			}},
+			ice.CTX_INIT: {Hand: web.DreamWhiteHandle},
 			chat.FAVOR_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				kit.If(m.Option(mdb.TYPE) == nfs.FILE, func() { m.PushButton(kit.Dict(m.CommandKey(), "源码")) })
 			}},

@@ -35,6 +35,7 @@ func init() {
 	})
 }
 
+func init() { ice.Info.Template = Template }
 func Template(m *ice.Message, p string, data ...ice.Any) string {
 	if len(data) == 0 {
 		return kit.Renders(TemplateText(m, p), m)

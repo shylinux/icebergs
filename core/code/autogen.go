@@ -29,19 +29,24 @@ func _autogen_list(m *ice.Message) string {
 func _autogen_source(m *ice.Message, main, file string) {
 	m.Cmd(nfs.DEFS, main, m.Cmdx(nfs.CAT, ice.SRC_MAIN_SHY))
 	m.Cmd(nfs.PUSH, main, lex.NL+ssh.SOURCE+lex.SP+strings.TrimPrefix(file, nfs.SRC)+lex.NL)
+	ReposAddFile(m, "", ice.SRC_MAIN_SHY)
 }
 func _autogen_script(m *ice.Message, file string) {
 	m.Cmd(nfs.DEFS, file, nfs.Template(m, DEMO_SHY))
+	ReposAddFile(m, "", file)
 }
 func _autogen_module(m *ice.Message, file string) {
 	m.Cmd(nfs.DEFS, file, nfs.Template(m, DEMO_GO))
+	ReposAddFile(m, "", file)
+}
+func _autogen_defs(m *ice.Message, arg ...string) {
+	kit.For(arg, func(p string) {
+		m.Cmd(nfs.DEFS, p, m.Cmdx(nfs.CAT, p))
+		ReposAddFile(m, "", p)
+	})
 }
 func _autogen_import(m *ice.Message, main string, ctx string, mod string) {
-	m.Cmd(nfs.DEFS, ice.ETC_MISS_SH, m.Cmdx(nfs.CAT, ice.ETC_MISS_SH))
-	m.Cmd(nfs.DEFS, ice.README_MD, m.Cmdx(nfs.CAT, ice.README_MD))
-	m.Cmd(nfs.DEFS, ice.MAKEFILE, m.Cmdx(nfs.CAT, ice.MAKEFILE))
-	m.Cmd(nfs.DEFS, ice.LICENSE, m.Cmdx(nfs.CAT, ice.LICENSE))
-	m.Cmd(nfs.DEFS, main, m.Cmdx(nfs.CAT, ice.SRC_MAIN_GO))
+	_autogen_defs(m, ice.SRC_MAIN_GO, ice.ETC_MISS_SH, ice.README_MD, ice.MAKEFILE, ice.LICENSE)
 	begin, done, list := false, false, []string{}
 	m.Cmd(nfs.CAT, main, func(line string, index int) {
 		if begin && !done && strings.HasPrefix(line, ")") {
@@ -58,6 +63,7 @@ func _autogen_import(m *ice.Message, main string, ctx string, mod string) {
 	})
 	m.Cmd(nfs.SAVE, main, kit.Join(list, lex.NL))
 	GoImports(m, main)
+	ReposAddFile(m, "", main)
 }
 func _autogen_version(m *ice.Message) string {
 	if mod := _autogen_mod(m, ice.GO_MOD); !nfs.Exists(m, ".git") {
@@ -100,6 +106,7 @@ func _autogen_mod(m *ice.Message, file string) (mod string) {
 		host = path.Join(host, "x", path.Base(kit.Path("")))
 	}
 	m.Cmd(nfs.DEFS, file, kit.Format(nfs.Template(m, ice.GO_MOD), host))
+	ReposAddFile(m, "", ice.GO_MOD)
 	m.Cmd(nfs.CAT, file, func(line string) {
 		kit.If(strings.HasPrefix(line, nfs.MODULE), func() { mod = kit.Split(line, lex.SP)[1] })
 	})

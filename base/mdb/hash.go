@@ -216,7 +216,7 @@ func DevDataAction(fields ...string) ice.Actions {
 			}
 		}},
 		DEV_CONFIRM: {Hand: func(m *ice.Message, arg ...string) {
-			m.EchoInfoButton(kit.JoinWord(m.PrefixKey(), DEV_CONFIRM, DEV_CREATE, m.Option(kit.Split(fields[0])[0])), DEV_CREATE)
+			m.EchoInfoButton(kit.JoinWord(m.PrefixKey(), m.Cmdx("nfs.cat", "src/template/mdb.hash/savefrom.html"), m.Option(kit.Split(fields[0])[0])), DEV_CREATE)
 		}},
 		DEV_CREATE: {Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 			if !m.Warn(m.Option(ice.MSG_METHOD) != http.MethodPost, ice.ErrNotAllow) {

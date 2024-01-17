@@ -30,7 +30,9 @@ const STATUS = "status"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		STATUS: {Name: "status repos:text auto", Help: "代码库", Icon: "git.png", Role: aaa.VOID, Meta: kit.Dict(
-			ice.CTX_TRANS, kit.Dict(html.INPUT, kit.Dict("actions", "操作", "message", "信息")),
+			ice.CTX_TRANS, kit.Dict(
+				html.INPUT, kit.Dict("actions", "操作", "message", "信息", "remote", "远程库"),
+			),
 		), Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
@@ -81,9 +83,9 @@ func init() {
 			if len(arg) > 0 && arg[0] == ctx.ACTION {
 				m.Cmdy(REPOS, arg)
 			} else if config, err := config.LoadConfig(config.GlobalScope); err == nil && config.User.Email == "" && mdb.Config(m, aaa.EMAIL) == "" {
-				m.EchoInfoButton("please config email and name. ", CONFIGS)
+				m.EchoInfoButton(nfs.Template(m, "email.html"), CONFIGS)
 			} else if !nfs.Exists(m, _GIT) {
-				m.EchoInfoButton("please init repos. ", INIT)
+				m.EchoInfoButton(nfs.Template(m, "init.html"), INIT)
 			} else if len(arg) == 0 {
 				kit.If(config != nil, func() { m.Option(aaa.EMAIL, kit.Select(mdb.Config(m, aaa.EMAIL), config.User.Email)) })
 				m.Cmdy(REPOS, STATUS).Action(PULL, PUSH, INSTEADOF, mdb.DEV_REQUEST, CONFIGS)

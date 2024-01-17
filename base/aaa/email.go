@@ -51,7 +51,7 @@ func init() {
 			}},
 		}, mdb.DevDataAction("name,service,username,password"), mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,service,username", ice.ACTION, SEND)), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) == 0 && m.Length() == 0 {
-				m.EchoInfoButton("please add admin email", mdb.CREATE, mdb.DEV_REQUEST)
+				m.EchoInfoButton(ice.Info.Template(m, "email.html"), mdb.CREATE, mdb.DEV_REQUEST)
 			} else if len(arg) == 0 {
 				m.Action(mdb.CREATE, mdb.DEV_REQUEST)
 			}

@@ -7,6 +7,7 @@ import (
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web/html"
 	kit "shylinux.com/x/toolkits"
 )
@@ -35,7 +36,8 @@ func DevTokenAction(name, origin string) ice.Actions {
 			))
 		}},
 		mdb.DEV_CHOOSE: {Hand: func(m *ice.Message, arg ...string) {
-			m.EchoInfoButton(kit.Format("save token to %s", m.Option(cli.BACK)), mdb.DEV_RESPONSE)
+			m.EchoInfoButton(kit.JoinWord(m.PrefixKey(),
+				m.Cmdx(nfs.CAT, nfs.SRC_TEMPLATE+"web.token/saveto.html"), m.Option(cli.BACK)), mdb.DEV_RESPONSE)
 		}},
 		mdb.DEV_RESPONSE: {Help: "确认", Hand: func(m *ice.Message, arg ...string) {
 			if !m.Warn(m.Option(ice.MSG_METHOD) != http.MethodPost, ice.ErrNotAllow) {
@@ -44,7 +46,8 @@ func DevTokenAction(name, origin string) ice.Actions {
 			}
 		}},
 		mdb.DEV_CONFIRM: {Hand: func(m *ice.Message, arg ...string) {
-			m.EchoInfoButton(kit.JoinWord(m.PrefixKey(), "save token for", m.Option(name)), mdb.DEV_CREATE)
+			m.EchoInfoButton(kit.JoinWord(m.PrefixKey(),
+				m.Cmdx(nfs.CAT, nfs.SRC_TEMPLATE+"web.token/savefrom.html"), m.Option(name)), mdb.DEV_CREATE)
 		}},
 		mdb.DEV_CREATE: {Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 			if !m.Warn(m.Option(ice.MSG_METHOD) != http.MethodPost, ice.ErrNotAllow) {

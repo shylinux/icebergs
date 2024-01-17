@@ -45,6 +45,15 @@ func (m *Message) OptionCB(key string, cb ...Any) Any {
 	return m.Optionv(kit.Keycb(kit.Select(m.CommandKey(), key)))
 }
 
+func (m *Message) ParseLink(p string) *Message {
+	u := kit.ParseURL(p)
+	switch arg := strings.Split(strings.TrimPrefix(u.Path, PS), PS); arg[0] {
+	case "s":
+		m.Option(MSG_USERPOD, kit.Select("", arg, 1))
+	}
+	m.Option(MSG_USERWEB, p)
+	return m
+}
 func (m *Message) MergePod(pod string, arg ...Any) string {
 	ls := []string{}
 	kit.If(kit.Keys(m.Option(MSG_USERPOD), pod), func(p string) { ls = append(ls, "s", p) })

@@ -205,14 +205,15 @@ func DevDataAction(fields ...string) ice.Actions {
 	)
 	return ice.Actions{
 		DEV_REQUEST: {Name: "request origin*", Help: "请求", Hand: func(m *ice.Message, arg ...string) {
-			m.ProcessOpen(m.Options(ice.MSG_USERWEB, m.Option(ORIGIN)).MergePodCmd("", m.PrefixKey(), ACTION, DEV_CHOOSE, BACK, m.Option(ice.MSG_USERHOST), DAEMON, m.Option(ice.MSG_DAEMON)))
+			back := m.Options(ice.MSG_USERWEB, m.Option(ice.MSG_USERHOST)).MergePod("")
+			m.ProcessOpen(m.Options(ice.MSG_USERWEB, m.Option(ORIGIN), ice.MSG_USERPOD, "").MergePodCmd("", m.PrefixKey(), ACTION, DEV_CHOOSE, BACK, back, DAEMON, m.Option(ice.MSG_DAEMON)))
 		}},
 		DEV_CHOOSE: {Hand: func(m *ice.Message, arg ...string) {
 			HashSelect(m.Options(ice.MSG_FIELDS, kit.Join(fields))).PushAction(DEV_RESPONSE).Options(ice.MSG_ACTION, "")
 		}},
 		DEV_RESPONSE: {Help: "选择", Hand: func(m *ice.Message, arg ...string) {
 			if !m.Warn(m.Option(ice.MSG_METHOD) != http.MethodPost, ice.ErrNotAllow) {
-				m.ProcessReplace(m.Options(ice.MSG_USERWEB, m.Option(BACK)).MergePodCmd("", m.PrefixKey(), ACTION, DEV_CONFIRM, m.OptionSimple(DAEMON), m.OptionSimple(fields...)))
+				m.ProcessReplace(m.ParseLink(m.Option(BACK)).MergePodCmd("", m.PrefixKey(), ACTION, DEV_CONFIRM, m.OptionSimple(DAEMON), m.OptionSimple(fields...)))
 			}
 		}},
 		DEV_CONFIRM: {Hand: func(m *ice.Message, arg ...string) {

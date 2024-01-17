@@ -111,6 +111,7 @@ func init() {
 				}
 			}},
 		}, web.ApiAction(), mdb.ImportantHashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icons,type,link,order,space,index,args")), Hand: func(m *ice.Message, arg ...string) {
+			kit.If(m.Option(ice.MSG_USERPOD), func(p string) { m.Option(ice.MSG_NODETYPE, m.Cmd(web.SPACE, p, cli.RUNTIME, ice.MSG_NODETYPE)) })
 			m.Option("language.list", m.Cmd(nfs.DIR, nfs.TemplatePath(m, aaa.LANGUAGE)+nfs.PS, nfs.FILE).Appendv(nfs.FILE))
 			m.Option("theme.list", m.Cmd(nfs.DIR, nfs.TemplatePath(m, aaa.THEME)+nfs.PS, nfs.FILE).Appendv(nfs.FILE))
 			m.Option(nfs.REPOS, m.Cmdv(web.SPIDE, nfs.REPOS, web.CLIENT_URL))

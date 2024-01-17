@@ -262,6 +262,13 @@ const (
 const SPACE = "space"
 
 func init() {
+	ice.Info.AdminCmd = func(m *ice.Message, cmd string, arg ...string) *ice.Message {
+		if ice.Info.NodeType == WORKER {
+			return m.Cmdy(SPIDE, ice.OPS, SPIDE_RAW, http.MethodGet, path.Join(C(cmd), path.Join(arg...)))
+		} else {
+			return m.Cmdy(cmd, arg)
+		}
+	}
 	ice.Info.Inputs = append(ice.Info.Inputs, func(m *ice.Message, arg ...string) {
 		switch kit.TrimPrefix(arg[0], "extra.") {
 		case DREAM:

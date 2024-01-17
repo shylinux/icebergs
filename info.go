@@ -83,6 +83,7 @@ var Info = struct {
 	PushStream func(m *Message) *Message
 	PushNotice func(m *Message, arg ...Any)
 	Template   func(m *Message, p string, data ...Any) string
+	AdminCmd   func(m *Message, cmd string, arg ...string) *Message
 	Save       func(m *Message, key ...string) *Message
 	Load       func(m *Message, key ...string) *Message
 	Open       func(m *Message, p string) (io.ReadCloser, error)

@@ -152,11 +152,13 @@ func init() {
 						}
 					})
 				})
-				for _, cmd := range kit.Reverse(kit.Split(mdb.Config(m, html.BUTTON))) {
-					m.Cmd(gdb.EVENT, gdb.LISTEN, gdb.EVENT, DREAM_TABLES, ice.CMD, cmd)
-					m.Cmd(gdb.EVENT, gdb.LISTEN, gdb.EVENT, DREAM_ACTION, ice.CMD, cmd)
-				}
-				aaa.White(m, kit.Keys(m.PrefixKey(), ctx.ACTION, DREAM_ACTION, ctx.RUN))
+				m.GoSleep("1s", func() {
+					for _, cmd := range kit.Reverse(kit.Split(mdb.Config(m, html.BUTTON))) {
+						m.Cmd(gdb.EVENT, gdb.LISTEN, gdb.EVENT, DREAM_TABLES, ice.CMD, cmd)
+						m.Cmd(gdb.EVENT, gdb.LISTEN, gdb.EVENT, DREAM_ACTION, ice.CMD, cmd)
+					}
+					aaa.White(m, kit.Keys(m.PrefixKey(), ctx.ACTION, DREAM_ACTION, ctx.RUN))
+				})
 			}},
 			html.BUTTON: {Hand: func(m *ice.Message, arg ...string) { mdb.Config(m, html.BUTTON, kit.Join(arg)) }},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {

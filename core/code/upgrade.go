@@ -42,9 +42,7 @@ func init() {
 					m.Option(ice.EXIT, ice.TRUE)
 				}
 				uri := "/publish/" + kit.Format(value[nfs.FILE])
-				kit.If(os.Getenv(cli.CTX_POD), func(p string) {
-					uri = kit.MergeURL2(os.Getenv(cli.CTX_DEV), web.S(p), cli.GOOS, runtime.GOOS, cli.GOARCH, runtime.GOARCH)
-				})
+				kit.If(m.Spawn().ParseLink(ice.Info.Domain).Option(ice.MSG_USERPOD), func(p string) { uri = kit.MergeURL(uri, ice.POD, p) })
 				dir := path.Join(kit.Format(value[nfs.PATH]), kit.Format(value[nfs.FILE]))
 				web.GoToast(m, m.PrefixKey(), func(toast func(name string, count, total int)) []string {
 					switch web.SpideSave(m, dir, uri, func(count, total, value int) {

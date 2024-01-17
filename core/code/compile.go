@@ -105,10 +105,8 @@ func init() {
 				m.Cmdy(INSTALL, web.DOWNLOAD, kit.Format("%s/go%s.%s-%s.%s", m.Option(SERVICE), m.Option(VERSION), runtime.GOOS, runtime.GOARCH, kit.Select("tar.gz", "zip", runtime.GOOS == cli.WINDOWS)), ice.USR_LOCAL)
 			}},
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
-				kit.If(m.Option(mdb.TYPE) == web.WORKER, func() {
-					kit.If(nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME), ice.SRC_MAIN_GO)), func() {
-						kit.If(cli.SystemFind(m, GO), func() { m.PushButton(kit.Dict(m.CommandKey(), "构建")) })
-					})
+				kit.If(m.Option(mdb.TYPE) == web.WORKER && nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME), ice.SRC_MAIN_GO)), func() {
+					kit.If(cli.SystemFind(m, GO), func() { m.PushButton(kit.Dict(m.CommandKey(), "构建")) })
 				})
 			}},
 			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { web.DreamProcess(m, nil, arg...) }},

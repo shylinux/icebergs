@@ -33,6 +33,7 @@ Volcanos(chat.ONIMPORT, {
 	}) },
 	_searchs: function(can) { can.onappend.plugin(can, {index: "web.chat.macos.searchs"}, function(sub) { can.ui.searchs = sub, can.onmotion.hidden(can, sub._target)
 		can.page.style(can, sub._target, html.LEFT, can.ConfWidth()/4, html.TOP, can.ConfHeight()/4), sub.onimport.size(sub, can.ConfHeight()/2, can.ConfWidth()/2, true)
+		can.user.isMobile && can.page.style(can, sub._target, html.LEFT, 0, html.TOP, 0), can.user.isMobile && sub.onimport.size(sub, can.ConfHeight(), can.ConfWidth(), true)
 		sub.onaction._close = function() { can.onmotion.hidden(can, sub._target) }, can.onmotion.hidden(can, sub._target)
 		sub.onexport.record = function(sub, value, key, item, event) { switch (item.type) {
 			case ice.CMD: can.onimport._window(can, {index: item.name, args: can.base.Obj(item.text) }); break

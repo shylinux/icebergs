@@ -57,7 +57,7 @@ const PLAN = "plan"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		PLAN: {Name: "plan scale=month,day,week,month,year,long begin_time@date list insert prev next", Help: "计划表", Icon: "Calendar.png", Role: aaa.VOID, Meta: kit.Dict(
+		PLAN: {Name: "plan scale=month,day,week,month,year,long begin_time@date list insert prev next actions", Help: "计划表", Icon: "Calendar.png", Role: aaa.VOID, Meta: kit.Dict(
 			ctx.TRANS, kit.Dict(html.INPUT, kit.Dict(
 				SCALE, "跨度", "view", "视图",
 				DAY, "日", WEEK, "周", MONTH, "月", YEAR, "年", LONG, "代",

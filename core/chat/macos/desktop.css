@@ -13,7 +13,7 @@ fieldset.macos.desktop>div.output>fieldset.macos.menu div.item.time { margin-rig
 fieldset.macos.desktop>div.output>fieldset.macos.menu>div.output { overflow:hidden; }
 fieldset.macos.desktop>div.output>fieldset.macos.dock { border:var(--box-border); border-radius:var(--plugin-radius); position:absolute; bottom:var(--input-margin); transition:margin-left 0.3s; }
 fieldset.macos.desktop>div.output>fieldset.macos.searchs { position:absolute; z-index:11; }
-fieldset.macos.desktop>div.output>fieldset.macos.searchs>form.option>div.item.keyword input { background-color:transparent; width:var(--river-width); }
+body:not(.mobile) fieldset.macos.desktop>div.output>fieldset.macos.searchs>form.option>div.item.keyword input { background-color:transparent; width:var(--river-width); }
 fieldset.macos.desktop>div.output>fieldset.macos.notifications { height:calc(100% - 125px); width:320px; overflow:auto; position:absolute; top:var(--desktop-menu-height); left:calc(100% - 320px); z-index:11; }
 fieldset.macos.desktop>div.output>fieldset.macos.notifications>div.action>div.item { padding:0; }
 fieldset.macos.desktop>div.output>fieldset.macos.notifications>div.action>div.item.refresh>span { font-size:var(--action-height); margin-top:-5px; }

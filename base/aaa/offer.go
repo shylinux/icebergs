@@ -5,12 +5,14 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/web/html"
 	kit "shylinux.com/x/toolkits"
 )
 
 const (
-	INVITE = "invite"
-	ACCEPT = "accept"
+	INVITER = "inviter"
+	INVITE  = "invite"
+	ACCEPT  = "accept"
 )
 const APPLY = "apply"
 const OFFER = "offer"
@@ -21,9 +23,11 @@ func init() {
 		CONTENT_HTML = "content.html"
 	)
 	Index.MergeCommands(ice.Commands{
-		OFFER: {Help: "邀请", Role: VOID, Actions: ice.MergeActions(ice.Actions{
+		OFFER: {Help: "邀请", Role: VOID, Meta: kit.Dict(
+			ice.CTX_TRANS, kit.Dict(html.INPUT, kit.Dict("inviter", "邀请人")),
+		), Actions: ice.MergeActions(ice.Actions{
 			mdb.CREATE: {Name: "create email*='shy@shylinux.com' subject content", Help: "邀请", Hand: func(m *ice.Message, arg ...string) {
-				h := mdb.HashCreate(m.Spawn(), m.OptionSimple(EMAIL, SUBJECT, CONTENT), INVITE, m.Option(ice.MSG_USERNAME), mdb.STATUS, INVITE)
+				h := mdb.HashCreate(m.Spawn(), m.OptionSimple(EMAIL, SUBJECT, CONTENT), INVITER, m.Option(ice.MSG_USERNAME), mdb.STATUS, INVITE)
 				SendEmail(m.Options("link", m.Cmdx("host", "publish", m.MergePodCmd("", "", mdb.HASH, h))), "", "", "")
 			}},
 			ACCEPT: {Help: "接受", Role: VOID, Hand: func(m *ice.Message, arg ...string) {
@@ -37,7 +41,7 @@ func init() {
 					mdb.HashModify(m, m.OptionSimple(mdb.HASH), mdb.STATUS, ACCEPT)
 				}
 			}},
-		}, mdb.ImportantHashAction(EMAIL, ADMIN, mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,status,invite,email,title,content")), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.ImportantHashAction(EMAIL, ADMIN, mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,status,inviter,email,title,content")), Hand: func(m *ice.Message, arg ...string) {
 			if !m.Warn(len(arg) == 0 && m.Option(ice.MSG_USERROLE) == VOID, ice.ErrNotRight) {
 				kit.If(mdb.HashSelect(m, arg...).FieldsIsDetail(), func() {
 					m.Option(ice.MSG_USERHOST, strings.Split(m.Option(ice.MSG_USERHOST), "://")[1])

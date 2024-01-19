@@ -103,9 +103,12 @@ func init() {
 				}
 				switch msg.Append(mdb.TYPE) {
 				case LOGIN:
-					// RenderCookie(m, aaa.SessCreate(m, msg.Append(aaa.USERNAME)))
-					// m.RenderRedirect(msg.Append(mdb.TEXT))
-					m.RenderRedirect(kit.MergeURL(msg.Append(mdb.TEXT), ice.MSG_SESSID, aaa.SessCreate(m, msg.Append(aaa.USERNAME))))
+					if u := kit.ParseURL(m.Option(ice.MSG_USERHOST)); u.Scheme == ice.HTTP {
+						m.RenderRedirect(kit.MergeURL(msg.Append(mdb.TEXT), ice.MSG_SESSID, aaa.SessCreate(m, msg.Append(aaa.USERNAME))))
+					} else {
+						RenderCookie(m, aaa.SessCreate(m, msg.Append(aaa.USERNAME)))
+						m.RenderRedirect(msg.Append(mdb.TEXT))
+					}
 				case STORM:
 					RenderCookie(m, aaa.SessCreate(m, msg.Append(aaa.USERNAME)))
 					m.RenderRedirect(m.MergeLink(kit.Select(nfs.PS, msg.Append(mdb.TEXT)), msg.AppendSimple(RIVER, STORM)))

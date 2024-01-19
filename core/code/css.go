@@ -8,6 +8,7 @@ import (
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -17,6 +18,10 @@ func _css_stat(m *ice.Message, zone string, stats map[string]int) {
 	m.Copy(msg.SortIntR(mdb.VALUE))
 }
 func _css_show(m *ice.Message, arg ...string) {
+	if arg[1] == "main.css" {
+		m.EchoIFrame(m.MergePodCmd("", web.ADMIN))
+		return
+	}
 	zone, stats_key, stats_value := "", map[string]int{}, map[string]int{}
 	m.Cmd(nfs.CAT, path.Join(arg[2], arg[1]), func(line string) {
 		if line = strings.TrimSpace(line); line == "" || strings.HasPrefix(line, "//") || strings.HasPrefix(line, "/*") {

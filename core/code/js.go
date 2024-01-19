@@ -14,7 +14,7 @@ import (
 
 func _js_show(m *ice.Message, arg ...string) {
 	if arg[1] == MAIN_JS {
-		ctx.ProcessField(m, web.CHAT_IFRAME, kit.Simple(web.UserHost(m)))
+		ctx.ProcessField(m, web.CHAT_IFRAME, kit.Simple(m.MergePodCmd("", web.ADMIN)))
 	} else if arg[2] == ice.USR_VOLCANOS {
 		if strings.HasPrefix(arg[1], "publish/client/mp/") {
 			ctx.ProcessField(m, "web.chat.wx.ide", nil)

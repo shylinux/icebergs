@@ -6,6 +6,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -17,7 +18,11 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		HTML: {Actions: ice.MergeActions(ice.Actions{
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
-				m.EchoIFrame(m.MergeLink(require(arg[2], arg[1]), "_v", kit.Hashs(mdb.UNIQ)))
+				if arg[1] == "main.html" {
+					m.EchoIFrame(m.MergePodCmd("", web.ADMIN))
+				} else {
+					m.EchoIFrame(m.MergeLink(require(arg[2], arg[1]), "_v", kit.Hashs(mdb.UNIQ)))
+				}
 			}},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
 				m.EchoIFrame(m.MergeLink(require(arg[2], arg[1]), "_v", kit.Hashs(mdb.UNIQ)))

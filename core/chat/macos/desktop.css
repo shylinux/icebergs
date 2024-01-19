@@ -44,6 +44,7 @@ fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>div.icon { ma
 fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>div.list.icons { margin:var(--button-margin) 0; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>div.back.icons { margin:var(--button-margin) 0; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>div.item:last-child { margin-right:100px; }
+body.width2 fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>div.item:last-child { margin-right:0; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>div.action>div.item:last-child { margin-right:100px; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>div.action>* { margin:var(--button-margin) var(--input-margin); }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>div.action>div.tabs { display:none; }
@@ -60,6 +61,7 @@ fieldset.macos.desktop>div.output>div.desktop>fieldset.web.chat.location>div.act
 fieldset.macos.desktop>div.output>div.desktop>fieldset.web.chat.location>div.action>div.item.style select { width:80px; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset.web.chat.location>div.action>div.item.feature select { width:60px; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset.web.chat.iframe>form.option>div.item.hash>input { width:var(--river-width); }
+body.width2 fieldset.macos.desktop>div.output>div.desktop>fieldset.web.chat.iframe>form.option>div.item.hash>input { width:var(--input-width); }
 fieldset.macos.desktop>div.output>div.desktop>fieldset.web.chat.macos.finder>div.status { display:none; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset.web.chat.macos.finder>div.output div.item.disable { display:none; }
 fieldset.macos.desktop>div.output>fieldset.web.chat.macos.dock>div.output div.item.disable { display:none; }

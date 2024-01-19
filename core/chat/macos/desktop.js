@@ -32,8 +32,7 @@ Volcanos(chat.ONIMPORT, {
 		sub.onexport.record = function(sub, value, key, item) { can.onimport._window(can, item) }
 	}) },
 	_searchs: function(can) { can.onappend.plugin(can, {index: "web.chat.macos.searchs"}, function(sub) { can.ui.searchs = sub, can.onmotion.hidden(can, sub._target)
-		can.page.style(can, sub._target, html.LEFT, can.ConfWidth()/4, html.TOP, can.ConfHeight()/4), sub.onimport.size(sub, can.ConfHeight()/2, can.ConfWidth()/2, true)
-		can.user.isMobile && can.page.style(can, sub._target, html.LEFT, 0, html.TOP, 0), can.user.isMobile && sub.onimport.size(sub, can.ConfHeight(), can.ConfWidth(), true)
+		can.page.style(can, sub._target, html.LEFT, can.ConfWidth()/4, html.TOP, can.ConfHeight()/4), sub.onimport.size(sub, can.ConfHeight()/2, can.ConfWidth()/2, true);
 		sub.onaction._close = function() { can.onmotion.hidden(can, sub._target) }, can.onmotion.hidden(can, sub._target)
 		sub.onexport.record = function(sub, value, key, item, event) { switch (item.type) {
 			case ice.CMD: can.onimport._window(can, {index: item.name, args: can.base.Obj(item.text) }); break
@@ -70,6 +69,7 @@ Volcanos(chat.ONIMPORT, {
 	_window: function(can, item, cb) { if (!item.index) { return }
 		item.height = can.ConfHeight()-125, item.width = can.ConfWidth()-200, item.left = (can.ConfWidth()-item.width)/2, item.top = 25
 		if (can.ConfWidth() > 1400) { item.width = can.base.Min(can.ConfWidth()-600, 640, 1400), item.left = (can.ConfWidth()-item.width)/2 }
+		if (can.ConfWidth() < 800) { item.width = can.ConfWidth(), item.left = 0 }
 		if (can.ConfHeight() > 800) { item.height = can.base.Min(can.ConfHeight()-200, 320, 800), item.top = 50 }
 		if (can.user.isMobile) { item.height = can.ConfHeight()-125, item.top = 25, item.width = can.ConfWidth(), item.left = 0 }
 		item.height = can.base.Max(html.DESKTOP_HEIGHT, item.height), item.width = can.base.Max(html.DESKTOP_WIDTH, item.width)
@@ -120,9 +120,13 @@ Volcanos(chat.ONIMPORT, {
 }, [""])
 Volcanos(chat.ONACTION, {
 	_search: function(can) { var sub = can.ui.searchs; if (can.onmotion.toggle(can, sub._target)) {
-		sub.onimport.size(sub, can.ConfHeight()/2, can.ConfWidth()/2, true)
-		sub.onimport.size(sub, can.ConfHeight()/2, can.base.Min(sub._target.offsetWidth, can.ConfWidth()/2, can.ConfWidth()), true)
-		can.page.style(can, sub._target, html.LEFT, (can.ConfWidth()-sub._target.offsetWidth)/2, html.TOP, can.ConfHeight()/4)
+		if (can.user.isMobile || can.ConfWidth() < 800) {
+			can.page.style(can, sub._target, html.LEFT, 0, html.TOP, 25)
+			sub.onimport.size(sub, can.ConfHeight()-115, can.ConfWidth(), true)
+		} else {
+			can.page.style(can, sub._target, html.LEFT, (can.ConfWidth()-sub._target.offsetWidth)/2, html.TOP, can.ConfHeight()/4)
+			sub.onimport.size(sub, can.ConfHeight()/2, can.base.Min(sub._target.offsetWidth, can.ConfWidth()/2, can.ConfWidth()), true)
+		}
 		can.page.Select(can, sub._option, "input[name=keyword]", function(target) { can.onmotion.focus(can, target) })
 	} },
 	create: function(event, can) { can.onimport._desktop(can) },

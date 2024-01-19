@@ -36,7 +36,7 @@ func init() {
 				Remove(m, m.Option(FILE))
 				mdb.HashRemove(m, m.OptionSimple(mdb.HASH))
 			}},
-			mdb.REVERT: {Hand: func(m *ice.Message, arg ...string) {
+			mdb.REVERT: {Help: "恢复", Icon: "bi bi-folder-symlink", Hand: func(m *ice.Message, arg ...string) {
 				msg := mdb.HashSelect(m.Spawn(), m.Option(mdb.HASH))
 				Rename(m, msg.Append(FILE), msg.Append(FROM))
 				mdb.HashRemove(m, m.OptionSimple(mdb.HASH))

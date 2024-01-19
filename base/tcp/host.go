@@ -10,6 +10,7 @@ import (
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/web/html"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -26,7 +27,7 @@ func _host_domain(m *ice.Message) string {
 		},
 	)
 }
-func _host_list(m *ice.Message, name string) {
+func _host_list(m *ice.Message, name string) *ice.Message {
 	if ifs, e := net.Interfaces(); m.Assert(e) {
 		for _, v := range ifs {
 			if !strings.Contains(v.Name, name) || len(v.HardwareAddr.String()) == 0 {
@@ -38,20 +39,21 @@ func _host_list(m *ice.Message, name string) {
 					if strings.Contains(ip[0], nfs.DF) || len(ip) == 0 {
 						continue
 					}
-					m.Push(mdb.INDEX, v.Index).Push(mdb.NAME, v.Name).Push(aaa.IP, ip[0]).Push("mask", ip[1]).Push("hard", v.HardwareAddr.String())
+					m.Push(mdb.INDEX, v.Index).Push(mdb.NAME, v.Name).Push(aaa.IP, ip[0]).Push(MASK, ip[1]).Push(MAC_ADDRESS, v.HardwareAddr.String())
 				}
 			}
 		}
 	}
 	if len(m.Appendv(aaa.IP)) == 0 {
-		m.Push(mdb.INDEX, -1).Push(mdb.NAME, LOCALHOST).Push(aaa.IP, "127.0.0.1").Push("mask", "255.0.0.0").Push("hard", "")
+		m.Push(mdb.INDEX, -1).Push(mdb.NAME, LOCALHOST).Push(aaa.IP, "127.0.0.1").Push(MASK, "255.0.0.0").Push(MAC_ADDRESS, "")
 	}
-	m.SortInt(mdb.INDEX)
-	m.StatusTimeCount(DOMAIN, _host_domain(m))
+	return m.SortInt(mdb.INDEX).StatusTimeCount(DOMAIN, _host_domain(m))
 }
 
 const (
-	LOCALHOST = "localhost"
+	LOCALHOST   = "localhost"
+	MAC_ADDRESS = "mac-address"
+	MASK        = "mask"
 
 	ISLOCAL = "islocal"
 	PUBLISH = "publish"
@@ -62,7 +64,11 @@ const HOST = "host"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		HOST: {Name: "host name auto domain", Help: "主机", Actions: ice.MergeActions(ice.Actions{
+		HOST: {Name: "host name auto domain", Help: "主机", Meta: kit.Dict(
+			ice.CTX_TRANS, kit.Dict(html.INPUT, kit.Dict(
+				aaa.IP, "网络地址", MASK, "子网掩码", MAC_ADDRESS, "物理地址",
+			)),
+		), Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd("", func(value ice.Maps) { m.Cmd("", aaa.WHITE, LOCALHOST, value[aaa.IP]) })
 			}},
@@ -96,13 +102,18 @@ func init() {
 			GATEWAY: {Hand: func(m *ice.Message, arg ...string) {
 				m.Push(aaa.IP, kit.Keys(kit.Slice(strings.Split(m.Cmdv(HOST, aaa.IP), nfs.PT), 0, 3), "1"))
 			}},
-			DOMAIN: {Name: "domain ip", Hand: func(m *ice.Message, arg ...string) {
+			DOMAIN: {Name: "domain ip", Help: "主机", Icon: "bi bi-house-check", Hand: func(m *ice.Message, arg ...string) {
 				kit.If(m.Option(aaa.IP), func(p string) { mdb.Config(m, DOMAIN, p) })
 				m.Echo(mdb.Config(m, DOMAIN))
 			}},
 		}, mdb.HashAction(mdb.SHORT, mdb.TEXT)), Hand: func(m *ice.Message, arg ...string) {
-			_host_list(m, kit.Select("", arg, 0))
-			m.PushAction(DOMAIN)
+			_host_list(m, kit.Select("", arg, 0)).Table(func(value ice.Maps) {
+				if value[aaa.IP] == mdb.Config(m, DOMAIN) {
+					m.Push(mdb.STATUS, "current").PushButton("")
+				} else {
+					m.Push(mdb.STATUS, "").PushButton(DOMAIN)
+				}
+			})
 		}},
 	})
 }

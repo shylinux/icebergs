@@ -204,7 +204,7 @@ func DevDataAction(fields ...string) ice.Actions {
 		BACK   = "back"
 	)
 	return ice.Actions{
-		DEV_REQUEST: {Name: "request origin*", Help: "请求", Hand: func(m *ice.Message, arg ...string) {
+		DEV_REQUEST: {Name: "request origin*", Help: "请求", Icon: "bi bi-cloud-download", Hand: func(m *ice.Message, arg ...string) {
 			back := m.Options(ice.MSG_USERWEB, m.Option(ice.MSG_USERHOST)).MergePod("")
 			m.ProcessOpen(m.Options(ice.MSG_USERWEB, m.Option(ORIGIN), ice.MSG_USERPOD, "").MergePodCmd("", m.PrefixKey(), ACTION, DEV_CHOOSE, BACK, back, DAEMON, m.Option(ice.MSG_DAEMON)))
 		}},

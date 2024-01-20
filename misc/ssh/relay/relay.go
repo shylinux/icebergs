@@ -296,7 +296,7 @@ func (s relay) Upgrade(m *ice.Message, arg ...string) {
 	if len(arg) == 0 && (m.Option(MACHINE) == "" || strings.Contains(m.Option(MACHINE), ",")) {
 		s.foreach(m, func(msg *ice.Message, cmd []string) {
 			ssh.PushShell(msg.Message, strings.Split(msg.Template(UPGRADE_SH), lex.NL), func(res string) {
-				web.PushNoticeGrow(m.Options(ctx.DISPLAY, web.PLUGIN_XTERM).Message, res)
+				web.PushNoticeGrow(m.Options(ice.MSG_COUNT, "0", ctx.DISPLAY, web.PLUGIN_XTERM).Message, res)
 			})
 		})
 	} else {

@@ -2,6 +2,7 @@ package web
 
 import (
 	"net/http"
+	"os"
 	"path"
 
 	ice "shylinux.com/x/icebergs"
@@ -36,7 +37,12 @@ func init() {
 				RenderMain(m)
 			} else {
 				kit.If(len(arg) == 0, func() { arg = append(arg, SPACE, DOMAIN) })
-				m.Cmd(SPIDE, mdb.CREATE, ice.OPS, kit.Format("http://localhost:%s", kit.Select("9020", m.Cmdx(nfs.CAT, ice.VAR_LOG_ICE_PORT))))
+				m.Cmd(SPIDE, mdb.CREATE, ice.OPS, kit.Format("http://localhost:%s", kit.GetValid(
+					func() string { return m.Cmdx(nfs.CAT, ice.VAR_LOG_ICE_PORT) },
+					func() string { return m.Cmdx(nfs.CAT, kit.Path(os.Args[0], "../", ice.VAR_LOG_ICE_PORT)) },
+					func() string { return m.Cmdx(nfs.CAT, kit.Path(os.Args[0], "../../", ice.VAR_LOG_ICE_PORT)) },
+					func() string { return "9020" },
+				)))
 				m.Cmdy(SPIDE, ice.OPS, SPIDE_RAW, http.MethodPost, C(path.Join(arg...)), "pwd", kit.Path(""))
 			}
 		}},

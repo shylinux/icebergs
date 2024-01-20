@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -19,12 +20,10 @@ func init() {
 		POD: {Help: "空间", Actions: web.ApiWhiteAction(), Hand: func(m *ice.Message, arg ...string) {
 			if m.IsCliUA() {
 				if len(arg) == 0 || arg[0] == "" {
+					m.Option(ice.MSG_USERROLE, aaa.TECH)
 					m.Cmd(web.SPACE, func(value ice.Maps) {
 						msg := m.Cmd(nfs.DIR, path.Join(ice.USR_LOCAL_WORK, value[mdb.NAME], ice.USR_PUBLISH, kit.Keys(ice.ICE, m.OptionDefault(cli.GOOS, cli.LINUX), m.OptionDefault(cli.GOARCH, cli.AMD64))))
-						if msg.Length() > 0 {
-							m.Push(mdb.NAME, value[mdb.NAME])
-							m.Copy(msg)
-						}
+						kit.If(msg.Length() > 0, func() { m.Push(mdb.NAME, value[mdb.NAME]).Copy(msg) })
 					})
 					m.RenderResult()
 				} else if strings.HasPrefix(m.Option(ice.MSG_USERUA), "git/") {

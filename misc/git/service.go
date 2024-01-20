@@ -163,10 +163,11 @@ func init() {
 			web.DREAM_INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				kit.If(arg[0] == REPOS, func() {
 					mdb.HashSelect(m).Sort(REPOS).Cut("repos,version,time")
-					p := m.Cmdv(web.SPIDE, ice.DEV, web.CLIENT_ORIGIN)
-					m.Spawn().SplitIndex(m.Cmdx(web.SPIDE, ice.DEV, web.SPIDE_RAW, http.MethodGet, web.C(web.CODE_GIT_SERVICE))).Table(func(value ice.Maps) {
-						value[nfs.REPOS] = p + web.X(value[nfs.REPOS])
-						m.Push("", value, kit.Split("repos,version,time"))
+					web.DreamListSpide(m, []string{ice.DEV}, web.MASTER, func(dev, origin string) {
+						m.Spawn().SplitIndex(m.Cmdx(web.SPIDE, dev, web.SPIDE_RAW, http.MethodGet, web.C(web.CODE_GIT_SERVICE))).Table(func(value ice.Maps) {
+							value[nfs.REPOS] = origin + web.X(value[nfs.REPOS])
+							m.Push("", value, kit.Split("repos,version,time"))
+						})
 					})
 				})
 			}},

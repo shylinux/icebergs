@@ -180,9 +180,10 @@ func init() {
 						})
 						m.RenameAppend(nfs.PATH, arg[0])
 						mdb.HashInputs(m, arg)
-						p := m.Cmdv(SPIDE, ice.DEV, CLIENT_ORIGIN)
-						m.Spawn().SplitIndex(m.Cmdx(SPIDE, ice.DEV, SPIDE_RAW, http.MethodGet, S(), cli.GOOS, runtime.GOOS, cli.GOARCH, runtime.GOARCH)).Table(func(value ice.Maps) {
-							m.Push(arg[0], p+S(value[mdb.NAME])).Push(nfs.SIZE, value[nfs.SIZE]).Push(mdb.TIME, value[mdb.TIME])
+						DreamListSpide(m, []string{ice.DEV}, MASTER, func(dev, origin string) {
+							m.Spawn().SplitIndex(m.Cmdx(SPIDE, dev, SPIDE_RAW, http.MethodGet, S(), cli.GOOS, runtime.GOOS, cli.GOARCH, runtime.GOARCH)).Table(func(value ice.Maps) {
+								m.Push(arg[0], origin+S(value[mdb.NAME])).Push(nfs.SIZE, value[nfs.SIZE]).Push(mdb.TIME, value[mdb.TIME])
+							})
 						})
 					case mdb.ICONS:
 						mdb.HashInputs(m, arg)
@@ -441,4 +442,16 @@ func DreamWhiteHandle(m *ice.Message, arg ...string) {
 	aaa.White(m, kit.Keys(DREAM, ctx.ACTION, m.CommandKey()))
 	aaa.White(m, kit.Keys(DREAM, ctx.ACTION, m.PrefixKey()))
 	aaa.White(m, kit.Keys(ctx.ShortCmd(m.PrefixKey()), ctx.ACTION, DREAM_ACTION))
+}
+func DreamListSpide(m *ice.Message, list []string, types string, cb func(dev, origin string)) {
+	m.Cmds(DREAM).Table(func(value ice.Maps) {
+		kit.If(value[mdb.TYPE] == types, func() { list = append(list, value[mdb.NAME]) })
+	})
+	GoToast(m, "", func(toast func(name string, count, total int)) []string {
+		kit.For(list, func(index int, dev string) {
+			toast(dev, index, len(list))
+			cb(dev, m.Cmdv(SPIDE, dev, CLIENT_ORIGIN))
+		})
+		return nil
+	})
 }

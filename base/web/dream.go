@@ -232,10 +232,12 @@ func init() {
 				})
 			}},
 			cli.BUILD: {Name: "build name", Hand: func(m *ice.Message, arg ...string) {
+				m.Option(ice.MSG_TITLE, m.ActionKey())
 				m.Cmd("", FOR_FLOW, m.Option(mdb.NAME), kit.JoinWord(cli.SH, ice.ETC_MISS_SH))
 				m.Sleep3s().Cmdy(ROUTE, cli.BUILD).ProcessInner()
 			}},
 			PUBLISH: {Name: "publish name", Help: "发布", Icon: "bi bi-send-check", Hand: func(m *ice.Message, arg ...string) {
+				m.Option(ice.MSG_TITLE, m.ActionKey())
 				defer ToastProcess(m)()
 				list := []string{cli.LINUX, cli.DARWIN, cli.WINDOWS}
 				msg := m.Spawn(ice.Maps{ice.MSG_DAEMON: ""})
@@ -246,7 +248,7 @@ func init() {
 				DreamEach(m, m.Option(mdb.NAME), "", func(name string) {
 					m.Cmd(SPACE, name, CODE_AUTOGEN, "binpack")
 					kit.For(list, func(goos string) {
-						PushNoticeRich(m, mdb.NAME, name, msg.Cmd(SPACE, name, CODE_COMPILE, goos, cli.AMD64).AppendSimple())
+						PushNoticeRich(m, mdb.NAME, name, msg.Cmd(SPACE, name, CODE_COMPILE, goos, cli.AMD64, kit.Dict(ice.MSG_USERPOD, name)).AppendSimple())
 					})
 				})
 				m.ProcessHold()

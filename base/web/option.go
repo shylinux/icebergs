@@ -90,19 +90,26 @@ func PushImages(m *ice.Message, name string) {
 	}
 }
 func PushNotice(m *ice.Message, arg ...ice.Any) {
+	if m.Option(ice.MSG_DAEMON) == "" {
+		return
+	}
 	opts := ice.Map{ice.MSG_OPTION: []string{}, ice.MSG_OPTS: []string{}}
-	kit.For([]string{ctx.DISPLAY, ctx.STYLE, cli.DELAY, ice.LOG_DEBUG, ice.LOG_TRACEID}, func(key string) {
+	kit.For([]string{ice.MSG_TITLE, ctx.DISPLAY, ctx.STYLE, cli.DELAY, ice.MSG_STATUS, ice.LOG_DEBUG, ice.LOG_TRACEID}, func(key string) {
 		opts[ice.MSG_OPTION] = kit.Simple(opts[ice.MSG_OPTION], key)
 		opts[key] = m.Option(key)
 	})
-	if m.Option(ice.MSG_DAEMON) != "" {
-		m.Cmd(SPACE, m.Option(ice.MSG_DAEMON), arg, opts)
-	}
+	m.Cmd(SPACE, m.Option(ice.MSG_DAEMON), arg, opts)
 }
 func PushNoticeRefresh(m *ice.Message, arg ...ice.Any) { PushNotice(m, kit.List("refresh", arg)...) }
 func PushNoticeToast(m *ice.Message, arg ...ice.Any)   { PushNotice(m, kit.List("toast", arg)...) }
-func PushNoticeGrow(m *ice.Message, arg ...ice.Any)    { PushNotice(m, kit.List("grow", arg)...) }
-func PushNoticeRich(m *ice.Message, arg ...ice.Any)    { PushNotice(m, kit.Simple("rich", arg)) }
+func PushNoticeGrow(m *ice.Message, arg ...ice.Any) {
+	m.StatusTimeCount()
+	PushNotice(m, kit.List("grow", arg)...)
+}
+func PushNoticeRich(m *ice.Message, arg ...ice.Any) {
+	m.StatusTimeCount()
+	PushNotice(m, kit.Simple("rich", arg))
+}
 func PushStream(m *ice.Message) *ice.Message {
 	m.Options(cli.CMD_OUTPUT, file.NewWriteCloser(func(buf []byte) { PushNoticeGrow(m, string(buf)) }, nil)).ProcessHold(toastContent(m, ice.SUCCESS))
 	return m

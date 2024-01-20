@@ -447,10 +447,14 @@ func DreamListSpide(m *ice.Message, list []string, types string, cb func(dev, or
 	m.Cmds(DREAM).Table(func(value ice.Maps) {
 		kit.If(value[mdb.TYPE] == types, func() { list = append(list, value[mdb.NAME]) })
 	})
+	has := map[string]bool{}
 	GoToast(m, "", func(toast func(name string, count, total int)) []string {
 		kit.For(list, func(index int, dev string) {
 			toast(dev, index, len(list))
-			cb(dev, m.Cmdv(SPIDE, dev, CLIENT_ORIGIN))
+			if origin := m.Cmdv(SPIDE, dev, CLIENT_ORIGIN); !has[origin] {
+				has[origin] = true
+				cb(dev, origin)
+			}
 		})
 		return nil
 	})

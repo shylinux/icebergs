@@ -4,6 +4,7 @@ import (
 	"os"
 	"path"
 	"regexp"
+	"runtime"
 	"strings"
 	"time"
 
@@ -201,7 +202,10 @@ func init() {
 				aaa.Black(m, ice.USR_LOCAL)
 			}},
 			ice.APP: {Help: "本机", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd("cli.system", "opens", "Finder.app")
+				switch runtime.GOOS {
+				case "darwin":
+					m.Cmd("cli.system", "open", kit.Path(m.Option(PATH)))
+				}
 			}},
 			mdb.SHOW: {Help: "预览", Hand: func(m *ice.Message, arg ...string) {
 				Show(m.ProcessInner(), path.Join(m.Option(DIR_ROOT), m.Option(PATH)))

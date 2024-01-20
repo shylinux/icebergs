@@ -6,6 +6,7 @@ Volcanos(chat.ONIMPORT, {
 		can.sup.onexport.link = function() { return can.misc.MergeURL(can, {pod: can.ConfSpace()||can.misc.Search(can, ice.POD), cmd: web.DESKTOP}) }
 	},
 	_menu: function(can) { can.onappend.plugin(can, {index: "web.chat.macos.menu", style: html.OUTPUT}, function(sub) { can.ui.menu = sub
+		sub._desktop = can
 		var tabs = can.misc.sessionStorage(can, [can.ConfIndex(), html.TABS])
 		sub.onexport.output = function() { can.onimport._desktop(can, can._msg)
 			var sess = can.misc.SearchHash(can)[0]||can.Conf("session")
@@ -120,14 +121,10 @@ Volcanos(chat.ONIMPORT, {
 }, [""])
 Volcanos(chat.ONACTION, {
 	_search: function(can) { var sub = can.ui.searchs; if (can.onmotion.toggle(can, sub._target)) {
-		if (can.user.isMobile || can.ConfWidth() < 800) {
-			can.page.style(can, sub._target, html.LEFT, 0, html.TOP, 25)
-			sub.onimport.size(sub, can.ConfHeight()-115, can.ConfWidth(), true)
-		} else {
-			can.page.style(can, sub._target, html.LEFT, (can.ConfWidth()-sub._target.offsetWidth)/2, html.TOP, can.ConfHeight()/4)
-			sub.onimport.size(sub, can.ConfHeight()/2, can.base.Min(sub._target.offsetWidth, can.ConfWidth()/2, can.ConfWidth()), true)
-		}
-		can.page.Select(can, sub._option, "input[name=keyword]", function(target) { can.onmotion.focus(can, target) })
+		var height = can.ConfHeight()-115, top = 25, width = can.base.Min(sub._target.offsetWidth, can.ConfWidth()/2, can.ConfWidth()), left = (can.ConfWidth()-width)/2
+		if (can.ConfHeight() > 600) { var height = can.ConfHeight()/2, top = can.ConfHeight()/4 }
+		if (can.ConfWidth() < 800) { var width = can.ConfWidth(), left = 0 }
+		can.page.style(can, sub._target, html.LEFT, left, html.TOP, top), sub.onimport.size(sub, height, width, true)
 	} },
 	create: function(event, can) { can.onimport._desktop(can) },
 })

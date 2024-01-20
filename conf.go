@@ -141,6 +141,7 @@ const ( // DIR
 	USR_LOCAL_DAEMON   = "usr/local/daemon/"
 	VAR_DATA_IMPORTANT = "var/data/.important"
 	VAR_LOG_BOOT_LOG   = "var/log/boot.log"
+	VAR_LOG_ICE_PORT   = "var/log/ice.port"
 	VAR_LOG_ICE_PID    = "var/log/ice.pid"
 
 	VAR_LOG            = "var/log/"

@@ -8,6 +8,7 @@ import (
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -35,6 +36,7 @@ func init() {
 				RenderMain(m)
 			} else {
 				kit.If(len(arg) == 0, func() { arg = append(arg, SPACE, DOMAIN) })
+				m.Cmd(SPIDE, mdb.CREATE, ice.OPS, kit.Format("http://localhost:%s", kit.Select("9020", m.Cmdx(nfs.CAT, ice.VAR_LOG_ICE_PORT))))
 				m.Cmdy(SPIDE, ice.OPS, SPIDE_RAW, http.MethodPost, C(path.Join(arg...)), "pwd", kit.Path(""))
 			}
 		}},

@@ -37,7 +37,6 @@ func _mdb_select(m *ice.Message, cb Any, key string, value Map, fields []string,
 		if m.FieldsIsDetail() {
 			m.Push(ice.FIELDS_DETAIL, value)
 		} else {
-			m.Debug("what %v %v", value, val)
 			m.Push(key, value, fields, val)
 		}
 	default:

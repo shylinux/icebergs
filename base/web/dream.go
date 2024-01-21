@@ -23,6 +23,9 @@ import (
 )
 
 func _dream_list(m *ice.Message) *ice.Message {
+	if ice.Info.NodeType == WORKER {
+		return m
+	}
 	list := m.CmdMap(SPACE, mdb.NAME)
 	mdb.HashSelect(m).Table(func(value ice.Maps) {
 		if space, ok := list[value[mdb.NAME]]; ok {

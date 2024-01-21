@@ -83,6 +83,7 @@ const (
 	CLEAR    = "clear"
 	DELAY    = "delay"
 	RELOAD   = "reload"
+	RECORD   = "record"
 	RESTART  = "restart"
 	INTERVAL = "interval"
 
@@ -93,6 +94,7 @@ const (
 	OPEN  = "open"
 	CLOSE = "close"
 
+	PLAY = "play"
 	MAIN = "main"
 	CODE = "code"
 	COST = "cost"

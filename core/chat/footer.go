@@ -32,7 +32,7 @@ func init() {
 				}, arg...)
 			}},
 			nfs.SCRIPT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(SCRIPT, mdb.INSERT, mdb.ZONE, "default", ctx.INDEX, arg[0], ice.AUTO, arg[2])
+				m.Cmd(SCRIPT, mdb.INSERT, mdb.ZONE, arg[0], web.SPACE, arg[1], ctx.INDEX, arg[2], cli.PLAY, arg[4], ctx.OPTS, kit.Format(arg[5:]))
 			}},
 			ctx.CONFIG: {Hand: func(m *ice.Message, arg ...string) {
 				_footer_plugin(m, ctx.CONFIG, arg, arg...)

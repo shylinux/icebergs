@@ -221,10 +221,12 @@ func _space_send(m *ice.Message, name string, arg ...string) (h string) {
 	}
 	if target := kit.Split(name, nfs.PT, nfs.PT); !mdb.HashSelectDetail(m, target[0], func(value ice.Map) {
 		if c, ok := value[mdb.TARGET].(*websocket.Conn); !m.Warn(!ok, ice.ErrNotValid, mdb.TARGET) {
-			kit.For([]string{
-				ice.LOG_TRACEID,
-				ice.MSG_USERROLE,
-			}, func(k string) { m.Optionv(k, m.Optionv(k)) })
+			m.Debug("what %v", value[mdb.TYPE])
+			kit.If(kit.Format(value[mdb.TYPE]) == MASTER, func() {
+				m.Options(ice.MSG_USERWEB, value[mdb.TEXT], ice.MSG_USERPOD, "", ice.MSG_USERHOST, "")
+			})
+			m.Debug("what %v", value[mdb.TYPE])
+			kit.For([]string{ice.MSG_USERROLE, ice.LOG_TRACEID}, func(k string) { m.Optionv(k, m.Optionv(k)) })
 			kit.For(m.Optionv(ice.MSG_OPTS), func(k string) { m.Optionv(k, m.Optionv(k)) })
 			if withecho {
 				_space_echo(m.Set(ice.MSG_DETAIL, arg...), []string{h}, target, c)

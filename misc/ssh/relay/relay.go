@@ -293,6 +293,7 @@ func (s relay) Install(m *ice.Message, arg ...string) {
 	s.Modify(m, kit.Simple(m.OptionSimple(MACHINE, web.DREAM))...)
 }
 func (s relay) Upgrade(m *ice.Message, arg ...string) {
+	m.Option(ice.MSG_TITLE, m.ActionKey())
 	if len(arg) == 0 && (m.Option(MACHINE) == "" || strings.Contains(m.Option(MACHINE), ",")) {
 		s.foreach(m, func(msg *ice.Message, cmd []string) {
 			ssh.PushShell(msg.Message, strings.Split(msg.Template(UPGRADE_SH), lex.NL), func(res string) {
@@ -304,6 +305,7 @@ func (s relay) Upgrade(m *ice.Message, arg ...string) {
 	}
 }
 func (s relay) Version(m *ice.Message, arg ...string) {
+	m.Option(ice.MSG_TITLE, m.ActionKey())
 	s.foreach(m, func(msg *ice.Message, cmd []string) {
 		ssh.PushShell(msg.Message, strings.Split(msg.Template(VERSION_SH), lex.NL), func(res string) {
 			web.PushNoticeGrow(m.Options(ctx.DISPLAY, web.PLUGIN_XTERM).Message, res)

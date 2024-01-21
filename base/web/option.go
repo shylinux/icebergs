@@ -156,7 +156,7 @@ func GoToast(m *ice.Message, title string, cb func(toast func(name string, count
 	icon := Icons[ice.PROCESS]
 	toast := func(name string, count, total int) {
 		kit.If(total == 0, func() { total = 1 })
-		Toast(m, kit.Format("%s %s %s/%s", icon, kit.JoinWord(m.ActionKey(), name), strings.TrimSuffix(kit.FmtSize(int64(count)), "B"), strings.TrimSuffix(kit.FmtSize(int64(total)), "B")),
+		Toast(m, kit.Format("%s %s %s/%s", icon, kit.JoinWord(kit.Select(m.ActionKey(), m.Option(ice.MSG_TITLE)), name), strings.TrimSuffix(kit.FmtSize(int64(count)), "B"), strings.TrimSuffix(kit.FmtSize(int64(total)), "B")),
 			"", m.OptionDefault(ice.TOAST_DURATION, "30s"), count*100/total)
 		_total = total
 	}

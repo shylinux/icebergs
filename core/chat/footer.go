@@ -31,6 +31,9 @@ func init() {
 					return nfs.SplitPath(m, ctx.GetCmdFile(m, arg[0]))
 				}, arg...)
 			}},
+			nfs.SCRIPT: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(SCRIPT, mdb.INSERT, mdb.ZONE, "default", ctx.INDEX, arg[0], ice.AUTO, arg[2])
+			}},
 			ctx.CONFIG: {Hand: func(m *ice.Message, arg ...string) {
 				_footer_plugin(m, ctx.CONFIG, arg, arg...)
 			}},

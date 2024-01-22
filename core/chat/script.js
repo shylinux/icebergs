@@ -9,15 +9,13 @@ Volcanos(chat.ONIMPORT, {
 })
 Volcanos(chat.ONACTION, {
 	record: function(event, can, msg) { can.misc.sessionStorage(can, SCRIPT_ZONE, msg.Option(mdb.ZONE)), can.user.toastSuccess(can, msg.Option(mdb.ZONE)), can.Update(event) },
-	enable: function(event, can, msg) { can.runAction(event, mdb.MODIFY, [mdb.STATUS, mdb.ENABLE]) },
-	disable: function(event, can, msg) { can.runAction(event, mdb.MODIFY, [mdb.STATUS, mdb.DISABLE]) },
 	stop: function(event, can, msg) { can.misc.sessionStorage(can, SCRIPT_ZONE, ""), can.Update(event) },
 	play: function(event, can) { var begin = new Date().getTime(); can.core.Next(can._msg.Table(), function(value, next, index, list) {
-		can.Status(cli.STEP, index), can.Status(cli.COST, can.base.Duration((new Date().getTime()-begin)))
+		can.Status(cli.STEP, index), can.Status(cli.COST, can.base.Duration(new Date().getTime()-begin))
 		can.user.toastProcess(can, `${can.core.Keys(value.space, value.index)} ${value.play} ${index}/${can._msg.Length()}`, "", index*100/list.length)
 		var tr = can.page.Select(can, can._output, html.TR)[1]; can.onmotion.select(can, tr.parentNode, html.TR, index)
 		value.status == mdb.DISABLE? next(): can.onaction.preview({}, can, can.request({}, value), next)
-	}, function(list) { can.Status(cli.STEP, list.length), can.Status(cli.COST, can.base.Duration((new Date().getTime()-begin))), can.user.toastSuccess(can) }) },
+	}, function(list) { can.Status(cli.STEP, list.length), can.Status(cli.COST, can.base.Duration(new Date().getTime()-begin)), can.user.toastSuccess(can) }) },
 	preview: function(event, can, msg, next) {
 		can.onappend.plugin(can, {space: msg.Option(web.SPACE), index: msg.Option(ctx.INDEX), style: msg.Option(ctx.STYLE)}, function(sub) { var done = false
 			function action(skip) { sub.Update(sub.request({}, {_handle: ice.TRUE}), [ctx.ACTION, msg.Option(cli.PLAY)], function(msg) {

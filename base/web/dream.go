@@ -23,6 +23,9 @@ import (
 )
 
 func _dream_list(m *ice.Message) *ice.Message {
+	if ice.Info.NodeType == WORKER {
+		return m
+	}
 	list := m.CmdMap(SPACE, mdb.NAME)
 	mdb.HashSelect(m).Table(func(value ice.Maps) {
 		if space, ok := list[value[mdb.NAME]]; ok {
@@ -195,6 +198,11 @@ func init() {
 				case MAIN:
 					m.Cmdy(SPACE, m.Option(mdb.NAME), SPACE, mdb.INPUTS, arg)
 					return
+				case "send":
+					m.Cmd(SPACE, func(value ice.Maps) {
+						kit.If(kit.IsIn(value[mdb.TYPE], SERVER), func() { m.Push(arg[0], value[mdb.NAME]) })
+					})
+					return
 				}
 				switch arg[0] {
 				case mdb.NAME:
@@ -295,6 +303,14 @@ func init() {
 				gdb.Event(m, DREAM_TRASH, arg)
 				nfs.Trash(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME)))
 			}},
+			"grant": {Help: "授权", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(CHAT_GRANT, aaa.CONFIRM, kit.Dict(SPACE, m.Option(mdb.NAME)))
+			}},
+			"send": {Name: "send space*", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(SPACE, m.Option(SPACE), DREAM, mdb.CREATE, m.OptionSimple(mdb.NAME, mdb.ICON, nfs.REPOS, nfs.BINARY, nfs.TEMPLATE))
+				m.Cmd(SPACE, m.Option(SPACE), DREAM, cli.START, m.OptionSimple(mdb.NAME))
+				m.ProcessOpen(m.MergePod(kit.Keys(m.Option(SPACE), m.Option(mdb.NAME))))
+			}},
 			OPEN: {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(mdb.TYPE) == MASTER {
 					m.ProcessOpen(SpideOrigin(m, m.Option(mdb.NAME)) + C(ADMIN))
@@ -305,16 +321,20 @@ func init() {
 			MAIN: {Name: "main index", Help: "首页", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(SPACE, m.Option(mdb.NAME), SPACE, ice.MAIN, m.Option(ctx.INDEX))
 			}},
-			"grant": {Help: "授权", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(CHAT_GRANT, aaa.CONFIRM, kit.Dict(SPACE, m.Option(mdb.NAME)))
-			}},
 			DREAM_OPEN: {Hand: func(m *ice.Message, arg ...string) {}},
 			DREAM_CLOSE: {Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(cli.DAEMON) == ice.OPS && m.Cmdv(SPACE, m.Option(mdb.NAME), mdb.STATUS) != cli.STOP {
 					m.GoSleep300ms(func() { m.Cmd(DREAM, cli.START, m.OptionSimple(mdb.NAME)) })
 				}
 			}},
-			DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) { m.PushButton(OPEN) }},
+			DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
+				switch m.Option(mdb.TYPE) {
+				case WORKER:
+					m.PushButton("send", OPEN)
+				default:
+					m.PushButton(OPEN)
+				}
+			}},
 			STATS_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				if msg := mdb.HashSelects(m.Spawn()); msg.Length() > 0 {
 					stat := map[string]int{}
@@ -374,7 +394,7 @@ func init() {
 						m.Push(mdb.TYPE, value[mdb.TYPE])
 						m.Push(mdb.NAME, value[mdb.NAME])
 						m.Push(mdb.ICON, nfs.USR_ICONS_VOLCANOS)
-						m.Push(mdb.TEXT, kit.JoinWord(value["agent"], value["system"], value[aaa.IP]))
+						m.Push(mdb.TEXT, kit.JoinWord(value["agent"], value[cli.SYSTEM], value[aaa.IP]))
 						m.PushButton("grant")
 					}
 				})

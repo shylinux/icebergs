@@ -21,7 +21,6 @@ func _action_exec(m *ice.Message, river, storm, index string, arg ...string) {
 	}).Length() == 0, ice.ErrNotRight, index, arg) {
 		return
 	}
-	// kit.If(index == "web.chat.island.portal", func() { m.Option(ice.MSG_USERROLE, aaa.VOID) })
 	kit.If(!ctx.PodCmd(m, index, arg), func() { m.Cmdy(index, arg) })
 }
 func _action_auth(m *ice.Message, share string) *ice.Message {
@@ -75,9 +74,10 @@ func init() {
 			} else if m.Warn(!_river_right(m, arg[0]), ice.ErrNotRight, arg) {
 				return
 			}
-			if web.PodCmd(m, web.SPACE, arg...) {
-				m.Table(func(value ice.Maps) { m.Push(web.SPACE, m.Option(ice.MSG_USERPOD)) })
-			} else if len(arg) == 2 {
+			// if web.PodCmd(m, ice.POD, arg...) {
+			// 	// m.Table(func(value ice.Maps) { m.Push(web.SPACE, m.Option(ice.MSG_USERPOD)) })
+			// } else
+			if len(arg) == 2 {
 				ctx.OptionFromConfig(m, MENUS)
 				_action_list(m, arg[0], arg[1])
 			} else {

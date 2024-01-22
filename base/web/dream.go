@@ -307,7 +307,7 @@ func init() {
 				m.Cmd(CHAT_GRANT, aaa.CONFIRM, kit.Dict(SPACE, m.Option(mdb.NAME)))
 			}},
 			"send": {Name: "send space*", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(SPACE, m.Option(SPACE), DREAM, mdb.CREATE, m.OptionSimple(mdb.NAME, mdb.ICON, nfs.REPOS, nfs.BINARY, nfs.TEMPLATE))
+				m.Cmd(SPACE, m.Option(SPACE), DREAM, mdb.CREATE, m.OptionSimple(mdb.NAME, mdb.ICON, nfs.REPOS, nfs.BINARY))
 				m.Cmd(SPACE, m.Option(SPACE), DREAM, cli.START, m.OptionSimple(mdb.NAME))
 				m.ProcessOpen(m.MergePod(kit.Keys(m.Option(SPACE), m.Option(mdb.NAME))))
 			}},

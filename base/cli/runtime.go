@@ -253,10 +253,12 @@ func init() {
 				m.Echo("%v", string(buf))
 			}},
 			"upgrade": {Help: "升级", Hand: func(m *ice.Message, arg ...string) {
-				if nfs.Exists(m, ".git") && SystemFind(m, "go") != "" {
+				if nfs.Exists(m, ice.SRC_MAIN_GO) && nfs.Exists(m, ".git") && SystemFind(m, "go") != "" {
 					m.Cmdy("web.code.compile")
-				} else {
+				} else if nfs.Exists(m, ice.BIN_ICE_BIN) {
 					m.Cmdy("web.code.upgrade")
+				} else {
+					m.Cmdy("", "reboot")
 				}
 			}},
 			"reboot": {Help: "重启", Icon: "bi bi-bootstrap-reboot", Hand: func(m *ice.Message, arg ...string) {

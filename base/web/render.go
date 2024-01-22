@@ -158,9 +158,13 @@ func RenderVersion(m *ice.Message) string {
 
 const (
 	CHAT    = "chat"
-	DESKTOP = "desktop"
-	COMPILE = "compile"
 	XTERM   = "xterm"
+	VIMER   = "vimer"
+	DESKTOP = "desktop"
+	UPGRADE = "upgrade"
+	COMPILE = "compile"
+	BINPACK = "binpack"
+	AUTOGEN = "autogen"
 
 	CODE_GIT_SERVICE  = "web.code.git.service"
 	CODE_GIT_SEARCH   = "web.code.git.search"

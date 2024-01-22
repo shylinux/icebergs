@@ -240,38 +240,53 @@ func init() {
 				})
 			}},
 			cli.BUILD: {Name: "build name", Hand: func(m *ice.Message, arg ...string) {
-				m.Option(ice.MSG_TITLE, kit.Keys(m.CommandKey(), m.ActionKey()))
-				m.Cmd("", FOR_FLOW, m.Option(mdb.NAME), kit.JoinWord(cli.SH, ice.ETC_MISS_SH))
-				m.Sleep3s().Cmdy(ROUTE, cli.BUILD).ProcessInner()
+				m.Option(ice.MSG_TITLE, kit.Keys(m.Option(ice.MSG_USERPOD), m.CommandKey(), m.ActionKey()))
+				compile := cli.SystemFind(m, "go") != ""
+				m.Cmd("", FOR_FLOW, m.Option(mdb.NAME), kit.JoinWord(cli.SH, ice.ETC_MISS_SH), func(p string) bool {
+					if compile && nfs.Exists(m, path.Join(p, ice.SRC_MAIN_GO)) {
+						return false
+					} else {
+						m.Cmd(SPACE, path.Base(p), cli.RUNTIME, UPGRADE)
+						return true
+					}
+				})
+				// kit.If(m.Option(mdb.NAME) == "", func() { m.Sleep3s().Cmdy(ROUTE, cli.BUILD).ProcessInner() })
 			}},
 			PUBLISH: {Name: "publish name", Help: "发布", Icon: "bi bi-send-check", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(ice.MSG_TITLE, kit.Keys(m.CommandKey(), m.ActionKey()))
 				defer ToastProcess(m)()
 				list := []string{cli.LINUX, cli.DARWIN, cli.WINDOWS}
 				msg := m.Spawn(ice.Maps{ice.MSG_DAEMON: ""})
-				m.Cmd(CODE_AUTOGEN, "binpack")
+				m.Cmd(AUTOGEN, BINPACK)
 				kit.For(list, func(goos string) {
-					PushNoticeRich(m, mdb.NAME, ice.Info.NodeName, msg.Cmd(CODE_COMPILE, goos, cli.AMD64).AppendSimple())
+					PushNoticeRich(m, mdb.NAME, ice.Info.NodeName, msg.Cmd(COMPILE, goos, cli.AMD64).AppendSimple())
 				})
 				DreamEach(m, m.Option(mdb.NAME), "", func(name string) {
-					m.Cmd(SPACE, name, CODE_AUTOGEN, "binpack")
+					m.Cmd(SPACE, name, AUTOGEN, BINPACK)
 					kit.For(list, func(goos string) {
-						PushNoticeRich(m, mdb.NAME, name, msg.Cmd(SPACE, name, CODE_COMPILE, goos, cli.AMD64, kit.Dict(ice.MSG_USERPOD, name)).AppendSimple())
+						PushNoticeRich(m, mdb.NAME, name, msg.Cmd(SPACE, name, COMPILE, goos, cli.AMD64, kit.Dict(ice.MSG_USERPOD, name)).AppendSimple())
 					})
 				})
 				m.ProcessHold()
 			}},
 			FOR_FLOW: {Name: "forFlow name cmd*='sh etc/miss.sh'", Help: "流程", Icon: "bi bi-terminal", Hand: func(m *ice.Message, arg ...string) {
+				list := []string{}
+				DreamEach(m.Spawn(ice.Maps{ice.MSG_DAEMON: ""}), m.Option(mdb.NAME), "", func(name string) { list = append(list, name) })
 				m.Options(ctx.DISPLAY, PLUGIN_XTERM, cli.CMD_OUTPUT, nfs.NewWriteCloser(func(buf []byte) (int, error) {
 					PushNoticeGrow(m.Options(ice.MSG_COUNT, "0"), strings.ReplaceAll(string(buf), lex.NL, "\r\n"))
 					return len(buf), nil
 				}, func() error { return nil }))
-				msg := mdb.HashSelects(m.Spawn(), m.Option(mdb.NAME))
 				GoToast(m, "", func(toast func(string, int, int)) []string {
-					msg.Table(func(index int, value ice.Maps) {
-						toast(value[mdb.NAME], index, msg.Length())
-						p := path.Join(ice.USR_LOCAL_WORK, value[mdb.NAME])
-						PushNoticeGrow(m, strings.ReplaceAll(kit.Format("[%s]%s$ %s\n", time.Now().Format(ice.MOD_TIME_ONLY), value[mdb.NAME], m.Option(ice.CMD)), lex.NL, "\r\n"))
+					kit.For(list, func(index int, name string) {
+						toast(name, index, len(list))
+						p := path.Join(ice.USR_LOCAL_WORK, name)
+						switch cb := m.OptionCB("").(type) {
+						case func(string) bool:
+							if cb(p) {
+								return
+							}
+						}
+						PushNoticeGrow(m, strings.ReplaceAll(kit.Format("[%s]%s$ %s\n", time.Now().Format(ice.MOD_TIME_ONLY), name, m.Option(ice.CMD)), lex.NL, "\r\n"))
 						m.Cmd(cli.SYSTEM, kit.Split(m.Option(ice.CMD)), kit.Dict(cli.CMD_DIR, p)).Sleep300ms()
 						PushNoticeGrow(m, "\r\n\r\n\r\n")
 					})
@@ -350,7 +365,7 @@ func init() {
 			}},
 		}, StatsAction(), DreamAction(), mdb.ImportantHashAction(
 			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icon,repos,binary,template,restart", ctx.TOOLS, kit.Simple(CODE_GIT_SEARCH, ROUTE, SPIDE),
-			html.BUTTON, kit.JoinWord(PORTAL, ADMIN, DESKTOP, WIKI_WORD, CODE_GIT_STATUS, CODE_VIMER, CODE_XTERM, CODE_COMPILE),
+			html.BUTTON, kit.JoinWord(PORTAL, ADMIN, DESKTOP, WIKI_WORD, STATUS, VIMER, XTERM, COMPILE),
 		)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				_dream_list(m).RewriteAppend(func(value, key string, index int) string {

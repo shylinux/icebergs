@@ -84,18 +84,9 @@ func init() {
 				_route_toast(m, m.Option(SPACE), append([]string{m.Option(ctx.INDEX)}, kit.Split(m.Option(ctx.ARGS))...)...)
 			}},
 			cli.BUILD: {Name: "build space", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
-				_route_toast(m, m.Option(SPACE), m.PrefixKey(), "_build")
+				_route_toast(m, m.Option(SPACE), cli.RUNTIME, UPGRADE)
 				func() { defer ToastProcess(m)(); m.Sleep3s() }()
 				m.SetAppend().Cmdy("", "travel")
-			}},
-			"_build": {Hand: func(m *ice.Message, arg ...string) {
-				if _, err := nfs.DiskFile.StatFile(ice.SRC_MAIN_GO); err == nil && nfs.Exists(m, ".git") {
-					m.Cmdy(CODE_VIMER, "compile")
-				} else if ice.Info.NodeType == SERVER {
-					m.Cmdy(CODE_UPGRADE)
-				} else {
-					m.Cmdy(ice.EXIT, "1")
-				}
 			}},
 			"diagram": {Help: "导图", Icon: "bi bi-diagram-3", Hand: func(m *ice.Message, arg ...string) {
 				ctx.DisplayStorySpide(m.Cmdy(""), nfs.DIR_ROOT, ice.Info.NodeName, mdb.FIELD, SPACE, lex.SPLIT, nfs.PT, ctx.ACTION, ice.MAIN)

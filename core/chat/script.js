@@ -21,10 +21,14 @@ Volcanos(chat.ONACTION, {
 			function action(skip) { sub.Update(sub.request({}, {_handle: ice.TRUE}), [ctx.ACTION, msg.Option(cli.PLAY)], function(msg) {
 				sub.onimport._process(sub, msg) || msg.Length() == 0 && msg.Result() == "" || can.onappend._output(sub, msg), next && next()
 			}) }
-			can.onmotion.delay(can, function() { if (done || sub._auto) { return } done = true, action() }, 300)
-			sub.onexport.output = function() { if (done) { return } done = true, action(true)
-				can.page.style(can, sub._output, html.HEIGHT, "", html.MAX_HEIGHT, "")
-			}, can.onmotion.delay(can, function() { can.onmotion.scrollIntoView(can, sub._target) }, 300)
+			if (msg.Option(ctx.STYLE) == "async") {
+				done = true, sub.Update(sub.request({}, {_handle: ice.TRUE}), [ctx.ACTION, msg.Option(cli.PLAY)]), next && next()
+			} else {
+				can.onmotion.delay(can, function() { if (done || sub._auto) { return } done = true, action() }, 300)
+			}
+			sub.onexport.output = function() { can.page.style(can, sub._output, html.HEIGHT, "", html.MAX_HEIGHT, "")
+				if (done) { return } done = true, action(true)
+			}, msg.Option(ctx.STYLE) == html.HIDE || can.onmotion.delay(can, function() { can.onmotion.scrollIntoView(can, sub._target) }, 300)
 		})
 	},
 })

@@ -25,6 +25,7 @@ func init() {
 						msg := m.Cmd(nfs.DIR, path.Join(ice.USR_LOCAL_WORK, value[mdb.NAME], ice.USR_PUBLISH, kit.Keys(ice.ICE, m.OptionDefault(cli.GOOS, cli.LINUX), m.OptionDefault(cli.GOARCH, cli.AMD64))))
 						kit.If(msg.Length() > 0, func() { m.Push(mdb.NAME, value[mdb.NAME]).Copy(msg) })
 					})
+					m.Cut("name,size,time")
 					m.RenderResult()
 				} else if strings.HasPrefix(m.Option(ice.MSG_USERUA), "git/") {
 					m.RenderRedirect(kit.MergeURL2(m.Cmdv(web.SPACE, arg[0], web.CODE_GIT_REPOS, nfs.REMOTE, nfs.REMOTE), "/info/refs", m.OptionSimple("service")))

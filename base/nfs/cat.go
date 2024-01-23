@@ -72,6 +72,7 @@ const (
 	BINARY = "binary"
 	SCRIPT = "script"
 
+	CLONE   = "clone"
 	REPOS   = "repos"
 	REMOTE  = "remote"
 	ORIGIN  = "origin"

@@ -32,8 +32,8 @@ func _space_qrcode(m *ice.Message, dev string) {
 func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 	origin := m.Cmdv(SPIDE, dev, CLIENT_ORIGIN)
 	u := kit.ParseURL(kit.MergeURL2(strings.Replace(origin, HTTP, "ws", 1), PP(SPACE), mdb.TYPE, ice.Info.NodeType, mdb.NAME, name,
-		nfs.MODULE, ice.Info.Make.Module, nfs.VERSION, ice.Info.Make.Versions(), "goos", runtime.GOOS, "goarch", runtime.GOARCH, arg))
-	args := kit.SimpleKV("type,name,host,port", u.Scheme, dev, u.Hostname(), kit.Select(kit.Select("443", "80", u.Scheme == "ws"), u.Port()))
+		nfs.MODULE, ice.Info.Make.Module, nfs.VERSION, ice.Info.Make.Versions(), cli.GOOS, runtime.GOOS, cli.GOARCH, runtime.GOARCH, arg))
+	args := kit.SimpleKV("type,name,host,port", u.Scheme, dev, u.Hostname(), kit.Select(kit.Select(tcp.PORT_443, tcp.PORT_80, u.Scheme == "ws"), u.Port()))
 	gdb.Go(m, func() {
 		once := sync.Once{}
 		redial := kit.Dict(mdb.Configv(m, REDIAL))
@@ -52,10 +52,10 @@ func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 	}, kit.Join(kit.Simple(SPACE, name), lex.SP))
 }
 func _space_agent(m *ice.Message, args ...string) []string {
-	kit.If(m.Option("goos"), func(p string) { args = append(args, "system", p) })
+	kit.If(m.Option(cli.GOOS), func(p string) { args = append(args, cli.SYSTEM, p) })
 	for _, p := range []string{"Android", "iPhone", "Mac", "Windows"} {
 		if strings.Contains(m.Option(ice.MSG_USERUA), p) {
-			args = append(args, "system", p)
+			args = append(args, cli.SYSTEM, p)
 			break
 		}
 	}
@@ -182,11 +182,8 @@ func _space_exec(m *ice.Message, name string, source, target []string, c *websoc
 	switch kit.Select(cli.PWD, m.Detailv(), 0) {
 	case cli.PWD:
 		mdb.HashModify(m, mdb.HASH, name,
-			aaa.USERNICK, m.Option(ice.MSG_USERNICK),
-			aaa.USERNAME, m.Option(ice.MSG_USERNAME),
-			aaa.USERROLE, m.Option(ice.MSG_USERROLE),
-			aaa.IP, m.Option(ice.MSG_USERIP),
-			m.OptionSimple(nfs.MODULE, nfs.VERSION, AGENT, cli.SYSTEM),
+			aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERROLE, m.Option(ice.MSG_USERROLE),
+			aaa.IP, m.Option(ice.MSG_USERIP), aaa.UA, m.Option(ice.MSG_USERUA), m.OptionSimple(nfs.MODULE, nfs.VERSION, AGENT, cli.SYSTEM),
 		)
 		m.Push(mdb.LINK, m.MergePod(kit.Select("", source, -1)))
 	default:

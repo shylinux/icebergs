@@ -282,6 +282,7 @@ func HashSelect(m *ice.Message, arg ...string) *ice.Message {
 	m.Table(func(value ice.Maps) {
 		m.SetAppend().OptionFields(ice.FIELDS_DETAIL)
 		kit.For(kit.Split(HashField(m)), func(key string) {
+			key = strings.TrimSuffix(key, "*")
 			if key == HASH {
 				m.Push(key, arg[0])
 			} else {

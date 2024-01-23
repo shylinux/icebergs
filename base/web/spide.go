@@ -24,12 +24,13 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _spide_create(m *ice.Message, name, link string) {
+func _spide_create(m *ice.Message, name, link, types string) {
 	if u, e := url.Parse(link); !m.Warn(e != nil || link == "", ice.ErrNotValid, link) {
 		dir, file := path.Split(u.EscapedPath())
 		m.Logs(mdb.INSERT, SPIDE, name, LINK, link)
 		mdb.HashSelectUpdate(m, mdb.HashCreate(m, CLIENT_NAME, name), func(value ice.Map) {
-			value[SPIDE_CLIENT] = kit.Dict(mdb.NAME, name, SPIDE_METHOD, http.MethodGet, URL, link, ORIGIN, u.Scheme+"://"+u.Host,
+			value[SPIDE_CLIENT] = kit.Dict(
+				mdb.NAME, name, mdb.TYPE, types, SPIDE_METHOD, http.MethodGet, URL, link, ORIGIN, u.Scheme+"://"+u.Host,
 				tcp.PROTOCOL, u.Scheme, tcp.HOSTNAME, u.Hostname(), tcp.HOST, u.Host, nfs.PATH, dir, nfs.FILE, file, cli.TIMEOUT, "300s",
 			)
 		})
@@ -243,6 +244,7 @@ const (
 
 	CLIENT_URL      = "client.url"
 	CLIENT_NAME     = "client.name"
+	CLIENT_TYPE     = "client.type"
 	CLIENT_METHOD   = "client.method"
 	CLIENT_ORIGIN   = "client.origin"
 	CLIENT_TIMEOUT  = "client.timeout"
@@ -293,16 +295,17 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		// SPIDE: {Name: "spide client.name action=raw,msg,save,cache method=GET,PUT,POST,DELETE url format=form,part,json,data,file arg run create", Help: "蜘蛛侠", Actions: ice.MergeActions(ice.Actions{
 		SPIDE: {Help: "蜘蛛侠", Meta: kit.Dict(ice.CTX_TRANS, kit.Dict(html.INPUT, kit.Dict(
+			CLIENT_TYPE, "类型",
 			CLIENT_NAME, "名称", CLIENT_URL, "地址",
 			CLIENT_METHOD, "方法", CLIENT_ORIGIN, "服务", CLIENT_TIMEOUT, "超时",
 			CLIENT_PROTOCOL, "协议", CLIENT_HOST, "主机", CLIENT_HOSTNAME, "机器",
 		))), Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				conf := mdb.Confm(m, cli.RUNTIME, cli.CONF)
-				m.Cmd("", mdb.CREATE, ice.SHY, kit.Select("https://shylinux.com", conf[cli.CTX_SHY]))
-				m.Cmd("", mdb.CREATE, ice.DEV, kit.Select("https://2021.shylinux.com", ice.Info.Make.Domain, conf[cli.CTX_DEV]))
-				m.Cmd("", mdb.CREATE, "dev_ip", kit.Select("https://2021.shylinux.com", os.Getenv("ctx_dev_ip")))
-				m.Cmd("", mdb.CREATE, ice.OPS, kit.Select("http://localhost:9020", conf[cli.CTX_OPS]))
+				m.Cmd("", mdb.CREATE, ice.SHY, kit.Select("https://shylinux.com", conf[cli.CTX_SHY]), nfs.REPOS)
+				m.Cmd("", mdb.CREATE, ice.DEV, kit.Select("https://2021.shylinux.com", ice.Info.Make.Domain, conf[cli.CTX_DEV]), nfs.REPOS)
+				m.Cmd("", mdb.CREATE, "dev_ip", kit.Select("https://2021.shylinux.com", os.Getenv("ctx_dev_ip")), nfs.REPOS)
+				m.Cmd("", mdb.CREATE, ice.OPS, kit.Select("http://localhost:9020", conf[cli.CTX_OPS]), nfs.REPOS)
 				m.Cmd("", mdb.CREATE, ice.DEMO, kit.Select("http://localhost:20000", conf[cli.CTX_DEMO]))
 				m.Cmd("", mdb.CREATE, ice.MAIL, kit.Select("https://mail.shylinux.com", conf[cli.CTX_MAIL]))
 				m.Cmd("", mdb.CREATE, nfs.REPOS, kit.Select("https://repos.shylinux.com", conf[cli.CTX_HUB]))
@@ -329,11 +332,19 @@ func init() {
 					case mdb.KEY:
 						m.Push(arg[0], html.Authorization)
 					}
+				case CLIENT_NAME:
+					mdb.HashSelectValue(m.Spawn(), func(value ice.Map) {
+						m.Push(arg[0], kit.Value(value, CLIENT_NAME))
+						m.Push(mdb.TYPE, kit.Value(value, CLIENT_TYPE))
+					})
+					m.Sort(arg[0])
 				default:
 					mdb.HashSelectValue(m.Spawn(), func(value ice.Map) { m.Push(kit.Select(ORIGIN, arg, 0), kit.Value(value, CLIENT_ORIGIN)) })
 				}
 			}},
-			mdb.CREATE: {Name: "create name link", Hand: func(m *ice.Message, arg ...string) { _spide_create(m, m.Option(mdb.NAME), m.Option(LINK)) }},
+			mdb.CREATE: {Name: "create name origin type", Hand: func(m *ice.Message, arg ...string) {
+				_spide_create(m, m.Option(mdb.NAME), m.Option(ORIGIN), m.Option(mdb.TYPE))
+			}},
 			COOKIE: {Name: "cookie key* value", Help: "状态量", Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashModify(m, m.OptionSimple(CLIENT_NAME), kit.Keys(COOKIE, m.Option(mdb.KEY)), m.Option(mdb.VALUE))
 			}},
@@ -354,10 +365,10 @@ func init() {
 			DEV_CREATE_TOKEN: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(SPACE, tcp.DIAL, ice.DEV, m.Option(CLIENT_NAME), m.OptionSimple(TOKEN))
 			}},
-		}, DevTokenAction(CLIENT_NAME, CLIENT_URL), mdb.HashAction(mdb.SHORT, CLIENT_NAME, mdb.FIELD, "time,client.name,client.url,token")), Hand: func(m *ice.Message, arg ...string) {
+		}, DevTokenAction(CLIENT_NAME, CLIENT_URL), mdb.HashAction(mdb.SHORT, CLIENT_NAME, mdb.FIELD, "time,client.name,client.url,client.type,token")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 || arg[0] == "" || (len(arg) > 3 && arg[3] == "") {
 				list := m.CmdMap(SPACE, mdb.NAME)
-				mdb.HashSelect(m, kit.Slice(arg, 0, 1)...).Sort(CLIENT_NAME)
+				mdb.HashSelect(m, kit.Slice(arg, 0, 1)...).Sort("client.type,client.name", []string{nfs.REPOS, ""})
 				m.Table(func(value ice.Maps) {
 					if _, ok := list[value[CLIENT_NAME]]; ok {
 						m.Push(mdb.STATUS, ONLINE)

@@ -68,6 +68,7 @@ func (m *Message) Push(key string, value Any, arg ...Any) *Message {
 		kit.If(len(head) == 0, func() { head = kit.SortedKey(kit.KeyValue(nil, "", value)) })
 		kit.If(len(arg) > 1, func() { val, _ = arg[1].(Map) })
 		kit.For(head, func(k string) {
+			k = strings.TrimSuffix(k, "*")
 			var v Any
 			switch k {
 			case "_target":
@@ -107,15 +108,16 @@ func (m *Message) Push(key string, value Any, arg ...Any) *Message {
 		})
 	case Maps:
 		kit.If(len(head) == 0, func() { head = kit.SortedKey(value) })
-		kit.For(head, func(k string) { m.Push(k, value[k]) })
+		kit.For(head, func(k string) {
+			k = strings.TrimSuffix(k, "*")
+			m.Push(k, value[k])
+		})
 	default:
 		kit.For(kit.Simple(value, arg), func(v string) {
+			key = strings.TrimSuffix(key, "*")
 			if m.FieldsIsDetail() {
 				m.Add(MSG_APPEND, KEY, key).Add(MSG_APPEND, VALUE, kit.Format(value))
 			} else {
-				if m.ActionKey() == INPUTS && kit.IndexOf(m.value(key), v) > -1 {
-					// return
-				}
 				m.Add(MSG_APPEND, key, v)
 			}
 		})
@@ -317,6 +319,8 @@ func (m *Message) Sort(key string, arg ...Any) *Message {
 		for s, k := range keys {
 			if a, b := list[i][k], list[j][k]; a != b {
 				if v, ok := order[k]; ok {
+					kit.If(v[a] == 0, func() { v[a] = len(v) + 1 })
+					kit.If(v[b] == 0, func() { v[b] = len(v) + 1 })
 					if v[a] > v[b] {
 						return true
 					} else if v[a] < v[b] {

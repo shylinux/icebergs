@@ -33,6 +33,7 @@ func init() {
 				DockAppend(m, "git.png", web.CODE_GIT_STATUS)
 				DockAppend(m, "vimer.png", web.CODE_VIMER)
 			}
+			AppInstall(m, "App Store.png", web.STORE)
 			m.Travel(func(p *ice.Context, c *ice.Context, key string, cmd *ice.Command) {
 				kit.If(cmd.Icon, func() {
 					if !kit.HasPrefix(cmd.Icon, nfs.PS, web.HTTP) {

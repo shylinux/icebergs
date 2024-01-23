@@ -31,16 +31,16 @@ func _dream_list(m *ice.Message) *ice.Message {
 		if space, ok := list[value[mdb.NAME]]; ok {
 			msg := gdb.Event(m.Spawn(value, space), DREAM_TABLES).Copy(m.Spawn().PushButton(cli.STOP))
 			m.Push(mdb.TYPE, space[mdb.TYPE]).Push(cli.STATUS, cli.START)
-			m.Push(nfs.VERSION, space[nfs.VERSION]).Push(mdb.TEXT, msg.Append(mdb.TEXT))
+			m.Push(nfs.MODULE, space[nfs.MODULE]).Push(nfs.VERSION, space[nfs.VERSION]).Push(mdb.TEXT, msg.Append(mdb.TEXT))
 			m.PushButton(strings.Join(msg.Appendv(ctx.ACTION), ""))
 		} else {
 			if m.Push(mdb.TYPE, WORKER); nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, value[mdb.NAME])) {
 				m.Push(cli.STATUS, cli.STOP)
-				m.Push(nfs.VERSION, "").Push(mdb.TEXT, "")
+				m.Push(nfs.MODULE, "").Push(nfs.VERSION, "").Push(mdb.TEXT, "")
 				m.PushButton(cli.START, nfs.TRASH)
 			} else {
 				m.Push(cli.STATUS, cli.BEGIN)
-				m.Push(nfs.VERSION, "").Push(mdb.TEXT, "")
+				m.Push(nfs.MODULE, "").Push(nfs.VERSION, "").Push(mdb.TEXT, "")
 				m.PushButton(cli.START, mdb.REMOVE)
 			}
 		}
@@ -364,7 +364,7 @@ func init() {
 				}
 			}},
 		}, StatsAction(), DreamAction(), mdb.ImportantHashAction(
-			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icon,repos,binary,template,restart", ctx.TOOLS, kit.Simple(CODE_GIT_SEARCH, ROUTE, SPIDE),
+			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icon,repos,binary,template,restart", ctx.TOOLS, kit.Simple(STORE, SPIDE, ROUTE),
 			html.BUTTON, kit.JoinWord(PORTAL, ADMIN, DESKTOP, WIKI_WORD, STATUS, VIMER, XTERM, COMPILE),
 		)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
@@ -384,34 +384,30 @@ func init() {
 				})
 				ctx.DisplayTableCard(m)
 				kit.If(cli.SystemFind(m, "go"), func() {
-					m.Action(mdb.CREATE, STARTALL, STOPALL, cli.BUILD, PUBLISH)
+					m.Action("filter", mdb.CREATE, STARTALL, STOPALL, cli.BUILD, PUBLISH)
 				}, func() {
 					m.Action(mdb.CREATE, STARTALL, STOPALL)
 				})
 				msg := m.Cmds(SPACE)
 				msg.Table(func(value ice.Maps) {
+					value[mdb.ICON] = nfs.USR_ICONS_VOLCANOS
+					value[mdb.STATUS] = cli.START
+					value[nfs.REPOS] = "https://" + value[nfs.MODULE]
 					switch value[mdb.TYPE] {
 					case SERVER:
-						m.Push(mdb.TYPE, value[mdb.TYPE])
-						m.Push(mdb.NAME, value[mdb.NAME])
-						m.Push(mdb.ICON, nfs.USR_ICONS_ICEBERGS)
-						m.Push(mdb.TEXT, value[mdb.TEXT])
+						value[mdb.ICON] = nfs.USR_ICONS_ICEBERGS
 						msg := gdb.Event(m.Spawn(value), DREAM_TABLES)
-						m.PushButton(strings.Join(msg.Appendv(ctx.ACTION), ""))
+						defer m.PushButton(strings.Join(msg.Appendv(ctx.ACTION), ""))
 					case MASTER:
-						m.Push(mdb.TYPE, value[mdb.TYPE])
-						m.Push(mdb.NAME, value[mdb.NAME])
-						m.Push(mdb.ICON, nfs.USR_ICONS_VOLCANOS)
-						m.Push(mdb.TEXT, value[mdb.TEXT])
 						msg := gdb.Event(m.Spawn(value), DREAM_TABLES)
-						m.PushButton(strings.Join(msg.Appendv(ctx.ACTION), ""))
+						defer m.PushButton(strings.Join(msg.Appendv(ctx.ACTION), ""))
 					case aaa.LOGIN:
-						m.Push(mdb.TYPE, value[mdb.TYPE])
-						m.Push(mdb.NAME, value[mdb.NAME])
-						m.Push(mdb.ICON, nfs.USR_ICONS_VOLCANOS)
-						m.Push(mdb.TEXT, kit.JoinWord(value["agent"], value[cli.SYSTEM], value[aaa.IP]))
-						m.PushButton("grant")
+						value[mdb.TEXT] = kit.JoinWord(value["agent"], value[cli.SYSTEM], value[aaa.IP])
+						defer m.PushButton("grant")
+					default:
+						return
 					}
+					m.Push("", value, kit.Split(mdb.Config(m, mdb.FIELD)+",type,status,module,version,text"))
 				})
 				stat := map[string]int{}
 				m.Table(func(value ice.Maps) { stat[value[mdb.TYPE]]++; stat[value[mdb.STATUS]]++ })

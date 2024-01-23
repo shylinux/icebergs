@@ -452,7 +452,7 @@ func DreamEach(m *ice.Message, name string, status string, cb func(string)) *ice
 	}
 	list := []string{}
 	m.Spawn().Cmds(DREAM).Table(func(value ice.Maps) {
-		if value[mdb.STATUS] == kit.Select(cli.START, status) && reg.MatchString(value[mdb.NAME]) {
+		if value[mdb.STATUS] == kit.Select(cli.START, status) && reg.MatchString(value[mdb.NAME]) && value[mdb.TYPE] == WORKER {
 			list = append(list, value[mdb.NAME])
 		}
 	})

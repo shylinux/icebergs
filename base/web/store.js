@@ -2,6 +2,9 @@ Volcanos(chat.ONIMPORT, {
 	_init: function(can, msg) {
 		can.ui = can.onappend.layout(can), can.onappend.style(can, "output card", can.ui.content), can.onimport._project(can, msg)
 		can.onmotion.delay(can, function() { can.onimport.layout(can) })
+		can.sup.onimport._field = function(sup, msg) { msg.Table(function(item) {
+			can.onappend._plugin(can, item, {style: html.FLOAT}, function(sub) {})
+		}) }
 	},
 	_project: function(can, msg) { var select
 		msg.Table(function(value) { if (value["client.type"] != nfs.REPOS) { return } value.name = `${value["client.name"]}`
@@ -30,9 +33,10 @@ Volcanos(chat.ONIMPORT, {
 		}))
 	},
 	layout: function(can) {
-		can.page.style(can, can.ui.project, html.HEIGHT, can.ConfHeight())
-		can.page.style(can, can.ui.content, html.HEIGHT, can.ConfHeight())
-		can.page.style(can, can._output, html.HEIGHT, can.ConfHeight(), html.WIDTH, can.ConfWidth())
+		can.ui.layout(can.ConfHeight(), can.ConfWidth())
+		// can.page.style(can, can.ui.project, html.HEIGHT, can.ConfHeight())
+		// can.page.style(can, can.ui.content, html.HEIGHT, can.ConfHeight())
+		// can.page.style(can, can._output, html.HEIGHT, can.ConfHeight(), html.WIDTH, can.ConfWidth())
 		can.onlayout.expand(can, can.ui.content, can.user.isMobile && !can.user.isLandscape()? can.ConfWidth(): 320)
 	},
 }, [""])

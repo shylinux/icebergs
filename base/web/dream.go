@@ -460,10 +460,7 @@ func DreamEach(m *ice.Message, name string, status string, cb func(string)) *ice
 		return m
 	}
 	GoToast(m, "", func(toast func(string, int, int)) []string {
-		kit.For(list, func(index int, name string) {
-			toast(name, index, len(list))
-			cb(name)
-		})
+		kit.For(list, func(index int, name string) { toast(name, index, len(list)); cb(name) })
 		return nil
 	})
 	return m

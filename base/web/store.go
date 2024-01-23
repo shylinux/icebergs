@@ -17,15 +17,11 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		STORE: {Help: "系统商店", Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmds(SPIDE).Table(func(value ice.Maps) {
-					if value[CLIENT_TYPE] == nfs.REPOS {
-						m.Push("", value, arg[0])
-					}
-				})
+				m.Cmds(SPIDE).Table(func(value ice.Maps) { kit.If(value[CLIENT_TYPE] == nfs.REPOS, func() { m.Push("", value, arg[0]) }) })
 			}},
-			"install": {Help: "购买", Hand: func(m *ice.Message, arg ...string) {
-				if strings.HasPrefix(m.Option(mdb.ICON), "/require/") {
-					m.Option(mdb.ICON, strings.TrimSuffix(strings.TrimPrefix(m.Option(mdb.ICON), "/require/"), "?pod="+m.Option(mdb.NAME)))
+			"install": {Help: "安装", Hand: func(m *ice.Message, arg ...string) {
+				if strings.HasPrefix(m.Option(mdb.ICON), nfs.REQUIRE) {
+					m.Option(mdb.ICON, strings.TrimSuffix(strings.TrimPrefix(m.Option(mdb.ICON), nfs.REQUIRE), "?pod="+m.Option(mdb.NAME)))
 				}
 				m.OptionDefault(nfs.BINARY, m.Option(ORIGIN)+S(m.Option(mdb.NAME)))
 				m.Cmdy(DREAM, mdb.CREATE, m.OptionSimple(mdb.NAME, mdb.ICON, nfs.REPOS, nfs.BINARY))
@@ -38,7 +34,7 @@ func init() {
 				m.Option(mdb.TYPE, nfs.REPOS)
 				m.Cmd(SPIDE, mdb.CREATE, m.OptionSimple("name,origin,type"))
 			}},
-		}, ctx.ConfAction(ctx.TOOLS, "dream")), Hand: func(m *ice.Message, arg ...string) {
+		}, ctx.ConfAction(ctx.TOOLS, DREAM)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				m.Cmdy(SPIDE, arg, kit.Dict(ice.MSG_FIELDS, "time,client.type,client.name,client.origin")).Action(mdb.CREATE).Display("")
 				ctx.Toolkit(m)

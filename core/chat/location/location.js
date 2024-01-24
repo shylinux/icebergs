@@ -1,6 +1,8 @@
 Volcanos(chat.ONIMPORT, {_init: function(can, msg) {},
 	_layout_init: function(can, msg, cb) {
 		can.db.list = {}, can.ui = can.onappend.layout(can), can.onimport._project(can)
+		can.onmotion.hidden(can, can.ui.project)
+		can.onmotion.hidden(can, can._action)
 		// can.core.Item(can.ui.zone, function(key, item) { key == "favor" || item._legend.click() })
 		if (can.user.isMobile) {
 			can.page.style(can, can.ui.project, "z-index", 10, "position", "absolute", html.MAX_HEIGHT, can.ConfHeight()-120)

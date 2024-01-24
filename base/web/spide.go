@@ -295,16 +295,16 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		// SPIDE: {Name: "spide client.name action=raw,msg,save,cache method=GET,PUT,POST,DELETE url format=form,part,json,data,file arg run create", Help: "蜘蛛侠", Actions: ice.MergeActions(ice.Actions{
 		SPIDE: {Help: "蜘蛛侠", Meta: kit.Dict(ice.CTX_TRANS, kit.Dict(html.INPUT, kit.Dict(
-			CLIENT_TYPE, "类型",
-			CLIENT_NAME, "名称", CLIENT_URL, "地址",
+			CLIENT_TYPE, "类型", CLIENT_NAME, "名称", CLIENT_URL, "地址",
 			CLIENT_METHOD, "方法", CLIENT_ORIGIN, "服务", CLIENT_TIMEOUT, "超时",
 			CLIENT_PROTOCOL, "协议", CLIENT_HOST, "主机", CLIENT_HOSTNAME, "机器",
 		))), Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				conf := mdb.Confm(m, cli.RUNTIME, cli.CONF)
+				dev := kit.Select("https://2021.shylinux.com", ice.Info.Make.Domain, conf[cli.CTX_DEV])
 				m.Cmd("", mdb.CREATE, ice.SHY, kit.Select("https://shylinux.com", conf[cli.CTX_SHY]), nfs.REPOS)
-				m.Cmd("", mdb.CREATE, ice.DEV, kit.Select("https://2021.shylinux.com", ice.Info.Make.Domain, conf[cli.CTX_DEV]), nfs.REPOS)
-				m.Cmd("", mdb.CREATE, "dev_ip", kit.Select("https://2021.shylinux.com", os.Getenv("ctx_dev_ip")), nfs.REPOS)
+				m.Cmd("", mdb.CREATE, ice.DEV, dev, nfs.REPOS)
+				m.Cmd("", mdb.CREATE, ice.DEV_IP, kit.Select(dev, os.Getenv("ctx_dev_ip")), nfs.REPOS)
 				m.Cmd("", mdb.CREATE, ice.OPS, kit.Select("http://localhost:9020", conf[cli.CTX_OPS]), nfs.REPOS)
 				m.Cmd("", mdb.CREATE, ice.DEMO, kit.Select("http://localhost:20000", conf[cli.CTX_DEMO]))
 				m.Cmd("", mdb.CREATE, ice.MAIL, kit.Select("https://mail.shylinux.com", conf[cli.CTX_MAIL]))

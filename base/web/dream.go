@@ -424,9 +424,7 @@ func init() {
 
 func DreamAction() ice.Actions {
 	return ice.MergeActions(ice.Actions{
-		DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) {
-			DreamProcess(m, nil, arg...)
-		}},
+		DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { DreamProcess(m, nil, arg...) }},
 	}, gdb.EventsAction(DREAM_OPEN, DREAM_CLOSE, DREAM_INPUTS, DREAM_CREATE, DREAM_TRASH, DREAM_TABLES, DREAM_ACTION, SERVE_START))
 }
 func DreamProcess(m *ice.Message, args ice.Any, arg ...string) {

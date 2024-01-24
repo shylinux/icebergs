@@ -204,20 +204,17 @@ func Grows(m Message, prefix string, chain Any, match string, value string, cb A
 	cache, ok := m.Confv(prefix, chain).(ice.Map)
 	if cache == nil || !ok {
 		return nil
-	}
-	limit := kit.Int(m.Option(CACHE_LIMIT))
-	if begin := kit.Int(m.Option(CACHE_BEGIN)); begin != 0 && limit > 0 {
-		count := kit.Int(m.Option(CACHE_COUNT, kit.Int(kit.Value(cache, kit.Keym("count")))))
-		if begin > 0 {
-			m.Option(CACHE_OFFEND, count-begin-limit)
+	} else if begin, limit := kit.Int(m.Option(CACHE_BEGIN)), kit.Int(m.Option(CACHE_LIMIT)); begin != 0 && limit > 0 {
+		if count := kit.Int(m.Option(CACHE_COUNT, kit.Int(kit.Value(cache, kit.Keym(COUNT))))); count-begin < limit {
+			m.Option(CACHE_OFFEND, 0)
+			m.Option(CACHE_LIMIT, count-begin+1)
 		} else {
-			m.Option(CACHE_OFFEND, -begin-limit)
+			m.Option(CACHE_OFFEND, count-begin-limit+1)
 		}
 	}
 	return miss.Grows(path.Join(prefix, kit.Keys(chain)), cache,
 		kit.Int(kit.Select("0", strings.TrimPrefix(m.Option(CACHE_OFFEND), "-"))),
-		kit.Int(kit.Select("10", m.Option(CACHE_LIMIT))),
-		match, value, cb)
+		kit.Int(kit.Select("10", m.Option(CACHE_LIMIT))), match, value, cb)
 }
 func Grow(m Message, prefix string, chain Any, data Any) int {
 	cache, ok := m.Confv(prefix, chain).(ice.Map)

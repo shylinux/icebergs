@@ -30,7 +30,7 @@ func init() {
 				messageInsert(m, web.DREAM, mdb.TYPE, "plug", ctx.INDEX, IFRAME, ctx.ARGS, web.S(m.Option(mdb.NAME)))
 			}},
 		}, web.DreamAction(), mdb.ZoneAction(
-			mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,type,name,icons", mdb.FIELDS, "time,avatar,usernick,username,type,name,text,space,index,args",
+			mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,type,name,icons", mdb.FIELDS, "time,id,avatar,usernick,username,type,name,text,space,index,args",
 		)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				mdb.ZoneSelect(m.Spawn(), arg...).Table(func(value ice.Maps) {
@@ -40,6 +40,7 @@ func init() {
 				})
 			} else {
 				mdb.ZoneSelect(m, arg...)
+				m.Sort(mdb.ID, ice.INT)
 			}
 			m.Display("")
 		}},

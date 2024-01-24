@@ -1,5 +1,7 @@
 Volcanos(chat.ONIMPORT, {
-	_init: function(can, msg) { if (can.isCmdMode()) { can.onappend.style(can, html.OUTPUT) }
+	_init: function(can, msg) {
+		delete(can._status._cache), delete(can._status._cache_key)
+		if (can.isCmdMode()) { can.onappend.style(can, html.OUTPUT) }
 		can.ui = can.onappend.layout(can), can.onimport._project(can, msg)
 	},
 	_project: function(can, msg) { var select, current = can.db.hash[0]||ice.DEV
@@ -16,8 +18,12 @@ Volcanos(chat.ONIMPORT, {
 				]},
 			], onclick: function(event) { can.isCmdMode() && can.misc.SearchHash(can, value.name), can.onimport._switch(can, false)
 				can.db.zone = value, can.db.hash = value.hash, can.onmotion.select(can, can.ui.project, html.DIV_ITEM, _target)
-				if (can.onmotion.cache(can, function() { return value.name }, can._status, can.ui.content, can.ui.profile, can.ui.display)) { return can.onimport.layout(can) }
-				can.run(event, [value.hash], function(msg) { can.onimport._display(can), can.onimport._content(can, msg) })
+				if (can.onmotion.cache(can, function() {
+					return value.name
+				}, can.ui.content, can.ui.profile, can.ui.display, can._status)) { return can.onimport.layout(can) }
+				can.run(can.request(event, {"cache.limit": 10}), [value.hash], function(msg) {
+					can.onimport._display(can), can.onimport._content(can, msg)
+				})
 			}}])._target; select = (value.name == current? _target: select)||_target
 		}), can.user.isMobile? can.onimport._switch(can, true): select && select.click()
 	},
@@ -27,18 +33,7 @@ Volcanos(chat.ONIMPORT, {
 			{text: can.db.zone.name},
 			{icon: "bi bi-three-dots", onclick: function() { can.onmotion.toggle(can, can.ui.profile), can.onimport.layout(can) }},
 		]}])._target
-		can.ui.message = can.page.Append(can, can.ui.content, [{view: html.LIST}])._target
-		can.onimport._message(can, msg)
-	},
-	_message: function(can, msg) {
-		var last = ""; msg.Table(function(value) { var myself = value.username == can.user.info.username, time = can.base.TimeTrim(value.time)
-			if (time != last) { can.page.Append(can, can.ui.message, [{view: [[html.ITEM, mdb.TIME], "", time]}]) } last = time
-			can.page.Append(can, can.ui.message, [{view: [[html.ITEM, value.type, myself? "myself": ""]], list: [
-				{img: can.misc.Resource(can, (value.avatar == can.db.zone.name? "": value.avatar)||can.db.zone.icons||"usr/icons/Messages.png")},
-				{view: html.CONTAINER, list: [{text: [value.usernick, "", nfs.FROM]}, can.onfigure[value.type](can, value)]},
-			]}])
-		}), can.onappend._status(can, msg.Option(ice.MSG_STATUS)), can.onimport.layout(can)
-		can.onmotion.delay(can, function() { can.ui.message && (can.ui.message.scrollTop += 10000) })
+		can.ui.message = can.page.Append(can, can.ui.content, [{view: html.LIST}])._target, can.onimport._message(can, msg)
 	},
 	_display: function(can, msg) {
 		can.page.Appends(can, can.ui.display, [
@@ -48,9 +43,26 @@ Volcanos(chat.ONIMPORT, {
 			} }},
 		]), can.onmotion.toggle(can, can.ui.display, true)
 	},
+	_message: function(can, msg) {
+		var last = ""; msg.Table(function(value) { can.db.zone.id = value.id
+			var myself = value.username == can.user.info.username, time = can.base.TimeTrim(value.time)
+			if (time != last) { can.page.Append(can, can.ui.message, [{view: [[html.ITEM, mdb.TIME], "", time]}]) } last = time
+			can.page.Append(can, can.ui.message, [{view: [[html.ITEM, value.type, myself? "myself": ""]], list: [
+				{img: can.misc.Resource(can, (value.avatar == can.db.zone.name? "": value.avatar)||can.db.zone.icons||"usr/icons/Messages.png")},
+				{view: html.CONTAINER, list: [{text: [value.usernick, "", nfs.FROM]}, can.onfigure[value.type](can, value)]},
+			]}])
+		}), can.onappend._status(can, msg.Option(ice.MSG_STATUS)), can.onimport.layout(can)
+		if (can.Status(mdb.TOTAL) > can.db.zone.id) { can.onimport._request(can) }
+		can.onmotion.delay(can, function() { can.ui.message && (can.ui.message.scrollTop += 10000) })
+	},
+	_request: function(can) {
+		can.run(can.request(event, {"cache.begin": parseInt(can.db.zone.id||0)+1, "cache.limit": 10}), [can.db.hash], function(msg) {
+			can.onimport._message(can, msg)
+		})
+	},
 	_insert: function(can, args) {
 		can.runAction(event, mdb.INSERT, [can.db.hash].concat(args), function() {
-			can.run(event, [can.db.hash], function(msg) { can.onimport._message(can, msg) })
+			can.onimport._request(can)
 		})
 	},
 	_switch: function(can, project) { if (!can.user.isMobile) { return }

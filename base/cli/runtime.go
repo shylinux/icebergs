@@ -254,7 +254,7 @@ func init() {
 			}},
 			"upgrade": {Help: "升级", Hand: func(m *ice.Message, arg ...string) {
 				if nfs.Exists(m, ice.SRC_MAIN_GO) && nfs.Exists(m, ".git") && SystemFind(m, "go") != "" {
-					m.Cmdy("web.code.compile")
+					m.Cmdy("web.code.vimer", "compile")
 				} else if nfs.Exists(m, ice.BIN_ICE_BIN) {
 					m.Cmdy("web.code.upgrade")
 				} else {

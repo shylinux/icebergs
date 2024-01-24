@@ -91,6 +91,10 @@ func init() {
 				m.Cmdy(web.SHARE, mdb.CREATE, mdb.TYPE, web.LOGIN, mdb.TEXT, tcp.PublishLocalhost(m, m.Option(ice.MSG_USERWEB)))
 				aaa.SendEmail(m, aaa.ADMIN, m.Option(aaa.TO), "")
 			}},
+			MESSAGE: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(MESSAGE, mdb.INSERT, arg)
+				web.ToastSuccess(m)
+			}},
 			aaa.LOGOUT: {Hand: aaa.SessLogout},
 			cli.QRCODE: {Hand: func(m *ice.Message, arg ...string) {
 				m.Push(web.LINK, tcp.PublishLocalhost(m, m.Option(ice.MSG_USERWEB)))

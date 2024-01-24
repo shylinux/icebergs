@@ -14,7 +14,7 @@ const MESSAGE = "message"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		MESSAGE: {Name: "message", Help: "消息", Icon: "Messages.png", Actions: ice.MergeActions(ice.Actions{
+		MESSAGE: {Name: "message", Help: "聊天消息", Icon: "Messages.png", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				messageCreate(m, web.DREAM, "usr/icons/Launchpad.png")
 				messageCreate(m, cli.SYSTEM, "usr/icons/System Settings.png")

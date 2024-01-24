@@ -16,7 +16,7 @@ const STORE = "store"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		STORE: {Help: "系统商店", Actions: ice.MergeActions(ice.Actions{
+		STORE: {Name: "store", Help: "系统商店", Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmds(SPIDE).Table(func(value ice.Maps) { kit.If(value[CLIENT_TYPE] == nfs.REPOS, func() { m.Push("", value, arg[0]) }) })
 			}},

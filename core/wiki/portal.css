@@ -7,6 +7,8 @@ fieldset.web.wiki.portal>div.output { padding:0; }
 fieldset.web.wiki.portal>div.output>div.header { background-color:rgb(22 31 49); height:var(--portal-header-height); --hover-bg-color:var(--plugin-bg-color); }
 fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] { display:flex; justify-content:center; }
 fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.item { text-align:center; padding:var(--legend-padding); height:var(--portal-header-height); }
+fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.item:first-child { line-height:calc(var(--portal-header-height) - 2 * var(--legend-padding)); }
+body.mobile fieldset.web.wiki.portal.cmd>div.output>div.header div.story[data-name=navmenu] div.item { line-height:calc(var(--portal-header-height) - 2 * var(--legend-padding)); }
 fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.item.select { background-color:var(--output-bg-color); }
 fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.item:hover { background-color:var(--output-bg-color); }
 fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.item.space { padding:0px; margin:0 var(--portal-main-padding); }
@@ -49,5 +51,6 @@ fieldset.web.wiki.portal>div.output>div.header div.list { display:flex; }
 
 body.mobile fieldset.web.wiki.portal { --portal-main-padding:10px; --legend-padding:10px; }
 body.mobile fieldset.web.wiki.portal>div.output>div.layout { display:block; }
-body.mobile fieldset.web.wiki.portal>div.output>div.layout>div.nav { height:unset; }
+body.mobile fieldset.web.wiki.portal>div.output>div.layout>div.nav { height:400px; }
 body.mobile fieldset.web.wiki.portal>div.output>div.layout>div.main { height:unset; }
+body.width2 fieldset.web.wiki.portal>div.output>div.layout>div.main>div.flex { flex-direction:column; }

@@ -33,10 +33,7 @@ Volcanos(chat.ONIMPORT, {
 		}))
 	},
 	layout: function(can) {
-		can.ui.layout(can.ConfHeight(), can.ConfWidth())
-		// can.page.style(can, can.ui.project, html.HEIGHT, can.ConfHeight())
-		// can.page.style(can, can.ui.content, html.HEIGHT, can.ConfHeight())
-		// can.page.style(can, can._output, html.HEIGHT, can.ConfHeight(), html.WIDTH, can.ConfWidth())
-		can.onlayout.expand(can, can.ui.content, can.user.isMobile && !can.user.isLandscape()? can.ConfWidth(): 320)
+		can.user.isMobile && can.onmotion.toggle(can, can.ui.project, can.user.isLandscape())
+		can.ui.layout(can.ConfHeight(), can.ConfWidth()), can.onlayout.expand(can, can.ui.content, 320)
 	},
 }, [""])

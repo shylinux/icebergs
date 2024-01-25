@@ -272,6 +272,8 @@ func init() {
 		switch kit.TrimPrefix(arg[0], "extra.") {
 		case DREAM:
 			m.SplitIndex(m.Cmdx(SPIDE, ice.OPS, SPIDE_RAW, http.MethodGet, C(DREAM))).CutTo(mdb.NAME, DREAM)
+		case "message":
+			m.Cmdy("web.chat.message").Cut(mdb.HASH, mdb.NAME, mdb.ICONS)
 		case SPACE:
 			m.Cmd(SPACE, func(value ice.Maps) {
 				kit.If(kit.IsIn(value[mdb.TYPE], WORKER, SERVER), func() { m.Push(arg[0], value[mdb.NAME]) })

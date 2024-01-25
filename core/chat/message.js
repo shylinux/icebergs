@@ -1,6 +1,5 @@
 Volcanos(chat.ONIMPORT, {
-	_init: function(can, msg) {
-		delete(can._status._cache), delete(can._status._cache_key)
+	_init: function(can, msg) { delete(can._status._cache), delete(can._status._cache_key)
 		if (can.isCmdMode()) { can.onappend.style(can, html.OUTPUT) }
 		can.ui = can.onappend.layout(can), can.onimport._project(can, msg)
 	},
@@ -18,8 +17,11 @@ Volcanos(chat.ONIMPORT, {
 				]},
 			], onclick: function(event) { can.isCmdMode() && can.misc.SearchHash(can, value.name), can.onimport._switch(can, false)
 				can.db.zone = value, can.db.hash = value.hash, can.onmotion.select(can, can.ui.project, html.DIV_ITEM, _target)
-				if (can.onmotion.cache(can, function() {
-					return value.name
+				if (can.onmotion.cache(can, function(save, load) {
+					can.ui.message && save({title: can.ui.title, message: can.ui.message, scroll: can.ui.message.scrollTop})
+					return load(value.name, function(bak) { can.ui.title = bak.title, can.ui.message = bak.message
+						can.onmotion.delay(can, function() { can.ui.message.scrollTop = bak.scroll })
+					})
 				}, can.ui.content, can.ui.profile, can.ui.display, can._status)) { return can.onimport.layout(can) }
 				can.run(can.request(event, {"cache.limit": 10}), [value.hash], function(msg) {
 					can.onimport._display(can), can.onimport._content(can, msg)
@@ -43,10 +45,12 @@ Volcanos(chat.ONIMPORT, {
 			} }},
 		]), can.onmotion.toggle(can, can.ui.display, true)
 	},
-	_message: function(can, msg) {
-		var last = ""; msg.Table(function(value) { can.db.zone.id = value.id
+	_message: function(can, msg) { var now = new Date(), last = ""
+		msg.Table(function(value) { can.db.zone.id = value.id
 			var myself = value.username == can.user.info.username, time = can.base.TimeTrim(value.time)
-			if (time != last) { can.page.Append(can, can.ui.message, [{view: [[html.ITEM, mdb.TIME], "", time]}]) } last = time
+			var t = new Date(value.time); if (!last || (t - last > 3*60*1000)) { last = t
+				can.page.Append(can, can.ui.message, [{view: [[html.ITEM, mdb.TIME], "", time]}])
+			}
 			can.page.Append(can, can.ui.message, [{view: [[html.ITEM, value.type, myself? "myself": ""]], list: [
 				{img: can.misc.Resource(can, (value.avatar == can.db.zone.name? "": value.avatar)||can.db.zone.icons||"usr/icons/Messages.png")},
 				{view: html.CONTAINER, list: [{text: [value.usernick, "", nfs.FROM]}, can.onfigure[value.type](can, value)]},
@@ -100,11 +104,30 @@ Volcanos(chat.ONFIGURE, {
 	plug: function(can, value) { var height = can.base.Min(can.ui.content.offsetHeight-210, 240)
 		var height = can.base.Max(320, height, height/(can.base.isIn(value.index, html.IFRAME)? 1: 2)), width = can.ui.content.offsetWidth-(can.user.isMobile? 60: 180)
 		return {view: wiki.CONTENT, style: {height: height, width: width}, _init: function(target) { value.type = chat.STORY
-			can.onappend._plugin(can, value, {height: height, width: width}, function(sub) {
+			can.onappend.plugin(can, value, function(sub) {
 				sub.onexport.output = function() { sub.onimport.size(sub, height, width)
 					can.page.style(can, target, html.HEIGHT, sub._target.offsetHeight, html.WIDTH, sub._target.offsetWidth)
 				}
 			}, target)
 		}}
+	},
+})
+Volcanos(chat.ONINPUTS, {
+	_show: function(event, can, msg, target, name) {
+		function show(value) {
+			if (target == target.parentNode.firstChild) { can.ui = can.ui||{}
+				can.ui.img = can.page.insertBefore(can, [{type: html.IMG}], target)
+				can.ui.span = can.page.insertBefore(can, [{type: html.SPAN}], target)
+				can.onappend.style(can, mdb.ICONS, can.page.parentNode(can, target, html.TR))
+				can.page.style(can, target, html.COLOR, html.TRANSPARENT)
+			}
+			can.ui.img.src = can.misc.Resource(can, value.icons), can.ui.span.innerText = value.name
+			target.value = value.hash, can.onmotion.hidden(can, can._target)
+		}
+		can.page.Appends(can, can._output, msg.Table(function(value) {
+			return value.name && {view: html.ITEM, list: [
+				{img: can.misc.Resource(can, value.icons)}, {text: value.name},
+			], onclick: function(event) { show(value) }}
+		}))
 	},
 })

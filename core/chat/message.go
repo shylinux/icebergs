@@ -33,25 +33,22 @@ func init() {
 			mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,type,name,icons", mdb.FIELDS, "time,id,avatar,usernick,username,type,name,text,space,index,args",
 		)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
-				mdb.ZoneSelect(m.Spawn(), arg...).Table(func(value ice.Maps) {
+				mdb.ZoneSelect(m.Display("").Spawn(), arg...).Table(func(value ice.Maps) {
 					if kit.IsIn(m.Option(ice.MSG_USERROLE), value[mdb.TYPE], aaa.TECH, aaa.ROOT) {
 						m.PushRecord(value, mdb.Config(m, mdb.FIELD))
 					}
 				})
 			} else {
-				mdb.ZoneSelect(m, arg...)
-				m.Sort(mdb.ID, ice.INT)
+				mdb.ZoneSelect(m, arg...).Sort(mdb.ID, ice.INT)
 			}
-			m.Display("")
 		}},
 	})
 }
 func messageCreate(m *ice.Message, name, icon string) {
-	kit.Value(m.Target().Configs[m.CommandKey()].Value, kit.Keys(mdb.HASH, name, "meta.time"), m.Time())
-	kit.Value(m.Target().Configs[m.CommandKey()].Value, kit.Keys(mdb.HASH, name, "meta.type"), aaa.TECH)
-	kit.Value(m.Target().Configs[m.CommandKey()].Value, kit.Keys(mdb.HASH, name, "meta.name"), name)
-	kit.Value(m.Target().Configs[m.CommandKey()].Value, kit.Keys(mdb.HASH, name, "meta.icons"), icon)
+	kit.Value(m.Target().Configs[m.CommandKey()].Value, kit.Keys(mdb.HASH, name, mdb.META), kit.Dict(
+		mdb.TIME, m.Time(), mdb.TYPE, aaa.TECH, mdb.NAME, name, mdb.ICONS, icon,
+	))
 }
 func messageInsert(m *ice.Message, zone string, arg ...string) {
-	m.Cmd("", mdb.INSERT, zone, arg, ice.Maps{ice.MSG_USERNAME: zone})
+	m.Cmd("", mdb.INSERT, zone, arg, ice.Maps{ice.MSG_USERNICK: zone, ice.MSG_USERNAME: zone})
 }

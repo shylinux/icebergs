@@ -92,8 +92,12 @@ func init() {
 				aaa.SendEmail(m, aaa.ADMIN, m.Option(aaa.TO), "")
 			}},
 			MESSAGE: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(MESSAGE, mdb.INSERT, arg)
-				web.ToastSuccess(m)
+				if arg[0] == mdb.INPUTS || arg[0] == mdb.ACTION && arg[1] == mdb.INPUTS {
+					m.Cmdy(MESSAGE, arg)
+				} else {
+					m.Cmdy(MESSAGE, mdb.INSERT, arg)
+					web.ToastSuccess(m)
+				}
 			}},
 			aaa.LOGOUT: {Hand: aaa.SessLogout},
 			cli.QRCODE: {Hand: func(m *ice.Message, arg ...string) {

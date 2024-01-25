@@ -4,6 +4,7 @@ body.light fieldset.web.chat.message>div.output>div.layout>div.layout>div.conten
 fieldset.web.chat.message>div.output>div.project>div.title { padding:var(--button-padding); display:flex; justify-content:space-between; position:sticky; top:0; z-index:10; }
 fieldset.web.chat.message>div.output>div.project>div.title i:hover { background-color:var(--hover-bg-color); cursor:pointer; }
 fieldset.web.chat.message>div.output>div.project>div.title span:hover { background-color:var(--hover-bg-color); cursor:pointer; }
+fieldset.web.chat.message>div.output>div.project>div.item.text.filter>i { left:var(--input-padding); }
 fieldset.web.chat.message>div.output>div.project>div.item { height:58px; padding:var(--input-padding); }
 fieldset.web.chat.message>div.output>div.project>div.item img { height:var(--header-height); width:var(--header-height); display:block; float:left; }
 fieldset.web.chat.message>div.output>div.project>div.item span.time { color:var(--disable-fg-color); font-size:var(--status-font-size); }

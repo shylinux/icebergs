@@ -14,7 +14,7 @@ const TRENDS = "trends"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		TRENDS: {Name: "trends repos begin_time@date auto", Help: "趋势图", Meta: kit.Dict(
+		TRENDS: {Name: "trends repos begin_time@date auto actions", Help: "趋势图", Meta: kit.Dict(
 			ice.CTX_TRANS, kit.Dict(html.INPUT, kit.Dict(
 				"from", "起始", "date", "日期", "max", "最多", "add", "添加", "del", "删除",
 			)),

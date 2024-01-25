@@ -13,7 +13,7 @@ Volcanos(chat.ONIMPORT, {
 	},
 	layout: function(can) {
 		can.Action(html.FILTER) && can.onmotion.filter(can, can.Action(html.FILTER))
-		can.user.isMobile && can.onmotion.toggle(can, can.ui.project, can.user.isLandscape())
+		// can.user.isMobile && can.onmotion.toggle(can, can.ui.project, can.user.isLandscape())
 		can.ui.layout(can.ConfHeight(), can.ConfWidth()), can.onlayout.expand(can, can.ui.content, 320)
 	},
 }, [""])

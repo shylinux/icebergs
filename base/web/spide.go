@@ -266,6 +266,7 @@ const (
 
 var agentIcon = map[string]string{
 	"Safari":         "usr/icons/Safari.png",
+	"Chrome":         "usr/icons/Chrome.png",
 	"Edg":            "usr/icons/Edg.png",
 	"MicroMessenger": "usr/icons/wechat.png",
 }

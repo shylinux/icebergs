@@ -55,6 +55,7 @@ func init() {
 				ctx.Toolkit(m)
 			} else {
 				origin := SpideOrigin(m, arg[0])
+				list := m.Spawn(ice.Maps{ice.MSG_FIELDS: ""}).CmdMap(DREAM, mdb.NAME)
 				m.SetAppend().Spawn().SplitIndex(m.Cmdx(SPIDE, arg[0], C(DREAM))).Table(func(value ice.Maps) {
 					if value[mdb.TYPE] != WORKER {
 						return
@@ -62,7 +63,6 @@ func init() {
 					m.Push("", value, kit.Split("time,name,icon,repos,binary,module,version"))
 					m.Push(mdb.TEXT, kit.JoinLine(value[nfs.REPOS], value[nfs.BINARY]))
 					m.Push(ORIGIN, origin)
-					list := m.Spawn(ice.Maps{ice.MSG_FIELDS: ""}).CmdMap(DREAM, mdb.NAME)
 					if _, ok := list[value[mdb.NAME]]; ok {
 						m.PushButton(OPEN, PORTAL)
 					} else {

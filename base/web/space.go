@@ -74,10 +74,12 @@ func _space_fork(m *ice.Message) {
 	if m.OptionDefault(mdb.TYPE, SERVER) == WORKER && (!nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, name)) || !tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP))) {
 		m.Option(mdb.TYPE, SERVER)
 	}
-	if kit.IsIn(m.Option(mdb.TYPE), WORKER) && IsLocalHost(m) {
-		text = nfs.USR_LOCAL_WORK + name
-	} else if kit.IsIn(m.Option(mdb.TYPE), PORTAL, aaa.LOGIN) && len(name) == 32 && kit.IsIn(mdb.HashSelects(m.Spawn(), name).Append(aaa.IP), "", m.Option(ice.MSG_USERIP)) {
+	if kit.IsIn(m.Option(mdb.TYPE), PORTAL, aaa.LOGIN) && len(name) == 32 && kit.IsIn(mdb.HashSelects(m.Spawn(), name).Append(aaa.IP), "", m.Option(ice.MSG_USERIP)) {
 
+	} else if kit.IsIn(m.Option(mdb.TYPE), SERVER) && IsLocalHost(m) {
+
+	} else if kit.IsIn(m.Option(mdb.TYPE), WORKER) && IsLocalHost(m) {
+		text = nfs.USR_LOCAL_WORK + name
 	} else {
 		name, text = kit.Hashs(name), kit.Select(addr, m.Option(mdb.NAME), m.Option(mdb.TEXT))
 	}

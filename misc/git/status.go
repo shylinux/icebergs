@@ -65,6 +65,7 @@ func init() {
 						text = append(text, list[0]+" ---")
 					}
 				}
+				// m.Push(mdb.TEXT, kit.JoinLine(m.Option(nfs.MODULE), strings.Join(text, ", ")))
 				m.Push(mdb.TEXT, strings.Join(text, ", "))
 				m.PushButton(kit.Dict(m.CommandKey(), "源码"))
 			}},

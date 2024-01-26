@@ -31,7 +31,7 @@ func _serve_start(m *ice.Message) {
 	kit.If(runtime.GOOS == cli.WINDOWS || m.Cmdx(cli.SYSTEM, "lsof", "-i", ":"+m.Option(tcp.PORT)) != "", func() {
 		m.Go(func() { m.Cmd(SPIDE, ice.OPS, _serve_address(m)+"/exit", ice.Maps{CLIENT_TIMEOUT: "30ms"}) }).Sleep300ms()
 	})
-	cli.NodeInfo(m, kit.Select(ice.Info.Hostname, m.Option(tcp.NODENAME)), SERVER)
+	cli.NodeInfo(m, kit.Select(strings.TrimSuffix(ice.Info.Hostname, ".local"), m.Option(tcp.NODENAME)), SERVER)
 	m.Start("", m.OptionSimple(tcp.HOST, tcp.PORT)...)
 	m.Cmd(nfs.SAVE, ice.VAR_LOG_ICE_PORT, m.Option(tcp.PORT))
 	kit.For(kit.Split(m.Option(ice.DEV)), func(dev string) {

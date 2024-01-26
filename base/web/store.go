@@ -18,14 +18,14 @@ const STORE = "store"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		STORE: {Name: "store", Help: "系统商店", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
+		STORE: {Name: "store list", Help: "系统商店", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmds(SPIDE).Table(func(value ice.Maps) { kit.If(value[CLIENT_TYPE] == nfs.REPOS, func() { m.Push("", value, arg[0]) }) })
 			}},
 			mdb.CREATE: {Name: "create name* origin*", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(SPIDE, mdb.CREATE, m.OptionSimple("name,origin"), mdb.TYPE, nfs.REPOS)
 			}},
-			"install": {Hand: func(m *ice.Message, arg ...string) {
+			INSTALL: {Hand: func(m *ice.Message, arg ...string) {
 				if !kit.HasPrefixList(arg, ctx.RUN) {
 					if !nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME))) {
 						if strings.HasPrefix(m.Option(mdb.ICON), nfs.REQUIRE) {
@@ -63,8 +63,9 @@ func init() {
 						return
 					}
 					m.Push("", value, kit.Split("time,name,icon,repos,binary,module,version"))
+					m.Push(mdb.TEXT, kit.JoinLine(value[nfs.REPOS], value[nfs.BINARY]))
 					if m.Push(ORIGIN, origin); !nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, value[mdb.NAME])) {
-						m.PushButton("install", PORTAL)
+						m.PushButton(INSTALL, PORTAL)
 					} else {
 						m.PushButton(OPEN, PORTAL)
 					}

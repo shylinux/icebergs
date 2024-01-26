@@ -189,10 +189,10 @@ func ZoneAction(arg ...ice.Any) ice.Actions {
 	}
 }
 func ExportZoneAction(arg ...ice.Any) ice.Actions {
-	return ice.MergeActions(ZoneAction(arg...), ice.Actions{
+	return ice.MergeActions(ice.Actions{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { Config(m, IMPORTANT, ice.TRUE); ZoneImport(m, arg) }},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { m.OptionFields(""); ZoneExport(m, arg) }},
-	})
+	}, ZoneAction(arg...))
 }
 func PageZoneAction(arg ...ice.Any) ice.Actions {
 	return ice.MergeActions(ice.Actions{

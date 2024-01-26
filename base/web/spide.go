@@ -24,13 +24,15 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _spide_create(m *ice.Message, name, link, types string) {
+func _spide_create(m *ice.Message, name, link, types, icon string) {
 	if u, e := url.Parse(link); !m.Warn(e != nil || link == "", ice.ErrNotValid, link) {
 		dir, file := path.Split(u.EscapedPath())
 		m.Logs(mdb.INSERT, SPIDE, name, LINK, link)
 		mdb.HashSelectUpdate(m, mdb.HashCreate(m, CLIENT_NAME, name), func(value ice.Map) {
+			value[mdb.ICON] = icon
 			value[SPIDE_CLIENT] = kit.Dict(
-				mdb.NAME, name, mdb.TYPE, types, SPIDE_METHOD, http.MethodGet, URL, link, ORIGIN, u.Scheme+"://"+u.Host,
+				mdb.NAME, name, mdb.TYPE, types,
+				SPIDE_METHOD, http.MethodGet, URL, link, ORIGIN, u.Scheme+"://"+u.Host,
 				tcp.PROTOCOL, u.Scheme, tcp.HOSTNAME, u.Hostname(), tcp.HOST, u.Host, nfs.PATH, dir, nfs.FILE, file, cli.TIMEOUT, "300s",
 			)
 		})
@@ -261,6 +263,13 @@ const (
 
 	QS = "?"
 )
+
+var agentIcon = map[string]string{
+	"Safari":         "usr/icons/Safari.png",
+	"Edg":            "usr/icons/Edg.png",
+	"MicroMessenger": "usr/icons/wechat.png",
+}
+
 const SPIDE = "spide"
 
 func init() {
@@ -304,7 +313,7 @@ func init() {
 				dev := kit.Select("https://2021.shylinux.com", ice.Info.Make.Domain, conf[cli.CTX_DEV])
 				m.Cmd("", mdb.CREATE, ice.SHY, kit.Select("https://shylinux.com", conf[cli.CTX_SHY]), nfs.REPOS)
 				m.Cmd("", mdb.CREATE, ice.DEV, dev, nfs.REPOS)
-				m.Cmd("", mdb.CREATE, ice.DEV_IP, kit.Select(dev, os.Getenv("ctx_dev_ip")), nfs.REPOS)
+				m.Cmd("", mdb.CREATE, ice.DEV_IP, kit.Select(dev, os.Getenv("ctx_dev_ip")))
 				m.Cmd("", mdb.CREATE, ice.OPS, kit.Select("http://localhost:9020", conf[cli.CTX_OPS]), nfs.REPOS)
 				m.Cmd("", mdb.CREATE, ice.DEMO, kit.Select("http://localhost:20000", conf[cli.CTX_DEMO]))
 				m.Cmd("", mdb.CREATE, ice.MAIL, kit.Select("https://mail.shylinux.com", conf[cli.CTX_MAIL]))
@@ -342,8 +351,8 @@ func init() {
 					mdb.HashSelectValue(m.Spawn(), func(value ice.Map) { m.Push(kit.Select(ORIGIN, arg, 0), kit.Value(value, CLIENT_ORIGIN)) })
 				}
 			}},
-			mdb.CREATE: {Name: "create name origin type", Hand: func(m *ice.Message, arg ...string) {
-				_spide_create(m, m.Option(mdb.NAME), m.Option(ORIGIN), m.Option(mdb.TYPE))
+			mdb.CREATE: {Name: "create name origin type icon", Hand: func(m *ice.Message, arg ...string) {
+				_spide_create(m, m.Option(mdb.NAME), m.Option(ORIGIN), m.Option(mdb.TYPE), m.Option(mdb.ICON))
 			}},
 			COOKIE: {Name: "cookie key* value", Help: "状态量", Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashModify(m, m.OptionSimple(CLIENT_NAME), kit.Keys(COOKIE, m.Option(mdb.KEY)), m.Option(mdb.VALUE))
@@ -364,8 +373,9 @@ func init() {
 			DEV_REQUEST_TEXT: {Hand: func(m *ice.Message, arg ...string) { m.Echo(SpaceName(ice.Info.NodeName)) }},
 			DEV_CREATE_TOKEN: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(SPACE, tcp.DIAL, ice.DEV, m.Option(CLIENT_NAME), m.OptionSimple(TOKEN))
+				m.Sleep300ms()
 			}},
-		}, DevTokenAction(CLIENT_NAME, CLIENT_URL), mdb.HashAction(mdb.SHORT, CLIENT_NAME, mdb.FIELD, "time,client.name,client.url,client.type,token")), Hand: func(m *ice.Message, arg ...string) {
+		}, DevTokenAction(CLIENT_NAME, CLIENT_URL), mdb.HashAction(mdb.SHORT, CLIENT_NAME, mdb.FIELD, "time,client.name,client.url,client.type,token,icon")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 || arg[0] == "" || (len(arg) > 3 && arg[3] == "") {
 				list := m.CmdMap(SPACE, mdb.NAME)
 				mdb.HashSelect(m, kit.Slice(arg, 0, 1)...).Sort("client.type,client.name", []string{nfs.REPOS, ""})

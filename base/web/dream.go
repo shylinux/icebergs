@@ -55,6 +55,36 @@ func _dream_list(m *ice.Message) *ice.Message {
 	})
 	return m
 }
+func _dream_more_list(m *ice.Message) *ice.Message {
+	list := m.Spawn(ice.Maps{ice.MSG_FIELDS: ""}).CmdMap(SPIDE, CLIENT_NAME)
+	m.Cmds(SPACE).Table(func(value ice.Maps) {
+		value[mdb.ICON] = nfs.USR_ICONS_VOLCANOS
+		value[nfs.REPOS] = "https://" + value[nfs.MODULE]
+		value[mdb.STATUS] = cli.START
+		switch value[mdb.TYPE] {
+		case SERVER:
+			value[mdb.ICON] = nfs.USR_ICONS_ICEBERGS
+			value[mdb.TEXT] = kit.JoinLine(value[nfs.MODULE], value[mdb.TEXT])
+			msg := gdb.Event(m.Spawn(value), DREAM_TABLES)
+			defer m.PushButton(strings.Join(msg.Appendv(ctx.ACTION), ""))
+		case MASTER:
+			if spide, ok := list[value[mdb.NAME]]; ok {
+				value[mdb.ICON] = spide[mdb.ICON]
+			}
+			value[mdb.TEXT] = kit.JoinLine(value[nfs.MODULE], value[mdb.TEXT])
+			msg := gdb.Event(m.Spawn(value), DREAM_TABLES)
+			defer m.PushButton(strings.Join(msg.Appendv(ctx.ACTION), ""))
+		case aaa.LOGIN:
+			value[mdb.ICON] = kit.Select(value[mdb.ICON], agentIcon[value[AGENT]])
+			value[mdb.TEXT] = kit.JoinWord(value[AGENT], value[cli.SYSTEM], value[aaa.IP])
+			defer m.PushButton(GRANT)
+		default:
+			return
+		}
+		m.Push("", value, kit.Split(mdb.Config(m, mdb.FIELD)+",type,status,module,version,text"))
+	})
+	return m
+}
 func _dream_start(m *ice.Message, name string) {
 	if m.Warn(name == "", ice.ErrNotValid, mdb.NAME) {
 		return
@@ -390,37 +420,17 @@ func init() {
 					}
 					return value
 				})
-				ctx.DisplayTableCard(m)
-				kit.If(cli.SystemFind(m, "go"), func() {
-					m.Action("filter", mdb.CREATE, STARTALL, STOPALL, cli.BUILD, PUBLISH)
-				}, func() {
-					m.Action(mdb.CREATE, STARTALL, STOPALL)
-				})
-				msg := m.Cmds(SPACE)
-				msg.Table(func(value ice.Maps) {
-					value[mdb.ICON] = nfs.USR_ICONS_VOLCANOS
-					value[mdb.STATUS] = cli.START
-					value[nfs.REPOS] = "https://" + value[nfs.MODULE]
-					switch value[mdb.TYPE] {
-					case SERVER:
-						value[mdb.ICON] = nfs.USR_ICONS_ICEBERGS
-						msg := gdb.Event(m.Spawn(value), DREAM_TABLES)
-						defer m.PushButton(strings.Join(msg.Appendv(ctx.ACTION), ""))
-					case MASTER:
-						msg := gdb.Event(m.Spawn(value), DREAM_TABLES)
-						defer m.PushButton(strings.Join(msg.Appendv(ctx.ACTION), ""))
-					case aaa.LOGIN:
-						value[mdb.TEXT] = kit.JoinWord(value["agent"], value[cli.SYSTEM], value[aaa.IP])
-						defer m.PushButton("grant")
-					default:
-						return
-					}
-					m.Push("", value, kit.Split(mdb.Config(m, mdb.FIELD)+",type,status,module,version,text"))
-				})
+				_dream_more_list(m)
 				stat := map[string]int{}
 				m.Table(func(value ice.Maps) { stat[value[mdb.TYPE]]++; stat[value[mdb.STATUS]]++ })
 				kit.If(stat[cli.START] == stat[WORKER], func() { delete(stat, cli.START) })
 				m.Sort("type,status,name", []string{aaa.LOGIN, WORKER, SERVER, MASTER}, []string{cli.START, cli.STOP, cli.BEGIN}, ice.STR_R).StatusTimeCount(stat)
+				ctx.DisplayTableCard(m)
+				kit.If(cli.SystemFind(m, "go"), func() {
+					m.Action(html.FILTER, mdb.CREATE, STARTALL, STOPALL, cli.BUILD, PUBLISH)
+				}, func() {
+					m.Action(mdb.CREATE, STARTALL, STOPALL)
+				})
 			} else if arg[0] == ctx.ACTION {
 				gdb.Event(m, DREAM_ACTION, arg)
 			} else {

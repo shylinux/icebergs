@@ -1,5 +1,6 @@
 Volcanos(chat.ONIMPORT, {
-	_init: function(can, msg) { can.ui = can.onappend.layout(can), can.onimport._project(can, msg)
+	_init: function(can, msg) {
+		can.ui = can.onappend.layout(can), can.onimport._project(can, msg)
 		can.onappend.style(can, "output card", can.ui.content), can.onmotion.delay(can, function() { can.onimport.layout(can) })
 		can.sup.onimport._field = function(sup, msg) { msg.Table(function(item) { can.onappend._plugin(can, item, {style: html.FLOAT}, function(sub) {}) }) }
 	},

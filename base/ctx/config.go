@@ -53,7 +53,12 @@ func _config_only(v ice.Any, arg ...string) bool {
 func _config_save(m *ice.Message, name string, arg ...string) {
 	data, msg := ice.Map{}, m.Spawn(m.Source())
 	for _, k := range arg {
-		if v := mdb.Confv(msg, k); _config_only(v, mdb.META) && _config_only(kit.Value(v, mdb.META), mdb.SHORT, mdb.FIELD, mdb.FIELDS, mdb.ACTION, mdb.SORT, mdb.TOOLS) {
+		if v := mdb.Confv(msg, k); _config_only(v, mdb.META) && _config_only(kit.Value(v, mdb.META),
+			mdb.IMPORTANT, mdb.EXPIRE, mdb.SHORT, mdb.FIELD, mdb.FIELDS, mdb.ACTION, mdb.SORT, mdb.TOOLS,
+			"regexp", "path", "link",
+			"linux", "darwin", "windows",
+			"source", "script",
+		) {
 			continue
 		} else {
 			data[k] = v

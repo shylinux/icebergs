@@ -61,7 +61,7 @@ func init() {
 						return
 					}
 					m.Push("", value, kit.Split("time,name,icon,repos,binary,module,version"))
-					m.Push(mdb.TEXT, kit.JoinLine(value[nfs.REPOS], value[nfs.BINARY]))
+					m.Push(mdb.TEXT, value[nfs.REPOS])
 					m.Push(ORIGIN, origin)
 					if _, ok := list[value[mdb.NAME]]; ok {
 						m.PushButton(OPEN, PORTAL)

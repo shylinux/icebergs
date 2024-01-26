@@ -1,7 +1,6 @@
 package web
 
 import (
-	"path"
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
@@ -27,25 +26,23 @@ func init() {
 			}},
 			INSTALL: {Hand: func(m *ice.Message, arg ...string) {
 				if !kit.HasPrefixList(arg, ctx.RUN) {
-					if !nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME))) {
-						if strings.HasPrefix(m.Option(mdb.ICON), nfs.REQUIRE) {
-							m.Option(mdb.ICON, strings.TrimSuffix(strings.TrimPrefix(m.Option(mdb.ICON), nfs.REQUIRE), "?pod="+m.Option(mdb.NAME)))
-						}
-						m.OptionDefault(nfs.BINARY, m.Option(ORIGIN)+S(m.Option(mdb.NAME)))
-						m.Cmdy(DREAM, mdb.CREATE, m.OptionSimple(mdb.NAME, mdb.ICON, nfs.REPOS, nfs.BINARY))
-						m.Cmdy(DREAM, cli.START, m.OptionSimple(mdb.NAME))
+					if strings.HasPrefix(m.Option(mdb.ICON), nfs.REQUIRE) {
+						m.Option(mdb.ICON, strings.TrimSuffix(strings.TrimPrefix(m.Option(mdb.ICON), nfs.REQUIRE), "?pod="+m.Option(mdb.NAME)))
 					}
-					defer m.Push("title", m.Option(mdb.NAME))
+					m.OptionDefault(nfs.BINARY, m.Option(ORIGIN)+S(m.Option(mdb.NAME)))
+					m.Cmdy(DREAM, mdb.CREATE, m.OptionSimple(mdb.NAME, mdb.ICON, nfs.REPOS, nfs.BINARY))
+					m.Cmdy(DREAM, cli.START, m.OptionSimple(mdb.NAME))
+					defer m.Push(TITLE, m.Option(mdb.NAME))
 				}
 				ctx.ProcessField(m, CHAT_IFRAME, S(m.Option(mdb.NAME)), arg...)
 			}},
 			OPEN: {Hand: func(m *ice.Message, arg ...string) {
 				ctx.ProcessField(m, CHAT_IFRAME, S(m.Option(mdb.NAME)), arg...)
-				kit.If(!kit.HasPrefixList(arg, ctx.RUN), func() { m.Push("title", m.Option(mdb.NAME)) })
+				kit.If(!kit.HasPrefixList(arg, ctx.RUN), func() { m.Push(TITLE, m.Option(mdb.NAME)) })
 			}},
 			PORTAL: {Hand: func(m *ice.Message, arg ...string) {
 				ctx.ProcessField(m, CHAT_IFRAME, m.Option(ORIGIN)+S(m.Option(mdb.NAME))+C(PORTAL), arg...)
-				kit.If(!kit.HasPrefixList(arg, ctx.RUN), func() { m.Push("title", m.Option(mdb.NAME)) })
+				kit.If(!kit.HasPrefixList(arg, ctx.RUN), func() { m.Push(TITLE, m.Option(mdb.NAME)) })
 			}},
 		}, ctx.ConfAction(ctx.TOOLS, DREAM)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
@@ -64,10 +61,12 @@ func init() {
 					}
 					m.Push("", value, kit.Split("time,name,icon,repos,binary,module,version"))
 					m.Push(mdb.TEXT, kit.JoinLine(value[nfs.REPOS], value[nfs.BINARY]))
-					if m.Push(ORIGIN, origin); !nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, value[mdb.NAME])) {
-						m.PushButton(INSTALL, PORTAL)
-					} else {
+					m.Push(ORIGIN, origin)
+					list := m.Spawn(ice.Maps{ice.MSG_FIELDS: ""}).CmdMap(DREAM, mdb.NAME)
+					if _, ok := list[value[mdb.NAME]]; ok {
 						m.PushButton(OPEN, PORTAL)
+					} else {
+						m.PushButton(INSTALL, PORTAL)
 					}
 				})
 				m.StatusTimeCount(ORIGIN, origin)

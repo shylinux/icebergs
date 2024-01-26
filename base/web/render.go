@@ -24,6 +24,8 @@ const (
 	COOKIE   = "cookie"
 	REQUEST  = "request"
 	RESPONSE = "response"
+	TITLE    = "title"
+	CONTENT  = "content"
 )
 
 func Render(m *ice.Message, cmd string, args ...ice.Any) bool {

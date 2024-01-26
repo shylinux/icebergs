@@ -158,8 +158,8 @@ func RenderVersion(m *ice.Message) string {
 
 const (
 	CHAT    = "chat"
-	XTERM   = "xterm"
 	VIMER   = "vimer"
+	XTERM   = "xterm"
 	DESKTOP = "desktop"
 	UPGRADE = "upgrade"
 	COMPILE = "compile"
@@ -181,9 +181,9 @@ const (
 	WIKI_DRAW         = "web.wiki.draw"
 	WIKI_WORD         = "web.wiki.word"
 	WIKI_PORTAL       = "web.wiki.portal"
+	CHAT_OAUTH_CLIENT = "web.chat.oauth.client"
 	CHAT_HEADER       = "web.chat.header"
 	CHAT_IFRAME       = "web.chat.iframe"
-	CHAT_OAUTH_CLIENT = "web.chat.oauth.client"
 	CHAT_FAVOR        = "web.chat.favor"
 	CHAT_FLOWS        = "web.chat.flows"
 	CHAT_GRANT        = "web.chat.grant"

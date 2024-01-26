@@ -107,7 +107,7 @@ func _autogen_mod(m *ice.Message, file string) (mod string) {
 		host = path.Join(host, "x", path.Base(kit.Path("")))
 	}
 	m.Cmd(nfs.DEFS, file, kit.Format(nfs.Template(m, ice.GO_MOD), host))
-	ReposAddFile(m, "", ice.GO_MOD)
+	// ReposAddFile(m, "", ice.GO_MOD)
 	m.Cmd(nfs.CAT, file, func(line string) {
 		kit.If(strings.HasPrefix(line, nfs.MODULE), func() { mod = kit.Split(line, lex.SP)[1] })
 	})

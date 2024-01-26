@@ -54,54 +54,56 @@ const (
 	DICT = kit.MDB_DICT
 	META = kit.MDB_META
 
+	SHORT = kit.MDB_SHORT
+	FIELD = kit.MDB_FIELD
+	COUNT = kit.MDB_COUNT
+	TOTAL = kit.MDB_TOTAL
+	LIMIT = kit.MDB_LIMIT
+	LEAST = kit.MDB_LEAST
+	STORE = kit.MDB_STORE
+	FSIZE = kit.MDB_FSIZE
+
 	UNIQ    = kit.MDB_UNIQ
 	FOREACH = kit.MDB_FOREACH
 	RANDOMS = kit.MDB_RANDOMS
 )
 const (
 	ID   = kit.MDB_ID
-	KEY  = kit.MDB_KEY
 	TIME = kit.MDB_TIME
 	TYPE = kit.MDB_TYPE
 	NAME = kit.MDB_NAME
 	TEXT = kit.MDB_TEXT
+
+	ICON = kit.MDB_ICON
+	SCAN = kit.MDB_SCAN
+	LINK = kit.MDB_LINK
+	HELP = kit.MDB_HELP
+	FILE = kit.MDB_FILE
 	DATA = kit.MDB_DATA
 	VIEW = kit.MDB_VIEW
-
-	FILE = kit.MDB_FILE
-	LINK = kit.MDB_LINK
-	SCAN = kit.MDB_SCAN
 	SHOW = kit.MDB_SHOW
-	HELP = kit.MDB_HELP
-	ICON = kit.MDB_ICON
 
-	INDEX  = kit.MDB_INDEX
+	KEY    = kit.MDB_KEY
 	VALUE  = kit.MDB_VALUE
+	INDEX  = kit.MDB_INDEX
 	EXTRA  = kit.MDB_EXTRA
 	ALIAS  = kit.MDB_ALIAS
 	EXPIRE = kit.MDB_EXPIRE
 	STATUS = kit.MDB_STATUS
 	STREAM = kit.MDB_STREAM
 
-	SHORT = kit.MDB_SHORT
-	FIELD = kit.MDB_FIELD
-	TOTAL = kit.MDB_TOTAL
-	COUNT = kit.MDB_COUNT
-	LIMIT = kit.MDB_LIMIT
-	LEAST = kit.MDB_LEAST
-	STORE = kit.MDB_STORE
-	FSIZE = kit.MDB_FSIZE
+	TOOLS   = "tools"
+	ICONS   = "icons"
+	UNITS   = "units"
+	ORDER   = "order"
+	VALID   = "valid"
+	ENABLE  = "enable"
+	DISABLE = "disable"
+	EXPIRED = "expired"
 
-	ICONS     = "icons"
-	UNITS     = "units"
-	TOOLS     = "tools"
 	SOURCE    = "_source"
 	TARGET    = "_target"
 	IMPORTANT = "important"
-	VALID     = "valid"
-	EXPIRED   = "expired"
-	DISABLE   = "disable"
-	ENABLE    = "enable"
 )
 const (
 	INPUTS = "inputs"
@@ -130,7 +132,6 @@ const (
 	REPEAT = "repeat"
 	REVERT = "revert"
 	RENAME = "rename"
-	ORDER  = "order"
 	PRUNE  = "prune"
 
 	PAGE = "page"

@@ -18,14 +18,14 @@ const (
 	TRUE    = "true"
 	FALSE   = "false"
 	SUCCESS = "success"
-	FAILURE = "failure"
 	PROCESS = "process"
+	FAILURE = "failure"
 	WINDOWS = "windows"
 
 	HTTPS = "https"
 	HTTP  = "http"
-	MAIL  = "mail"
 	DEMO  = "demo"
+	MAIL  = "mail"
 	HELP  = "help"
 	MAIN  = "main"
 	AUTO  = "auto"
@@ -100,7 +100,6 @@ const ( // DIR
 	PAGE   = "page"
 	PANEL  = "panel"
 	PLUGIN = "plugin"
-	STORY  = "story"
 
 	INDEX_CSS = "index.css"
 	CONST_JS  = "const.js"
@@ -113,22 +112,21 @@ const ( // DIR
 	PLUGIN_STORY    = "/plugin/story/"
 	PLUGIN_TABLE_JS = "/plugin/table.js"
 
-	ISH_PLUGED = ".ish/pluged/"
-
-	USR_LOCAL    = "usr/local/"
-	USR_PORTAL   = "usr/portal/"
+	ISH_PLUGED   = ".ish/pluged/"
 	USR_INSTALL  = "usr/install/"
 	USR_REQUIRE  = "usr/require/"
 	USR_PUBLISH  = "usr/publish/"
-	USR_RELEASE  = "usr/release/"
-	USR_ICEBERGS = "usr/icebergs/"
-	USR_TOOLKITS = "usr/toolkits/"
+	USR_INTSHELL = "usr/intshell/"
 	USR_VOLCANOS = "usr/volcanos/"
 	USR_LEARNING = "usr/learning/"
-	USR_INTSHELL = "usr/intshell/"
+	USR_TOOLKITS = "usr/toolkits/"
+	USR_ICEBERGS = "usr/icebergs/"
+	USR_RELEASE  = "usr/release/"
+	USR_ICONS    = "usr/icons/"
 	USR_PROGRAM  = "usr/program/"
 	USR_GEOAREA  = "usr/geoarea/"
-	USR_ICONS    = "usr/icons/"
+	USR_PORTAL   = "usr/portal/"
+	USR_LOCAL    = "usr/local/"
 
 	USR_LOCAL_GO       = "usr/local/go/"
 	USR_LOCAL_GO_BIN   = "usr/local/go/bin/"
@@ -182,8 +180,8 @@ const ( // DIR
 const ( // MSG
 	MSG_CMDS   = "cmds"
 	MSG_FIELDS = "fields"
-	MSG_METHOD = "method"
 	MSG_SESSID = "sessid"
+	MSG_METHOD = "method"
 	MSG_DEBUG  = "debug"
 
 	MSG_DETAIL = "detail"
@@ -242,8 +240,8 @@ const ( // MSG
 	LOG_TRACEID  = "log.id"
 	MSG_NODETYPE = "node.type"
 
-	TOAST_DURATION = "toast.duration"
 	TABLE_CHECKBOX = "table.checkbox"
+	TOAST_DURATION = "toast.duration"
 	TCP_DOMAIN     = "tcp_domain"
 )
 const ( // RENDER

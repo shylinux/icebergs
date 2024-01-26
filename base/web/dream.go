@@ -45,6 +45,14 @@ func _dream_list(m *ice.Message) *ice.Message {
 			}
 		}
 	})
+	m.RewriteAppend(func(value, key string, index int) string {
+		if key == mdb.TIME {
+			if space, ok := list[m.Appendv(mdb.NAME)[index]]; ok {
+				value = space[mdb.TIME]
+			}
+		}
+		return value
+	})
 	return m
 }
 func _dream_start(m *ice.Message, name string) {

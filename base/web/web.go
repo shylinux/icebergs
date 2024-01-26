@@ -79,8 +79,8 @@ var Index = &ice.Context{Name: WEB, Help: "网络模块"}
 
 func init() {
 	ice.Index.Register(Index, &Frame{},
-		BROAD, SERVE, DREAM, ROUTE, SPACE, STORE,
-		TOKEN, SHARE, CACHE, SPIDE, COUNT, ADMIN, STATS,
+		BROAD, SERVE, SPACE, ROUTE, DREAM, STORE,
+		SHARE, TOKEN, SPIDE, CACHE, ADMIN, STATS, COUNT,
 	)
 }
 

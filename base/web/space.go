@@ -32,7 +32,7 @@ func _space_qrcode(m *ice.Message, dev string) {
 func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 	origin := m.Cmdv(SPIDE, dev, CLIENT_ORIGIN)
 	u := kit.ParseURL(kit.MergeURL2(strings.Replace(origin, HTTP, "ws", 1), PP(SPACE), mdb.TYPE, ice.Info.NodeType, mdb.NAME, name,
-		nfs.MODULE, ice.Info.Make.Module, nfs.VERSION, ice.Info.Make.Versions(), cli.GOOS, runtime.GOOS, cli.GOARCH, runtime.GOARCH, arg))
+		mdb.TIME, ice.Info.Make.Time, nfs.MODULE, ice.Info.Make.Module, nfs.VERSION, ice.Info.Make.Versions(), cli.GOOS, runtime.GOOS, cli.GOARCH, runtime.GOARCH, arg))
 	args := kit.SimpleKV("type,name,host,port", u.Scheme, dev, u.Hostname(), kit.Select(kit.Select(tcp.PORT_443, tcp.PORT_80, u.Scheme == "ws"), u.Port()))
 	gdb.Go(m, func() {
 		once := sync.Once{}
@@ -93,7 +93,7 @@ func _space_fork(m *ice.Message) {
 			safe = true
 		}
 	}
-	args := kit.Simple(mdb.TYPE, m.Option(mdb.TYPE), mdb.NAME, name, mdb.TEXT, text, m.OptionSimple(nfs.MODULE, nfs.VERSION, cli.DAEMON))
+	args := kit.Simple(mdb.TYPE, m.Option(mdb.TYPE), mdb.NAME, name, mdb.TEXT, text, m.OptionSimple(mdb.TIME, nfs.MODULE, nfs.VERSION, cli.DAEMON))
 	args = append(args, aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERROLE, m.Option(ice.MSG_USERROLE))
 	args = append(args, aaa.UA, m.Option(ice.MSG_USERUA), aaa.IP, m.Option(ice.MSG_USERIP))
 	args = _space_agent(m, args...)
@@ -115,7 +115,8 @@ func _space_fork(m *ice.Message) {
 			case SERVER:
 				defer gdb.EventDeferEvent(m, SPACE_OPEN, args)(SPACE_CLOSE, args)
 				m.Go(func() {
-					m.Cmd(SPACE, name, cli.PWD, name, kit.Dict(nfs.MODULE, ice.Info.Make.Module, nfs.VERSION, ice.Info.Make.Versions(), AGENT, "Go-http-client", cli.SYSTEM, runtime.GOOS))
+					m.Cmd(SPACE, name, cli.PWD, name, kit.Dict(
+						mdb.TIME, ice.Info.Make.Time, nfs.MODULE, ice.Info.Make.Module, nfs.VERSION, ice.Info.Make.Versions(), AGENT, "Go-http-client", cli.SYSTEM, runtime.GOOS))
 					m.Cmd(SPACE).Table(func(value ice.Maps) {
 						if kit.IsIn(value[mdb.TYPE], WORKER, SERVER) && value[mdb.NAME] != name {
 							m.Cmd(SPACE, value[mdb.NAME], gdb.EVENT, gdb.HAPPEN, gdb.EVENT, OPS_SERVER_OPEN, args, kit.Dict(ice.MSG_USERROLE, aaa.TECH))
@@ -183,7 +184,7 @@ func _space_exec(m *ice.Message, name string, source, target []string, c *websoc
 	case cli.PWD:
 		mdb.HashModify(m, mdb.HASH, name,
 			aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERROLE, m.Option(ice.MSG_USERROLE),
-			aaa.IP, m.Option(ice.MSG_USERIP), aaa.UA, m.Option(ice.MSG_USERUA), m.OptionSimple(nfs.MODULE, nfs.VERSION, AGENT, cli.SYSTEM),
+			aaa.IP, m.Option(ice.MSG_USERIP), aaa.UA, m.Option(ice.MSG_USERUA), m.OptionSimple(mdb.TIME, nfs.MODULE, nfs.VERSION, AGENT, cli.SYSTEM),
 		)
 		m.Push(mdb.LINK, m.MergePod(kit.Select("", source, -1)))
 	default:

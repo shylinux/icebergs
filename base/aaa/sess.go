@@ -24,8 +24,8 @@ func _sess_check(m *ice.Message, sessid string) {
 }
 
 const (
-	UA = "ua"
 	IP = "ip"
+	UA = "ua"
 )
 const (
 	CHECK  = "check"

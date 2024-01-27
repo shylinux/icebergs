@@ -31,7 +31,7 @@ func _space_qrcode(m *ice.Message, dev string) {
 }
 func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 	origin := m.Cmdv(SPIDE, dev, CLIENT_ORIGIN)
-	u := kit.ParseURL(kit.MergeURL2(strings.Replace(origin, HTTP, "ws", 1), PP(SPACE), mdb.TYPE, ice.Info.NodeType, mdb.NAME, name,
+	u := kit.ParseURL(kit.MergeURL2(strings.Replace(origin, HTTP, "ws", 1), PP(SPACE), mdb.TYPE, ice.Info.NodeType, mdb.NAME, name, mdb.NAME, "",
 		mdb.TIME, ice.Info.Make.Time, nfs.MODULE, ice.Info.Make.Module, nfs.VERSION, ice.Info.Make.Versions(), cli.GOOS, runtime.GOOS, cli.GOARCH, runtime.GOARCH, arg))
 	args := kit.SimpleKV("type,name,host,port", u.Scheme, dev, u.Hostname(), kit.Select(kit.Select(tcp.PORT_443, tcp.PORT_80, u.Scheme == "ws"), u.Port()))
 	gdb.Go(m, func() {
@@ -120,7 +120,7 @@ func _space_fork(m *ice.Message) {
 					m.Cmd(SPACE, name, cli.PWD, name, kit.Dict(
 						mdb.TIME, ice.Info.Make.Time, nfs.MODULE, ice.Info.Make.Module, nfs.VERSION, ice.Info.Make.Versions(), AGENT, "Go-http-client", cli.SYSTEM, runtime.GOOS))
 					m.Cmd(SPACE).Table(func(value ice.Maps) {
-						if kit.IsIn(value[mdb.TYPE], WORKER, SERVER) && value[mdb.NAME] != name {
+						if kit.IsIn(value[mdb.TYPE], WORKER) && value[mdb.NAME] != name {
 							m.Cmd(SPACE, value[mdb.NAME], gdb.EVENT, gdb.HAPPEN, gdb.EVENT, OPS_SERVER_OPEN, args, kit.Dict(ice.MSG_USERROLE, aaa.TECH))
 						}
 					})

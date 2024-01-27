@@ -69,7 +69,7 @@ func _dream_more_list(m *ice.Message) *ice.Message {
 			defer m.PushButton(strings.Join(msg.Appendv(ctx.ACTION), ""))
 		case MASTER:
 			if spide, ok := list[value[mdb.NAME]]; ok {
-				value[mdb.ICON] = spide[mdb.ICON]
+				value[mdb.ICON] = kit.Select(value[mdb.ICON], spide[mdb.ICON])
 			}
 			value[mdb.TEXT] = kit.JoinLine(value[nfs.MODULE], value[mdb.TEXT])
 			msg := gdb.Event(m.Spawn(value), DREAM_TABLES)

@@ -24,11 +24,11 @@ func init() {
 	)
 	Index.MergeCommands(ice.Commands{
 		OFFER: {Help: "邀请", Role: VOID, Meta: kit.Dict(
-			ice.CTX_TRANS, kit.Dict(html.INPUT, kit.Dict("inviter", "邀请人")),
+			ice.CTX_TRANS, kit.Dict(html.INPUT, kit.Dict("from", "发自", "inviter", "邀请人")),
 		), Actions: ice.MergeActions(ice.Actions{
-			mdb.CREATE: {Name: "create email*='shy@shylinux.com' subject content", Help: "邀请", Hand: func(m *ice.Message, arg ...string) {
+			mdb.CREATE: {Name: "create from*=admin email*='shy@shylinux.com' subject content", Help: "邀请", Hand: func(m *ice.Message, arg ...string) {
 				h := mdb.HashCreate(m.Spawn(), m.OptionSimple(EMAIL, SUBJECT, CONTENT), INVITER, m.Option(ice.MSG_USERNAME), mdb.STATUS, INVITE)
-				SendEmail(m.Options("link", m.Cmdx("host", "publish", m.MergePodCmd("", "", mdb.HASH, h))), "", "", "")
+				SendEmail(m.Options("link", m.Cmdx("host", "publish", m.MergePodCmd("", "", mdb.HASH, h))), m.Option(FROM), "", "")
 			}},
 			ACCEPT: {Help: "接受", Role: VOID, Hand: func(m *ice.Message, arg ...string) {
 				if m.Warn(m.Option(mdb.HASH) == "", ice.ErrNotValid, mdb.HASH) {

@@ -1,6 +1,8 @@
 package ice
 
 import (
+	"strings"
+
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -74,6 +76,7 @@ func (m *Message) setDetail(key string, arg ...string) *Message {
 }
 func (m *Message) Optionv(key string, arg ...Any) Any {
 	key = kit.Select(MSG_OPTION, key)
+	key = strings.ReplaceAll(key, "*", "")
 	var unlock func()
 	if len(arg) > 0 {
 		unlock = m.lock.Lock()

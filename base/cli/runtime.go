@@ -266,6 +266,7 @@ func init() {
 			}},
 			"stash": {Help: "清空", Icon: "bi bi-trash", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(SYSTEM, "git", "stash")
+				m.Cmd(SYSTEM, "git", "checkout", ".")
 				m.Go(func() { m.Sleep30ms(ice.QUIT, 1) })
 			}},
 			"logs": {Help: "日志", Hand: func(m *ice.Message, arg ...string) {

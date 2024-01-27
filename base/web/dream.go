@@ -405,6 +405,9 @@ func init() {
 			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icon,repos,binary,template,restart", ctx.TOOLS, kit.Simple(STORE, SPIDE, ROUTE),
 			html.BUTTON, kit.JoinWord(PORTAL, ADMIN, DESKTOP, WIKI_WORD, STATUS, VIMER, XTERM, COMPILE),
 		)), Hand: func(m *ice.Message, arg ...string) {
+			if ice.Info.NodeType == WORKER {
+				return
+			}
 			if len(arg) == 0 {
 				_dream_list(m).RewriteAppend(func(value, key string, index int) string {
 					if key == mdb.ICON {

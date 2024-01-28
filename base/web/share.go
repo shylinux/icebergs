@@ -75,7 +75,7 @@ func init() {
 			mdb.CREATE: {Name: "create type name text", Hand: func(m *ice.Message, arg ...string) {
 				// kit.If(m.Option(mdb.TYPE) == LOGIN, func() { arg = append(arg, mdb.TEXT, tcp.PublishLocalhost(m, m.Option(mdb.TEXT))) })
 				kit.If(m.Option(mdb.TYPE) == LOGIN && m.Option(mdb.TEXT) == "", func() { arg = append(arg, mdb.TEXT, tcp.PublishLocalhost(m, m.Option(ice.MSG_USERWEB))) })
-				mdb.HashCreate(m, arg, SPACE, m.Option(ice.MSG_USERPOD), aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERROLE, m.Option(ice.MSG_USERROLE))
+				mdb.HashCreate(m, m.OptionSimple(mdb.TEXT), arg, SPACE, m.Option(ice.MSG_USERPOD), aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERROLE, m.Option(ice.MSG_USERROLE))
 				m.Option(mdb.LINK, tcp.PublishLocalhost(m, m.MergeLink(P(SHARE, m.Result()))))
 			}},
 			LOGIN: {Help: "登录", Hand: func(m *ice.Message, arg ...string) {

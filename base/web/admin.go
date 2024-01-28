@@ -43,7 +43,14 @@ func init() {
 					func() string { return m.Cmdx(nfs.CAT, kit.Path(os.Args[0], "../../", ice.VAR_LOG_ICE_PORT)) },
 					func() string { return "9020" },
 				)))
-				m.Cmdy(SPIDE, ice.OPS, SPIDE_RAW, http.MethodPost, C(path.Join(arg...)), "pwd", kit.Path(""))
+				args := []string{}
+				for i := range arg {
+					if arg[i] == "--" {
+						arg, args = arg[:i], arg[i+1:]
+						break
+					}
+				}
+				m.Cmdy(SPIDE, ice.OPS, SPIDE_RAW, http.MethodPost, C(path.Join(arg...)), "pwd", kit.Path(""), args)
 			}
 		}},
 	})

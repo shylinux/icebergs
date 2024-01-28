@@ -1,7 +1,6 @@
 package relay
 
 import (
-	"net/url"
 	"os"
 	"path"
 	"strings"
@@ -285,16 +284,6 @@ func (s relay) Pushbin(m *ice.Message, arg ...string) {
 	s.shell(m, m.Template(PUSHBIN_SH), arg...)
 	s.Modify(m, kit.Simple(m.OptionSimple(MACHINE, web.DREAM))...)
 }
-func (s relay) Grant(m *ice.Message, arg ...string) {
-	m.Options(s.Hash.List(m.Spawn(), m.Option(MACHINE)).AppendSimple())
-	ssh.CombinedOutput(m.Message, s.admins(m, kit.JoinWord(web.SHARE,
-		mdb.CREATE, mdb.TYPE, aaa.LOGIN, mdb.TEXT, kit.Format("%q", m.Option("back")))), func(res string) {
-		m.Debug("what %v", url.PathEscape(m.Option("back")))
-		m.Cmd(web.SPIDE, ice.DEV, web.C(web.DREAM, path.Join("text", url.PathEscape(m.Option("back")))))
-		m.ProcessReplace(MergeURL2(m, m.Option("back"), "/share/"+strings.TrimSpace(res)))
-		m.Debug("what %v", res)
-	})
-}
 func (s relay) Install(m *ice.Message, arg ...string) {
 	m.Options(web.DOMAIN, "https://shylinux.com", ice.MSG_USERPOD, m.Option(web.DREAM))
 	m.Options(nfs.SOURCE, kit.Value(kit.UnMarshal(web.AdminCmd(m.Message, cli.RUNTIME)), "make.remote"))
@@ -378,21 +367,4 @@ func (s relay) admin(m *ice.Message, arg ...string) string {
 }
 func (s relay) admins(m *ice.Message, arg ...string) string {
 	return kit.Select(ice.CONTEXTS, m.Option(web.DREAM)) + nfs.PS + s.admin(m, arg...)
-}
-func MergeURL2(m *ice.Message, str string, uri string, arg ...ice.Any) string {
-	raw, err := url.Parse(str)
-	m.Debug("what %v", err)
-	if err != nil {
-		return kit.MergeURL(uri, arg...)
-	}
-	get, err := url.Parse(uri)
-	m.Debug("what %v", err)
-	if err != nil {
-		return kit.MergeURL(str, arg...)
-	}
-	p := get.Path
-	m.Debug("what %v", p)
-	kit.If(!strings.HasPrefix(p, nfs.PS), func() { p = path.Join(raw.Path, get.Path) })
-	kit.If(p == nfs.PS, func() { p = "" })
-	return kit.MergeURL(kit.Select(raw.Scheme, get.Scheme)+"://"+kit.Select(raw.Host, get.Host)+p+"?"+kit.Select(raw.RawQuery, get.RawQuery), arg...)
 }

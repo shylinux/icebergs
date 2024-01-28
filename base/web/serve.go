@@ -134,15 +134,7 @@ func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.Response
 	m.Options(ice.MSG_USERUA, r.Header.Get(html.UserAgent), ice.MSG_USERIP, r.Header.Get(ice.MSG_USERIP))
 	m.Options(ice.MSG_SESSID, kit.Select(m.Option(ice.MSG_SESSID), m.Option(CookieName(m.Option(ice.MSG_USERWEB)))))
 	kit.If(m.Optionv(ice.MSG_CMDS) == nil, func() {
-		kit.If(strings.TrimPrefix(r.URL.Path, key), func(p string) {
-			arg := strings.Split(p, nfs.PS)
-			for i, v := range arg {
-				if p, err := url.PathUnescape(v); err == nil {
-					arg[i] = p
-				}
-			}
-			m.Optionv(ice.MSG_CMDS, arg)
-		})
+		kit.If(strings.TrimPrefix(r.URL.Path, key), func(p string) { m.Optionv(ice.MSG_CMDS, strings.Split(p, nfs.PS)) })
 	})
 	UserHost(m)
 	m.W.Header().Add(strings.ReplaceAll(ice.LOG_TRACEID, ".", "-"), m.Option(ice.LOG_TRACEID))

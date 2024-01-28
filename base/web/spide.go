@@ -47,13 +47,14 @@ func _spide_show(m *ice.Message, name string, arg ...string) {
 	method = kit.Select(http.MethodGet, msg.Append(CLIENT_METHOD), method)
 	uri, arg := arg[0], arg[1:]
 	body, head, arg := _spide_body(m, method, arg...)
-	if m.Option("_break") == ice.TRUE {
+	if m.Option("spide.break") == ice.TRUE {
 		return
 	}
 	if c, ok := body.(io.Closer); ok {
 		defer c.Close()
 	}
-	req, e := http.NewRequest(method, kit.MergeURL2(msg.Append(CLIENT_URL), uri, arg), body)
+	_uri := kit.MergeURL2(msg.Append(CLIENT_URL), uri, arg)
+	req, e := http.NewRequest(method, _uri, body)
 	if m.Warn(e, ice.ErrNotValid, uri) {
 		return
 	}
@@ -146,10 +147,10 @@ func _spide_part(m *ice.Message, arg ...string) (string, io.Reader) {
 			p := arg[i+1][1:]
 			if s, e := nfs.StatFile(m, p); !m.Warn(e, ice.ErrNotValid) {
 				if s.Size() == size && s.ModTime().Before(cache) {
-					m.Option("_break", ice.TRUE)
+					m.Option("spide.break", ice.TRUE)
 					continue
 				} else if s.Size() == size && !nfs.Exists(m.Spawn(kit.Dict(ice.MSG_FILES, nfs.DiskFile)), p) {
-					m.Option("_break", ice.TRUE)
+					m.Option("spide.break", ice.TRUE)
 					continue
 				}
 				m.Logs(nfs.FIND, LOCAL, s.ModTime(), nfs.SIZE, s.Size(), CACHE, cache, nfs.SIZE, size)

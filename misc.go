@@ -159,3 +159,11 @@ func (m *Message) CmdMap(arg ...string) map[string]map[string]string {
 func (m *Message) Toast(content string, arg ...string) { // title duration
 	Info.PushNotice(m, "toast", content, arg)
 }
+func (m *Message) Trans(en string, zh string) string {
+	switch strings.ToLower(kit.Split(m.Option(MSG_LANGUAGE), "_-")[0]) {
+	case "zh":
+		return zh
+	default:
+		return en
+	}
+}

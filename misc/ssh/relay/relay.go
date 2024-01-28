@@ -1,6 +1,8 @@
 package relay
 
 import (
+	"net/http"
+	"net/url"
 	"os"
 	"path"
 	"strings"
@@ -245,7 +247,7 @@ func (s relay) List(m *ice.Message, arg ...string) *ice.Message {
 			return
 		}
 		m.Push(web.LINK, web.HostPort(m.Message, value[tcp.HOST], value[web.PORTAL]))
-		m.PushButton(s.Admin, s.Dream, s.Vimer, s.AdminCmd, s.Upgrade, s.Pushbin, s.Xterm, s.Remove)
+		m.PushButton(s.Admin, s.Dream, s.Vimer, s.AdminCmd, s.Login, s.Upgrade, s.Pushbin, s.Xterm, s.Remove)
 		kit.If(len(arg) > 0, func() { m.PushQRCode(cli.QRCODE, m.Append(web.LINK)) })
 	})
 	_stats := kit.Dict(MEM, kit.FmtSize(stats[MEM_FREE], stats[MEM_TOTAL]), DISK, kit.FmtSize(stats[DISK_USED], stats[DISK_TOTAL]))
@@ -283,6 +285,23 @@ func (s relay) Pushbin(m *ice.Message, arg ...string) {
 	m.Cmd(SSH_TRANS, tcp.SEND)
 	s.shell(m, m.Template(PUSHBIN_SH), arg...)
 	s.Modify(m, kit.Simple(m.OptionSimple(MACHINE, web.DREAM))...)
+}
+func (s relay) Login(m *ice.Message, arg ...string) {
+	if m.Options(s.Hash.List(m.Spawn(), m.Option(MACHINE)).AppendSimple()); m.Option(ice.BACK) == "" {
+		defer web.ToastProcess(m.Message)()
+		ssh.CombinedOutput(m.Message, s.admins(m, kit.JoinCmds(web.CHAT_HEADER, mdb.CREATE,
+			"--", mdb.TYPE, "oauth", mdb.NAME, m.CommandKey(), mdb.ICONS, "usr/icons/ssh.png", mdb.ORDER, "100",
+			web.LINK, m.MergePodCmd("", "", ctx.ACTION, m.ActionKey(), MACHINE, m.Option(MACHINE)),
+		)), func(res string) { m.ProcessHold() })
+		m.ProcessOpen(kit.MergeURL2(m.Option(mdb.LINK), web.C(web.CHAT_HEADER)))
+	} else if m.Option(ice.MSG_METHOD) == http.MethodGet {
+		m.EchoInfoButton(kit.JoinLine(m.Trans("please confirm login", "请确认登录"), m.Option(ice.BACK)), m.ActionKey())
+	} else {
+		defer web.ToastProcess(m.Message)()
+		ssh.CombinedOutput(m.Message, s.admins(m, kit.JoinCmds(web.SHARE, mdb.CREATE, mdb.TYPE, aaa.LOGIN, "--", mdb.TEXT, m.Option(ice.BACK))), func(res string) {
+			m.ProcessReplace(MergeURL2(m, m.Option(ice.BACK), "/share/"+strings.TrimSpace(res)))
+		})
+	}
 }
 func (s relay) Install(m *ice.Message, arg ...string) {
 	m.Options(web.DOMAIN, "https://shylinux.com", ice.MSG_USERPOD, m.Option(web.DREAM))
@@ -367,4 +386,21 @@ func (s relay) admin(m *ice.Message, arg ...string) string {
 }
 func (s relay) admins(m *ice.Message, arg ...string) string {
 	return kit.Select(ice.CONTEXTS, m.Option(web.DREAM)) + nfs.PS + s.admin(m, arg...)
+}
+func MergeURL2(m *ice.Message, str string, uri string, arg ...ice.Any) string {
+	raw, err := url.Parse(str)
+	m.Debug("what %v", err)
+	if err != nil {
+		return kit.MergeURL(uri, arg...)
+	}
+	get, err := url.Parse(uri)
+	m.Debug("what %v", err)
+	if err != nil {
+		return kit.MergeURL(str, arg...)
+	}
+	p := get.Path
+	m.Debug("what %v", p)
+	kit.If(!strings.HasPrefix(p, nfs.PS), func() { p = path.Join(raw.Path, get.Path) })
+	kit.If(p == nfs.PS, func() { p = "" })
+	return kit.MergeURL(kit.Select(raw.Scheme, get.Scheme)+"://"+kit.Select(raw.Host, get.Host)+p+"?"+kit.Select(raw.RawQuery, get.RawQuery), arg...)
 }

@@ -295,7 +295,7 @@ func (s relay) Login(m *ice.Message, arg ...string) {
 		)), func(res string) { m.ProcessHold() })
 		m.ProcessOpen(kit.MergeURL2(m.Option(mdb.LINK), web.C(web.CHAT_HEADER)))
 	} else if m.Option(ice.MSG_METHOD) == http.MethodGet {
-		m.EchoInfoButton(kit.JoinLine(m.Trans("please confirm login", "请确认登录"), m.Option(ice.BACK)), m.ActionKey())
+		m.EchoInfoButton("")
 	} else {
 		defer web.ToastProcess(m.Message)()
 		ssh.CombinedOutput(m.Message, s.admins(m, kit.JoinCmds(web.SHARE, mdb.CREATE, mdb.TYPE, aaa.LOGIN, "--", mdb.TEXT, m.Option(ice.BACK))), func(res string) {

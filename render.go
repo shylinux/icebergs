@@ -212,6 +212,8 @@ func (m *Message) EchoFields(cmd string, arg ...string) *Message {
 `, cmd, kit.Join(arg))
 }
 func (m *Message) EchoInfoButton(info string, arg ...Any) *Message {
+	kit.If(info == "", func() { info = Info.Template(m, m.ActionKey()+".html") })
+	kit.If(len(arg) == 0, func() { arg = append(arg, m.ActionKey()) })
 	m.Display("/plugin/table.js", "style", "form")
 	return m.Echo(html.Format("div", info, "class", "info", "style", kit.JoinCSS())).EchoButton(arg...).Echo(NL).Action(arg...)
 }

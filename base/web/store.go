@@ -49,9 +49,6 @@ func init() {
 				ctx.ProcessField(m, CHAT_IFRAME, m.Option(ORIGIN)+S(m.Option(mdb.NAME))+C(PORTAL), arg...)
 			}},
 		}, ctx.ConfAction(ctx.TOOLS, DREAM)), Hand: func(m *ice.Message, arg ...string) {
-			if ice.Info.NodeType == WORKER {
-				return
-			}
 			if len(arg) == 0 {
 				m.Cmd(SPIDE, arg, kit.Dict(ice.MSG_FIELDS, "time,client.type,client.name,client.origin")).Table(func(value ice.Maps) {
 					if value[CLIENT_TYPE] == nfs.REPOS && value[CLIENT_NAME] != ice.OPS {
@@ -71,7 +68,9 @@ func init() {
 					}
 					m.Push("", value, kit.Split("time,name,icon,repos,binary,module,version"))
 					m.Push(mdb.TEXT, value[nfs.REPOS]).Push(ORIGIN, origin)
-					if _, ok := list[value[mdb.NAME]]; ok {
+					if ice.Info.NodeType == WORKER {
+						m.PushButton(PORTAL)
+					} else if _, ok := list[value[mdb.NAME]]; ok {
 						m.PushButton(OPEN, PORTAL)
 					} else {
 						m.PushButton(INSTALL, PORTAL)

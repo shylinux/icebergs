@@ -79,7 +79,7 @@ func init() {
 			aaa.AVATAR:     {Hand: _header_users},
 			aaa.BACKGROUND: {Hand: _header_users},
 			aaa.THEME: {Hand: func(m *ice.Message, arg ...string) {
-				if tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) {
+				if len(arg) > 0 && arg[0] != ice.AUTO && tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) {
 					cli.TellApp(m, "System Events", `tell appearance preferences to set dark mode to `+
 						kit.Select(ice.TRUE, ice.FALSE, kit.IsIn(kit.Select(html.LIGHT, arg, 0), html.LIGHT, html.WHITE)))
 				}

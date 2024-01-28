@@ -117,8 +117,7 @@ func _space_fork(m *ice.Message) {
 			case SERVER:
 				defer gdb.EventDeferEvent(m, SPACE_OPEN, args)(SPACE_CLOSE, args)
 				m.Go(func() {
-					m.Cmd(SPACE, name, cli.PWD, name, kit.Dict(
-						mdb.TIME, ice.Info.Make.Time, nfs.MODULE, ice.Info.Make.Module, nfs.VERSION, ice.Info.Make.Versions(), AGENT, "Go-http-client", cli.SYSTEM, runtime.GOOS))
+					m.Cmd(SPACE, name, cli.PWD, name, kit.Dict(mdb.TIME, ice.Info.Make.Time, nfs.MODULE, ice.Info.Make.Module, nfs.VERSION, ice.Info.Make.Versions(), AGENT, "Go-http-client", cli.SYSTEM, runtime.GOOS))
 					m.Cmd(SPACE).Table(func(value ice.Maps) {
 						if kit.IsIn(value[mdb.TYPE], WORKER) && value[mdb.NAME] != name {
 							m.Cmd(SPACE, value[mdb.NAME], gdb.EVENT, gdb.HAPPEN, gdb.EVENT, OPS_SERVER_OPEN, args, kit.Dict(ice.MSG_USERROLE, aaa.TECH))

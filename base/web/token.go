@@ -16,7 +16,7 @@ const TOKEN = "token"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		TOKEN: {Help: "令牌桶", Actions: mdb.HashAction(mdb.SHORT, mdb.UNIQ, mdb.EXPIRE, mdb.MONTH)},
+		TOKEN: {Help: "令牌桶", Actions: mdb.ImportantHashAction(mdb.SHORT, mdb.UNIQ, mdb.EXPIRE, mdb.MONTH)},
 	})
 }
 

@@ -125,7 +125,7 @@ func init() {
 					m.Push(ice.CMD, cmd).Push("actions", kit.Join(action))
 				})
 			}},
-		}, mdb.HashAction(mdb.SHORT, mdb.NAME)), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.ImportantHashAction(mdb.SHORT, mdb.NAME)), Hand: func(m *ice.Message, arg ...string) {
 			_role_list(m, kit.Select("", arg, 0), kit.Slice(arg, 1)...).PushAction(mdb.DELETE)
 		}},
 	})

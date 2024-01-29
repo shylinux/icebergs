@@ -2,6 +2,7 @@ package web
 
 import (
 	"net"
+	"runtime"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
@@ -22,14 +23,19 @@ func _broad_send(m *ice.Message, to_host, to_port string, host, port string, arg
 func _broad_serve(m *ice.Message) {
 	m.GoSleep300ms(func() {
 		m.Cmd(tcp.HOST, func(value ice.Maps) {
-			_broad_send(m, "", "", value[aaa.IP], m.Option(tcp.PORT), gdb.EVENT, tcp.LISTEN, mdb.NAME, ice.Info.NodeName, mdb.TYPE, ice.Info.NodeType)
+			_broad_send(m, "", "", value[aaa.IP], m.Option(tcp.PORT),
+				gdb.EVENT, tcp.LISTEN, mdb.NAME, ice.Info.Hostname, mdb.TYPE, ice.Info.NodeType, mdb.TIME, m.Time(),
+				nfs.MODULE, ice.Info.Make.Module, nfs.VERSION, ice.Info.Make.Versions(),
+				"kernel", runtime.GOOS, "arch", runtime.GOARCH,
+			)
 		})
 	})
 	m.Cmd(tcp.SERVER, tcp.LISTEN, mdb.TYPE, tcp.UDP4, mdb.NAME, logs.FileLine(1), m.OptionSimple(tcp.HOST, tcp.PORT), func(from *net.UDPAddr, buf []byte) {
 		msg := m.Spawn(buf).Logs(tcp.RECV, BROAD, string(buf), nfs.FROM, from)
 		if m.Cmd(BROAD, mdb.CREATE, msg.OptionSimple(kit.Simple(msg.Optionv(ice.MSG_OPTION))...)); msg.Option(gdb.EVENT) == tcp.LISTEN {
 			m.Cmds(BROAD, func(value ice.Maps) {
-				_broad_send(m, msg.Option(tcp.HOST), msg.Option(tcp.PORT), value[tcp.HOST], value[tcp.PORT], mdb.TYPE, value[mdb.TYPE], mdb.NAME, value[mdb.NAME])
+				_broad_send(m, msg.Option(tcp.HOST), msg.Option(tcp.PORT), value[tcp.HOST], value[tcp.PORT],
+					mdb.TYPE, value[mdb.TYPE], mdb.NAME, value[mdb.NAME], mdb.TIME, value[mdb.TIME])
 			})
 		}
 	})
@@ -39,7 +45,7 @@ const BROAD = "broad"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		BROAD: {Help: "广播", Actions: ice.MergeActions(ice.Actions{
+		BROAD: {Help: "广播台", Actions: ice.MergeActions(ice.Actions{
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if mdb.IsSearchPreview(m, arg) {
 					host, domain := m.Cmdv(tcp.HOST, aaa.IP), UserWeb(m).Hostname()
@@ -57,6 +63,7 @@ func init() {
 			SERVE:       {Name: "serve port=9020 host", Hand: func(m *ice.Message, arg ...string) { gdb.Go(m, _broad_serve) }},
 			OPEN:        {Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen(Domain(m.Option(tcp.HOST), m.Option(tcp.PORT))) }},
 			tcp.SEND:    {Hand: func(m *ice.Message, arg ...string) { _broad_send(m, "", "", "", "", arg...) }},
-		}, gdb.EventsAction(SERVE_START), mdb.HashAction(mdb.SHORT, "host,port", mdb.FIELD, "time,hash,type,name,host,port", mdb.ACTION, OPEN), mdb.ClearOnExitHashAction())},
+		}, gdb.EventsAction(SERVE_START), mdb.HashAction(mdb.SHORT, "host,port",
+			mdb.FIELD, "time,hash,type,name,host,port,module,version,kernel,arch", mdb.ACTION, OPEN, mdb.SORT, "type,name,host,port"), mdb.ClearOnExitHashAction())},
 	})
 }

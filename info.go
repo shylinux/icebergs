@@ -52,6 +52,7 @@ var Info = struct {
 	Make MakeInfo
 	Hash string
 	Size string
+	Time string
 
 	Username string
 	Hostname string

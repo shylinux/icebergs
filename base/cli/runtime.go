@@ -59,6 +59,7 @@ func _runtime_init(m *ice.Message) {
 	aaa.UserRoot(ice.Pulse, "", ice.Info.Make.Username, aaa.TECH, ice.DEV)
 	aaa.UserRoot(ice.Pulse, "", ice.Info.Username, aaa.ROOT, ice.OPS)
 	m.Conf(RUNTIME, kit.Keys(BOOT, mdb.TIME), m.Time())
+	ice.Info.Time = m.Time()
 	if runtime.GOARCH != MIPSLE {
 		msg := m.Cmd(nfs.DIR, _system_find(m, os.Args[0]), "time,path,size,hash")
 		m.Conf(RUNTIME, kit.Keys(BOOT, mdb.HASH), msg.Append(mdb.HASH))
@@ -340,4 +341,11 @@ func ParseMake(str string) []string {
 		"kernel", kit.Format(kit.Value(res, "host.GOOS")),
 		"arch", kit.Format(kit.Value(res, "host.GOARCH")),
 	)
+}
+func SimpleMake() []string {
+	return []string{
+		"bootTime", ice.Info.Time, "compileTime", ice.Info.Make.Time, "commitTime", ice.Info.Make.When,
+		nfs.MODULE, ice.Info.Make.Module, nfs.VERSION, ice.Info.Make.Versions(),
+		"kernel", runtime.GOOS, "arch", runtime.GOARCH,
+	}
 }

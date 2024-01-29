@@ -162,6 +162,8 @@ func (s relay) Dream(m *ice.Message) {
 	s.foreach(m, func(msg *ice.Message, cmd []string) {
 		m.Push("", kit.Dict(msg.OptionSimple(fields), mdb.TYPE, web.SERVER, mdb.STATUS, web.ONLINE, web.SPACE, ice.CONTEXTS, web.LINK, web.HostPort(m.Message, msg.Option(tcp.HOST), msg.Option(web.PORTAL))), kit.Split(fields))
 		ssh.CombinedOutput(msg.Message, s.admins(msg, web.ROUTE), func(res string) {
+			if strings.HasPrefix(res, "status") {
+			}
 			_msg := m.Spawn().SplitIndex(res)
 			m.Copy(_msg.Table(func(value ice.Maps) {
 				switch _msg.Push(MACHINE, msg.Option(MACHINE)).Push(tcp.HOST, msg.Option(tcp.HOST)); msg.Option(web.PORTAL) {

@@ -68,14 +68,18 @@ func _spide_show(m *ice.Message, name string, arg ...string) {
 	}
 	defer res.Body.Close()
 	m.Cost(cli.STATUS, res.Status, nfs.SIZE, kit.FmtSize(kit.Int64(res.Header.Get(html.ContentLength))), mdb.TYPE, res.Header.Get(html.ContentType))
-	m.Push(mdb.TYPE, STATUS).Push(mdb.NAME, res.StatusCode).Push(mdb.VALUE, res.Status)
+	if action != SPIDE_RAW {
+		m.Push(mdb.TYPE, STATUS).Push(mdb.NAME, res.StatusCode).Push(mdb.VALUE, res.Status)
+	}
 	m.Options(STATUS, res.Status)
 	kit.For(res.Header, func(k string, v []string) {
 		if m.Option(log.DEBUG) == ice.TRUE {
 			m.Logs(RESPONSE, k, v)
 		}
 		m.Options(k, v)
-		m.Push(mdb.TYPE, SPIDE_HEADER).Push(mdb.NAME, k).Push(mdb.VALUE, v[0])
+		if action != SPIDE_RAW {
+			m.Push(mdb.TYPE, SPIDE_HEADER).Push(mdb.NAME, k).Push(mdb.VALUE, v[0])
+		}
 	})
 	mdb.HashSelectUpdate(m, name, func(value ice.Map) {
 		kit.For(res.Cookies(), func(v *http.Cookie) {
@@ -83,7 +87,9 @@ func _spide_show(m *ice.Message, name string, arg ...string) {
 			if m.Option(log.DEBUG) == ice.TRUE {
 				m.Logs(RESPONSE, v.Name, v.Value)
 			}
-			m.Push(mdb.TYPE, COOKIE).Push(mdb.NAME, v.Name).Push(mdb.VALUE, v.Value)
+			if action != SPIDE_RAW {
+				m.Push(mdb.TYPE, COOKIE).Push(mdb.NAME, v.Name).Push(mdb.VALUE, v.Value)
+			}
 		})
 	})
 	if m.Warn(res.StatusCode != http.StatusOK && res.StatusCode != http.StatusCreated, ice.ErrNotValid, uri, cli.STATUS, res.Status) {

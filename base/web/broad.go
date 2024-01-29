@@ -2,6 +2,7 @@ package web
 
 import (
 	"net"
+	"strings"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
@@ -56,19 +57,16 @@ func init() {
 			}},
 			SERVE_START: {Hand: func(m *ice.Message, arg ...string) { gdb.Go(m, _broad_serve) }},
 			SERVE:       {Name: "serve port=9020 host", Hand: func(m *ice.Message, arg ...string) { gdb.Go(m, _broad_serve) }},
-			ADMIN: {Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessOpen(Domain(m.Option(mdb.NAME), m.Option(tcp.PORT)) + C(m.ActionKey()))
-			}},
-			DREAM: {Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessOpen(Domain(m.Option(mdb.NAME), m.Option(tcp.PORT)) + C(m.ActionKey()))
-			}},
-			VIMER: {Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessOpen(Domain(m.Option(mdb.NAME), m.Option(tcp.PORT)) + C(m.ActionKey()))
-			}},
-			OPEN:     {Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen(Domain(m.Option(mdb.NAME), m.Option(tcp.PORT))) }},
-			tcp.SEND: {Hand: func(m *ice.Message, arg ...string) { _broad_send(m, "", "", "", "", arg...) }},
+			ADMIN:       {Hand: func(m *ice.Message, arg ...string) { broadOpen(m) }},
+			DREAM:       {Hand: func(m *ice.Message, arg ...string) { broadOpen(m) }},
+			VIMER:       {Hand: func(m *ice.Message, arg ...string) { broadOpen(m) }},
+			OPEN:        {Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen(Domain(m.Option(mdb.NAME), m.Option(tcp.PORT))) }},
+			tcp.SEND:    {Hand: func(m *ice.Message, arg ...string) { _broad_send(m, "", "", "", "", arg...) }},
 		}, gdb.EventsAction(SERVE_START), mdb.HashAction(mdb.SHORT, "host,port",
 			mdb.FIELD, "time,hash,type,name,host,port,module,version,commitTime,compileTime,bootTime,kernel,arch",
 			mdb.ACTION, "admin,dream,vimer,open", mdb.SORT, "type,name,host,port"), mdb.ClearOnExitHashAction())},
 	})
+}
+func broadOpen(m *ice.Message) {
+	m.ProcessOpen(Domain(strings.TrimSuffix(m.Option(mdb.NAME), ".local")+".local", m.Option(tcp.PORT)) + C(m.ActionKey()))
 }

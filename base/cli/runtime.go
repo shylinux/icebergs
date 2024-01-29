@@ -31,7 +31,7 @@ func _runtime_init(m *ice.Message) {
 	m.Conf(RUNTIME, kit.Keys(HOST, MAXPROCS), runtime.GOMAXPROCS(0))
 	nfs.Exists(m, "/proc/meminfo", func(p string) {
 		kit.For(kit.SplitLine(m.Cmdx(nfs.CAT, p)), func(p string) {
-			switch ls := kit.Split(p, ": "); ls[0] {
+			switch ls := kit.Split(p, ": "); kit.Select("", ls, 0) {
 			case "MemTotal", "MemFree", "MemAvailable", "Buffers", "Cached":
 				m.Conf(RUNTIME, kit.Keys(HOST, ls[0]), kit.FmtSize(kit.Int(ls[1])*1024))
 			}

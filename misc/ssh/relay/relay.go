@@ -2,7 +2,6 @@ package relay
 
 import (
 	"net/http"
-	"net/url"
 	"os"
 	"path"
 	"strings"
@@ -62,7 +61,7 @@ type relay struct {
 	ice.Code
 	checkbox    string `data:"true"`
 	short       string `data:"machine"`
-	field       string `data:"time,machine,username,host,port,portal,dream,module,version,commitTime,compileTime,bootTime,package,shell,kernel,arch,ncpu,vcpu,mhz,mem,disk,network,listen,socket,proc,vendor"`
+	field       string `data:"time,machine,username,host,port,portal,dream,module,version,commitTime,compileTime,bootTime,go,git,package,shell,kernel,arch,ncpu,vcpu,mhz,mem,disk,network,listen,socket,proc,vendor"`
 	statsTables string `name:"statsTables" event:"stats.tables"`
 	create      string `name:"create machine* username* host* port*=22"`
 	stats       string `name:"stats machine" help:"采集" icon:"bi bi-pc-display"`
@@ -73,7 +72,7 @@ type relay struct {
 	publish     string `name:"publish" help:"发布" icon:"bi bi-send-check"`
 	list        string `name:"list machine auto" help:"机器" icon:"relay.png"`
 	install     string `name:"install dream param" help:"安装"`
-	pushbin     string `name:"pushbin dream param" help:"部署"`
+	pushbin     string `name:"pushbin dream param" help:"部署" icon:"bi bi-box-arrow-in-up"`
 	adminCmd    string `name:"adminCmd cmd" help:"命令" icon:"bi bi-terminal-plus"`
 }
 
@@ -111,18 +110,20 @@ func (s relay) Inputs(m *ice.Message, arg ...string) {
 }
 func (s relay) Stats(m *ice.Message) {
 	m.Option(ice.MSG_TITLE, kit.Keys(m.CommandKey(), m.ActionKey()))
-	cmds := []string{
-		PACKAGE, `if yum -h &>/dev/null; then echo yum; elif apk version &>/dev/null; then echo apk; elif apt -h &>/dev/null; then echo apt; fi`,
+	cmds := []string{"go", `go version`, "git", `git version`,
+		PACKAGE, `if yum -h &>/dev/null; then echo yum; elif apk version &>/dev/null; then echo apk; elif opkg -v &>/dev/null; then echo opkg; elif apt -h &>/dev/null; then echo apt; fi`,
 		SHELL, `echo $SHELL`, KERNEL, `uname -s`, ARCH, `uname -m`,
 		NCPU, `cat /proc/cpuinfo | grep "physical id" | sort | uniq | wc -l`,
 		VCPU, `cat /proc/cpuinfo | grep "processor" | sort | uniq | wc -l`,
-		MHZ, `cat /proc/cpuinfo | grep "cpu MHz" | grep -o "[0-9.]\+" | sort -nr | head -n1`,
+		MHZ, `cat /proc/cpuinfo | grep "\(cpu MHz\|BogoMIPS\)" | grep -o "[0-9.]\+" | sort -nr | head -n1`,
 		MEM, `cat /proc/meminfo | head -n2 | grep -o "[0-9.]*"`, DISK, `df | grep "^/dev/"`,
 		NETWORK, `cat /proc/net/dev | grep "eth0\|eth1" | sort -r | head -n1`,
 		LISTEN, `netstat -ntl 2>/dev/null | grep "^tcp" | grep -o ":[0-9]\+" | grep -o "[0-9]\+" | sort -n | uniq`,
-		SOCKET, `netstat -nt 2>/dev/null | grep "^tcp" | wc -l`, PROC, `ps aux | wc -l`,
+		SOCKET, `netstat -nt 2>/dev/null | grep "^tcp" | wc -l`, PROC, `ps aux | wc -l 2>/dev/null`,
 	}
 	trans := map[string]func([]string) string{
+		"go":  func(ls []string) string { return kit.Select("", ls, 2) },
+		"git": func(ls []string) string { return kit.Select("", ls, 2) },
 		MEM: func(ls []string) string {
 			return kit.FmtSize(kit.Int(kit.Select("", ls, 1))*1024, kit.Int(kit.Select("", ls, 0))*1024)
 		},
@@ -131,6 +132,9 @@ func (s relay) Stats(m *ice.Message) {
 		},
 		NETWORK: func(ls []string) string {
 			return kit.FmtSize(kit.Int(kit.Select("", ls, 1)), kit.Int(kit.Select("", ls, 9)))
+		},
+		PROC: func(ls []string) string {
+			return kit.Format(kit.Int(ls[0]))
 		},
 	}
 	machine := m.Option(MACHINE)
@@ -247,7 +251,7 @@ func (s relay) List(m *ice.Message, arg ...string) *ice.Message {
 			return
 		}
 		m.Push(web.LINK, web.HostPort(m.Message, value[tcp.HOST], value[web.PORTAL]))
-		m.PushButton(s.Admin, s.Dream, s.Vimer, s.AdminCmd, s.Login, s.Upgrade, s.Pushbin, s.Xterm, s.Remove)
+		m.PushButton(s.Admin, s.Dream, s.Vimer, s.Login, s.Upgrade, s.Pushbin, s.AdminCmd, s.Xterm, s.Remove)
 		kit.If(len(arg) > 0, func() { m.PushQRCode(cli.QRCODE, m.Append(web.LINK)) })
 	})
 	_stats := kit.Dict(MEM, kit.FmtSize(stats[MEM_FREE], stats[MEM_TOTAL]), DISK, kit.FmtSize(stats[DISK_USED], stats[DISK_TOTAL]))
@@ -299,7 +303,7 @@ func (s relay) Login(m *ice.Message, arg ...string) {
 	} else {
 		defer web.ToastProcess(m.Message)()
 		ssh.CombinedOutput(m.Message, s.admins(m, kit.JoinCmds(web.SHARE, mdb.CREATE, mdb.TYPE, aaa.LOGIN, "--", mdb.TEXT, m.Option(ice.BACK))), func(res string) {
-			m.ProcessReplace(MergeURL2(m, m.Option(ice.BACK), "/share/"+strings.TrimSpace(res)))
+			m.ProcessReplace(kit.MergeURL2(m.Option(ice.BACK), "/share/"+strings.TrimSpace(res)))
 		})
 	}
 }
@@ -316,6 +320,9 @@ func (s relay) Upgrade(m *ice.Message, arg ...string) {
 	m.Option(ice.MSG_TITLE, kit.Keys(m.CommandKey(), m.ActionKey()))
 	if len(arg) == 0 && (m.Option(MACHINE) == "" || strings.Contains(m.Option(MACHINE), ",")) {
 		s.foreach(m, func(msg *ice.Message, cmd []string) {
+			if msg.Option("go") == "" {
+				return
+			}
 			ssh.PushShell(msg.Message, strings.Split(msg.Template(UPGRADE_SH), lex.NL), func(res string) {
 				web.PushNoticeGrow(m.Options(ice.MSG_COUNT, "0", ctx.DISPLAY, web.PLUGIN_XTERM).Message, res)
 			})
@@ -327,6 +334,9 @@ func (s relay) Upgrade(m *ice.Message, arg ...string) {
 func (s relay) Version(m *ice.Message, arg ...string) {
 	m.Option(ice.MSG_TITLE, kit.Keys(m.CommandKey(), m.ActionKey()))
 	s.foreach(m, func(msg *ice.Message, cmd []string) {
+		if msg.Option("go") == "" {
+			return
+		}
 		ssh.PushShell(msg.Message, strings.Split(msg.Template(VERSION_SH), lex.NL), func(res string) {
 			web.PushNoticeGrow(m.Options(ctx.DISPLAY, web.PLUGIN_XTERM).Message, res)
 		})
@@ -386,21 +396,4 @@ func (s relay) admin(m *ice.Message, arg ...string) string {
 }
 func (s relay) admins(m *ice.Message, arg ...string) string {
 	return kit.Select(ice.CONTEXTS, m.Option(web.DREAM)) + nfs.PS + s.admin(m, arg...)
-}
-func MergeURL2(m *ice.Message, str string, uri string, arg ...ice.Any) string {
-	raw, err := url.Parse(str)
-	m.Debug("what %v", err)
-	if err != nil {
-		return kit.MergeURL(uri, arg...)
-	}
-	get, err := url.Parse(uri)
-	m.Debug("what %v", err)
-	if err != nil {
-		return kit.MergeURL(str, arg...)
-	}
-	p := get.Path
-	m.Debug("what %v", p)
-	kit.If(!strings.HasPrefix(p, nfs.PS), func() { p = path.Join(raw.Path, get.Path) })
-	kit.If(p == nfs.PS, func() { p = "" })
-	return kit.MergeURL(kit.Select(raw.Scheme, get.Scheme)+"://"+kit.Select(raw.Host, get.Host)+p+"?"+kit.Select(raw.RawQuery, get.RawQuery), arg...)
 }

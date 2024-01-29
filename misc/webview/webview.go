@@ -1,9 +1,6 @@
 package webview
 
 import (
-	"fmt"
-	"io"
-	"os"
 	"path"
 	"strings"
 
@@ -96,18 +93,9 @@ func Run(cb func(*WebView) ice.Any) {
 	}
 	kit.If(!view.Menu(), func() { view.navigate(ice.Pulse.Cmdv(web.SPIDE, ice.OPS, web.CLIENT_ORIGIN)) })
 }
-
-var log io.WriteCloser
-
-func Log(str string, arg ...ice.Any) { fmt.Fprintln(log, kit.Format(str, arg...), kit.FileLine(2, 3)) }
-
 func RunServe() {
 	kit.Setenv(cli.PATH, "/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin")
-	for _, p := range []string{ice.Info.Make.Path, kit.HomePath(ice.CONTEXTS)} {
-		kit.Chdir(p)
-		log, _ = os.Create(path.Join(p, "webview.log"))
-		Log("what %v", p)
-	}
+	kit.Chdir(kit.HomePath(ice.CONTEXTS))
 	wait := make(chan bool, 1)
 	ice.Pulse.Optionv(web.SERVE_START, func() { wait <- true })
 	go ice.Run(ice.SERVE, ice.START)

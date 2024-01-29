@@ -49,7 +49,7 @@ func init() {
 				auth := smtp.PlainAuth("", msg.Append(USERNAME), msg.Append(PASSWORD), kit.Split(msg.Append(SERVICE), ice.DF)[0])
 				m.Logs(EMAIL, SEND, string(content)).Warn(smtp.SendMail(msg.Append(SERVICE), auth, msg.Append(USERNAME), kit.Split(m.Option(TO)), content))
 			}},
-		}, mdb.DevDataAction("name,service,username,password"), mdb.ImportantHashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,service,username", ice.ACTION, SEND)), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.DevDataAction("name,service,username,password"), mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,service,username", ice.ACTION, SEND)), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) == 0 && m.Length() == 0 {
 				m.EchoInfoButton(ice.Info.Template(m, "email.html"), mdb.CREATE, mdb.DEV_REQUEST)
 			} else if len(arg) == 0 {

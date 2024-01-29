@@ -29,6 +29,14 @@ func _runtime_init(m *ice.Message) {
 	m.Conf(RUNTIME, kit.Keys(HOST, PWD), kit.Path(""))
 	m.Conf(RUNTIME, kit.Keys(HOST, HOME), kit.HomePath(""))
 	m.Conf(RUNTIME, kit.Keys(HOST, MAXPROCS), runtime.GOMAXPROCS(0))
+	nfs.Exists(m, "/proc/meminfo", func(p string) {
+		kit.For(kit.SplitLine(m.Cmdx(nfs.CAT, p)), func(p string) {
+			switch ls := kit.Split(p, ": "); ls[0] {
+			case "MemTotal", "MemFree", "MemAvailable", "Buffers", "Cached":
+				m.Conf(RUNTIME, kit.Keys(HOST, ls[0]), kit.FmtSize(kit.Int(ls[1])*1024))
+			}
+		})
+	})
 	kit.For(ENV_LIST, func(k string) {
 		m.Conf(RUNTIME, kit.Keys(CONF, k), kit.Env(k))
 		kit.If(k == CTX_PID, func() { ice.Info.PidPath = kit.Env(k) })
@@ -50,9 +58,9 @@ func _runtime_init(m *ice.Message) {
 	ice.Info.System = m.Conf(RUNTIME, kit.Keys(HOST, OSID))
 	aaa.UserRoot(ice.Pulse, "", ice.Info.Make.Username, aaa.TECH, ice.DEV)
 	aaa.UserRoot(ice.Pulse, "", ice.Info.Username, aaa.ROOT, ice.OPS)
+	m.Conf(RUNTIME, kit.Keys(BOOT, mdb.TIME), m.Time())
 	if runtime.GOARCH != MIPSLE {
 		msg := m.Cmd(nfs.DIR, _system_find(m, os.Args[0]), "time,path,size,hash")
-		m.Conf(RUNTIME, kit.Keys(BOOT, mdb.TIME), msg.Append(mdb.TIME))
 		m.Conf(RUNTIME, kit.Keys(BOOT, mdb.HASH), msg.Append(mdb.HASH))
 		m.Conf(RUNTIME, kit.Keys(BOOT, nfs.SIZE), msg.Append(nfs.SIZE))
 		m.Conf(RUNTIME, kit.Keys(BOOT, ice.BIN), msg.Append(nfs.PATH))
@@ -70,9 +78,17 @@ func _runtime_hostinfo(m *ice.Message) {
 	m.Push("NumGoroutine", runtime.NumGoroutine())
 	var stats runtime.MemStats
 	runtime.ReadMemStats(&stats)
-	m.Push("Sys", kit.FmtSize(int64(stats.Sys)))
-	m.Push("Alloc", kit.FmtSize(int64(stats.Alloc)))
+	m.Push("Sys", kit.FmtSize(stats.Sys))
+	m.Push("Alloc", kit.FmtSize(stats.Alloc))
+	m.Push("TotalAlloc", kit.FmtSize(stats.TotalAlloc))
 	m.Push("Objects", stats.HeapObjects)
+	m.Push("StackSys", kit.FmtSize(stats.StackSys))
+	m.Push("StackInuse", kit.FmtSize(stats.StackInuse))
+	m.Push("HeapSys", kit.FmtSize(stats.HeapSys))
+	m.Push("HeapInuse", kit.FmtSize(stats.HeapInuse))
+	m.Push("HeapIdle", kit.FmtSize(stats.HeapIdle))
+	m.Push("HeapReleased", kit.FmtSize(stats.HeapReleased))
+
 	m.Push("NumGC", stats.NumGC)
 	m.Push("LastGC", time.Unix(int64(stats.LastGC)/int64(time.Second), int64(stats.LastGC)%int64(time.Second)))
 	m.Push("uptime", kit.Split(m.Cmdx(SYSTEM, "uptime"), mdb.FS)[0])
@@ -249,7 +265,14 @@ func init() {
 				}
 				var stats runtime.MemStats
 				runtime.ReadMemStats(&stats)
-				m.StatusTimeCount(status, "GOMAXPROCS", runtime.GOMAXPROCS(0), "NumGC", stats.NumGC, "Alloc", kit.FmtSize(int64(stats.Alloc)), "Sys", kit.FmtSize(int64(stats.Sys)))
+				m.StatusTimeCount(status, "GOMAXPROCS", runtime.GOMAXPROCS(0), "NumGC", stats.NumGC,
+					"Sys", kit.FmtSize(stats.Sys),
+					"Alloc", kit.FmtSize(stats.Alloc),
+					"StackSys", kit.FmtSize(stats.StackSys),
+					"StackInuse", kit.FmtSize(stats.StackInuse),
+					"HeapSys", kit.FmtSize(stats.HeapSys),
+					"HeapInuse", kit.FmtSize(stats.HeapInuse),
+				)
 				m.Echo("%v", string(buf))
 			}},
 			"upgrade": {Help: "升级", Hand: func(m *ice.Message, arg ...string) {

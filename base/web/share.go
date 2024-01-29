@@ -120,7 +120,7 @@ func init() {
 					RenderMain(m)
 				}
 			}},
-		}, mdb.ImportantHashAction(mdb.FIELD, "time,hash,type,name,text,usernick,username,userrole", mdb.EXPIRE, mdb.DAYS)), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,usernick,username,userrole", mdb.EXPIRE, mdb.DAYS)), Hand: func(m *ice.Message, arg ...string) {
 			if kit.IsIn(m.Option(ice.MSG_USERROLE), aaa.ROOT, aaa.TECH) || len(arg) > 0 && arg[0] != "" {
 				mdb.HashSelect(m, arg...)
 			}

@@ -81,7 +81,7 @@ func _space_fork(m *ice.Message) {
 	} else if kit.IsIn(m.Option(mdb.TYPE), WORKER) && IsLocalHost(m) {
 		text = nfs.USR_LOCAL_WORK + name
 	} else {
-		name, text = kit.Hashs(name), kit.Select(addr, m.Option(mdb.NAME), m.Option(mdb.TEXT))
+		name, text = kit.Hashs(name), kit.Select(addr, m.Option(mdb.TEXT))
 	}
 	safe := false
 	if m.Option(ice.MSG_USERNAME, ""); kit.IsIn(m.Option(mdb.TYPE), WORKER, PORTAL) {

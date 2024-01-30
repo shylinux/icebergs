@@ -29,6 +29,7 @@ func init() {
 			mdb.CREATE: {Name: "create from*=admin email*='shy@shylinux.com' subject content", Help: "邀请", Hand: func(m *ice.Message, arg ...string) {
 				h := mdb.HashCreate(m.Spawn(), m.OptionSimple(EMAIL, SUBJECT, CONTENT), INVITER, m.Option(ice.MSG_USERNAME), mdb.STATUS, INVITE)
 				SendEmail(m.Options("link", m.Cmdx("host", "publish", m.MergePodCmd("", "", mdb.HASH, h))), m.Option(FROM), "", "")
+				m.Cmd("count", mdb.CREATE, OFFER, m.Option(FROM), kit.Dict(ice.LOG_DISABLE, ice.TRUE))
 			}},
 			ACCEPT: {Help: "接受", Role: VOID, Hand: func(m *ice.Message, arg ...string) {
 				if m.Warn(m.Option(mdb.HASH) == "", ice.ErrNotValid, mdb.HASH) {

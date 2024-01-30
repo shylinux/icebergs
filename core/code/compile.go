@@ -124,6 +124,7 @@ func init() {
 				m.Logs(nfs.SAVE, nfs.TARGET, file, nfs.SOURCE, main)
 				m.Cmdy(nfs.DIR, file, "time,path,size,hash,link")
 				kit.If(!m.IsCliUA() && strings.Contains(file, ice.ICE), func() { m.Cmdy(PUBLISH, ice.CONTEXTS, ice.APP) })
+				web.Count(m, "", file)
 			}
 		}},
 	})

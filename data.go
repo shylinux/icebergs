@@ -8,7 +8,13 @@ import (
 	"shylinux.com/x/toolkits/task"
 )
 
-func (m *Message) ActionKey() string           { return strings.TrimPrefix(strings.TrimSuffix(m._sub, PS), PS) }
+func (m *Message) ActionKey() string {
+	if action := strings.TrimPrefix(strings.TrimSuffix(m._sub, PS), PS); kit.IsIn(action, LIST, SELECT) {
+		return ""
+	} else {
+		return action
+	}
+}
 func (m *Message) CommandKey() string          { return strings.TrimPrefix(strings.TrimSuffix(m._key, PS), PS) }
 func (m *Message) PrefixKey() string           { return m.Prefix(m.CommandKey()) }
 func (m *Message) Prefix(arg ...string) string { return m.Target().Prefix(arg...) }

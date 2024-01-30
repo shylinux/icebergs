@@ -26,7 +26,7 @@ func UserWeb(m Message) *url.URL {
 func UserHost(m *ice.Message) string {
 	if p := m.Option(ice.MSG_USERHOST); p != "" {
 		return p
-	} else if u := UserWeb(m); strings.Contains(u.Host, tcp.LOCALHOST) {
+	} else if u := UserWeb(m); kit.HasSuffix(u.Hostname(), tcp.LOCALHOST, ".local") {
 		return m.Option(ice.MSG_USERHOST, tcp.PublishLocalhost(m, u.Scheme+"://"+u.Host))
 	} else {
 		return m.Option(ice.MSG_USERHOST, u.Scheme+"://"+u.Host)

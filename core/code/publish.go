@@ -78,6 +78,7 @@ const PUBLISH = "publish"
 func init() {
 	web.Index.MergeCommands(ice.Commands{
 		web.PP(ice.PUBLISH): {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
+			web.Count(m, PUBLISH, path.Join(arg...))
 			web.ShareLocalFile(m, ice.USR_PUBLISH, path.Join(arg...))
 		}},
 	})

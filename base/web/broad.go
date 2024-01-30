@@ -60,11 +60,15 @@ func init() {
 			ADMIN:       {Hand: func(m *ice.Message, arg ...string) { broadOpen(m) }},
 			DREAM:       {Hand: func(m *ice.Message, arg ...string) { broadOpen(m) }},
 			VIMER:       {Hand: func(m *ice.Message, arg ...string) { broadOpen(m) }},
-			OPEN:        {Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen(Domain(m.Option(mdb.NAME), m.Option(tcp.PORT))) }},
-			tcp.SEND:    {Hand: func(m *ice.Message, arg ...string) { _broad_send(m, "", "", "", "", arg...) }},
+			SPIDE: {Name: "spide name type=repos", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(SPIDE, mdb.CREATE,
+					m.OptionSimple(mdb.NAME), ORIGIN, "http://"+m.Option(mdb.NAME)+":"+m.Option(tcp.PORT))
+			}},
+			OPEN:     {Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen(Domain(m.Option(mdb.NAME), m.Option(tcp.PORT))) }},
+			tcp.SEND: {Hand: func(m *ice.Message, arg ...string) { _broad_send(m, "", "", "", "", arg...) }},
 		}, gdb.EventsAction(SERVE_START), mdb.HashAction(mdb.SHORT, "host,port",
 			mdb.FIELD, "time,hash,type,name,host,port,module,version,commitTime,compileTime,bootTime,kernel,arch",
-			mdb.ACTION, "admin,dream,vimer,open", mdb.SORT, "type,name,host,port"), mdb.ClearOnExitHashAction())},
+			mdb.ACTION, "admin,dream,vimer,spide,open", mdb.SORT, "type,name,host,port"), mdb.ClearOnExitHashAction())},
 	})
 }
 func broadOpen(m *ice.Message) {

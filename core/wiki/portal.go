@@ -88,6 +88,7 @@ func init() {
 				kit.If(path.Join(arg...) == "commands", func() { _portal_commands(m, arg...) })
 				m.Push(NAV, m.Cmdx(WORD, path.Join(nfs.USR_LEARNING_PORTAL, path.Join(arg...), INDEX_SHY)))
 			}
+			web.Count(m, "", path.Join(arg...))
 			m.Display("")
 		}},
 	})

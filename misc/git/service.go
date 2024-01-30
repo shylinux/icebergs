@@ -52,6 +52,7 @@ func _service_repos(m *ice.Message, arg ...string) error {
 	} else {
 		web.RenderType(m.W, "", kit.Format("application/x-git-%s-result", service))
 	}
+	web.Count(m, service, repos)
 	if mdb.Conf(m, web.CODE_GIT_SERVICE, kit.Keym(ice.CMD)) == GIT {
 		return _service_repos0(m, arg...)
 	}

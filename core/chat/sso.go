@@ -24,6 +24,7 @@ func init() {
 			}
 			m.Cmdx(web.SPACE, m.Option(web.SPACE), aaa.USER, mdb.CREATE, m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME)).AppendSimple(aaa.USERNICK, aaa.USERNAME, aaa.USERROLE, aaa.USERZONE, aaa.AVATAR, aaa.AVATAR_URL, aaa.BACKGROUND, aaa.LANGUAGE))
 			m.RenderRedirect(kit.MergeURL2(m.Option(cli.BACK), web.P(web.SHARE, m.Cmdx(web.SPACE, m.Option(web.SPACE), web.SHARE, mdb.CREATE, mdb.TYPE, web.LOGIN, mdb.TEXT, m.Option(cli.BACK)))))
+			web.Count(m, SSO, m.Option(web.SPACE))
 		}},
 	})
 }

@@ -92,10 +92,11 @@ func init() {
 				}
 			}},
 			PUBLISH: {Hand: func(m *ice.Message, arg ...string) {
-				if strings.Contains(arg[0], LOCALHOST) {
-					arg[0] = strings.Replace(arg[0], LOCALHOST, _host_domain(m), 1)
-				} else if strings.Contains(arg[0], "127.0.0.1") {
-					arg[0] = strings.Replace(arg[0], "127.0.0.1", _host_domain(m), 1)
+				for _, p := range []string{LOCALHOST, "127.0.0.1", strings.ToLower(ice.Info.Hostname)} {
+					if strings.Contains(arg[0], p) {
+						arg[0] = strings.Replace(arg[0], p, _host_domain(m), 1)
+						break
+					}
 				}
 				m.Echo(arg[0])
 			}},

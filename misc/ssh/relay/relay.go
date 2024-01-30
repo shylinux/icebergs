@@ -116,7 +116,7 @@ func (s relay) Stats(m *ice.Message) {
 		NCPU, `cat /proc/cpuinfo | grep "physical id" | sort | uniq | wc -l`,
 		VCPU, `cat /proc/cpuinfo | grep "processor" | sort | uniq | wc -l`,
 		MHZ, `cat /proc/cpuinfo | grep "\(cpu MHz\|BogoMIPS\)" | grep -o "[0-9.]\+" | sort -nr | head -n1`,
-		MEM, `cat /proc/meminfo | head -n2 | grep -o "[0-9.]*"`, DISK, `df | grep "^/dev/"`,
+		MEM, `cat /proc/meminfo | head -n3 | grep -o "[0-9.]*"`, DISK, `df | grep "^/dev/"`,
 		NETWORK, `cat /proc/net/dev | grep "eth0\|eth1" | sort -r | head -n1`,
 		LISTEN, `netstat -ntl 2>/dev/null | grep "^tcp" | grep -o ":[0-9]\+" | grep -o "[0-9]\+" | sort -n | uniq`,
 		SOCKET, `netstat -nt 2>/dev/null | grep "^tcp" | wc -l`, PROC, `ps aux | wc -l 2>/dev/null`,
@@ -125,7 +125,7 @@ func (s relay) Stats(m *ice.Message) {
 		"go":  func(ls []string) string { return kit.Select("", ls, 2) },
 		"git": func(ls []string) string { return kit.Select("", ls, 2) },
 		MEM: func(ls []string) string {
-			return kit.FmtSize(kit.Int(kit.Select("", ls, 1))*1024, kit.Int(kit.Select("", ls, 0))*1024)
+			return kit.FmtSize(kit.Int(kit.Select("", ls, 2))*1024, kit.Int(kit.Select("", ls, 0))*1024)
 		},
 		DISK: func(ls []string) string {
 			return kit.FmtSize(kit.Int(kit.Select("", ls, 2))*1024, kit.Int(kit.Select("", ls, 1))*1024)

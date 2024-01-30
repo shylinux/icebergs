@@ -16,7 +16,7 @@ import (
 )
 
 func _broad_send(m *ice.Message, to_host, to_port string, host, port string, arg ...string) {
-	m.Cmd(tcp.CLIENT, tcp.DIAL, mdb.TYPE, tcp.UDP4, tcp.HOST, to_host, tcp.PORT, kit.Select("9020", to_port), func(s *net.UDPConn) {
+	m.Cmd(tcp.CLIENT, tcp.DIAL, mdb.TYPE, tcp.UDP4, tcp.HOST, to_host, tcp.PORT, kit.Select(tcp.PORT_9020, to_port), func(s *net.UDPConn) {
 		msg := m.Spawn(kit.Dict(tcp.HOST, host, tcp.PORT, port, arg))
 		msg.Logs(tcp.SEND, BROAD, msg.FormatsMeta(nil), nfs.TO, tcp.HostPort(to_host, to_port)).FormatsMeta(s)
 	})
@@ -28,7 +28,13 @@ func _broad_serve(m *ice.Message) {
 		})
 	})
 	m.Cmd(tcp.SERVER, tcp.LISTEN, mdb.TYPE, tcp.UDP4, mdb.NAME, logs.FileLine(1), m.OptionSimple(tcp.HOST, tcp.PORT), func(from *net.UDPAddr, buf []byte) {
+		if m.Warn(len(buf) > 1024, "broad recv buf size too large") {
+			return
+		}
 		msg := m.Spawn(buf).Logs(tcp.RECV, BROAD, string(buf), nfs.FROM, from)
+		if strings.HasPrefix(msg.Option(tcp.HOST), "169.254") {
+			return
+		}
 		if m.Cmd(BROAD, mdb.CREATE, msg.OptionSimple(kit.Simple(msg.Optionv(ice.MSG_OPTION))...)); msg.Option(gdb.EVENT) == tcp.LISTEN {
 			m.Cmds(BROAD, func(value ice.Maps) {
 				_broad_send(m, msg.Option(tcp.HOST), msg.Option(tcp.PORT), value[tcp.HOST], value[tcp.PORT], kit.Simple(value)...)
@@ -42,6 +48,7 @@ const BROAD = "broad"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		BROAD: {Help: "广播台", Actions: ice.MergeActions(ice.Actions{
+			SERVE_START: {Hand: func(m *ice.Message, arg ...string) { gdb.Go(m, _broad_serve) }},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if mdb.IsSearchPreview(m, arg) {
 					host, domain := m.Cmdv(tcp.HOST, aaa.IP), UserWeb(m).Hostname()
@@ -55,14 +62,12 @@ func init() {
 					})
 				}
 			}},
-			SERVE_START: {Hand: func(m *ice.Message, arg ...string) { gdb.Go(m, _broad_serve) }},
-			SERVE:       {Name: "serve port=9020 host", Hand: func(m *ice.Message, arg ...string) { gdb.Go(m, _broad_serve) }},
-			ADMIN:       {Hand: func(m *ice.Message, arg ...string) { broadOpen(m) }},
-			DREAM:       {Hand: func(m *ice.Message, arg ...string) { broadOpen(m) }},
-			VIMER:       {Hand: func(m *ice.Message, arg ...string) { broadOpen(m) }},
+			SERVE: {Name: "serve port=9020 host", Hand: func(m *ice.Message, arg ...string) { gdb.Go(m, _broad_serve) }},
+			ADMIN: {Hand: func(m *ice.Message, arg ...string) { broadOpen(m) }},
+			DREAM: {Hand: func(m *ice.Message, arg ...string) { broadOpen(m) }},
+			VIMER: {Hand: func(m *ice.Message, arg ...string) { broadOpen(m) }},
 			SPIDE: {Name: "spide name type=repos", Icon: "bi bi-house-add", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(SPIDE, mdb.CREATE,
-					m.OptionSimple(mdb.NAME), ORIGIN, "http://"+m.Option(mdb.NAME)+":"+m.Option(tcp.PORT))
+				m.Cmd(SPIDE, mdb.CREATE, m.OptionSimple(mdb.NAME), ORIGIN, Domain(m.Option(mdb.NAME), m.Option(tcp.PORT)))
 			}},
 			OPEN:     {Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen(Domain(m.Option(mdb.NAME), m.Option(tcp.PORT))) }},
 			tcp.SEND: {Hand: func(m *ice.Message, arg ...string) { _broad_send(m, "", "", "", "", arg...) }},
@@ -72,5 +77,5 @@ func init() {
 	})
 }
 func broadOpen(m *ice.Message) {
-	m.ProcessOpen(Domain(strings.TrimSuffix(m.Option(mdb.NAME), ".local")+".local", m.Option(tcp.PORT)) + C(m.ActionKey()))
+	m.ProcessOpen(Domain(m.Option(mdb.NAME), m.Option(tcp.PORT)) + C(m.ActionKey()))
 }

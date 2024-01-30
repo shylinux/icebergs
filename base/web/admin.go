@@ -7,9 +7,11 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
+	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/tcp"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -41,7 +43,7 @@ func init() {
 					func() string { return m.Cmdx(nfs.CAT, ice.VAR_LOG_ICE_PORT) },
 					func() string { return m.Cmdx(nfs.CAT, kit.Path(os.Args[0], "../", ice.VAR_LOG_ICE_PORT)) },
 					func() string { return m.Cmdx(nfs.CAT, kit.Path(os.Args[0], "../../", ice.VAR_LOG_ICE_PORT)) },
-					func() string { return "9020" },
+					func() string { return tcp.PORT_9020 },
 				)))
 				args := []string{}
 				for i := range arg {
@@ -50,7 +52,7 @@ func init() {
 						break
 					}
 				}
-				m.Cmdy(SPIDE, ice.OPS, SPIDE_RAW, http.MethodPost, C(path.Join(arg...)), "pwd", kit.Path(""), args)
+				m.Cmdy(SPIDE, ice.OPS, SPIDE_RAW, http.MethodPost, C(path.Join(arg...)), cli.PWD, kit.Path(""), args)
 			}
 		}},
 	})

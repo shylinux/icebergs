@@ -405,9 +405,6 @@ func init() {
 			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icon,repos,binary,template,restart", ctx.TOOLS, kit.Simple(STORE, SPIDE, ROUTE),
 			html.BUTTON, kit.JoinWord(PORTAL, ADMIN, DESKTOP, WIKI_WORD, STATUS, VIMER, XTERM, COMPILE),
 		)), Hand: func(m *ice.Message, arg ...string) {
-			if ice.Info.NodeType == WORKER {
-				return
-			}
 			if len(arg) == 0 {
 				_dream_list(m).RewriteAppend(func(value, key string, index int) string {
 					if key == mdb.ICON {
@@ -429,6 +426,9 @@ func init() {
 				kit.If(stat[cli.START] == stat[WORKER], func() { delete(stat, cli.START) })
 				m.Sort("type,status,name", []string{aaa.LOGIN, WORKER, SERVER, MASTER}, []string{cli.START, cli.STOP, cli.BEGIN}, ice.STR_R).StatusTimeCount(stat)
 				ctx.DisplayTableCard(m)
+				if ice.Info.NodeType == WORKER {
+					return
+				}
 				kit.If(cli.SystemFind(m, "go"), func() {
 					m.Action(html.FILTER, mdb.CREATE, STARTALL, STOPALL, cli.BUILD, PUBLISH)
 				}, func() {

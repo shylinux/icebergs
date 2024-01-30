@@ -24,7 +24,7 @@ func _broad_send(m *ice.Message, to_host, to_port string, host, port string, arg
 func _broad_serve(m *ice.Message) {
 	m.GoSleep300ms(func() {
 		m.Cmd(tcp.HOST, func(value ice.Maps) {
-			_broad_send(m, "", "", value[aaa.IP], m.Option(tcp.PORT), kit.Simple(gdb.EVENT, tcp.LISTEN, mdb.NAME, ice.Info.Hostname, mdb.TYPE, ice.Info.NodeType, mdb.TIME, m.Time(), cli.SimpleMake())...)
+			_broad_send(m, "", "", value[aaa.IP], m.Option(tcp.PORT), kit.Simple(gdb.EVENT, tcp.LISTEN, mdb.NAME, ice.Info.NodeName, mdb.TYPE, ice.Info.NodeType, mdb.TIME, m.Time(), cli.SimpleMake())...)
 		})
 	})
 	m.Cmd(tcp.SERVER, tcp.LISTEN, mdb.TYPE, tcp.UDP4, mdb.NAME, logs.FileLine(1), m.OptionSimple(tcp.HOST, tcp.PORT), func(from *net.UDPAddr, buf []byte) {
@@ -60,7 +60,7 @@ func init() {
 			ADMIN:       {Hand: func(m *ice.Message, arg ...string) { broadOpen(m) }},
 			DREAM:       {Hand: func(m *ice.Message, arg ...string) { broadOpen(m) }},
 			VIMER:       {Hand: func(m *ice.Message, arg ...string) { broadOpen(m) }},
-			SPIDE: {Name: "spide name type=repos", Hand: func(m *ice.Message, arg ...string) {
+			SPIDE: {Name: "spide name type=repos", Icon: "bi bi-house-add", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(SPIDE, mdb.CREATE,
 					m.OptionSimple(mdb.NAME), ORIGIN, "http://"+m.Option(mdb.NAME)+":"+m.Option(tcp.PORT))
 			}},

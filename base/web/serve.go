@@ -5,7 +5,6 @@ import (
 	"net/url"
 	"path"
 	"regexp"
-	"runtime"
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
@@ -28,12 +27,12 @@ func _serve_address(m *ice.Message) string { return Domain(tcp.LOCALHOST, m.Opti
 func _serve_start(m *ice.Message) {
 	kit.If(m.Option(aaa.USERNAME), func() { aaa.UserRoot(m, m.Option(aaa.USERNICK), m.Option(aaa.USERNAME)) })
 	kit.If(m.Option(tcp.PORT) == tcp.RANDOM, func() { m.Option(tcp.PORT, m.Cmdx(tcp.PORT, aaa.RIGHT)) })
-	kit.If(runtime.GOOS == cli.WINDOWS || m.Cmdx(cli.SYSTEM, "lsof", "-i", ":"+m.Option(tcp.PORT)) != "", func() {
-		m.Go(func() { m.Cmd(SPIDE, ice.OPS, _serve_address(m)+"/exit", ice.Maps{CLIENT_TIMEOUT: "30ms"}) }).Sleep300ms()
-	})
 	cli.NodeInfo(m, kit.Select(kit.Split(ice.Info.Hostname, ".")[0], m.Option(tcp.NODENAME)), SERVER)
-	m.Start("", m.OptionSimple(tcp.HOST, tcp.PORT)...)
+	m.Go(func() {
+		m.Cmd(SPIDE, ice.OPS, _serve_address(m)+"/exit", ice.Maps{CLIENT_TIMEOUT: "30ms", ice.LOG_DISABLE: ice.TRUE})
+	}).Sleep300ms()
 	m.Cmd(nfs.SAVE, ice.VAR_LOG_ICE_PORT, m.Option(tcp.PORT))
+	m.Start("", m.OptionSimple(tcp.HOST, tcp.PORT)...)
 	kit.For(kit.Split(m.Option(ice.DEV)), func(dev string) {
 		if m.Cmds(SPIDE, dev).Append(TOKEN) == "" {
 			m.Sleep30ms(SPACE, tcp.DIAL, ice.DEV, dev, mdb.NAME, ice.Info.NodeName, m.OptionSimple(TOKEN))

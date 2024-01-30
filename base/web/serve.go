@@ -35,7 +35,9 @@ func _serve_start(m *ice.Message) {
 	m.Start("", m.OptionSimple(tcp.HOST, tcp.PORT)...)
 	m.Cmd(nfs.SAVE, ice.VAR_LOG_ICE_PORT, m.Option(tcp.PORT))
 	kit.For(kit.Split(m.Option(ice.DEV)), func(dev string) {
-		m.Sleep30ms(SPACE, tcp.DIAL, ice.DEV, dev, mdb.NAME, ice.Info.NodeName, m.OptionSimple(TOKEN))
+		if m.Cmds(SPIDE, dev).Append(TOKEN) == "" {
+			m.Sleep30ms(SPACE, tcp.DIAL, ice.DEV, dev, mdb.NAME, ice.Info.NodeName, m.OptionSimple(TOKEN))
+		}
 	})
 }
 func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {

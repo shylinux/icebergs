@@ -14,6 +14,7 @@ import (
 	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
@@ -45,11 +46,15 @@ func _publish_file(m *ice.Message, file string, arg ...string) string {
 }
 func _publish_contexts(m *ice.Message, arg ...string) {
 	m.Options(nfs.DIR_ROOT, "").OptionDefault(ice.MSG_USERNAME, "demo")
+	m.Option("tcp_localhost", strings.ToLower(ice.Info.Hostname))
+	host := tcp.PublishLocalhost(m, web.UserHost(m))
 	for _, k := range kit.Default(arg, ice.MISC) {
-		m.OptionDefault(web.DOMAIN, web.UserHost(m))
+		m.OptionDefault(web.DOMAIN, host)
 		m.Options(cli.CTX_ENV, kit.Select("", lex.SP+kit.JoinKV(mdb.EQ, lex.SP, cli.CTX_POD, m.Option(ice.MSG_USERPOD)), m.Option(ice.MSG_USERPOD) != ""))
-		kit.If(m.Option("ctx_dev_ip"), func(p string) { m.Option(cli.CTX_ENV, m.Option(cli.CTX_DEV)+" "+"ctx_dev_ip="+p) })
-		m.Option(ice.TCP_DOMAIN, kit.ParseURL(web.UserHost(m)).Hostname())
+		kit.If(m.Option("ctx_dev_ip"), func(p string) {
+			m.Option(cli.CTX_ENV, m.Option(cli.CTX_DEV)+" "+"ctx_dev_ip="+tcp.PublishLocalhost(m, p))
+		})
+		m.Option(ice.TCP_DOMAIN, kit.ParseURL(host).Hostname())
 		switch k {
 		case INSTALL:
 			m.Option("format", "raw")

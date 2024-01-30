@@ -319,13 +319,13 @@ func init() {
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				conf := mdb.Confm(m, cli.RUNTIME, cli.CONF)
 				dev := kit.Select("https://2021.shylinux.com", ice.Info.Make.Domain, conf[cli.CTX_DEV])
-				m.Cmd("", mdb.CREATE, ice.SHY, kit.Select("https://shylinux.com", conf[cli.CTX_SHY]), nfs.REPOS)
-				m.Cmd("", mdb.CREATE, ice.DEV, dev, nfs.REPOS)
-				m.Cmd("", mdb.CREATE, ice.DEV_IP, kit.Select(dev, os.Getenv("ctx_dev_ip")))
-				m.Cmd("", mdb.CREATE, ice.OPS, kit.Select("http://localhost:9020", conf[cli.CTX_OPS]))
-				m.Cmd("", mdb.CREATE, ice.DEMO, kit.Select("http://localhost:20000", conf[cli.CTX_DEMO]))
-				m.Cmd("", mdb.CREATE, ice.MAIL, kit.Select("https://mail.shylinux.com", conf[cli.CTX_MAIL]))
-				m.Cmd("", mdb.CREATE, nfs.REPOS, kit.Select("https://repos.shylinux.com", conf[cli.CTX_HUB]))
+				m.Cmd("", mdb.CREATE, ice.SHY, kit.Select("https://shylinux.com", conf[cli.CTX_SHY]), nfs.REPOS, nfs.USR_ICONS_CONTEXTS)
+				m.Cmd("", mdb.CREATE, ice.DEV, dev, nfs.REPOS, nfs.USR_ICONS_ICEBERGS)
+				m.Cmd("", mdb.CREATE, ice.DEV_IP, kit.Select(dev, os.Getenv("ctx_dev_ip")), "", nfs.USR_ICONS_ICEBERGS)
+				m.Cmd("", mdb.CREATE, ice.OPS, kit.Select("http://localhost:9020", conf[cli.CTX_OPS]), "", nfs.USR_ICONS_VOLCANOS)
+				m.Cmd("", mdb.CREATE, ice.DEMO, kit.Select("http://localhost:20000", conf[cli.CTX_DEMO]), "", nfs.USR_ICONS_VOLCANOS)
+				m.Cmd("", mdb.CREATE, ice.MAIL, kit.Select("https://mail.shylinux.com", conf[cli.CTX_MAIL]), "", "usr/icons/Mail.png")
+				m.Cmd("", mdb.CREATE, nfs.REPOS, kit.Select("https://repos.shylinux.com", conf[cli.CTX_HUB]), "", "usr/icons/gitea.png")
 				mdb.HashSelects(m.Spawn()).Table(func(value ice.Maps) {
 					kit.If(value[TOKEN], func() { m.Cmd(SPACE, tcp.DIAL, ice.DEV, value[CLIENT_NAME], TOKEN, value[TOKEN], mdb.TYPE, SERVER) })
 				})
@@ -383,7 +383,7 @@ func init() {
 				m.Cmd(SPACE, tcp.DIAL, ice.DEV, m.Option(CLIENT_NAME), m.OptionSimple(TOKEN))
 				m.Sleep300ms()
 			}},
-		}, DevTokenAction(CLIENT_NAME, CLIENT_URL), mdb.HashAction(mdb.SHORT, CLIENT_NAME, mdb.FIELD, "time,client.name,client.url,client.type,token,icon")), Hand: func(m *ice.Message, arg ...string) {
+		}, DevTokenAction(CLIENT_NAME, CLIENT_URL), mdb.HashAction(mdb.SHORT, CLIENT_NAME, mdb.FIELD, "time,icon,client.name,client.url,client.type,token")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 || arg[0] == "" || (len(arg) > 3 && arg[3] == "") {
 				list := m.CmdMap(SPACE, mdb.NAME)
 				mdb.HashSelect(m, kit.Slice(arg, 0, 1)...).Sort("client.type,client.name", []string{nfs.REPOS, ""})

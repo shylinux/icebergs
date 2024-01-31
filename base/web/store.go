@@ -38,15 +38,13 @@ func init() {
 			OPEN: {Hand: func(m *ice.Message, arg ...string) {
 				ProcessIframe(m, m.Option(mdb.NAME), S(m.Option(mdb.NAME)), arg...)
 			}},
-			PORTAL: {Hand: func(m *ice.Message, arg ...string) {
+			PORTAL: {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
 				ProcessIframe(m, m.Option(mdb.NAME), m.Option(ORIGIN)+S(m.Option(mdb.NAME))+C(PORTAL), arg...)
 			}},
 		}, ctx.ConfAction(ctx.TOOLS, DREAM)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				m.Cmd(SPIDE, arg, kit.Dict(ice.MSG_FIELDS, "time,client.type,client.name,client.origin")).Table(func(value ice.Maps) {
-					if value[CLIENT_TYPE] == nfs.REPOS {
-						m.Push(mdb.NAME, value[CLIENT_NAME])
-					}
+					kit.If(value[CLIENT_TYPE] == nfs.REPOS, func() { m.Push(mdb.NAME, value[CLIENT_NAME]) })
 				})
 				if ctx.Toolkit(m.Display("")); ice.Info.NodeType == WORKER {
 					return

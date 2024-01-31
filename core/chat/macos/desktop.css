@@ -53,6 +53,8 @@ fieldset.macos.desktop>div.output>div.desktop>fieldset>div.output>table.content 
 fieldset.macos.desktop>div.output>div.desktop>fieldset.web.wiki.feel>div.status { display:none; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset.web.code.xterm>div.status { display:none; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset.web.chat.iframe>div.status { display:none; }
+fieldset.macos.desktop>div.output>div.desktop>fieldset.iframe>form.option>div.item.hash input { width:var(--form-width); }
+fieldset.macos.desktop>div.output>div.desktop>fieldset.xterm>form.option>div.item.hash input { width:var(--form-width); }
 fieldset.macos.desktop>div.output>div.desktop>fieldset.web.chat.location>form.option>div.item:last-child { margin-right:unset; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset.web.chat.location>div.action>div.item.text { display:none; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset.web.chat.location>div.action>div.item.style select { width:80px; }

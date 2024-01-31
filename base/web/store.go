@@ -32,21 +32,14 @@ func init() {
 					m.OptionDefault(nfs.BINARY, m.Option(ORIGIN)+S(m.Option(mdb.NAME)))
 					m.Cmdy(DREAM, mdb.CREATE, m.OptionSimple(mdb.NAME, mdb.ICON, nfs.REPOS, nfs.BINARY))
 					m.Cmdy(DREAM, cli.START, m.OptionSimple(mdb.NAME))
-					defer m.Push(TITLE, m.Option(mdb.NAME))
 				}
-				ctx.ProcessField(m, CHAT_IFRAME, S(m.Option(mdb.NAME)), arg...)
+				ProcessIframe(m, m.Option(mdb.NAME), S(m.Option(mdb.NAME)), arg...)
 			}},
 			OPEN: {Hand: func(m *ice.Message, arg ...string) {
-				if !kit.HasPrefixList(arg, ctx.RUN) {
-					defer m.Push(TITLE, m.Option(mdb.NAME))
-				}
-				ctx.ProcessField(m, CHAT_IFRAME, S(m.Option(mdb.NAME)), arg...)
+				ProcessIframe(m, m.Option(mdb.NAME), S(m.Option(mdb.NAME)), arg...)
 			}},
 			PORTAL: {Hand: func(m *ice.Message, arg ...string) {
-				if !kit.HasPrefixList(arg, ctx.RUN) {
-					defer m.Push(TITLE, m.Option(mdb.NAME))
-				}
-				ctx.ProcessField(m, CHAT_IFRAME, m.Option(ORIGIN)+S(m.Option(mdb.NAME))+C(PORTAL), arg...)
+				ProcessIframe(m, m.Option(mdb.NAME), m.Option(ORIGIN)+S(m.Option(mdb.NAME))+C(PORTAL), arg...)
 			}},
 		}, ctx.ConfAction(ctx.TOOLS, DREAM)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {

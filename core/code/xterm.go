@@ -120,7 +120,7 @@ func init() {
 				}
 			}},
 			html.OUTPUT: {Help: "全屏", Hand: func(m *ice.Message, arg ...string) {
-				web.ProcessPodCmd(m, "", "", mdb.HASH, kit.Select(m.Option(mdb.HASH), arg, 0), ctx.STYLE, html.OUTPUT)
+				m.ProcessOpen(m.MergePodCmd("", "", mdb.HASH, kit.Select(m.Option(mdb.HASH), arg, 0), ctx.STYLE, html.OUTPUT))
 			}},
 			INSTALL: {Help: "安装", Hand: func(m *ice.Message, arg ...string) {
 				_xterm_get(m, kit.Select("", arg, 0)).Write([]byte(m.Cmdx(PUBLISH, ice.CONTEXTS, ice.APP, kit.Dict("format", "raw")) + ice.NL))

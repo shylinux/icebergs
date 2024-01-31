@@ -1,8 +1,11 @@
 package ctx
 
 import (
+	"path"
+
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
+	"shylinux.com/x/icebergs/base/web/html"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -58,10 +61,20 @@ func ProcessField(m *ice.Message, cmd string, args ice.Any, arg ...string) *ice.
 		}
 		m.Push(ARGS, kit.Format(_process_args(m, args))).Options(ice.MSG_INDEX, m.PrefixKey())
 		m.ProcessField(ACTION, m.ActionKey(), RUN)
+		kit.If(m.IsMetaKey(), func() { m.Push(STYLE, html.FLOAT) })
 	} else {
 		if !PodCmd(m, cmd, arg[1:]) {
 			kit.If(aaa.Right(m, cmd, arg[1:]), func() { m.Cmdy(cmd, arg[1:]) })
 		}
 	}
 	return m
+}
+func ProcessFloat(m *ice.Message, cmd string, args ice.Any, arg ...string) *ice.Message {
+	if m.IsMetaKey() {
+		return m.ProcessOpen(path.Join("/c/", cmd, path.Join(_process_args(m, args)...)))
+	}
+	if !kit.HasPrefixList(arg, RUN) {
+		defer m.Push(STYLE, html.FLOAT)
+	}
+	return ProcessField(m, cmd, args, arg...)
 }

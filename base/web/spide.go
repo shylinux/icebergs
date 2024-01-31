@@ -455,14 +455,22 @@ func SpideDelete(m *ice.Message, arg ...ice.Any) ice.Any {
 }
 func SpideSave(m *ice.Message, file, link string, cb func(count, total, value int)) *ice.Message {
 	return m.Cmd(Prefix(SPIDE), ice.DEV_IP, SPIDE_SAVE, file, http.MethodGet, link, cb)
-	// return m.Cmd(Prefix(SPIDE), ice.DEV, SPIDE_SAVE, file, http.MethodGet, link, cb)
 }
 func SpideCache(m *ice.Message, link string) *ice.Message {
 	return m.Cmd(Prefix(SPIDE), ice.DEV, SPIDE_CACHE, http.MethodGet, link)
 }
 func SpideOrigin(m *ice.Message, name string) string {
-	return m.Cmdv("web.spide", name, CLIENT_ORIGIN)
+	return m.Cmdv(SPIDE, name, CLIENT_ORIGIN)
 }
 func SpideURL(m *ice.Message, name string) string {
-	return m.Cmdv("web.spide", name, CLIENT_URL)
+	return m.Cmdv(SPIDE, name, CLIENT_URL)
+}
+func ProcessIframe(m *ice.Message, title, link string, arg ...string) *ice.Message {
+	if m.IsMetaKey() {
+		return m.ProcessOpen(link)
+	}
+	if !kit.HasPrefixList(arg, ctx.RUN) {
+		defer m.Push(TITLE, title)
+	}
+	return ctx.ProcessFloat(m, CHAT_IFRAME, link, arg...)
 }

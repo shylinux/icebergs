@@ -52,14 +52,6 @@ func ParseLink(m *ice.Message, url string) ice.Maps {
 	kit.For(u.Query(), func(k string, v []string) { list[k] = v[0] })
 	return list
 }
-func ProcessPodCmd(m *ice.Message, pod, cmd string, arg ...ice.Any) {
-	m.ProcessOpen(m.MergePodCmd(pod, cmd, arg...))
-}
-func ProcessIframe(m *ice.Message, name, link string, arg ...string) {
-	ctx.ProcessField(m, CHAT_IFRAME, func() []string {
-		return []string{m.Cmdx(CHAT_IFRAME, mdb.CREATE, mdb.TYPE, LINK, mdb.NAME, name, LINK, link)}
-	}, arg...)
-}
 func PushPodCmd(m *ice.Message, cmd string, arg ...string) *ice.Message {
 	list := []string{}
 	m.Cmds(SPACE, func(value ice.Maps) {

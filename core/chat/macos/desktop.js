@@ -76,6 +76,7 @@ Volcanos(chat.ONIMPORT, {
 		item.height = can.base.Max(html.DESKTOP_HEIGHT, item.height), item.width = can.base.Max(html.DESKTOP_WIDTH, item.width)
 		if (can.base.isIn(item.index, web.CODE_VIMER)) { item.width = can.base.Max(1600, can.ConfWidth()), item.left = (can.ConfWidth()-item.width)/2 }
 		can.onappend.plugin(can, item, function(sub) { can.ondetail.select(can, sub._target)
+			can.page.style(can, sub._target, html.HEIGHT, item.height, html.WIDTH, item.width)
 			var index = 0; can.core.Item({
 				close: {color: "#f95f57", inner: "x", onclick: function(event) { sub.onaction._close(event, sub) }},
 				small: {color: "#fcbc2f", inner: "-", onclick: function(event) { var dock = can.page.Append(can, can.ui.dock._output, [{view: html.ITEM, list: [{view: html.ICON, list: [{img: can.misc.PathJoin(item.icon)}]}], onclick: function() {
@@ -87,17 +88,18 @@ Volcanos(chat.ONIMPORT, {
 			})
 			sub.onexport.marginTop = function() { return 25 }, sub.onexport.marginBottom = function() { return 100 }
 			sub.onexport.actionHeight = function(sub) { return can.page.ClassList.has(can, sub._target, html.OUTPUT)? 0: html.ACTION_HEIGHT+20 }
-			sub.onexport.output = function() { sub.onimport.size(sub, item.height, can.base.Min(sub._target.offsetWidth, item.width), true)
+			sub.onexport.output = function() { sub.onimport.size(sub, item.height, can.base.Min(sub._target.offsetWidth, item.width), false)
 				sub._target._meta.args = can.base.trim(can.page.SelectArgs(can, sub._option, "", function(target) { return target.value })), can.onexport.tabs(can)
-			}, sub.onimport.size(sub, item.height, can.base.Min(sub._target.offsetWidth, item.width), true)
+			}, sub.onimport.size(sub, item.height, can.base.Min(sub._target.offsetWidth, item.width), false)
 			sub.onexport.record = function(sub, value, key, item) { can.onimport._window(can, item) }
 			sub.onimport._open = function(sub, msg, arg) { can.onimport._window(can, {index: web.CHAT_IFRAME, args: [arg]}) }
+			sub.onimport._field = function(sub, msg) { msg.Table(function(item) { can.onimport._window(can, item) }) }
 			sub.onappend.dock = function(item) { can.ui.dock.runAction(can.request(event, item), mdb.CREATE, [], function() { can.ui.dock.Update() }) }
 			sub.onaction._close = function() { can.page.Remove(can, sub._target), can.onexport.tabs(can) }
 			sub.onappend.desktop = function(item) { can.onimport._item(can, item) }
 			can.onmotion.move(can, sub._target, {top: item.top, left: item.left})
 			sub.onmotion.resize(can, sub._target, function(height, width) {
-				sub.onimport.size(sub, item.height = height, item.width = width)
+				sub.onimport.size(sub, item.height = height, item.width = width, false)
 				sub._target._meta.height = height, sub._target._meta.width = width, can.onexport.tabs(can)
 			}, 25)
 			sub._target.onclick = function(event) { can.ondetail.select(can, sub._target) }

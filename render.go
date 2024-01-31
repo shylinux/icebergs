@@ -120,6 +120,9 @@ func (m *Message) IsDebug() bool {
 func (m *Message) IsCliUA() bool {
 	return m.Option(MSG_USERUA) == "" || !strings.HasPrefix(m.Option(MSG_USERUA), "Mozilla")
 }
+func (m *Message) IsMetaKey() bool {
+	return m.Option("metaKey") == TRUE
+}
 func (m *Message) IsMobileUA() bool {
 	return strings.Contains(m.Option(MSG_USERUA), "Mobile")
 }

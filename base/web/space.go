@@ -382,9 +382,9 @@ func init() {
 			OPEN: {Hand: func(m *ice.Message, arg ...string) {
 				switch m.Option(mdb.TYPE) {
 				case MASTER:
-					m.ProcessOpen(m.Cmdv(SPIDE, m.Option(mdb.NAME), CLIENT_ORIGIN))
+					ProcessIframe(m, m.Option(mdb.NAME), m.Cmdv(SPIDE, m.Option(mdb.NAME), CLIENT_ORIGIN), arg...)
 				default:
-					m.ProcessOpen(m.MergePod(m.Option(mdb.NAME), arg))
+					ProcessIframe(m, m.Option(mdb.NAME), m.MergePod(m.Option(mdb.NAME)), arg...)
 				}
 			}},
 			nfs.PS: {Hand: func(m *ice.Message, arg ...string) { _space_fork(m) }},

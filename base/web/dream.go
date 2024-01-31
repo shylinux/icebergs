@@ -273,9 +273,6 @@ func init() {
 					_dream_start(m, m.Option(mdb.NAME))
 				}
 			}},
-			nfs.REPOS: {Help: "仓库", Icon: "bi bi-git", Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessOpen(m.MergePodCmd("", CODE_GIT_SEARCH))
-			}},
 			STARTALL: {Name: "startall name", Help: "启动", Icon: "bi bi-play-circle", Hand: func(m *ice.Message, arg ...string) {
 				DreamEach(m, m.Option(mdb.NAME), cli.STOP, func(name string) {
 					m.Cmd("", cli.START, ice.Maps{mdb.NAME: name, ice.MSG_DAEMON: ""})
@@ -371,14 +368,10 @@ func init() {
 			"send": {Name: "send space*", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(SPACE, m.Option(SPACE), DREAM, mdb.CREATE, m.OptionSimple(mdb.NAME, mdb.ICON, nfs.REPOS, nfs.BINARY))
 				m.Cmd(SPACE, m.Option(SPACE), DREAM, cli.START, m.OptionSimple(mdb.NAME))
-				m.ProcessOpen(m.MergePod(kit.Keys(m.Option(SPACE), m.Option(mdb.NAME))))
+				ProcessIframe(m, "", m.MergePod(kit.Keys(m.Option(SPACE), m.Option(mdb.NAME))))
 			}},
 			OPEN: {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
-				if m.Option(mdb.TYPE) == MASTER {
-					m.ProcessOpen(SpideOrigin(m, m.Option(mdb.NAME)) + C(ADMIN))
-				} else {
-					m.ProcessOpen(m.MergePod(m.Option(mdb.NAME)))
-				}
+				ProcessIframe(m, m.Option(mdb.NAME), kit.Select(m.MergePod(m.Option(mdb.NAME), SpideOrigin(m, m.Option(mdb.NAME))+C(ADMIN)), m.Option(mdb.TYPE) == MASTER), arg...)
 			}},
 			MAIN: {Name: "main index", Help: "首页", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(SPACE, m.Option(mdb.NAME), SPACE, ice.MAIN, m.Option(ctx.INDEX))
@@ -465,9 +458,9 @@ func DreamProcess(m *ice.Message, args ice.Any, arg ...string) {
 		ctx.ProcessField(m, m.PrefixKey(), args, kit.Slice(arg, 1)...)
 	} else if kit.HasPrefixList(arg, ctx.ACTION, m.PrefixKey()) || kit.HasPrefixList(arg, ctx.ACTION, m.CommandKey()) {
 		if m.Option(mdb.TYPE) == MASTER && (kit.IsIn(ctx.ShortCmd(m.PrefixKey()), PORTAL, DESKTOP)) {
-			// m.ProcessOpen(SpideOrigin(m, m.Option(mdb.NAME)) + C(m.PrefixKey()))
-			ctx.ProcessField(m, CHAT_IFRAME, SpideOrigin(m, m.Option(mdb.NAME))+C(m.PrefixKey()), arg...)
-			m.ProcessField(ctx.ACTION, ctx.RUN, CHAT_IFRAME)
+			if ProcessIframe(m, "", SpideOrigin(m, m.Option(mdb.NAME))+C(m.PrefixKey()), arg...); !m.IsMetaKey() {
+				m.ProcessField(ctx.ACTION, ctx.RUN, CHAT_IFRAME)
+			}
 		} else if arg = kit.Slice(arg, 2); kit.HasPrefixList(arg, DREAM) {
 			m.Cmdy(SPACE, m.Option(ice.MSG_USERPOD, arg[1]), m.PrefixKey(), ctx.ACTION, DREAM_ACTION, ctx.RUN, arg[2:])
 		} else if dream := m.Option(mdb.NAME); dream != "" {

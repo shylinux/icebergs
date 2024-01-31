@@ -84,7 +84,7 @@ func _dream_more_list(m *ice.Message) *ice.Message {
 			msg := gdb.Event(m.Spawn(value), DREAM_TABLES)
 			defer m.PushButton(strings.Join(msg.Appendv(ctx.ACTION), ""))
 		case aaa.LOGIN:
-			value[mdb.ICON] = kit.Select(value[mdb.ICON], agentIcon[value[AGENT]])
+			value[mdb.ICON] = kit.Select(value[mdb.ICON], agentIcons[value[AGENT]])
 			value[mdb.TEXT] = kit.JoinWord(value[AGENT], value[cli.SYSTEM], value[aaa.IP])
 			defer m.PushButton(GRANT)
 		default:
@@ -404,7 +404,7 @@ func init() {
 				}
 			}},
 		}, StatsAction(), DreamAction(), mdb.ImportantHashAction(
-			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icon,repos,binary,template,restart", ctx.TOOLS, kit.Simple(STORE, SPIDE, ROUTE),
+			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icon,repos,binary,template,restart", ctx.TOOLS, kit.Simple(STORE, SPIDE),
 			html.BUTTON, kit.JoinWord(PORTAL, ADMIN, DESKTOP, WIKI_WORD, STATUS, VIMER, XTERM, COMPILE),
 		)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {

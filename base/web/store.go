@@ -9,6 +9,7 @@ import (
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/base/web/html"
 	kit "shylinux.com/x/toolkits"
 )
@@ -19,10 +20,11 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		STORE: {Name: "store refresh", Help: "系统商店", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmds(SPIDE).Table(func(value ice.Maps) { kit.If(value[CLIENT_TYPE] == nfs.REPOS, func() { m.Push("", value, arg[0]) }) })
+				m.Cmdy(SPIDE, mdb.INPUTS, arg)
+				// m.Cmds(SPIDE).Table(func(value ice.Maps) { kit.If(value[CLIENT_TYPE] == nfs.REPOS, func() { m.Push("", value, arg[0]) }) })
 			}},
-			mdb.CREATE: {Name: "create name* origin*", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(SPIDE, mdb.CREATE, m.OptionSimple("name,origin"), mdb.TYPE, nfs.REPOS)
+			mdb.CREATE: {Name: "create name* origin* icons", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(SPIDE, mdb.CREATE, m.OptionSimple("name,origin,icons"), mdb.TYPE, nfs.REPOS)
 			}},
 			INSTALL: {Hand: func(m *ice.Message, arg ...string) {
 				if !kit.HasPrefixList(arg, ctx.RUN) {
@@ -41,17 +43,21 @@ func init() {
 			PORTAL: {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
 				ProcessIframe(m, m.Option(mdb.NAME), m.Option(ORIGIN)+S(m.Option(mdb.NAME))+C(PORTAL), arg...)
 			}},
-		}, ctx.ConfAction(ctx.TOOLS, DREAM)), Hand: func(m *ice.Message, arg ...string) {
+		}), Hand: func(m *ice.Message, arg ...string) {
+			m.Display("")
 			if len(arg) == 0 {
-				m.Cmd(SPIDE, arg, kit.Dict(ice.MSG_FIELDS, "time,client.type,client.name,client.origin")).Table(func(value ice.Maps) {
-					kit.If(value[CLIENT_TYPE] == nfs.REPOS, func() { m.Push(mdb.NAME, value[CLIENT_NAME]) })
+				m.Cmd(SPIDE, arg, kit.Dict(ice.MSG_FIELDS, "time,icon,client.type,client.name,client.origin")).Table(func(value ice.Maps) {
+					kit.If(value[CLIENT_TYPE] == nfs.REPOS, func() { m.Push(mdb.NAME, value[CLIENT_NAME]).Push(mdb.ICON, value[mdb.ICON]) })
 				})
-				if ctx.Toolkit(m.Display("")); ice.Info.NodeType == WORKER {
+				if ice.Info.NodeType == WORKER {
 					return
 				}
 				m.Action(html.FILTER, mdb.CREATE)
 			} else {
 				origin := SpideOrigin(m, arg[0])
+				if arg[0] == ice.OPS {
+					origin = tcp.PublishLocalhost(m, origin)
+				}
 				list := m.Spawn(ice.Maps{ice.MSG_FIELDS: ""}).CmdMap(DREAM, mdb.NAME)
 				m.SetAppend().Spawn().SplitIndex(m.Cmdx(SPIDE, arg[0], C(DREAM))).Table(func(value ice.Maps) {
 					if value[mdb.TYPE] != WORKER {

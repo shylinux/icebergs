@@ -63,3 +63,10 @@ func AdminCmd(m *ice.Message, cmd string, arg ...string) string {
 		return m.Cmdx(cmd, arg)
 	}
 }
+func AdminCmdPost(m *ice.Message, cmd string, action string, arg ...string) string {
+	if ice.Info.NodeType == WORKER {
+		return m.Cmdx(SPIDE, ice.OPS, SPIDE_RAW, http.MethodPost, C(path.Join(cmd, ctx.ACTION, action))+"?debug=true", SPIDE_FORM, arg)
+	} else {
+		return m.Cmdx(cmd, cmd, action, arg)
+	}
+}

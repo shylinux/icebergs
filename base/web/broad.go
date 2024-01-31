@@ -47,7 +47,7 @@ const BROAD = "broad"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		BROAD: {Help: "广播台", Actions: ice.MergeActions(ice.Actions{
+		BROAD: {Help: "广播台", Icon: "Podcasts.png", Actions: ice.MergeActions(ice.Actions{
 			SERVE_START: {Hand: func(m *ice.Message, arg ...string) { gdb.Go(m, _broad_serve) }},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if mdb.IsSearchPreview(m, arg) {

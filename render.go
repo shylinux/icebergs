@@ -123,6 +123,9 @@ func (m *Message) IsCliUA() bool {
 func (m *Message) IsMetaKey() bool {
 	return m.Option("metaKey") == TRUE
 }
+func (m *Message) IsGetMethod() bool {
+	return m.Option(MSG_METHOD) == http.MethodGet
+}
 func (m *Message) IsMobileUA() bool {
 	return strings.Contains(m.Option(MSG_USERUA), "Mobile")
 }

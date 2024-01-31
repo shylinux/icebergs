@@ -396,7 +396,7 @@ func init() {
 					return
 				}
 				defer m.StatusTimeCount(kit.Dict(ice.MAIN, mdb.Config(m, ice.MAIN)))
-				m.Option(ice.MSG_USERWEB, tcp.PublishLocalhost(m, m.Option(ice.MSG_USERWEB)))
+				// m.Option(ice.MSG_USERWEB, tcp.PublishLocalhost(m, m.Option(ice.MSG_USERWEB)))
 				kit.If(len(arg) > 0 && arg[0] != "", func() { m.OptionFields(ice.MSG_DETAIL) })
 				mdb.HashSelect(m.Spawn(), arg...).Table(func(index int, value ice.Maps, field []string) {
 					if m.Push("", value, kit.Split(mdb.Config(m, mdb.FIELD))); len(arg) > 0 && arg[0] != "" {

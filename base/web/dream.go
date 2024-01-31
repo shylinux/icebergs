@@ -29,10 +29,16 @@ func _dream_list(m *ice.Message) *ice.Message {
 	list := m.CmdMap(SPACE, mdb.NAME)
 	mdb.HashSelect(m).Table(func(value ice.Maps) {
 		if space, ok := list[value[mdb.NAME]]; ok {
-			msg := gdb.Event(m.Spawn(value, space), DREAM_TABLES).Copy(m.Spawn().PushButton(cli.STOP))
-			m.Push(mdb.TYPE, space[mdb.TYPE]).Push(cli.STATUS, cli.START)
-			m.Push(nfs.MODULE, space[nfs.MODULE]).Push(nfs.VERSION, space[nfs.VERSION]).Push(mdb.TEXT, msg.Append(mdb.TEXT))
-			m.PushButton(strings.Join(msg.Appendv(ctx.ACTION), ""))
+			if m.IsCliUA() {
+				m.Push(mdb.TYPE, space[mdb.TYPE]).Push(cli.STATUS, cli.START)
+				m.Push(nfs.MODULE, space[nfs.MODULE]).Push(nfs.VERSION, space[nfs.VERSION]).Push(mdb.TEXT, "")
+				m.PushButton(cli.STOP)
+			} else {
+				msg := gdb.Event(m.Spawn(value, space), DREAM_TABLES).Copy(m.Spawn().PushButton(cli.STOP))
+				m.Push(mdb.TYPE, space[mdb.TYPE]).Push(cli.STATUS, cli.START)
+				m.Push(nfs.MODULE, space[nfs.MODULE]).Push(nfs.VERSION, space[nfs.VERSION]).Push(mdb.TEXT, msg.Append(mdb.TEXT))
+				m.PushButton(strings.Join(msg.Appendv(ctx.ACTION), ""))
+			}
 		} else {
 			if m.Push(mdb.TYPE, WORKER); nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, value[mdb.NAME])) {
 				m.Push(cli.STATUS, cli.STOP)
@@ -56,6 +62,9 @@ func _dream_list(m *ice.Message) *ice.Message {
 	return m
 }
 func _dream_more_list(m *ice.Message) *ice.Message {
+	if m.IsCliUA() {
+		return m
+	}
 	list := m.Spawn(ice.Maps{ice.MSG_FIELDS: ""}).CmdMap(SPIDE, CLIENT_NAME)
 	m.Cmds(SPACE).Table(func(value ice.Maps) {
 		value[mdb.ICON] = nfs.USR_ICONS_VOLCANOS
@@ -427,6 +436,9 @@ func init() {
 				m.Sort("type,status,name", []string{aaa.LOGIN, WORKER, SERVER, MASTER}, []string{cli.START, cli.STOP, cli.BEGIN}, ice.STR_R).StatusTimeCount(stat)
 				ctx.DisplayTableCard(m)
 				if ice.Info.NodeType == WORKER {
+					return
+				}
+				if m.IsCliUA() {
 					return
 				}
 				kit.If(cli.SystemFind(m, "go"), func() {

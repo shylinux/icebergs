@@ -51,7 +51,7 @@ func init() {
 		}, ctx.ConfAction(ctx.TOOLS, DREAM)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				m.Cmd(SPIDE, arg, kit.Dict(ice.MSG_FIELDS, "time,client.type,client.name,client.origin")).Table(func(value ice.Maps) {
-					if value[CLIENT_TYPE] == nfs.REPOS && value[CLIENT_NAME] != ice.OPS {
+					if value[CLIENT_TYPE] == nfs.REPOS {
 						m.Push(mdb.NAME, value[CLIENT_NAME])
 					}
 				})

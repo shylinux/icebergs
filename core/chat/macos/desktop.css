@@ -1,6 +1,6 @@
 fieldset.macos.desktop { --desktop-menu-height:25px; }
 fieldset.macos.desktop { background-size:cover; background-position:center; }
-fieldset.macos.desktop>div.output { background-color:transparent; }
+fieldset.macos.desktop>div.output { background-color:transparent; overflow:hidden; }
 fieldset.macos.desktop>div.output>fieldset.macos { background-color:var(--plugin-bg-color); }
 fieldset.macos.desktop>div.output>fieldset.macos>div.output { background-color:transparent; }
 fieldset.macos.desktop>div.output>fieldset.macos.menu { line-height:var(--desktop-menu-height); border-radius:0; height:var(--desktop-menu-height); width:100%; position:sticky; top:0; overflow:hidden; }

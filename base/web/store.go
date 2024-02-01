@@ -43,11 +43,11 @@ func init() {
 			PORTAL: {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
 				ProcessIframe(m, m.Option(mdb.NAME), m.Option(ORIGIN)+S(m.Option(mdb.NAME))+C(PORTAL), arg...)
 			}},
-		}), Hand: func(m *ice.Message, arg ...string) {
+		}, ctx.ConfAction(CLIENT_TIMEOUT, "300ms")), Hand: func(m *ice.Message, arg ...string) {
 			m.Display("")
 			if len(arg) == 0 {
-				m.Cmd(SPIDE, arg, kit.Dict(ice.MSG_FIELDS, "time,icon,client.type,client.name,client.origin")).Table(func(value ice.Maps) {
-					kit.If(value[CLIENT_TYPE] == nfs.REPOS, func() { m.Push(mdb.NAME, value[CLIENT_NAME]).Push(mdb.ICON, value[mdb.ICON]) })
+				m.Cmd(SPIDE, arg, kit.Dict(ice.MSG_FIELDS, "time,icons,client.type,client.name,client.origin")).Table(func(value ice.Maps) {
+					kit.If(value[CLIENT_TYPE] == nfs.REPOS, func() { m.Push(mdb.NAME, value[CLIENT_NAME]).Push(mdb.ICONS, value[mdb.ICONS]) })
 				})
 				if ice.Info.NodeType == WORKER {
 					return
@@ -55,11 +55,9 @@ func init() {
 				m.Action(html.FILTER, mdb.CREATE)
 			} else {
 				origin := SpideOrigin(m, arg[0])
-				if arg[0] == ice.OPS {
-					origin = tcp.PublishLocalhost(m, origin)
-				}
+				kit.If(arg[0] == ice.OPS, func() { origin = tcp.PublishLocalhost(m, origin) })
 				list := m.Spawn(ice.Maps{ice.MSG_FIELDS: ""}).CmdMap(DREAM, mdb.NAME)
-				m.SetAppend().Spawn().SplitIndex(m.Cmdx(SPIDE, arg[0], C(DREAM))).Table(func(value ice.Maps) {
+				m.SetAppend().Spawn().SplitIndex(m.Cmdx(SPIDE, arg[0], C(DREAM), kit.Dict(mdb.ConfigSimple(m, CLIENT_TIMEOUT)))).Table(func(value ice.Maps) {
 					if value[mdb.TYPE] != WORKER {
 						return
 					}

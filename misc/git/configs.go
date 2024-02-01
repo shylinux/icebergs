@@ -4,15 +4,20 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
 
 func _configs_set(m *ice.Message, k, v string) string { return _git_cmds(m, CONFIG, GLOBAL, k, v) }
-func _configs_get(m *ice.Message, k string) string    { return _git_cmds(m, CONFIG, GLOBAL, k) }
+func _configs_get(m *ice.Message, k string) string {
+	return _git_cmds(m, CONFIG, GLOBAL, k)
+}
 func _configs_list(m *ice.Message) *ice.Message {
-	kit.SplitKV(mdb.EQ, lex.NL, _configs_get(m, LIST), func(text string, ls []string) {
-		m.Push(mdb.NAME, ls[0]).Push(mdb.VALUE, ls[1]).PushButton(mdb.REMOVE)
-	})
+	if nfs.Exists(m, kit.HomePath(_GITCONFIG)) {
+		kit.SplitKV(mdb.EQ, lex.NL, _configs_get(m, LIST), func(text string, ls []string) {
+			m.Push(mdb.NAME, ls[0]).Push(mdb.VALUE, ls[1]).PushButton(mdb.REMOVE)
+		})
+	}
 	return mdb.HashSelectValue(m, func(value ice.Maps) {
 		m.Push("", value, kit.Split("name,value")).PushButton(mdb.CREATE)
 	})

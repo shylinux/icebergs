@@ -637,6 +637,7 @@ func init() {
 				}
 			}},
 			web.SERVE_START: {Hand: func(m *ice.Message, arg ...string) {
+				return
 				m.Go(func() {
 					m.Cmd("", CLONE, REMOTE, "node_modules", mdb.NAME, "", nfs.PATH, "")
 					m.Cmd("", CLONE, REMOTE, "icons", mdb.NAME, "", nfs.PATH, "")

@@ -125,7 +125,9 @@ func init() {
 				case mdb.ZONE, mdb.NAME:
 					m.Cmdy(nfs.DIR, nfs.PWD, mdb.NAME, kit.Dict(nfs.DIR_ROOT, ice.SRC, nfs.DIR_TYPE, nfs.DIR))
 				case mdb.KEY:
-					m.Push(arg[0], Prefix(m.Option(mdb.ZONE), m.Option(mdb.NAME)))
+					kit.For([]string{"code", "wiki", "chat", "team", "mall"}, func(p string) {
+						m.Push(arg[0], kit.Keys("web", p, m.Option(mdb.ZONE), m.Option(mdb.NAME)))
+					})
 				}
 			}},
 			nfs.SCRIPT: {Help: "脚本", Hand: func(m *ice.Message, arg ...string) {

@@ -4,8 +4,8 @@ Volcanos(chat.ONIMPORT, {
 		var p = "/c/"+web.PORTAL; can.db.prefix = location.pathname.indexOf(p) > -1? location.pathname.split(p)[0]+p: nfs.WIKI_PORTAL
 		can.db.current = can.isCmdMode()? can.base.trimPrefix(location.pathname, can.db.prefix+nfs.PS, can.db.prefix): can.Option(nfs.PATH)
 		can.sup.onexport.link = function() { return can.misc.MergeURL(can, {pod: can.ConfSpace(), cmd: web.PORTAL}) }
-		can.require(["/plugin/local/wiki/word.js"])
 		can.Conf(html.PADDING, can.page.styleValueInt(can, "--portal-main-padding", can._output))
+		can.require(["/plugin/local/wiki/word.js"])
 		can.onmotion.clear(can), can.isCmdMode() && can.onappend.style(can, html.OUTPUT)
 		can.ui = can.onappend.layout(can, [html.HEADER, [html.NAV, html.MAIN, html.ASIDE]], html.FLOW), can.onimport._scroll(can)
 		can.ui.header.innerHTML = msg.Append(html.HEADER), can.ui.nav.innerHTML = msg.Append(html.NAV)

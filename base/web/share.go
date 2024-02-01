@@ -82,15 +82,18 @@ func init() {
 			LOGIN: {Help: "登录", Hand: func(m *ice.Message, arg ...string) {
 				m.EchoQRCode(m.Cmd(SHARE, mdb.CREATE, mdb.TYPE, LOGIN).Option(mdb.LINK)).ProcessInner()
 			}},
+			OPEN: {Hand: func(m *ice.Message, arg ...string) {
+				m.ProcessOpen(m.MergeLink("/share/" + m.Option(mdb.HASH)))
+			}},
 			ctx.COMMAND: {Hand: func(m *ice.Message, arg ...string) {
 				if msg := mdb.HashSelects(m.Spawn(), m.Option(SHARE)); !IsNotValidFieldShare(m, msg) {
-					m.Cmdy(Space(m, msg.Append(SPACE)), ctx.COMMAND, msg.Append(mdb.NAME))
+					m.Cmdy(Space(m, msg.Append(SPACE)), ctx.COMMAND, msg.Append(mdb.NAME), kit.Dict(ice.MSG_USERPOD, msg.Append(SPACE)))
 				}
 			}},
 			ctx.RUN: {Hand: func(m *ice.Message, arg ...string) {
 				if msg := mdb.HashSelects(m.Spawn(), m.Option(SHARE)); !IsNotValidFieldShare(m, msg) {
 					aaa.SessAuth(m, kit.Dict(msg.AppendSimple(aaa.USERNICK, aaa.USERNAME, aaa.USERROLE)))
-					m.Cmdy(Space(m, msg.Append(SPACE)), msg.Append(mdb.NAME), arg[1:])
+					m.Cmdy(Space(m, msg.Append(SPACE)), msg.Append(mdb.NAME), kit.UnMarshal(msg.Append(mdb.TEXT)), arg[1:], kit.Dict(ice.MSG_USERPOD, msg.Append(SPACE)))
 				}
 			}},
 			nfs.PS: {Hand: func(m *ice.Message, arg ...string) {
@@ -123,7 +126,7 @@ func init() {
 			}},
 		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,usernick,username,userrole", mdb.EXPIRE, mdb.DAYS)), Hand: func(m *ice.Message, arg ...string) {
 			if kit.IsIn(m.Option(ice.MSG_USERROLE), aaa.ROOT, aaa.TECH) || len(arg) > 0 && arg[0] != "" {
-				mdb.HashSelect(m, arg...)
+				mdb.HashSelect(m, arg...).PushAction(OPEN, mdb.REMOVE)
 			}
 		}},
 		PP(SHARE, CACHE): {Hand: func(m *ice.Message, arg ...string) { _share_cache(m, arg...) }},
@@ -198,4 +201,7 @@ func ShareLocal(m *ice.Message, p string) string {
 		return p
 	}
 	return m.MergeLink(PP(SHARE, LOCAL, p))
+}
+func ShareField(m *ice.Message, cmd string, arg ...ice.Any) *ice.Message {
+	return m.EchoQRCode(tcp.PublishLocalhost(m, m.MergeLink("/share/"+AdminCmdPost(m, SHARE, mdb.CREATE, mdb.TYPE, FIELD, mdb.NAME, kit.Select(m.PrefixKey(), cmd), mdb.TEXT, kit.Format(kit.Simple(arg...)), ice.POD, m.Option(ice.MSG_USERPOD)))))
 }

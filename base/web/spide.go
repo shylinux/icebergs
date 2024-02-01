@@ -285,7 +285,8 @@ func init() {
 		if p := path.Join(ice.SRC_TEMPLATE, m.PrefixKey(), path.Join(arg...)); nfs.Exists(m, p) {
 			return p + kit.Select("", nfs.PS, len(arg) == 0)
 		} else {
-			return path.Join(path.Dir(ctx.GetCmdFile(m, m.PrefixKey())), path.Join(arg...)) + kit.Select("", nfs.PS, len(arg) == 0)
+			return kit.MergeURL(ctx.FileURI(path.Join(path.Dir(ctx.GetCmdFile(m, m.PrefixKey())), path.Join(arg...))), ice.POD, m.Option(ice.MSG_USERPOD))
+			// return path.Join(path.Dir(ctx.GetCmdFile(m, m.PrefixKey())), path.Join(arg...)) + kit.Select("", nfs.PS, len(arg) == 0)
 		}
 	}
 	nfs.TemplateText = func(m *ice.Message, p string) string {
@@ -474,7 +475,7 @@ func SpideURL(m *ice.Message, name string) string {
 	return m.Cmdv(SPIDE, name, CLIENT_URL)
 }
 func ProcessIframe(m *ice.Message, title, link string, arg ...string) *ice.Message {
-	if m.IsMetaKey() {
+	if m.IsMetaKey() || m.IsMobileUA() {
 		return m.ProcessOpen(link)
 	}
 	if !kit.HasPrefixList(arg, ctx.RUN) {

@@ -92,7 +92,7 @@ func _space_fork(m *ice.Message) {
 		if msg := m.Cmd(TOKEN, m.Option(TOKEN)); msg.Append(mdb.TIME) > m.Time() && kit.IsIn(msg.Append(mdb.TYPE), SERVER, SPIDE) {
 			aaa.SessAuth(m, kit.Dict(m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME, msg.Append(mdb.NAME))).AppendSimple()))
 			name = SpaceName(kit.Select(name, msg.Append(mdb.TEXT)))
-			safe = true
+			safe = aaa.IsTechOrRoot(m)
 		}
 	}
 	args := kit.Simple(mdb.TYPE, m.Option(mdb.TYPE), mdb.NAME, name, mdb.TEXT, text, m.OptionSimple(mdb.TIME, nfs.MODULE, nfs.VERSION, cli.DAEMON))

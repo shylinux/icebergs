@@ -390,6 +390,12 @@ func Richs(m *ice.Message, prefix string, chain Any, raw Any, cb Any) (res Map) 
 	if cache == nil {
 		return nil
 	}
+	if value := kit.Format(raw); strings.Contains(value, ",") {
+		kit.For(kit.Split(value), func(value string) {
+			res = miss.Richs(path.Join(prefix, kit.Keys(chain)), cache, value, cb)
+		})
+		return
+	}
 	return miss.Richs(path.Join(prefix, kit.Keys(chain)), cache, raw, cb)
 
 }

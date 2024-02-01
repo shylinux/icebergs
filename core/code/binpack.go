@@ -96,13 +96,6 @@ func _binpack_src(m *ice.Message) {
 		ice.ETC_MISS_SH, ice.ETC_INIT_SHY, ice.ETC_LOCAL_SHY, ice.ETC_EXIT_SHY, ice.ETC_PATH,
 		ice.README_MD, ice.MAKEFILE, ice.LICENSE, ice.GO_MOD, ice.GO_SUM,
 	}, func(p string) { _binpack_file(m, w, p) })
-	mdb.HashSelects(m).Sort(nfs.PATH).Table(func(value ice.Maps) {
-		if strings.HasSuffix(value[nfs.PATH], nfs.PS) {
-			_binpack_dir(m, w, value[nfs.PATH])
-		} else {
-			_binpack_file(m, w, value[nfs.PATH])
-		}
-	})
 }
 
 const BINPACK = "binpack"

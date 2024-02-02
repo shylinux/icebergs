@@ -441,8 +441,10 @@ func HostPort(m *ice.Message, host, port string, arg ...string) string {
 	kit.If(host == "", func() { host = kit.ParseURL(UserHost(m)).Hostname() })
 	if port == tcp.PORT_443 {
 		return kit.Format("https://%s", host) + p
-	} else if port == tcp.PORT_80 || port == "" {
+	} else if port == tcp.PORT_80 {
 		return kit.Format("http://%s", host) + p
+	} else if port == "" {
+		return kit.Format("%s://%s", UserWeb(m).Scheme, host) + p
 	} else {
 		return kit.Format("http://%s:%s", host, port) + p
 	}

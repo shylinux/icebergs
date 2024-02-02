@@ -14,7 +14,7 @@ import (
 )
 
 func _makefile_xterm(m *ice.Message, arg ...string) {
-	ctx.Process(m, XTERM, func() []string {
+	ctx.ProcessField(m, XTERM, func() []string {
 		m.Push(ctx.STYLE, html.OUTPUT)
 		if ls := kit.Simple(kit.UnMarshal(m.Option(ctx.ARGS))); len(ls) > 0 {
 			return ls

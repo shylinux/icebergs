@@ -44,7 +44,7 @@ func init() {
 					m.Cmdy(REPOS, mdb.INPUTS, arg)
 				}
 			}},
-			CONFIGS: {Name: "configs email* username*", Help: "配置", Hand: func(m *ice.Message, arg ...string) {
+			ctx.CONFIG: {Name: "config email* username*", Help: "配置", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.DEFS, kit.HomePath(_GITCONFIG), kit.Format(nfs.Template(m, "gitconfig"), m.Option(aaa.USERNAME), m.Option(aaa.EMAIL)))
 				mdb.Config(m, aaa.USERNAME, m.Option(aaa.USERNAME))
 				mdb.Config(m, aaa.EMAIL, m.Option(aaa.EMAIL))
@@ -85,12 +85,12 @@ func init() {
 			if len(arg) > 0 && arg[0] == ctx.ACTION {
 				m.Cmdy(REPOS, arg)
 			} else if config, err := config.LoadConfig(config.GlobalScope); err == nil && config.User.Email == "" && mdb.Config(m, aaa.EMAIL) == "" {
-				m.EchoInfoButton(nfs.Template(m, "email.html"), CONFIGS)
+				m.EchoInfoButton(nfs.Template(m, "email.html"), ctx.CONFIG)
 			} else if !nfs.Exists(m, _GIT) {
 				m.EchoInfoButton(nfs.Template(m, "init.html"), INIT)
 			} else if len(arg) == 0 {
 				kit.If(config != nil, func() { m.Option(aaa.EMAIL, kit.Select(mdb.Config(m, aaa.EMAIL), config.User.Email)) })
-				m.Cmdy(REPOS, STATUS).Action(PULL, PUSH, INSTEADOF, mdb.DEV_REQUEST, CONFIGS)
+				m.Cmdy(REPOS, STATUS).Action(PULL, PUSH, INSTEADOF, mdb.DEV_REQUEST, ctx.CONFIG)
 				kit.If(!m.IsCliUA(), func() { m.Cmdy(code.PUBLISH, ice.CONTEXTS, ice.DEV) })
 				ctx.Toolkit(m)
 			} else {

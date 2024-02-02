@@ -185,7 +185,9 @@ func init() {
 			cli.START: {Name: "start link* cmd", Hand: func(m *ice.Message, arg ...string) { _install_start(m, arg...) }},
 			cli.STOP:  {Hand: func(m *ice.Message, arg ...string) { _install_stop(m, arg...) }},
 			cli.CLEAR: {Hand: func(m *ice.Message, arg ...string) { _install_clear(m, arg...) }},
-			gdb.DEBUG: {Hand: func(m *ice.Message, arg ...string) { ctx.Process(m, XTERM, []string{mdb.TYPE, "gdb"}, arg...) }},
+			gdb.DEBUG: {Hand: func(m *ice.Message, arg ...string) {
+				ctx.ProcessField(m, XTERM, []string{mdb.TYPE, "gdb"}, arg...)
+			}},
 			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) { _install_trash(m, arg...) }},
 			nfs.PATH:  {Hand: func(m *ice.Message, arg ...string) { m.Echo(_install_path(m, kit.Select("", arg, 0))) }},
 			nfs.SOURCE: {Name: "source link* path", Hand: func(m *ice.Message, arg ...string) {

@@ -220,6 +220,4 @@ func Temp(m *ice.Message, cb func(p string)) {
 	cb(p)
 }
 
-var ImageResize = func(m *ice.Message, p string, height, width uint) bool {
-	return false
-}
+var ImageResize = func(m *ice.Message, p string, height, width uint) bool { return false }

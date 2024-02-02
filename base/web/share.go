@@ -72,10 +72,9 @@ const SHARE = "share"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		SHARE: {Name: "share hash auto login", Help: "共享链", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
-			mdb.CREATE: {Name: "create type name text", Hand: func(m *ice.Message, arg ...string) {
-				// kit.If(m.Option(mdb.TYPE) == LOGIN, func() { arg = append(arg, mdb.TEXT, tcp.PublishLocalhost(m, m.Option(mdb.TEXT))) })
+			mdb.CREATE: {Name: "create type name text space", Hand: func(m *ice.Message, arg ...string) {
 				kit.If(m.Option(mdb.TYPE) == LOGIN && m.Option(mdb.TEXT) == "", func() { arg = append(arg, mdb.TEXT, tcp.PublishLocalhost(m, m.Option(ice.MSG_USERWEB))) })
-				mdb.HashCreate(m, m.OptionSimple("type,name,text"), arg, SPACE, m.Option(ice.MSG_USERPOD), aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERROLE, m.Option(ice.MSG_USERROLE))
+				mdb.HashCreate(m, m.OptionSimple("type,name,text,space"), arg, aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERROLE, m.Option(ice.MSG_USERROLE))
 				m.Option(mdb.LINK, tcp.PublishLocalhost(m, m.MergeLink(P(SHARE, m.Result()))))
 				Count(m, "", m.Option(mdb.TYPE))
 			}},
@@ -124,7 +123,7 @@ func init() {
 					RenderMain(m)
 				}
 			}},
-		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,usernick,username,userrole", mdb.EXPIRE, mdb.DAYS)), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,space,usernick,username,userrole", mdb.EXPIRE, mdb.DAYS)), Hand: func(m *ice.Message, arg ...string) {
 			if kit.IsIn(m.Option(ice.MSG_USERROLE), aaa.ROOT, aaa.TECH) || len(arg) > 0 && arg[0] != "" {
 				mdb.HashSelect(m, arg...).PushAction(OPEN, mdb.REMOVE)
 			}
@@ -203,5 +202,5 @@ func ShareLocal(m *ice.Message, p string) string {
 	return m.MergeLink(PP(SHARE, LOCAL, p))
 }
 func ShareField(m *ice.Message, cmd string, arg ...ice.Any) *ice.Message {
-	return m.EchoQRCode(tcp.PublishLocalhost(m, m.MergeLink("/share/"+AdminCmdPost(m, SHARE, mdb.CREATE, mdb.TYPE, FIELD, mdb.NAME, kit.Select(m.PrefixKey(), cmd), mdb.TEXT, kit.Format(kit.Simple(arg...)), ice.POD, m.Option(ice.MSG_USERPOD)))))
+	return m.EchoQRCode(tcp.PublishLocalhost(m, m.MergeLink("/share/"+AdminCmd(m, SHARE, mdb.CREATE, mdb.TYPE, FIELD, mdb.NAME, kit.Select(m.PrefixKey(), cmd), mdb.TEXT, kit.Format(kit.Simple(arg...)), SPACE, m.Option(ice.MSG_USERPOD)))))
 }

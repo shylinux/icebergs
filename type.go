@@ -203,6 +203,10 @@ func (c *Context) Close(m *Message, arg ...string) {
 	kit.If(c.server != nil, func() { c.server.Close(m, arg...) })
 }
 
+type IMessage interface {
+	Option(key string, arg ...Any) string
+	PrefixKey() string
+}
 type Message struct {
 	time time.Time
 	code int

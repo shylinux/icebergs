@@ -15,12 +15,7 @@ import (
 	"shylinux.com/x/toolkits/file"
 )
 
-type Message interface {
-	Option(key string, arg ...ice.Any) string
-	PrefixKey() string
-}
-
-func UserWeb(m Message) *url.URL {
+func UserWeb(m ice.IMessage) *url.URL {
 	return kit.ParseURL(m.Option(ice.MSG_USERWEB))
 }
 func UserHost(m *ice.Message) string {
@@ -32,7 +27,7 @@ func UserHost(m *ice.Message) string {
 		return m.Option(ice.MSG_USERHOST, u.Scheme+"://"+u.Host)
 	}
 }
-func AgentIs(m Message, arg ...string) bool {
+func AgentIs(m ice.IMessage, arg ...string) bool {
 	for _, k := range arg {
 		if strings.HasPrefix(strings.ToLower(m.Option(ice.MSG_USERUA)), k) {
 			return true

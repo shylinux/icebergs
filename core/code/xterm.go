@@ -158,7 +158,7 @@ func init() {
 				kit.If(aaa.IsTechOrRoot(m), func() { m.PushButton(kit.Dict(m.CommandKey(), "终端")) })
 			}},
 			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { web.DreamProcess(m, cli.Shell(m), arg...) }},
-		}, chat.FavorAction(), ctx.ProcessAction(), mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,path")), Hand: func(m *ice.Message, arg ...string) {
+		}, chat.FavorAction(), mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,path")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) == 0 {
 				if web.IsLocalHost(m) {
 					m.Action(mdb.CREATE, mdb.PRUNES, ice.APP)
@@ -175,7 +175,7 @@ func init() {
 }
 
 func ProcessXterm(m *ice.Message, cmds, text string, arg ...string) {
-	ctx.Process(m, XTERM, func() []string {
+	ctx.ProcessField(m, XTERM, func() []string {
 		if ls := kit.Simple(kit.UnMarshal(m.Option(ctx.ARGS))); len(ls) > 0 {
 			return ls
 		} else {

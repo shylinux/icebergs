@@ -56,10 +56,10 @@ func init() {
 		}},
 	})
 }
-func AdminCmd(m *ice.Message, cmd string, arg ...string) string {
+func AdminCmd(m *ice.Message, cmd string, arg ...ice.Any) string {
 	if ice.Info.NodeType == WORKER {
-		return m.Cmdx(SPACE, ice.OPS, cmd, arg)
+		return m.Cmdx(append([]ice.Any{SPACE, ice.OPS, cmd}, arg...)...)
 	} else {
-		return m.Cmdx(cmd, arg)
+		return m.Cmdx(append([]ice.Any{cmd}, arg...)...)
 	}
 }

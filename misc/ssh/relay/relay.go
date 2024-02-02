@@ -93,12 +93,12 @@ func (s relay) Inputs(m *ice.Message, arg ...string) {
 	switch s.Hash.Inputs(m, arg...); arg[0] {
 	case MACHINE:
 		if m.Option(ctx.ACTION) == mdb.CREATE {
-			m.Copy(m.Cmd(web.SPIDE).CutTo(web.CLIENT_NAME, arg[0]))
+			m.Message.Copy(m.Cmd(web.SPIDE).CutTo(web.CLIENT_NAME, arg[0]))
 		}
 	case aaa.USERNAME:
-		m.Copy(m.Cmd(aaa.USER).Cut(aaa.USERNAME).Push(arg[0], aaa.ROOT).Push(arg[0], ice.SHY))
+		m.Message.Copy(m.Cmd(aaa.USER).Cut(aaa.USERNAME).Push(arg[0], aaa.ROOT).Push(arg[0], ice.SHY))
 	case tcp.HOST:
-		m.Copy(m.Options(ice.MSG_FIELDS, web.CLIENT_HOSTNAME).Cmd(web.SPIDE).CutTo(web.CLIENT_HOSTNAME, arg[0]))
+		m.Message.Copy(m.Options(ice.MSG_FIELDS, web.CLIENT_HOSTNAME).Cmd(web.SPIDE).CutTo(web.CLIENT_HOSTNAME, arg[0]))
 	case tcp.PORT:
 		m.Push(arg[0], tcp.PORT_22, tcp.PORT_9022)
 	case web.PORTAL:
@@ -165,7 +165,7 @@ func (s relay) Dream(m *ice.Message) {
 			if strings.HasPrefix(res, "status") {
 			}
 			_msg := m.Spawn().SplitIndex(res)
-			m.Copy(_msg.Table(func(value ice.Maps) {
+			m.Message.Copy(_msg.Table(func(value ice.Maps) {
 				switch _msg.Push(MACHINE, msg.Option(MACHINE)).Push(tcp.HOST, msg.Option(tcp.HOST)); msg.Option(web.PORTAL) {
 				case "":
 					_msg.Push(web.LINK, "")
@@ -183,7 +183,7 @@ func (s relay) Dream(m *ice.Message) {
 			m.Push(mdb.TYPE, web.SERVER).Push(mdb.STATUS, web.ONLINE).Push(web.LINK, web.UserHost(m.Message))
 		}
 		if _msg := m.Spawn().SplitIndex(m.Cmdx(cli.SYSTEM, kit.Split(s.admin(m, web.ROUTE)))); _msg.Length() > 0 {
-			m.Copy(_msg.Table(func(value ice.Maps) {
+			m.Message.Copy(_msg.Table(func(value ice.Maps) {
 				_msg.Push(MACHINE, tcp.LOCALHOST).Push(tcp.HOST, tcp.PublishLocalhost(m.Message, tcp.LOCALHOST))
 				_msg.Push(web.LINK, web.UserHost(m.Message)+web.S(value[web.SPACE]))
 			}).Cut(fields))

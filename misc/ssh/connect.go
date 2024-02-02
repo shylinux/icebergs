@@ -199,7 +199,7 @@ func init() {
 				}
 			}},
 			code.XTERM: {Hand: func(m *ice.Message, arg ...string) {
-				ctx.Process(m, code.XTERM, []string{SSH + lex.SP + m.Option(mdb.NAME)}, arg...)
+				ctx.ProcessField(m, code.XTERM, kit.JoinWord(SSH, m.Option(mdb.NAME)), arg...)
 			}},
 		}, mdb.StatusHashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,username,private,host,port"), mdb.ImportantHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...).PushAction(code.XTERM, DIRECT, SESSION, mdb.REMOVE); len(arg) == 0 {

@@ -43,7 +43,7 @@ func init() {
 			PORTAL: {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
 				ProcessIframe(m, m.Option(mdb.NAME), m.Option(ORIGIN)+S(m.Option(mdb.NAME))+C(PORTAL), arg...)
 			}},
-		}, ctx.ConfAction(CLIENT_TIMEOUT, "300ms")), Hand: func(m *ice.Message, arg ...string) {
+		}, ctx.ConfAction(CLIENT_TIMEOUT, cli.TIME_300ms)), Hand: func(m *ice.Message, arg ...string) {
 			m.Display("")
 			if len(arg) == 0 {
 				m.Cmd(SPIDE, arg, kit.Dict(ice.MSG_FIELDS, "time,icons,client.type,client.name,client.origin")).Table(func(value ice.Maps) {

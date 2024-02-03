@@ -135,7 +135,7 @@ func ToastFailure(m *ice.Message, arg ...ice.Any) {
 	Toast(m, toastContent(m, ice.FAILURE, arg...), "", m.OptionDefault(ice.TOAST_DURATION, "3s")).Sleep(m.OptionDefault(ice.TOAST_DURATION, "3s"))
 }
 func ToastProcess(m *ice.Message, arg ...ice.Any) func(...ice.Any) {
-	Toast(m, toastContent(m, ice.PROCESS, arg...), "", "30s")
+	Toast(m, toastContent(m, ice.PROCESS, arg...), "", cli.TIME_30s)
 	return func(arg ...ice.Any) { Toast(m, toastContent(m, ice.SUCCESS, arg...), "", "1s") }
 }
 func GoToast(m *ice.Message, title string, cb func(toast func(name string, count, total int)) []string) *ice.Message {
@@ -144,7 +144,7 @@ func GoToast(m *ice.Message, title string, cb func(toast func(name string, count
 	toast := func(name string, count, total int) {
 		kit.If(total == 0, func() { total = 1 })
 		Toast(m, kit.Format("%s %s %s", icon, kit.JoinWord(kit.Select(kit.Select("", m.ActionKey(), m.ActionKey() != ice.LIST), title, m.Option(ice.MSG_TITLE)), name), strings.ReplaceAll(kit.FmtSize(count, total), "B", "")),
-			"", m.OptionDefault(ice.TOAST_DURATION, "30s"), count*100/total)
+			"", m.OptionDefault(ice.TOAST_DURATION, cli.TIME_30s), count*100/total)
 		_total = total
 	}
 	if list := cb(toast); len(list) > 0 {

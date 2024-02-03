@@ -22,6 +22,9 @@ func _broad_send(m *ice.Message, to_host, to_port string, host, port string, arg
 	})
 }
 func _broad_serve(m *ice.Message) {
+	if m.Cmd(tcp.HOST).Length() == 0 {
+		return
+	}
 	m.GoSleep300ms(func() {
 		m.Cmd(tcp.HOST, func(value ice.Maps) {
 			_broad_send(m, "", "", value[aaa.IP], m.Option(tcp.PORT), kit.Simple(gdb.EVENT, tcp.LISTEN, mdb.NAME, ice.Info.NodeName, mdb.TYPE, ice.Info.NodeType, mdb.TIME, m.Time(), cli.SimpleMake())...)

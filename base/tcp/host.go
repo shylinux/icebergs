@@ -44,9 +44,9 @@ func _host_list(m *ice.Message, name string) *ice.Message {
 			}
 		}
 	}
-	if len(m.Appendv(aaa.IP)) == 0 {
-		m.Push(mdb.INDEX, -1).Push(mdb.NAME, LOCALHOST).Push(aaa.IP, "127.0.0.1").Push(MASK, "255.0.0.0").Push(MAC_ADDRESS, "")
-	}
+	// if len(m.Appendv(aaa.IP)) == 0 {
+	// 	m.Push(mdb.INDEX, -1).Push(mdb.NAME, LOCALHOST).Push(aaa.IP, "127.0.0.1").Push(MASK, "255.0.0.0").Push(MAC_ADDRESS, "")
+	// }
 	return m.SortInt(mdb.INDEX).StatusTimeCount(DOMAIN, _host_domain(m))
 }
 
@@ -73,7 +73,7 @@ func init() {
 				m.Cmd("", func(value ice.Maps) { m.Cmd("", aaa.WHITE, LOCALHOST, value[aaa.IP]) })
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				if mdb.IsSearchPreview(m, arg) {
+				if mdb.IsSearchPreview(m, arg) && m.Cmd(HOST).Length() > 0 {
 					ip := m.Cmdv(HOST, GATEWAY, aaa.IP)
 					m.PushSearch(mdb.TYPE, GATEWAY, mdb.NAME, ip, mdb.TEXT, "http://"+ip)
 				}

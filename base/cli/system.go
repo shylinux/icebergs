@@ -128,6 +128,11 @@ func _system_find(m *ice.Message, bin string, dir ...string) string {
 }
 
 const (
+	TIME_300ms = "300ms"
+	TIME_30ms  = "30ms"
+	TIME_30s   = "30s"
+	TIME_3s    = "3s"
+
 	CMD_DIR = "cmd_dir"
 	CMD_ENV = "cmd_env"
 

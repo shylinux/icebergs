@@ -29,10 +29,13 @@ func _serve_start(m *ice.Message) {
 	kit.If(m.Option(tcp.PORT) == tcp.RANDOM, func() { m.Option(tcp.PORT, m.Cmdx(tcp.PORT, aaa.RIGHT)) })
 	cli.NodeInfo(m, kit.Select(kit.Split(ice.Info.Hostname, ".")[0], m.Option(tcp.NODENAME)), SERVER)
 	m.Go(func() {
-		m.Cmd(SPIDE, ice.OPS, _serve_address(m)+"/exit", ice.Maps{CLIENT_TIMEOUT: "30ms", ice.LOG_DISABLE: ice.TRUE})
+		m.Cmd(SPIDE, ice.OPS, _serve_address(m)+"/exit", ice.Maps{CLIENT_TIMEOUT: cli.TIME_30ms, ice.LOG_DISABLE: ice.TRUE})
 	}).Sleep300ms()
-	m.Cmd(nfs.SAVE, ice.VAR_LOG_ICE_PORT, m.Option(tcp.PORT))
 	m.Start("", m.OptionSimple(tcp.HOST, tcp.PORT)...)
+	m.Cmd(nfs.SAVE, ice.VAR_LOG_ICE_PORT, m.Option(tcp.PORT))
+	if m.Cmd(tcp.HOST).Length() == 0 {
+		return
+	}
 	kit.For(kit.Split(m.Option(ice.DEV)), func(dev string) {
 		if m.Cmds(SPIDE, dev).Append(TOKEN) == "" {
 			m.Sleep30ms(SPACE, tcp.DIAL, ice.DEV, dev, mdb.NAME, ice.Info.NodeName, m.OptionSimple(TOKEN))

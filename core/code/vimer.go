@@ -182,7 +182,7 @@ func init() {
 				}
 				if msg := m.Cmd(cmds); cli.IsSuccess(msg) {
 					if m.GoSleep30ms(func() { m.Cmd(UPGRADE, cli.RESTART) }); isWebview() {
-						m.Cmd(cli.DAEMON, ice.BIN_ICE_BIN, cli.FOREVER, cli.DELAY, "300ms", cli.SYSTEM, cli.OPEN, app)
+						m.Cmd(cli.DAEMON, ice.BIN_ICE_BIN, cli.FOREVER, cli.DELAY, cli.TIME_300ms, cli.SYSTEM, cli.OPEN, app)
 					}
 				} else {
 					_vimer_make(m, nfs.PWD, msg)

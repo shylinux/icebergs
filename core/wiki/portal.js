@@ -6,6 +6,7 @@ Volcanos(chat.ONIMPORT, {
 		can.sup.onexport.link = function() { return can.misc.MergeURL(can, {pod: can.ConfSpace(), cmd: web.PORTAL}) }
 		can.Conf(html.PADDING, can.page.styleValueInt(can, "--portal-main-padding", can._output))
 		can.require(["/plugin/local/wiki/word.js"])
+		can.Conf(html.PADDING, can.page.styleValueInt(can, "--portal-main-padding", can._output))
 		can.onmotion.clear(can), can.isCmdMode() && can.onappend.style(can, html.OUTPUT)
 		can.ui = can.onappend.layout(can, [html.HEADER, [html.NAV, html.MAIN, html.ASIDE]], html.FLOW), can.onimport._scroll(can)
 		can.ui.header.innerHTML = msg.Append(html.HEADER), can.ui.nav.innerHTML = msg.Append(html.NAV)

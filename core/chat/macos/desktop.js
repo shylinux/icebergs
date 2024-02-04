@@ -70,7 +70,7 @@ Volcanos(chat.ONIMPORT, {
 	_window: function(can, item, cb) { if (!item.index) { return }
 		item.height = can.ConfHeight()-125, item.width = can.ConfWidth()-200, item.left = (can.ConfWidth()-item.width)/2, item.top = 25
 		if (can.ConfWidth() > 1400) { item.width = can.base.Min(can.ConfWidth()-600, 640, 1400), item.left = (can.ConfWidth()-item.width)/2 }
-		if (can.ConfWidth() < 800) { item.width = can.ConfWidth(), item.left = 0 }
+		if (can.ConfWidth() < 1000) { item.width = can.ConfWidth(), item.left = 0 }
 		if (can.ConfHeight() > 800) { item.height = can.base.Min(can.ConfHeight()-200, 320, 800), item.top = 50 }
 		if (can.user.isMobile) { item.height = can.ConfHeight()-125, item.top = 25, item.width = can.ConfWidth(), item.left = 0 }
 		item.height = can.base.Max(html.DESKTOP_HEIGHT, item.height), item.width = can.base.Max(html.DESKTOP_WIDTH, item.width)

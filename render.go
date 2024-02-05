@@ -256,6 +256,6 @@ func (m *Message) resource(file string) string {
 		p = strings.Split(p, "/pkg/mod/")[1]
 	}
 	kit.If(file == "", func() { p = kit.ExtChange(p, JS) }, func() { p = path.Join(path.Dir(p), file) })
-	return "/require/" + p
+	return kit.MergeURL("/require/"+p, POD, m.Option(MSG_USERPOD))
 	// return m.MergeLink("/require/"+p, POD, m.Option(MSG_USERPOD))
 }

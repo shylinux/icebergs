@@ -32,8 +32,12 @@ Volcanos(chat.ONIMPORT, {
 		sub.onaction._close = function() { can.onmotion.hidden(can, sub._target) }, can.onmotion.hidden(can, sub._target)
 		sub.onexport.record = function(sub, value, key, item) { can.onimport._window(can, item) }
 	}) },
-	_searchs: function(can) { can.onappend.plugin(can, {index: "web.chat.macos.searchs"}, function(sub) { can.ui.searchs = sub, can.onmotion.hidden(can, sub._target)
-		can.page.style(can, sub._target, html.LEFT, can.ConfWidth()/4, html.TOP, can.ConfHeight()/4), sub.onimport.size(sub, can.ConfHeight()/2, can.ConfWidth()/2, true);
+	_searchs: function(can) { can.onappend.plugin(can, {index: "web.chat.macos.searchs"}, function(sub) {
+		can.ui.searchs = sub, can.onmotion.hidden(can, sub._target)
+		var width = can.base.Max(can.ConfWidth()/2, can.ConfWidth(), html.FLOAT_WIDTH)
+		var height = can.base.Max(can.ConfHeight()/2, can.ConfHeight(), html.FLOAT_HEIGHT)
+		can.page.style(can, sub._target, html.LEFT, (can.ConfWidth()-width)/2, html.TOP, (can.ConfHeight()-height)/2)
+		sub.onimport.size(sub, height, width, true)
 		sub.onaction._close = function() { can.onmotion.hidden(can, sub._target) }, can.onmotion.hidden(can, sub._target)
 		sub.onexport.record = function(sub, value, key, item, event) { switch (item.type) {
 			case ice.CMD: can.onimport._window(can, {index: item.name, args: can.base.Obj(item.text) }); break

@@ -43,7 +43,7 @@ func init() {
 			PORTAL: {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
 				ProcessIframe(m, m.Option(mdb.NAME), m.Option(ORIGIN)+S(m.Option(mdb.NAME))+C(PORTAL), arg...)
 			}},
-		}, ctx.ConfAction(CLIENT_TIMEOUT, cli.TIME_300ms)), Hand: func(m *ice.Message, arg ...string) {
+		}, ctx.ConfAction(CLIENT_TIMEOUT, "3s")), Hand: func(m *ice.Message, arg ...string) {
 			m.Display("")
 			if len(arg) == 0 {
 				m.Cmd(SPIDE, arg, kit.Dict(ice.MSG_FIELDS, "time,icons,client.type,client.name,client.origin")).Table(func(value ice.Maps) {
@@ -54,6 +54,7 @@ func init() {
 				}
 				m.Action(html.FILTER, mdb.CREATE)
 			} else {
+				defer ToastProcess(m, "查询中，请稍候")("查询成功")
 				origin := SpideOrigin(m, arg[0])
 				kit.If(arg[0] == ice.OPS, func() { origin = tcp.PublishLocalhost(m, origin) })
 				list := m.Spawn(ice.Maps{ice.MSG_FIELDS: ""}).CmdMap(DREAM, mdb.NAME)

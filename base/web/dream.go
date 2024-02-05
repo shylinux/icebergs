@@ -428,10 +428,8 @@ func init() {
 				kit.If(stat[cli.START] == stat[WORKER], func() { delete(stat, cli.START) })
 				m.Sort("type,status,name", []string{aaa.LOGIN, WORKER, SERVER, MASTER}, []string{cli.START, cli.STOP, cli.BEGIN}, ice.STR_R).StatusTimeCount(stat)
 				ctx.DisplayTableCard(m)
-				if ice.Info.NodeType == WORKER {
-					return
-				}
-				if m.IsCliUA() {
+				if ice.Info.NodeType == WORKER || !aaa.IsTechOrRoot(m) || m.IsCliUA() {
+					m.Action()
 					return
 				}
 				kit.If(cli.SystemFind(m, "go"), func() {
@@ -455,7 +453,7 @@ func DreamAction() ice.Actions {
 }
 func DreamProcess(m *ice.Message, args ice.Any, arg ...string) {
 	if kit.HasPrefixList(arg, ctx.RUN) {
-		ctx.ProcessField(m, m.PrefixKey(), args, kit.Slice(arg, 1)...)
+		ctx.ProcessFloat(m, m.PrefixKey(), args, kit.Slice(arg, 1)...)
 	} else if kit.HasPrefixList(arg, ctx.ACTION, m.PrefixKey()) || kit.HasPrefixList(arg, ctx.ACTION, m.CommandKey()) {
 		if m.Option(mdb.TYPE) == MASTER && (kit.IsIn(ctx.ShortCmd(m.PrefixKey()), PORTAL, DESKTOP)) {
 			if ProcessIframe(m, "", SpideOrigin(m, m.Option(mdb.NAME))+C(m.PrefixKey()), arg...); !m.IsMetaKey() {

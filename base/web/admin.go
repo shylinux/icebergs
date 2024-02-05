@@ -24,11 +24,14 @@ func init() {
 			DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) { m.PushButton(kit.Dict(ADMIN, "后台")) }},
 			DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) {
 				if kit.HasPrefixList(arg, ctx.ACTION, ADMIN) && len(arg) == 2 {
+					link := m.MergePodCmd(m.Option(mdb.NAME), "")
 					if m.Option(mdb.TYPE) == MASTER {
-						ctx.ProcessField(m, CHAT_IFRAME, SpideOrigin(m, m.Option(mdb.NAME))+C(m.PrefixKey()), arg...)
-						m.ProcessField(ctx.ACTION, ctx.RUN, CHAT_IFRAME)
+						link = SpideOrigin(m, m.Option(mdb.NAME)) + C(m.PrefixKey())
+					}
+					if m.IsMetaKey() {
+						m.ProcessOpen(link)
 					} else {
-						ctx.ProcessField(m, CHAT_IFRAME, m.MergePodCmd(m.Option(mdb.NAME), ""), arg...)
+						ctx.ProcessFloat(m, CHAT_IFRAME, link, arg...)
 						m.ProcessField(ctx.ACTION, ctx.RUN, CHAT_IFRAME)
 					}
 				}

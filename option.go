@@ -138,4 +138,8 @@ func (m *Message) ProcessOpen(url string) *Message {
 	kit.If(url, func() { m.Process(PROCESS_OPEN, url) })
 	return m
 }
+func (m *Message) ProcessOpenAndRefresh(url string) *Message {
+	kit.If(url, func() { m.Process(PROCESS_OPEN, url, "refresh") })
+	return m
+}
 func (m *Message) ProcessClose() *Message { return m.Process(PROCESS_CLOSE) }

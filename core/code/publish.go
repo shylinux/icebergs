@@ -52,7 +52,7 @@ func _publish_contexts(m *ice.Message, arg ...string) {
 		m.OptionDefault(web.DOMAIN, host)
 		m.Options(cli.CTX_ENV, kit.Select("", lex.SP+kit.JoinKV(mdb.EQ, lex.SP, cli.CTX_POD, m.Option(ice.MSG_USERPOD)), m.Option(ice.MSG_USERPOD) != ""))
 		kit.If(m.Option("ctx_dev_ip"), func(p string) {
-			m.Option(cli.CTX_ENV, m.Option(cli.CTX_DEV)+" "+"ctx_dev_ip="+tcp.PublishLocalhost(m, p))
+			m.Option(cli.CTX_ENV, m.Option(cli.CTX_ENV)+" "+"ctx_dev_ip="+tcp.PublishLocalhost(m, p))
 		})
 		m.Option(ice.TCP_DOMAIN, kit.ParseURL(host).Hostname())
 		switch k {

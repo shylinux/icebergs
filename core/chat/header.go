@@ -101,8 +101,8 @@ func init() {
 			}},
 			aaa.LOGOUT: {Hand: aaa.SessLogout},
 			cli.QRCODE: {Hand: func(m *ice.Message, arg ...string) {
-				m.Push(web.LINK, tcp.PublishLocalhost(m, m.Option(ice.MSG_USERWEB)))
-				m.EchoQRCode(tcp.PublishLocalhost(m, m.Option(ice.MSG_USERWEB)))
+				link := tcp.PublishLocalhost(m, m.Option(ice.MSG_USERWEB))
+				m.Push(mdb.NAME, link).PushQRCode(mdb.TEXT, link)
 			}},
 			mdb.CREATE: {Name: "create type*=plugin,qrcode,oauth name* icons link order space index args", Hand: func(m *ice.Message, arg ...string) { mdb.HashCreate(m, m.OptionSimple()) }},
 			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) { mdb.HashRemove(m, m.OptionSimple(mdb.NAME)) }},
@@ -122,7 +122,9 @@ func init() {
 			if ice.Info.NodeType == web.WORKER {
 				return
 			}
-			kit.If(m.Option(ice.MSG_USERPOD), func(p string) { m.Option(ice.MSG_NODETYPE, m.Cmdx(web.SPACE, p, cli.RUNTIME, ice.MSG_NODETYPE)) })
+			kit.If(m.Option(ice.MSG_USERPOD), func(p string) {
+				m.Option(ice.MSG_NODETYPE, m.Cmdx(web.SPACE, p, cli.RUNTIME, ice.MSG_NODETYPE))
+			})
 			m.Option("language.list", m.Cmd(nfs.DIR, nfs.TemplatePath(m, aaa.LANGUAGE)+nfs.PS, nfs.FILE).Appendv(nfs.FILE))
 			m.Option("theme.list", m.Cmd(nfs.DIR, nfs.TemplatePath(m, aaa.THEME)+nfs.PS, nfs.FILE).Appendv(nfs.FILE))
 			m.Option(nfs.REPOS, m.Cmdv(web.SPIDE, nfs.REPOS, web.CLIENT_URL))

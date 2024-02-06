@@ -7,7 +7,6 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
-	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
@@ -24,11 +23,10 @@ func _command_list(m *ice.Message, name string) *ice.Message {
 		m.Push(mdb.LIST, kit.Format(cmd.List))
 		m.Push(mdb.META, kit.Format(cmd.Meta))
 		m.Push("_command", ShortCmd(kit.Keys(s.Prefix(), key)))
-		if !nfs.Exists(m, kit.Split(cmd.FileLine(), ":")[0], func(p string) {
-			m.Push("_fileline", kit.MergeURL(FileURI(p), ice.POD, m.Option(ice.MSG_USERPOD)))
+		if !nfs.Exists(m, kit.Split(cmd.FileLine(), nfs.DF)[0], func(p string) {
+			m.Push("_fileline", m.FileURI(p))
 		}) {
 			m.Push("_fileline", "")
-
 		}
 		m.Push("_role", kit.Select("", ice.OK, aaa.Right(m.Spawn(), name)))
 		m.Push("_help", GetCmdHelp(m, name))
@@ -40,16 +38,10 @@ func _command_search(m *ice.Message, kind, name, text string) {
 		if IsOrderCmd(key) || !strings.Contains(s.Prefix(key), name) {
 			return
 		}
-		m.PushSearch(ice.CTX, kit.PathName(1),
-			ice.CMD, kit.FileName(1),
+		m.PushSearch(ice.CTX, kit.PathName(1), ice.CMD, kit.FileName(1),
 			kit.SimpleKV("", s.Prefix(), kit.Select(key, cmd.Name), cmd.Help),
-			CONTEXT, s.Prefix(),
-			COMMAND, key,
-			INDEX, kit.Keys(s.Prefix(), key),
-			mdb.HELP, cmd.Help,
-			nfs.FILE, FileURI(cmd.FileLine()))
-	})
-	m.Sort(m.OptionFields())
+			INDEX, kit.Keys(s.Prefix(), key))
+	}).Sort(m.OptionFields())
 }
 
 const (
@@ -103,56 +95,24 @@ func init() {
 					})
 				}
 			}},
-			mdb.EXPORT: {Hand: func(m *ice.Message, arg ...string) {
-				TravelCmd(m, func(key, file, line string) { m.Push(mdb.NAME, key).Push(nfs.FILE, file).Push(nfs.LINE, line) }).Sort(mdb.NAME).Table(func(value ice.Maps) {
-					m.Echo(`%s	%s	%s;" f`+lex.NL, value[mdb.NAME], value[nfs.FILE], value[nfs.LINE])
-				}).Cmd(nfs.SAVE, nfs.TAGS, m.Result())
-			}},
-		}), Hand: func(m *ice.Message, arg ...string) {
-			if len(arg) == 0 {
-				m.Cmdy("", mdb.SEARCH, COMMAND, ice.OptionFields(INDEX)).Action(mdb.EXPORT)
-				DisplayStory(m.Options(nfs.DIR_ROOT, "ice."), "spide.js?split=.")
-			} else {
-				kit.For(arg, func(k string) { _command_list(m, k) })
-			}
-		}},
+		}), Hand: func(m *ice.Message, arg ...string) { kit.For(arg, func(k string) { _command_list(m, k) }) }},
 	})
 }
 
 var PodCmd = func(m *ice.Message, arg ...ice.Any) bool { return false }
 
 func Run(m *ice.Message, arg ...string) {
-	kit.If(kit.IsIn(arg[0], "web.chat.grant") || !PodCmd(m, arg) && aaa.Right(m, arg), func() { m.Cmdy(arg) })
+	kit.If(!PodCmd(m, arg) && aaa.Right(m, arg), func() { m.Cmdy(arg) })
 }
 func Command(m *ice.Message, arg ...string) {
-	kit.If(kit.IsIn(arg[0], "web.chat.grant") || !PodCmd(m, COMMAND, arg), func() { m.Cmdy(COMMAND, arg) })
+	kit.If(!PodCmd(m, COMMAND, arg), func() { m.Cmdy(COMMAND, arg) })
 }
 
-func FileURI(dir string) string {
-	if dir == "" {
-		return ""
-	} else if strings.Contains(dir, "/pkg/mod/") {
-		dir = strings.Split(dir, "/pkg/mod/")[1]
-	} else if ice.Info.Make.Path != "" && strings.HasPrefix(dir, ice.Info.Make.Path) {
-		dir = strings.TrimPrefix(dir, ice.Info.Make.Path)
-	} else if strings.HasPrefix(dir, kit.Path("")+nfs.PS) {
-		dir = strings.TrimPrefix(dir, kit.Path("")+nfs.PS)
-	} else if strings.HasPrefix(dir, ice.ISH_PLUGED) {
-		dir = strings.TrimPrefix(dir, ice.ISH_PLUGED)
-	} else if kit.HasPrefix(dir, nfs.PS, ice.HTTP) {
-		return dir
-	}
-	if strings.HasPrefix(dir, ice.USR_VOLCANOS) {
-		return strings.TrimPrefix(dir, ice.USR)
-	} else {
-		return path.Join(nfs.PS, ice.REQUIRE, dir)
-	}
-}
 func FileCmd(dir string) string {
 	if strings.Index(dir, ":") == 1 {
-		return FileURI(kit.ExtChange(strings.Join(kit.Slice(strings.Split(dir, ":"), 0, 2), ":"), nfs.GO))
+		return ice.Pulse.FileURI(kit.ExtChange(strings.Join(kit.Slice(strings.Split(dir, ":"), 0, 2), ":"), nfs.GO))
 	}
-	return FileURI(kit.ExtChange(strings.Split(dir, nfs.DF)[0], nfs.GO))
+	return ice.Pulse.FileURI(kit.ExtChange(strings.Split(dir, nfs.DF)[0], nfs.GO))
 }
 func AddFileCmd(dir, key string) {
 	ice.Info.File[FileCmd(dir)] = key
@@ -180,7 +140,7 @@ func GetFileCmd(dir string) string {
 	return ""
 }
 func GetCmdHelp(m *ice.Message, cmds string) (file string) {
-	file = strings.TrimPrefix(FileURI(kit.ExtChange(GetCmdFile(m, cmds), nfs.SHY)), nfs.REQUIRE)
+	file = strings.TrimPrefix(m.FileURI(kit.ExtChange(GetCmdFile(m, cmds), nfs.SHY)), nfs.REQUIRE)
 	if !nfs.Exists(m, path.Join(nfs.USR_LEARNING_PORTAL, "commands", strings.TrimPrefix(file, nfs.USR_ICEBERGS)), func(p string) { file = p }) {
 		kit.If(!nfs.Exists(m, file), func() { file = "" })
 	}
@@ -188,7 +148,7 @@ func GetCmdHelp(m *ice.Message, cmds string) (file string) {
 }
 func GetCmdFile(m *ice.Message, cmds string) (file string) {
 	m.Search(kit.Select(m.PrefixKey(), cmds), func(key string, cmd *ice.Command) {
-		if file = strings.TrimPrefix(FileURI(kit.Split(cmd.FileLine(), nfs.DF)[0]), nfs.REQUIRE); !nfs.Exists(m, file) {
+		if file = strings.TrimPrefix(m.FileURI(kit.Split(cmd.FileLine(), nfs.DF)[0]), nfs.REQUIRE); !nfs.Exists(m, file) {
 			file = path.Join(nfs.REQUIRE, file)
 		}
 	})
@@ -211,7 +171,9 @@ func TravelCmd(m *ice.Message, cb func(key, file, line string)) *ice.Message {
 	})
 	return m
 }
-func IsOrderCmd(key string) bool { return key[0] == '/' || key[0] == '_' }
+func IsOrderCmd(key string) bool {
+	return key[0] == '/' || key[0] == '_'
+}
 func ShortCmd(key string) string {
 	_key := kit.Select("", kit.Split(key, nfs.PT), -1)
 	if _p, ok := ice.Info.Index[_key].(*ice.Context); ok && _p.Prefix(_key) == key {

@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"bytes"
 	"os"
 	"path"
 	"runtime"
@@ -11,7 +10,6 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/ctx"
-	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -21,6 +19,7 @@ import (
 
 func _runtime_init(m *ice.Message) {
 	count := kit.Int(m.Conf(RUNTIME, kit.Keys(BOOT, mdb.COUNT)))
+	defer m.Conf(RUNTIME, kit.Keys(BOOT, mdb.COUNT), count+1)
 	kit.For(kit.UnMarshal(kit.Format(ice.Info.Make)), func(k string, v ice.Any) { m.Conf(RUNTIME, kit.Keys(MAKE, strings.ToLower(k)), v) })
 	m.Conf(RUNTIME, kit.Keys(HOST, GOARCH), runtime.GOARCH)
 	m.Conf(RUNTIME, kit.Keys(HOST, GOOS), runtime.GOOS)
@@ -29,37 +28,29 @@ func _runtime_init(m *ice.Message) {
 	m.Conf(RUNTIME, kit.Keys(HOST, PWD), kit.Path(""))
 	m.Conf(RUNTIME, kit.Keys(HOST, HOME), kit.HomePath(""))
 	m.Conf(RUNTIME, kit.Keys(HOST, MAXPROCS), runtime.GOMAXPROCS(0))
-	nfs.Exists(m, "/proc/meminfo", func(p string) {
-		kit.For(kit.SplitLine(m.Cmdx(nfs.CAT, p)), func(p string) {
-			switch ls := kit.Split(p, ": "); kit.Select("", ls, 0) {
-			case "MemTotal", "MemFree", "MemAvailable", "Buffers", "Cached":
-				m.Conf(RUNTIME, kit.Keys(HOST, ls[0]), kit.FmtSize(kit.Int(ls[1])*1024))
-			}
-		})
-	})
+	ice.Info.System = m.Conf(RUNTIME, kit.Keys(HOST, OSID))
+	ice.Info.PidPath = ice.VAR_LOG_ICE_PID
 	kit.For(ENV_LIST, func(k string) {
 		m.Conf(RUNTIME, kit.Keys(CONF, k), kit.Env(k))
 		kit.If(k == CTX_PID, func() { ice.Info.PidPath = kit.Env(k) })
 	})
-	ice.Info.PidPath = ice.VAR_LOG_ICE_PID
 	ice.Info.Lang = m.Conf(RUNTIME, kit.Keys(CONF, LANG))
+	m.Conf(RUNTIME, kit.Keys(BOOT, USERNAME), kit.UserName())
 	m.Conf(RUNTIME, kit.Keys(BOOT, HOSTNAME), kit.Env("HOSTNAME"))
+	m.Conf(RUNTIME, kit.Keys(BOOT, PATHNAME), path.Base(kit.Path("")))
 	if name, e := os.Hostname(); e == nil && name != "" {
 		m.Conf(RUNTIME, kit.Keys(BOOT, HOSTNAME), name)
 	}
-	m.Conf(RUNTIME, kit.Keys(BOOT, USERNAME), kit.UserName())
-	m.Conf(RUNTIME, kit.Keys(BOOT, PATHNAME), path.Base(kit.Path("")))
-	ice.Info.Hostname = m.Conf(RUNTIME, kit.Keys(BOOT, HOSTNAME))
 	ice.Info.Username = m.Conf(RUNTIME, kit.Keys(BOOT, USERNAME))
+	ice.Info.Hostname = m.Conf(RUNTIME, kit.Keys(BOOT, HOSTNAME))
 	ice.Info.Pathname = m.Conf(RUNTIME, kit.Keys(BOOT, PATHNAME))
-	kit.HashSeed = append(kit.HashSeed, ice.Info.Hostname)
 	kit.HashSeed = append(kit.HashSeed, ice.Info.Username)
+	kit.HashSeed = append(kit.HashSeed, ice.Info.Hostname)
 	kit.HashSeed = append(kit.HashSeed, ice.Info.Pathname)
-	ice.Info.System = m.Conf(RUNTIME, kit.Keys(HOST, OSID))
 	aaa.UserRoot(ice.Pulse, "", ice.Info.Make.Username, aaa.TECH, ice.DEV)
 	aaa.UserRoot(ice.Pulse, "", ice.Info.Username, aaa.ROOT, ice.OPS)
-	m.Conf(RUNTIME, kit.Keys(BOOT, mdb.TIME), m.Time())
 	ice.Info.Time = m.Time()
+	m.Conf(RUNTIME, kit.Keys(BOOT, mdb.TIME), ice.Info.Time)
 	if runtime.GOARCH != MIPSLE {
 		msg := m.Cmd(nfs.DIR, _system_find(m, os.Args[0]), "time,path,size,hash")
 		m.Conf(RUNTIME, kit.Keys(BOOT, mdb.HASH), msg.Append(mdb.HASH))
@@ -68,9 +59,14 @@ func _runtime_init(m *ice.Message) {
 		ice.Info.Hash = msg.Append(mdb.HASH)
 		ice.Info.Size = msg.Append(nfs.SIZE)
 	}
-	m.Conf(RUNTIME, kit.Keys(BOOT, mdb.COUNT), count+1)
-	m.Conf(RUNTIME, mdb.META, "")
-	m.Conf(RUNTIME, mdb.HASH, "")
+	nfs.Exists(m, "/proc/meminfo", func(p string) {
+		kit.For(kit.SplitLine(m.Cmdx(nfs.CAT, p)), func(p string) {
+			switch ls := kit.Split(p, ": "); kit.Select("", ls, 0) {
+			case "MemTotal", "MemFree", "MemAvailable", "Buffers", "Cached":
+				m.Conf(RUNTIME, kit.Keys(BOOT, ls[0]), kit.FmtSize(kit.Int(ls[1])*1024))
+			}
+		})
+	})
 }
 func _runtime_hostinfo(m *ice.Message) {
 	m.Push("time", ice.Info.Make.Time)
@@ -82,14 +78,12 @@ func _runtime_hostinfo(m *ice.Message) {
 	m.Push("Sys", kit.FmtSize(stats.Sys))
 	m.Push("Alloc", kit.FmtSize(stats.Alloc))
 	m.Push("TotalAlloc", kit.FmtSize(stats.TotalAlloc))
-	m.Push("Objects", stats.HeapObjects)
 	m.Push("StackSys", kit.FmtSize(stats.StackSys))
 	m.Push("StackInuse", kit.FmtSize(stats.StackInuse))
 	m.Push("HeapSys", kit.FmtSize(stats.HeapSys))
 	m.Push("HeapInuse", kit.FmtSize(stats.HeapInuse))
 	m.Push("HeapIdle", kit.FmtSize(stats.HeapIdle))
 	m.Push("HeapReleased", kit.FmtSize(stats.HeapReleased))
-
 	m.Push("NumGC", stats.NumGC)
 	m.Push("LastGC", time.Unix(int64(stats.LastGC)/int64(time.Second), int64(stats.LastGC)%int64(time.Second)))
 	m.Push("uptime", kit.Split(m.Cmdx(SYSTEM, "uptime"), mdb.FS)[0])
@@ -148,12 +142,10 @@ const (
 const (
 	CTX_SHY  = "ctx_shy"
 	CTX_DEV  = "ctx_dev"
-	CTX_HUB  = "ctx_hub"
-	CTX_COM  = "ctx_com"
 	CTX_OPS  = "ctx_ops"
 	CTX_DEMO = "ctx_demo"
-	CTX_ROOT = "ctx_root"
 	CTX_MAIL = "ctx_mail"
+	CTX_ROOT = "ctx_root"
 
 	CTX_PID = "ctx_pid"
 	CTX_LOG = "ctx_log"
@@ -161,21 +153,18 @@ const (
 	CTX_ENV = "ctx_env"
 )
 
-var ENV_LIST = []string{TZ, LANG, TERM, SHELL, CTX_SHY, CTX_DEV, CTX_HUB, CTX_COM, CTX_OPS, CTX_ROOT, CTX_DEMO, CTX_MAIL, CTX_PID}
+var ENV_LIST = []string{TZ, LANG, TERM, SHELL, CTX_SHY, CTX_DEV, CTX_OPS, CTX_DEMO, CTX_MAIL, CTX_ROOT, CTX_PID}
 
 const (
+	USERNAME = "username"
 	HOSTNAME = "hostname"
 	PATHNAME = "pathname"
-	USERNAME = "username"
 )
 const (
 	IFCONFIG = "ifconfig"
 	DISKINFO = "diskinfo"
 	HOSTINFO = "hostinfo"
 	USERINFO = "userinfo"
-	PROCSTAT = "procstat"
-	PROCINFO = "procinfo"
-	PROCKILL = "prockill"
 	BOOTINFO = "bootinfo"
 	MAXPROCS = "maxprocs"
 )
@@ -183,28 +172,22 @@ const RUNTIME = "runtime"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		RUNTIME: {Name: "runtime info=bootinfo,ifconfig,diskinfo,hostinfo,userinfo,procstat,procinfo,bootinfo,role,api,cli,cmd,mod,env,path,chain,routine auto upgrade reboot stash logs conf", Icon: "Infomation.png", Help: "运行环境", Actions: ice.MergeActions(ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				aaa.White(m, ice.LICENSE)
-				_runtime_init(m)
-			}},
-			IFCONFIG: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(tcp.HOST) }},
-			DISKINFO: {Hand: func(m *ice.Message, arg ...string) { _runtime_diskinfo(m) }},
-			HOSTINFO: {Hand: func(m *ice.Message, arg ...string) { _runtime_hostinfo(m) }},
+		RUNTIME: {Name: "runtime info=bootinfo,ifconfig,diskinfo,hostinfo,userinfo,bootinfo,role,api,cli,cmd,mod,env,path,chain auto upgrade reboot stash logs conf lock", Icon: "Infomation.png", Help: "运行环境", Actions: ice.MergeActions(ice.Actions{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { _runtime_init(m); aaa.White(m, ice.LICENSE) }},
+			IFCONFIG:     {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(tcp.HOST) }},
+			DISKINFO:     {Hand: func(m *ice.Message, arg ...string) { _runtime_diskinfo(m) }},
+			HOSTINFO:     {Hand: func(m *ice.Message, arg ...string) { _runtime_hostinfo(m) }},
 			HOSTNAME: {Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) > 0 {
 					ice.Info.Hostname = mdb.Conf(m, RUNTIME, kit.Keys(NODE, mdb.NAME), mdb.Conf(m, RUNTIME, kit.Keys(BOOT, HOSTNAME), arg[0]))
 				}
 				m.Echo(ice.Info.Hostname)
 			}},
-			USERINFO: {Hand: func(m *ice.Message, arg ...string) { m.Split(m.Cmdx(SYSTEM, "who"), "user term time") }},
-			PROCSTAT: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(PROCSTAT) }},
-			PROCINFO: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(PROCINFO) }},
-			PROCKILL: {Help: "结束进程", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(gdb.SIGNAL, gdb.STOP, m.Option("PID")).ProcessRefresh() }},
 			MAXPROCS: {Hand: func(m *ice.Message, arg ...string) {
 				kit.If(len(arg) > 0, func() { runtime.GOMAXPROCS(kit.Int(mdb.Conf(m, RUNTIME, kit.Keys(HOST, MAXPROCS), arg[0]))) })
 				m.Echo("%d", runtime.GOMAXPROCS(0))
 			}},
+			USERINFO: {Hand: func(m *ice.Message, arg ...string) { m.Split(m.Cmdx(SYSTEM, "who"), "user term time") }},
 			aaa.ROLE: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(aaa.ROLE, func(value ice.Maps) { m.Push(mdb.KEY, kit.Keys(value[aaa.ROLE], value[mdb.ZONE], value[mdb.KEY])) })
 				ctx.DisplayStorySpide(m.Options(nfs.DIR_ROOT, "ice."), mdb.FIELD, mdb.KEY, lex.SPLIT, nfs.PT)
@@ -235,47 +218,13 @@ func init() {
 				kit.For(ice.Info.Gomod, func(k string, v string) { m.Push(nfs.MODULE, k).Push(nfs.VERSION, v) })
 			}},
 			ENV: {Hand: func(m *ice.Message, arg ...string) {
-				kit.For(os.Environ(), func(v string) {
-					ls := strings.SplitN(v, mdb.EQ, 2)
-					m.Push(mdb.NAME, ls[0]).Push(mdb.VALUE, ls[1])
-				})
+				kit.For(os.Environ(), func(v string) { ls := strings.SplitN(v, mdb.EQ, 2); m.Push(mdb.NAME, ls[0]).Push(mdb.VALUE, ls[1]) })
 				m.Sort(mdb.NAME)
 			}},
 			nfs.PATH: {Hand: func(m *ice.Message, arg ...string) {
 				kit.For(_path_split(os.Getenv(PATH)), func(p string) { m.Push(nfs.PATH, p) })
 			}},
 			"chain": {Hand: func(m *ice.Message, arg ...string) { m.Echo(m.FormatChain()) }},
-			"routine": {Hand: func(m *ice.Message, arg ...string) {
-				status := map[string]int{}
-				buf := make([]byte, 4096*4096)
-				runtime.Stack(buf, true)
-			outer:
-				for _, v := range bytes.Split(buf, []byte(lex.NL+lex.NL)) {
-					ls := bytes.Split(v, []byte(lex.NL))
-					if ls := strings.SplitN(string(ls[0]), " ", 3); len(ls) > 0 {
-						m.Push(mdb.ID, ls[1]).Push(mdb.STATUS, ls[2])
-						status[kit.Split(string(ls[2]), " []:")[0]]++
-					}
-					for i := 1; i < len(ls); i += 2 {
-						if bytes.HasPrefix(ls[i], []byte("shylinux.com/x/")) {
-							m.Push(nfs.PATH, kit.TrimPath(string(ls[i+1]))).Push("func", string(ls[i]))
-							continue outer
-						}
-					}
-					m.Push(nfs.PATH, kit.TrimPath(string(ls[2]))).Push("func", string(ls[1]))
-				}
-				var stats runtime.MemStats
-				runtime.ReadMemStats(&stats)
-				m.StatusTimeCount(status, "GOMAXPROCS", runtime.GOMAXPROCS(0), "NumGC", stats.NumGC,
-					"Sys", kit.FmtSize(stats.Sys),
-					"Alloc", kit.FmtSize(stats.Alloc),
-					"StackSys", kit.FmtSize(stats.StackSys),
-					"StackInuse", kit.FmtSize(stats.StackInuse),
-					"HeapSys", kit.FmtSize(stats.HeapSys),
-					"HeapInuse", kit.FmtSize(stats.HeapInuse),
-				)
-				m.Echo("%v", string(buf))
-			}},
 			"upgrade": {Help: "升级", Hand: func(m *ice.Message, arg ...string) {
 				if nfs.Exists(m, ice.SRC_MAIN_GO) && nfs.Exists(m, ".git") && SystemFind(m, "go") != "" {
 					m.Cmdy("web.code.vimer", "compile")
@@ -310,9 +259,8 @@ func init() {
 			m.Cmdy(ctx.CONFIG, RUNTIME, arg).StatusTime(mdb.TIME, ice.Info.Make.Time,
 				mdb.HASH, kit.Cut(ice.Info.Hash, 6), nfs.SIZE, ice.Info.Size,
 				mdb.NAME, ice.Info.NodeName, nfs.VERSION, ice.Info.Make.Versions(),
-			).Option(ice.MSG_ACTION, "")
+			).Action()
 			ctx.DisplayStoryJSON(m)
-			m.Action("lock")
 		}},
 	})
 }
@@ -344,8 +292,8 @@ func ParseMake(str string) []string {
 }
 func SimpleMake() []string {
 	return []string{
-		"bootTime", ice.Info.Time, "compileTime", ice.Info.Make.Time, "commitTime", ice.Info.Make.When,
 		nfs.MODULE, ice.Info.Make.Module, nfs.VERSION, ice.Info.Make.Versions(),
+		"commitTime", ice.Info.Make.When, "compileTime", ice.Info.Make.Time, "bootTime", ice.Info.Time,
 		"kernel", runtime.GOOS, "arch", runtime.GOARCH,
 	}
 }

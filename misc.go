@@ -159,6 +159,14 @@ func (m *Message) CmdMap(arg ...string) map[string]map[string]string {
 func (m *Message) Toast(content string, arg ...string) { // title duration
 	Info.PushNotice(m, "toast", content, arg)
 }
+func (m *Message) PushStream() *Message       { return Info.PushStream(m) }
+func (m *Message) ToastSuccess(arg ...string) { m.Toast(SUCCESS, arg...) }
+func (m *Message) ToastFailure(arg ...string) { m.Toast(FAILURE, arg...) }
+func (m *Message) ToastProcess(arg ...string) func(...string) {
+	kit.If(len(arg) == 0, func() { arg = append(arg, "", "-1") })
+	m.Toast(PROCESS, arg...)
+	return func(arg ...string) { m.ToastSuccess(arg...) }
+}
 func (m *Message) Trans(en string, zh string) string {
 	switch strings.ToLower(kit.Select("", kit.Split(m.Option(MSG_LANGUAGE), "_-"), 0)) {
 	case "zh":

@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/mdb"
@@ -14,7 +15,9 @@ import (
 
 type Frame struct{ s chan os.Signal }
 
-func (f *Frame) Begin(m *ice.Message, arg ...string) { f.s = make(chan os.Signal, 10) }
+func (f *Frame) Begin(m *ice.Message, arg ...string) {
+	f.s = make(chan os.Signal, 10)
+}
 func (f *Frame) Start(m *ice.Message, arg ...string) {
 	kit.If(ice.Info.PidPath, func(p string) {
 		if f, p, e := logs.CreateFile(p); e == nil {
@@ -23,11 +26,12 @@ func (f *Frame) Start(m *ice.Message, arg ...string) {
 			fmt.Fprint(f, os.Getpid())
 		}
 	})
-	// t := kit.Duration(mdb.Conf(m, TIMER, kit.Keym(TICK)))
+	t := time.NewTicker(kit.Duration(mdb.Conf(m, TIMER, kit.Keym(TICK))))
 	for {
 		select {
-		// case <-time.Tick(t):
-		// 	m.Cmd(TIMER, HAPPEN, kit.Dict(ice.LOG_DISABLE, ice.TRUE))
+		case <-t.C:
+			m.Options(ice.LOG_DISABLE, ice.TRUE)
+			m.Cmd(TIMER, HAPPEN)
 		case s, ok := <-f.s:
 			if !ok {
 				return

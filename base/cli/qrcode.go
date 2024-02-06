@@ -50,9 +50,7 @@ const QRCODE = "qrcode"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		QRCODE: {Name: "qrcode text fg@key bg@key size auto", Help: "二维码", Role: aaa.VOID, Meta: kit.Dict(
-			ice.CTX_TRANS, kit.Dict(html.INPUT, kit.Dict(
-				mdb.TEXT, "文本", BG, "背景色", FG, "字体色",
-			)),
+			ice.CTX_TRANS, kit.Dict(html.INPUT, kit.Dict(mdb.TEXT, "文本", BG, "背景色", FG, "字体色")),
 		), Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				ice.AddRender(ice.RENDER_QRCODE, func(m *ice.Message, args ...ice.Any) string {

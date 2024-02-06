@@ -21,13 +21,7 @@ func _signal_action(m *ice.Message, arg ...string) {
 	mdb.HashSelect(m.Spawn(), arg...).Table(func(value ice.Maps) { m.Cmdy(kit.Split(value[ice.CMD])) })
 }
 func _signal_process(m *ice.Message, p string, s os.Signal) {
-	if p == "" {
-		b, _ := file.ReadFile(ice.Info.PidPath)
-		p = string(b)
-		if runtime.GOOS == ice.WINDOWS {
-			return
-		}
-	}
+	kit.If(p == "", func() { b, _ := file.ReadFile(ice.Info.PidPath); p = string(b) })
 	if p, e := os.FindProcess(kit.Int(kit.Select(kit.Format(os.Getpid()), p))); e == nil {
 		p.Signal(s)
 	}

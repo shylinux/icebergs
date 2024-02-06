@@ -52,7 +52,7 @@ func _portal_commands(m *ice.Message, arg ...string) {
 			if p := path.Join(nfs.USR_LEARNING_PORTAL, path.Join(arg...), mod, last, strings.Replace(cmd, nfs.PT, nfs.PS, -1)+".shy"); nfs.Exists(m, p) {
 				text = append(text, kit.Format("		%s %s.shy", cmd, cmd))
 			} else if p, ok := help[last+nfs.PT+cmd]; ok {
-				text = append(text, kit.Format("		%s %s", cmd, strings.TrimPrefix(ctx.FileURI(p), "/require/")))
+				text = append(text, kit.Format("		%s %s", cmd, strings.TrimPrefix(m.FileURI(p), "/require/")))
 			}
 		}
 	}

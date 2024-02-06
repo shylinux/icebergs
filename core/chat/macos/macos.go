@@ -53,7 +53,7 @@ func PodCmdAction(arg ...string) ice.Actions {
 	file := kit.FileLine(2, 100)
 	return ice.Actions{
 		mdb.SELECT: {Name: "list hash auto create", Hand: func(m *ice.Message, arg ...string) {
-			defer m.Display(ctx.FileURI(file))
+			defer m.Display(m.FileURI(file))
 			msg := disableApp(mdb.HashSelect(m.Spawn(), arg...).Sort(mdb.NAME))
 			web.PushPodCmd(msg, m.PrefixKey(), arg...)
 			has := map[string]bool{}
@@ -75,7 +75,7 @@ func CmdHashAction(arg ...string) ice.Actions {
 			}
 		}},
 		mdb.SELECT: {Hand: func(m *ice.Message, arg ...string) {
-			disableApp(mdb.HashSelect(m, arg...).Sort(mdb.NAME).Display(ctx.FileURI(file)))
+			disableApp(mdb.HashSelect(m, arg...).Sort(mdb.NAME).Display(m.FileURI(file)))
 		}},
 	}, mdb.HashAction(mdb.SHORT, kit.Select("", arg, 0), mdb.FIELD, kit.Select("time,hash,icon,name,text,space,index,args", arg, 1), kit.Slice(arg, 2)))
 }

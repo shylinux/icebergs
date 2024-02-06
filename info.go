@@ -304,7 +304,7 @@ func Module(prefix string, arg ...Any) {
 		return m
 	}
 }
-func FileURI(dir string) string {
+func (m *Message) FileURI(dir string) string {
 	if dir == "" {
 		return ""
 	} else if strings.Contains(dir, "/pkg/mod/") {
@@ -321,6 +321,6 @@ func FileURI(dir string) string {
 	if strings.HasPrefix(dir, USR_VOLCANOS) {
 		return strings.TrimPrefix(dir, USR)
 	} else {
-		return path.Join(PS, REQUIRE, dir)
+		return kit.MergeURL(path.Join(PS, REQUIRE, dir), POD, m.Option(MSG_USERPOD))
 	}
 }

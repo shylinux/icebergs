@@ -91,6 +91,7 @@ func _system_exec(m *ice.Message, cmd *exec.Cmd) {
 			if m.Echo(out.String()).Echo(err.String()); m.IsErr() {
 				m.Option(ice.MSG_ARGS, kit.Simple(http.StatusBadRequest, cmd.Args, err.String()))
 				m.Echo(strings.TrimRight(err.String(), lex.NL))
+				m.Info("err: %v", err.String())
 			}
 		}()
 	}
@@ -105,19 +106,16 @@ func _system_code(cmd *exec.Cmd) string {
 func _system_find(m *ice.Message, bin string, dir ...string) string {
 	if strings.Contains(bin, nfs.DF) {
 		return bin
-	}
-	if strings.HasPrefix(bin, nfs.PS) {
+	} else if strings.HasPrefix(bin, nfs.PS) {
 		return bin
-	}
-	if strings.HasPrefix(bin, nfs.PWD) {
+	} else if strings.HasPrefix(bin, nfs.PWD) {
 		return bin
 	}
 	kit.If(len(dir) == 0, func() { dir = append(dir, _path_split(kit.Env(PATH))...) })
 	for _, p := range dir {
 		if nfs.Exists(m, path.Join(p, bin)) {
 			return kit.Path(p, bin)
-		}
-		if IsWindows() && nfs.Exists(m, path.Join(p, bin)+".exe") {
+		} else if IsWindows() && nfs.Exists(m, path.Join(p, bin)+".exe") {
 			return kit.Path(p, bin) + ".exe"
 		}
 	}
@@ -177,10 +175,8 @@ func init() {
 				m.Echo(SystemCmds(m, "man %s %s|col -b", kit.Select("", arg[1], arg[1] != "1"), arg[0]))
 			}},
 			OPENS: {Hand: func(m *ice.Message, arg ...string) { Opens(m, arg...) }},
-		}, mdb.HashAction(mdb.SHORT, CMD, mdb.FIELD, "time,cmd,arg")), Hand: func(m *ice.Message, arg ...string) {
-			if len(arg) == 0 {
-				mdb.HashSelect(m)
-			} else if _system_exec(m, _system_cmd(m, arg...)); IsSuccess(m) && m.Append(CMD_ERR) == "" {
+		}), Hand: func(m *ice.Message, arg ...string) {
+			if _system_exec(m, _system_cmd(m, arg...)); IsSuccess(m) && m.Append(CMD_ERR) == "" {
 				m.SetAppend()
 			}
 		}},
@@ -199,9 +195,7 @@ func IsSuccess(m *ice.Message) bool { return m.Append(CODE) == "" || m.Append(CO
 
 var _cache_path []string
 
-func Shell(m *ice.Message) string {
-	return kit.Select("/bin/sh", os.Getenv("SHELL"))
-}
+func Shell(m *ice.Message) string { return kit.Select("/bin/sh", os.Getenv("SHELL")) }
 func EtcPath(m *ice.Message) (res []string) {
 	if len(_cache_path) > 0 {
 		return _cache_path

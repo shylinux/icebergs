@@ -30,7 +30,7 @@ func _daemon_exec(m *ice.Message, cmd *exec.Cmd) {
 		cmd.Stderr = w
 	}
 	h := mdb.HashCreate(m.Spawn(), STATUS, START,
-		ice.CMD, kit.Join(cmd.Args, lex.SP), DIR, cmd.Dir, ENV, kit.Select("", cmd.Env),
+		ice.CMD, kit.JoinWord(cmd.Args...), DIR, cmd.Dir, ENV, kit.Select("", cmd.Env),
 		m.OptionSimple(CMD_INPUT, CMD_OUTPUT, CMD_ERRPUT, mdb.CACHE_CLEAR_ONEXIT),
 	)
 	if e := cmd.Start(); m.Warn(e, ice.ErrNotStart, cmd.Args, err.String()) {
@@ -38,8 +38,7 @@ func _daemon_exec(m *ice.Message, cmd *exec.Cmd) {
 		return
 	}
 	mdb.HashSelectUpdate(m, h, func(value ice.Map) { value[PID] = cmd.Process.Pid })
-	m.Echo("%d", cmd.Process.Pid)
-	m.Go(func() {
+	m.Echo("%d", cmd.Process.Pid).Go(func() {
 		if e := cmd.Wait(); !m.Warn(e, ice.ErrNotStart, cmd.Args, err.String()) && cmd.ProcessState != nil && cmd.ProcessState.Success() {
 			mdb.HashModify(m, mdb.HASH, h, STATUS, STOP)
 			m.Cost(CODE, "0", ctx.ARGS, cmd.Args)
@@ -187,6 +186,4 @@ tell application "%s"
 end tell
 `, app, strings.Join(arg, lex.NL)))
 }
-func OSAScript(m *ice.Message, arg ...string) {
-	m.Cmd(SYSTEM, "osascript", "-e", arg)
-}
+func OSAScript(m *ice.Message, arg ...string) { m.Cmd(SYSTEM, "osascript", "-e", arg) }

@@ -29,8 +29,8 @@ var _color_map = map[string]color.Color{
 }
 
 var _color_list = map[string]string{
-	"aliceblue": "#f0f8ff",
 	"navy":      "#000080",
+	"aliceblue": "#f0f8ff",
 	"firebrick": "#b22222",
 }
 

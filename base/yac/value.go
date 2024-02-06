@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -458,7 +457,7 @@ func (m Message) Call(cmd string, arg ...Any) Any {
 		} else if !strings.HasPrefix(file, nfs.PS) && !strings.HasPrefix(file, ice.HTTP) {
 			file = path.Join(path.Dir(kit.Split(_parse_stack(m.Message).name, nfs.DF)[0]), file)
 		}
-		m.Display(ctx.FileURI(file), arg[1:]...)
+		m.Display(m.FileURI(file), arg[1:]...)
 	case "DebugStack":
 		list := []string{}
 		s := _parse_stack(m.Message)

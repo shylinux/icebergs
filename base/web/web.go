@@ -52,7 +52,7 @@ func (f *Frame) Start(m *ice.Message, arg ...string) {
 				f.HandleFunc(key, func(w http.ResponseWriter, r *http.Request) {
 					m.Spawn(key, cmd, c, w, r).TryCatch(true, func(msg *ice.Message) { _serve_handle(key, cmd, msg, w, r) })
 				})
-				ice.Info.Route[path.Join(list[c], key)+kit.Select("", nfs.PS, strings.HasSuffix(key, nfs.PS))] = ctx.FileURI(cmd.FileLine())
+				ice.Info.Route[path.Join(list[c], key)+kit.Select("", nfs.PS, strings.HasSuffix(key, nfs.PS))] = m.FileURI(cmd.FileLine())
 			}(key, cmd)
 		}
 	})

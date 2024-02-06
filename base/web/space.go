@@ -49,7 +49,7 @@ func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 				}
 			}).Cost(mdb.COUNT, i, mdb.NEXT, next, tcp.DIAL, dev, LINK, u.String()).Sleep(next)
 		}
-	}, kit.Join(kit.Simple(SPACE, name), lex.SP))
+	}, kit.JoinWord(SPACE, dev))
 }
 func _space_agent(m *ice.Message, args ...string) []string {
 	kit.If(m.Option(cli.GOOS), func(p string) { args = append(args, cli.SYSTEM, p) })
@@ -127,7 +127,7 @@ func _space_fork(m *ice.Message) {
 				})
 			}
 			_space_handle(m, safe, name, c)
-		}, kit.Join(kit.Simple(SPACE, name), lex.SP))
+		}, kit.JoinWord(SPACE, name))
 	}
 }
 func _space_handle(m *ice.Message, safe bool, name string, c *websocket.Conn) {

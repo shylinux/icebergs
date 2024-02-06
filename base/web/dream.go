@@ -413,11 +413,11 @@ func init() {
 						if kit.HasPrefix(value, HTTP, nfs.PS) {
 							return value
 						} else if nfs.ExistsFile(m, path.Join(ice.USR_LOCAL_WORK, m.Appendv(mdb.NAME)[index], value)) {
-							return kit.MergeURL(ctx.FileURI(value), ice.POD, m.Appendv(mdb.NAME)[index])
+							return m.Spawn(kit.Dict(ice.MSG_USERPOD, m.Appendv(mdb.NAME)[index])).FileURI(value)
 						} else if nfs.ExistsFile(m, value) {
-							return kit.MergeURL(ctx.FileURI(value))
+							return m.FileURI(value)
 						} else {
-							return kit.MergeURL(ctx.FileURI(nfs.USR_ICONS_ICEBERGS))
+							return m.FileURI(nfs.USR_ICONS_ICEBERGS)
 						}
 					}
 					return value

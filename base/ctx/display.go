@@ -10,21 +10,10 @@ import (
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web/html"
 	kit "shylinux.com/x/toolkits"
-	"shylinux.com/x/toolkits/logs"
 )
-
-type displayMessage interface {
-	Option(key string, arg ...ice.Any) string
-	Action(arg ...ice.Any) *ice.Message
-}
 
 func isLocalFile(p string) bool {
 	return !strings.HasPrefix(p, nfs.PS) && !strings.HasPrefix(p, ice.HTTP)
-}
-func Display(m *ice.Message, file string, arg ...ice.Any) *ice.Message {
-	kit.If(file == "", func() { file = kit.Keys(kit.FileName(5), nfs.JS) })
-	kit.If(isLocalFile(file), func() { file = path.Join(nfs.PS, path.Join(path.Dir(FileURI(logs.FileLines(2))), file)) })
-	return DisplayBase(m, file, arg...)
 }
 func DisplayTable(m *ice.Message, arg ...ice.Any) *ice.Message {
 	return DisplayBase(m, ice.PLUGIN_TABLE_JS, arg...)
@@ -42,21 +31,17 @@ func DisplayStoryForm(m *ice.Message, arg ...ice.Any) *ice.Message {
 	for i := range arg {
 		switch v := arg[i].(type) {
 		case string:
-			args = append(args, ice.SplitCmd("list  "+v, nil)...)
+			args = append(args, ice.SplitCmd("list "+v, nil)...)
 		default:
 			trans := kit.Value(m.Commands(m.CommandKey()).Meta, ice.CTX_TRANS)
 			if t := reflect.TypeOf(v); t.Kind() == reflect.Func {
 				name := kit.FuncName(arg[i])
-				args = append(args, kit.Dict(mdb.TYPE, html.BUTTON, mdb.NAME, name,
-					mdb.VALUE, kit.Select(name, kit.Value(trans, name), !m.IsEnglish()),
-				))
+				args = append(args, kit.Dict(mdb.TYPE, html.BUTTON, mdb.NAME, name, mdb.VALUE, kit.Select(name, kit.Value(trans, name), !m.IsEnglish())))
 			}
 		}
 	}
-	for _, v := range args {
-		m.Push("", v, kit.Split("type,name,value,values,need,action"))
-	}
-	return DisplayStory(m, "form.js")
+	kit.For(args, func(v string) { m.Push("", v, kit.Split("type,name,value,values,need,action")) })
+	return DisplayStory(m, "form")
 }
 func DisplayStoryJSON(m *ice.Message, arg ...ice.Any) *ice.Message {
 	return DisplayStory(m, "json", arg...)
@@ -71,21 +56,20 @@ func DisplayStudio(m *ice.Message, cmd ...string) *ice.Message {
 	for i, k := range cmd {
 		kit.If(!strings.Contains(cmd[i], nfs.PT), func() { cmd[i] = m.Prefix(k) })
 	}
-	return DisplayStory(m.Cmdy(COMMAND, cmd), "studio.js")
+	return DisplayStory(m.Cmdy(COMMAND, cmd), "studio")
 }
 func DisplayLocal(m *ice.Message, file string, arg ...ice.Any) *ice.Message {
-	kit.If(file == "", func() { file = path.Join(kit.PathName(5), kit.Keys(kit.FileName(5), nfs.JS)) })
+	kit.If(file == "", func() { file = strings.ReplaceAll(strings.TrimPrefix(m.PrefixKey(), "web."), nfs.PT, nfs.PS) })
 	kit.If(isLocalFile(file), func() { file = path.Join(ice.PLUGIN_LOCAL, file) })
 	return DisplayBase(m, file, arg...)
 }
 func DisplayLocalInner(m *ice.Message, arg ...ice.Any) *ice.Message {
-	return DisplayLocal(m, "code/inner.js", arg...)
+	return DisplayLocal(m, "code/inner", arg...)
 }
 func DisplayBase(m *ice.Message, file string, arg ...ice.Any) *ice.Message {
 	m.Option(ice.MSG_DISPLAY, m.MergeLink(kit.Select(kit.ExtChange(file, nfs.JS), file, strings.Contains(file, mdb.QS)), arg...))
-	Toolkit(m, "")
-	return m
+	return Toolkit(m, "")
 }
-func Toolkit(m *ice.Message, arg ...string) {
-	m.Option(ice.MSG_TOOLKIT, kit.Select(mdb.Config(m, mdb.TOOLS), kit.Fields(arg)))
+func Toolkit(m *ice.Message, arg ...string) *ice.Message {
+	return m.Options(ice.MSG_TOOLKIT, kit.Select(mdb.Config(m, mdb.TOOLS), kit.Fields(arg)))
 }

@@ -35,26 +35,26 @@ func init() {
 			CMD: {Name: "cmd cli osid", Hand: func(m *ice.Message, arg ...string) {
 				osid := kit.Select(mdb.Conf(m, RUNTIME, kit.Keys(HOST, OSID)), m.Option(OSID))
 				mdb.ZoneSelectCB(m, m.Option(CLI), func(value ice.Map) {
-					kit.If(strings.Contains(osid, kit.Format(value[OSID])), func() { m.Cmdy(kit.Split(kit.Format(value[CMD]))) })
+					kit.If(strings.Contains(osid, kit.Format(value[OSID])), func() {
+						m.Cmdy(kit.Split(kit.Format(value[CMD])))
+					})
 				})
 			}},
 			ADD: {Help: "安装", Hand: func(m *ice.Message, arg ...string) {
+				ice.Info.PushStream(m)
 				mdb.ZoneSelect(m, m.Option(CLI)).Table(func(value ice.Maps) {
-					ice.Info.PushStream(m)
-					m.Toast(ice.PROCESS, "", "-1")
+					m.ToastProcess()
 					if msg := m.Cmd(kit.Split(value[CMD])); IsSuccess(msg) {
-						m.Toast(ice.SUCCESS)
+						m.ToastSuccess()
 					} else {
-						m.Toast(ice.FAILURE)
+						m.ToastFailure()
 					}
 				})
 			}},
 			REPOS: {Name: "repos proxy=mirrors.tencent.com", Help: "镜像", Hand: func(m *ice.Message, arg ...string) {
 				switch {
 				case strings.Contains(_release, ALPINE):
-					m.Toast(ice.PROCESS, "", "-1")
-					defer m.Toast(ice.SUCCESS)
-					ice.Info.PushStream(m)
+					defer m.PushStream().ToastProcess()()
 					kit.If(m.Option("proxy"), func(p string) {
 						m.Cmd(nfs.SAVE, ETC_APK_REPOS, strings.ReplaceAll(m.Cmdx(nfs.CAT, ETC_APK_REPOS), "dl-cdn.alpinelinux.org", p))
 					})
@@ -95,7 +95,7 @@ func release(m *ice.Message) string {
 		}
 		return text
 	})
-	_release = strings.Join(list, lex.SP)
+	_release = kit.JoinWord(list...)
 	return _release
 }
 func insert(m *ice.Message, sys, cmd string, arg ...string) bool {

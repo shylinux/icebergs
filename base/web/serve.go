@@ -273,6 +273,22 @@ func Domain(host, port string) string {
 func Script(m *ice.Message, str string, arg ...ice.Any) string {
 	return ice.Render(m, ice.RENDER_SCRIPT, kit.Format(str, arg...))
 }
+func ParseUA(m *ice.Message) (res []string) {
+	res = append(res, aaa.IP, m.Option(ice.MSG_USERIP), aaa.UA, m.Option(ice.MSG_USERUA))
+	for _, p := range []string{"Android", "iPhone", "Mac", "Windows"} {
+		if strings.Contains(m.Option(ice.MSG_USERUA), p) {
+			res = append(res, cli.SYSTEM, p)
+			break
+		}
+	}
+	for _, p := range []string{"MicroMessenger", "Alipay", "Edg", "Chrome", "Safari", "Go-http-client"} {
+		if strings.Contains(m.Option(ice.MSG_USERUA), p) {
+			res = append(res, AGENT, p, mdb.ICONS, agentIcons[p])
+			break
+		}
+	}
+	return
+}
 func ChatCmdPath(m *ice.Message, arg ...string) string {
 	return m.MergePodCmd("", kit.Select(m.PrefixKey(), path.Join(arg...)))
 }

@@ -1,6 +1,8 @@
 package chat
 
 import (
+	"strings"
+
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
@@ -104,7 +106,7 @@ func init() {
 				link := tcp.PublishLocalhost(m, m.Option(ice.MSG_USERWEB))
 				m.Push(mdb.NAME, link).PushQRCode(mdb.TEXT, link)
 			}},
-			mdb.CREATE: {Name: "create type*=plugin,qrcode,oauth name* icons link order space index args", Hand: func(m *ice.Message, arg ...string) { mdb.HashCreate(m, m.OptionSimple()) }},
+			mdb.CREATE: {Name: "create type*=plugin,qrcode,oauth name* help icons link order space index args", Hand: func(m *ice.Message, arg ...string) { mdb.HashCreate(m, m.OptionSimple()) }},
 			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) { mdb.HashRemove(m, m.OptionSimple(mdb.NAME)) }},
 			mdb.MODIFY: {Hand: func(m *ice.Message, arg ...string) { mdb.HashModify(m, m.OptionSimple(mdb.NAME), arg) }},
 			ice.DEMO: {Help: "体验", Icon: "bi bi-shield-fill-check", Hand: func(m *ice.Message, arg ...string) {
@@ -118,13 +120,15 @@ func init() {
 					m.Echo("login failure")
 				}
 			}},
-		}, web.ApiAction(), mdb.ImportantHashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icons,type,link,order,space,index,args")), Hand: func(m *ice.Message, arg ...string) {
+		}, web.ApiAction(), mdb.ImportantHashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,help,icons,type,link,order,space,index,args")), Hand: func(m *ice.Message, arg ...string) {
 			if ice.Info.NodeType == web.WORKER {
 				return
 			}
 			kit.If(m.Option(ice.MSG_USERPOD), func(p string) {
 				m.Option(ice.MSG_NODETYPE, m.Cmdx(web.SPACE, p, cli.RUNTIME, ice.MSG_NODETYPE))
 			})
+			m.OptionDefault(ice.MSG_LANGUAGE, strings.ToLower(kit.Select("", kit.Split(m.R.Header.Get(html.AcceptLanguage), ",;"), 0)))
+			m.OptionDefault(aaa.LANGUAGE, m.Option(ice.MSG_LANGUAGE))
 			m.Option("language.list", m.Cmd(nfs.DIR, nfs.TemplatePath(m, aaa.LANGUAGE)+nfs.PS, nfs.FILE).Appendv(nfs.FILE))
 			m.Option("theme.list", m.Cmd(nfs.DIR, nfs.TemplatePath(m, aaa.THEME)+nfs.PS, nfs.FILE).Appendv(nfs.FILE))
 			m.Option(nfs.REPOS, m.Cmdv(web.SPIDE, nfs.REPOS, web.CLIENT_URL))
@@ -134,7 +138,7 @@ func init() {
 			mdb.HashSelect(m, arg...).Sort(mdb.ORDER, ice.INT)
 			m.Table(func(value ice.Maps) { m.Push(mdb.STATUS, kit.Select(mdb.ENABLE, mdb.DISABLE, value[mdb.ORDER] == "")) })
 			kit.If(m.Length() == 0, func() {
-				m.Push(mdb.TIME, m.Time()).Push(mdb.NAME, "扫码登录").Push(mdb.ICONS, nfs.USR_ICONS_VOLCANOS).Push(mdb.TYPE, cli.QRCODE).Push(web.LINK, "").Push(mdb.ORDER, "10")
+				m.Push(mdb.TIME, m.Time()).Push(mdb.NAME, "qrcode").Push(mdb.HELP, "扫码登录").Push(mdb.ICONS, nfs.USR_ICONS_VOLCANOS).Push(mdb.TYPE, cli.QRCODE).Push(web.LINK, "").Push(mdb.ORDER, "10")
 			})
 			kit.If(GetSSO(m), func(p string) {
 				m.Push(mdb.TIME, m.Time()).Push(mdb.NAME, web.SERVE).Push(mdb.ICONS, nfs.USR_ICONS_ICEBERGS).Push(mdb.TYPE, "oauth").Push(web.LINK, p)
@@ -145,9 +149,11 @@ func init() {
 				return
 			}
 			msg := m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME))
-			m.Option(aaa.LANGUAGE, m.Option(ice.MSG_LANGUAGE))
-			kit.For([]string{aaa.USERNICK, aaa.EMAIL}, func(k string) { m.Option(k, msg.Append(k)) })
+			kit.For([]string{aaa.USERNICK, aaa.EMAIL, aaa.LANGUAGE}, func(k string) { m.OptionDefault(k, msg.Append(k)) })
 			kit.For([]string{aaa.AVATAR, aaa.BACKGROUND}, func(k string) { m.Option(k, web.RequireFile(m, msg.Append(k))) })
 		}},
 	})
+}
+func AddHeaderLogin(m *ice.Message, types, name, help, order string, arg ...string) {
+	m.Cmd(web.CHAT_HEADER, mdb.CREATE, mdb.TYPE, types, mdb.NAME, name, mdb.HELP, help, mdb.ORDER, order, arg)
 }

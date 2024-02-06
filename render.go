@@ -223,7 +223,12 @@ func (m *Message) EchoInfoButton(info string, arg ...Any) *Message {
 	m.Display("/plugin/table.js", "style", "form")
 	return m.Echo(html.Format("div", info, "class", "info", "style", kit.JoinCSS())).EchoButton(arg...).Echo(NL).Action(arg...)
 }
-func (m *Message) EchoButton(arg ...Any) *Message    { return m.Echo(Render(m, RENDER_BUTTON, arg...)) }
+func (m *Message) EchoButton(arg ...Any) *Message {
+	if len(arg) == 0 || len(arg) == 1 && arg[0] == nil {
+		return m
+	}
+	return m.Echo(Render(m, RENDER_BUTTON, arg...))
+}
 func (m *Message) EchoAnchor(arg ...string) *Message { return m.Echo(Render(m, RENDER_ANCHOR, arg)) }
 func (m *Message) EchoQRCode(src string) *Message    { return m.Echo(Render(m, RENDER_QRCODE, src)) }
 func (m *Message) EchoImages(src string) *Message    { return m.Echo(Render(m, RENDER_IMAGES, src)) }

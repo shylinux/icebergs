@@ -82,6 +82,7 @@ func (m *Message) Fields(length int, fields ...string) string {
 	return m.OptionDefault(MSG_FIELDS, kit.Select(FIELDS_DETAIL, fields, length))
 }
 func (m *Message) Action(arg ...Any) *Message {
+	kit.If(len(arg) == 1 && arg[0] == nil, func() { arg = arg[:0] })
 	kit.For(arg, func(i int, v Any) { arg[i] = kit.LowerCapital(kit.Format(v)) })
 	return m.Options(MSG_ACTION, kit.Format(arg))
 }

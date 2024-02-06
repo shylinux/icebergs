@@ -8,66 +8,72 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
-	"shylinux.com/x/icebergs/base/web/html"
 	kit "shylinux.com/x/toolkits"
 )
 
 type apply struct {
 	ice.Hash
 	email string `data:"admin"`
-	field string `data:"time,hash,mobile,email,usernick,username,userrole,status"`
-	sso   string `name:"sso" help:"登录"`
-	input string `name:"input" help:"注册" role:"void"`
+	field string `data:"time,hash,status,email,usernick,username,userrole,icons,agent,system,ip,ua"`
 	apply string `name:"apply" help:"申请" role:"void"`
-	agree string `name:"agree userrole=tech" help:"同意" icon:"bi bi-check2-square"`
+	agree string `name:"agree userrole=tech,void" help:"同意" icon:"bi bi-check2-square"`
 	login string `name:"login" help:"登录" role:"void"`
 	list  string `name:"list hash auto sso" help:"注册"`
 }
 
 func (s apply) Sso(m *ice.Message, arg ...string) {
-	m.Cmd(web.CHAT_HEADER, mdb.CREATE, mdb.TYPE, cli.QRCODE, mdb.NAME, "扫码登录", mdb.ORDER, "10")
-	m.Cmd(web.CHAT_HEADER, mdb.CREATE, mdb.TYPE, mdb.PLUGIN, mdb.NAME, "邮箱登录", mdb.ORDER, "20", ctx.INDEX, m.PrefixKey(), ctx.ARGS, kit.FuncName(s.Email))
-	m.Cmd(web.CHAT_HEADER, mdb.CREATE, mdb.TYPE, mdb.PLUGIN, mdb.NAME, "注册用户", mdb.ORDER, "30", ctx.INDEX, m.PrefixKey(), ctx.ARGS, kit.FuncName(s.Input))
-}
-func (s apply) Input(m *ice.Message, arg ...string) {
-	kit.If(m.Option(mdb.HASH) == kit.FuncName(s.Input), func() { m.Options(mdb.HASH, "") })
-	if k := _cookie_key(m); m.Option(k) == "" || s.List(m, m.Option(k)).Length() == 0 && m.Result() == "" {
-		ctx.DisplayStoryForm(m.Message, "email*", aaa.USERNICK, s.Apply)
-	}
+	m.AddHeaderLogin(cli.QRCODE, cli.QRCODE, "扫码登录", "10")
+	m.AddHeaderLogin(mdb.PLUGIN, aaa.EMAIL, "邮箱登录", "20", ctx.INDEX, m.PrefixKey(), ctx.ARGS, kit.FuncName(s.Login))
+	m.AddHeaderLogin(mdb.PLUGIN, aaa.APPLY, "注册用户", "30", ctx.INDEX, m.PrefixKey(), ctx.ARGS, kit.FuncName(s.Apply))
 }
 func (s apply) Apply(m *ice.Message, arg ...string) {
-	if m.Warn(m.Options(arg).Cmd(aaa.USER, m.Option(aaa.EMAIL)).Length() > 0, ice.ErrAlreadyExists) {
-		return
+	if m.IsGetMethod() {
+		if k := _cookie_key(m); m.Option(k) == "" || s.List(m, m.Option(k)).Length() == 0 && m.Result() == "" {
+			m.DisplayForm(m, "email*", aaa.USERNICK, s.Apply)
+		}
+	} else if !m.Warn(m.Options(arg).Cmd(aaa.USER, m.Option(aaa.EMAIL)).Length() > 0, ice.ErrAlreadyExists, aaa.USER, m.Option(aaa.EMAIL)) {
+		m.ProcessCookie(_cookie_key(m), s.Hash.Create(m, kit.Simple(append(arg, mdb.STATUS, kit.FuncName(s.Apply), aaa.USERNAME, m.Option(aaa.EMAIL)), web.ParseUA(m.Message), cli.DAEMON, m.Option(ice.MSG_DAEMON))...))
 	}
-	m.ProcessCookie(_cookie_key(m), s.Hash.Create(m, kit.Simple(append(arg, aaa.USERNAME, m.Option(aaa.EMAIL)), mdb.STATUS, s.Apply,
-		aaa.IP, m.Option(ice.MSG_USERIP), aaa.UA, m.Option(ice.MSG_USERUA), cli.DAEMON, m.Option(ice.MSG_DAEMON))...))
 }
 func (s apply) Agree(m *ice.Message, arg ...string) {
+	if m.Warn(m.Option(mdb.HASH) == "", ice.ErrNotValid, mdb.PARAMS, mdb.HASH) {
+		return
+	}
 	msg := s.Hash.List(m.Spawn(), m.Option(mdb.HASH))
+	if m.Warn(msg.Length() == 0, ice.ErrNotFound, m.PrefixKey(), m.Option(mdb.HASH)) {
+		return
+	}
 	s.Hash.Modify(m, kit.Simple(m.OptionSimple(mdb.HASH, aaa.USERROLE), mdb.STATUS, s.Agree)...)
-	m.Cmd(aaa.USER, mdb.CREATE, msg.AppendSimple(aaa.USERNICK, aaa.USERNAME), m.Option(aaa.USERROLE))
-	web.PushNotice(m.Spawn(kit.Dict(ice.MSG_DAEMON, msg.Append(cli.DAEMON))).Message, html.REFRESH)
+	m.Cmd(aaa.USER, mdb.CREATE, msg.AppendSimple(aaa.USERNICK, aaa.USERNAME), m.OptionSimple(aaa.USERROLE))
+	m.PushRefresh(msg.Append(cli.DAEMON))
 }
 func (s apply) Login(m *ice.Message, arg ...string) {
-	kit.If(m.Option(mdb.HASH) == kit.FuncName(s.Input), func() { m.Options(mdb.HASH, "") })
-	if m.Options(arg).Option(aaa.EMAIL) == "" {
-		m.OptionDefault(mdb.HASH, m.Option(_cookie_key(m)))
+	kit.If(m.Option(mdb.HASH) == kit.FuncName(s.Apply), func() { m.Options(mdb.HASH, "") })
+	if m.IsGetMethod() {
+		m.DisplayForm("email*", s.Login)
+	} else if m.Options(arg).Option(aaa.EMAIL) == "" {
+		if m.Warn(m.OptionDefault(mdb.HASH, m.Option(_cookie_key(m))) == "", ice.ErrNotValid, mdb.PARAMS, mdb.HASH) {
+			m.ProcessCookie(_cookie_key(m), "")
+			return
+		}
+		msg := s.Hash.List(m.Spawn(), m.Option(mdb.HASH))
+		if m.Warn(msg.Length() == 0, ice.ErrNotFound, m.PrefixKey(), m.Option(mdb.HASH)) {
+			m.ProcessCookie(_cookie_key(m), "")
+			return
+		}
 		s.Hash.Modify(m, kit.Simple(m.OptionSimple(mdb.HASH), mdb.STATUS, s.Login)...)
-		web.RenderCookie(m.Message, m.Cmdx(aaa.SESS, mdb.CREATE, s.Hash.List(m.Spawn(), m.Option(mdb.HASH)).Append(aaa.USERNAME)))
+		web.RenderCookie(m.Message, m.Cmdx(aaa.SESS, mdb.CREATE, msg.Append(aaa.USERNAME)))
 		m.ProcessLocation(nfs.PS)
 	} else {
-		if m.Warn(m.Cmd(aaa.USER, m.Option(aaa.EMAIL)).Length() == 0, ice.ErrNotFound) {
+		if m.Warn(m.Cmd(aaa.USER, m.Option(aaa.EMAIL)).Length() == 0, ice.ErrNotFound, aaa.USER, m.Option(aaa.EMAIL)) {
 			return
 		}
 		m.Options(ice.MSG_USERNAME, m.Option(aaa.EMAIL))
 		space := kit.Keys(kit.Slice(kit.Split(m.Option(ice.MSG_DAEMON), nfs.PT), 0, -1))
 		share := m.Cmd(web.SHARE, mdb.CREATE, mdb.TYPE, web.FIELD, mdb.NAME, web.CHAT_GRANT, mdb.TEXT, space).Append(mdb.LINK)
-		aaa.SendEmail(m.Options(web.LINK, share).Message, "", "", "")
-		m.ProcessHold()
+		m.SendEmail(m.Options(web.LINK, share), "", "", "")
+		m.ProcessHold(m.Trans("please auth login in mailbox", "请注意查收邮件"))
 	}
-}
-func (s apply) Email(m *ice.Message, arg ...string) {
-	ctx.DisplayStoryForm(m.Message, "email*", s.Login).Echo("please auth login in mailbox, after email sent")
 }
 func (s apply) List(m *ice.Message, arg ...string) *ice.Message {
 	kit.If(m.Option(_cookie_key(m)), func(p string) { arg = []string{p} })
@@ -82,19 +88,19 @@ func (s apply) List(m *ice.Message, arg ...string) *ice.Message {
 		}
 	})
 	if len(arg) == 0 {
-		m.EchoQRCode(m.MergePodCmd("", "", ctx.ACTION, s.Input))
-	} else if m.Option(_cookie_key(m)) != "" || !kit.IsIn(m.ActionKey(), "", ice.LIST, mdb.SELECT) {
+		m.EchoQRCode(m.MergePodCmd("", "", ctx.ACTION, s.Apply))
+	} else if m.Option(_cookie_key(m)) != "" || m.ActionKey() != "" {
 		switch m.Append(mdb.STATUS) {
 		case kit.FuncName(s.Login):
-			if m.ActionKey() == kit.FuncName(s.Input) {
+			if m.ActionKey() == kit.FuncName(s.Apply) {
 				m.ProcessCookie(_cookie_key(m), "")
 			} else {
 				m.SetAppend().ProcessLocation(nfs.PS)
 			}
 		case kit.FuncName(s.Agree):
-			m.SetAppend().EchoInfoButton("please login", s.Login)
+			m.SetAppend().EchoInfoButton(m.Trans("please login", "请登录"), s.Login)
 		case kit.FuncName(s.Apply):
-			m.SetAppend().EchoInfoButton("please wait admin agree")
+			m.SetAppend().EchoInfoButton(m.Trans("please wait admin agree", "请等待管理员同意"), nil)
 		}
 	}
 	return m

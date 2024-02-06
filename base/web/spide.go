@@ -291,7 +291,7 @@ func init() {
 	}
 	nfs.TemplateText = func(m *ice.Message, p string) string {
 		if p := kit.Select(nfs.TemplatePath(m, path.Base(p)), m.Option("_template")); kit.HasPrefix(p, "/require/", ice.HTTP) {
-			return m.Cmdx(SPIDE, ice.DEV, SPIDE_RAW, http.MethodGet, p)
+			return m.Cmdx(SPIDE, ice.OPS, SPIDE_RAW, http.MethodGet, p)
 		} else {
 			return m.Cmdx(nfs.CAT, p)
 		}

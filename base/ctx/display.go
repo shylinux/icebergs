@@ -44,8 +44,12 @@ func DisplayStoryForm(m *ice.Message, arg ...ice.Any) *ice.Message {
 		case string:
 			args = append(args, ice.SplitCmd("list  "+v, nil)...)
 		default:
+			trans := kit.Value(m.Commands(m.CommandKey()).Meta, ice.CTX_TRANS)
 			if t := reflect.TypeOf(v); t.Kind() == reflect.Func {
-				args = append(args, kit.Dict(mdb.TYPE, html.BUTTON, mdb.NAME, kit.FuncName(arg[i])))
+				name := kit.FuncName(arg[i])
+				args = append(args, kit.Dict(mdb.TYPE, html.BUTTON, mdb.NAME, name,
+					mdb.VALUE, kit.Select(name, kit.Value(trans, name), !m.IsEnglish()),
+				))
 			}
 		}
 	}

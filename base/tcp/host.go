@@ -87,8 +87,8 @@ func init() {
 			ISLOCAL: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] = strings.Split(strings.TrimPrefix(arg[0], "["), "]")[0]; arg[0] == "::1" || strings.HasPrefix(arg[0], "127.") || arg[0] == LOCALHOST {
 					m.Echo(ice.OK)
-				} else if mdb.HashSelectField(m, strings.Split(arg[0], nfs.DF)[0], mdb.TYPE) == aaa.WHITE {
-					m.Echo(ice.OK)
+					// } else if mdb.HashSelectField(m, strings.Split(arg[0], nfs.DF)[0], mdb.TYPE) == aaa.WHITE {
+					// 	m.Echo(ice.OK)
 				}
 			}},
 			PUBLISH: {Hand: func(m *ice.Message, arg ...string) {

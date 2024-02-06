@@ -160,7 +160,7 @@ func (m *Message) Toast(content string, arg ...string) { // title duration
 	Info.PushNotice(m, "toast", content, arg)
 }
 func (m *Message) Trans(en string, zh string) string {
-	switch strings.ToLower(kit.Split(m.Option(MSG_LANGUAGE), "_-")[0]) {
+	switch strings.ToLower(kit.Select("", kit.Split(m.Option(MSG_LANGUAGE), "_-"), 0)) {
 	case "zh":
 		return zh
 	default:

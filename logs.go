@@ -131,8 +131,20 @@ func (m *Message) Warn(err Any, arg ...Any) bool {
 	}
 	return true
 }
-func (m *Message) WarnTimeNotValid(time Any, arg ...Any) bool {
-	return m.Warn(kit.Format(time) < m.Time(), ErrNotValid, kit.Simple(arg), time, m.Time(), logs.FileLineMeta(2))
+func (m *Message) WarnNotValidTime(time Any, arg ...Any) bool {
+	return m.Warn(kit.Format(time) < m.Time(), ErrNotValid, kit.Simple(arg...), time, m.Time(), logs.FileLineMeta(2))
+}
+func (m *Message) WarnNotValid(err Any, arg ...Any) bool {
+	return m.Warn(err, ErrNotValid, kit.Simple(arg...), logs.FileLineMeta(2))
+}
+func (m *Message) WarnNotFound(err Any, arg ...Any) bool {
+	return m.Warn(err, ErrNotFound, kit.Simple(arg...), logs.FileLineMeta(2))
+}
+func (m *Message) WarnNotRight(err Any, arg ...Any) bool {
+	return m.Warn(err, ErrNotRight, kit.Simple(arg...), logs.FileLineMeta(2))
+}
+func (m *Message) WarnAlreadyExists(err Any, arg ...Any) bool {
+	return m.Warn(err, ErrAlreadyExists, kit.Simple(arg...), logs.FileLineMeta(2))
 }
 func (m *Message) ErrorNotImplement(arg ...Any) *Message {
 	m.Error(true, append(kit.List(ErrNotImplement), arg...)...)

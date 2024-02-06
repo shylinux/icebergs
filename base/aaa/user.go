@@ -73,11 +73,11 @@ func UserNick(m *ice.Message, username ice.Any) (nick string) {
 func UserRole(m *ice.Message, username ice.Any) (role string) {
 	if username == "" {
 		return VOID
-	}
-	if role = VOID; username == ice.Info.Username {
+	} else if role = VOID; username == ice.Info.Username {
 		return ROOT
+	} else {
+		return UserInfo(m, username, USERROLE, ice.MSG_USERROLE)
 	}
-	return UserInfo(m, username, USERROLE, ice.MSG_USERROLE)
 }
 func UserZone(m *ice.Message, username ice.Any) (zone string) {
 	return UserInfo(m, username, USERZONE, ice.MSG_USERZONE)

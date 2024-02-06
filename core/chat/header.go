@@ -124,11 +124,12 @@ func init() {
 			if ice.Info.NodeType == web.WORKER {
 				return
 			}
-			kit.If(m.Option(ice.MSG_USERPOD), func(p string) {
-				m.Option(ice.MSG_NODETYPE, m.Cmdx(web.SPACE, p, cli.RUNTIME, ice.MSG_NODETYPE))
-			})
-			m.OptionDefault(ice.MSG_LANGUAGE, strings.ToLower(kit.Select("", kit.Split(m.R.Header.Get(html.AcceptLanguage), ",;"), 0)))
-			m.OptionDefault(aaa.LANGUAGE, m.Option(ice.MSG_LANGUAGE))
+			kit.If(m.Option(ice.MSG_USERPOD), func(p string) { m.Option(ice.MSG_NODETYPE, m.Cmdx(web.SPACE, p, cli.RUNTIME, ice.MSG_NODETYPE)) })
+			m.Option(aaa.LANGUAGE, strings.ReplaceAll(strings.ToLower(kit.Select("", kit.Split(kit.GetValid(
+				func() string { return kit.Select("", "zh-cn", strings.Contains(m.Option(ice.MSG_USERUA), "zh_CN")) },
+				func() string { return kit.Select("", kit.Split(m.R.Header.Get(html.AcceptLanguage), ",;"), 0) },
+				func() string { return ice.Info.Lang },
+			), " ."), 0)), "_", "-"))
 			m.Option("language.list", m.Cmd(nfs.DIR, nfs.TemplatePath(m, aaa.LANGUAGE)+nfs.PS, nfs.FILE).Appendv(nfs.FILE))
 			m.Option("theme.list", m.Cmd(nfs.DIR, nfs.TemplatePath(m, aaa.THEME)+nfs.PS, nfs.FILE).Appendv(nfs.FILE))
 			m.Option(nfs.REPOS, m.Cmdv(web.SPIDE, nfs.REPOS, web.CLIENT_URL))
@@ -138,7 +139,7 @@ func init() {
 			mdb.HashSelect(m, arg...).Sort(mdb.ORDER, ice.INT)
 			m.Table(func(value ice.Maps) { m.Push(mdb.STATUS, kit.Select(mdb.ENABLE, mdb.DISABLE, value[mdb.ORDER] == "")) })
 			kit.If(m.Length() == 0, func() {
-				m.Push(mdb.TIME, m.Time()).Push(mdb.NAME, "qrcode").Push(mdb.HELP, "扫码登录").Push(mdb.ICONS, nfs.USR_ICONS_VOLCANOS).Push(mdb.TYPE, cli.QRCODE).Push(web.LINK, "").Push(mdb.ORDER, "10")
+				m.Push(mdb.TIME, m.Time()).Push(mdb.NAME, cli.QRCODE).Push(mdb.HELP, "扫码登录").Push(mdb.ICONS, nfs.USR_ICONS_VOLCANOS).Push(mdb.TYPE, cli.QRCODE).Push(web.LINK, "").Push(mdb.ORDER, "10")
 			})
 			kit.If(GetSSO(m), func(p string) {
 				m.Push(mdb.TIME, m.Time()).Push(mdb.NAME, web.SERVE).Push(mdb.ICONS, nfs.USR_ICONS_ICEBERGS).Push(mdb.TYPE, "oauth").Push(web.LINK, p)
@@ -149,7 +150,7 @@ func init() {
 				return
 			}
 			msg := m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME))
-			kit.For([]string{aaa.USERNICK, aaa.EMAIL, aaa.LANGUAGE}, func(k string) { m.OptionDefault(k, msg.Append(k)) })
+			kit.For([]string{aaa.EMAIL, aaa.LANGUAGE, aaa.USERNICK}, func(k string) { kit.If(msg.Append(k), func(v string) { m.Option(k, v) }) })
 			kit.For([]string{aaa.AVATAR, aaa.BACKGROUND}, func(k string) { m.Option(k, web.RequireFile(m, msg.Append(k))) })
 		}},
 	})

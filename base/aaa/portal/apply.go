@@ -31,16 +31,16 @@ func (s apply) Apply(m *ice.Message, arg ...string) {
 		if k := _cookie_key(m); m.Option(k) == "" || s.List(m, m.Option(k)).Length() == 0 && m.Result() == "" {
 			m.DisplayForm(m, "email*", aaa.USERNICK, s.Apply)
 		}
-	} else if !m.Warn(m.Options(arg).Cmd(aaa.USER, m.Option(aaa.EMAIL)).Length() > 0, ice.ErrAlreadyExists, aaa.USER, m.Option(aaa.EMAIL)) {
+	} else if !m.WarnAlreadyExists(m.Options(arg).Cmd(aaa.USER, m.Option(aaa.EMAIL)).Length() > 0, m.Option(aaa.EMAIL)) {
 		m.ProcessCookie(_cookie_key(m), s.Hash.Create(m, kit.Simple(append(arg, mdb.STATUS, kit.FuncName(s.Apply), aaa.USERNAME, m.Option(aaa.EMAIL)), web.ParseUA(m.Message), cli.DAEMON, m.Option(ice.MSG_DAEMON))...))
 	}
 }
 func (s apply) Agree(m *ice.Message, arg ...string) {
-	if m.Warn(m.Option(mdb.HASH) == "", ice.ErrNotValid, mdb.PARAMS, mdb.HASH) {
+	if m.WarnNotValid(m.Option(mdb.HASH) == "", mdb.HASH) {
 		return
 	}
 	msg := s.Hash.List(m.Spawn(), m.Option(mdb.HASH))
-	if m.Warn(msg.Length() == 0, ice.ErrNotFound, m.PrefixKey(), m.Option(mdb.HASH)) {
+	if m.WarnNotFound(msg.Length() == 0, m.Option(mdb.HASH)) {
 		return
 	}
 	s.Hash.Modify(m, kit.Simple(m.OptionSimple(mdb.HASH, aaa.USERROLE), mdb.STATUS, s.Agree)...)
@@ -52,12 +52,12 @@ func (s apply) Login(m *ice.Message, arg ...string) {
 	if m.IsGetMethod() {
 		m.DisplayForm("email*", s.Login)
 	} else if m.Options(arg).Option(aaa.EMAIL) == "" {
-		if m.Warn(m.OptionDefault(mdb.HASH, m.Option(_cookie_key(m))) == "", ice.ErrNotValid, mdb.PARAMS, mdb.HASH) {
+		if m.WarnNotValid(m.OptionDefault(mdb.HASH, m.Option(_cookie_key(m))) == "", mdb.HASH) {
 			m.ProcessCookie(_cookie_key(m), "")
 			return
 		}
 		msg := s.Hash.List(m.Spawn(), m.Option(mdb.HASH))
-		if m.Warn(msg.Length() == 0, ice.ErrNotFound, m.PrefixKey(), m.Option(mdb.HASH)) {
+		if m.WarnNotFound(msg.Length() == 0, m.Option(mdb.HASH)) {
 			m.ProcessCookie(_cookie_key(m), "")
 			return
 		}
@@ -65,13 +65,13 @@ func (s apply) Login(m *ice.Message, arg ...string) {
 		web.RenderCookie(m.Message, m.Cmdx(aaa.SESS, mdb.CREATE, msg.Append(aaa.USERNAME)))
 		m.ProcessLocation(nfs.PS)
 	} else {
-		if m.Warn(m.Cmd(aaa.USER, m.Option(aaa.EMAIL)).Length() == 0, ice.ErrNotFound, aaa.USER, m.Option(aaa.EMAIL)) {
+		if m.WarnNotFound(m.Cmd(aaa.USER, m.Option(aaa.EMAIL)).Length() == 0, m.Option(aaa.EMAIL)) {
 			return
 		}
 		m.Options(ice.MSG_USERNAME, m.Option(aaa.EMAIL))
 		space := kit.Keys(kit.Slice(kit.Split(m.Option(ice.MSG_DAEMON), nfs.PT), 0, -1))
 		share := m.Cmd(web.SHARE, mdb.CREATE, mdb.TYPE, web.FIELD, mdb.NAME, web.CHAT_GRANT, mdb.TEXT, space).Append(mdb.LINK)
-		m.SendEmail(m.Options(web.LINK, share), "", "", "")
+		m.Options(web.LINK, share).SendEmail("", "", "")
 		m.ProcessHold(m.Trans("please auth login in mailbox", "请注意查收邮件"))
 	}
 }

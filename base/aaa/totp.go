@@ -60,9 +60,7 @@ func init() {
 					m.Echo(m.Append(mdb.VALUE))
 				}
 			})
-			if len(arg) == 0 {
-				m.PushAction(mdb.REMOVE).Action(mdb.CREATE, mdb.PRUNES)
-			}
+			kit.If(len(arg) == 0, func() { m.PushAction(mdb.REMOVE).Action(mdb.CREATE, mdb.PRUNES) })
 		}},
 	})
 }

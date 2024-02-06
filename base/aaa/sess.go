@@ -1,11 +1,8 @@
 package aaa
 
 import (
-	"strings"
-
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/mdb"
-	"shylinux.com/x/icebergs/base/web/html"
 	kit "shylinux.com/x/toolkits"
 	"shylinux.com/x/toolkits/logs"
 )
@@ -18,7 +15,7 @@ func _sess_create(m *ice.Message, username string, arg ...string) {
 	}
 }
 func _sess_check(m *ice.Message, sessid string) {
-	if val := mdb.HashSelectDetails(m, sessid, func(value ice.Map) bool { return !m.WarnTimeNotValid(value[mdb.TIME], sessid) }); len(val) > 0 {
+	if val := mdb.HashSelectDetails(m, sessid, func(value ice.Map) bool { return !m.WarnNotValidTime(value[mdb.TIME], sessid) }); len(val) > 0 {
 		SessAuth(m, val)
 	}
 }
@@ -59,20 +56,12 @@ func SessValid(m *ice.Message) string {
 	return m.Option(ice.MSG_SESSID)
 }
 func SessAuth(m *ice.Message, value ice.Any, arg ...string) *ice.Message {
-	language := kit.Select(m.Option(ice.MSG_LANGUAGE), kit.Format(kit.Value(value, LANGUAGE)))
-	kit.If(language == "", func() {
-		kit.If(kit.Format(kit.Value(value, USERNAME)), func(p string) { language = m.Cmdv(USER, p, LANGUAGE) })
-	})
-	kit.If(language == "", func() { language = kit.Select("", "zh-cn", strings.Contains(m.Option(ice.MSG_USERUA), "zh_CN")) })
-	kit.If(language == "" && m.R != nil, func() { language = kit.Select("", kit.Split(m.R.Header.Get(html.AcceptLanguage), ",;"), 0) })
-	kit.If(language == "", func() { language = ice.Info.Lang })
-	language = strings.ReplaceAll(strings.ToLower(kit.Select("", kit.Split(language, " ."), 0)), "_", "-")
 	return m.Auth(
 		USERROLE, m.Option(ice.MSG_USERROLE, kit.Format(kit.Value(value, USERROLE))),
 		USERNAME, m.Option(ice.MSG_USERNAME, kit.Format(kit.Value(value, USERNAME))),
 		USERNICK, m.Option(ice.MSG_USERNICK, kit.Format(kit.Value(value, USERNICK))),
-		LANGUAGE, m.Option(ice.MSG_LANGUAGE, language), arg,
-		logs.FileLineMeta(kit.Select(logs.FileLine(-1), m.Option("aaa.checker"))),
+		LANGUAGE, m.OptionDefault(ice.MSG_LANGUAGE, kit.Format(kit.Value(value, LANGUAGE))),
+		arg, logs.FileLineMeta(kit.Select(logs.FileLine(-1), m.Option("aaa.checker"))),
 	)
 }
 func SessLogout(m *ice.Message, arg ...string) {

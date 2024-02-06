@@ -15,7 +15,6 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
-	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -158,7 +157,7 @@ func init() {
 					mdb.HashModify(m, m.Option(tcp.PORT), mdb.STATUS, tcp.OPEN)
 				} else {
 					mdb.HashCreate(m.Spawn(), m.OptionSimple(), mdb.STATUS, tcp.OPEN)
-					m.Cmd("", ctx.LOAD, m.OptionSimple(AUTHKEY))
+					m.Cmd("", nfs.LOAD, m.OptionSimple(AUTHKEY))
 				}
 				m.Go(func() {
 					m.Cmd(web.BROAD, "send", mdb.TYPE, "sshd", mdb.NAME, ice.Info.Hostname, tcp.HOST, m.Cmd(tcp.HOST).Append(aaa.IP), tcp.PORT, m.Option(tcp.PORT))
@@ -177,10 +176,10 @@ func init() {
 					mdb.ZoneInsert(m, m.OptionSimple(tcp.PORT), mdb.TYPE, ls[0], mdb.NAME, ls[len(ls)-1], mdb.TEXT, strings.Join(ls[1:len(ls)-1], "+"))
 				}
 			}},
-			ctx.LOAD: {Name: "load authkey=.ssh/authorized_keys", Hand: func(m *ice.Message, arg ...string) {
+			nfs.LOAD: {Name: "load authkey=.ssh/authorized_keys", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.CAT, kit.HomePath(m.Option(AUTHKEY)), func(pub string) { m.Cmd(SERVICE, mdb.INSERT, pub) })
 			}},
-			ctx.SAVE: {Name: "save authkey=.ssh/authorized_keys", Hand: func(m *ice.Message, arg ...string) {
+			nfs.SAVE: {Name: "save authkey=.ssh/authorized_keys", Hand: func(m *ice.Message, arg ...string) {
 				list := []string{}
 				mdb.ZoneSelectCB(m, m.Option(tcp.PORT), func(value ice.Maps) {
 					list = append(list, fmt.Sprintf("%s %s %s", value[mdb.TYPE], value[mdb.TEXT], value[mdb.NAME]))
@@ -199,7 +198,7 @@ func init() {
 			mdb.SHORT, tcp.PORT, mdb.FIELD, "time,port,status,private,authkey,count", mdb.FIELDS, "time,id,type,name,text",
 			WELCOME, "welcome to contexts world\r\n", GOODBYE, "goodbye of contexts world\r\n",
 		)), Hand: func(m *ice.Message, arg ...string) {
-			if mdb.ZoneSelect(m, arg...).PushAction(aaa.INVITE, mdb.INSERT, ctx.LOAD, ctx.SAVE, mdb.REMOVE); len(arg) == 0 {
+			if mdb.ZoneSelect(m, arg...).PushAction(aaa.INVITE, mdb.INSERT, nfs.LOAD, nfs.SAVE, mdb.REMOVE); len(arg) == 0 {
 				m.Action(tcp.LISTEN)
 			}
 		}},

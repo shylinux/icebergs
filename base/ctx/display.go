@@ -40,7 +40,7 @@ func DisplayStoryForm(m *ice.Message, arg ...ice.Any) *ice.Message {
 			}
 		}
 	}
-	kit.For(args, func(v string) { m.Push("", v, kit.Split("type,name,value,values,need,action")) })
+	kit.For(args, func(v ice.Map) { m.Push("", v, kit.Split("type,name,value,values,need,action")) })
 	return DisplayStory(m, "form")
 }
 func DisplayStoryJSON(m *ice.Message, arg ...ice.Any) *ice.Message {

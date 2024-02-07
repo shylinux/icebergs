@@ -318,9 +318,13 @@ func (m *Message) FileURI(dir string) string {
 	} else if kit.HasPrefix(dir, PS, HTTP) {
 		return dir
 	}
+	m.Debug("what %v", m.Option(MSG_USERPOD))
 	if strings.HasPrefix(dir, USR_VOLCANOS) {
 		return strings.TrimPrefix(dir, USR)
 	} else {
-		return kit.MergeURL(path.Join(PS, REQUIRE, dir), POD, m.Option(MSG_USERPOD))
+		m.Debug("what %v", m.Option(MSG_USERPOD))
+		what := kit.MergeURL(path.Join(PS, REQUIRE, dir), POD, m.Option(MSG_USERPOD))
+		m.Debug("what %v", what)
+		return what
 	}
 }

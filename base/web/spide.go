@@ -285,12 +285,16 @@ func init() {
 		if p := path.Join(ice.SRC_TEMPLATE, m.PrefixKey(), path.Join(arg...)); nfs.Exists(m, p) {
 			return p + kit.Select("", nfs.PS, len(arg) == 0)
 		} else {
-			return m.FileURI(path.Join(path.Dir(ctx.GetCmdFile(m, m.PrefixKey())), path.Join(arg...)))
+			m.Debug("what %v", p)
+			what := kit.MergeURL2(UserHost(m)+ctx.GetCmdFile(m, m.PrefixKey()), path.Join(arg...))
+			m.Debug("what %v", what)
+			return what
 			// return path.Join(path.Dir(ctx.GetCmdFile(m, m.PrefixKey())), path.Join(arg...)) + kit.Select("", nfs.PS, len(arg) == 0)
 		}
 	}
 	nfs.TemplateText = func(m *ice.Message, p string) string {
 		if p := kit.Select(nfs.TemplatePath(m, path.Base(p)), m.Option("_template")); kit.HasPrefix(p, "/require/", ice.HTTP) {
+			m.Debug("what %v", p)
 			return m.Cmdx(SPIDE, ice.OPS, SPIDE_RAW, http.MethodGet, p)
 		} else {
 			return m.Cmdx(nfs.CAT, p)

@@ -248,7 +248,7 @@ func (m *Message) EchoDownload(arg ...string) *Message {
 }
 func (m *Message) Display(file string, arg ...Any) *Message {
 	file = m.resource(file)
-	m.Option(MSG_DISPLAY, m.MergeLink(kit.Select(kit.ExtChange(file, JS), file, strings.Contains(file, QS)), arg...))
+	m.Option(MSG_DISPLAY, kit.MergeURL(kit.ExtChange(file, JS), arg...))
 	return m
 }
 func (m *Message) Resource(file string) string { return m.resource(file) }

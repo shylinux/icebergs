@@ -44,7 +44,8 @@ func (f *Frame) Start(m *ice.Message, arg ...string) {
 				if file == "" {
 					return
 				}
-				bio := m.Confv(FILE, kit.Keys(file, FILE)).(*bufio.Writer)
+				conf := m.Confv(FILE, file)
+				bio := kit.Value(conf, FILE).(*bufio.Writer)
 				if bio == nil {
 					return
 				}
@@ -59,10 +60,7 @@ func (f *Frame) Start(m *ice.Message, arg ...string) {
 		}
 	}
 }
-func (f *Frame) Close(m *ice.Message, arg ...string) {
-	ice.Info.Log = nil
-	close(f.p)
-}
+func (f *Frame) Close(m *ice.Message, arg ...string) { ice.Info.Log = nil; close(f.p) }
 
 const (
 	PREFIX  = "prefix"
@@ -112,10 +110,7 @@ var Index = &ice.Context{Name: LOG, Help: "日志模块", Configs: ice.Configs{
 
 func init() { ice.Index.Register(Index, &Frame{}, TAIL) }
 
-func init() {
-	ice.Info.Traceid = "short"
-	ice.Pulse.Option(ice.LOG_TRACEID, Traceid())
-}
+func init() { ice.Info.Traceid = "short"; ice.Pulse.Option(ice.LOG_TRACEID, Traceid()) }
 
 var _trace_count int64
 
@@ -133,8 +128,6 @@ func Traceid() (traceid string) {
 			ls = ls[:0]
 		}
 	})
-	kit.If(len(ls) > 0, func() {
-		ls = append(ls, kit.Format(atomic.AddInt64(&_trace_count, 1)))
-	})
+	kit.If(len(ls) > 0, func() { ls = append(ls, kit.Format(atomic.AddInt64(&_trace_count, 1))) })
 	return strings.Join(ls, "-")
 }

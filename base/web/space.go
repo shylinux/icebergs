@@ -16,7 +16,6 @@ import (
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/lex"
-	"shylinux.com/x/icebergs/base/log"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/ssh"
@@ -97,8 +96,7 @@ func _space_fork(m *ice.Message) {
 	}
 	args := kit.Simple(mdb.TYPE, m.Option(mdb.TYPE), mdb.NAME, name, mdb.TEXT, text, m.OptionSimple(mdb.TIME, nfs.MODULE, nfs.VERSION, cli.DAEMON))
 	args = append(args, aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERROLE, m.Option(ice.MSG_USERROLE))
-	args = append(args, aaa.UA, m.Option(ice.MSG_USERUA), aaa.IP, m.Option(ice.MSG_USERIP))
-	args = _space_agent(m, args...)
+	args = append(args, ParseUA(m)...)
 	if c, e := websocket.Upgrade(m.W, m.R); !m.Warn(e) {
 		gdb.Go(m, func() {
 			defer mdb.HashCreateDeferRemove(m, args, kit.Dict(mdb.TARGET, c))()
@@ -147,7 +145,7 @@ func _space_handle(m *ice.Message, safe bool, name string, c *websocket.Conn) {
 		source, target := kit.Simple(msg.Optionv(ice.MSG_SOURCE), name), kit.Simple(msg.Optionv(ice.MSG_TARGET))
 		msg.Log(tcp.RECV, "%v->%v %v %v", source, target, msg.Detailv(), msg.FormatsMeta(nil))
 		if next := msg.Option(ice.MSG_TARGET); next == "" || len(target) == 0 {
-			m.Go(func() {
+			msg.Go(func() {
 				if k := kit.Keys(msg.Option(ice.MSG_USERPOD), "_token"); msg.Option(k) != "" {
 					aaa.SessCheck(msg, msg.Option(k))
 				}
@@ -160,7 +158,7 @@ func _space_handle(m *ice.Message, safe bool, name string, c *websocket.Conn) {
 				case (*websocket.Conn): // 转发报文
 					_space_echo(msg, source, target, c)
 				case ice.Handler: // 接收响应
-					m.Go(func() { c(msg) })
+					msg.Go(func() { c(msg) })
 				}
 			}), ice.ErrNotFound, next)
 		}
@@ -200,7 +198,7 @@ func _space_exec(m *ice.Message, name string, source, target []string, c *websoc
 		kit.If(m.Optionv(ice.MSG_ARGS) != nil, func() { m.Options(ice.MSG_ARGS, kit.Simple(m.Optionv(ice.MSG_ARGS))) })
 	}
 	defer m.Cost(kit.Format("%v->%v %v %v", source, target, m.Detailv(), m.FormatSize()))
-	_space_echo(m.Set(ice.MSG_OPTS).Options(log.DEBUG, m.Option(log.DEBUG)), []string{}, kit.Reverse(kit.Simple(source)), c)
+	_space_echo(m.Set(ice.MSG_OPTS).Options(m.OptionSimple(ice.LOG_DEBUG, ice.LOG_TRACEID)), []string{}, kit.Reverse(kit.Simple(source)), c)
 }
 func _space_echo(m *ice.Message, source, target []string, c *websocket.Conn) {
 	defer func() { m.Warn(recover()) }()

@@ -80,14 +80,20 @@ const (
 	VIEW = "view"
 	SHOW = "show"
 )
+const (
+	BENCH_LOG = "bench.log"
+	DEBUG_LOG = "debug.log"
+	ERROR_LOG = "error.log"
+	WATCH_LOG = "watch.log"
+)
 const LOG = "log"
 
 var Index = &ice.Context{Name: LOG, Help: "日志模块", Configs: ice.Configs{
 	FILE: {Name: FILE, Help: "日志文件", Value: kit.Dict(
-		BENCH, kit.Dict(nfs.PATH, path.Join(ice.VAR_LOG, "bench.log"), mdb.LIST, []string{}),
-		DEBUG, kit.Dict(nfs.PATH, path.Join(ice.VAR_LOG, "debug.log"), mdb.LIST, []string{ice.LOG_DEBUG}),
-		ERROR, kit.Dict(nfs.PATH, path.Join(ice.VAR_LOG, "error.log"), mdb.LIST, []string{ice.LOG_WARN, ice.LOG_ERROR}),
-		WATCH, kit.Dict(nfs.PATH, path.Join(ice.VAR_LOG, "watch.log"), mdb.LIST, []string{mdb.CREATE, mdb.REMOVE, mdb.INSERT, mdb.DELETE, mdb.MODIFY, mdb.EXPORT, mdb.IMPORT}),
+		BENCH, kit.Dict(nfs.PATH, path.Join(ice.VAR_LOG, BENCH_LOG), mdb.LIST, []string{}),
+		DEBUG, kit.Dict(nfs.PATH, path.Join(ice.VAR_LOG, DEBUG_LOG), mdb.LIST, []string{ice.LOG_DEBUG}),
+		ERROR, kit.Dict(nfs.PATH, path.Join(ice.VAR_LOG, ERROR_LOG), mdb.LIST, []string{ice.LOG_WARN, ice.LOG_ERROR}),
+		WATCH, kit.Dict(nfs.PATH, path.Join(ice.VAR_LOG, WATCH_LOG), mdb.LIST, []string{mdb.CREATE, mdb.REMOVE, mdb.INSERT, mdb.DELETE, mdb.MODIFY, mdb.EXPORT, mdb.IMPORT}),
 	)},
 	VIEW: {Name: VIEW, Help: "日志格式", Value: kit.Dict(
 		GREEN, kit.Dict(PREFIX, "\033[32m", SUFFIX, "\033[0m", mdb.LIST, []string{ice.CTX_START, ice.LOG_CMDS}),
@@ -105,23 +111,34 @@ var Index = &ice.Context{Name: LOG, Help: "日志模块", Configs: ice.Configs{
 			kit.For(value[mdb.LIST], func(index int, k string) { m.Conf(SHOW, kit.Keys(k, VIEW), key) })
 		})
 	}},
-	ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { ice.Info.Save(m, TAIL) }},
+	ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) {
+		ice.Info.Save(m, TAIL)
+	}},
 }}
 
 func init() { ice.Index.Register(Index, &Frame{}, TAIL) }
 
-func init() { ice.Info.Traceid = "short"; ice.Pulse.Option(ice.LOG_TRACEID, Traceid()) }
+func init() {
+	ice.Info.Traceid = "short"
+	ice.Pulse.Option("work.id", "0")
+	ice.Pulse.Option("task.id", "0")
+	ice.Pulse.Option(ice.LOG_TRACEID, Traceid(ice.Pulse))
+}
 
 var _trace_count int64
 
-func Traceid() (traceid string) {
+func Traceid(m *ice.Message) (traceid string) {
 	ls := []string{}
 	kit.For(kit.Split(ice.Info.Traceid), func(key string) {
 		switch key {
 		case "short":
-			ls = append(ls, kit.Hashs(mdb.UNIQ)[:6])
+			if len(ls) == 0 {
+				ls = append(ls, kit.Hashs(mdb.UNIQ)[:6])
+			}
 		case "long":
-			ls = append(ls, kit.Hashs(mdb.UNIQ))
+			if len(ls) == 0 {
+				ls = append(ls, kit.Hashs(mdb.UNIQ))
+			}
 		case "node":
 			ls = append(ls, ice.Info.NodeName)
 		case "hide":

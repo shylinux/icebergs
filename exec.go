@@ -67,7 +67,13 @@ func (m *Message) Go(cb func(), arg ...Any) *Message {
 	meta := m.FormatTaskMeta()
 	meta.FileLine = kit.FileLine(2, 3)
 	kit.If(len(arg) > 0, func() { meta.FileLine = kit.Format(arg[0]) })
-	task.Put(meta, nil, func(task *task.Task) { m.TryCatch(true, func(m *Message) { cb() }) })
+	task.Put(meta, nil, func(task *task.Task) {
+		m.TryCatch(true, func(m *Message) {
+			m.Option("task.id", kit.Format(task.TaskId()))
+			m.Option("work.id", kit.Format(task.WorkId()))
+			cb()
+		})
+	})
 	return m
 }
 func (m *Message) GoWait(cb func(func()), arg ...Any) *Message {

@@ -77,9 +77,9 @@ func init() {
 				})
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				if mdb.IsSearchPreview(m, arg) {
+				if mdb.IsSearchPreview(m, arg) || kit.HasPrefixList(arg, SHELL) {
 					kit.For([]string{shell, "/bin/ish"}, func(p string) {
-						m.PushSearch(mdb.TYPE, ssh.SHELL, mdb.NAME, path.Base(p), mdb.TEXT, p)
+						m.PushSearch(mdb.TYPE, SHELL, mdb.NAME, path.Base(p), mdb.TEXT, p)
 					})
 				}
 			}},
@@ -88,8 +88,8 @@ func init() {
 				case mdb.HASH:
 					fallthrough
 				case mdb.TYPE:
-					m.Cmd(mdb.SEARCH, mdb.FOREACH, "", "", func(value ice.Maps) {
-						kit.If(value[mdb.TYPE] == ssh.SHELL, func() { m.Push(arg[0], value[mdb.TEXT]) })
+					m.Cmd(mdb.SEARCH, SHELL, "", "", func(value ice.Maps) {
+						kit.If(value[mdb.TYPE] == SHELL, func() { m.Push(arg[0], value[mdb.TEXT]) })
 					})
 				case mdb.NAME:
 					m.Push(arg[0], path.Base(m.Option(mdb.TYPE)), ice.Info.Hostname)

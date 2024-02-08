@@ -114,7 +114,9 @@ func init() {
 	})
 }
 
-func FavorAction() ice.Actions { return gdb.EventsAction(FAVOR_INPUTS, FAVOR_TABLES, FAVOR_ACTION) }
+func FavorAction() ice.Actions {
+	return gdb.EventsAction(FAVOR_INPUTS, FAVOR_TABLES, FAVOR_ACTION)
+}
 func FavorPreview(m *ice.Message, arg ...string) {
 	if kit.HasPrefixList(arg, ctx.RUN) {
 		if pod := arg[1]; pod != "" {

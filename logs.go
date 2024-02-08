@@ -186,7 +186,10 @@ func (m *Message) FormatPrefix(traceid ...string) string {
 }
 func (m *Message) FormatShip(traceid ...string) string {
 	_traceid := ""
-	kit.If(kit.Select(m.Option(LOG_TRACEID), traceid, 0), func(traceid string) { _traceid = kit.Format("%s: %s ", logs.TRACEID, traceid) })
+	kit.If(kit.Select(m.Option(LOG_TRACEID), traceid, 0), func(traceid string) {
+		// _traceid = kit.Format("%s: %s ", logs.TRACEID, traceid+"-"+m.Option("task.id")+"-"+m.Option("work.id"))
+		_traceid = kit.Format("%s: %s ", logs.TRACEID, traceid)
+	})
 	return kit.Format("%s%02d %4s->%-4s", _traceid, m.code, m.source.Name, m.target.Name)
 }
 func (m *Message) FormatSize() string {

@@ -65,7 +65,7 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 		r.Header.Set(ice.MSG_USERIP, strings.Split(r.RemoteAddr, nfs.DF)[0])
 	}
 	if !kit.HasPrefix(r.URL.String(), nfs.VOLCANOS, nfs.REQUIRE_MODULES, nfs.INTSHELL) {
-		r.Header.Set(ice.LOG_TRACEID, log.Traceid())
+		r.Header.Set(ice.LOG_TRACEID, log.Traceid(m))
 		m.Logs(r.Header.Get(ice.MSG_USERIP), r.Method, r.URL.String(), logs.TraceidMeta(r.Header.Get(ice.LOG_TRACEID)))
 	}
 	if path.Join(r.URL.Path) == nfs.PS && strings.HasPrefix(r.UserAgent(), html.Mozilla) {

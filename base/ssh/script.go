@@ -96,7 +96,7 @@ func (f *Frame) parse(m *ice.Message, h, line string) string {
 		return ""
 	}
 	msg := m.Spawn(f.target)
-	kit.If(h == STDIO, func() { msg.Option(ice.LOG_TRACEID, log.Traceid()) })
+	kit.If(h == STDIO, func() { msg.Option(ice.LOG_TRACEID, log.Traceid(m)) })
 	if msg.Cmdy(ls); h == STDIO && msg.IsErrNotFound() {
 		msg.SetResult().Cmdy(cli.SYSTEM, ls)
 	}

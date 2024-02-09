@@ -43,7 +43,7 @@ func init() {
 			PORTAL: {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
 				ProcessIframe(m, m.Option(mdb.NAME), m.Option(ORIGIN)+S(m.Option(mdb.NAME))+C(PORTAL), arg...)
 			}},
-		}, ctx.ConfAction(CLIENT_TIMEOUT, "3s"), DREAM), Hand: func(m *ice.Message, arg ...string) {
+		}, ctx.ConfAction(CLIENT_TIMEOUT, cli.TIME_3s), DREAM), Hand: func(m *ice.Message, arg ...string) {
 			if kit.HasPrefixList(arg, ctx.ACTION) {
 				m.Cmdy(DREAM, arg)
 				return
@@ -55,17 +55,16 @@ func init() {
 				if ice.Info.NodeType == WORKER || !aaa.IsTechOrRoot(m) {
 					m.Action()
 				} else {
-					m.Action(html.FILTER, mdb.CREATE)
-					m.PushAction(mdb.REMOVE)
+					m.PushAction(mdb.REMOVE).Action(html.FILTER, mdb.CREATE)
 				}
 			} else {
 				if arg[0] == ice.OPS && ice.Info.NodeType == SERVER {
 					m.Cmdy(DREAM)
 					return
 				}
-				defer ToastProcess(m, "查询中，请稍候")("查询成功")
+				defer ToastProcess(m, m.Trans("querying, please wait", "查询中，请稍候"))(m.Trans("query succsess", "查询成功"))
 				origin := SpideOrigin(m, arg[0])
-				kit.If(arg[0] == ice.OPS, func() { origin = tcp.PublishLocalhost(m, origin) })
+				kit.If(kit.IsIn(arg[0], ice.OPS, ice.DEV), func() { origin = tcp.PublishLocalhost(m, origin) })
 				list := m.Spawn(ice.Maps{ice.MSG_FIELDS: ""}).CmdMap(DREAM, mdb.NAME)
 				m.SetAppend().Spawn().SplitIndex(m.Cmdx(SPIDE, arg[0], C(DREAM), kit.Dict(mdb.ConfigSimple(m, CLIENT_TIMEOUT)))).Table(func(value ice.Maps) {
 					if value[mdb.TYPE] != WORKER {

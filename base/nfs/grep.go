@@ -21,7 +21,7 @@ func init() {
 		GREP: {Name: "grep word file auto", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 			kit.If(len(arg) == 0, func() { arg = append(arg, ice.MAIN) })
 			m.Options(mdb.VALUE, arg[0], CMD_DIR, kit.Select("", arg, 2))
-			kit.For(strings.Split(m.Cmdx("cli.system", GREP, "--exclude=.[a-z]*", "--exclude-dir=.[a-z]*", "-rni", arg[0], path.Join(kit.Select(SRC, arg, 1))), ice.NL), func(s string) {
+			kit.For(strings.Split(m.System(GREP, "--exclude=.[a-z]*", "--exclude-dir=.[a-z]*", "-rni", arg[0], path.Join(kit.Select(SRC, arg, 1))).Result(), ice.NL), func(s string) {
 				if ls := strings.SplitN(s, DF, 3); len(ls) > 2 {
 					m.Push(FILE, strings.TrimPrefix(ls[0], PWD)).Push(LINE, ls[1]).Push(mdb.TEXT, ls[2])
 				}

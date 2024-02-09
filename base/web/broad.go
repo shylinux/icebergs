@@ -31,7 +31,7 @@ func _broad_serve(m *ice.Message) {
 		})
 	})
 	m.Cmd(tcp.SERVER, tcp.LISTEN, mdb.TYPE, tcp.UDP4, mdb.NAME, logs.FileLine(1), m.OptionSimple(tcp.HOST, tcp.PORT), func(from *net.UDPAddr, buf []byte) {
-		if m.Warn(len(buf) > 1024, "broad recv buf size too large") {
+		if m.WarnNotValid(len(buf) > 1024, "broad recv buf size too large") {
 			return
 		}
 		msg := m.Spawn(buf).Logs(tcp.RECV, BROAD, string(buf), nfs.FROM, from)
@@ -58,9 +58,9 @@ func init() {
 					m.Cmds("", func(value ice.Maps) {
 						switch kit.If(value[tcp.HOST] == host, func() { value[tcp.HOST] = domain }); value[mdb.TYPE] {
 						case "sshd":
-							m.PushSearch(mdb.NAME, Script(m, "ssh -p %s %s@%s", value[tcp.PORT], m.Option(ice.MSG_USERNAME), value[tcp.HOST]), mdb.TEXT, Domain(value[tcp.HOST], value[tcp.PORT]), value)
+							m.PushSearch(mdb.NAME, Script(m, "ssh -p %s %s@%s", value[tcp.PORT], m.Option(ice.MSG_USERNAME), value[tcp.HOST]), mdb.TEXT, HostPort(m, value[tcp.HOST], value[tcp.PORT]), value)
 						default:
-							m.PushSearch(mdb.TEXT, Domain(value[tcp.HOST], value[tcp.PORT]), value)
+							m.PushSearch(mdb.TEXT, HostPort(m, value[tcp.HOST], value[tcp.PORT]), value)
 						}
 					})
 				}
@@ -70,9 +70,11 @@ func init() {
 			DREAM: {Hand: func(m *ice.Message, arg ...string) { broadOpen(m) }},
 			VIMER: {Hand: func(m *ice.Message, arg ...string) { broadOpen(m) }},
 			SPIDE: {Name: "spide name type=repos", Icon: "bi bi-house-add", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(SPIDE, mdb.CREATE, m.OptionSimple(mdb.NAME), ORIGIN, Domain(m.Option(mdb.NAME), m.Option(tcp.PORT)))
+				m.Cmd(SPIDE, mdb.CREATE, m.OptionSimple(mdb.NAME), ORIGIN, HostPort(m, m.Option(mdb.NAME), m.Option(tcp.PORT)))
 			}},
-			OPEN:     {Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen(Domain(m.Option(mdb.NAME), m.Option(tcp.PORT))) }},
+			OPEN: {Hand: func(m *ice.Message, arg ...string) {
+				m.ProcessOpen(HostPort(m, m.Option(mdb.NAME), m.Option(tcp.PORT)))
+			}},
 			tcp.SEND: {Hand: func(m *ice.Message, arg ...string) { _broad_send(m, "", "", "", "", arg...) }},
 		}, gdb.EventsAction(SERVE_START), mdb.HashAction(mdb.SHORT, "host,port",
 			mdb.FIELD, "time,hash,type,name,host,port,module,version,commitTime,compileTime,bootTime,kernel,arch",
@@ -80,5 +82,5 @@ func init() {
 	})
 }
 func broadOpen(m *ice.Message) {
-	m.ProcessOpen(Domain(m.Option(mdb.NAME), m.Option(tcp.PORT)) + C(m.ActionKey()))
+	m.ProcessOpen(HostPort(m, m.Option(mdb.NAME), m.Option(tcp.PORT)) + C(m.ActionKey()))
 }

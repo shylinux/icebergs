@@ -29,7 +29,7 @@ func _xterm_get(m *ice.Message, h string) xterm.XTerm {
 		ls := kit.Split(strings.Split(kit.Select(ISH, value[mdb.TYPE]), " # ")[0])
 		kit.If(value[nfs.PATH] != "" && !strings.HasSuffix(value[nfs.PATH], nfs.PS), func() { value[nfs.PATH] = path.Dir(value[nfs.PATH]) })
 		term, e := xterm.Command(m, value[nfs.PATH], kit.Select(ls[0], cli.SystemFind(m, ls[0], value[nfs.PATH])), ls[1:]...)
-		if m.Warn(e) {
+		if m.WarnNotValid(e) {
 			return nil
 		}
 		m.Go(func() {
@@ -37,7 +37,7 @@ func _xterm_get(m *ice.Message, h string) xterm.XTerm {
 			defer mdb.HashRemove(m, mdb.HASH, h)
 			buf := make([]byte, ice.MOD_BUFS)
 			for {
-				if n, e := term.Read(buf); !m.Warn(e) && e == nil {
+				if n, e := term.Read(buf); !m.WarnNotValid(e) && e == nil {
 					if _xterm_echo(m, h, string(buf[:n])); len(text) > 0 {
 						kit.If(text[0], func(cmd string) { m.GoSleep300ms(func() { term.Write([]byte(cmd + lex.NL)) }) })
 						text = text[1:]
@@ -115,7 +115,7 @@ func init() {
 				_xterm_get(m, "").Setsize(m.OptionDefault("rows", "24"), m.OptionDefault("cols", "80"))
 			}},
 			html.INPUT: {Hand: func(m *ice.Message, arg ...string) {
-				if b, e := base64.StdEncoding.DecodeString(strings.Join(arg, "")); !m.Warn(e) {
+				if b, e := base64.StdEncoding.DecodeString(strings.Join(arg, "")); !m.WarnNotValid(e) {
 					_xterm_get(m, "").Write(b)
 				}
 			}},

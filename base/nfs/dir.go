@@ -51,9 +51,7 @@ func _dir_list(m *ice.Message, root string, dir string, level int, deep bool, di
 			default:
 				m.ErrorNotImplement(cb)
 			}
-			if s.ModTime().After(last) {
-				last = s.ModTime()
-			}
+			kit.If(s.ModTime().After(last), func() { last = s.ModTime() })
 			for _, field := range fields {
 				switch field {
 				case mdb.TIME:
@@ -144,29 +142,29 @@ const (
 	VAR = "var/"
 	USR = "usr/"
 
-	USR_PORTAL          = ice.USR_PORTAL
-	USR_PUBLISH         = ice.USR_PUBLISH
-	USR_ICEBERGS        = ice.USR_ICEBERGS
-	USR_LOCAL_WORK      = ice.USR_LOCAL_WORK
-	USR_LOCAL           = ice.USR_LOCAL
-	SRC_TEMPLATE        = ice.SRC_TEMPLATE
-	USR_LEARNING_PORTAL = "usr/learning/portal/"
-	USR_PACKAGE         = "usr/package.json"
-	USR_MODULES         = "usr/node_modules/"
-	REQUIRE_MODULES     = "/require/modules/"
-	REQUIRE_SRC         = "/require/src/"
-	REQUIRE_USR         = "/require/usr/"
-	REQUIRE             = "/require/"
-	VOLCANOS            = "/volcanos/"
-	INTSHELL            = "/intshell/"
-	SHARE_LOCAL         = "/share/local/"
-	PATHNAME            = "pathname"
-	FILENAME            = "filename"
+	SRC_TEMPLATE    = ice.SRC_TEMPLATE
+	USR_ICEBERGS    = ice.USR_ICEBERGS
+	USR_PUBLISH     = ice.USR_PUBLISH
+	USR_PORTAL      = ice.USR_PORTAL
+	USR_LOCAL       = ice.USR_LOCAL
+	USR_LOCAL_WORK  = ice.USR_LOCAL_WORK
+	USR_PACKAGE     = "usr/package.json"
+	USR_MODULES     = "usr/node_modules/"
+	REQUIRE_MODULES = "/require/modules/"
+	REQUIRE_USR     = "/require/usr/"
+	REQUIRE_SRC     = "/require/src/"
+	REQUIRE         = "/require/"
+	VOLCANOS        = "/volcanos/"
+	INTSHELL        = "/intshell/"
+	SHARE_LOCAL     = "/share/local/"
+	PATHNAME        = "pathname"
+	FILENAME        = "filename"
 
-	USR_ICONS_AVATAR   = "usr/icons/avatar.jpg"
-	USR_ICONS_CONTEXTS = "usr/icons/contexts.png"
-	USR_ICONS_ICEBERGS = "usr/icons/icebergs.jpg"
-	USR_ICONS_VOLCANOS = "usr/icons/volcanos.jpg"
+	USR_LEARNING_PORTAL = "usr/learning/portal/"
+	USR_ICONS_AVATAR    = "usr/icons/avatar.jpg"
+	USR_ICONS_CONTEXTS  = "usr/icons/contexts.png"
+	USR_ICONS_ICEBERGS  = "usr/icons/icebergs.jpg"
+	USR_ICONS_VOLCANOS  = "usr/icons/volcanos.jpg"
 
 	TYPE_ALL  = "all"
 	TYPE_BIN  = "bin"
@@ -204,14 +202,14 @@ func init() {
 			ice.APP: {Help: "本机", Hand: func(m *ice.Message, arg ...string) {
 				switch runtime.GOOS {
 				case "darwin":
-					m.Cmd("cli.system", "open", kit.Path(m.Option(PATH)))
+					m.System("open", kit.Path(m.Option(PATH)))
 				}
 			}},
 			mdb.SHOW: {Help: "预览", Hand: func(m *ice.Message, arg ...string) {
 				Show(m.ProcessInner(), path.Join(m.Option(DIR_ROOT), m.Option(PATH)))
 			}}, mdb.UPLOAD: {},
 			SIZE: {Hand: func(m *ice.Message, arg ...string) {
-				m.Echo(kit.Select("", kit.Split(m.Cmdx("cli.system", "du", "-sh")), 0))
+				m.Echo(kit.Select("", kit.Split(m.System("du", "-sh").Result()), 0))
 			}},
 			TRASH: {Hand: func(m *ice.Message, arg ...string) { m.Cmd(TRASH, mdb.CREATE, m.Option(PATH)) }},
 		}, Hand: func(m *ice.Message, arg ...string) {
@@ -272,9 +270,7 @@ func DirDeepAll(m *ice.Message, root, dir string, cb func(ice.Maps), arg ...stri
 }
 func Show(m *ice.Message, file string) bool {
 	p := SHARE_LOCAL + file
-	kit.If(m.Option(ice.MSG_USERPOD), func(pod string) {
-		p += "?" + kit.JoinKV("=", "&", ice.POD, pod)
-	})
+	kit.If(m.Option(ice.MSG_USERPOD), func(pod string) { p = kit.MergeURL(p, ice.POD, pod) })
 	switch strings.ToLower(kit.Ext(file)) {
 	case PNG, JPG, JPEG:
 		m.EchoImages(p)

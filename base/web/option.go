@@ -15,7 +15,7 @@ import (
 	"shylinux.com/x/toolkits/file"
 )
 
-func UserWeb(m ice.IMessage) *url.URL {
+func UserWeb(m *ice.Message) *url.URL {
 	return kit.ParseURL(m.Option(ice.MSG_USERWEB))
 }
 func UserHost(m *ice.Message) string {
@@ -27,7 +27,7 @@ func UserHost(m *ice.Message) string {
 		return m.Option(ice.MSG_USERHOST, u.Scheme+"://"+u.Host)
 	}
 }
-func AgentIs(m ice.IMessage, arg ...string) bool {
+func AgentIs(m *ice.Message, arg ...string) bool {
 	for _, k := range arg {
 		if strings.HasPrefix(strings.ToLower(m.Option(ice.MSG_USERUA)), k) {
 			return true
@@ -90,12 +90,10 @@ func PushNotice(m *ice.Message, arg ...ice.Any) {
 func PushNoticeRefresh(m *ice.Message, arg ...ice.Any) { PushNotice(m, kit.List("refresh", arg)...) }
 func PushNoticeToast(m *ice.Message, arg ...ice.Any)   { PushNotice(m, kit.List("toast", arg)...) }
 func PushNoticeGrow(m *ice.Message, arg ...ice.Any) {
-	m.StatusTimeCount()
-	PushNotice(m, kit.List("grow", arg)...)
+	PushNotice(m.StatusTimeCount(), kit.List("grow", arg)...)
 }
 func PushNoticeRich(m *ice.Message, arg ...ice.Any) {
-	m.StatusTimeCount()
-	PushNotice(m, kit.Simple("rich", arg))
+	PushNotice(m.StatusTimeCount(), kit.Simple("rich", arg))
 }
 func PushStream(m *ice.Message) *ice.Message {
 	m.Options(cli.CMD_OUTPUT, file.NewWriteCloser(func(buf []byte) { PushNoticeGrow(m, string(buf)) }, nil)).ProcessHold(toastContent(m, ice.SUCCESS))
@@ -129,10 +127,10 @@ func toastContent(m *ice.Message, state string, arg ...ice.Any) string {
 	}
 }
 func ToastSuccess(m *ice.Message, arg ...ice.Any) {
-	Toast(m, toastContent(m, ice.SUCCESS, arg...), "", "1s")
+	Toast(m, toastContent(m, ice.SUCCESS, arg...), "", cli.TIME_3s)
 }
 func ToastFailure(m *ice.Message, arg ...ice.Any) {
-	Toast(m, toastContent(m, ice.FAILURE, arg...), "", m.OptionDefault(ice.TOAST_DURATION, "3s")).Sleep(m.OptionDefault(ice.TOAST_DURATION, "3s"))
+	Toast(m, toastContent(m, ice.FAILURE, arg...), "", m.OptionDefault(ice.TOAST_DURATION, cli.TIME_3s)).Sleep(m.OptionDefault(ice.TOAST_DURATION, cli.TIME_3s))
 }
 func ToastProcess(m *ice.Message, arg ...ice.Any) func(...ice.Any) {
 	Toast(m, toastContent(m, ice.PROCESS, arg...), "", cli.TIME_30s)
@@ -149,11 +147,11 @@ func GoToast(m *ice.Message, title string, cb func(toast func(name string, count
 	}
 	if list := cb(toast); len(list) > 0 {
 		icon = Icons[ice.FAILURE]
-		m.Option(ice.TOAST_DURATION, "10s")
+		m.Option(ice.TOAST_DURATION, cli.TIME_30s)
 		toast(kit.JoinWord(list...), len(list), _total)
 	} else {
 		icon = Icons[ice.SUCCESS]
-		m.Option(ice.TOAST_DURATION, "1s")
+		m.Option(ice.TOAST_DURATION, cli.TIME_3s)
 		toast(ice.SUCCESS, _total, _total)
 	}
 	m.Sleep(m.Option(ice.TOAST_DURATION))

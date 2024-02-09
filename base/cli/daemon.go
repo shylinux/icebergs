@@ -33,13 +33,13 @@ func _daemon_exec(m *ice.Message, cmd *exec.Cmd) {
 		ice.CMD, kit.JoinWord(cmd.Args...), DIR, cmd.Dir, ENV, kit.Select("", cmd.Env),
 		m.OptionSimple(CMD_INPUT, CMD_OUTPUT, CMD_ERRPUT, mdb.CACHE_CLEAR_ONEXIT),
 	)
-	if e := cmd.Start(); m.Warn(e, ice.ErrNotStart, cmd.Args, err.String()) {
+	if e := cmd.Start(); m.WarnNotValid(e, cmd.Args, err.String()) {
 		mdb.HashModify(m, h, STATUS, ERROR, ERROR, e)
 		return
 	}
 	mdb.HashSelectUpdate(m, h, func(value ice.Map) { value[PID] = cmd.Process.Pid })
 	m.Echo("%d", cmd.Process.Pid).Go(func() {
-		if e := cmd.Wait(); !m.Warn(e, ice.ErrNotStart, cmd.Args, err.String()) && cmd.ProcessState != nil && cmd.ProcessState.Success() {
+		if e := cmd.Wait(); !m.WarnNotValid(e, cmd.Args, err.String()) && cmd.ProcessState != nil && cmd.ProcessState.Success() {
 			mdb.HashModify(m, mdb.HASH, h, STATUS, STOP)
 			m.Cost(CODE, "0", ctx.ARGS, cmd.Args)
 		} else {
@@ -80,9 +80,11 @@ const (
 	STATUS   = "status"
 	ERROR    = "error"
 	CLEAR    = "clear"
+	STASH    = "stash"
 	DELAY    = "delay"
-	RELOAD   = "reload"
 	RECORD   = "record"
+	RELOAD   = "reload"
+	REBOOT   = "reboot"
 	RESTART  = "restart"
 	INTERVAL = "interval"
 
@@ -106,12 +108,16 @@ const DAEMON = "daemon"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		DAEMON: {Name: "daemon hash auto", Help: "守护进程", Actions: ice.MergeActions(ice.Actions{
-			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { mdb.HashPrunesValue(m, mdb.CACHE_CLEAR_ONEXIT, ice.TRUE) }},
+			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) {
+				mdb.HashPrunesValue(m, mdb.CACHE_CLEAR_ONEXIT, ice.TRUE)
+			}},
 			START: {Name: "start cmd* dir env", Hand: func(m *ice.Message, arg ...string) {
 				m.Options(CMD_DIR, m.Option(DIR), CMD_ENV, kit.Split(m.Option(ENV), " ="))
 				_daemon_exec(m, _system_cmd(m, kit.Split(m.Option(ice.CMD))...))
 			}},
-			RESTART: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy("", STOP).Sleep3s().Cmdy("", START) }},
+			RESTART: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy("", STOP).Sleep3s().Cmdy("", START)
+			}},
 			STOP: {Hand: func(m *ice.Message, arg ...string) {
 				h, pid := m.Option(mdb.HASH), m.Option(PID)
 				mdb.HashSelects(m, h).Table(func(value ice.Maps) {

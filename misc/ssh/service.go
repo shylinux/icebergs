@@ -40,8 +40,8 @@ func _ssh_config(m *ice.Message, h string) *ssh.ServerConfig {
 					if !strings.HasPrefix(value[mdb.NAME], meta[aaa.USERNAME]+mdb.AT) {
 						return
 					}
-					if s, e := base64.StdEncoding.DecodeString(value[mdb.TEXT]); !m.Warn(e, ice.ErrNotValid, value[mdb.TEXT]) {
-						if pub, e := ssh.ParsePublicKey([]byte(s)); !m.Warn(e, ice.ErrNotValid, value[mdb.TEXT]) {
+					if s, e := base64.StdEncoding.DecodeString(value[mdb.TEXT]); !m.WarnNotValid(e, value[mdb.TEXT]) {
+						if pub, e := ssh.ParsePublicKey([]byte(s)); !m.WarnNotValid(e, value[mdb.TEXT]) {
 							if bytes.Compare(pub.Marshal(), key.Marshal()) == 0 {
 								meta[tcp.HOSTNAME] = kit.Select("", kit.Split(value[mdb.NAME], mdb.AT), 1)
 								m.Auth(kit.SimpleKV(kit.Fields(aaa.USERNAME, tcp.HOSTNAME, tcp.HOSTPORT), meta))
@@ -62,7 +62,7 @@ func _ssh_config(m *ice.Message, h string) *ssh.ServerConfig {
 			return &ssh.Permissions{Extensions: meta}, err
 		},
 	}
-	if key, err := ssh.ParsePrivateKey([]byte(m.Cmdx(nfs.CAT, kit.HomePath(m.Option(PRIVATE))))); !m.Warn(err, ice.ErrNotValid, m.Option(PRIVATE)) {
+	if key, err := ssh.ParsePrivateKey([]byte(m.Cmdx(nfs.CAT, kit.HomePath(m.Option(PRIVATE))))); !m.WarnNotValid(err, m.Option(PRIVATE)) {
 		config.AddHostKey(key)
 	}
 	return config
@@ -70,13 +70,13 @@ func _ssh_config(m *ice.Message, h string) *ssh.ServerConfig {
 
 func _ssh_accept(m *ice.Message, c net.Conn, conf *ssh.ServerConfig) {
 	conn, chans, reqs, err := ssh.NewServerConn(c, conf)
-	if m.Warn(err) {
+	if m.WarnNotValid(err) {
 		return
 	}
 	m.Go(func() { ssh.DiscardRequests(reqs) })
 	for ch := range chans {
 		channel, requests, err := ch.Accept()
-		if m.Warn(err) {
+		if m.WarnNotValid(err) {
 			continue
 		}
 		m.Go(func() {
@@ -88,7 +88,7 @@ func _ssh_accept(m *ice.Message, c net.Conn, conf *ssh.ServerConfig) {
 }
 func _ssh_prepare(m *ice.Message, channel ssh.Channel, requests <-chan *ssh.Request) {
 	pty, tty, err := xterm.Open()
-	if m.Warn(err) {
+	if m.WarnNotValid(err) {
 		return
 	}
 	defer tty.Close()

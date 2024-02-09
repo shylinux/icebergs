@@ -10,18 +10,18 @@ import (
 )
 
 func _trash_create(m *ice.Message, from string) {
-	if m.Warn(from == "", ice.ErrNotValid, FROM) {
+	if m.WarnNotValid(from == "", FROM) {
 		return
 	}
 	s, e := StatFile(m, from)
 	defer Remove(m, from)
-	if m.Warn(e, ice.ErrNotFound, from) {
+	if m.WarnNotFound(e, from) {
 		return
 	}
 	p := path.Join(ice.VAR_TRASH, path.Base(from))
 	kit.If(!s.IsDir(), func() { Open(m, from, func(r io.Reader) { p = path.Join(ice.VAR_TRASH, kit.HashsPath(r)) }) })
 	RemoveAll(m, p)
-	kit.If(!m.Warn(Rename(m, from, p)), func() { mdb.HashCreate(m, FROM, kit.Paths(from), FILE, p) })
+	kit.If(!m.WarnNotValid(Rename(m, from, p)), func() { mdb.HashCreate(m, FROM, kit.Paths(from), FILE, p) })
 }
 
 const TRASH = "trash"

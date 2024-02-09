@@ -24,8 +24,8 @@ const (
 	COOKIE   = "cookie"
 	REQUEST  = "request"
 	RESPONSE = "response"
-	TITLE    = "title"
 	CONTENT  = "content"
+	TITLE    = "title"
 )
 
 func Render(m *ice.Message, cmd string, args ...ice.Any) bool {
@@ -107,22 +107,14 @@ func RenderType(w http.ResponseWriter, name, mime string) {
 func RenderOrigin(w http.ResponseWriter, origin string) {
 	RenderHeader(w, "Access-Control-Allow-Origin", origin)
 }
-func RenderHeader(w http.ResponseWriter, key, value string) {
-	w.Header().Set(key, value)
-}
+func RenderHeader(w http.ResponseWriter, key, value string) { w.Header().Set(key, value) }
 func RenderStatus(w http.ResponseWriter, code int, text string) {
 	w.WriteHeader(code)
 	w.Write([]byte(text))
 }
-func RenderRedirect(m *ice.Message, arg ...ice.Any) {
-	Render(m, ice.RENDER_REDIRECT, arg...)
-}
-func RenderDownload(m *ice.Message, arg ...ice.Any) {
-	Render(m, ice.RENDER_DOWNLOAD, arg...)
-}
-func RenderResult(m *ice.Message, arg ...ice.Any) {
-	Render(m, ice.RENDER_RESULT, arg...)
-}
+func RenderRedirect(m *ice.Message, arg ...ice.Any) { Render(m, ice.RENDER_REDIRECT, arg...) }
+func RenderDownload(m *ice.Message, arg ...ice.Any) { Render(m, ice.RENDER_DOWNLOAD, arg...) }
+func RenderResult(m *ice.Message, arg ...ice.Any)   { Render(m, ice.RENDER_RESULT, arg...) }
 func RenderTemplate(m *ice.Message, file string, arg ...ice.Any) *ice.Message {
 	return m.RenderResult(kit.Renders(kit.Format(m.Cmdx(nfs.CAT, path.Join(ice.SRC_TEMPLATE, WEB, file)), arg...), m))
 }
@@ -143,9 +135,7 @@ func RenderPodCmd(m *ice.Message, pod, cmd string, arg ...ice.Any) {
 		RenderCmds(m, kit.Dict(msg.AppendSimple(), ctx.ARGS, kit.Simple(arg), ctx.DISPLAY, m.Option(ice.MSG_DISPLAY)))
 	}
 }
-func RenderCmd(m *ice.Message, cmd string, arg ...ice.Any) {
-	RenderPodCmd(m, "", cmd, arg...)
-}
+func RenderCmd(m *ice.Message, cmd string, arg ...ice.Any) { RenderPodCmd(m, "", cmd, arg...) }
 
 func RenderVersion(m *ice.Message) string {
 	if ice.Info.Make.Hash == "" {
@@ -191,6 +181,8 @@ const (
 	CHAT_FAVOR        = "web.chat.favor"
 	CHAT_FLOWS        = "web.chat.flows"
 	CHAT_GRANT        = "web.chat.grant"
+	CHAT_POD          = "web.chat.pod"
+	CHAT_CMD          = "web.chat.cmd"
 	TEAM_PLAN         = "web.team.plan"
 
 	PLUGIN_XTERM = "/plugin/local/code/xterm.js"

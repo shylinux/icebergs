@@ -13,7 +13,7 @@ import (
 )
 
 func _zip_list(m *ice.Message, p string, cb func(zip.FileHeader, io.Reader, int)) {
-	if f, e := zip.OpenReader(p); m.Warn(e, ice.ErrNotValid, p) {
+	if f, e := zip.OpenReader(p); m.WarnNotFound(e, p) {
 		return
 	} else {
 		defer f.Close()

@@ -56,8 +56,8 @@ const (
 const ( // REPOS
 	CONTEXTS = "contexts"
 	INTSHELL = "intshell"
-	VOLCANOS = "volcanos"
 	LEARNING = "learning"
+	VOLCANOS = "volcanos"
 	TOOLKITS = "toolkits"
 	ICEBERGS = "icebergs"
 	RELEASE  = "release"
@@ -117,15 +117,15 @@ const ( // DIR
 	USR_REQUIRE  = "usr/require/"
 	USR_PUBLISH  = "usr/publish/"
 	USR_INTSHELL = "usr/intshell/"
-	USR_VOLCANOS = "usr/volcanos/"
 	USR_LEARNING = "usr/learning/"
+	USR_VOLCANOS = "usr/volcanos/"
 	USR_TOOLKITS = "usr/toolkits/"
 	USR_ICEBERGS = "usr/icebergs/"
 	USR_RELEASE  = "usr/release/"
-	USR_ICONS    = "usr/icons/"
 	USR_PROGRAM  = "usr/program/"
 	USR_GEOAREA  = "usr/geoarea/"
 	USR_PORTAL   = "usr/portal/"
+	USR_ICONS    = "usr/icons/"
 	USR_LOCAL    = "usr/local/"
 
 	USR_LOCAL_GO       = "usr/local/go/"
@@ -242,17 +242,16 @@ const ( // MSG
 
 	TABLE_CHECKBOX = "table.checkbox"
 	TOAST_DURATION = "toast.duration"
-	TCP_DOMAIN     = "tcp_domain"
 )
 const ( // RENDER
 	RENDER_BUTTON = "_button"
 	RENDER_ANCHOR = "_anchor"
 	RENDER_QRCODE = "_qrcode"
+	RENDER_SCRIPT = "_script"
 	RENDER_IMAGES = "_images"
 	RENDER_VIDEOS = "_videos"
 	RENDER_AUDIOS = "_audios"
 	RENDER_IFRAME = "_iframe"
-	RENDER_SCRIPT = "_script"
 
 	RENDER_STATUS   = "_status"
 	RENDER_REDIRECT = "_redirect"
@@ -298,11 +297,11 @@ const ( // CTX
 	CTX_CLOSE = "close"
 
 	CTX_INIT  = "_init"
-	CTX_OPEN  = "_open"
 	CTX_EXIT  = "_exit"
-	CTX_ICONS = "_icons"
-	CTX_TRANS = "_trans"
+	CTX_OPEN  = "_open"
 	CTX_TITLE = "_title"
+	CTX_TRANS = "_trans"
+	CTX_ICONS = "_icons"
 )
 const ( // LOG
 	LOG_CMDS  = "cmds"
@@ -319,8 +318,8 @@ const ( // Err
 	ErrNotLogin = "not login: "
 	ErrNotRight = "not right: "
 	ErrNotAllow = "not allow: "
-	ErrNotValid = "not valid: "
 	ErrNotFound = "not found: "
+	ErrNotValid = "not valid: "
 	ErrNotStart = "not start: "
 
 	ErrAlreadyExists = "already exists: "
@@ -340,8 +339,8 @@ const ( // mdb
 	SELECT = "select"
 
 	KEY   = "key"
-	FIELD = "field"
 	VALUE = "value"
+	FIELD = "field"
 	EXTRA = "extra"
 	META  = "meta"
 	TIME  = "time"
@@ -355,8 +354,8 @@ const ( // web
 	SERVE = "serve"
 	SPACE = "space"
 
-	THEME = "theme"
 	TITLE = "title"
+	THEME = "theme"
 )
 const ( // gdb
 	EVENT   = "event"
@@ -390,5 +389,6 @@ const ( // ice
 	LOG = "log"
 )
 const ( // env
-	LOG_TRACE = "log_trace"
+	LOG_TRACE  = "log_trace"
+	TCP_DOMAIN = "tcp_domain"
 )

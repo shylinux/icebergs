@@ -19,7 +19,7 @@ func _server_udp(m *ice.Message, arg ...string) {
 		m.Assert(e)
 		buf := make([]byte, 2*ice.MOD_BUFS)
 		for {
-			if n, from, e := l.ReadFromUDP(buf[:]); !m.Warn(e) {
+			if n, from, e := l.ReadFromUDP(buf[:]); !m.WarnNotValid(e) {
 				cb(from, buf[:n])
 			} else {
 				break
@@ -34,7 +34,7 @@ func _client_dial_udp4(m *ice.Message, arg ...string) {
 	defer kit.If(e == nil, func() { c.Close() })
 	switch cb := m.OptionCB("").(type) {
 	case func(*net.UDPConn):
-		kit.If(!m.Warn(e), func() { cb(c) })
+		kit.If(!m.WarnNotValid(e), func() { cb(c) })
 	default:
 		m.ErrorNotImplement(cb)
 	}
@@ -47,7 +47,7 @@ const (
 )
 
 func UDPAddr(m *ice.Message, host, port string) *net.UDPAddr {
-	if addr, e := net.ResolveUDPAddr(UDP4, host+nfs.DF+port); !m.Warn(e, ice.ErrNotValid, host, port, logs.FileLineMeta(2)) {
+	if addr, e := net.ResolveUDPAddr(UDP4, host+nfs.DF+port); !m.WarnNotValid(e, host, port, logs.FileLineMeta(2)) {
 		return addr
 	}
 	return nil

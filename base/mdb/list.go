@@ -2,6 +2,7 @@ package mdb
 
 import (
 	"encoding/csv"
+	"os"
 	"path"
 	"strings"
 
@@ -29,14 +30,14 @@ func _list_inputs(m *ice.Message, prefix, chain string, field, value string) {
 func _list_insert(m *ice.Message, prefix, chain string, arg ...string) {
 	m.Logs(INSERT, KEY, path.Join(prefix, chain), arg)
 	defer Lock(m, prefix)()
-	saveImportant(m, prefix, chain, kit.Simple(INSERT, prefix, chain, LIST, TIME, m.Time(), arg)...)
 	m.Echo("%d", Grow(m, prefix, chain, kit.Dict(arg, TARGET, m.Optionv(TARGET))))
+	saveImportant(m, prefix, chain, kit.Simple(INSERT, prefix, chain, LIST, TIME, m.Time(), arg)...)
 }
 func _list_modify(m *ice.Message, prefix, chain string, field, value string, arg ...string) {
 	m.Logs(MODIFY, KEY, path.Join(prefix, chain), field, value, arg)
 	defer Lock(m, prefix)()
-	saveImportant(m, prefix, chain, kit.Simple(MODIFY, prefix, chain, LIST, field, value, arg)...)
 	Grows(m, prefix, chain, field, value, func(index int, val ice.Map) { _mdb_modify(m, val, field, arg...) })
+	saveImportant(m, prefix, chain, kit.Simple(MODIFY, prefix, chain, LIST, field, value, arg)...)
 }
 func _list_select(m *ice.Message, prefix, chain, field, value string) {
 	defer m.SortIntR(ID)
@@ -48,29 +49,40 @@ func _list_select(m *ice.Message, prefix, chain, field, value string) {
 }
 func _list_export(m *ice.Message, prefix, chain, file string) {
 	defer Lock(m, prefix)()
-	f, p, e := miss.CreateFile(kit.Keys(file, CSV))
+	p := kit.Keys(file, CSV)
+	count := kit.Int(Conf(m, prefix, kit.Keys(chain, META, COUNT)))
+	if count == 0 {
+		if s, e := os.Stat(p); e == nil && !s.IsDir() {
+			os.Remove(p)
+		}
+		return
+	}
+	f, p, e := miss.CreateFile(p)
 	m.Assert(e)
 	defer f.Close()
 	defer m.Echo(p)
+	m.Logs(EXPORT, KEY, path.Join(prefix, chain), FILE, p, COUNT, count)
 	w := csv.NewWriter(f)
 	defer w.Flush()
-	count, head := 0, kit.Split(ListField(m))
+	head := kit.Split(ListField(m))
 	Grows(m, prefix, chain, "", "", func(index int, value ice.Map) {
 		if value = kit.GetMeta(value); index == 0 {
 			kit.If(len(head) == 0 || head[0] == ice.FIELDS_DETAIL, func() { head = kit.SortedKey(value) })
 			w.Write(head)
 		}
 		w.Write(kit.Simple(head, func(k string) string { return kit.Format(value[k]) }))
-		count++
 	})
-	m.Logs(EXPORT, KEY, path.Join(prefix, chain), FILE, p, COUNT, count)
 	m.Conf(prefix, kit.Keys(chain, kit.Keym(COUNT)), 0)
 	m.Conf(prefix, kit.Keys(chain, LIST), "")
 }
 func _list_import(m *ice.Message, prefix, chain, file string) {
 	defer Lock(m, prefix)()
 	f, e := miss.OpenFile(kit.Keys(file, CSV))
-	m.Assert(e)
+	if e != nil && !ice.Info.Important {
+		return
+	} else if m.WarnNotFound(e) {
+		return
+	}
 	defer f.Close()
 	r := csv.NewReader(f)
 	head, _ := r.Read()
@@ -195,12 +207,7 @@ const (
 	CACHE_FIELD  = "cache.field"
 )
 
-type Message interface {
-	Confv(arg ...Any) (val Any)
-	Option(key string, arg ...Any) string
-}
-
-func Grows(m Message, prefix string, chain Any, match string, value string, cb Any) Map {
+func Grows(m *ice.Message, prefix string, chain Any, match string, value string, cb Any) Map {
 	cache, ok := m.Confv(prefix, chain).(ice.Map)
 	if cache == nil || !ok {
 		return nil
@@ -216,7 +223,7 @@ func Grows(m Message, prefix string, chain Any, match string, value string, cb A
 		kit.Int(kit.Select("0", strings.TrimPrefix(m.Option(CACHE_OFFEND), "-"))),
 		kit.Int(kit.Select("10", m.Option(CACHE_LIMIT))), match, value, cb)
 }
-func Grow(m Message, prefix string, chain Any, data Any) int {
+func Grow(m *ice.Message, prefix string, chain Any, data Any) int {
 	cache, ok := m.Confv(prefix, chain).(ice.Map)
 	if cache == nil || !ok {
 		cache = kit.Data()

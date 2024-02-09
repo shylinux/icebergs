@@ -184,7 +184,6 @@ func (f *Frame) Spawn(m *ice.Message, c *ice.Context, arg ...string) ice.Server 
 const (
 	FRAME = "frame"
 	SHELL = "shell"
-	WEBIO = "webio"
 	STDIO = "stdio"
 	PS1   = "PS1"
 	PS2   = "PS2"
@@ -195,7 +194,6 @@ const (
 	TARGET = "target"
 	PROMPT = "prompt"
 	PRINTF = "printf"
-	SCREEN = "screen"
 )
 
 func init() {
@@ -227,16 +225,6 @@ func init() {
 		PRINTF: {Name: "printf run text", Help: "输出显示", Hand: func(m *ice.Message, arg ...string) {
 			if f, ok := m.Target().Server().(*Frame); ok {
 				f.printf(m, kit.Select(m.Option(nfs.CONTENT), arg, 0))
-			}
-		}},
-		SCREEN: {Name: "screen run text", Help: "输出命令", Hand: func(m *ice.Message, arg ...string) {
-			if f, ok := m.Target().Server().(*Frame); ok {
-				for _, line := range kit.Split(arg[0], lex.NL, lex.NL) {
-					fmt.Fprintf(f.pipe, line+lex.NL)
-					f.printf(m, line+lex.NL)
-					m.Sleep300ms()
-				}
-				m.Echo(f.res)
 			}
 		}},
 	})

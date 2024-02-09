@@ -1,7 +1,6 @@
 package ice
 
 import (
-	"io"
 	"os"
 	"path"
 	"reflect"
@@ -9,7 +8,6 @@ import (
 
 	"shylinux.com/x/icebergs/base/web/html"
 	kit "shylinux.com/x/toolkits"
-	"shylinux.com/x/toolkits/miss"
 )
 
 type MakeInfo struct {
@@ -30,46 +28,44 @@ type MakeInfo struct {
 	When    string
 	Message string
 
-	Module string
 	System string
 	Domain string
+	Module string
 }
 
 func (s MakeInfo) Versions() string {
 	if s.Hash == "" {
 		return ""
-	}
-	if s.Version == "" {
+	} else if s.Version == "" {
 		return s.Hash[:6]
-	}
-	if kit.IsIn(s.Forword, "", "0") {
+	} else if kit.IsIn(s.Forword, "", "0") {
 		return s.Version
+	} else {
+		return kit.Format("%s-%s-%s", s.Version, s.Forword, s.Hash[:6])
 	}
-	return kit.Format("%s-%s-%s", s.Version, s.Forword, s.Hash[:6])
 }
 
 var Info = struct {
 	Make MakeInfo
-	Hash string
-	Size string
 	Time string
+	Size string
+	Hash string
 
 	Username string
 	Hostname string
 	Pathname string
-	PidPath  string
-	CtxRoot  string
-	Traceid  string
-	Colors   bool
-	Pwd      string
+	NodeName string
+	NodeType string
 
+	Pwd       string
 	Lang      string
 	System    string
 	Domain    string
-	NodeType  string
-	NodeName  string
+	PidPath   string
+	Traceid   string
 	Localhost bool
 	Important bool
+	Colors    bool
 
 	File  Maps
 	Gomod Maps
@@ -83,11 +79,11 @@ var Info = struct {
 
 	PushStream func(m *Message) *Message
 	PushNotice func(m *Message, arg ...Any)
+	SystemCmd  func(m *Message, arg ...Any) *Message
+	AdminCmd   func(m *Message, cmd string, arg ...Any) *Message
 	Template   func(m *Message, p string, data ...Any) string
-	AdminCmd   func(m *Message, cmd string, arg ...string) *Message
 	Save       func(m *Message, key ...string) *Message
 	Load       func(m *Message, key ...string) *Message
-	Open       func(m *Message, p string) (io.ReadCloser, error)
 	Log        func(m *Message, p, l, s string)
 }{
 	Localhost: true,
@@ -99,28 +95,15 @@ var Info = struct {
 
 	render: map[string]func(*Message, ...Any) string{},
 	Stack:  map[string]func(m *Message, key string, arg ...Any) Any{},
-
-	PushStream: func(m *Message) *Message { return m },
-	PushNotice: func(m *Message, arg ...Any) {},
-	Save:       func(m *Message, key ...string) *Message { return m },
-	Load:       func(m *Message, key ...string) *Message { return m },
-	Open:       func(m *Message, p string) (io.ReadCloser, error) { return miss.OpenFile(p) },
-	Log:        func(m *Message, p, l, s string) {},
 }
 
-func init() {
-	Info.Pwd = kit.Path("")
-	Info.CtxRoot = kit.Env("ctx_root")
-	Info.Traceid = os.Getenv(LOG_TRACE)
-}
-func AddMergeAction(h ...Any) {
-	Info.merges = append(Info.merges, h...)
-}
+func init() { Info.Pwd = kit.Path(""); Info.Traceid = os.Getenv(LOG_TRACE) }
+
+func AddMergeAction(h ...Any) { Info.merges = append(Info.merges, h...) }
 func MergeHand(hand ...Handler) Handler {
 	if len(hand) == 0 {
 		return nil
-	}
-	if len(hand) == 1 {
+	} else if len(hand) == 1 {
 		return hand[0]
 	}
 	return func(m *Message, arg ...string) {
@@ -180,7 +163,6 @@ func MergeActions(arg ...Any) Actions {
 									}
 								}
 							}
-
 							kit.If((!ok || len(h.List) == 0) && len(v.List) > 0, func() { _cmd.Meta[k] = v.List })
 						}(k)
 					}
@@ -321,7 +303,6 @@ func (m *Message) FileURI(dir string) string {
 	if strings.HasPrefix(dir, USR_VOLCANOS) {
 		return strings.TrimPrefix(dir, USR)
 	} else {
-		what := kit.MergeURL(path.Join(PS, REQUIRE, dir), POD, m.Option(MSG_USERPOD))
-		return what
+		return kit.MergeURL(path.Join(PS, REQUIRE, dir), POD, m.Option(MSG_USERPOD))
 	}
 }

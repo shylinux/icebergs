@@ -42,8 +42,8 @@ func (s *Frame) Close(m *Message, arg ...string) {
 
 const (
 	INIT = "init"
-	EXIT = "exit"
 	QUIT = "quit"
+	EXIT = "exit"
 )
 
 var Index = &Context{Name: ICE, Help: "冰山模块", Commands: Commands{
@@ -82,15 +82,16 @@ var Index = &Context{Name: ICE, Help: "冰山模块", Commands: Commands{
 		})
 	}},
 }, server: &Frame{}}
+
 var Pulse = &Message{_meta: map[string][]string{}, _data: Map{}, source: Index, target: Index}
 
 func init() {
+	logs.Disable(true)
 	switch tz := os.Getenv("TZ"); tz {
 	case "", "Asia/Beijing", "Asia/Shanghai":
 		time.Local = time.FixedZone(tz, 28800)
 	}
 	Index.root, Pulse.root, Pulse.time = Index, Pulse, time.Now()
-	logs.Disable(true)
 }
 
 func Run(arg ...string) string {

@@ -27,7 +27,6 @@ func (m *Message) OptionSimple(key ...string) (res []string) {
 	kit.If(len(key) == 0, func() {
 		key = kit.Filters(kit.Split(kit.Select("type,name,text", m.Conf(m.PrefixKey(), kit.Keym(FIELD)))), TIME, HASH)
 	})
-	// kit.For(kit.Filters(kit.Split(kit.Join(key)), ""), func(k string) { kit.If(m.Option(k), func(v string) { res = append(res, k, v) }) })
 	kit.For(kit.Filters(kit.Split(kit.Join(key)), ""), func(k string) { res = append(res, k, m.Option(k)) })
 	return
 }
@@ -44,7 +43,6 @@ func (m *Message) OptionCB(key string, cb ...Any) Any {
 	kit.If(len(cb) > 0, func() { m.Optionv(kit.Keycb(kit.Select(m.CommandKey(), key)), cb...) })
 	return m.Optionv(kit.Keycb(kit.Select(m.CommandKey(), key)))
 }
-
 func (m *Message) ParseLink(p string) *Message {
 	u := kit.ParseURL(p)
 	switch arg := strings.Split(strings.TrimPrefix(u.Path, PS), PS); arg[0] {
@@ -103,7 +101,6 @@ func (m *Message) StatusTimeCount(arg ...Any) *Message {
 func (m *Message) StatusTimeCountTotal(arg ...Any) *Message {
 	return m.StatusTimeCount(append([]Any{kit.MDB_TOTAL}, arg...))
 }
-
 func (m *Message) Process(cmd string, arg ...Any) *Message {
 	if len(arg) == 0 {
 		return m.Options(MSG_PROCESS, cmd)
@@ -111,12 +108,8 @@ func (m *Message) Process(cmd string, arg ...Any) *Message {
 		return m.Options(MSG_PROCESS, cmd, PROCESS_ARG, kit.Simple(arg...))
 	}
 }
-func (m *Message) ProcessCookie(arg ...Any) {
-	m.Process(PROCESS_COOKIE, arg...)
-}
-func (m *Message) ProcessSession(arg ...Any) {
-	m.Process(PROCESS_SESSION, arg...)
-}
+func (m *Message) ProcessCookie(arg ...Any)   { m.Process(PROCESS_COOKIE, arg...) }
+func (m *Message) ProcessSession(arg ...Any)  { m.Process(PROCESS_SESSION, arg...) }
 func (m *Message) ProcessLocation(arg ...Any) { m.Process(PROCESS_LOCATION, arg...) }
 func (m *Message) ProcessReplace(url string, arg ...Any) {
 	m.Process(PROCESS_REPLACE, m.MergeLink(url, arg...))
@@ -135,12 +128,8 @@ func (m *Message) ProcessHold(text ...Any)   { m.Process(PROCESS_HOLD, text...) 
 func (m *Message) ProcessBack()              { m.Process(PROCESS_BACK) }
 func (m *Message) ProcessRich(arg ...Any)    { m.Process(PROCESS_RICH, arg...) }
 func (m *Message) ProcessGrow(arg ...Any)    { m.Process(PROCESS_GROW, arg...) }
-func (m *Message) ProcessOpen(url string) *Message {
-	kit.If(url, func() { m.Process(PROCESS_OPEN, url) })
-	return m
-}
+func (m *Message) ProcessOpen(url string)    { m.Process(PROCESS_OPEN, url) }
+func (m *Message) ProcessClose() *Message    { return m.Process(PROCESS_CLOSE) }
 func (m *Message) ProcessOpenAndRefresh(url string) *Message {
-	kit.If(url, func() { m.Process(PROCESS_OPEN, url, "refresh") })
-	return m
+	return m.Process(PROCESS_OPEN, url, "refresh")
 }
-func (m *Message) ProcessClose() *Message { return m.Process(PROCESS_CLOSE) }

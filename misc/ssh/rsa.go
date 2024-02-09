@@ -40,8 +40,8 @@ func init() {
 				}
 			}},
 			mdb.CREATE: {Name: "create bits=2048,4096 title=some", Hand: func(m *ice.Message, arg ...string) {
-				if key, err := rsa.GenerateKey(rand.Reader, kit.Int(m.Option(BITS))); !m.Warn(err, ice.ErrNotValid) {
-					if pub, err := ssh.NewPublicKey(key.Public()); !m.Warn(err, ice.ErrNotValid) {
+				if key, err := rsa.GenerateKey(rand.Reader, kit.Int(m.Option(BITS))); !m.WarnNotValid(err) {
+					if pub, err := ssh.NewPublicKey(key.Public()); !m.WarnNotValid(err) {
 						mdb.HashCreate(m, m.OptionSimple(TITLE),
 							PUBLIC, strings.TrimSpace(string(ssh.MarshalAuthorizedKey(pub)))+lex.SP+strings.TrimSpace(m.Option(TITLE)),
 							PRIVATE, string(pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(key)})),

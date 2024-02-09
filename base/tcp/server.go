@@ -30,7 +30,7 @@ func (l Listener) Close() error {
 
 func _server_listen(m *ice.Message, arg ...string) {
 	l, e := net.Listen(TCP, m.Option(HOST)+nfs.DF+m.Option(PORT))
-	if m.Warn(e) {
+	if m.WarnNotValid(e) {
 		return
 	}
 	l = &Listener{Listener: l, m: m, h: mdb.HashCreate(m, arg, kit.Dict(mdb.TARGET, l), STATUS, kit.Select(ERROR, OPEN, e == nil), ERROR, kit.Format(e)), s: &Stat{}}
@@ -40,7 +40,7 @@ func _server_listen(m *ice.Message, arg ...string) {
 		cb(l)
 	case func(net.Conn):
 		for {
-			if c, e := l.Accept(); !m.Warn(e) {
+			if c, e := l.Accept(); !m.WarnNotValid(e) {
 				cb(c)
 			} else {
 				break

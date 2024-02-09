@@ -42,7 +42,7 @@ func (s input) Inputs(m *ice.Message, arg ...string) {
 	}
 }
 func (s input) Load(m *ice.Message, arg ...string) {
-	if f, e := nfs.OpenFile(m.Message, m.Option(nfs.FILE)); !m.Warn(e) {
+	if f, e := nfs.OpenFile(m.Message, m.Option(nfs.FILE)); !m.WarnNotFound(e) {
 		defer f.Close()
 		lib := kit.Select(path.Base(m.Option(nfs.FILE)), m.Option(mdb.ZONE))
 		m.Assert(nfs.RemoveAll(m, path.Join(mdb.Config(m, mdb.STORE), lib)))

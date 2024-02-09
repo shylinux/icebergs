@@ -111,9 +111,7 @@ var Index = &ice.Context{Name: LOG, Help: "日志模块", Configs: ice.Configs{
 			kit.For(value[mdb.LIST], func(index int, k string) { m.Conf(SHOW, kit.Keys(k, VIEW), key) })
 		})
 	}},
-	ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) {
-		ice.Info.Save(m, TAIL)
-	}},
+	ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { ice.Info.Save(m, TAIL) }},
 }}
 
 func init() { ice.Index.Register(Index, &Frame{}, TAIL) }

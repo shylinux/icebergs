@@ -6,4 +6,4 @@ const SSH = "ssh"
 
 var Index = &ice.Context{Name: SSH, Help: "终端模块"}
 
-func init() { ice.Index.Register(Index, &Frame{}, SOURCE, RETURN, TARGET, PROMPT, PRINTF, SCREEN) }
+func init() { ice.Index.Register(Index, &Frame{}, SOURCE, RETURN, TARGET, PROMPT, PRINTF) }

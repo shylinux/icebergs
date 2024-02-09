@@ -20,7 +20,7 @@ func _tar_list(m *ice.Message, p string, cb func(*tar.Header, io.Reader, int)) {
 			case TGZ:
 				p = kit.Keys(kit.TrimExt(p, kit.Ext(p)), TAR, GZ)
 			case GZ:
-				if f, e := gzip.NewReader(r); m.Warn(e, ice.ErrNotValid, p) {
+				if f, e := gzip.NewReader(r); m.WarnNotValid(e, p) {
 					return
 				} else {
 					defer f.Close()
@@ -30,7 +30,7 @@ func _tar_list(m *ice.Message, p string, cb func(*tar.Header, io.Reader, int)) {
 				i := 0
 				for r := tar.NewReader(r); ; i++ {
 					h, e := r.Next()
-					if m.Warn(e) || e == io.EOF {
+					if m.WarnNotValid(e) || e == io.EOF {
 						break
 					}
 					if h.Size == 0 {

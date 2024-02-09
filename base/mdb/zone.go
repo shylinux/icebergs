@@ -83,19 +83,15 @@ func _zone_export(m *ice.Message, prefix, chain, file string) {
 		m.Conf(prefix, kit.Keys(chain, HASH, key, LIST), "")
 		m.Conf(prefix, kit.Keys(chain, HASH, key, META, COUNT), "")
 	}
-	if count == 0 {
-		os.Remove(p)
-		return
-	}
+	kit.If(count == 0, func() { os.Remove(p) })
 	m.Logs(EXPORT, KEY, path.Join(prefix, chain), FILE, p, COUNT, count)
 }
 func _zone_import(m *ice.Message, prefix, chain, file string) {
 	defer Lock(m, prefix)()
-	f, e := ice.Info.Open(m, kit.Keys(file, CSV))
-	if os.IsNotExist(e) {
+	f, e := miss.OpenFile(kit.Keys(file, CSV))
+	if e != nil && !ice.Info.Important {
 		return
-	}
-	if e != nil {
+	} else if m.WarnNotFound(e) {
 		return
 	}
 	defer f.Close()
@@ -132,10 +128,7 @@ func _zone_import(m *ice.Message, prefix, chain, file string) {
 			list[zone] = Rich(m, prefix, chain, kit.Data(zkey, zone))
 			kit.If(times[list[zone]], func(t string) { m.Confv(prefix, kit.Keys(chain, HASH, list[zone], META, TIME), t) })
 		}
-		func() {
-			chain := kit.Keys(chain, HASH, list[zone])
-			Grow(m, prefix, chain, data)
-		}()
+		func() { chain := kit.Keys(chain, HASH, list[zone]); Grow(m, prefix, chain, data) }()
 		count++
 	}
 	m.Logs(IMPORT, KEY, path.Join(prefix, chain), FILE, kit.Keys(file, CSV), COUNT, count)
@@ -166,7 +159,7 @@ func ZoneConfig(arg ...Any) *ice.Action {
 			add := func(list []string) (inputs []Any) {
 				kit.For(list, func(k string) {
 					kit.If(!kit.IsIn(k, TIME, HASH, COUNT, ID), func() {
-						inputs = append(inputs, k+kit.Select("", "*", strings.Contains(s, k)))
+						inputs = append(inputs, k+kit.Select("", FOREACH, strings.Contains(s, k)))
 					})
 				})
 				return
@@ -279,7 +272,7 @@ func PageZoneSelect(m *ice.Message, arg ...string) *ice.Message {
 	if ZoneSelect(m, arg...); len(arg) == 0 {
 		m.Action(CREATE)
 	} else if len(arg) == 1 {
-		m.Action(INSERT, "page")
+		m.Action(INSERT, PAGE)
 	}
 	return m
 }

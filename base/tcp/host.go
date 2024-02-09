@@ -1,7 +1,6 @@
 package tcp
 
 import (
-	"fmt"
 	"net"
 	"os"
 	"strings"
@@ -44,9 +43,6 @@ func _host_list(m *ice.Message, name string) *ice.Message {
 			}
 		}
 	}
-	// if len(m.Appendv(aaa.IP)) == 0 {
-	// 	m.Push(mdb.INDEX, -1).Push(mdb.NAME, LOCALHOST).Push(aaa.IP, "127.0.0.1").Push(MASK, "255.0.0.0").Push(MAC_ADDRESS, "")
-	// }
 	return m.SortInt(mdb.INDEX).StatusTimeCount(DOMAIN, _host_domain(m))
 }
 
@@ -87,8 +83,8 @@ func init() {
 			ISLOCAL: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] = strings.Split(strings.TrimPrefix(arg[0], "["), "]")[0]; arg[0] == "::1" || strings.HasPrefix(arg[0], "127.") || arg[0] == LOCALHOST {
 					m.Echo(ice.OK)
-					// } else if mdb.HashSelectField(m, strings.Split(arg[0], nfs.DF)[0], mdb.TYPE) == aaa.WHITE {
-					// 	m.Echo(ice.OK)
+				} else if mdb.HashSelectField(m, strings.Split(arg[0], nfs.DF)[0], mdb.TYPE) == aaa.WHITE {
+					m.Echo(ice.OK)
 				}
 			}},
 			PUBLISH: {Hand: func(m *ice.Message, arg ...string) {
@@ -119,6 +115,5 @@ func init() {
 	})
 }
 
-func Address(host, port string) string                   { return fmt.Sprintf("%s:%s", host, port) }
 func IsLocalHost(m *ice.Message, ip string) bool         { return m.Cmdx(HOST, ISLOCAL, ip) == ice.OK }
 func PublishLocalhost(m *ice.Message, url string) string { return m.Cmdx(HOST, PUBLISH, url) }

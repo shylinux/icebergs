@@ -1,8 +1,6 @@
 package chart
 
 import (
-	"strings"
-
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/core/wiki"
@@ -51,7 +49,7 @@ func (b *Block) Data(m *ice.Message, meta ice.Any) wiki.Chart {
 	return b
 }
 func (b *Block) Draw(m *ice.Message, x, y int) wiki.Chart {
-	float := kit.Int(kit.Select("2", "6", strings.Contains(m.Option(ice.MSG_USERUA), "Chrome")))
+	float := kit.Int(kit.Select("2", "6", m.IsChromeUA()))
 	if m.Option(HIDE_BLOCK) != ice.TRUE {
 		item := wiki.NewItem(`<rect x="%d" y="%d" height="%d" width="%d" rx="4" ry="4"`, x+b.MarginX/2, y+b.MarginY/2, b.GetHeight(), b.GetWidth())
 		item.Push(`fill="%s"`, b.BackGround).Push(`%v`, b.RectData).Echo("/>").Dump(m)

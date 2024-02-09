@@ -53,9 +53,9 @@ func transArgKey(arg []string) []string {
 	for i := 0; i < len(arg)-1; i += 2 {
 		switch arg[i] {
 		case BG:
-			arg[i] = html.BACKGROUND_COLOR
+			arg[i] = html.BG_COLOR
 		case FG:
-			arg[i] = html.COLOR
+			arg[i] = html.FG_COLOR
 		}
 	}
 	return arg

@@ -23,11 +23,11 @@ import (
 	"shylinux.com/x/toolkits/logs"
 )
 
-func _serve_address(m *ice.Message) string { return Domain(tcp.LOCALHOST, m.Option(tcp.PORT)) }
+func _serve_address(m *ice.Message) string { return HostPort(m, tcp.LOCALHOST, m.Option(tcp.PORT)) }
 func _serve_start(m *ice.Message) {
 	kit.If(m.Option(aaa.USERNAME), func() { aaa.UserRoot(m, m.Option(aaa.USERNICK), m.Option(aaa.USERNAME)) })
 	kit.If(m.Option(tcp.PORT) == tcp.RANDOM, func() { m.Option(tcp.PORT, m.Cmdx(tcp.PORT, aaa.RIGHT)) })
-	cli.NodeInfo(m, kit.Select(kit.Split(ice.Info.Hostname, ".")[0], m.Option(tcp.NODENAME)), SERVER)
+	cli.NodeInfo(m, kit.Select(kit.Split(ice.Info.Hostname, nfs.PT)[0], m.Option(tcp.NODENAME)), SERVER)
 	m.Go(func() {
 		m.Cmd(SPIDE, ice.OPS, _serve_address(m)+"/exit", ice.Maps{CLIENT_TIMEOUT: cli.TIME_30ms, ice.LOG_DISABLE: ice.TRUE})
 	}).Sleep300ms()
@@ -72,8 +72,7 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 		r.URL.Path = kit.Select(nfs.PS, mdb.Config(m, ice.MAIN))
 	}
 	if r.Method == http.MethodGet {
-		msg := m.Spawn(w, r).Options(ice.MSG_USERUA, r.UserAgent(), ice.LOG_TRACEID, r.Header.Get(ice.LOG_TRACEID),
-			ParseLink(m, kit.Select(r.URL.String(), r.Referer())))
+		msg := m.Spawn(w, r).Options(ice.MSG_USERUA, r.UserAgent(), ice.LOG_TRACEID, r.Header.Get(ice.LOG_TRACEID), ParseLink(m, kit.Select(r.URL.String(), r.Referer())))
 		if path.Join(r.URL.Path) == nfs.PS {
 			if Render(RenderMain(msg), msg.Option(ice.MSG_OUTPUT), kit.List(msg.Optionv(ice.MSG_ARGS))...) {
 				return false
@@ -90,7 +89,7 @@ func _serve_static(msg *ice.Message, w http.ResponseWriter, r *http.Request) boo
 	} else if p = path.Join(nfs.USR, r.URL.Path); kit.HasPrefix(r.URL.Path, nfs.VOLCANOS, nfs.INTSHELL) && nfs.Exists(msg, p) {
 		return Render(msg, ice.RENDER_DOWNLOAD, p)
 	} else if p = strings.TrimPrefix(r.URL.Path, nfs.REQUIRE); kit.HasPrefix(r.URL.Path, nfs.REQUIRE_SRC, nfs.REQUIRE+ice.USR_ICONS, nfs.REQUIRE+ice.USR_ICEBERGS) && nfs.Exists(msg, p) {
-		ispod := kit.Contains(r.URL.String(), "/s/", "pod=") || kit.Contains(r.Header.Get(html.Referer), "/s/", "pod=")
+		ispod := kit.Contains(r.URL.String(), S(), "pod=") || kit.Contains(r.Header.Get(html.Referer), S(), "pod=")
 		return !ispod && Render(msg, ice.RENDER_DOWNLOAD, p)
 	} else if p = path.Join(nfs.USR_MODULES, strings.TrimPrefix(r.URL.Path, nfs.REQUIRE_MODULES)); kit.HasPrefix(r.URL.Path, nfs.REQUIRE_MODULES) && nfs.Exists(msg, p) {
 		return Render(msg, ice.RENDER_DOWNLOAD, p)
@@ -151,7 +150,7 @@ func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.Response
 		}()
 		m.Option(ice.MSG_OPTS, kit.Simple(m.Optionv(ice.MSG_OPTION), func(k string) bool { return !strings.HasPrefix(k, ice.MSG_SESSID) }))
 		if m.Detailv(m.PrefixKey(), cmds); len(cmds) > 1 && cmds[0] == ctx.ACTION && cmds[1] != ctx.ACTION {
-			if !kit.IsIn(cmds[1], aaa.LOGIN, ctx.RUN, ctx.COMMAND) && m.Warn(r.Method == http.MethodGet, ice.ErrNotAllow) {
+			if !kit.IsIn(cmds[1], aaa.LOGIN, ctx.RUN, ctx.COMMAND) && m.WarnNotAllow(r.Method == http.MethodGet) {
 				return
 			}
 			m.ActionHand(cmd, key, cmds[1], cmds[2:]...)
@@ -213,7 +212,7 @@ const SERVE = "serve"
 
 func init() {
 	Index.MergeCommands(ice.Commands{P(ice.EXIT): {Hand: func(m *ice.Message, arg ...string) { m.Cmd(ice.EXIT) }},
-		SERVE: {Name: "serve name auto main host dark system", Help: "服务器", Actions: ice.MergeActions(ice.Actions{
+		SERVE: {Name: "serve name auto main host system", Help: "服务器", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { cli.NodeInfo(m, ice.Info.Pathname, WORKER) }},
 			ice.MAIN: {Name: "main index", Help: "首页", Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(ctx.INDEX) == "" {
@@ -222,16 +221,7 @@ func init() {
 					mdb.Config(m, ice.MAIN, C(m.Option(ctx.INDEX)+nfs.PS))
 				}
 			}},
-			log.TRACEID: {Help: "日志", Hand: func(m *ice.Message, arg ...string) {
-				kit.If(len(arg) > 0, func() { ice.Info.Traceid = arg[0] })
-				m.Echo(ice.Info.Traceid)
-			}},
-			tcp.HOST: {Help: "公网", Hand: func(m *ice.Message, arg ...string) { m.Echo(kit.Formats(PublicIP(m))) }},
-			cli.DARK: {Help: "主题", Hand: func(m *ice.Message, arg ...string) {
-				kit.If(tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)), func() {
-					m.Cmd(cli.SYSTEM, "osascript", "-e", `tell app "System Events" to tell appearance preferences to set dark mode to not dark mode`)
-				})
-			}},
+			tcp.HOST:   {Help: "公网", Hand: func(m *ice.Message, arg ...string) { m.Echo(kit.Formats(PublicIP(m))) }},
 			cli.SYSTEM: {Help: "系统", Hand: func(m *ice.Message, arg ...string) { cli.Opens(m, "System Settings.app") }},
 			cli.START:  {Name: "start dev proto host port=9020 nodename username usernick", Hand: func(m *ice.Message, arg ...string) { _serve_start(m) }},
 			SERVE_START: {Hand: func(m *ice.Message, arg ...string) {
@@ -247,7 +237,7 @@ func init() {
 				})
 			}},
 		}, gdb.EventsAction(SERVE_START), mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,status,name,proto,host,port"), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
-			mdb.HashSelect(m, arg...).Options(ice.MSG_ACTION, "").StatusTimeCount(kit.Dict(ice.MAIN, mdb.Config(m, ice.MAIN)))
+			mdb.HashSelect(m, arg...).Action().StatusTimeCount(kit.Dict(ice.MAIN, mdb.Config(m, ice.MAIN)))
 		}},
 	})
 	ice.AddMergeAction(func(c *ice.Context, key string, cmd *ice.Command, sub string, action *ice.Action) {
@@ -267,27 +257,27 @@ func init() {
 	})
 }
 
-func Domain(host, port string) string {
-	return kit.Format("%s://%s:%s", HTTP, host, port)
-}
-func Script(m *ice.Message, str string, arg ...ice.Any) string {
-	return ice.Render(m, ice.RENDER_SCRIPT, kit.Format(str, arg...))
+func IsLocalHost(m *ice.Message) bool {
+	return (m.R == nil || m.R.Header.Get(html.XForwardedFor) == "") && tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP))
 }
 func ParseUA(m *ice.Message) (res []string) {
 	res = append(res, aaa.IP, m.Option(ice.MSG_USERIP), aaa.UA, m.Option(ice.MSG_USERUA))
-	for _, p := range []string{"Android", "iPhone", "Mac", "Windows"} {
+	for _, p := range html.SystemList {
 		if strings.Contains(m.Option(ice.MSG_USERUA), p) {
 			res = append(res, cli.SYSTEM, p)
 			break
 		}
 	}
-	for _, p := range []string{"MicroMessenger", "Alipay", "Edg", "Chrome", "Safari", "Go-http-client"} {
+	for _, p := range html.AgentList {
 		if strings.Contains(m.Option(ice.MSG_USERUA), p) {
 			res = append(res, AGENT, p, mdb.ICONS, agentIcons[p])
 			break
 		}
 	}
 	return
+}
+func Script(m *ice.Message, str string, arg ...ice.Any) string {
+	return ice.Render(m, ice.RENDER_SCRIPT, kit.Format(str, arg...))
 }
 func ChatCmdPath(m *ice.Message, arg ...string) string {
 	return m.MergePodCmd("", kit.Select(m.PrefixKey(), path.Join(arg...)))
@@ -299,7 +289,4 @@ func RequireFile(m *ice.Message, file string) string {
 		return nfs.REQUIRE + file
 	}
 	return ""
-}
-func IsLocalHost(m *ice.Message) bool {
-	return (m.R == nil || m.R.Header.Get(html.XForwardedFor) == "") && tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP))
 }

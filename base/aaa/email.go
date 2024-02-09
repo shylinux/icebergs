@@ -7,6 +7,7 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/web/html"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -37,12 +38,12 @@ func init() {
 				if m.WarnNotFound(msg.Append(SERVICE) == "", m.Option(FROM)) {
 					return
 				}
-				m.Toast(ice.PROCESS, "", "-1")
-				content := []byte(kit.JoinKV(DF, NL, kit.Simple(FROM, msg.Append(USERNAME), m.OptionSimple(TO, CC, SUBJECT), DATE, time.Now().Format(time.RFC1123Z), "Content-Type", "text/html; charset=UTF-8")...) + NL + NL + m.Option(CONTENT))
+				m.ToastProcess()
+				content := []byte(kit.JoinKV(DF, NL, kit.Simple(FROM, msg.Append(USERNAME), m.OptionSimple(TO, CC, SUBJECT), DATE, time.Now().Format(time.RFC1123Z), html.ContentType, "text/html; charset=UTF-8")...) + NL + NL + m.Option(CONTENT))
 				auth := smtp.PlainAuth("", msg.Append(USERNAME), msg.Append(PASSWORD), kit.Split(msg.Append(SERVICE), ice.DF)[0])
 				m.Logs(EMAIL, SEND, string(content))
-				if !m.Warn(smtp.SendMail(msg.Append(SERVICE), auth, msg.Append(USERNAME), kit.Split(m.Option(TO)), content)) {
-					m.Toast(ice.SUCCESS)
+				if !m.WarnNotValid(smtp.SendMail(msg.Append(SERVICE), auth, msg.Append(USERNAME), kit.Split(m.Option(TO)), content)) {
+					m.ToastSuccess()
 				}
 			}},
 		}, mdb.DevDataAction("name,service,username,password"), mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,service,username", ice.ACTION, SEND)), Hand: func(m *ice.Message, arg ...string) {

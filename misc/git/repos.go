@@ -305,8 +305,8 @@ func _repos_inner(m *ice.Message, _repos_path func(m *ice.Message, p string, arg
 			} else {
 				if refer, err := repos.Head(); err == nil {
 					if commit, err := repos.CommitObject(refer.Hash()); err == nil {
-						if file, err := commit.File(arg[2]); !m.Warn(err) {
-							if content, err := file.Contents(); !m.Warn(err) {
+						if file, err := commit.File(arg[2]); !m.WarnNotValid(err) {
+							if content, err := file.Contents(); !m.WarnNotValid(err) {
 								for _, diff := range diffmatchpatch.New().DiffMain(content, m.Result(), true) {
 									switch diff.Type {
 									case diffmatchpatch.DiffDelete:
@@ -324,7 +324,7 @@ func _repos_inner(m *ice.Message, _repos_path func(m *ice.Message, p string, arg
 				}
 				m.Cmdy(nfs.CAT, _repos_path(m, ls[0], arg[2]))
 			}
-		} else if commit, err := _repos_open(m, ls[0]).CommitObject(plumbing.NewHash(ls[2])); m.Warn(err) {
+		} else if commit, err := _repos_open(m, ls[0]).CommitObject(plumbing.NewHash(ls[2])); m.WarnNotValid(err) {
 			return
 		} else if len(arg) < 3 {
 			if stats, err := commit.Stats(); err == nil {
@@ -333,8 +333,8 @@ func _repos_inner(m *ice.Message, _repos_path func(m *ice.Message, p string, arg
 				}
 			}
 		} else {
-			if file, err := commit.File(arg[2]); !m.Warn(err) {
-				if content, err := file.Contents(); !m.Warn(err) {
+			if file, err := commit.File(arg[2]); !m.WarnNotValid(err) {
+				if content, err := file.Contents(); !m.WarnNotValid(err) {
 					if parent, err := commit.Parent(0); err == nil {
 						if file0, err := parent.File(arg[2]); err == nil {
 							if content0, err := file0.Contents(); err == nil {
@@ -415,7 +415,7 @@ func init() {
 			} else {
 				if p = path.Join(cache, path.Join(arg...)); !nfs.Exists(m, p) {
 					if p = path.Join(ice.USR_REQUIRE, path.Join(arg...)); !nfs.Exists(m, p) {
-						if m.Warn(kit.Lasterr(git.PlainClone(path.Join(ice.USR_REQUIRE, path.Join(arg[:3]...)), false, &git.CloneOptions{
+						if m.WarnNotValid(kit.Lasterr(git.PlainClone(path.Join(ice.USR_REQUIRE, path.Join(arg[:3]...)), false, &git.CloneOptions{
 							URL: ice.HTTPS + "://" + path.Join(arg[0], arg[1], ls[0]), Depth: 1,
 							ReferenceName: plumbing.NewTagReferenceName(kit.Select(ice.Info.Gomod[ls[0]], ls, 1)),
 						}))) {
@@ -504,7 +504,7 @@ func init() {
 				}
 			}},
 			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) {
-				if !m.Warn(m.Option(REPOS), ice.ErrNotValid, REPOS) {
+				if !m.WarnNotValid(m.Option(REPOS), REPOS) {
 					nfs.Trash(m, _repos_path(m, m.Option(REPOS)))
 					mdb.HashRemove(m, m.Option(REPOS))
 				}
@@ -521,7 +521,7 @@ func init() {
 					p := m.Option(REMOTE)
 					kit.If(!kit.HasPrefix(p, nfs.PS, web.HTTP), func() { p = m.Cmdv(web.SPIDE, dev, web.CLIENT_ORIGIN) + web.X(p) })
 					m.Info("clone %s", p)
-					if _, err := git.PlainClone(m.Option(nfs.PATH), false, &git.CloneOptions{URL: p, Auth: _repos_auth(m, p)}); !m.Warn(err) {
+					if _, err := git.PlainClone(m.Option(nfs.PATH), false, &git.CloneOptions{URL: p, Auth: _repos_auth(m, p)}); !m.WarnNotValid(err) {
 						_repos_insert(m, m.Option(nfs.PATH))
 						return
 					}
@@ -577,17 +577,17 @@ func init() {
 				}
 			}},
 			ADD: {Icon: "bi bi-plus-square", Hand: func(m *ice.Message, arg ...string) {
-				if work, err := _repos_open(m, m.Option(REPOS)).Worktree(); !m.Warn(err) {
-					m.Warn(kit.Lasterr(work.Add(m.Option(nfs.FILE))))
+				if work, err := _repos_open(m, m.Option(REPOS)).Worktree(); !m.WarnNotValid(err) {
+					m.WarnNotValid(kit.Lasterr(work.Add(m.Option(nfs.FILE))))
 				}
 			}},
 			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
-				if !m.Warn(m.Option(REPOS), ice.ErrNotValid, REPOS) && !m.Warn(m.Option(nfs.FILE), ice.ErrNotValid, nfs.FILE) {
+				if !m.WarnNotValid(m.Option(REPOS), REPOS) && !m.WarnNotValid(m.Option(nfs.FILE), nfs.FILE) {
 					nfs.Trash(m, _repos_path(m, m.Option(REPOS), m.Option(nfs.FILE)))
 				}
 			}},
 			COMMIT: {Name: "commit actions=add,opt,fix message*=some", Help: "提交", Icon: "bi bi-check2-square", Hand: func(m *ice.Message, arg ...string) {
-				if work, err := _repos_open(m, m.Option(REPOS)).Worktree(); !m.Warn(err) {
+				if work, err := _repos_open(m, m.Option(REPOS)).Worktree(); !m.WarnNotValid(err) {
 					opt := &git.CommitOptions{All: true}
 					if cfg, err := config.LoadConfig(config.GlobalScope); err == nil {
 						if cfg.Author.Email == "" || cfg.Author.Name == "" {
@@ -597,12 +597,12 @@ func init() {
 							}
 						}
 					}
-					m.Warn(kit.Lasterr(work.Commit(kit.JoinWord(m.Option("actions"), m.Option(MESSAGE)), opt)))
+					m.WarnNotValid(kit.Lasterr(work.Commit(kit.JoinWord(m.Option("actions"), m.Option(MESSAGE)), opt)))
 				}
 			}},
 			LOG: {Hand: func(m *ice.Message, arg ...string) {
 				repos := _repos_open(m, kit.Select(m.Option(REPOS), arg, 0))
-				if branch, err := repos.Branch(kit.Select(m.Option(BRANCH), arg, 1)); !m.Warn(err) {
+				if branch, err := repos.Branch(kit.Select(m.Option(BRANCH), arg, 1)); !m.WarnNotValid(err) {
 					if refer, err := repos.Reference(branch.Merge, true); !m.Warn(err) {
 						_repos_log(m, refer.Hash(), repos)
 					}

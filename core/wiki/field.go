@@ -17,7 +17,7 @@ func _field_show(m *ice.Message, name, text string, arg ...string) {
 		meta[mdb.LIST], name = cmd.List, kit.Select(cmd.Help, name)
 		kit.For(cmd.Meta, func(k string, v ice.Any) { meta[kit.Keys(mdb.META, k)] = v })
 	})
-	if m.Warn(len(meta) == 0, ice.ErrNotFound, text) || !aaa.Right(m.Spawn(), text) {
+	if m.WarnNotFound(len(meta) == 0, text) || !aaa.Right(m.Spawn(), text) {
 		return
 	}
 	kit.For(arg, func(k, v string) {

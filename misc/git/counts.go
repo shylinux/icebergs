@@ -14,7 +14,7 @@ import (
 )
 
 func _counts_count(m *ice.Message, arg []string, cb func(string)) {
-	if m.Warn(len(arg) == 0 || arg[0] == nfs.USR, ice.ErrNotValid, nfs.DIR, "to many files, please select sub dir") {
+	if m.WarnNotValid(len(arg) == 0 || arg[0] == nfs.USR, nfs.DIR, "to many files, please select sub dir") {
 		return
 	}
 	nfs.DirDeepAll(m, "", arg[0], func(value ice.Maps) {

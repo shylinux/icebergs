@@ -50,8 +50,8 @@ func SessCheck(m *ice.Message, sessid string) bool {
 	return sessid != "" && m.Cmdy(SESS, CHECK, sessid, logs.FileLineMeta(-1)).Option(ice.MSG_USERNAME) != ""
 }
 func SessValid(m *ice.Message) string {
-	if m.Option(ice.MSG_SESSID) == "" || ice.Info.AdminCmd(m.Spawn(), SESS, m.Option(ice.MSG_SESSID)).Length() == 0 {
-		return m.Option(ice.MSG_SESSID, ice.Info.AdminCmd(m.Spawn(), SESS, mdb.CREATE, m.Option(ice.MSG_USERNAME)).Result())
+	if m.Option(ice.MSG_SESSID) == "" || m.Spawn().AdminCmd(SESS, m.Option(ice.MSG_SESSID)).Length() == 0 {
+		return m.Option(ice.MSG_SESSID, m.Spawn().AdminCmd(SESS, mdb.CREATE, m.Option(ice.MSG_USERNAME)).Result())
 	}
 	return m.Option(ice.MSG_SESSID)
 }

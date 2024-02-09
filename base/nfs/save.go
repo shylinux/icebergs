@@ -16,7 +16,7 @@ func _defs_file(m *ice.Message, name string, text ...string) {
 		return
 	}
 	for i, v := range text {
-		if b, e := kit.Render(v, m); !m.Warn(e) {
+		if b, e := kit.Render(v, m); !m.WarnNotValid(e) {
 			text[i] = string(b)
 		}
 	}
@@ -45,16 +45,16 @@ func _copy_file(m *ice.Message, name string, from ...string) {
 	})
 }
 func _link_file(m *ice.Message, name string, from string) {
-	if m.Warn(from == "", ice.ErrNotValid, FROM) {
+	if m.WarnNotValid(from == "", FROM) {
 		return
 	}
 	name = path.Join(m.Option(DIR_ROOT), name)
 	from = path.Join(m.Option(DIR_ROOT), from)
-	if m.Warn(!Exists(m, from), ice.ErrNotFound, from) {
+	if m.WarnNotFound(!Exists(m, from), from) {
 		return
 	}
 	Remove(m, name)
-	if MkdirAll(m, path.Dir(name)); m.Warn(Link(m, from, name)) && m.Warn(Symlink(m, from, name), ice.ErrWarn, from) {
+	if MkdirAll(m, path.Dir(name)); m.WarnNotValid(Link(m, from, name)) && m.WarnNotValid(Symlink(m, from, name), from) {
 		return
 	}
 	m.Logs(SAVE, FILE, name, FROM, from).Echo(name)
@@ -103,7 +103,7 @@ func init() {
 	})
 }
 func Create(m *ice.Message, p string, cb ice.Any) {
-	if f, p, e := CreateFile(m, p); !m.Warn(e) {
+	if f, p, e := CreateFile(m, p); !m.WarnNotValid(e) {
 		defer f.Close()
 		switch cb := cb.(type) {
 		case func(io.Writer, string):
@@ -116,7 +116,7 @@ func Create(m *ice.Message, p string, cb ice.Any) {
 	}
 }
 func Append(m *ice.Message, p string, cb ice.Any) {
-	if f, p, e := AppendFile(m, p); !m.Warn(e) {
+	if f, p, e := AppendFile(m, p); !m.WarnNotValid(e) {
 		defer f.Close()
 		switch cb := cb.(type) {
 		case func(io.Writer, string):
@@ -134,7 +134,7 @@ func Save(m *ice.Message, w io.Writer, s string, cb ice.Any) {
 		io.Copy(w, content)
 		return
 	}
-	if n, e := fmt.Fprint(w, s); !m.Warn(e) {
+	if n, e := fmt.Fprint(w, s); !m.WarnNotValid(e) {
 		switch cb := cb.(type) {
 		case func(int):
 			cb(n)
@@ -144,7 +144,7 @@ func Save(m *ice.Message, w io.Writer, s string, cb ice.Any) {
 	}
 }
 func Copy(m *ice.Message, w io.Writer, r io.Reader, cb ice.Any) {
-	if n, e := io.Copy(w, r); !m.Warn(e) {
+	if n, e := io.Copy(w, r); !m.WarnNotValid(e) {
 		switch cb := cb.(type) {
 		case func(int):
 			cb(int(n))
@@ -171,7 +171,7 @@ func CopyStream(m *ice.Message, to io.Writer, from io.Reader, cache, total int, 
 		default:
 			m.ErrorNotImplement(cb)
 		}
-		if e == io.EOF || m.Warn(e) {
+		if e == io.EOF || m.WarnNotValid(e) {
 			break
 		}
 	}

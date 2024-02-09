@@ -34,7 +34,7 @@ func _cat_list(m *ice.Message, p string) {
 		return
 	}
 	f, e := _cat_find(m, p)
-	if m.Warn(e, ice.ErrNotFound, p) {
+	if m.WarnNotFound(e, p) {
 		return
 	}
 	defer f.Close()
@@ -52,7 +52,7 @@ func _cat_list(m *ice.Message, p string) {
 	case func([]string):
 		kit.For(f, cb)
 	case nil:
-		if b, e := ioutil.ReadAll(f); !m.Warn(e) {
+		if b, e := ioutil.ReadAll(f); !m.WarnNotFound(e) {
 			m.Echo(string(b)).StatusTime(FILE, p, SIZE, len(b))
 		}
 	default:
@@ -103,13 +103,12 @@ const (
 	PY    = "py"
 
 	IMAGE = "image"
-
-	PNG  = "png"
-	JPEG = "jpeg"
-	JPG  = "jpg"
-	MP4  = "mp4"
-	MOV  = "mov"
-	PDF  = "pdf"
+	JPEG  = "jpeg"
+	JPG   = "jpg"
+	PNG   = "png"
+	MP4   = "mp4"
+	MOV   = "mov"
+	PDF   = "pdf"
 
 	DF = ice.DF
 	PS = ice.PS
@@ -139,8 +138,9 @@ func DirList(m *ice.Message, arg ...string) bool {
 	if len(arg) == 0 || strings.HasSuffix(arg[0], PS) {
 		m.Cmdy(DIR, kit.Slice(arg, 0, 1))
 		return true
+	} else {
+		return false
 	}
-	return false
 }
 
 func IsSourceFile(m *ice.Message, ext string) bool {
@@ -159,7 +159,7 @@ func Open(m *ice.Message, p string, cb ice.Any) {
 		return
 	} else if strings.HasSuffix(p, PS) {
 		kit.If(p == PS, func() { p = "" })
-		if ls, e := ReadDir(m, p); !m.Warn(e) {
+		if ls, e := ReadDir(m, p); !m.WarnNotFound(e) {
 			switch cb := cb.(type) {
 			case func([]os.FileInfo):
 				cb(ls)
@@ -171,7 +171,7 @@ func Open(m *ice.Message, p string, cb ice.Any) {
 				m.ErrorNotImplement(cb)
 			}
 		}
-	} else if f, e := OpenFile(m, p); !m.Warn(e, ice.ErrNotFound, p) {
+	} else if f, e := OpenFile(m, p); !m.WarnNotFound(e, p) {
 		defer f.Close()
 		switch cb := cb.(type) {
 		case func(io.Reader, os.FileInfo):
@@ -182,7 +182,7 @@ func Open(m *ice.Message, p string, cb ice.Any) {
 		case func(io.Reader):
 			cb(f)
 		case func(string):
-			if b, e := ioutil.ReadAll(f); !m.Warn(e) {
+			if b, e := ioutil.ReadAll(f); !m.WarnNotFound(e) {
 				cb(string(b))
 			}
 		default:
@@ -191,7 +191,7 @@ func Open(m *ice.Message, p string, cb ice.Any) {
 	}
 }
 func ReadAll(m *ice.Message, r io.Reader) []byte {
-	if b, e := ioutil.ReadAll(r); !m.Warn(e) {
+	if b, e := ioutil.ReadAll(r); !m.WarnNotFound(e) {
 		return b
 	}
 	return nil

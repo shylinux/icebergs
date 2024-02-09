@@ -124,7 +124,7 @@ func formatStyle(arg ...string) string {
 }
 
 var transKey = map[string]string{
-	BG: html.BACKGROUND_COLOR, FG: html.COLOR,
+	BG: html.BG_COLOR, FG: html.FG_COLOR,
 }
 
 const (

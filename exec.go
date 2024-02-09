@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"shylinux.com/x/icebergs/base/web/html"
 	kit "shylinux.com/x/toolkits"
 	"shylinux.com/x/toolkits/logs"
 	"shylinux.com/x/toolkits/task"
@@ -69,8 +70,8 @@ func (m *Message) Go(cb func(), arg ...Any) *Message {
 	kit.If(len(arg) > 0, func() { meta.FileLine = kit.Format(arg[0]) })
 	task.Put(meta, nil, func(task *task.Task) {
 		m.TryCatch(true, func(m *Message) {
-			m.Option("task.id", kit.Format(task.TaskId()))
 			m.Option("work.id", kit.Format(task.WorkId()))
+			m.Option("task.id", kit.Format(task.TaskId()))
 			cb()
 		})
 	})
@@ -108,7 +109,7 @@ func (m *Message) Cmdy(arg ...Any) *Message { return m.Copy(m._command(arg...)) 
 func (m *Message) CmdList(arg ...string) []string {
 	msg, list := m._command(arg), []string{}
 	kit.For(msg._cmd.List, func(value Map) {
-		kit.If(!kit.IsIn(kit.Format(kit.Value(value, TYPE)), "button"), func() { list = append(list, kit.Format(kit.Value(value, NAME))) })
+		kit.If(!kit.IsIn(kit.Format(kit.Value(value, TYPE)), html.BUTTON), func() { list = append(list, kit.Format(kit.Value(value, NAME))) })
 	})
 	return msg.Appendv(kit.Select(kit.Select("", list, 0), list, len(arg)-1))
 }
@@ -130,7 +131,7 @@ func (m *Message) CmdHand(cmd *Command, key string, arg ...string) *Message {
 	return m
 }
 func (m *Message) ActionHand(cmd *Command, key, sub string, arg ...string) *Message {
-	if action, ok := cmd.Actions[sub]; !m.Warn(!ok, ErrNotFound, sub, cmd.FileLines()) {
+	if action, ok := cmd.Actions[sub]; !m.WarnNotFound(!ok, sub, cmd.FileLines()) {
 		return m.Target()._action(m, cmd, key, sub, action, arg...)
 	}
 	return m
@@ -191,7 +192,7 @@ func (m *Message) _command(arg ...Any) *Message {
 			run(m.Spawn(s), s, cmd, key, list[1:]...)
 		})
 	}
-	m.Warn(!ok, ErrNotFound, kit.Format(list))
+	m.WarnNotFound(!ok, kit.Format(list))
 	return m
 }
 func (c *Context) _command(m *Message, cmd *Command, key string, arg ...string) *Message {
@@ -230,7 +231,7 @@ func (c *Context) _action(m *Message, cmd *Command, key string, sub string, h *A
 				}
 			}
 			kit.If(order && i < len(arg), func() { m.Option(name, arg[i]) })
-			if m.Warn(m.OptionDefault(name, kit.Format(kit.Value(v, VALUE))) == "" && kit.Value(v, "need") == "must", ErrNotValid, name, key, sub) {
+			if m.WarnNotValid(m.OptionDefault(name, kit.Format(kit.Value(v, VALUE))) == "" && kit.Value(v, "need") == "must", name, key, sub) {
 				return m
 			}
 		}

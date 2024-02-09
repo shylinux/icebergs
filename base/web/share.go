@@ -39,12 +39,12 @@ func _share_cache(m *ice.Message, arg ...string) {
 	}
 }
 func _share_proxy(m *ice.Message) {
-	if m.Warn(m.Option(SHARE) == "", ice.ErrNotValid) {
+	if m.WarnNotValid(m.Option(SHARE) == "") {
 		return
 	}
 	msg := m.Cmd(SHARE, m.Option(SHARE))
 	defer m.Cmd(SHARE, mdb.REMOVE, mdb.HASH, m.Option(SHARE))
-	if m.Warn(msg.Append(mdb.TEXT) == "", ice.ErrNotValid) {
+	if m.WarnNotValid(msg.Append(mdb.TEXT) == "") {
 		return
 	}
 	p := path.Join(ice.VAR_PROXY, msg.Append(mdb.TEXT), msg.Append(mdb.NAME))
@@ -82,7 +82,7 @@ func init() {
 				m.EchoQRCode(m.Cmd(SHARE, mdb.CREATE, mdb.TYPE, LOGIN).Option(mdb.LINK)).ProcessInner()
 			}},
 			OPEN: {Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessOpen(m.MergeLink("/share/" + m.Option(mdb.HASH)))
+				m.ProcessOpen(m.MergeLink(P(SHARE, m.Option(mdb.HASH))))
 			}},
 			ctx.COMMAND: {Hand: func(m *ice.Message, arg ...string) {
 				if msg := mdb.HashSelects(m.Spawn(), m.Option(SHARE)); !IsNotValidFieldShare(m, msg) {
@@ -96,7 +96,7 @@ func init() {
 				}
 			}},
 			nfs.PS: {Hand: func(m *ice.Message, arg ...string) {
-				if m.Warn(len(arg) == 0 || arg[0] == "", ice.ErrNotValid, SHARE) {
+				if m.WarnNotValid(len(arg) == 0 || arg[0] == "", SHARE) {
 					return
 				}
 				msg := m.Cmd(SHARE, m.Option(SHARE, arg[0]))
@@ -124,7 +124,7 @@ func init() {
 				}
 			}},
 		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,space,usernick,username,userrole", mdb.EXPIRE, mdb.DAYS)), Hand: func(m *ice.Message, arg ...string) {
-			if kit.IsIn(m.Option(ice.MSG_USERROLE), aaa.ROOT, aaa.TECH) || len(arg) > 0 && arg[0] != "" {
+			if aaa.IsTechOrRoot(m) || len(arg) > 0 && arg[0] != "" {
 				mdb.HashSelect(m, arg...).PushAction(OPEN, mdb.REMOVE)
 			}
 		}},
@@ -137,13 +137,13 @@ func init() {
 	})
 }
 func IsNotValidShare(m *ice.Message, time string) bool {
-	return m.Warn(time < m.Time(), ice.ErrNotValid, m.Option(SHARE), time, m.Time(), logs.FileLineMeta(2))
+	return m.WarnNotValid(time < m.Time(), ice.ErrNotValid, m.Option(SHARE), time, m.Time(), logs.FileLineMeta(2))
 }
 func IsNotValidFieldShare(m *ice.Message, msg *ice.Message) bool {
 	if m.Warn(IsNotValidShare(m, msg.Append(mdb.TIME)), kit.Format("共享超时, 请联系 %s(%s), 重新分享 %s %s %s", msg.Append(aaa.USERNICK), msg.Append(aaa.USERNAME), msg.Append(mdb.TYPE), msg.Append(mdb.NAME), msg.Append(mdb.TEXT))) {
 		return true
 	}
-	if m.Warn(msg.Append(mdb.NAME) == "") {
+	if m.WarnNotValid(msg.Append(mdb.NAME) == "") {
 		return true
 	}
 	return false
@@ -162,7 +162,7 @@ func ShareLocalFile(m *ice.Message, arg ...string) {
 	p := path.Join(arg...)
 	switch ls := strings.Split(p, nfs.PS); ls[0] {
 	case ice.ETC, ice.VAR:
-		if m.Warn(m.Option(ice.MSG_USERROLE) == aaa.VOID, ice.ErrNotRight, p) {
+		if m.WarnNotRight(m.Option(ice.MSG_USERROLE) == aaa.VOID, p) {
 			return
 		}
 	default:
@@ -180,6 +180,15 @@ func ShareLocalFile(m *ice.Message, arg ...string) {
 		m.RenderDownload(ProxyUpload(m, m.Option(ice.POD), p))
 	}
 }
+func ShareLocal(m *ice.Message, p string) string {
+	if kit.HasPrefix(p, nfs.PS, HTTP) {
+		return p
+	}
+	return m.MergeLink(PP(SHARE, LOCAL, p))
+}
+func ShareField(m *ice.Message, cmd string, arg ...ice.Any) *ice.Message {
+	return m.EchoQRCode(tcp.PublishLocalhost(m, m.MergeLink(P(SHARE, AdminCmd(m, SHARE, mdb.CREATE, mdb.TYPE, FIELD, mdb.NAME, kit.Select(m.PrefixKey(), cmd), mdb.TEXT, kit.Format(kit.Simple(arg...)), SPACE, m.Option(ice.MSG_USERPOD)).Result()))))
+}
 func ProxyUpload(m *ice.Message, pod string, p string) string {
 	pp := path.Join(ice.VAR_PROXY, pod, p)
 	size, cache := int64(0), time.Now().Add(-time.Hour*24)
@@ -194,13 +203,4 @@ func ProxyUpload(m *ice.Message, pod string, p string) string {
 	url := tcp.PublishLocalhost(m, m.MergeLink(PP(SHARE, PROXY), SHARE, share))
 	m.Cmd(SPACE, pod, SPIDE, PROXY, URL, url, nfs.SIZE, size, CACHE, cache.Format(ice.MOD_TIME), UPLOAD, mdb.AT+p)
 	return kit.Select(p, pp, file.ExistsFile(pp))
-}
-func ShareLocal(m *ice.Message, p string) string {
-	if kit.HasPrefix(p, nfs.PS, HTTP) {
-		return p
-	}
-	return m.MergeLink(PP(SHARE, LOCAL, p))
-}
-func ShareField(m *ice.Message, cmd string, arg ...ice.Any) *ice.Message {
-	return m.EchoQRCode(tcp.PublishLocalhost(m, m.MergeLink("/share/"+AdminCmd(m, SHARE, mdb.CREATE, mdb.TYPE, FIELD, mdb.NAME, kit.Select(m.PrefixKey(), cmd), mdb.TEXT, kit.Format(kit.Simple(arg...)), SPACE, m.Option(ice.MSG_USERPOD)))))
 }

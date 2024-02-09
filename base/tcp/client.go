@@ -35,7 +35,7 @@ func _client_dial(m *ice.Message, arg ...string) {
 	defer kit.If(e == nil, func() { c.Close() })
 	switch cb := m.OptionCB("").(type) {
 	case func(net.Conn):
-		kit.If(!m.Warn(e), func() { cb(c) })
+		kit.If(!m.WarnNotValid(e), func() { cb(c) })
 	default:
 		m.ErrorNotImplement(cb)
 	}

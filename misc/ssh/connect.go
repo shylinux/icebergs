@@ -55,7 +55,7 @@ func _ssh_dial(m *ice.Message, cb func(net.Conn), arg ...string) {
 		nfs.Remove(m, p)
 	}
 	_ssh_conn(m, func(client *ssh.Client) {
-		if l, e := net.Listen(tcp.UNIX, p); !m.Warn(e, ice.ErrNotValid) {
+		if l, e := net.Listen(tcp.UNIX, p); !m.WarnNotValid(e) {
 			defer func() { nfs.Remove(m, p) }()
 			defer l.Close()
 			m.Go(func() {
@@ -86,7 +86,7 @@ func _ssh_dial(m *ice.Message, cb func(net.Conn), arg ...string) {
 				}
 			})
 		}
-		if c, e := net.Dial(tcp.UNIX, p); !m.Warn(e) {
+		if c, e := net.Dial(tcp.UNIX, p); !m.WarnNotValid(e) {
 			cb(c)
 		}
 	}, arg...)
@@ -121,13 +121,13 @@ func _ssh_conn(m *ice.Message, cb func(*ssh.Client), arg ...string) (err error) 
 			User: m.Option(aaa.USERNAME), Auth: methods, BannerCallback: func(message string) error { return nil },
 			HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error { return nil },
 		})
-		kit.If(!m.Warn(_err), func() { cb(ssh.NewClient(conn, chans, reqs)) })
+		kit.If(!m.WarnNotValid(_err), func() { cb(ssh.NewClient(conn, chans, reqs)) })
 		err = _err
 	})
 	return
 }
 func _ssh_hold(m *ice.Message, c *ssh.Client) {
-	if s, e := _ssh_session(m, c); !m.Warn(e, ice.ErrNotValid) {
+	if s, e := _ssh_session(m, c); !m.WarnNotValid(e) {
 		defer s.Wait()
 		s.Shell()
 	}
@@ -189,9 +189,9 @@ func init() {
 						})
 						return nil
 					}).ProcessInner()
-				} else if s, e := _ssh_target(m, m.Option(mdb.NAME)).NewSession(); !m.Warn(e, ice.ErrNotValid) {
+				} else if s, e := _ssh_target(m, m.Option(mdb.NAME)).NewSession(); !m.WarnNotValid(e) {
 					defer s.Close()
-					if b, e := s.CombinedOutput(m.Option(ice.CMD)); !m.Warn(e, ice.ErrNotValid) {
+					if b, e := s.CombinedOutput(m.Option(ice.CMD)); !m.WarnNotValid(e) {
 						m.Echo(string(b)).ProcessInner()
 					}
 				} else {
@@ -237,10 +237,10 @@ func init() { xterm.AddCommand(SSH, NewSession) }
 
 func CombinedOutput(m *ice.Message, cmd string, cb func(string)) {
 	_ssh_conn(m, func(c *ssh.Client) {
-		if s, e := c.NewSession(); !m.Warn(e, ice.ErrNotValid) {
+		if s, e := c.NewSession(); !m.WarnNotValid(e) {
 			defer s.Close()
 			m.Debug("cmd %v", cmd)
-			if b, e := s.CombinedOutput(cmd); !m.Warn(e, ice.ErrNotValid) {
+			if b, e := s.CombinedOutput(cmd); !m.WarnNotValid(e) {
 				cb(string(b))
 			}
 		}
@@ -248,7 +248,7 @@ func CombinedOutput(m *ice.Message, cmd string, cb func(string)) {
 }
 func PushOutput(m *ice.Message, cmd string, cb func(string)) {
 	_ssh_conn(m, func(c *ssh.Client) {
-		if s, e := c.NewSession(); !m.Warn(e, ice.ErrNotValid) {
+		if s, e := c.NewSession(); !m.WarnNotValid(e) {
 			defer s.Close()
 			r, _ := s.StdoutPipe()
 			m.Debug("res %v", cmd)
@@ -262,7 +262,7 @@ func PushOutput(m *ice.Message, cmd string, cb func(string)) {
 }
 func PushShell(m *ice.Message, cmds []string, cb func(string)) {
 	_ssh_conn(m, func(c *ssh.Client) {
-		if s, e := c.NewSession(); !m.Warn(e, ice.ErrNotValid) {
+		if s, e := c.NewSession(); !m.WarnNotValid(e) {
 			defer s.Close()
 			w, _ := s.StdinPipe()
 			r, _ := s.StdoutPipe()

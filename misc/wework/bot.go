@@ -23,7 +23,7 @@ func init() {
 
 			check := kit.Sort([]string{msg.Append("token"), m.Option("nonce"), m.Option("timestamp"), m.Option("echostr")})
 			sig := kit.Format(sha1.Sum([]byte(strings.Join(check, ""))))
-			if m.Warn(sig != m.Option("msg_signature"), ice.ErrNotRight, check, sig) {
+			if m.WarnNotRight(sig != m.Option("msg_signature"), check, sig) {
 				// return
 			}
 

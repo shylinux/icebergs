@@ -220,7 +220,7 @@ func (s relay) Publish(m *ice.Message, arg ...string) {
 		m.Cmdy(nfs.DIR, ice.USR_PUBLISH).Set(ctx.ACTION)
 		return
 	}
-	kit.If(!nfs.Exists(m, path.Join(ice.USR_PUBLISH, RELAY)), func() { s.Compile(m) })
+	kit.If(!nfs.Exists(m.Message, path.Join(ice.USR_PUBLISH, RELAY)), func() { s.Compile(m) })
 	os.Symlink(RELAY, ice.USR_PUBLISH+m.Option(MACHINE))
 	m.Cmd(nfs.SAVE, kit.HomePath(".ssh/"+m.Option(MACHINE)+".json"), kit.Formats(kit.Dict(m.OptionSimple("username,host,port")))+ice.NL)
 }
@@ -311,7 +311,7 @@ func (s relay) Login(m *ice.Message, arg ...string) {
 }
 func (s relay) Install(m *ice.Message, arg ...string) {
 	m.Options(web.DOMAIN, "https://shylinux.com", ice.MSG_USERPOD, m.Option(web.DREAM))
-	m.Options(nfs.SOURCE, kit.Value(kit.UnMarshal(web.AdminCmd(m.Message, cli.RUNTIME)), "make.remote"))
+	m.Options(nfs.SOURCE, kit.Value(kit.UnMarshal(web.AdminCmd(m.Message, cli.RUNTIME).Result()), "make.remote"))
 	web.DreamList(m.Spawn().Message).Table(func(value ice.Maps) {
 		kit.If(value[mdb.NAME] == m.Option(web.DREAM), func() { m.Option(nfs.SOURCE, value[nfs.REPOS]) })
 	})

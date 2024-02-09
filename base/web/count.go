@@ -22,19 +22,19 @@ func _count_stat(m *ice.Message, arg ...string) map[string]int {
 				break
 			}
 		}
-		for _, agent := range []string{"Go-http-client", "GoModuleMirror", "git", "compatible"} {
+		for _, agent := range []string{"GoModuleMirror", "Go-http-client", "git", "compatible"} {
 			if strings.Contains(value[mdb.TEXT], agent) {
 				stat[agent] += count
 				return
 			}
 		}
-		for _, agent := range []string{"Edg", "Chrome", "Safari", "MSIE", "Firefox"} {
+		for _, agent := range html.AgentList {
 			if strings.Contains(value[mdb.TEXT], agent) {
 				stat[agent] += count
 				break
 			}
 		}
-		for _, agent := range []string{"Android", "iPhone", "Mac", "Linux", "Windows"} {
+		for _, agent := range html.SystemList {
 			if strings.Contains(value[mdb.TEXT], agent) {
 				stat[agent] += count
 				break
@@ -66,7 +66,7 @@ func init() {
 				})
 				m.StatusTimeCount(_count_stat(m))
 			}},
-			"group": {Hand: func(m *ice.Message, arg ...string) {
+			mdb.GROUP: {Hand: func(m *ice.Message, arg ...string) {
 				count := map[string]int{}
 				list := map[string]map[string]string{}
 				m.Cmd("", mdb.VALID).Table(func(value ice.Maps) {

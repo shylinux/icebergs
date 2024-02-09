@@ -128,7 +128,14 @@ const (
 	LINUX   = "linux"
 	MACOS   = "macos"
 	DARWIN  = "darwin"
-	WINDOWS = ice.WINDOWS
+	WINDOWS = "windows"
+
+	COMMIT_TIME  = "commitTime"
+	COMPILE_TIME = "compileTime"
+	BOOT_TIME    = "bootTime"
+
+	KERNEL = "kernel"
+	ARCH   = "arch"
 )
 const (
 	PATH  = "PATH"
@@ -194,7 +201,7 @@ func init() {
 			}},
 			API: {Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) > 1 {
-					m.Cmdy(ctx.COMMAND, "web.code.inner").Push(ctx.ARGS, kit.Format(nfs.SplitPath(m, m.Option(nfs.FILE))))
+					m.Cmdy(ctx.COMMAND, "inner").Push(ctx.ARGS, kit.Format(nfs.SplitPath(m, m.Option(nfs.FILE))))
 					return
 				}
 				ctx.DisplayStorySpide(m.Options(nfs.DIR_ROOT, nfs.PS), lex.PREFIX, kit.Fields(ctx.ACTION, m.ActionKey()))
@@ -203,7 +210,7 @@ func init() {
 			}},
 			CLI: {Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) > 1 {
-					m.Cmdy(ctx.COMMAND, "web.code.inner").Push(ctx.ARGS, kit.Format(nfs.SplitPath(m, m.Option(nfs.FILE))))
+					m.Cmdy(ctx.COMMAND, "inner").Push(ctx.ARGS, kit.Format(nfs.SplitPath(m, m.Option(nfs.FILE))))
 					return
 				}
 				ctx.DisplayStorySpide(m.Options(nfs.DIR_ROOT, "ice."), lex.PREFIX, kit.Fields(ctx.ACTION, m.ActionKey()), mdb.FIELD, mdb.NAME, lex.SPLIT, nfs.PT)
@@ -227,18 +234,18 @@ func init() {
 			"chain": {Hand: func(m *ice.Message, arg ...string) { m.Echo(m.FormatChain()) }},
 			"upgrade": {Help: "升级", Hand: func(m *ice.Message, arg ...string) {
 				if nfs.Exists(m, ice.SRC_MAIN_GO) && nfs.Exists(m, ".git") && SystemFind(m, "go") != "" {
-					m.Cmdy("web.code.vimer", "compile")
+					m.Cmdy("vimer", "compile")
 				} else if nfs.Exists(m, ice.BIN_ICE_BIN) {
-					m.Cmdy("web.code.upgrade")
+					m.Cmdy("upgrade")
 				} else {
-					m.Cmdy("", "reboot")
+					m.Cmdy("", REBOOT)
 				}
 			}},
-			"reboot": {Help: "重启", Icon: "bi bi-bootstrap-reboot", Hand: func(m *ice.Message, arg ...string) {
+			REBOOT: {Help: "重启", Icon: "bi bi-bootstrap-reboot", Hand: func(m *ice.Message, arg ...string) {
 				m.Go(func() { m.Sleep30ms(ice.EXIT, 1) })
 			}},
-			"stash": {Help: "清空", Icon: "bi bi-trash", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(SYSTEM, "git", "stash")
+			STASH: {Help: "清空", Icon: "bi bi-trash", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(SYSTEM, "git", STASH)
 				m.Cmd(SYSTEM, "git", "checkout", ".")
 				m.Go(func() { m.Sleep30ms(ice.QUIT, 1) })
 			}},
@@ -274,26 +281,26 @@ func ParseMake(str string) []string {
 	res := kit.UnMarshal(str)
 	data := kit.Value(res, MAKE)
 	return kit.Simple(
-		mdb.TIME, kit.Format(kit.Value(res, "boot.time")),
-		ice.SPACE, kit.Format(kit.Value(res, "node.name")),
+		mdb.TIME, kit.Format(kit.Value(res, kit.Keys(BOOT, mdb.TIME))),
+		ice.SPACE, kit.Format(kit.Value(res, kit.Keys(NODE, mdb.NAME))),
 		nfs.MODULE, kit.Format(kit.Value(data, nfs.MODULE)),
 		nfs.VERSION, kit.Join(kit.TrimArg(kit.Simple(
 			kit.Format(kit.Value(data, nfs.VERSION)),
 			kit.Format(kit.Value(data, "forword")),
 			kit.Cut(kit.Format(kit.Value(data, mdb.HASH)), 6),
 		)...), "-"),
-		"commitTime", kit.Format(kit.Value(data, "when")),
-		"compileTime", kit.Format(kit.Value(data, mdb.TIME)),
-		"bootTime", kit.Format(kit.Value(res, "boot.time")),
-		SHELL, kit.Format(kit.Value(res, "conf.SHELL")),
-		"kernel", kit.Format(kit.Value(res, "host.GOOS")),
-		"arch", kit.Format(kit.Value(res, "host.GOARCH")),
+		COMMIT_TIME, kit.Format(kit.Value(data, "when")),
+		COMPILE_TIME, kit.Format(kit.Value(data, mdb.TIME)),
+		BOOT_TIME, kit.Format(kit.Value(res, kit.Keys(BOOT, mdb.TIME))),
+		SHELL, kit.Format(kit.Value(res, kit.Keys(CONF, SHELL))),
+		KERNEL, kit.Format(kit.Value(res, kit.Keys(HOST, GOOS))),
+		ARCH, kit.Format(kit.Value(res, kit.Keys(HOST, GOARCH))),
 	)
 }
 func SimpleMake() []string {
 	return []string{
 		nfs.MODULE, ice.Info.Make.Module, nfs.VERSION, ice.Info.Make.Versions(),
-		"commitTime", ice.Info.Make.When, "compileTime", ice.Info.Make.Time, "bootTime", ice.Info.Time,
-		"kernel", runtime.GOOS, "arch", runtime.GOARCH,
+		COMMIT_TIME, ice.Info.Make.When, COMPILE_TIME, ice.Info.Make.Time, BOOT_TIME, ice.Info.Time,
+		KERNEL, runtime.GOOS, ARCH, runtime.GOARCH,
 	}
 }

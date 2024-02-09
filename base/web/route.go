@@ -23,7 +23,7 @@ func _route_push(m *ice.Message, space string, msg *ice.Message) *ice.Message {
 }
 func _route_match(m *ice.Message, space string, cb func(ice.Maps, int, []ice.Maps)) {
 	reg, err := regexp.Compile(space)
-	if m.Warn(err) {
+	if m.WarnNotValid(err) {
 		return
 	}
 	res := []ice.Maps{}
@@ -88,9 +88,6 @@ func init() {
 				func() { defer ToastProcess(m)(); m.Sleep3s() }()
 				m.SetAppend().Cmdy("", "travel")
 			}},
-			"diagram": {Help: "导图", Icon: "bi bi-diagram-3", Hand: func(m *ice.Message, arg ...string) {
-				ctx.DisplayStorySpide(m.Cmdy(""), nfs.DIR_ROOT, ice.Info.NodeName, mdb.FIELD, SPACE, lex.SPLIT, nfs.PT, ctx.ACTION, ice.MAIN)
-			}},
 			"travel": {Help: "遍历", Icon: "bi bi-card-list", Hand: func(m *ice.Message, arg ...string) {
 				kit.For(kit.Split(m.OptionDefault(ice.MSG_FIELDS, mdb.Config(m, mdb.FIELD))), func(key string) {
 					switch key {
@@ -128,6 +125,9 @@ func init() {
 				defer m.ProcessRefresh()
 				PushPodCmd(m, "", m.ActionKey())
 				m.Table(func(value ice.Maps) { kit.If(value[SPACE], func() { mdb.HashCreate(m.Spawn(), kit.Simple(value)) }) })
+			}},
+			"diagram": {Help: "导图", Icon: "bi bi-diagram-3", Hand: func(m *ice.Message, arg ...string) {
+				ctx.DisplayStorySpide(m.Cmdy(""), nfs.DIR_ROOT, ice.Info.NodeName, mdb.FIELD, SPACE, lex.SPLIT, nfs.PT, ctx.ACTION, ice.MAIN)
 			}},
 			mdb.PRUNES: &ice.Action{Name: "prunes status=offline", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd("", func(value ice.Maps) {

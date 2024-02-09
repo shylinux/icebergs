@@ -6,8 +6,14 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func (m *Message) IsEnglish() bool {
-	return kit.IsIn(strings.ToLower(m.Option(MSG_LANGUAGE)), "en", "en-us")
+func (m *Message) System(arg ...Any) *Message {
+	return Info.SystemCmd(m, arg...)
+}
+func (m *Message) AdminCmd(cmd string, arg ...Any) *Message {
+	return Info.AdminCmd(m, cmd, arg...)
+}
+func (m *Message) Template(p string, data ...Any) string {
+	return Info.Template(m, p, data...)
 }
 func (m *Message) Split(str string, arg ...string) *Message {
 	m.Set(MSG_APPEND).Set(MSG_RESULT)
@@ -174,4 +180,7 @@ func (m *Message) Trans(en string, zh string) string {
 	default:
 		return en
 	}
+}
+func (m *Message) IsEnglish() bool {
+	return kit.IsIn(strings.ToLower(m.Option(MSG_LANGUAGE)), "en", "en-us")
 }

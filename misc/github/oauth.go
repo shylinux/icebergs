@@ -71,7 +71,7 @@ func init() {
 			}
 		}},
 		web.P(OAUTH): {Name: "/oauth", Help: "授权", Hand: func(m *ice.Message, arg ...string) {
-			if m.Warn(m.Option(CODE) == "", ice.ErrNotValid) {
+			if m.WarnNotValid(m.Option(CODE) == "") {
 				return
 			}
 			web.RenderCmd(m, m.PrefixKey(), m.Cmdx(m.PrefixKey(), mdb.CREATE, m.OptionSimple(CODE)))

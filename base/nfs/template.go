@@ -4,6 +4,7 @@ import (
 	"path"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/web/html"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -19,7 +20,7 @@ func init() {
 			}},
 		}), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
-				m.Cmdy(ice.COMMAND).Action("filter:text").Option(ice.MSG_DISPLAY, "")
+				m.Cmdy(ice.COMMAND).Action(html.FILTER).Option(ice.MSG_DISPLAY, "")
 				return
 			}
 			m.Search(arg[0], func(p *ice.Context, c *ice.Context, key string, cmd *ice.Command) {
@@ -36,6 +37,7 @@ func init() {
 }
 
 func init() { ice.Info.Template = Template }
+
 func Template(m *ice.Message, p string, data ...ice.Any) string {
 	if len(data) == 0 {
 		return kit.Renders(TemplateText(m, p), m)
@@ -47,9 +49,5 @@ var TemplateText = func(m *ice.Message, p string) string {
 	return m.Cmdx(CAT, kit.Select(TemplatePath(m, path.Base(p)), m.Option("_template")))
 }
 var TemplatePath = func(m *ice.Message, arg ...string) string {
-	if p := path.Join(ice.SRC_TEMPLATE, m.PrefixKey(), path.Join(arg...)); Exists(m, p) {
-		return p
-	} else {
-		return p
-	}
+	return path.Join(ice.SRC_TEMPLATE, m.PrefixKey(), path.Join(arg...))
 }

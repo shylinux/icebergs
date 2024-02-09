@@ -22,11 +22,11 @@ func init() {
 		Open(m, arg[0], func(r io.Reader, s os.FileInfo) {
 			switch arg[1] {
 			case "gzip":
-				if g, e := gzip.NewReader(r); !m.Warn(e) {
+				if g, e := gzip.NewReader(r); !m.WarnNotFound(e) {
 					r = g
 				}
 			case "zlib":
-				if z, e := zlib.NewReader(r); !m.Warn(e) {
+				if z, e := zlib.NewReader(r); !m.WarnNotFound(e) {
 					r = z
 				}
 			}

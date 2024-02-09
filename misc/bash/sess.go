@@ -35,7 +35,7 @@ func init() {
 			}
 			if m.Option(SID, strings.TrimSpace(m.Option(SID))) == "" && m.Option(ice.MSG_USERNAME) != "" {
 				return
-			} else if m.Warn(m.Option(SID) == "", ice.ErrNotLogin, arg) {
+			} else if m.WarnNotLogin(m.Option(SID) == "", arg) {
 				return
 			} else if msg := m.Cmd(SESS, m.Option(SID)); msg.Append(GRANT) == "" {
 				aaa.SessAuth(m, ice.Maps{aaa.USERNAME: msg.Append(aaa.USERNAME), aaa.USERNICK: msg.Append(aaa.USERNAME), aaa.USERROLE: aaa.VOID}).Options(msg.AppendSimple(aaa.USERNAME, tcp.HOSTNAME, cli.RELEASE))
@@ -48,7 +48,7 @@ func init() {
 		}},
 		web.PP(SESS): {Actions: ice.Actions{
 			aaa.LOGOUT: {Hand: func(m *ice.Message, arg ...string) {
-				if !m.Warn(m.Option(SID) == "", ice.ErrNotValid, SID) {
+				if !m.WarnNotValid(m.Option(SID) == "", SID) {
 					mdb.HashModify(m, mdb.HASH, m.Option(SID), mdb.STATUS, aaa.LOGOUT)
 				}
 			}},

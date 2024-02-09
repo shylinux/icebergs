@@ -17,20 +17,6 @@ const PACK = "pack"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		PACK: {Name: "pack path auto create upload", Help: "文件系统", Actions: ice.Actions{
-			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				if arg[0] == mdb.FOREACH && arg[1] != "" {
-					m.Cmd(DIR, SRC, PATH, kit.Dict(DIR_REG, arg[1], DIR_DEEP, ice.TRUE, DIR_TYPE, CAT), func(value ice.Maps) {
-						if strings.HasPrefix(value[PATH], ice.SRC_TEMPLATE) {
-							return
-						}
-						m.PushSearch(mdb.TYPE, kit.Ext(value[PATH]), mdb.NAME, path.Base(value[PATH]), mdb.TEXT, value[PATH])
-					})
-					OptionFiles(m, PackFile)
-					m.Cmd(DIR, USR, PATH, kit.Dict(DIR_REG, arg[1], DIR_DEEP, ice.TRUE, DIR_TYPE, CAT), func(value ice.Maps) {
-						m.PushSearch(mdb.TYPE, kit.Ext(value[PATH]), mdb.NAME, path.Base(value[PATH]), mdb.TEXT, value[PATH])
-					})
-				}
-			}},
 			mdb.CREATE: {Name: "create path*=src/hi/hi.txt text*=hello", Hand: func(m *ice.Message, arg ...string) {
 				OptionFiles(m, PackFile)
 				Create(m, m.Option(PATH), func(w io.Writer, p string) {
@@ -72,13 +58,8 @@ var DiskFile = file.NewDiskFile()
 var PackFile = file.NewPackFile()
 
 func init() { file.Init(OptionFiles(ice.Pulse, DiskFile, PackFile)) }
-func init() { ice.Info.Open = OpenFile }
 
-type optionMessage interface {
-	Optionv(key string, arg ...ice.Any) ice.Any
-}
-
-func OptionFiles(m optionMessage, f ...file.File) file.File {
+func OptionFiles(m *ice.Message, f ...file.File) file.File {
 	if len(f) > 1 {
 		m.Optionv(ice.MSG_FILES, file.NewMultiFile(f...))
 	} else if len(f) > 0 {
@@ -86,18 +67,18 @@ func OptionFiles(m optionMessage, f ...file.File) file.File {
 	}
 	return m.Optionv(ice.MSG_FILES).(file.File)
 }
-func StatFile(m optionMessage, p string) (os.FileInfo, error)  { return OptionFiles(m).StatFile(p) }
+func StatFile(m *ice.Message, p string) (os.FileInfo, error)   { return OptionFiles(m).StatFile(p) }
 func OpenFile(m *ice.Message, p string) (io.ReadCloser, error) { return OptionFiles(m).OpenFile(p) }
-func CreateFile(m optionMessage, p string) (io.WriteCloser, string, error) {
+func CreateFile(m *ice.Message, p string) (io.WriteCloser, string, error) {
 	return OptionFiles(m).CreateFile(p)
 }
-func AppendFile(m optionMessage, p string) (io.ReadWriteCloser, string, error) {
+func AppendFile(m *ice.Message, p string) (io.ReadWriteCloser, string, error) {
 	w, e := OptionFiles(m).AppendFile(p)
 	return w, p, e
 }
-func WriteFile(m optionMessage, p string, b []byte) error { return OptionFiles(m).WriteFile(p, b) }
+func WriteFile(m *ice.Message, p string, b []byte) error { return OptionFiles(m).WriteFile(p, b) }
 
-func ReadDir(m optionMessage, p string) ([]os.FileInfo, error) {
+func ReadDir(m *ice.Message, p string) ([]os.FileInfo, error) {
 	list, e := OptionFiles(m).ReadDir(p)
 	for i := 0; i < len(list)-1; i++ {
 		for j := i + 1; j < len(list); j++ {
@@ -110,24 +91,24 @@ func ReadDir(m optionMessage, p string) ([]os.FileInfo, error) {
 	}
 	return list, e
 }
-func MkdirAll(m optionMessage, p string) string {
+func MkdirAll(m *ice.Message, p string) string {
 	OptionFiles(m).MkdirAll(p, ice.MOD_DIR)
 	return p
 }
-func RemoveAll(m optionMessage, p string) error { return OptionFiles(m).RemoveAll(p) }
-func Remove(m optionMessage, p string) error    { return OptionFiles(m).Remove(p) }
-func Rename(m optionMessage, oldname string, newname string) error {
+func RemoveAll(m *ice.Message, p string) error { return OptionFiles(m).RemoveAll(p) }
+func Remove(m *ice.Message, p string) error    { return OptionFiles(m).Remove(p) }
+func Rename(m *ice.Message, oldname string, newname string) error {
 	MkdirAll(m, path.Dir(newname))
 	return OptionFiles(m).Rename(oldname, newname)
 }
-func Symlink(m optionMessage, oldname string, newname string) error {
+func Symlink(m *ice.Message, oldname string, newname string) error {
 	return OptionFiles(m).Symlink(oldname, newname)
 }
-func Link(m optionMessage, oldname string, newname string) error {
+func Link(m *ice.Message, oldname string, newname string) error {
 	return OptionFiles(m).Link(oldname, newname)
 }
 
-func Exists(m optionMessage, p string, cb ...func(string)) bool {
+func Exists(m *ice.Message, p string, cb ...func(string)) bool {
 	if _, e := OptionFiles(m).StatFile(p); e == nil {
 		for _, cb := range cb {
 			cb(p)
@@ -136,7 +117,7 @@ func Exists(m optionMessage, p string, cb ...func(string)) bool {
 	}
 	return false
 }
-func ExistsFile(m optionMessage, p string) bool {
+func ExistsFile(m *ice.Message, p string) bool {
 	if s, e := OptionFiles(m).StatFile(p); e == nil && !s.IsDir() {
 		return true
 	}
@@ -146,7 +127,7 @@ func NewReadCloser(r io.Reader) io.ReadCloser { return file.NewReadCloser(r) }
 func NewWriteCloser(w func([]byte) (int, error), c func() error) io.WriteCloser {
 	return file.NewWriteCloser(w, c)
 }
-func Close(m optionMessage, p ice.Any) {
+func Close(m *ice.Message, p ice.Any) {
 	if w, ok := p.(io.Closer); ok {
 		w.Close()
 	}

@@ -30,7 +30,7 @@ func _cache_mime(m *ice.Message, mime, name string) string {
 	return mime
 }
 func _cache_save(m *ice.Message, mime, name, text string, arg ...string) {
-	if m.Warn(name == "", ice.ErrNotValid, mdb.NAME) {
+	if m.WarnNotValid(name == "", mdb.NAME) {
 		return
 	} else if len(text) > 512 {
 		p := m.Cmdx(nfs.SAVE, _cache_name(m, kit.Hashs(text)), kit.Dict(nfs.CONTENT, text))
@@ -57,12 +57,12 @@ func _cache_catch(m *ice.Message, path string) (file string, size string) {
 	return "", "0"
 }
 func _cache_upload(m *ice.Message, r *http.Request) (mime, name, file, size string) {
-	if b, h, e := r.FormFile(UPLOAD); !m.Warn(e, ice.ErrNotValid, UPLOAD) {
+	if b, h, e := r.FormFile(UPLOAD); !m.WarnNotValid(e, UPLOAD) {
 		defer b.Close()
-		if f, p, e := miss.CreateFile(_cache_name(m, kit.Hashs(b))); !m.Warn(e, ice.ErrNotValid, UPLOAD) {
+		if f, p, e := miss.CreateFile(_cache_name(m, kit.Hashs(b))); !m.WarnNotValid(e, UPLOAD) {
 			defer f.Close()
 			b.Seek(0, os.SEEK_SET)
-			if n, e := io.Copy(f, b); !m.Warn(e, ice.ErrNotValid, UPLOAD) {
+			if n, e := io.Copy(f, b); !m.WarnNotValid(e, UPLOAD) {
 				m.Logs(nfs.SAVE, nfs.FILE, p, nfs.SIZE, kit.FmtSize(int64(n)))
 				return h.Header.Get(html.ContentType), h.Filename, p, kit.Format(n)
 			}
@@ -71,7 +71,7 @@ func _cache_upload(m *ice.Message, r *http.Request) (mime, name, file, size stri
 	return "", "", "", "0"
 }
 func _cache_download(m *ice.Message, r *http.Response, file string, cb ice.Any) string {
-	if f, p, e := miss.CreateFile(file); !m.Warn(e, ice.ErrNotValid, DOWNLOAD) {
+	if f, p, e := miss.CreateFile(file); !m.WarnNotValid(e, DOWNLOAD) {
 		defer func() {
 			if s, e := os.Stat(file); e == nil && s.Size() == 0 {
 				nfs.Remove(m, file)
@@ -117,9 +117,6 @@ func init() {
 			ice.RENDER_DOWNLOAD: {Hand: func(m *ice.Message, arg ...string) {
 				m.Echo(_share_link(m, kit.Select(arg[0], arg, 1), ice.POD, m.Option(ice.MSG_USERPOD), nfs.FILENAME, kit.Select("", arg[0], len(arg) > 1)))
 			}},
-			WATCH: {Name: "watch hash* path*", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
-				_cache_watch(m, m.Option(mdb.HASH), m.Option(nfs.PATH))
-			}},
 			WRITE: {Name: "write type name* text*", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				_cache_save(m, m.Option(mdb.TYPE), m.Option(mdb.NAME), m.Option(mdb.TEXT))
 			}},
@@ -127,12 +124,15 @@ func init() {
 				file, size := _cache_catch(m, m.Option(nfs.PATH))
 				_cache_save(m, m.Option(mdb.TYPE), m.Option(nfs.PATH), "", file, size)
 			}},
+			WATCH: {Name: "watch hash* path*", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
+				_cache_watch(m, m.Option(mdb.HASH), m.Option(nfs.PATH))
+			}},
 			UPLOAD: {Hand: func(m *ice.Message, arg ...string) {
 				mime, name, file, size := _cache_upload(m, m.R)
 				_cache_save(m, mime, name, "", file, size)
 			}},
 			DOWNLOAD: {Name: "download type name*", Hand: func(m *ice.Message, arg ...string) {
-				if res, ok := m.Optionv(RESPONSE).(*http.Response); !m.Warn(!ok, ice.ErrNotValid, RESPONSE) {
+				if res, ok := m.Optionv(RESPONSE).(*http.Response); !m.WarnNotValid(!ok, RESPONSE) {
 					nfs.Temp(m, func(p string) {
 						file, size := _cache_catch(m, _cache_download(m, res, p, m.OptionCB("")))
 						_cache_save(m, m.Option(mdb.TYPE), m.Option(mdb.NAME), "", file, size)

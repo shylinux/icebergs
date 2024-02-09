@@ -60,7 +60,7 @@ func init() {
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case FG, BG:
-					m.Push(arg[0], BLACK, WHITE)
+					m.Push(arg[0], kit.SortedKey(_color_map))
 				}
 			}},
 		}), Hand: func(m *ice.Message, arg ...string) {

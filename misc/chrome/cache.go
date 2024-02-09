@@ -28,7 +28,7 @@ func (s cache) Create(m *ice.Message, arg ...string) *ice.Message {
 		s.Hash.Modify(m, kit.Simple(mdb.COUNT, count, mdb.TOTAL, total, mdb.VALUE, value)...)
 	})
 	name := kit.Keys(path.Base(m.Append(nfs.FILE)), path.Base(m.Append(mdb.TYPE)))
-	m.Cmdy(nfs.LINK, path.Join(mdb.Config(m, nfs.PATH), name), m.Append(nfs.FILE))
+	m.Cmdy(nfs.LINK, path.Join(m.Config(nfs.PATH), name), m.Append(nfs.FILE))
 	s.Hash.Modify(m, mdb.NAME, name)
 	web.ToastSuccess(m.Message)
 	return m

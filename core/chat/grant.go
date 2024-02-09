@@ -1,6 +1,8 @@
 package chat
 
 import (
+	"net/http"
+
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
@@ -26,12 +28,11 @@ func init() {
 			}},
 			web.HOME: {Help: "首页", Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen(web.C(web.ADMIN)) }},
 			aaa.CONFIRM: {Help: "授权", Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
-				// if m.Warn(m.R.Method == http.MethodGet, ice.ErrNotAllow) {
-				// 	return
-				// } else
-				if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin) || m.Warn(m.Option(web.SPACE) == "", ice.ErrNotValid, web.SPACE) {
+				if m.WarnNotAllow(m.R.Method == http.MethodGet) {
 					return
-				} else if msg := m.Cmd(web.SPACE, m.Option(web.SPACE)); m.Warn(msg.Append(mdb.TYPE) == "", ice.ErrNotFound, m.Option(web.SPACE)) {
+				} else if m.WarnNotLogin(m.Option(ice.MSG_USERNAME) == "") || m.WarnNotValid(m.Option(web.SPACE) == "", web.SPACE) {
+					return
+				} else if msg := m.Cmd(web.SPACE, m.Option(web.SPACE)); m.WarnNotFound(msg.Append(mdb.TYPE) == "", m.Option(web.SPACE)) {
 					return
 				} else {
 					web.RenderCookie(m, aaa.SessValid(m))
@@ -50,7 +51,7 @@ func init() {
 		}, gdb.EventsAction(web.SPACE_LOGIN)), Hand: func(m *ice.Message, arg ...string) {
 			msg := m.Cmd(web.SPACE, m.Option(web.SPACE, arg[0]))
 			m.Options(tcp.HOSTNAME, ice.Info.Hostname, nfs.PATH, msg.Append(mdb.TEXT))
-			if !m.Warn(m.Option(nfs.PATH) == "", ice.ErrNotFound, arg[0]) {
+			if !m.WarnNotValid(m.Option(nfs.PATH) == "", arg[0]) {
 				if m.EchoInfoButton(nfs.Template(m, "auth.html"), aaa.CONFIRM); m.IsWeixinUA() {
 					m.OptionFields(mdb.DETAIL)
 					m.Push(web.SPACE, arg[0])

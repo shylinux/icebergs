@@ -41,7 +41,7 @@ func init() {
 				RenderMain(m)
 			} else {
 				kit.If(len(arg) == 0, func() { arg = append(arg, SPACE, DOMAIN) })
-				m.Cmd(SPIDE, mdb.CREATE, ice.OPS, kit.Format("http://localhost:%s", kit.GetValid(
+				m.Cmd(SPIDE, mdb.CREATE, ice.OPS, HostPort(m, tcp.LOCALHOST, kit.GetValid(
 					func() string { return m.Cmdx(nfs.CAT, ice.VAR_LOG_ICE_PORT) },
 					func() string { return m.Cmdx(nfs.CAT, kit.Path(os.Args[0], "../", ice.VAR_LOG_ICE_PORT)) },
 					func() string { return m.Cmdx(nfs.CAT, kit.Path(os.Args[0], "../../", ice.VAR_LOG_ICE_PORT)) },
@@ -59,10 +59,10 @@ func init() {
 		}},
 	})
 }
-func AdminCmd(m *ice.Message, cmd string, arg ...ice.Any) string {
+func AdminCmd(m *ice.Message, cmd string, arg ...ice.Any) *ice.Message {
 	if ice.Info.NodeType == WORKER {
-		return m.Cmdx(append([]ice.Any{SPACE, ice.OPS, cmd}, arg...)...)
+		return m.Cmd(append([]ice.Any{SPACE, ice.OPS, cmd}, arg...)...)
 	} else {
-		return m.Cmdx(append([]ice.Any{cmd}, arg...)...)
+		return m.Cmd(append([]ice.Any{cmd}, arg...)...)
 	}
 }

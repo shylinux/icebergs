@@ -95,7 +95,7 @@ func _system_exec(m *ice.Message, cmd *exec.Cmd) {
 			}
 		}()
 	}
-	if e := cmd.Run(); !m.Warn(e, ice.ErrNotValid, cmd.Args) {
+	if e := cmd.Run(); !m.WarnNotValid(e, cmd.Args) {
 		m.Cost(CODE, _system_code(cmd), EXEC, cmd.Args)
 	}
 	m.Push(mdb.TIME, m.Time()).Push(CODE, _system_code(cmd)).StatusTime()
@@ -181,6 +181,9 @@ func init() {
 			}
 		}},
 	})
+	ice.Info.SystemCmd = func(m *ice.Message, arg ...ice.Any) *ice.Message {
+		return m.Cmd(append([]ice.Any{SYSTEM}, arg...)...)
+	}
 }
 
 func SystemFind(m *ice.Message, bin string, dir ...string) string {
@@ -189,13 +192,13 @@ func SystemFind(m *ice.Message, bin string, dir ...string) string {
 }
 func SystemExec(m *ice.Message, arg ...string) string { return strings.TrimSpace(m.Cmdx(SYSTEM, arg)) }
 func SystemCmds(m *ice.Message, cmds string, args ...ice.Any) string {
-	return strings.TrimRight(m.Cmdx(SYSTEM, "sh", "-c", kit.Format(cmds, args...), ice.Option{CMD_OUTPUT, ""}), lex.NL)
+	return strings.TrimRight(m.Cmdx(SYSTEM, SH, "-c", kit.Format(cmds, args...), ice.Option{CMD_OUTPUT, ""}), lex.NL)
 }
 func IsSuccess(m *ice.Message) bool { return m.Append(CODE) == "" || m.Append(CODE) == "0" }
 
 var _cache_path []string
 
-func Shell(m *ice.Message) string { return kit.Select("/bin/sh", os.Getenv("SHELL")) }
+func Shell(m *ice.Message) string { return kit.Select(SH, os.Getenv(SHELL)) }
 func EtcPath(m *ice.Message) (res []string) {
 	if len(_cache_path) > 0 {
 		return _cache_path

@@ -112,13 +112,13 @@ func (s Client) List(m *ice.Message, arg ...string) {
 func init() { ice.ChatCtxCmd(Client{}) }
 
 func (s Client) Login(m *ice.Message, arg ...string) {
-	if state, code := m.Option(STATE), m.Option(CODE); !m.Warn(state == "" || code == "") {
+	if state, code := m.Option(STATE), m.Option(CODE); !m.WarnNotValid(state == "" || code == "") {
 		s.Hash.List(m.Spawn(), m.Option(mdb.HASH, state)).Table(func(value ice.Maps) { m.Options(value) })
 		m.Options(GRANT_TYPE, AUTHORIZATION_CODE, REDIRECT_URI, s.RedirectURI(m))
-		if res := s.Post(m, m.Option(mdb.HASH), m.Option(GRANT_URL), m.OptionSimple(GRANT_TYPE, CODE, CLIENT_ID, CLIENT_SECRET, REDIRECT_URI)...); !m.Warn(res == nil) {
+		if res := s.Post(m, m.Option(mdb.HASH), m.Option(GRANT_URL), m.OptionSimple(GRANT_TYPE, CODE, CLIENT_ID, CLIENT_SECRET, REDIRECT_URI)...); !m.WarnNotValid(res == nil) {
 			kit.Value(res, EXPIRES_IN, m.Time(kit.Format("%vs", kit.Int(kit.Value(res, EXPIRES_IN)))))
 			m.Options(res)
-			if s.User(m); !m.Warn(m.Option(aaa.USERNAME) == "") && m.R != nil {
+			if s.User(m); !m.WarnNotValid(m.Option(aaa.USERNAME) == "") && m.R != nil {
 				m.Cmd(aaa.USER, mdb.MODIFY, m.OptionSimple(aaa.USERNAME), kit.Simple(res))
 				web.RenderCookie(m.Message, aaa.SessCreate(m.Message, m.Option(aaa.USERNAME)))
 				m.ProcessHistory()
@@ -129,13 +129,13 @@ func (s Client) Login(m *ice.Message, arg ...string) {
 	}
 }
 func (s Client) Login2(m *ice.Message, arg ...string) {
-	if state, code := m.Option(STATE), m.Option(CODE); !m.Warn(state == "" || code == "") {
+	if state, code := m.Option(STATE), m.Option(CODE); !m.WarnNotValid(state == "" || code == "") {
 		s.Hash.List(m.Spawn(), m.Option(mdb.HASH, state)).Table(func(value ice.Maps) { m.Options(value) })
 		m.Options(GRANT_TYPE, AUTHORIZATION_CODE, REDIRECT_URI, s.RedirectURI(m))
-		if res := s.Get(m, m.Option(mdb.HASH), m.Option(GRANT_URL), m.OptionSimple(GRANT_TYPE, CODE, CLIENT_ID, CLIENT_SECRET, REDIRECT_URI)...); !m.Warn(res == nil) {
+		if res := s.Get(m, m.Option(mdb.HASH), m.Option(GRANT_URL), m.OptionSimple(GRANT_TYPE, CODE, CLIENT_ID, CLIENT_SECRET, REDIRECT_URI)...); !m.WarnNotValid(res == nil) {
 			kit.Value(res, EXPIRES_IN, m.Time(kit.Format("%vs", kit.Int(kit.Value(res, EXPIRES_IN)))))
 			m.Options(res)
-			if s.User(m); !m.Warn(m.Option(aaa.USERNAME) == "") && m.R != nil {
+			if s.User(m); !m.WarnNotValid(m.Option(aaa.USERNAME) == "") && m.R != nil {
 				m.Cmd(aaa.USER, mdb.MODIFY, m.OptionSimple(aaa.USERNAME), kit.Simple(res))
 				web.RenderCookie(m.Message, aaa.SessCreate(m.Message, m.Option(aaa.USERNAME)))
 				m.ProcessHistory()

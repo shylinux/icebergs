@@ -140,11 +140,11 @@ func init() {
 					return
 				}
 			}
-			if m.Warn(!nfs.Exists(m, repos), ice.ErrNotFound, arg[0]) {
+			if m.WarnNotFound(!nfs.Exists(m, repos), arg[0]) {
 				return
 			}
 		}
-		m.Warn(_service_repos(m, arg...), ice.ErrNotValid)
+		m.WarnNotValid(_service_repos(m, arg...))
 	}}})
 	Index.MergeCommands(ice.Commands{
 		SERVICE: {Name: "service repos branch commit file auto", Help: "代码源", Actions: ice.MergeActions(ice.Actions{

@@ -60,7 +60,7 @@ func init() {
 			}},
 			aaa.CHECK: {Hand: func(m *ice.Message, arg ...string) {
 				check := kit.Sort([]string{mdb.Config(m, TOKEN), m.Option(TIMESTAMP), m.Option(NONCE)})
-				if sig := kit.Format(sha1.Sum([]byte(strings.Join(check, "")))); !m.Warn(sig != m.Option(SIGNATURE), ice.ErrNotRight, check) {
+				if sig := kit.Format(sha1.Sum([]byte(strings.Join(check, "")))); !m.WarnNotRight(sig != m.Option(SIGNATURE), check) {
 					m.Echo(ice.TRUE)
 				}
 			}},

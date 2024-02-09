@@ -14,11 +14,11 @@ func _action_list(m *ice.Message, river, storm string) {
 }
 func _action_exec(m *ice.Message, river, storm, index string, arg ...string) {
 	m.Options(ice.MSG_RIVER, river, ice.MSG_STORM, storm)
-	if m.Warn(m.Cmd(STORM, index, arg, func(value ice.Maps) {
+	if m.WarnNotRight(m.Cmd(STORM, index, arg, func(value ice.Maps) {
 		if index = value[ctx.INDEX]; value[web.SPACE] != "" {
 			m.Option(ice.POD, value[web.SPACE])
 		}
-	}).Length() == 0, ice.ErrNotRight, index, arg) {
+	}).Length() == 0, index, arg) {
 		return
 	}
 	kit.If(!ctx.PodCmd(m, index, arg), func() { m.Cmdy(index, arg) })
@@ -32,7 +32,7 @@ func _action_auth(m *ice.Message, share string) *ice.Message {
 	m.Table(func(value ice.Maps) {
 		aaa.SessAuth(m, kit.Dict(value), RIVER, m.Option(ice.MSG_RIVER, msg.Append(RIVER)), STORM, m.Option(ice.MSG_STORM, msg.Append(STORM)))
 	})
-	if m.Warn(!_river_right(m, msg.Append(web.RIVER)), ice.ErrNotRight) {
+	if m.WarnNotRight(!_river_right(m, msg.Append(web.RIVER))) {
 		msg.Append(mdb.TYPE, "")
 		return msg
 	}
@@ -69,14 +69,11 @@ func init() {
 			}},
 			web.SHARE: {Hand: func(m *ice.Message, arg ...string) { _action_share(m, arg...) }},
 		}, web.ApiAction(""), aaa.WhiteAction("", web.SHARE)), Hand: func(m *ice.Message, arg ...string) {
-			if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin, arg) {
+			if m.WarnNotLogin(m.Option(ice.MSG_USERNAME) == "", arg) {
 				return
-			} else if m.Warn(!_river_right(m, arg[0]), ice.ErrNotRight, arg) {
+			} else if m.WarnNotRight(!_river_right(m, arg[0]), arg) {
 				return
 			}
-			// if web.PodCmd(m, ice.POD, arg...) {
-			// 	// m.Table(func(value ice.Maps) { m.Push(web.SPACE, m.Option(ice.MSG_USERPOD)) })
-			// } else
 			if len(arg) == 2 {
 				ctx.OptionFromConfig(m, MENUS)
 				_action_list(m, arg[0], arg[1])

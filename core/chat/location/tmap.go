@@ -24,7 +24,7 @@ func init() {
 	get := func(m *ice.Message, api string, arg ...ice.Any) string {
 		return kit.Format(mdb.Cache(m, kit.Join(kit.Simple(api, arg)), func() ice.Any {
 			res := kit.UnMarshal(m.Cmdx(web.SPIDE, TMAP, web.SPIDE_RAW, http.MethodGet, api, mdb.KEY, mdb.Config(m, aaa.SECRET), arg))
-			m.Warn(kit.Format(kit.Value(res, mdb.STATUS)) != "0", kit.Format(res))
+			m.WarnNotValid(kit.Format(kit.Value(res, mdb.STATUS)) != "0", kit.Format(res))
 			m.Debug("what %v %v", api, kit.Formats(res))
 			return res
 		}))

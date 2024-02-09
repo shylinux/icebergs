@@ -30,12 +30,12 @@ func init() {
 				m.Cmd("count", mdb.CREATE, OFFER, m.Option(FROM), kit.Dict(ice.LOG_DISABLE, ice.TRUE))
 			}},
 			ACCEPT: {Help: "接受", Role: VOID, Hand: func(m *ice.Message, arg ...string) {
-				if m.WarnNotValid(m.Option(mdb.HASH) == "", mdb.HASH) {
+				if m.WarnNotValid(m.Option(mdb.HASH), mdb.HASH) {
 					return
 				}
 				msg := mdb.HashSelect(m.Spawn(), m.Option(mdb.HASH))
 				if ls := kit.Split(msg.Append(EMAIL), mdb.AT); !m.WarnNotFound(msg.Length() == 0 || len(ls) < 2, m.Option(mdb.HASH)) {
-					ice.Info.AdminCmd(m.Spawn(), USER, mdb.CREATE, USERNICK, ls[0], USERNAME, msg.Append(EMAIL), USERZONE, ls[1])
+					m.Spawn().AdminCmd(USER, mdb.CREATE, USERNICK, ls[0], USERNAME, msg.Append(EMAIL), USERZONE, ls[1])
 					m.ProcessLocation(m.MergePod("", ice.MSG_SESSID, SessValid(m.Options(ice.MSG_USERNAME, msg.Append(EMAIL)))))
 					mdb.HashModify(m, m.OptionSimple(mdb.HASH), mdb.STATUS, ACCEPT)
 				}
@@ -45,7 +45,7 @@ func init() {
 				kit.If(mdb.HashSelect(m, arg...).FieldsIsDetail(), func() {
 					if m.Option(ice.MSG_USERNAME) == "" {
 						m.Option(ice.MSG_USERHOST, strings.Split(m.Option(ice.MSG_USERHOST), "://")[1])
-						m.SetAppend().EchoInfoButton(ice.Info.Template(m, SUBJECT_HTML), ACCEPT)
+						m.SetAppend().EchoInfoButton(m.Template(SUBJECT_HTML), ACCEPT)
 					} else {
 						m.ProcessLocation(m.MergePod(""))
 					}

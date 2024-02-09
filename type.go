@@ -13,8 +13,8 @@ import (
 	"shylinux.com/x/toolkits/task"
 )
 
-type Any = interface{}
 type List = []Any
+type Any = interface{}
 type Map = map[string]Any
 type Maps = map[string]string
 type Handler func(m *Message, arg ...string)
@@ -203,10 +203,6 @@ func (c *Context) Close(m *Message, arg ...string) {
 	kit.If(c.server != nil, func() { c.server.Close(m, arg...) })
 }
 
-type IMessage interface {
-	Option(key string, arg ...Any) string
-	PrefixKey() string
-}
 type Message struct {
 	time time.Time
 	code int
@@ -261,7 +257,7 @@ func (m *Message) Spawn(arg ...Any) *Message {
 	for _, val := range arg {
 		switch val := val.(type) {
 		case []byte:
-			if m.Warn(json.Unmarshal(val, &msg._meta), string(val)) {
+			if m.WarnNotValid(json.Unmarshal(val, &msg._meta), string(val)) {
 				m.Debug(m.FormatStack(1, 100))
 			}
 		case Option:

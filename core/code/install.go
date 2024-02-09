@@ -174,7 +174,7 @@ func init() {
 			web.DOWNLOAD: {Name: "download link* path", Hand: func(m *ice.Message, arg ...string) { _install_download(m, arg...) }},
 			cli.BUILD: {Name: "build link*", Hand: func(m *ice.Message, arg ...string) {
 				web.PushStream(m)
-				if err := _install_build(m, arg...); m.Warn(err != "", err) {
+				if err := _install_build(m, arg...); m.WarnNotValid(err != "", err) {
 					web.ToastFailure(m, err)
 				} else {
 					web.ToastSuccess(m)
@@ -225,7 +225,7 @@ func InstallAction(args ...ice.Any) ice.Actions {
 			nfs.Trash(m, m.Option(nfs.PATH))
 		}},
 		mdb.SELECT: {Name: "select path auto order build download", Hand: func(m *ice.Message, arg ...string) {
-			m.Options(nfs.PATH, "").Cmdy(INSTALL, ctx.ConfigSimple(m, nfs.SOURCE), arg)
+			m.Options(nfs.PATH, "").Cmdy(INSTALL, mdb.ConfigSimple(m, nfs.SOURCE), arg)
 		}},
 	}
 }

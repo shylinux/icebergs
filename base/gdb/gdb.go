@@ -30,8 +30,7 @@ func (f *Frame) Start(m *ice.Message, arg ...string) {
 	for {
 		select {
 		case <-t.C:
-			m.Options(ice.LOG_DISABLE, ice.TRUE)
-			m.Cmd(TIMER, HAPPEN)
+			m.Options(ice.LOG_DISABLE, ice.TRUE).Cmd(TIMER, HAPPEN)
 		case s, ok := <-f.s:
 			if !ok {
 				return

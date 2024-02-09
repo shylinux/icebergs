@@ -30,10 +30,10 @@ func _binpack_file(m *ice.Message, w io.Writer, arg ...string) {
 		fmt.Fprintf(w, "        \"%s\": \"%s\",\n", kit.Select(arg[0], arg, 1), "")
 		return
 	}
-	if f, e := nfs.OpenFile(m, arg[0]); !m.Warn(e, ice.ErrNotFound, arg[0]) {
+	if f, e := nfs.OpenFile(m, arg[0]); !m.WarnNotFound(e, arg[0]) {
 		defer f.Close()
-		if b, e := ioutil.ReadAll(f); !m.Warn(e, ice.ErrNotValid, arg[0]) {
-			kit.If(len(b) > 1<<20, func() { m.Warn("too large %s %s", arg[0], len(b)) })
+		if b, e := ioutil.ReadAll(f); !m.WarnNotValid(e, arg[0]) {
+			kit.If(len(b) > 1<<20, func() { m.WarnNotValid("too large %s %s", arg[0], len(b)) })
 			fmt.Fprintf(w, "        \"%s\": \"%s\",\n", kit.Select(arg[0], arg, 1), base64.StdEncoding.EncodeToString(b))
 		}
 	}

@@ -49,6 +49,8 @@ func Render(m *Message, cmd string, args ...Any) string {
 		return strings.Join(list, "")
 	case RENDER_ANCHOR:
 		return kit.Format(`<a href="%s" target="_blank">%s</a>`, kit.Select(arg[0], arg, 1), arg[0])
+	case RENDER_SCRIPT:
+		return kit.Format(`<code>%s</code>`, arg[0])
 	case RENDER_IMAGES:
 		if len(arg) > 1 {
 			return kit.Format(`<img src="%s" height="%s">`, arg[0], arg[1])
@@ -60,8 +62,6 @@ func Render(m *Message, cmd string, args ...Any) string {
 		return kit.Format(`<audio src="%s" controls autoplay>`, arg[0])
 	case RENDER_IFRAME:
 		return kit.Format(`<iframe src="%s"></iframe>`, arg[0])
-	case RENDER_SCRIPT:
-		return kit.Format(`<code>%s</code>`, arg[0])
 	default:
 		if len(arg) == 1 {
 			return kit.Format(`<%s>%s</%s>`, cmd, arg[0], cmd)
@@ -80,9 +80,6 @@ func (m *Message) Render(cmd string, arg ...Any) *Message {
 		return m
 	}
 	return m.Options(MSG_OUTPUT, cmd, MSG_ARGS, arg)
-}
-func (m *Message) RenderTemplate(arg ...Any) *Message {
-	return m.Render(RENDER_TEMPLATE, arg...)
 }
 func (m *Message) RenderStatus(status int, arg ...string) *Message {
 	return m.Render(RENDER_STATUS, status, arg)
@@ -105,6 +102,9 @@ func (m *Message) RenderRedirect(arg ...Any) *Message {
 func (m *Message) RenderDownload(arg ...Any) *Message {
 	return m.Render(RENDER_DOWNLOAD, arg...)
 }
+func (m *Message) RenderTemplate(arg ...Any) *Message {
+	return m.Render(RENDER_TEMPLATE, arg...)
+}
 func (m *Message) RenderResult(arg ...Any) *Message {
 	return m.Render(RENDER_RESULT, arg...)
 }
@@ -118,22 +118,22 @@ func (m *Message) IsDebug() bool {
 	return m.Option(MSG_DEBUG) == TRUE
 }
 func (m *Message) IsCliUA() bool {
-	return m.Option(MSG_USERUA) == "" || !strings.HasPrefix(m.Option(MSG_USERUA), "Mozilla")
+	return m.Option(MSG_USERUA) == "" || !strings.HasPrefix(m.Option(MSG_USERUA), html.Mozilla)
+}
+func (m *Message) IsWeixinUA() bool {
+	return strings.Contains(m.Option(MSG_USERUA), html.MicroMessenger)
+}
+func (m *Message) IsMobileUA() bool {
+	return strings.Contains(m.Option(MSG_USERUA), html.Mobile)
+}
+func (m *Message) IsChromeUA() bool {
+	return strings.Contains(m.Option(MSG_USERUA), html.Chrome)
 }
 func (m *Message) IsMetaKey() bool {
 	return m.Option("metaKey") == TRUE
 }
 func (m *Message) IsGetMethod() bool {
 	return m.Option(MSG_METHOD) == http.MethodGet
-}
-func (m *Message) IsMobileUA() bool {
-	return strings.Contains(m.Option(MSG_USERUA), "Mobile")
-}
-func (m *Message) IsWeixinUA() bool {
-	return strings.Contains(m.Option(MSG_USERUA), "MicroMessenger")
-}
-func (m *Message) IsChromeUA() bool {
-	return strings.Contains(m.Option(MSG_USERUA), "Chrome")
 }
 func (m *Message) PushSearch(arg ...Any) {
 	data := kit.Dict(arg...)
@@ -187,6 +187,9 @@ func (m *Message) PushQRCode(key, src string) *Message {
 	kit.If(!m.IsCliUA(), func() { m.Push(key, Render(m, RENDER_QRCODE, src)) })
 	return m
 }
+func (m *Message) PushScript(arg ...string) {
+	kit.If(!m.IsCliUA(), func() { m.Push(SCRIPT, Render(m, RENDER_SCRIPT, arg)) })
+}
 func (m *Message) PushImages(key, src string, arg ...string) {
 	kit.If(!m.IsCliUA(), func() { m.Push(key, Render(m, RENDER_IMAGES, src, arg)) })
 }
@@ -199,24 +202,11 @@ func (m *Message) PushAudios(key, src string) {
 func (m *Message) PushIFrame(key, src string) {
 	kit.If(!m.IsCliUA(), func() { m.Push(key, Render(m, RENDER_IFRAME, src)) })
 }
-func (m *Message) PushScript(arg ...string) {
-	kit.If(!m.IsCliUA(), func() { m.Push(SCRIPT, Render(m, RENDER_SCRIPT, arg)) })
-}
 func (m *Message) PushDownload(key string, arg ...string) *Message {
 	kit.If(!m.IsCliUA(), func() { m.Push(key, Render(m, RENDER_DOWNLOAD, arg)) })
 	return m
 }
 
-func (m *Message) EchoFields(cmd string, arg ...string) *Message {
-	return m.Echo(`<fieldset class="story" data-index="%s" data-args=%q>
-<legend></legend>
-<form class="option"></form>
-<div class="action"></div>
-<div class="output"></div>
-<div class="status"></div>
-</fieldset>
-`, cmd, kit.Join(arg))
-}
 func (m *Message) EchoInfoButton(info string, arg ...Any) *Message {
 	kit.If(info == "", func() { info = Info.Template(m, m.ActionKey()+".html") })
 	kit.If(len(arg) == 0, func() { arg = append(arg, m.ActionKey()) })
@@ -231,6 +221,7 @@ func (m *Message) EchoButton(arg ...Any) *Message {
 }
 func (m *Message) EchoAnchor(arg ...string) *Message { return m.Echo(Render(m, RENDER_ANCHOR, arg)) }
 func (m *Message) EchoQRCode(src string) *Message    { return m.Echo(Render(m, RENDER_QRCODE, src)) }
+func (m *Message) EchoScript(arg ...string) *Message { return m.Echo(Render(m, RENDER_SCRIPT, arg)) }
 func (m *Message) EchoImages(src string) *Message    { return m.Echo(Render(m, RENDER_IMAGES, src)) }
 func (m *Message) EchoVideos(src string) *Message    { return m.Echo(Render(m, RENDER_VIDEOS, src)) }
 func (m *Message) EchoAudios(src string) *Message    { return m.Echo(Render(m, RENDER_AUDIOS, src)) }
@@ -240,15 +231,21 @@ func (m *Message) EchoIFrame(src string) *Message {
 	})
 	return m
 }
-func (m *Message) EchoScript(arg ...string) *Message {
-	return m.Echo(Render(m, RENDER_SCRIPT, arg))
-}
 func (m *Message) EchoDownload(arg ...string) *Message {
 	return m.Echo(Render(m, RENDER_DOWNLOAD, arg))
 }
+func (m *Message) EchoFields(cmd string, arg ...string) *Message {
+	return m.Echo(`<fieldset class="story" data-index="%s" data-args=%q>
+<legend></legend>
+<form class="option"></form>
+<div class="action"></div>
+<div class="output"></div>
+<div class="status"></div>
+</fieldset>
+`, cmd, kit.Join(arg))
+}
 func (m *Message) Display(file string, arg ...Any) *Message {
-	file = m.resource(file)
-	m.Option(MSG_DISPLAY, kit.MergeURL(kit.ExtChange(file, JS), arg...))
+	m.Option(MSG_DISPLAY, kit.MergeURL(kit.ExtChange(m.resource(file), JS), arg...))
 	return m
 }
 func (m *Message) Resource(file string) string { return m.resource(file) }
@@ -262,5 +259,4 @@ func (m *Message) resource(file string) string {
 	}
 	kit.If(file == "", func() { p = kit.ExtChange(p, JS) }, func() { p = path.Join(path.Dir(p), file) })
 	return kit.MergeURL("/require/"+p, POD, m.Option(MSG_USERPOD))
-	// return m.MergeLink("/require/"+p, POD, m.Option(MSG_USERPOD))
 }

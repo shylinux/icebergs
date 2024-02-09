@@ -17,7 +17,6 @@ const WIFI = "wifi"
 
 func init() {
 	const (
-		SYSTEM       = "cli.system"
 		NETWORKSETUP = "networksetup"
 		DISCOVER     = "discover"
 		CONNECT      = "connect"
@@ -25,12 +24,12 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		WIFI: {Help: "无线", Actions: ice.MergeActions(ice.Actions{
 			DISCOVER: {Help: "查找", Hand: func(m *ice.Message, arg ...string) {
-				m.Push(SSID, strings.Split(m.Cmdx(SYSTEM, NETWORKSETUP, "-listpreferredwirelessnetworks", "en0"), lex.NL)[1:])
+				m.Push(SSID, strings.Split(m.System(NETWORKSETUP, "-listpreferredwirelessnetworks", "en0").Result(), lex.NL)[1:])
 				m.PushAction(CONNECT)
 			}},
 			CONNECT: {Help: "连接", Hand: func(m *ice.Message, arg ...string) {
 				msg := mdb.HashSelect(m.Spawn(), m.Option(SSID, strings.TrimSpace(m.Option(SSID))))
-				m.Cmd(SYSTEM, NETWORKSETUP, "-setairportnetwork", "en0", kit.Select(m.Option(SSID), msg.Append(SSID)), msg.Append(aaa.PASSWORD))
+				m.System(NETWORKSETUP, "-setairportnetwork", "en0", kit.Select(m.Option(SSID), msg.Append(SSID)), msg.Append(aaa.PASSWORD))
 				m.ProcessHold()
 			}},
 		}, mdb.HashAction(mdb.SHORT, SSID, mdb.FIELD, "time,ssid,password")), Hand: func(m *ice.Message, arg ...string) {

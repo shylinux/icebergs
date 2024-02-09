@@ -67,7 +67,7 @@ func (s *FileSystem) Close() error { return nil }
 func Open(m *ice.Message, cb func(*FileSystem)) {
 	_ssh_conn(m, func(c *ssh.Client) {
 		defer c.Close()
-		if s, e := sftp.NewClient(c); !m.Warn(e) {
+		if s, e := sftp.NewClient(c); !m.WarnNotValid(e) {
 			cb(&FileSystem{s})
 		}
 	})

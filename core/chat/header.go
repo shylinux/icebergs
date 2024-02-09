@@ -17,18 +17,18 @@ import (
 )
 
 func _header_users(m *ice.Message, arg ...string) {
-	if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin) {
+	if m.WarnNotLogin(m.Option(ice.MSG_USERNAME) == "") {
 		return
-	} else if m.Warn(m.Option(web.SHARE) != "", ice.ErrNotRight, "没有权限") {
+	} else if m.WarnNotRight(m.Option(web.SHARE) != "", "没有权限") {
 		return
 	} else {
 		m.Cmdy(aaa.USER, mdb.MODIFY, aaa.USERNAME, m.Option(ice.MSG_USERNAME), m.ActionKey(), m.Option(m.ActionKey(), arg[0]))
 	}
 }
 func _header_share(m *ice.Message, arg ...string) {
-	if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin, "没有登录") {
+	if m.WarnNotLogin(m.Option(ice.MSG_USERNAME) == "", "没有登录") {
 		return
-	} else if m.Warn(m.Option(web.SHARE) != "", ice.ErrNotRight, "没有权限") {
+	} else if m.WarnNotRight(m.Option(web.SHARE) != "", "没有权限") {
 		return
 	} else if kit.For(arg, func(k, v string) { m.Option(k, v) }); m.Option(mdb.LINK) == "" {
 		m.Cmdy(web.SHARE, mdb.CREATE, mdb.TYPE, web.LOGIN, arg)

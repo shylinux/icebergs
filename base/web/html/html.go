@@ -7,8 +7,23 @@ import (
 )
 
 const (
-	Mozilla         = "Mozilla"
+	Mozilla        = "Mozilla"
+	Firefox        = "Firefox"
+	Safari         = "Safari"
+	Chrome         = "Chrome"
+	Edg            = "Edg"
+	Mobile         = "Mobile"
+	Alipay         = "Alipay"
+	MicroMessenger = "MicroMessenger"
+	Android        = "Android"
+	IPhone         = "iPhone"
+	Mac            = "Mac"
+	Linux          = "Linux"
+	Windows        = "Windows"
+
 	UserAgent       = "User-Agent"
+	XForwardedFor   = "X-Forwarded-For"
+	XHost           = "X-Host"
 	Referer         = "Referer"
 	Authorization   = "Authorization"
 	Bearer          = "Bearer"
@@ -18,8 +33,6 @@ const (
 	ContentEncoding = "Content-Encoding"
 	ContentLength   = "Content-Length"
 	ContentType     = "Content-Type"
-	XForwardedFor   = "X-Forwarded-For"
-	XHost           = "X-Host"
 
 	ApplicationForm  = "application/x-www-form-urlencoded"
 	ApplicationOctet = "application/octet-stream"
@@ -36,9 +49,8 @@ const (
 	WIDTH  = "width"
 	HEIGHT = "height"
 
-	BACKGROUND_COLOR = "background-color"
-
-	COLOR = "color"
+	BG_COLOR = "background-color"
+	FG_COLOR = "color"
 )
 const (
 	DARK   = "dark"
@@ -98,5 +110,22 @@ func FormatA(inner string, arg ...string) string {
 	return kit.Format(`<a href="%s">%s</a>`, kit.Select(inner, arg, 0), inner)
 }
 func FormatDanger(value string) string {
-	return Format(SPAN, value, STYLE, kit.JoinCSS(BACKGROUND_COLOR, "var(--danger-bg-color)", COLOR, "var(--danger-fg-color)"))
+	return Format(SPAN, value, STYLE, kit.JoinCSS(BG_COLOR, "var(--danger-bg-color)", FG_COLOR, "var(--danger-fg-color)"))
+}
+
+var SystemList = []string{
+	Android,
+	IPhone,
+	Mac,
+	Linux,
+	Windows,
+}
+var AgentList = []string{
+	MicroMessenger,
+	Alipay,
+	Edg,
+	Chrome,
+	Safari,
+	Firefox,
+	"Go-http-client",
 }

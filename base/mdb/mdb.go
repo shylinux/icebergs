@@ -32,7 +32,7 @@ func _mdb_select(m *ice.Message, cb Any, key string, value Map, fields []string,
 	case func(Any):
 		cb(value[TARGET])
 	case func(Maps):
-		cb(ToMaps(value))
+		cb(kit.ToMaps(value))
 	case string, []string, []Any, nil:
 		if m.FieldsIsDetail() {
 			m.Push(ice.FIELDS_DETAIL, value)
@@ -96,6 +96,7 @@ const (
 	ICONS   = "icons"
 	UNITS   = "units"
 	ORDER   = "order"
+	GROUP   = "group"
 	VALID   = "valid"
 	ENABLE  = "enable"
 	DISABLE = "disable"
@@ -217,26 +218,16 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: ice.Commands
 		m.OptionDefault(CACHE_LIMIT, "-1")
 		file := _mdb_export_file(m, arg...)
 		kit.Switch(arg[2],
-			HASH, func() {
-				_hash_export(m, arg[0], arg[1], file)
-			},
-			ZONE, func() {
-				_zone_export(m, arg[0], arg[1], file)
-				_hash_export(m, arg[0], arg[1], file)
-			},
+			HASH, func() { _hash_export(m, arg[0], arg[1], file) },
+			ZONE, func() { _zone_export(m, arg[0], arg[1], file); _hash_export(m, arg[0], arg[1], file) },
 			LIST, func() { _list_export(m, arg[0], arg[1], file) },
 		)
 	}},
 	IMPORT: {Name: "import key sub type file", Hand: func(m *ice.Message, arg ...string) {
 		file := _mdb_export_file(m, arg...)
 		kit.Switch(arg[2],
-			HASH, func() {
-				_hash_import(m, arg[0], arg[1], file)
-			},
-			ZONE, func() {
-				_hash_import(m, arg[0], arg[1], file)
-				_zone_import(m, arg[0], arg[1], file)
-			},
+			HASH, func() { _hash_import(m, arg[0], arg[1], file) },
+			ZONE, func() { _hash_import(m, arg[0], arg[1], file); _zone_import(m, arg[0], arg[1], file) },
 			LIST, func() { _list_import(m, arg[0], arg[1], file) },
 		)
 	}},
@@ -271,7 +262,7 @@ func AutoConfig(arg ...Any) *ice.Action {
 			add := func(list []string) (inputs []Any) {
 				kit.For(list, func(k string) {
 					kit.If(!kit.IsIn(k, TIME, HASH, COUNT, ID), func() {
-						inputs = append(inputs, k+kit.Select("", "*", strings.Contains(s, k)))
+						inputs = append(inputs, k+kit.Select("", FOREACH, strings.Contains(s, k)))
 					})
 				})
 				return
@@ -300,9 +291,4 @@ func saveImportant(m *ice.Message, key, sub string, arg ...string) {
 		return
 	}
 	kit.If(m.Conf(key, kit.Keys(META, IMPORTANT)) == ice.TRUE, func() { ice.SaveImportant(m, arg...) })
-}
-func ToMaps(value Map) Maps {
-	res := Maps{}
-	kit.For(value, func(k, v string) { res[k] = v })
-	return res
 }

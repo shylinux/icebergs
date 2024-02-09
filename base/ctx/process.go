@@ -45,7 +45,8 @@ func ProcessField(m *ice.Message, cmd string, args ice.Any, arg ...string) *ice.
 }
 func ProcessFloat(m *ice.Message, cmd string, args ice.Any, arg ...string) *ice.Message {
 	if m.IsMetaKey() {
-		return m.ProcessOpen(path.Join("/c/", cmd, path.Join(_process_args(m, args)...)))
+		m.ProcessOpen(path.Join("/c/", cmd, path.Join(_process_args(m, args)...)))
+		return m
 	}
 	if !kit.HasPrefixList(arg, RUN) {
 		defer m.Push(STYLE, html.FLOAT)

@@ -8,7 +8,6 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
-	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
@@ -105,10 +104,8 @@ func init() {
 				m.Assert(m.Option(PORT) != "")
 				nfs.Trash(m, path.Join(ice.USR_LOCAL_DAEMON, m.Option(PORT)))
 			}},
-			aaa.RIGHT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Echo(PortRight(m, arg...))
-			}},
-			CURRENT: {Hand: func(m *ice.Message, arg ...string) { m.Echo(mdb.Config(m, CURRENT)) }},
+			aaa.RIGHT: {Hand: func(m *ice.Message, arg ...string) { m.Echo(PortRight(m, arg...)) }},
+			CURRENT:   {Hand: func(m *ice.Message, arg ...string) { m.Echo(mdb.Config(m, CURRENT)) }},
 		}, mdb.HashAction(BEGIN, 10000, END, 20000)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 {
 				m.Cmdy(nfs.DIR, arg[1:], kit.Dict(nfs.DIR_ROOT, path.Join(ice.USR_LOCAL_DAEMON, arg[0])))
@@ -122,7 +119,7 @@ func init() {
 				m.Push(mdb.TIME, value[mdb.TIME]).Push(PORT, port).Push(nfs.SIZE, value[nfs.SIZE]).Push(ice.BIN, strings.TrimPrefix(bin, value[nfs.PATH]))
 				current = kit.Max(current, port)
 			})
-			m.PushAction(nfs.TRASH).StatusTimeCount(ctx.ConfigSimple(m, BEGIN, CURRENT, END)).SortInt(PORT)
+			m.PushAction(nfs.TRASH).StatusTimeCount(mdb.ConfigSimple(m, BEGIN, CURRENT, END)).SortInt(PORT)
 			mdb.Config(m, CURRENT, current)
 		}},
 	})

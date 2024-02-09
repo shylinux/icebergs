@@ -20,6 +20,8 @@ func init() {
 		STATS: {Help: "汇总量", Hand: func(m *ice.Message, arg ...string) {
 			defer ctx.DisplayStory(m, "")
 			if m.Option(ice.MSG_USERPOD) == "" {
+				PushStats(m, "", "", "", "共享总数", SHARE)
+				PushStats(m, "", "", "", "令牌总数", TOKEN)
 				PushStats(m, "", "", "", "注册总数", aaa.APPLY)
 				PushStats(m, "", "", "", "邀请总数", aaa.OFFER)
 				if ice.Info.Username == ice.Info.Make.Username {
@@ -29,8 +31,6 @@ func init() {
 				}
 				PushStats(m, "", "", "", "会话总数", aaa.SESS)
 				PushStats(m, "", m.Cmd(mdb.SELECT, aaa.ROLE, "", mdb.HASH).Length(), "", "角色总数", aaa.ROLE)
-				PushStats(m, "", "", "", "令牌总数", TOKEN)
-				PushStats(m, "", "", "", "共享总数", SHARE)
 				PushStats(m, "", "", "", "命令总数", ctx.COMMAND)
 			}
 			gdb.Event(m, STATS_TABLES)

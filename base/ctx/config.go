@@ -51,8 +51,8 @@ func _config_save(m *ice.Message, name string, arg ...string) {
 	}
 	if f, _, e := miss.CreateFile(path.Join(ice.VAR_CONF, name)); m.Assert(e) {
 		defer f.Close()
-		if s, e := json.MarshalIndent(data, "", "  "); !m.Warn(e) {
-			if _, e := f.Write(s); !m.Warn(e) {
+		if s, e := json.MarshalIndent(data, "", "  "); !m.WarnNotValid(e) {
+			if _, e := f.Write(s); !m.WarnNotValid(e) {
 			}
 		}
 	}
@@ -130,10 +130,6 @@ func Load(m *ice.Message, arg ...string) *ice.Message {
 }
 func ConfAction(arg ...ice.Any) ice.Actions {
 	return ice.Actions{ice.CTX_INIT: mdb.AutoConfig(arg...)}
-}
-func ConfigSimple(m *ice.Message, key ...string) (res []string) {
-	kit.For(kit.Split(kit.Join(key)), func(k string) { res = append(res, k, mdb.Config(m, k)) })
-	return
 }
 func ConfigFromOption(m *ice.Message, arg ...string) {
 	if len(arg) == 0 {

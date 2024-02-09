@@ -37,11 +37,10 @@ func DevTokenAction(name, origin string) ice.Actions {
 			))
 		}},
 		mdb.DEV_CHOOSE: {Hand: func(m *ice.Message, arg ...string) {
-			m.EchoInfoButton(kit.JoinWord(m.PrefixKey(),
-				m.Cmdx(nfs.CAT, nfs.SRC_TEMPLATE+"web.token/saveto.html"), m.Option(cli.BACK)), mdb.DEV_RESPONSE)
+			m.EchoInfoButton(kit.JoinWord(m.PrefixKey(), m.Cmdx(nfs.CAT, nfs.SRC_TEMPLATE+"web.token/saveto.html"), m.Option(cli.BACK)), mdb.DEV_RESPONSE)
 		}},
 		mdb.DEV_RESPONSE: {Help: "确认", Hand: func(m *ice.Message, arg ...string) {
-			if !m.Warn(m.Option(ice.MSG_METHOD) != http.MethodPost, ice.ErrNotAllow) {
+			if !m.WarnNotAllow(m.Option(ice.MSG_METHOD) != http.MethodPost) {
 				m.ProcessReplace(m.ParseLink(m.Option(cli.BACK)).MergePodCmd("", m.PrefixKey(), ctx.ACTION, mdb.DEV_CONFIRM, m.OptionSimple(cli.DAEMON),
 					m.OptionSimple(name), TOKEN, m.Cmdx(TOKEN, mdb.CREATE, mdb.TYPE, m.CommandKey(), mdb.NAME, m.Option(ice.MSG_USERNAME), m.OptionSimple(mdb.TEXT))))
 			}
@@ -50,7 +49,7 @@ func DevTokenAction(name, origin string) ice.Actions {
 			m.EchoInfoButton(kit.JoinWord(m.PrefixKey(), m.Cmdx(nfs.CAT, nfs.SRC_TEMPLATE+"web.token/savefrom.html"), m.Option(name)), mdb.DEV_CREATE)
 		}},
 		mdb.DEV_CREATE: {Help: "创建", Hand: func(m *ice.Message, arg ...string) {
-			if !m.Warn(m.Option(ice.MSG_METHOD) != http.MethodPost, ice.ErrNotAllow) {
+			if !m.WarnNotAllow(m.Option(ice.MSG_METHOD) != http.MethodPost) {
 				defer kit.If(m.Option(cli.DAEMON), func(p string) { m.Cmd(SPACE, p, html.REFRESH) })
 				mdb.HashModify(m, m.OptionSimple(name, TOKEN))
 				m.Cmdy("", DEV_CREATE_TOKEN).ProcessClose()

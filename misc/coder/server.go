@@ -36,7 +36,7 @@ func (s server) Start(m *ice.Message, arg ...string) {
 user-data-dir: %s
 bind-addr: %s:%s
 password: %s
-`, "./data", kit.Select("0.0.0.0", m.Option(tcp.HOST)), path.Base(p), kit.Select(mdb.Config(m, aaa.PASSWORD), m.Option(aaa.PASSWORD))))
+`, "./data", kit.Select("0.0.0.0", m.Option(tcp.HOST)), path.Base(p), kit.Select(m.Config(aaa.PASSWORD), m.Option(aaa.PASSWORD))))
 		return []string{"--config=config", kit.Path(nfs.PWD)}
 	})
 }

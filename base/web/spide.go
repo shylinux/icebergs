@@ -25,13 +25,12 @@ import (
 )
 
 func _spide_create(m *ice.Message, name, link, types, icons string) {
-	if u, e := url.Parse(link); !m.Warn(e != nil || link == "", ice.ErrNotValid, link) {
+	if u, e := url.Parse(link); !m.WarnNotValid(e != nil || link == "", link) {
 		dir, file := path.Split(u.EscapedPath())
 		m.Logs(mdb.INSERT, SPIDE, name, LINK, link)
 		mdb.HashSelectUpdate(m, mdb.HashCreate(m, CLIENT_NAME, name), func(value ice.Map) {
 			value[mdb.ICONS] = icons
-			value[SPIDE_CLIENT] = kit.Dict(
-				mdb.NAME, name, mdb.TYPE, types,
+			value[SPIDE_CLIENT] = kit.Dict(mdb.NAME, name, mdb.TYPE, types,
 				SPIDE_METHOD, http.MethodGet, URL, link, ORIGIN, u.Scheme+"://"+u.Host,
 				tcp.PROTOCOL, u.Scheme, tcp.HOSTNAME, u.Hostname(), tcp.HOST, u.Host, nfs.PATH, dir, nfs.FILE, file, cli.TIMEOUT, "300s",
 			)
@@ -55,7 +54,7 @@ func _spide_show(m *ice.Message, name string, arg ...string) {
 	}
 	_uri := kit.MergeURL2(msg.Append(CLIENT_URL), uri, arg)
 	req, e := http.NewRequest(method, _uri, body)
-	if m.Warn(e, ice.ErrNotValid, uri) {
+	if m.WarnNotValid(e, uri) {
 		return
 	}
 	mdb.HashSelectDetail(m, name, func(value ice.Map) { _spide_head(m, req, head, value) })
@@ -63,7 +62,7 @@ func _spide_show(m *ice.Message, name string, arg ...string) {
 		kit.For(req.Header, func(k string, v []string) { m.Logs(REQUEST, k, v) })
 	}
 	res, e := _spide_send(m, name, req, kit.Format(m.OptionDefault(CLIENT_TIMEOUT, msg.Append(CLIENT_TIMEOUT))))
-	if m.Warn(e, ice.ErrNotFound, uri) {
+	if m.WarnNotFound(e, uri) {
 		return
 	}
 	defer res.Body.Close()
@@ -76,8 +75,7 @@ func _spide_show(m *ice.Message, name string, arg ...string) {
 		if m.Option(log.DEBUG) == ice.TRUE {
 			m.Logs(RESPONSE, k, v)
 		}
-		m.Options(k, v)
-		if action != SPIDE_RAW {
+		if m.Options(k, v); action != SPIDE_RAW {
 			m.Push(mdb.TYPE, SPIDE_HEADER).Push(mdb.NAME, k).Push(mdb.VALUE, v[0])
 		}
 	})
@@ -92,7 +90,7 @@ func _spide_show(m *ice.Message, name string, arg ...string) {
 			}
 		})
 	})
-	if m.Warn(res.StatusCode != http.StatusOK && res.StatusCode != http.StatusCreated, ice.ErrNotValid, uri, cli.STATUS, res.Status) {
+	if m.WarnNotValid(res.StatusCode != http.StatusOK && res.StatusCode != http.StatusCreated, uri, cli.STATUS, res.Status) {
 		switch res.StatusCode {
 		case http.StatusNotFound, http.StatusUnauthorized:
 			return
@@ -115,8 +113,7 @@ func _spide_body(m *ice.Message, method string, arg ...string) (io.Reader, ice.M
 	switch kit.If(len(arg) == 1, func() { arg = []string{SPIDE_DATA, arg[0]} }); arg[0] {
 	case SPIDE_FORM:
 		arg = kit.Simple(arg, func(v string) string { return url.QueryEscape(v) })
-		_data := kit.JoinKV("=", "&", arg[1:]...)
-		head[html.ContentType], body = html.ApplicationForm, bytes.NewBufferString(_data)
+		head[html.ContentType], body = html.ApplicationForm, bytes.NewBufferString(kit.JoinQuery(arg[1:]...))
 	case SPIDE_PART:
 		head[html.ContentType], body = _spide_part(m, arg...)
 	case SPIDE_FILE:
@@ -132,8 +129,7 @@ func _spide_body(m *ice.Message, method string, arg ...string) (io.Reader, ice.M
 	default:
 		data := ice.Map{}
 		kit.For(arg, func(k, v string) { kit.Value(data, k, v) })
-		_data := kit.Format(data)
-		head[html.ContentType], body = html.ApplicationJSON, bytes.NewBufferString(_data)
+		head[html.ContentType], body = html.ApplicationJSON, bytes.NewBufferString(kit.Format(data))
 	}
 	return body, head, arg[:0]
 }
@@ -146,12 +142,12 @@ func _spide_part(m *ice.Message, arg ...string) (string, io.Reader) {
 		if arg[i] == nfs.SIZE {
 			size = kit.Int64(arg[i+1])
 		} else if arg[i] == SPIDE_CACHE {
-			if t, e := time.ParseInLocation(ice.MOD_TIME, arg[i+1], time.Local); !m.Warn(e, ice.ErrNotValid) {
+			if t, e := time.ParseInLocation(ice.MOD_TIME, arg[i+1], time.Local); !m.WarnNotValid(e) {
 				cache = t
 			}
 		} else if strings.HasPrefix(arg[i+1], mdb.AT) {
 			p := arg[i+1][1:]
-			if s, e := nfs.StatFile(m, p); !m.Warn(e, ice.ErrNotValid) {
+			if s, e := nfs.StatFile(m, p); !m.WarnNotValid(e) {
 				if s.Size() == size && s.ModTime().Before(cache) {
 					m.Option("spide.break", ice.TRUE)
 					continue
@@ -161,10 +157,10 @@ func _spide_part(m *ice.Message, arg ...string) (string, io.Reader) {
 				}
 				m.Logs(nfs.FIND, LOCAL, s.ModTime(), nfs.SIZE, s.Size(), CACHE, cache, nfs.SIZE, size)
 			}
-			if f, e := nfs.OpenFile(m, p); !m.Warn(e, ice.ErrNotValid, arg[i+1]) {
+			if f, e := nfs.OpenFile(m, p); !m.WarnNotValid(e, arg[i+1]) {
 				defer f.Close()
-				if p, e := mp.CreateFormFile(arg[i], path.Base(p)); !m.Warn(e, ice.ErrNotValid, arg[i+1]) {
-					if n, e := io.Copy(p, f); !m.Warn(e, ice.ErrNotValid, arg[i+1]) {
+				if p, e := mp.CreateFormFile(arg[i], path.Base(p)); !m.WarnNotValid(e, arg[i+1]) {
+					if n, e := io.Copy(p, f); !m.WarnNotValid(e, arg[i+1]) {
 						m.Logs(nfs.LOAD, nfs.FILE, arg[i+1], nfs.SIZE, n)
 					}
 				}
@@ -198,12 +194,8 @@ func _spide_save(m *ice.Message, action, file, uri string, res *http.Response) {
 	}
 	switch action {
 	case SPIDE_RAW:
-		if b, _ := ioutil.ReadAll(res.Body); strings.HasPrefix(res.Header.Get(html.ContentType), html.ApplicationJSON) {
-			// m.Echo(kit.Formats(kit.UnMarshal(string(b))))
-			m.Echo(string(b))
-		} else {
-			m.Echo(string(b))
-		}
+		b, _ := ioutil.ReadAll(res.Body)
+		m.Echo(string(b))
 	case SPIDE_MSG:
 		var data map[string][]string
 		m.Assert(json.NewDecoder(res.Body).Decode(&data))
@@ -216,7 +208,7 @@ func _spide_save(m *ice.Message, action, file, uri string, res *http.Response) {
 		m.Echo(m.Append(mdb.HASH))
 	default:
 		var data ice.Any
-		if b, e := ioutil.ReadAll(res.Body); !m.Warn(e) {
+		if b, e := ioutil.ReadAll(res.Body); !m.WarnNotFound(e) {
 			if json.Unmarshal(b, &data) == nil {
 				m.Push("", kit.KeyValue(ice.Map{}, "", m.Optionv(SPIDE_RES, data)))
 			} else {
@@ -272,48 +264,15 @@ const (
 )
 
 var agentIcons = map[string]string{
-	"Safari":         "usr/icons/Safari.png",
-	"Chrome":         "usr/icons/Chrome.png",
-	"Edg":            "usr/icons/Edg.png",
-	"MicroMessenger": "usr/icons/wechat.png",
+	html.Safari:         "usr/icons/Safari.png",
+	html.Chrome:         "usr/icons/Chrome.png",
+	html.Edg:            "usr/icons/Edg.png",
+	html.MicroMessenger: "usr/icons/wechat.png",
 }
 
 const SPIDE = "spide"
 
 func init() {
-	nfs.TemplatePath = func(m *ice.Message, arg ...string) string {
-		if p := path.Join(ice.SRC_TEMPLATE, m.PrefixKey(), path.Join(arg...)); nfs.Exists(m, p) {
-			return p + kit.Select("", nfs.PS, len(arg) == 0)
-		} else {
-			m.Debug("what %v", p)
-			what := kit.MergeURL2(UserHost(m)+ctx.GetCmdFile(m, m.PrefixKey()), path.Join(arg...))
-			m.Debug("what %v", what)
-			return what
-			// return path.Join(path.Dir(ctx.GetCmdFile(m, m.PrefixKey())), path.Join(arg...)) + kit.Select("", nfs.PS, len(arg) == 0)
-		}
-	}
-	nfs.TemplateText = func(m *ice.Message, p string) string {
-		if p := kit.Select(nfs.TemplatePath(m, path.Base(p)), m.Option("_template")); kit.HasPrefix(p, "/require/", ice.HTTP) {
-			m.Debug("what %v", p)
-			return m.Cmdx(SPIDE, ice.OPS, SPIDE_RAW, http.MethodGet, p)
-		} else {
-			return m.Cmdx(nfs.CAT, p)
-		}
-	}
-	nfs.DocumentPath = func(m *ice.Message, arg ...string) string {
-		if p := path.Join(nfs.USR_LEARNING_PORTAL, m.PrefixKey(), path.Join(arg...)); nfs.Exists(m, p) {
-			return p + kit.Select("", nfs.PS, len(arg) == 0)
-		} else {
-			return path.Join(path.Dir(ctx.GetCmdFile(m, m.PrefixKey())), path.Join(arg...)) + kit.Select("", nfs.PS, len(arg) == 0)
-		}
-	}
-	nfs.DocumentText = func(m *ice.Message, p string) string {
-		if p := nfs.DocumentPath(m, path.Base(p)); kit.HasPrefix(p, "/require/", ice.HTTP) {
-			return m.Cmdx(SPIDE, ice.DEV, SPIDE_RAW, http.MethodGet, p)
-		} else {
-			return m.Cmdx(nfs.CAT, p)
-		}
-	}
 	Index.MergeCommands(ice.Commands{
 		// SPIDE: {Name: "spide client.name action=raw,msg,save,cache method=GET,PUT,POST,DELETE url format=form,part,json,data,file arg run create", Help: "蜘蛛侠", Actions: ice.MergeActions(ice.Actions{
 		SPIDE: {Help: "蜘蛛侠", Meta: kit.Dict(ice.CTX_TRANS, kit.Dict(html.INPUT, kit.Dict(
@@ -397,17 +356,14 @@ func init() {
 			}},
 			DEV_REQUEST_TEXT: {Hand: func(m *ice.Message, arg ...string) { m.Echo(SpaceName(ice.Info.NodeName)) }},
 			DEV_CREATE_TOKEN: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(SPACE, tcp.DIAL, ice.DEV, m.Option(CLIENT_NAME), m.OptionSimple(TOKEN))
-				m.Sleep300ms()
+				m.Cmd(SPACE, tcp.DIAL, ice.DEV, m.Option(CLIENT_NAME), m.OptionSimple(TOKEN)).Sleep300ms()
 			}},
 		}, DevTokenAction(CLIENT_NAME, CLIENT_URL), mdb.HashAction(mdb.SHORT, CLIENT_NAME, mdb.FIELD, "time,icons,client.name,client.url,client.type,token")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 || arg[0] == "" || (len(arg) > 3 && arg[3] == "") {
 				list := m.CmdMap(SPACE, mdb.NAME)
 				mdb.HashSelect(m, kit.Slice(arg, 0, 1)...).Sort("client.type,client.name", []string{nfs.REPOS, ""})
 				m.RewriteAppend(func(value, key string, index int) string {
-					if key == CLIENT_URL {
-						value = kit.MergeURL(value, m.OptionSimple(ice.MSG_DEBUG))
-					}
+					kit.If(key == CLIENT_URL, func() { value = kit.MergeURL(value, m.OptionSimple(ice.MSG_DEBUG)) })
 					return value
 				})
 				m.Table(func(value ice.Maps) {
@@ -439,6 +395,34 @@ func init() {
 			m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx(SPIDE, ice.DEV, SPIDE_RAW, http.MethodDelete, arg[0], arg[1:]))))
 		}},
 	})
+	nfs.TemplateText = func(m *ice.Message, p string) string {
+		if p := kit.Select(nfs.TemplatePath(m, path.Base(p)), m.Option("_template")); kit.HasPrefix(p, "/require/", ice.HTTP) {
+			return m.Cmdx(SPIDE, ice.OPS, SPIDE_RAW, http.MethodGet, p)
+		} else {
+			return m.Cmdx(nfs.CAT, p)
+		}
+	}
+	nfs.TemplatePath = func(m *ice.Message, arg ...string) string {
+		if p := path.Join(ice.SRC_TEMPLATE, m.PrefixKey(), path.Join(arg...)); nfs.Exists(m, p) {
+			return p + kit.Select("", nfs.PS, len(arg) == 0)
+		} else {
+			return kit.MergeURL2(UserHost(m)+ctx.GetCmdFile(m, m.PrefixKey()), path.Join(arg...))
+		}
+	}
+	nfs.DocumentPath = func(m *ice.Message, arg ...string) string {
+		if p := path.Join(nfs.USR_LEARNING_PORTAL, m.PrefixKey(), path.Join(arg...)); nfs.Exists(m, p) {
+			return p + kit.Select("", nfs.PS, len(arg) == 0)
+		} else {
+			return kit.MergeURL2(UserHost(m)+ctx.GetCmdFile(m, m.PrefixKey()), path.Join(arg...))
+		}
+	}
+	nfs.DocumentText = func(m *ice.Message, p string) string {
+		if p := nfs.DocumentPath(m, path.Base(p)); kit.HasPrefix(p, "/require/", ice.HTTP) {
+			return m.Cmdx(SPIDE, ice.DEV, SPIDE_RAW, http.MethodGet, p)
+		} else {
+			return m.Cmdx(nfs.CAT, p)
+		}
+	}
 }
 
 func HostPort(m *ice.Message, host, port string, arg ...string) string {
@@ -479,15 +463,12 @@ func SpideSave(m *ice.Message, file, link string, cb func(count, total, value in
 func SpideCache(m *ice.Message, link string) *ice.Message {
 	return m.Cmd(Prefix(SPIDE), ice.DEV, SPIDE_CACHE, http.MethodGet, link)
 }
-func SpideOrigin(m *ice.Message, name string) string {
-	return m.Cmdv(SPIDE, name, CLIENT_ORIGIN)
-}
-func SpideURL(m *ice.Message, name string) string {
-	return m.Cmdv(SPIDE, name, CLIENT_URL)
-}
+func SpideOrigin(m *ice.Message, name string) string { return m.Cmdv(SPIDE, name, CLIENT_ORIGIN) }
+func SpideURL(m *ice.Message, name string) string    { return m.Cmdv(SPIDE, name, CLIENT_URL) }
 func ProcessIframe(m *ice.Message, title, link string, arg ...string) *ice.Message {
 	if m.IsMetaKey() || m.IsMobileUA() {
-		return m.ProcessOpen(link)
+		m.ProcessOpen(link)
+		return m
 	}
 	if !kit.HasPrefixList(arg, ctx.RUN) {
 		defer m.Push(TITLE, title)

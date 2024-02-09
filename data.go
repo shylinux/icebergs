@@ -9,11 +9,8 @@ import (
 )
 
 func (m *Message) ActionKey() string {
-	if action := strings.TrimPrefix(strings.TrimSuffix(m._sub, PS), PS); kit.IsIn(action, LIST, SELECT) {
-		return ""
-	} else {
-		return action
-	}
+	action := strings.TrimPrefix(strings.TrimSuffix(m._sub, PS), PS)
+	return kit.Select("", action, !kit.IsIn(action, LIST, SELECT))
 }
 func (m *Message) CommandKey() string          { return strings.TrimPrefix(strings.TrimSuffix(m._key, PS), PS) }
 func (m *Message) PrefixKey() string           { return m.Prefix(m.CommandKey()) }

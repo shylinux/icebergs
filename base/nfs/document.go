@@ -4,6 +4,7 @@ import (
 	"path"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/web/html"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -11,9 +12,9 @@ const DOCUMENT = "document"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		DOCUMENT: {Name: "document index path auto", Help: "文档", Actions: ice.MergeActions(ice.Actions{}), Hand: func(m *ice.Message, arg ...string) {
+		DOCUMENT: {Name: "document index path auto", Help: "文档", Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
-				m.Cmdy(ice.COMMAND).Action("filter:text").Option(ice.MSG_DISPLAY, "")
+				m.Cmdy(ice.COMMAND).Action(html.FILTER).Option(ice.MSG_DISPLAY, "")
 				return
 			}
 			m.Search(arg[0], func(p *ice.Context, c *ice.Context, key string, cmd *ice.Command) {
@@ -36,9 +37,5 @@ var DocumentText = func(m *ice.Message, p string) string {
 	return m.Cmdx(CAT, DocumentPath(m, path.Base(p)))
 }
 var DocumentPath = func(m *ice.Message, arg ...string) string {
-	if p := path.Join(USR_LEARNING_PORTAL, m.PrefixKey(), path.Join(arg...)); Exists(m, p) {
-		return p
-	} else {
-		return p
-	}
+	return path.Join(USR_LEARNING_PORTAL, m.PrefixKey(), path.Join(arg...))
 }

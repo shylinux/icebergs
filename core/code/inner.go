@@ -18,6 +18,7 @@ import (
 )
 
 func _inner_list(m *ice.Message, ext, file, dir string) {
+	file = kit.Split(file, "?")[0]
 	kit.If(aaa.Right(m, dir, file), func() {
 		kit.If(nfs.IsSourceFile(m, ext), func() {
 			m.Cmdy(nfs.CAT, path.Join(dir, file))

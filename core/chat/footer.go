@@ -28,7 +28,7 @@ func init() {
 			}},
 			nfs.SOURCE: {Hand: func(m *ice.Message, arg ...string) {
 				_footer_plugin(m, web.CODE_VIMER, func() []string {
-					return nfs.SplitPath(m, ctx.GetCmdFile(m, arg[0]))
+					return nfs.SplitPath(m, kit.Split(ctx.GetCmdFile(m, arg[0]), "?")[0])
 				}, arg...)
 			}},
 			nfs.SCRIPT: {Hand: func(m *ice.Message, arg ...string) {

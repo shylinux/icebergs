@@ -7,6 +7,7 @@ fieldset.web.wiki.portal>div.output { padding:0; }
 fieldset.web.wiki.portal>div.output>div.header { background-color:rgb(22 31 49); height:var(--portal-header-height); --hover-bg-color:var(--plugin-bg-color); }
 fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] { display:flex; justify-content:center; }
 fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.item { text-align:center; padding:var(--legend-padding); height:var(--portal-header-height); }
+fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.item { display:flex; align-items:center; }
 fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.item:first-child { line-height:calc(var(--portal-header-height) - 2 * var(--legend-padding)); }
 body.mobile fieldset.web.wiki.portal.cmd>div.output>div.header div.story[data-name=navmenu] div.item { line-height:calc(var(--portal-header-height) - 2 * var(--legend-padding)); }
 fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.item.select { background-color:var(--output-bg-color); }
@@ -43,8 +44,8 @@ body.cmd.web.wiki.portal { background-color:rgb(22 31 49); }
 fieldset.web.wiki.portal.home>div.output>div.layout>div.main p { white-space:pre-wrap; text-align:center; }
 
 body.dark fieldset.web.wiki.portal>div.output>div.layout { background-color:var(--plugin-bg-color); --code-bg-color:var(--output-bg-color); }
-body.dark fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.item.select { background-color:var(--plugin-bg-color); }
 body.dark fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.item:hover { background-color:var(--plugin-bg-color); }
+body.dark fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.item.select { background-color:var(--plugin-bg-color); }
 body.white fieldset.web.wiki.portal>div.output>div.header { color:silver; }
 body.light fieldset.web.wiki.portal>div.output>div.header { color:white; }
 body.light fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] { --hover-fg-color:black; }

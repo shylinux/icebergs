@@ -19,7 +19,10 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		POD: {Help: "空间", Actions: web.ApiWhiteAction(), Hand: func(m *ice.Message, arg ...string) {
 			if m.IsCliUA() {
-				if len(arg) == 0 || arg[0] == "" {
+				if len(arg) > 1 {
+					m.Option(ice.MSG_USERPOD, arg[0])
+					m.Cmdy(web.SPACE, arg[0], arg[2], arg[3:])
+				} else if len(arg) == 0 || arg[0] == "" {
 					m.Option(ice.MSG_USERROLE, aaa.TECH)
 					m.Cmd(web.SPACE, func(value ice.Maps) {
 						msg := m.Cmd(nfs.DIR, path.Join(ice.USR_LOCAL_WORK, value[mdb.NAME], ice.USR_PUBLISH, kit.Keys(ice.ICE, m.OptionDefault(cli.GOOS, cli.LINUX), m.OptionDefault(cli.GOARCH, cli.AMD64))))
@@ -44,7 +47,7 @@ func init() {
 					m.Cmdy(web.SPACE, arg[0], web.SPACE, ice.MAIN)
 				} else if kit.IsIn(arg[1], CMD, "c") {
 					if kit.IsIn(arg[2], web.ADMIN) {
-						m.Cmdy(web.SPACE, arg[0], arg[2])
+						m.Cmdy(web.SPACE, arg[0], arg[2], arg[3:])
 					} else {
 						web.RenderPodCmd(m, arg[0], arg[2], arg[3:])
 					}

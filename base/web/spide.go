@@ -268,6 +268,7 @@ var agentIcons = map[string]string{
 	html.Chrome:         "usr/icons/Chrome.png",
 	html.Edg:            "usr/icons/Edg.png",
 	html.MicroMessenger: "usr/icons/wechat.png",
+	"Go-http-client":    "usr/icons/go.png",
 }
 
 const SPIDE = "spide"
@@ -283,10 +284,10 @@ func init() {
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				conf := mdb.Confm(m, cli.RUNTIME, cli.CONF)
 				dev := kit.Select("https://2021.shylinux.com", ice.Info.Make.Domain, conf[cli.CTX_DEV])
-				m.Cmd("", mdb.CREATE, ice.SHY, kit.Select("https://shylinux.com", conf[cli.CTX_SHY]), nfs.REPOS, nfs.USR_ICONS_CONTEXTS)
+				m.Cmd("", mdb.CREATE, ice.SHY, kit.Select("https://shylinux.com", conf[cli.CTX_SHY]), nfs.REPOS)
 				m.Cmd("", mdb.CREATE, ice.DEV, dev, nfs.REPOS)
 				m.Cmd("", mdb.CREATE, ice.DEV_IP, kit.Select(dev, os.Getenv("ctx_dev_ip")))
-				m.Cmd("", mdb.CREATE, ice.OPS, kit.Select("http://localhost:9020", conf[cli.CTX_OPS]), nfs.REPOS, nfs.USR_ICONS_VOLCANOS)
+				m.Cmd("", mdb.CREATE, ice.OPS, kit.Select("http://localhost:9020", conf[cli.CTX_OPS]), nfs.REPOS)
 				m.Cmd("", mdb.CREATE, ice.DEMO, kit.Select("http://localhost:20000", conf[cli.CTX_DEMO]), "", nfs.USR_ICONS_VOLCANOS)
 				m.Cmd("", mdb.CREATE, ice.MAIL, kit.Select("https://mail.shylinux.com", conf[cli.CTX_MAIL]), "", "usr/icons/Mail.png")
 				if m.Cmd(tcp.HOST).Length() == 0 {
@@ -336,7 +337,7 @@ func init() {
 				}
 			}},
 			mdb.CREATE: {Name: "create name* origin* type icons", Hand: func(m *ice.Message, arg ...string) {
-				_spide_create(m, m.Option(mdb.NAME), m.Option(ORIGIN), m.Option(mdb.TYPE), m.OptionDefault(mdb.ICONS, nfs.USR_ICONS_ICEBERGS))
+				_spide_create(m, m.Option(mdb.NAME), m.Option(ORIGIN), m.Option(mdb.TYPE), m.OptionDefault(mdb.ICONS, nfs.USR_ICONS_CONTEXTS))
 			}},
 			COOKIE: {Name: "cookie key* value", Help: "状态量", Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashModify(m, m.OptionSimple(CLIENT_NAME), kit.Keys(COOKIE, m.Option(mdb.KEY)), m.Option(mdb.VALUE))

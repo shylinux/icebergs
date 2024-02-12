@@ -67,6 +67,7 @@ func _runtime_init(m *ice.Message) {
 			}
 		})
 	})
+	m.Conf(m.PrefixKey(), mdb.META, "")
 }
 func _runtime_hostinfo(m *ice.Message) {
 	m.Push("time", ice.Info.Make.Time)

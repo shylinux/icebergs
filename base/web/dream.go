@@ -77,7 +77,7 @@ func _dream_list_icon(m *ice.Message) {
 		return value
 	})
 }
-func _dream_more_list(m *ice.Message) *ice.Message {
+func _dream_list_more(m *ice.Message) *ice.Message {
 	if m.IsCliUA() {
 		return m
 	}
@@ -93,6 +93,7 @@ func _dream_more_list(m *ice.Message) *ice.Message {
 			msg := gdb.Event(m.Spawn(value), DREAM_TABLES)
 			defer m.PushButton(strings.Join(msg.Appendv(ctx.ACTION), ""))
 		case MASTER:
+			value[mdb.ICON] = nfs.USR_ICONS_CONTEXTS
 			if spide, ok := list[value[mdb.NAME]]; ok {
 				value[mdb.ICON] = kit.Select(value[mdb.ICON], spide[mdb.ICON])
 			}
@@ -424,21 +425,18 @@ func init() {
 			if len(arg) == 0 {
 				_dream_list(m)
 				_dream_list_icon(m)
-				_dream_more_list(m)
+				_dream_list_more(m)
 				stat := map[string]int{}
 				m.Table(func(value ice.Maps) { stat[value[mdb.TYPE]]++; stat[value[mdb.STATUS]]++ })
 				kit.If(stat[cli.START] == stat[WORKER], func() { delete(stat, cli.START) })
 				m.Sort("type,status,name", []string{aaa.LOGIN, WORKER, SERVER, MASTER}, []string{cli.START, cli.STOP, cli.BEGIN}, ice.STR_R).StatusTimeCount(stat)
-				ctx.DisplayTableCard(m)
-				if ice.Info.NodeType == WORKER || !aaa.IsTechOrRoot(m) || m.IsCliUA() {
+				if ctx.DisplayTableCard(m); ice.Info.NodeType == WORKER || !aaa.IsTechOrRoot(m) || m.IsCliUA() {
 					m.Action()
-					return
-				}
-				kit.If(cli.SystemFind(m, "go"), func() {
+				} else if cli.SystemFind(m, "go") == "" {
+					m.Action(html.FILTER, mdb.CREATE, STARTALL, STOPALL)
+				} else {
 					m.Action(html.FILTER, mdb.CREATE, STARTALL, STOPALL, cli.BUILD, PUBLISH)
-				}, func() {
-					m.Action(mdb.CREATE, STARTALL, STOPALL)
-				})
+				}
 			} else if arg[0] == ctx.ACTION {
 				gdb.Event(m, DREAM_ACTION, arg)
 			} else {

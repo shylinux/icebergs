@@ -100,8 +100,8 @@ func init() {
 			}},
 		}, mdb.ExportZoneAction(mdb.FIELDS, "time,id,type,name,text,nconn,nreqs")), Hand: func(m *ice.Message, arg ...string) {
 			mdb.ZoneSelect(m, arg...)
-			kit.If(len(arg) == 1, func() { m.Action(cli.START) })
 			m.PushAction(kit.Select(cli.START, mdb.REMOVE, len(arg) == 0))
+			kit.If(len(arg) == 1, func() { m.Action(mdb.INSERT, cli.START) })
 		}},
 	})
 }

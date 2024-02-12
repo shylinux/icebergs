@@ -407,7 +407,8 @@ func init() {
 		if p := path.Join(ice.SRC_TEMPLATE, m.PrefixKey(), path.Join(arg...)); nfs.Exists(m, p) {
 			return p + kit.Select("", nfs.PS, len(arg) == 0)
 		} else {
-			return kit.MergeURL2(UserHost(m)+ctx.GetCmdFile(m, m.PrefixKey()), path.Join(arg...))
+			return kit.MergeURL2(SpideOrigin(m, ice.OPS)+m.FileURI(ctx.GetCmdFile(m, m.PrefixKey())), path.Join(arg...))
+			return kit.MergeURL2(UserHost(m)+m.FileURI(ctx.GetCmdFile(m, m.PrefixKey())), path.Join(arg...))
 		}
 	}
 	nfs.DocumentPath = func(m *ice.Message, arg ...string) string {

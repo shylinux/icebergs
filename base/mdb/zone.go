@@ -229,7 +229,7 @@ func ZoneModify(m *ice.Message, arg ...Any) {
 	if args := kit.Simple(arg...); m.Option(ID) == "" {
 		HashModify(m, arg...)
 	} else if args[0] == HASH || args[0] == ZoneShort(m) {
-		m.Cmdy(MODIFY, m.PrefixKey(), "", ZONE, args[1], args[3], arg[4:])
+		m.Cmdy(MODIFY, m.PrefixKey(), "", ZONE, args[1], args[3], args[4:])
 	} else {
 		m.Cmdy(MODIFY, m.PrefixKey(), "", ZONE, m.Option(ZoneKey(m)), m.Option(ID), arg)
 	}

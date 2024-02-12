@@ -70,7 +70,7 @@ func init() {
 					if value[mdb.TYPE] != WORKER {
 						return
 					}
-					m.Push("", value, kit.Split("time,name,icon,repos,binary,module,version"))
+					m.Push("", value, kit.Split("time,name,icons,repos,binary,module,version"))
 					m.Push(mdb.TEXT, value[nfs.REPOS]).Push(ORIGIN, origin)
 					if _, ok := list[value[mdb.NAME]]; ok || arg[0] == ice.OPS {
 						m.PushButton(OPEN, PORTAL)

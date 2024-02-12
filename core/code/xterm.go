@@ -166,7 +166,13 @@ func init() {
 					m.Action(mdb.CREATE, mdb.PRUNES)
 				}
 			} else {
-				kit.If(m.Length() == 0, func() { arg[0] = m.Cmdx("", mdb.CREATE, arg); mdb.HashSelect(m, arg[0]) })
+				kit.If(m.Length() == 0, func() {
+					if arg[0] == SH {
+						arg[0] = cli.Shell(m)
+					}
+					arg[0] = m.Cmdx("", mdb.CREATE, arg)
+					mdb.HashSelect(m, arg[0])
+				})
 				m.Push(mdb.HASH, arg[0]).Action(ice.APP)
 				ctx.DisplayLocal(m, "")
 			}

@@ -63,7 +63,7 @@ func _dream_list(m *ice.Message) *ice.Message {
 }
 func _dream_list_icon(m *ice.Message) {
 	m.RewriteAppend(func(value, key string, index int) string {
-		if key == mdb.ICON {
+		if key == mdb.ICONS {
 			if kit.HasPrefix(value, HTTP, nfs.PS) {
 				return value
 			} else if nfs.ExistsFile(m, path.Join(ice.USR_LOCAL_WORK, m.Appendv(mdb.NAME)[index], value)) {
@@ -83,25 +83,24 @@ func _dream_list_more(m *ice.Message) *ice.Message {
 	}
 	list := m.Spawn(ice.Maps{ice.MSG_FIELDS: ""}).CmdMap(SPIDE, CLIENT_NAME)
 	m.Cmds(SPACE).Table(func(value ice.Maps) {
-		value[mdb.ICON] = nfs.USR_ICONS_VOLCANOS
+		value[mdb.ICONS] = nfs.USR_ICONS_VOLCANOS
 		value[nfs.REPOS] = "https://" + value[nfs.MODULE]
 		value[mdb.STATUS] = cli.START
 		switch value[mdb.TYPE] {
 		case SERVER:
-			value[mdb.ICON] = nfs.USR_ICONS_ICEBERGS
+			value[mdb.ICONS] = nfs.USR_ICONS_ICEBERGS
 			value[mdb.TEXT] = kit.JoinLine(value[nfs.MODULE], value[mdb.TEXT])
 			msg := gdb.Event(m.Spawn(value), DREAM_TABLES)
 			defer m.PushButton(strings.Join(msg.Appendv(ctx.ACTION), ""))
 		case MASTER:
-			value[mdb.ICON] = nfs.USR_ICONS_CONTEXTS
 			if spide, ok := list[value[mdb.NAME]]; ok {
-				value[mdb.ICON] = kit.Select(value[mdb.ICON], spide[mdb.ICON])
+				value[mdb.ICONS] = kit.Select(value[mdb.ICONS], spide[mdb.ICONS])
 			}
 			value[mdb.TEXT] = kit.JoinLine(value[nfs.MODULE], value[mdb.TEXT])
 			msg := gdb.Event(m.Spawn(value), DREAM_TABLES)
 			defer m.PushButton(strings.Join(msg.Appendv(ctx.ACTION), ""))
 		case aaa.LOGIN:
-			value[mdb.ICON] = kit.Select(value[mdb.ICON], agentIcons[value[AGENT]])
+			value[mdb.ICONS] = kit.Select(value[mdb.ICONS], agentIcons[value[AGENT]])
 			value[mdb.TEXT] = kit.JoinWord(value[AGENT], value[cli.SYSTEM], value[aaa.IP])
 			defer m.PushButton(GRANT)
 		default:
@@ -278,12 +277,12 @@ func init() {
 					gdb.Event(m, DREAM_INPUTS, arg)
 				}
 			}},
-			mdb.CREATE: {Name: "create name*=hi icon@icons repos binary template", Hand: func(m *ice.Message, arg ...string) {
+			mdb.CREATE: {Name: "create name*=hi icons repos binary template", Hand: func(m *ice.Message, arg ...string) {
 				kit.If(!strings.Contains(m.Option(mdb.NAME), "-") || !strings.HasPrefix(m.Option(mdb.NAME), "20"), func() { m.Option(mdb.NAME, m.Time("20060102-")+m.Option(mdb.NAME)) })
 				kit.If(mdb.Config(m, nfs.BINARY), func(p string) { m.OptionDefault(nfs.BINARY, p+m.Option(mdb.NAME)) })
 				kit.If(mdb.Config(m, nfs.REPOS), func(p string) { m.OptionDefault(nfs.REPOS, p+m.Option(mdb.NAME)) })
 				m.Option(nfs.REPOS, kit.Select("", kit.Slice(kit.Split(m.Option(nfs.REPOS)), -1), 0))
-				m.OptionDefault(mdb.ICON, nfs.USR_ICONS_VOLCANOS)
+				m.OptionDefault(mdb.ICONS, nfs.USR_ICONS_CONTEXTS)
 				if mdb.HashCreate(m); !m.IsCliUA() {
 					_dream_start(m, m.Option(mdb.NAME))
 				}
@@ -378,7 +377,7 @@ func init() {
 				nfs.Trash(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME)))
 			}},
 			tcp.SEND: {Name: "send space*", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(SPACE, m.Option(SPACE), DREAM, mdb.CREATE, m.OptionSimple(mdb.NAME, mdb.ICON, nfs.REPOS, nfs.BINARY))
+				m.Cmd(SPACE, m.Option(SPACE), DREAM, mdb.CREATE, m.OptionSimple(mdb.NAME, mdb.ICONS, nfs.REPOS, nfs.BINARY))
 				m.Cmd(SPACE, m.Option(SPACE), DREAM, cli.START, m.OptionSimple(mdb.NAME))
 				ProcessIframe(m, "", m.MergePod(kit.Keys(m.Option(SPACE), m.Option(mdb.NAME))))
 			}},
@@ -419,7 +418,7 @@ func init() {
 				}
 			}},
 		}, StatsAction(), DreamAction(), mdb.ImportantHashAction(
-			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icon,repos,binary,template,restart", ctx.TOOLS, kit.Simple(STORE, SPIDE),
+			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icons,repos,binary,template,restart", ctx.TOOLS, kit.Simple(STORE, SPIDE),
 			html.BUTTON, kit.JoinWord(PORTAL, ADMIN, DESKTOP, WIKI_WORD, STATUS, VIMER, XTERM, COMPILE),
 		)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {

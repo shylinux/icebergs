@@ -202,6 +202,8 @@ func (m *Message) Table(cb Any) *Message {
 			cb(index, value)
 		case func(value Maps, index int):
 			cb(value, index)
+		case func(value Maps, index, total int):
+			cb(value, index, n)
 		case func(value Maps):
 			cb(value)
 		default:

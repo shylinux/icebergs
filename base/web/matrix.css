@@ -5,7 +5,8 @@ fieldset.web.matrix>div.output>table.content th i:hover { background-color:var(-
 fieldset.web.matrix>div.output>table.content td:hover { color:unset; }
 fieldset.web.matrix>div.output>table.content div.item { display:flex; align-items:center; cursor:default; }
 fieldset.web.matrix>div.output>table.content div.item:hover { background-color:unset; color:unset; }
-fieldset.web.matrix>div.output>table.content div.item img { height:var(--header-height); width:var(--header-height); margin-right:var(--input-margin); }
+fieldset.web.matrix>div.output>table.content div.item img { height:var(--header-height); width:var(--header-height); margin:var(--input-margin); }
+/* fieldset.web.matrix>div.output>table.content div.item img { height:64px; width:64px; margin-right:var(--input-margin); } */
 fieldset.web.matrix>div.output>table.content div.item div.title { text-align:left; }
 fieldset.web.matrix>div.output>table.content div.item div.title:hover { background-color:unset; }
 fieldset.web.matrix>div.output>table.content div.item div.title span:hover { background-color:var(--hover-bg-color); }
@@ -13,6 +14,8 @@ fieldset.web.matrix>div.output>table.content div.item div.status i { font-size:v
 fieldset.web.matrix>div.output>table.content div.item div.status div.item:hover { background-color:var(--hover-bg-color); }
 fieldset.web.matrix>div.output>table.content div.item div.action { overflow:hidden; }
 fieldset.web.matrix>div.output>table.content div.item div.action input.icons { display:none; }
+fieldset.web.matrix>div.output>table.content div.item.notice { background-color:var(--notice-bg-color); color:var(--notice-fg-color); }
+fieldset.web.matrix>div.output>table.content div.item.danger { background-color:var(--danger-bg-color); color:var(--danger-fg-color); }
 fieldset.web.matrix>div.output>table.content div.item.danger div.status { background-color:var(--danger-bg-color); color:var(--danger-fg-color); }
 fieldset.web.matrix>div.output>table.content div.item.danger div.status div.item { background-color:var(--danger-bg-color); color:var(--danger-fg-color); }
 fieldset.web.matrix>div.output>table.content div.item.danger div.status i { background-color:var(--danger-bg-color); color:var(--danger-fg-color); }

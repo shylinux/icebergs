@@ -10,7 +10,10 @@ Volcanos(chat.ONIMPORT, {
 		can.core.Item(list, function(name, value) { var i = 0; if (name == ice.CONTEXTS) { return }
 			var tr = can.page.Append(can, ui.tbody, [{type: html.TR, list: can.core.Item(domain, function(domain) { i++
 				var item = value[domain]||{}
-				return {type: html.TD, list: [{view: [[html.ITEM, can.core.Value(list, can.core.Keys(name, domain, nfs.VERSION)) != can.core.Value(list, can.core.Keys(name, ice.CONTEXTS, nfs.VERSION))? "danger": ""]], list: item.name? [
+				return {type: html.TD, list: [{view: [[html.ITEM,
+					!list[name][ice.CONTEXTS]? html.NOTICE: list[name][domain] && (can.core.Value(list, can.core.Keys(name, domain, nfs.VERSION)) != can.core.Value(list, can.core.Keys(name, ice.CONTEXTS, nfs.VERSION))
+					|| can.core.Value(list, can.core.Keys(name, domain, mdb.TIME)) < can.core.Value(list, can.core.Keys(name, ice.CONTEXTS, mdb.TIME)))
+					? html.DANGER: ""]], list: item.name? [
 					{img: can.misc.Resource(can, item.icons||nfs.USR_ICONS_VOLCANOS)},
 					{view: wiki.TITLE, list: [{text: item.name}, can.onappend.label(can, item, {version: icon.version, time: icon.compile, time: icon.compile}), can.onappend.buttons(can, item)]},
 				]: [
@@ -20,7 +23,8 @@ Volcanos(chat.ONIMPORT, {
 						}}, "", target)
 					}},
 				]}]}
-			}) }])._target; list[name][ice.CONTEXTS] || can.onappend.style(can, "danger", tr)
+			}) }])._target
+			// ; list[name][ice.CONTEXTS] || can.onappend.style(can, html.NOTICE, tr)
 		}), can.onmotion.delay(can, function() { can.Status(mdb.COUNT, can.core.Item(list).length+"x"+can.core.Item(domain).length) })
 	},
 }, [""])

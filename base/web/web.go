@@ -81,6 +81,7 @@ func init() {
 	ice.Index.Register(Index, &Frame{},
 		BROAD, SERVE, SPACE, ROUTE, DREAM, STORE,
 		SHARE, TOKEN, SPIDE, CACHE, ADMIN, STATS, COUNT,
+		MATRIX,
 	)
 }
 

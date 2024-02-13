@@ -22,14 +22,14 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _dream_list(m *ice.Message) *ice.Message {
+func _dream_list(m *ice.Message, simple bool) *ice.Message {
 	if ice.Info.NodeType == WORKER {
 		return m
 	}
 	list := m.CmdMap(SPACE, mdb.NAME)
 	mdb.HashSelect(m).Table(func(value ice.Maps) {
 		if space, ok := list[value[mdb.NAME]]; ok {
-			if m.IsCliUA() {
+			if m.IsCliUA() || simple {
 				m.Push(mdb.TYPE, space[mdb.TYPE]).Push(cli.STATUS, cli.START)
 				m.Push(nfs.MODULE, space[nfs.MODULE]).Push(nfs.VERSION, space[nfs.VERSION]).Push(mdb.TEXT, "")
 				m.PushButton(cli.STOP)
@@ -77,7 +77,7 @@ func _dream_list_icon(m *ice.Message) {
 		return value
 	})
 }
-func _dream_list_more(m *ice.Message) *ice.Message {
+func _dream_list_more(m *ice.Message, simple bool) *ice.Message {
 	if m.IsCliUA() {
 		return m
 	}
@@ -90,15 +90,24 @@ func _dream_list_more(m *ice.Message) *ice.Message {
 		case SERVER:
 			value[mdb.ICONS] = nfs.USR_ICONS_ICEBERGS
 			value[mdb.TEXT] = kit.JoinLine(value[nfs.MODULE], value[mdb.TEXT])
-			msg := gdb.Event(m.Spawn(value), DREAM_TABLES)
-			defer m.PushButton(strings.Join(msg.Appendv(ctx.ACTION), ""))
+
+			if simple {
+				defer m.PushButton("")
+			} else {
+				msg := gdb.Event(m.Spawn(value), DREAM_TABLES)
+				defer m.PushButton(strings.Join(msg.Appendv(ctx.ACTION), ""))
+			}
 		case MASTER:
 			if spide, ok := list[value[mdb.NAME]]; ok {
 				value[mdb.ICONS] = kit.Select(value[mdb.ICONS], spide[mdb.ICONS])
 			}
 			value[mdb.TEXT] = kit.JoinLine(value[nfs.MODULE], value[mdb.TEXT])
-			msg := gdb.Event(m.Spawn(value), DREAM_TABLES)
-			defer m.PushButton(strings.Join(msg.Appendv(ctx.ACTION), ""))
+			if simple {
+				defer m.PushButton("")
+			} else {
+				msg := gdb.Event(m.Spawn(value), DREAM_TABLES)
+				defer m.PushButton(strings.Join(msg.Appendv(ctx.ACTION), ""))
+			}
 		case aaa.LOGIN:
 			value[mdb.ICONS] = kit.Select(value[mdb.ICONS], agentIcons[value[AGENT]])
 			value[mdb.TEXT] = kit.JoinWord(value[AGENT], value[cli.SYSTEM], value[aaa.IP])
@@ -235,7 +244,7 @@ func init() {
 				case mdb.CREATE:
 					switch arg[0] {
 					case mdb.NAME, nfs.TEMPLATE:
-						_dream_list(m).Cut("name,status,time")
+						_dream_list(m, true).Cut("name,status,time")
 						return
 					case nfs.BINARY:
 						m.Cmdy(nfs.DIR, ice.BIN, "path,size,time", kit.Dict(nfs.DIR_TYPE, nfs.TYPE_BIN))
@@ -422,9 +431,10 @@ func init() {
 			html.BUTTON, kit.JoinWord(PORTAL, ADMIN, DESKTOP, WIKI_WORD, STATUS, VIMER, XTERM, COMPILE),
 		)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
-				_dream_list(m)
+				simple := m.Option("dream.simple") == ice.TRUE
+				_dream_list(m, simple)
 				_dream_list_icon(m)
-				_dream_list_more(m)
+				_dream_list_more(m, simple)
 				stat := map[string]int{}
 				m.Table(func(value ice.Maps) { stat[value[mdb.TYPE]]++; stat[value[mdb.STATUS]]++ })
 				kit.If(stat[cli.START] == stat[WORKER], func() { delete(stat, cli.START) })

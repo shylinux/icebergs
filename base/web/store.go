@@ -18,7 +18,7 @@ const STORE = "store"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		STORE: {Name: "store refresh", Help: "系统商店", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
+		STORE: {Name: "store refresh", Help: "空间商店", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(SPIDE, mdb.INPUTS, arg) }},
 			mdb.CREATE: {Name: "create name* origin* icons", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(SPIDE, mdb.CREATE, m.OptionSimple("name,origin,icons"), mdb.TYPE, nfs.REPOS)

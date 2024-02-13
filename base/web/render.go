@@ -150,6 +150,7 @@ func RenderVersion(m *ice.Message) string {
 
 const (
 	CHAT    = "chat"
+	WORD    = "word"
 	GRANT   = "grant"
 	VIMER   = "vimer"
 	XTERM   = "xterm"

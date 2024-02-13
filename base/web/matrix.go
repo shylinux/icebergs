@@ -1,6 +1,8 @@
 package web
 
 import (
+	"strings"
+
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
@@ -11,10 +13,11 @@ import (
 
 func _matrix_list(m *ice.Message, domain string) (server []string) {
 	fields := kit.Split(mdb.Config(m, mdb.FIELD))
-	button := []ice.Any{PORTAL, DESKTOP, ADMIN, VIMER, XTERM, OPEN, kit.Select(UPGRADE, COMPILE, domain == "")}
+	button := []ice.Any{PORTAL, ADMIN, DESKTOP, kit.Select(UPGRADE, COMPILE, domain == ""), WORD, STATUS, VIMER, XTERM, cli.RUNTIME, OPEN}
 	value := kit.Dict(cli.ParseMake(m.Cmdx(Space(m, domain), cli.RUNTIME)))
 	value[mdb.TYPE], value[mdb.ICONS] = SERVER, kit.Select(nfs.USR_ICONS_ICEBERGS, ice.SRC_MAIN_ICO, domain == "")
 	value[DOMAIN] = kit.Select(ice.CONTEXTS, domain)
+	// value[mdb.TIME] = value[cli.COMPILE_TIME]
 	m.PushRecord(value, fields...).PushButton(button...)
 	m.Cmd(Space(m, domain), DREAM, ice.Maps{"space.timeout": "3s", "dream.simple": ice.TRUE}).Table(func(value ice.Maps) {
 		switch value[mdb.TYPE] {
@@ -53,7 +56,9 @@ const MATRIX = "matrix"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		MATRIX: {Name: "matrix list", Help: "空间矩阵", Actions: ice.MergeActions(ice.Actions{
+		MATRIX: {Name: "matrix list", Help: "空间矩阵", Meta: kit.Dict(ice.CTX_TRANS, kit.Dict(
+			WORD, "文档", STATUS, "源码", VIMER, "编程", cli.RUNTIME, "环境",
+		)), Actions: ice.MergeActions(ice.Actions{
 			INSTALL: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(Space(m, m.Option(DOMAIN)), DREAM, ctx.ACTION, mdb.CREATE, m.OptionSimple(mdb.NAME, mdb.ICONS, nfs.REPOS), nfs.BINARY, UserHost(m)+S(m.Option(mdb.NAME)))
 				m.Cmd(Space(m, m.Option(DOMAIN)), DREAM, ctx.ACTION, cli.START, m.OptionSimple(mdb.NAME))
@@ -70,6 +75,16 @@ func init() {
 				})
 				return nil
 			}).Sort("name,domain", "str_r", "str_r").Display("")
+			m.RewriteAppend(func(value, key string, index int) string {
+				if key == mdb.ICONS && m.Appendv(DOMAIN)[index] != ice.CONTEXTS {
+					if strings.HasPrefix(value, "/require/") {
+						value = kit.MergeURL(strings.Split(value, "?")[0], ice.POD, kit.Keys(
+							m.Appendv(DOMAIN)[index], m.Appendv(mdb.NAME)[index],
+						))
+					}
+				}
+				return value
+			})
 		}},
 	})
 }

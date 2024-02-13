@@ -282,7 +282,8 @@ func ParseMake(str string) []string {
 	res := kit.UnMarshal(str)
 	data := kit.Value(res, MAKE)
 	return kit.Simple(
-		mdb.TIME, kit.Format(kit.Value(res, kit.Keys(BOOT, mdb.TIME))),
+		// mdb.TIME, kit.Format(kit.Value(res, kit.Keys(BOOT, mdb.TIME))),
+		mdb.TIME, kit.Format(kit.Value(data, mdb.TIME)),
 		ice.SPACE, kit.Format(kit.Value(res, kit.Keys(NODE, mdb.NAME))),
 		nfs.MODULE, kit.Format(kit.Value(data, nfs.MODULE)),
 		nfs.VERSION, kit.Join(kit.TrimArg(kit.Simple(

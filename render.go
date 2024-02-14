@@ -31,6 +31,9 @@ func Render(m *Message, cmd string, args ...Any) string {
 			case []string:
 				kit.For(k, func(k string) { list = append(list, Render(m, RENDER_BUTTON, k)) })
 			case string:
+				if k == "" {
+					break
+				}
 				if strings.HasPrefix(k, "<input") {
 					list = append(list, k)
 					break

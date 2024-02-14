@@ -18,7 +18,7 @@ const STORE = "store"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		STORE: {Name: "store refresh", Help: "空间商店", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
+		STORE: {Name: "store refresh", Help: "商店", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(SPIDE, mdb.INPUTS, arg) }},
 			mdb.CREATE: {Name: "create name* origin* icons", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(SPIDE, mdb.CREATE, m.OptionSimple("name,origin,icons"), mdb.TYPE, nfs.REPOS)
@@ -73,11 +73,11 @@ func init() {
 					m.Push("", value, kit.Split("time,name,icons,repos,binary,module,version"))
 					m.Push(mdb.TEXT, value[nfs.REPOS]).Push(ORIGIN, origin)
 					if _, ok := list[value[mdb.NAME]]; ok || arg[0] == ice.OPS {
-						m.PushButton(OPEN, PORTAL)
+						m.PushButton(PORTAL, OPEN)
 					} else if ice.Info.NodeType == WORKER || !aaa.IsTechOrRoot(m) {
 						m.PushButton(PORTAL)
 					} else {
-						m.PushButton(INSTALL, PORTAL)
+						m.PushButton(PORTAL, INSTALL)
 					}
 				})
 				m.StatusTimeCount(ORIGIN, origin)

@@ -220,7 +220,7 @@ func _space_send(m *ice.Message, name string, arg ...string) (h string) {
 			m.WarnNotFound(kit.IndexOf([]string{ice.OPS, ice.DEV}, target[0]) == -1, SPACE, name)
 		})
 	} else if withecho {
-		m.Warn(!wait(), "time out")
+		m.Warn(!wait(), kit.Format("space %v %v time out", name, arg))
 	}
 	return
 }

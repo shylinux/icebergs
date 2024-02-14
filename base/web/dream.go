@@ -161,8 +161,7 @@ func _dream_binary(m *ice.Message, p string) {
 		GoToast(m, DOWNLOAD, func(toast func(string, int, int)) (list []string) {
 			begin := time.Now()
 			SpideSave(m, bin, kit.MergeURL(p, cli.GOOS, runtime.GOOS, cli.GOARCH, runtime.GOARCH), func(count, total, value int) {
-				cost := time.Now().Sub(begin)
-				toast(kit.FormatShow(nfs.FROM, begin.Format(ice.MOD_TIME_ONLY), cli.COST, kit.FmtDuration(cost), cli.REST, kit.FmtDuration(cost*time.Duration(101)/time.Duration(value+1)-cost)), count, total)
+				toast(m.Option(mdb.NAME)+" "+kit.FormatShow(cli.COST, kit.FmtDuration(time.Now().Sub(begin))), count, total)
 			})
 			return nil
 		})

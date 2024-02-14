@@ -130,6 +130,7 @@ const (
 	TIME_30ms  = "30ms"
 	TIME_30s   = "30s"
 	TIME_3s    = "3s"
+	TIME_1s    = "1s"
 
 	CMD_DIR = "cmd_dir"
 	CMD_ENV = "cmd_env"

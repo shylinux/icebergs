@@ -151,7 +151,7 @@ func GoToast(m *ice.Message, title string, cb func(toast func(name string, count
 		toast(kit.JoinWord(list...), len(list), _total)
 	} else {
 		icon = Icons[ice.SUCCESS]
-		m.Option(ice.TOAST_DURATION, cli.TIME_3s)
+		m.Option(ice.TOAST_DURATION, cli.TIME_1s)
 		toast(ice.SUCCESS, _total, _total)
 	}
 	m.Sleep(m.Option(ice.TOAST_DURATION))

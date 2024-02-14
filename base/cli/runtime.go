@@ -62,8 +62,8 @@ func _runtime_init(m *ice.Message) {
 	nfs.Exists(m, "/proc/meminfo", func(p string) {
 		kit.For(kit.SplitLine(m.Cmdx(nfs.CAT, p)), func(p string) {
 			switch ls := kit.Split(p, ": "); kit.Select("", ls, 0) {
-			case "MemTotal", "MemFree", "MemAvailable", "Buffers", "Cached":
-				m.Conf(RUNTIME, kit.Keys(BOOT, ls[0]), kit.FmtSize(kit.Int(ls[1])*1024))
+			case "MemTotal", "MemFree", "MemAvailable":
+				m.Conf(RUNTIME, kit.Keys(HOST, ls[0]), kit.FmtSize(kit.Int(ls[1])*1024))
 			}
 		})
 	})
@@ -180,7 +180,7 @@ const RUNTIME = "runtime"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		RUNTIME: {Name: "runtime info=bootinfo,ifconfig,diskinfo,hostinfo,userinfo,bootinfo,role,api,cli,cmd,mod,env,path,chain auto upgrade reboot stash logs conf lock", Icon: "Infomation.png", Help: "运行环境", Actions: ice.MergeActions(ice.Actions{
+		RUNTIME: {Name: "runtime info=bootinfo,ifconfig,diskinfo,hostinfo,userinfo,bootinfo,role,api,cli,cmd,mod,env,path,chain auto upgrade reboot stash lock", Icon: "Infomation.png", Help: "运行环境", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { _runtime_init(m); aaa.White(m, ice.LICENSE) }},
 			IFCONFIG:     {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(tcp.HOST) }},
 			DISKINFO:     {Hand: func(m *ice.Message, arg ...string) { _runtime_diskinfo(m) }},
@@ -250,12 +250,6 @@ func init() {
 				m.Cmd(SYSTEM, "git", "checkout", ".")
 				m.Go(func() { m.Sleep30ms(ice.QUIT, 1) })
 			}},
-			"logs": {Help: "日志", Hand: func(m *ice.Message, arg ...string) {
-				OpenCmds(m, kit.Format("cd %s", kit.Path("")), "tail -f var/log/bench.log")
-			}},
-			"conf": {Help: "配置", Hand: func(m *ice.Message, arg ...string) {
-				OpenCmds(m, kit.Format("cd %s", kit.Path("")), "vim etc/init.shy")
-			}},
 			"lock": {Help: "锁屏", Icon: "bi bi-file-lock", Hand: func(m *ice.Message, arg ...string) {
 				switch runtime.GOOS {
 				case DARWIN:
@@ -282,7 +276,6 @@ func ParseMake(str string) []string {
 	res := kit.UnMarshal(str)
 	data := kit.Value(res, MAKE)
 	return kit.Simple(
-		// mdb.TIME, kit.Format(kit.Value(res, kit.Keys(BOOT, mdb.TIME))),
 		mdb.TIME, kit.Format(kit.Value(data, mdb.TIME)),
 		ice.SPACE, kit.Format(kit.Value(res, kit.Keys(NODE, mdb.NAME))),
 		nfs.MODULE, kit.Format(kit.Value(data, nfs.MODULE)),

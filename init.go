@@ -96,15 +96,8 @@ func init() {
 
 func Run(arg ...string) string {
 	kit.If(len(arg) == 0 && len(os.Args) > 1, func() { arg = os.Args[1:] })
-	if len(arg) == 0 {
-		if runtime.GOOS == WINDOWS {
-			arg = append(arg, SERVE, START)
-		} else {
-			arg = append(arg, FOREVER, START)
-		}
-	} else if arg[0] == FOREVER && arg[1] == START && runtime.GOOS == WINDOWS {
-		arg[0] = SERVE
-	}
+	kit.If(len(arg) == 0, func() { arg = append(arg, FOREVER, START) })
+	kit.If(runtime.GOOS == WINDOWS && kit.HasPrefixList(arg, FOREVER, START), func() { arg[0] = SERVE })
 	Pulse.value(MSG_DETAIL, arg...)
 	kit.For(kit.Sort(os.Environ()), func(env string) {
 		if ls := strings.SplitN(env, EQ, 2); strings.ToLower(ls[0]) == ls[0] && ls[0] != "_" {

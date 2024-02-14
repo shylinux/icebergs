@@ -86,7 +86,7 @@ func init() {
 			}
 			GoToast(m, "", func(toast func(name string, count, total int)) []string {
 				fields := kit.Split(mdb.Config(m, mdb.FIELD))
-				m.Options("space.timeout", "3s", "dream.simple", ice.TRUE)
+				m.Options("space.timeout", cli.TIME_300ms, "dream.simple", ice.TRUE)
 				kit.For(_matrix_list(m, "", fields...), func(domain string, index int, total int) {
 					toast(domain, index, total)
 					_matrix_list(m, domain, fields...)
@@ -98,7 +98,7 @@ func init() {
 						value = kit.MergeURL(strings.Split(value, "?")[0], ice.POD, kit.Keys(m.Appendv(DOMAIN)[index], m.Appendv(mdb.NAME)[index]))
 					}
 					return value
-				}).Sort("status,name,domain", []string{cli.START, cli.STOP, ""}, "str_r", "str_r")
+				}).Sort("type,status,name,domain", []string{SERVER, WORKER, ""}, []string{cli.START, cli.STOP, ""}, "str_r", "str_r")
 				return nil
 			}).Action(html.FILTER, mdb.CREATE).Display("")
 		}},

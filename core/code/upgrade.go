@@ -61,7 +61,8 @@ func init() {
 				m.Cmdy(nfs.DIR, dir, "time,size,path,hash").Push(web.ORIGIN, kit.MergeURL2(web.SpideOrigin(m, ice.DEV_IP), uri))
 			})
 			if web.ToastSuccess(m); m.Option(ice.EXIT) == ice.TRUE {
-				web.Toast(m, cli.RESTART).Cmd("", cli.RESTART)
+				web.Toast(m, cli.RESTART)
+				m.GoSleep("30ms", func() { m.Cmd("", cli.RESTART) })
 			}
 		}},
 	}})

@@ -157,11 +157,15 @@ func _dream_start(m *ice.Message, name string) {
 func _dream_binary(m *ice.Message, p string) {
 	if bin := path.Join(m.Option(cli.CMD_DIR), ice.BIN_ICE_BIN); nfs.Exists(m, bin) {
 		return
-	} else if kit.IsUrl(p) {
+	} else if kit.IsUrl(p) || strings.HasPrefix(p, S()) {
 		GoToast(m, DOWNLOAD, func(toast func(string, int, int)) (list []string) {
 			begin := time.Now()
 			SpideSave(m, bin, kit.MergeURL(p, cli.GOOS, runtime.GOOS, cli.GOARCH, runtime.GOARCH), func(count, total, value int) {
-				toast(m.Option(mdb.NAME)+"\n"+kit.FormatShow(cli.COST, kit.FmtDuration(time.Now().Sub(begin))), count, total)
+				if strings.HasPrefix(p, S()) {
+					toast(m.Option(mdb.NAME), count, total)
+				} else {
+					toast(m.Option(mdb.NAME)+"\n"+kit.FormatShow(cli.COST, kit.FmtDuration(time.Now().Sub(begin))), count, total)
+				}
 			})
 			return nil
 		})

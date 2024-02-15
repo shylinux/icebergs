@@ -81,9 +81,8 @@ func PushNotice(m *ice.Message, arg ...ice.Any) {
 		return
 	}
 	opts := ice.Map{ice.MSG_OPTION: []string{}, ice.MSG_OPTS: []string{}}
-	kit.For([]string{ice.MSG_TITLE, ctx.DISPLAY, ctx.STYLE, cli.DELAY, ice.MSG_STATUS, ice.LOG_DEBUG, ice.LOG_TRACEID}, func(key string) {
-		opts[ice.MSG_OPTION] = kit.Simple(opts[ice.MSG_OPTION], key)
-		opts[key] = m.Option(key)
+	kit.For([]string{ctx.DISPLAY, ctx.STYLE, cli.DELAY, ice.MSG_TITLE, ice.MSG_STATUS, ice.LOG_DEBUG, ice.LOG_TRACEID}, func(key string) {
+		opts[ice.MSG_OPTION], opts[key] = kit.Simple(opts[ice.MSG_OPTION], key), m.Option(key)
 	})
 	m.Cmd(SPACE, m.Option(ice.MSG_DAEMON), arg, opts)
 }
@@ -102,7 +101,7 @@ func PushStream(m *ice.Message) *ice.Message {
 func init() { ice.Info.PushStream = PushStream }
 func init() { ice.Info.PushNotice = PushNotice }
 
-func Toast(m *ice.Message, text string, arg ...ice.Any) *ice.Message { // [title [duration [progress]]]
+func Toast(m *ice.Message, text string, arg ...ice.Any) *ice.Message { // [title [duration [progress [hash]]]]
 	if len(arg) > 1 {
 		switch val := arg[1].(type) {
 		case string:
@@ -112,7 +111,7 @@ func Toast(m *ice.Message, text string, arg ...ice.Any) *ice.Message { // [title
 		}
 	}
 	kit.If(len(arg) == 0, func() { arg = append(arg, m.PrefixKey()) })
-	kit.If(len(arg) > 0, func() { arg[0] = kit.Select(m.PrefixKey(), arg[0]) })
+	kit.If(len(arg) > 0 && arg[0] == "", func() { arg[0] = kit.Keys(m.Option(ice.MSG_USERPOD), ctx.ShortCmd(m.PrefixKey())) })
 	PushNoticeToast(m, text, arg)
 	return m
 }
@@ -133,16 +132,17 @@ func ToastFailure(m *ice.Message, arg ...ice.Any) {
 	Toast(m, toastContent(m, ice.FAILURE, arg...), "", m.OptionDefault(ice.TOAST_DURATION, cli.TIME_3s)).Sleep(m.OptionDefault(ice.TOAST_DURATION, cli.TIME_3s))
 }
 func ToastProcess(m *ice.Message, arg ...ice.Any) func(...ice.Any) {
-	Toast(m, toastContent(m, ice.PROCESS, arg...), "", cli.TIME_30s)
-	return func(arg ...ice.Any) { Toast(m, toastContent(m, ice.SUCCESS, arg...), "", "1s") }
+	h := kit.HashsUniq()
+	Toast(m, toastContent(m, ice.PROCESS, arg...), "", "-1", "", h)
+	return func(arg ...ice.Any) { Toast(m, toastContent(m, ice.SUCCESS, arg...), "", cli.TIME_1s, "", h) }
 }
 func GoToast(m *ice.Message, title string, cb func(toast func(name string, count, total int)) []string) *ice.Message {
-	_total := 0
-	icon := Icons[ice.PROCESS]
+	h := kit.HashsUniq()
+	icon, _total := Icons[ice.PROCESS], 0
 	toast := func(name string, count, total int) {
 		kit.If(total == 0, func() { total = 1 })
-		Toast(m, kit.Format("%s %s %s", icon, kit.JoinWord(kit.Select(kit.Select("", m.ActionKey(), m.ActionKey() != ice.LIST), title, m.Option(ice.MSG_TITLE)), name), strings.ReplaceAll(kit.FmtSize(count, total), "B", "")),
-			"", m.OptionDefault(ice.TOAST_DURATION, cli.TIME_30s), count*100/total)
+		Toast(m, kit.Format("%s %s %s", icon, kit.JoinWord(m.ActionKey(), name), strings.ReplaceAll(kit.FmtSize(count, total), "B", "")),
+			kit.Select(title, m.Option(ice.MSG_TITLE)), m.OptionDefault(ice.TOAST_DURATION, "-1"), count*100/total, h)
 		_total = total
 	}
 	if list := cb(toast); len(list) > 0 {

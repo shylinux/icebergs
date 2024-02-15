@@ -458,7 +458,7 @@ func init() {
 				}
 			}},
 			REMOTE: {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
-				repos := _repos_open(m, kit.Select(path.Base(kit.Path("")), kit.Select(m.Option(REPOS), arg, 0)))
+				repos := _repos_open(m, kit.Select(path.Base(kit.Path("")), arg, 0))
 				if _remote, err := repos.Remote(ORIGIN); err == nil {
 					m.Push(REMOTE, kit.Select("", _remote.Config().URLs, 0))
 				}

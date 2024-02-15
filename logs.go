@@ -271,6 +271,18 @@ func (m *Message) FormatStack(s, n int) string {
 		switch ls := kit.Split(name, PT, PT); kit.Select("", ls, 0) {
 		case "reflect", "runtime", "http":
 		default:
+			if kit.HasPrefix(name,
+				"icebergs.(*Context)._action",
+				"icebergs.(*Context)._command",
+				"icebergs.(*Message)._command",
+				"icebergs.(*Message).Cmd",
+				"icebergs.(*Message).CmdHand",
+				"icebergs.(*Message).Search",
+				"icebergs.(*Message).TryCatch",
+				"icebergs.(*Message).Go",
+			) {
+				break
+			}
 			list = append(list, kit.Format("%s:%d\t%s", file, frame.Line, name))
 		}
 		if len(list) >= n || !more {

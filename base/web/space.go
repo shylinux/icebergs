@@ -325,6 +325,7 @@ func init() {
 				})
 				m.Sort("", kit.Simple(aaa.LOGIN, WEIXIN, PORTAL, WORKER, SERVER, MASTER))
 			} else {
+				m.OptionDefault(ice.MSG_USERPOD, arg[0])
 				_space_send(m, arg[0], kit.Simple(kit.Split(arg[1]), arg[2:])...)
 			}
 		}},

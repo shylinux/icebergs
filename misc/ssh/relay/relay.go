@@ -109,7 +109,6 @@ func (s relay) Inputs(m *ice.Message, arg ...string) {
 	}
 }
 func (s relay) Stats(m *ice.Message) {
-	m.Option(ice.MSG_TITLE, kit.Keys(m.CommandKey(), m.ActionKey()))
 	cmds := []string{"go", `go version`, "git", `git version`,
 		PACKAGE, `if yum -h &>/dev/null; then echo yum; elif apk version &>/dev/null; then echo apk; elif opkg -v &>/dev/null; then echo opkg; elif apt -h &>/dev/null; then echo apt; fi`,
 		SHELL, `echo $SHELL`, KERNEL, `uname -s`, ARCH, `uname -m`,
@@ -319,7 +318,7 @@ func (s relay) Install(m *ice.Message, arg ...string) {
 	s.Modify(m, kit.Simple(m.OptionSimple(MACHINE, web.DREAM))...)
 }
 func (s relay) Upgrade(m *ice.Message, arg ...string) {
-	m.Option(ice.MSG_TITLE, kit.Keys(m.CommandKey(), m.ActionKey()))
+	m.Option(ice.MSG_TITLE, kit.Keys(m.Option(ice.MSG_USERPOD), m.CommandKey(), m.ActionKey()))
 	if len(arg) == 0 && (m.Option(MACHINE) == "" || strings.Contains(m.Option(MACHINE), ",")) {
 		s.foreach(m, func(msg *ice.Message, cmd []string) {
 			if msg.Option("go") == "" {
@@ -334,7 +333,7 @@ func (s relay) Upgrade(m *ice.Message, arg ...string) {
 	}
 }
 func (s relay) Version(m *ice.Message, arg ...string) {
-	m.Option(ice.MSG_TITLE, kit.Keys(m.CommandKey(), m.ActionKey()))
+	m.Option(ice.MSG_TITLE, kit.Keys(m.Option(ice.MSG_USERPOD), m.CommandKey(), m.ActionKey()))
 	s.foreach(m, func(msg *ice.Message, cmd []string) {
 		if msg.Option("go") == "" {
 			return

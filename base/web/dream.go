@@ -323,7 +323,7 @@ func init() {
 				kit.If(m.Option(mdb.NAME) == "", func() { m.Sleep3s().Cmdy(ROUTE, cli.BUILD).ProcessInner() })
 			}},
 			PUBLISH: {Name: "publish name", Help: "发布", Icon: "bi bi-send-check", Hand: func(m *ice.Message, arg ...string) {
-				m.Option(ice.MSG_TITLE, kit.Keys(m.CommandKey(), m.ActionKey()))
+				m.Option(ice.MSG_TITLE, kit.Keys(m.Option(ice.MSG_USERPOD), m.CommandKey(), m.ActionKey()))
 				defer ToastProcess(m)()
 				list := []string{cli.LINUX, cli.DARWIN, cli.WINDOWS}
 				msg := m.Spawn(ice.Maps{ice.MSG_DAEMON: ""})

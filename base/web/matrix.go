@@ -73,6 +73,9 @@ func init() {
 			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) { _matrix_dream(m, nfs.TRASH); _matrix_dream(m, "") }},
 			cli.START:  {Hand: func(m *ice.Message, arg ...string) { _matrix_dream(m, "") }},
 			cli.STOP:   {Hand: func(m *ice.Message, arg ...string) { _matrix_dream(m, "") }},
+			COMPILE: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(Space(m, kit.Keys(m.Option(DOMAIN), m.Option(mdb.NAME))), COMPILE, cli.AMD64, cli.LINUX, ice.SRC_MAIN_GO).ProcessHold()
+			}},
 			UPGRADE: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(Space(m, kit.Keys(m.Option(DOMAIN), m.Option(mdb.NAME))), UPGRADE).Sleep3s()
 			}},

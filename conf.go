@@ -210,6 +210,7 @@ const ( // MSG
 	MSG_USERUA   = "user.ua"
 	MSG_USERWEB  = "user.web"
 	MSG_USERPOD  = "user.pod"
+	MSG_USERPOD0 = "user.pod0"
 	MSG_USERHOST = "user.host"
 	MSG_USERADDR = "user.addr"
 	MSG_USERDATA = "user.data"

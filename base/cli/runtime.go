@@ -180,7 +180,7 @@ const RUNTIME = "runtime"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		RUNTIME: {Name: "runtime info=bootinfo,ifconfig,diskinfo,hostinfo,userinfo,bootinfo,role,api,cli,cmd,mod,env,path,chain auto upgrade reboot stash lock", Icon: "Infomation.png", Help: "运行环境", Actions: ice.MergeActions(ice.Actions{
+		RUNTIME: {Name: "runtime info=bootinfo,ifconfig,diskinfo,hostinfo,userinfo,bootinfo,role,api,cli,cmd,mod,env,path,chain auto upgrade reboot lock", Icon: "Infomation.png", Help: "运行环境", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { _runtime_init(m); aaa.White(m, ice.LICENSE) }},
 			IFCONFIG:     {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(tcp.HOST) }},
 			DISKINFO:     {Hand: func(m *ice.Message, arg ...string) { _runtime_diskinfo(m) }},
@@ -244,11 +244,6 @@ func init() {
 			}},
 			REBOOT: {Help: "重启", Icon: "bi bi-bootstrap-reboot", Hand: func(m *ice.Message, arg ...string) {
 				m.Go(func() { m.Sleep30ms(ice.EXIT, 1) })
-			}},
-			STASH: {Help: "清空", Icon: "bi bi-trash", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(SYSTEM, "git", STASH)
-				m.Cmd(SYSTEM, "git", "checkout", ".")
-				m.Go(func() { m.Sleep30ms(ice.QUIT, 1) })
 			}},
 			"lock": {Help: "锁屏", Icon: "bi bi-file-lock", Hand: func(m *ice.Message, arg ...string) {
 				switch runtime.GOOS {

@@ -23,6 +23,8 @@ const (
 	DIFF      = "diff"
 	INSTEADOF = "insteadof"
 	OAUTH     = "oauth"
+	STASH     = "stash"
+	CHECKOUT  = "checkout"
 )
 
 const STATUS = "status"
@@ -81,6 +83,11 @@ func init() {
 				m.Cmd(CONFIGS, mdb.CREATE, "credential.helper", "store")
 				m.ProcessClose()
 			}},
+			STASH: {Help: "清空", Icon: "bi bi-trash", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(cli.SYSTEM, GIT, STASH)
+				m.Cmd(cli.SYSTEM, GIT, CHECKOUT, ".")
+				m.Go(func() { m.Sleep30ms(ice.QUIT, 1) })
+			}},
 		}, web.DevTokenAction(web.ORIGIN, web.ORIGIN), ctx.ConfAction(ctx.TOOLS, "xterm,compile"), Prefix(REPOS)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 && arg[0] == ctx.ACTION {
 				m.Cmdy(REPOS, arg)
@@ -90,7 +97,7 @@ func init() {
 				m.EchoInfoButton(nfs.Template(m, "init.html"), INIT)
 			} else if len(arg) == 0 {
 				kit.If(config != nil, func() { m.Option(aaa.EMAIL, kit.Select(mdb.Config(m, aaa.EMAIL), config.User.Email)) })
-				m.Cmdy(REPOS, STATUS).Action(PULL, PUSH, INSTEADOF, mdb.DEV_REQUEST, ctx.CONFIG)
+				m.Cmdy(REPOS, STATUS).Action(PULL, PUSH, INSTEADOF, mdb.DEV_REQUEST, ctx.CONFIG, STASH)
 				kit.If(!m.IsCliUA(), func() { m.Cmdy(code.PUBLISH, ice.CONTEXTS, ice.DEV) })
 				ctx.Toolkit(m)
 			} else {

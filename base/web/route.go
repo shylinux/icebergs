@@ -85,6 +85,7 @@ func init() {
 			}},
 			cli.BUILD: {Name: "build space", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
 				_route_toast(m, m.Option(SPACE), cli.RUNTIME, UPGRADE)
+				m.Option(ice.MSG_TITLE, kit.Keys(m.Option(ice.MSG_USERPOD0), m.Option(ice.MSG_USERPOD), m.CommandKey(), m.ActionKey()))
 				func() { defer ToastProcess(m)(); m.Sleep3s() }()
 				m.SetAppend().Cmdy("", "travel")
 			}},

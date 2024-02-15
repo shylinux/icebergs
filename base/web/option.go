@@ -111,7 +111,9 @@ func Toast(m *ice.Message, text string, arg ...ice.Any) *ice.Message { // [title
 		}
 	}
 	kit.If(len(arg) == 0, func() { arg = append(arg, m.PrefixKey()) })
-	kit.If(len(arg) > 0 && arg[0] == "", func() { arg[0] = kit.Keys(m.Option(ice.MSG_USERPOD), ctx.ShortCmd(m.PrefixKey())) })
+	kit.If(len(arg) > 0 && arg[0] == "", func() {
+		arg[0] = kit.Keys(m.Option(ice.MSG_USERPOD0), m.Option(ice.MSG_USERPOD), ctx.ShortCmd(m.PrefixKey()))
+	})
 	PushNoticeToast(m, text, arg)
 	return m
 }

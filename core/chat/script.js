@@ -12,12 +12,12 @@ Volcanos(chat.ONACTION, {
 	stop: function(event, can, msg) { can.misc.sessionStorage(can, SCRIPT_ZONE, ""), can.Update(event) },
 	play: function(event, can) { var begin = new Date().getTime(); can.core.Next(can._msg.Table(), function(value, next, index, list, data) {
 		var ls = can.core.Split(value.style||""); data = data||{}, data.list = data.list||[]; var fork
-		if (ls && ls.length > 0 && ls[0] == "fork") { data.done = parseInt(ls[1])+1, fork = {skip: parseInt(ls[1])} }
-		if (!fork && data.skip > 0) { return next({skip: data.skip-1}) }
+		if (data.skip > 0) { return next({skip: data.skip-1}) }
 		if (data.done === 0) { return } if (data.done > 0) { data.done -= 1 } data.list.push(value)
-		can.Status(cli.STEP, index), can.Status(cli.COST, can.base.Duration(new Date().getTime()-begin))
+		if (ls && ls.length > 0 && ls[0] == "fork") { data.done = parseInt(ls[1]), fork = {skip: parseInt(ls[1])} }
 		can.user.toastProcess(can, `${can.core.Keys(value.space, value.index)} ${value.play} ${index}/${can._msg.Length()}`, "", index*100/list.length)
 		var tr = can.page.Select(can, can._output, html.TR)[1]; can.onmotion.select(can, tr.parentNode, html.TR, index)
+		can.Status(cli.STEP, index), can.Status(cli.COST, can.base.Duration(new Date().getTime()-begin))
 		value.status == mdb.DISABLE? next(data): can.onaction.preview({}, can, can.request({}, value), next, data)
 		if (fork) { next(fork) }
 	}, function(list) { can.Status(cli.STEP, list.length), can.Status(cli.COST, can.base.Duration(new Date().getTime()-begin)), can.user.toastSuccess(can) }) },

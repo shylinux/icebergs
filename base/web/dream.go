@@ -323,14 +323,15 @@ func init() {
 				kit.If(m.Option(mdb.NAME) == "", func() { m.Sleep3s().Cmdy(ROUTE, cli.BUILD).ProcessInner() })
 			}},
 			PUBLISH: {Name: "publish name", Help: "发布", Icon: "bi bi-send-check", Hand: func(m *ice.Message, arg ...string) {
-				m.Option(ice.MSG_TITLE, kit.Keys(m.Option(ice.MSG_USERPOD0), m.Option(ice.MSG_USERPOD), m.CommandKey(), m.ActionKey()))
-				defer ToastProcess(m)()
 				list := []string{cli.LINUX, cli.DARWIN, cli.WINDOWS}
 				msg := m.Spawn(ice.Maps{ice.MSG_DAEMON: ""})
-				m.Cmd(AUTOGEN, BINPACK)
-				kit.For(list, func(goos string) {
-					PushNoticeRich(m, mdb.NAME, ice.Info.NodeName, msg.Cmd(COMPILE, goos, cli.AMD64).AppendSimple())
-				})
+				func() {
+					defer ToastProcess(m, PUBLISH, ice.Info.NodeName)(PUBLISH, ice.Info.NodeName)
+					m.Cmd(AUTOGEN, BINPACK)
+					kit.For(list, func(goos string) {
+						PushNoticeRich(m, mdb.NAME, ice.Info.NodeName, msg.Cmd(COMPILE, goos, cli.AMD64).AppendSimple())
+					})
+				}()
 				DreamEach(m, m.Option(mdb.NAME), "", func(name string) {
 					m.Cmd(SPACE, name, AUTOGEN, BINPACK)
 					kit.For(list, func(goos string) {

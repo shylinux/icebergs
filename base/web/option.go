@@ -122,7 +122,7 @@ var Icons = map[string]string{ice.PROCESS: "🕑", ice.FAILURE: "❌", ice.SUCCE
 
 func toastContent(m *ice.Message, state string, arg ...ice.Any) string {
 	if len(arg) == 0 {
-		return kit.JoinWord(kit.Simple(Icons[state], kit.Select("", m.ActionKey(), m.ActionKey() != ice.LIST), state)...)
+		return kit.JoinWord(kit.Simple(Icons[state], kit.Select(ice.LIST, m.ActionKey()), state)...)
 	} else {
 		return kit.JoinWord(kit.Simple(Icons[state], arg)...)
 	}
@@ -136,14 +136,14 @@ func ToastFailure(m *ice.Message, arg ...ice.Any) {
 func ToastProcess(m *ice.Message, arg ...ice.Any) func(...ice.Any) {
 	h := kit.HashsUniq()
 	Toast(m, toastContent(m, ice.PROCESS, arg...), "", "-1", "", h)
-	return func(arg ...ice.Any) { Toast(m, toastContent(m, ice.SUCCESS, arg...), "", cli.TIME_1s, "", h) }
+	return func(arg ...ice.Any) { Toast(m, toastContent(m, ice.SUCCESS, arg...), "", cli.TIME_3s, "", h) }
 }
 func GoToast(m *ice.Message, title string, cb func(toast func(name string, count, total int)) []string) *ice.Message {
 	h := kit.HashsUniq()
 	icon, _total := Icons[ice.PROCESS], 0
 	toast := func(name string, count, total int) {
 		kit.If(total == 0, func() { total = 1 })
-		Toast(m, kit.Format("%s %s %s", icon, kit.JoinWord(m.ActionKey(), name), strings.ReplaceAll(kit.FmtSize(count, total), "B", "")),
+		Toast(m, kit.Format("%s %s %s", icon, kit.JoinWord(kit.Select(ice.LIST, m.ActionKey()), name), strings.ReplaceAll(kit.FmtSize(count, total), "B", "")),
 			kit.Select(title, m.Option(ice.MSG_TITLE)), m.OptionDefault(ice.TOAST_DURATION, "-1"), count*100/total, h)
 		_total = total
 	}
@@ -153,7 +153,7 @@ func GoToast(m *ice.Message, title string, cb func(toast func(name string, count
 		toast(kit.JoinWord(list...), len(list), _total)
 	} else {
 		icon = Icons[ice.SUCCESS]
-		m.Option(ice.TOAST_DURATION, cli.TIME_1s)
+		m.Option(ice.TOAST_DURATION, cli.TIME_3s)
 		toast(ice.SUCCESS, _total, _total)
 	}
 	m.Sleep(m.Option(ice.TOAST_DURATION))

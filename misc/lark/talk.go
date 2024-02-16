@@ -34,7 +34,7 @@ func init() {
 				return
 			}
 			val := []string{}
-			m.Table(func(index int, value ice.Maps, head []string) {
+			m.Table(func(value ice.Maps, index int, head []string) {
 				kit.For(head, func(k string) { val = append(val, kit.Format("%s:\t%s", k, value[k])) })
 				val = append(val, lex.NL)
 			})

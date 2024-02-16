@@ -58,11 +58,11 @@ func init() {
 					m.PushAction(mdb.REMOVE).Action(html.FILTER, mdb.CREATE)
 				}
 			} else {
+				defer ToastProcess(m, ice.LIST, arg[0])(ice.LIST, arg[0])
 				if arg[0] == ice.OPS && ice.Info.NodeType == SERVER {
 					m.Cmdy(DREAM)
 					return
 				}
-				defer ToastProcess(m, m.Trans("querying, please wait", "查询中，请稍候"))(m.Trans("query succsess", "查询成功"))
 				origin := SpideOrigin(m, arg[0])
 				kit.If(kit.IsIn(arg[0], ice.OPS, ice.DEV), func() { origin = tcp.PublishLocalhost(m, origin) })
 				list := m.Spawn(ice.Maps{ice.MSG_FIELDS: ""}).CmdMap(DREAM, mdb.NAME)

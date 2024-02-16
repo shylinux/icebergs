@@ -48,24 +48,17 @@ func ParseLink(m *ice.Message, url string) ice.Maps {
 	return list
 }
 func PushPodCmd(m *ice.Message, cmd string, arg ...string) *ice.Message {
-	list := []string{}
+	msg := m.Spawn()
 	m.Cmds(SPACE, func(value ice.Maps) {
-		kit.If(kit.IsIn(value[mdb.TYPE], WORKER), func() { list = append(list, value[mdb.NAME]) })
+		kit.If(kit.IsIn(value[mdb.TYPE], WORKER), func() { msg.Push(SPACE, value[mdb.NAME]) })
 	})
-	if len(list) == 0 {
-		return m
-	}
 	kit.If(m.Length() > 0 && len(m.Appendv(SPACE)) == 0, func() { m.Table(func(value ice.Maps) { m.Push(SPACE, "") }) })
-	GoToast(m, "", func(toast func(string, int, int)) []string {
-		kit.For(list, func(index int, space string) {
-			toast(space, index, len(list))
-			m.Cmd(SPACE, space, kit.Dict(ice.MSG_USERPOD, space), kit.Select(m.PrefixKey(), cmd), arg).Table(func(index int, val ice.Maps, head []string) {
-				kit.If(!kit.IsIn(SPACE, head...), func() { head = append(head, SPACE) })
-				val[SPACE] = kit.Keys(space, val[SPACE])
-				m.Push("", val, head)
-			})
+	GoToastTable(msg, SPACE, func(value ice.Maps) {
+		m.Cmd(SPACE, value[SPACE], kit.Dict(ice.MSG_USERPOD, value[SPACE]), kit.Select(m.PrefixKey(), cmd), arg).Table(func(val ice.Maps, index int, head []string) {
+			kit.If(!kit.IsIn(SPACE, head...), func() { head = append(head, SPACE) })
+			val[SPACE] = kit.Keys(value[SPACE], val[SPACE])
+			m.Push("", val, head)
 		})
-		return nil
 	})
 	return m
 }
@@ -138,13 +131,21 @@ func ToastProcess(m *ice.Message, arg ...ice.Any) func(...ice.Any) {
 	Toast(m, toastContent(m, ice.PROCESS, arg...), "", "-1", "", h)
 	return func(arg ...ice.Any) { Toast(m, toastContent(m, ice.SUCCESS, arg...), "", cli.TIME_3s, "", h) }
 }
-func GoToast(m *ice.Message, title string, cb func(toast func(name string, count, total int)) []string) *ice.Message {
-	h := kit.HashsUniq()
-	icon, _total := Icons[ice.PROCESS], 0
+func GoToastTable(m *ice.Message, key string, cb func(value ice.Maps)) *ice.Message {
+	if m.Length() == 0 {
+		return m
+	}
+	return GoToast(m, func(toast func(string, int, int)) []string {
+		m.Table(func(value ice.Maps, index, total int) { toast(value[key], index, total); cb(value) })
+		return nil
+	})
+}
+func GoToast(m *ice.Message, cb func(toast func(name string, count, total int)) []string) *ice.Message {
+	icon, _total, h := Icons[ice.PROCESS], 1, kit.HashsUniq()
 	toast := func(name string, count, total int) {
 		kit.If(total == 0, func() { total = 1 })
 		Toast(m, kit.Format("%s %s %s", icon, kit.JoinWord(kit.Select(ice.LIST, m.ActionKey()), name), strings.ReplaceAll(kit.FmtSize(count, total), "B", "")),
-			kit.Select(title, m.Option(ice.MSG_TITLE)), m.OptionDefault(ice.TOAST_DURATION, "-1"), count*100/total, h)
+			m.Option(ice.MSG_TITLE), m.OptionDefault(ice.TOAST_DURATION, "-1"), count*100/total, h)
 		_total = total
 	}
 	if list := cb(toast); len(list) > 0 {

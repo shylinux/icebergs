@@ -57,7 +57,7 @@ func PodCmdAction(arg ...string) ice.Actions {
 			msg := disableApp(mdb.HashSelect(m.Spawn(), arg...).Sort(mdb.NAME))
 			web.PushPodCmd(msg, m.PrefixKey(), arg...)
 			has := map[string]bool{}
-			msg.Table(func(index int, value ice.Maps, head []string) {
+			msg.Table(func(value ice.Maps, index int, head []string) {
 				kit.If(!has[value[ctx.INDEX]], func() { has[value[ctx.INDEX]] = true; m.Push("", value, head) })
 			})
 		}},

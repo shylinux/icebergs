@@ -88,12 +88,12 @@ func init() {
 				m.StatusTimeCount(stat)
 			}},
 			aaa.LOCATION: {Hand: func(m *ice.Message, arg ...string) {
-				GoToast(mdb.HashSelects(m).Sort(mdb.COUNT, ice.INT_R), "", func(toast func(string, int, int)) []string {
-					m.Table(func(index int, value ice.Maps) {
+				GoToast(mdb.HashSelects(m).Sort(mdb.COUNT, ice.INT_R), func(toast func(string, int, int)) []string {
+					m.Table(func(value ice.Maps, index, total int) {
 						if value[aaa.LOCATION] == "" {
 							location := kit.Format(kit.Value(SpideGet(m, "http://opendata.baidu.com/api.php?co=&resource_id=6006&oe=utf8", "query", value[mdb.NAME]), "data.0.location"))
 							mdb.HashModify(m, mdb.HASH, value[mdb.HASH], aaa.LOCATION, location)
-							toast(kit.Select(value[mdb.NAME], location), index, m.Length())
+							toast(kit.Select(value[mdb.NAME], location), index, total)
 							m.Sleep300ms()
 						}
 					})

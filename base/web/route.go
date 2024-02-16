@@ -16,7 +16,7 @@ import (
 )
 
 func _route_push(m *ice.Message, space string, msg *ice.Message) *ice.Message {
-	return msg.Table(func(index int, value ice.Maps, head []string) {
+	return msg.Table(func(value ice.Maps, index int, head []string) {
 		value[SPACE], head = space, append(head, SPACE)
 		m.Push("", value, head)
 	})
@@ -44,7 +44,7 @@ func _route_match(m *ice.Message, space string, cb func(ice.Maps, int, []ice.Map
 	}
 }
 func _route_toast(m *ice.Message, space string, args ...string) {
-	GoToast(m, "", func(toast func(string, int, int)) (list []string) {
+	GoToast(m, func(toast func(string, int, int)) (list []string) {
 		count, total := 0, 1
 		_route_match(m, space, func(value ice.Maps, i int, _list []ice.Maps) {
 			count, total = i, len(_list)
@@ -84,9 +84,8 @@ func init() {
 				_route_toast(m, m.Option(SPACE), append([]string{m.Option(ctx.INDEX)}, kit.Split(m.Option(ctx.ARGS))...)...)
 			}},
 			cli.BUILD: {Name: "build space", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
+				m.Option(ice.MSG_TITLE, kit.Keys(m.Option(ice.MSG_USERPOD0), m.Option(ice.MSG_USERPOD), m.CommandKey()))
 				_route_toast(m, m.Option(SPACE), cli.RUNTIME, UPGRADE)
-				m.Option(ice.MSG_TITLE, kit.Keys(m.Option(ice.MSG_USERPOD0), m.Option(ice.MSG_USERPOD), m.CommandKey(), m.ActionKey()))
-				func() { defer ToastProcess(m)(); m.Sleep3s() }()
 				m.SetAppend().Cmdy("", "travel")
 			}},
 			"travel": {Help: "遍历", Icon: "bi bi-card-list", Hand: func(m *ice.Message, arg ...string) {
@@ -100,21 +99,18 @@ func init() {
 						m.Push(key, ice.Info.Make.Module)
 					case nfs.VERSION:
 						m.Push(key, ice.Info.Make.Versions())
-					case "commitTime":
+					case cli.COMMIT_TIME:
 						m.Push(key, ice.Info.Make.When)
-					case "compileTime":
+					case cli.COMPILE_TIME:
 						m.Push(key, ice.Info.Make.Time)
-					case "bootTime":
+					case cli.BOOT_TIME:
 						m.Push(key, m.Cmdx(cli.RUNTIME, "boot.time"))
 					case "md5":
 						m.Push(key, ice.Info.Hash)
 					case nfs.SIZE:
-						if m.Option(ice.MSG_USERPOD) == "" {
-							defer ToastProcess(m)()
-						}
 						var stats runtime.MemStats
 						runtime.ReadMemStats(&stats)
-						m.Push(key, kit.Format("%s/%s/%s", kit.FmtSize(int64(stats.Sys)), ice.Info.Size, m.Cmdx(nfs.DIR, nfs.SIZE)))
+						m.Push(key, kit.Format("%s/%s/%s", ice.Info.Size, kit.FmtSize(int64(stats.Sys)), m.Cmdx(nfs.DIR, nfs.SIZE)))
 					case nfs.PATH:
 						m.Push(key, kit.Path(""))
 					case tcp.HOSTNAME:

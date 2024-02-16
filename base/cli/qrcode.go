@@ -68,9 +68,10 @@ func init() {
 				m.OptionDefault(FG, BLACK, BG, WHITE)
 				_qrcode_cli(m, kit.Select(kit.Select(ice.Info.Make.Domain, ice.Info.Domain), arg, 0))
 			} else {
-				m.OptionDefault(SIZE, kit.Select("360", "280", m.IsMobileUA()))
+				// m.OptionDefault(SIZE, kit.Select("360", "280", m.IsMobileUA()))
 				m.Option(FG, kit.Select(m.Option(ice.MSG_FG), arg, 1))
 				m.Option(BG, kit.Select(m.Option(ice.MSG_BG), arg, 2))
+				m.Option(SIZE, kit.Select(m.OptionDefault(SIZE, "360"), arg, 3))
 				switch m.Option(ice.MSG_THEME) {
 				case LIGHT, WHITE:
 					m.OptionDefault(FG, BLACK, BG, WHITE)

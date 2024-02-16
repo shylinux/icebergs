@@ -311,7 +311,7 @@ func init() {
 				}
 				defer m.StatusTimeCount(kit.Dict(ice.MAIN, mdb.Config(m, ice.MAIN)))
 				kit.If(len(arg) > 0 && arg[0] != "", func() { m.OptionFields(ice.MSG_DETAIL) })
-				mdb.HashSelect(m.Spawn(), arg...).Table(func(index int, value ice.Maps, field []string) {
+				mdb.HashSelect(m.Spawn(), arg...).Table(func(value ice.Maps) {
 					if m.Push("", value, kit.Split(mdb.Config(m, mdb.FIELD))); len(arg) > 0 && arg[0] != "" {
 						m.Push(mdb.STATUS, value[mdb.STATUS]).Push(aaa.UA, value[aaa.UA])
 					}

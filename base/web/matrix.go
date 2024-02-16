@@ -59,14 +59,16 @@ func _matrix_action(m *ice.Message, action string, arg ...string) {
 func _matrix_dream(m *ice.Message, action string, arg ...string) {
 	m.Cmd(Space(m, m.Option(DOMAIN)), DREAM, kit.Select(m.ActionKey(), action), m.OptionSimple(mdb.NAME), arg)
 }
+func _matrix_cmd(m *ice.Message, cmd string, arg ...string) *ice.Message {
+	return m.Cmdy(Space(m, kit.Keys(m.Option(DOMAIN), m.Option(mdb.NAME))), kit.Select(m.ActionKey(), cmd), arg)
+}
 
 const MATRIX = "matrix"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
 		MATRIX: {Name: "matrix refresh", Help: "矩阵", Meta: kit.Dict(
-			ice.CTX_ICONS, kit.Dict(STATUS, "bi bi-git"),
-			ice.CTX_TRANS, kit.Dict(STATUS, "源码"),
+			ice.CTX_ICONS, kit.Dict(STATUS, "bi bi-git"), ice.CTX_TRANS, kit.Dict(STATUS, "源码"),
 		), Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(DREAM, mdb.INPUTS, arg) }},
 			mdb.CREATE: {Name: "create name*=hi icons repos binary template", Hand: func(m *ice.Message, arg ...string) { m.Cmd(DREAM, mdb.CREATE, arg) }},
@@ -74,15 +76,16 @@ func init() {
 			cli.START:  {Hand: func(m *ice.Message, arg ...string) { _matrix_dream(m, "") }},
 			cli.STOP:   {Hand: func(m *ice.Message, arg ...string) { _matrix_dream(m, "") }},
 			COMPILE: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(Space(m, kit.Keys(m.Option(DOMAIN), m.Option(mdb.NAME))), COMPILE, cli.AMD64, cli.LINUX, ice.SRC_MAIN_GO).ProcessHold()
+				_matrix_cmd(m, "", cli.AMD64, cli.LINUX, ice.SRC_MAIN_GO).ProcessHold()
 			}},
 			UPGRADE: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(Space(m, kit.Keys(m.Option(DOMAIN), m.Option(mdb.NAME))), UPGRADE).Sleep3s()
+				_matrix_cmd(m, "").ProcessRefresh().Sleep3s()
 			}},
 			INSTALL: {Hand: func(m *ice.Message, arg ...string) {
-				m.OptionDefault(nfs.BINARY, UserHost(m)+S(m.Option(mdb.NAME)))
 				if kit.IsIn(m.Cmdv(Space(m, m.Option(DOMAIN)), SPIDE, ice.DEV_IP, CLIENT_HOSTNAME), m.Cmd(tcp.HOST).Appendv(aaa.IP)...) {
 					m.Option(nfs.BINARY, S(m.Option(mdb.NAME)))
+				} else {
+					m.OptionDefault(nfs.BINARY, UserHost(m)+S(m.Option(mdb.NAME)))
 				}
 				_matrix_dream(m, mdb.CREATE, kit.Simple(m.OptionSimple(mdb.ICONS, nfs.REPOS, nfs.BINARY))...)
 				_matrix_dream(m, cli.START)
@@ -92,21 +95,20 @@ func init() {
 				_matrix_action(m, arg[1], arg[2:]...)
 				return
 			}
-			GoToast(m, "", func(toast func(name string, count, total int)) []string {
-				fields := kit.Split(mdb.Config(m, mdb.FIELD))
+			GoToast(m, func(toast func(name string, count, total int)) []string {
+				field := kit.Split(mdb.Config(m, mdb.FIELD))
 				m.Options("space.timeout", cli.TIME_300ms, "dream.simple", ice.TRUE)
-				kit.For(_matrix_list(m, "", fields...), func(domain string, index int, total int) {
+				kit.For(_matrix_list(m, "", field...), func(domain string, index int, total int) {
 					toast(domain, index, total)
-					_matrix_list(m, domain, fields...)
+					_matrix_list(m, domain, field...)
 				})
-				stat := map[string]int{}
-				m.Table(func(value ice.Maps) { stat[value[mdb.TYPE]]++; stat[value[mdb.STATUS]]++ }).StatusTimeCount(stat)
 				m.RewriteAppend(func(value, key string, index int) string {
 					if key == mdb.ICONS && strings.HasPrefix(value, nfs.REQUIRE) && m.Appendv(DOMAIN)[index] != "" {
 						value = kit.MergeURL(strings.Split(value, "?")[0], ice.POD, kit.Keys(m.Appendv(DOMAIN)[index], m.Appendv(mdb.NAME)[index]))
 					}
 					return value
 				}).Sort("type,status,name,domain", []string{SERVER, WORKER, ""}, []string{cli.START, cli.STOP, ""}, "str_r", "str_r")
+				m.StatusTimeCountStats(mdb.TYPE, mdb.STATUS)
 				return nil
 			}).Action(html.FILTER, mdb.CREATE).Display("")
 		}},

@@ -103,7 +103,7 @@ func Complete(m *ice.Message, detail bool, arg ...string) (res []string) {
 			kit.If(detail, func() { echo("func") })
 			m.Cmdy(arg).Search(arg[0], func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
 				field := kit.Format(kit.Value(cmd.List, kit.Keys(len(arg)-1, mdb.NAME)))
-				m.Table(func(index int, value ice.Maps, head []string) {
+				m.Table(func(value ice.Maps, index int, head []string) {
 					echo(value[field])
 					if detail {
 						echo(kit.Join(kit.Simple(head, func(key string) string { return key + ": " + value[key] }), lex.SP))

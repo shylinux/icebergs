@@ -38,22 +38,21 @@ func _install_download(m *ice.Message, arg ...string) {
 		return
 	}
 	mdb.HashCreate(m.Cmd(nfs.SAVE, file, ""), mdb.NAME, name, nfs.PATH, file, web.LINK, link)
-	web.GoToast(m, name, func(toast func(string, int, int)) (list []string) {
+	web.GoToast(m, func(toast func(string, int, int)) []string {
 		begin := time.Now()
 		_toast := func(count, total, value int) {
-			cost := time.Now().Sub(begin)
-			toast(kit.FormatShow(nfs.FROM, begin.Format("15:04:05"), cli.COST, kit.FmtDuration(cost), cli.REST, kit.FmtDuration(cost*time.Duration(101)/time.Duration(value+1)-cost)), count, total)
+			toast(kit.FormatShow(cli.COST, kit.FmtDuration(time.Now().Sub(begin))), count, total)
 			mdb.HashSelectUpdate(m, name, func(value ice.Map) { value[mdb.COUNT], value[mdb.TOTAL], value[mdb.VALUE] = count, total, value })
 		}
 		defer nfs.TarExport(m, file)
 		if mdb.Config(m, nfs.REPOS) != "" {
 			web.SpideSave(m, file, mdb.Config(m, nfs.REPOS)+path.Base(link), _toast)
 			if s, e := nfs.StatFile(m, file); e == nil && s.Size() > 0 {
-				return
+				return nil
 			}
 		}
 		web.SpideSave(m, file, link, _toast)
-		return
+		return nil
 	})
 	if s, e := nfs.StatFile(m, file); e == nil && s.Size() > 0 {
 		web.ToastSuccess(m)

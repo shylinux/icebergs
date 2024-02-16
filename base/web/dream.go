@@ -158,14 +158,10 @@ func _dream_binary(m *ice.Message, p string) {
 	if bin := path.Join(m.Option(cli.CMD_DIR), ice.BIN_ICE_BIN); nfs.Exists(m, bin) {
 		return
 	} else if kit.IsUrl(p) || strings.HasPrefix(p, S()) {
-		GoToast(m, DOWNLOAD, func(toast func(string, int, int)) (list []string) {
+		GoToast(m, func(toast func(string, int, int)) []string {
 			begin := time.Now()
 			SpideSave(m, bin, kit.MergeURL(p, cli.GOOS, runtime.GOOS, cli.GOARCH, runtime.GOARCH), func(count, total, value int) {
-				if strings.HasPrefix(p, S()) {
-					toast(m.Option(mdb.NAME), count, total)
-				} else {
-					toast(m.Option(mdb.NAME)+"\n"+kit.FormatShow(cli.COST, kit.FmtDuration(time.Now().Sub(begin))), count, total)
-				}
+				toast(m.Option(mdb.NAME)+lex.NL+kit.FormatShow(cli.COST, kit.FmtDuration(time.Now().Sub(begin))), count, total)
 			})
 			return nil
 		})
@@ -310,8 +306,8 @@ func init() {
 				})
 			}},
 			cli.BUILD: {Name: "build name", Hand: func(m *ice.Message, arg ...string) {
-				m.Option(ice.MSG_TITLE, kit.Keys(m.Option(ice.MSG_USERPOD0), m.Option(ice.MSG_USERPOD), m.CommandKey(), m.ActionKey()))
 				compile := cli.SystemFind(m, "go") != ""
+				m.Option(ice.MSG_TITLE, kit.Keys(m.Option(ice.MSG_USERPOD0), m.Option(ice.MSG_USERPOD), m.CommandKey(), m.ActionKey()))
 				m.Cmd("", FOR_FLOW, m.Option(mdb.NAME), kit.JoinWord(cli.SH, ice.ETC_MISS_SH), func(p string) bool {
 					if compile && nfs.Exists(m, path.Join(p, ice.SRC_MAIN_GO)) {
 						return false
@@ -342,27 +338,23 @@ func init() {
 				m.ProcessHold()
 			}},
 			FOR_FLOW: {Name: "forFlow name cmd*='sh etc/miss.sh'", Help: "流程", Icon: "bi bi-terminal", Hand: func(m *ice.Message, arg ...string) {
-				list := []string{}
-				DreamEach(m.Spawn(ice.Maps{ice.MSG_DAEMON: ""}), m.Option(mdb.NAME), "", func(name string) { list = append(list, name) })
+				msg := m.Spawn()
+				DreamEach(m.Spawn(ice.Maps{ice.MSG_DAEMON: ""}), m.Option(mdb.NAME), "", func(name string) { msg.Push(SPACE, name) })
 				m.Options(ctx.DISPLAY, PLUGIN_XTERM, cli.CMD_OUTPUT, nfs.NewWriteCloser(func(buf []byte) (int, error) {
 					PushNoticeGrow(m.Options(ice.MSG_COUNT, "0"), strings.ReplaceAll(string(buf), lex.NL, "\r\n"))
 					return len(buf), nil
 				}, func() error { return nil }))
-				GoToast(m, "", func(toast func(string, int, int)) []string {
-					kit.For(list, func(index int, name string) {
-						toast(name, index, len(list))
-						p := path.Join(ice.USR_LOCAL_WORK, name)
-						switch cb := m.OptionCB("").(type) {
-						case func(string) bool:
-							if cb(p) {
-								return
-							}
+				GoToastTable(msg, SPACE, func(value ice.Maps) {
+					p := path.Join(ice.USR_LOCAL_WORK, value[SPACE])
+					switch cb := m.OptionCB("").(type) {
+					case func(string) bool:
+						if cb(p) {
+							return
 						}
-						PushNoticeGrow(m, strings.ReplaceAll(kit.Format("[%s]%s$ %s\n", time.Now().Format(ice.MOD_TIME_ONLY), name, m.Option(ice.CMD)), lex.NL, "\r\n"))
-						m.Cmd(cli.SYSTEM, kit.Split(m.Option(ice.CMD)), kit.Dict(cli.CMD_DIR, p)).Sleep300ms()
-						PushNoticeGrow(m, "\r\n\r\n\r\n")
-					})
-					return nil
+					}
+					PushNoticeGrow(m, strings.ReplaceAll(kit.Format("[%s]%s$ %s\r\n", time.Now().Format(ice.MOD_TIME_ONLY), value[SPACE], m.Option(ice.CMD)), lex.NL, "\r\n"))
+					m.Cmd(cli.SYSTEM, kit.Split(m.Option(ice.CMD)), kit.Dict(cli.CMD_DIR, p)).Sleep300ms()
+					PushNoticeGrow(m, "\r\n\r\n\r\n")
 				})
 			}},
 			ctx.CMDS: {Name: "cmds name cmds*", Help: "命令", Icon: "bi bi-terminal", Hand: func(m *ice.Message, arg ...string) {
@@ -495,8 +487,8 @@ func DreamEach(m *ice.Message, name string, status string, cb func(string)) *ice
 	if len(list) == 0 {
 		return m
 	}
-	GoToast(m, "", func(toast func(string, int, int)) []string {
-		kit.For(list, func(index int, name string) { toast(name, index, len(list)); cb(name) })
+	GoToast(m, func(toast func(string, int, int)) []string {
+		kit.For(list, func(name string, index, total int) { toast(name, index, total); cb(name) })
 		return nil
 	})
 	return m
@@ -514,10 +506,10 @@ func DreamListSpide(m *ice.Message, list []string, types string, cb func(dev, or
 		kit.If(value[mdb.TYPE] == types, func() { list = append(list, value[mdb.NAME]) })
 	})
 	has := map[string]bool{}
-	GoToast(m, "", func(toast func(name string, count, total int)) []string {
-		kit.For(list, func(index int, dev string) {
-			toast(dev, index, len(list))
-			if origin := m.Cmdv(SPIDE, dev, CLIENT_ORIGIN); !has[origin] {
+	GoToast(m, func(toast func(name string, count, total int)) []string {
+		kit.For(list, func(dev string, index, total int) {
+			toast(dev, index, total)
+			if origin := SpideOrigin(m, dev); !has[origin] {
 				has[origin] = true
 				cb(dev, origin)
 			}

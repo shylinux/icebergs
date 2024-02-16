@@ -32,7 +32,7 @@ func (s spring) List(m *ice.Message, arg ...string) {
 	if len(arg) == 0 {
 		s.Hash.List(m, arg...).PushAction(s.Start, s.Build)
 	} else {
-		m.Cmd(cli.DAEMON).Table(func(index int, value ice.Maps, head []string) {
+		m.Cmd(cli.DAEMON).Table(func(value ice.Maps, index int, head []string) {
 			if strings.Contains(value[ice.CMD], "target/"+arg[0]+"-0.0.1-SNAPSHOT.jar") {
 				m.PushRecord(value, head...)
 			}

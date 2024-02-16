@@ -46,10 +46,9 @@ func init() {
 					uri = kit.MergeURL(uri, ice.POD, p)
 				})
 				dir := path.Join(kit.Format(value[nfs.PATH]), kit.Format(value[nfs.FILE]))
-				web.GoToast(m, web.DOWNLOAD, func(toast func(name string, count, total int)) []string {
-					switch web.SpideSave(m, dir, uri, func(count, total, value int) {
-						toast(dir, count, total)
-					}); value[mdb.TYPE] {
+				web.GoToast(m, func(toast func(name string, count, total int)) []string {
+					web.SpideSave(m, dir, uri, func(count, total, value int) { toast(dir, count, total) })
+					switch value[mdb.TYPE] {
 					case nfs.TAR:
 						m.Cmd(cli.SYSTEM, nfs.TAR, "xf", dir, "-C", path.Dir(dir))
 						// m.Cmd(nfs.TAR, mdb.EXPORT, dir, "-C", path.Dir(dir))

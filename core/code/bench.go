@@ -14,7 +14,6 @@ import (
 	"shylinux.com/x/icebergs/base/web"
 	"shylinux.com/x/icebergs/base/web/html"
 	kit "shylinux.com/x/toolkits"
-	"shylinux.com/x/toolkits/task"
 	"shylinux.com/x/toolkits/util/bench"
 )
 
@@ -47,16 +46,14 @@ func _bench_http(m *ice.Message, target string, arg ...string) {
 			}
 		}
 	})
-	var ndata int64
-	total, count := nreqs*nconn, 0
-	var lock task.Lock
-	web.GoToast(m, m.Option(mdb.NAME), func(toast func(name string, count, total int)) []string {
+	var ndata, count int64
+	total := int(nreqs * nconn)
+	web.GoToast(m, func(toast func(name string, count, total int)) []string {
 		if s, e := bench.HTTP(m.FormatTaskMeta(), nconn, nreqs, list, func(req *http.Request, res *http.Response) {
+			toast(m.Option(mdb.NAME), int(count), total)
 			n, _ := io.Copy(ioutil.Discard, res.Body)
 			atomic.AddInt64(&ndata, n)
-			defer lock.Lock()()
-			toast(m.Option(mdb.NAME), count, int(total))
-			count++
+			atomic.AddInt64(&count, 1)
 		}); m.Assert(e) {
 			m.Echo("nconn: %d total: %d ndata: %s\n", nconn, total, kit.FmtSize(ndata)).Echo(s.Show()).ProcessInner()
 		}

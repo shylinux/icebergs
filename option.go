@@ -98,6 +98,9 @@ func (m *Message) StatusTime(arg ...Any) *Message {
 func (m *Message) StatusTimeCount(arg ...Any) *Message {
 	return m.StatusTime(append([]Any{kit.MDB_COUNT, kit.Split(m.FormatSize())[0]}, arg...))
 }
+func (m *Message) StatusTimeCountStats(field ...string) *Message {
+	return m.StatusTimeCount(m.TableStats(field...))
+}
 func (m *Message) StatusTimeCountTotal(arg ...Any) *Message {
 	return m.StatusTimeCount(append([]Any{kit.MDB_TOTAL}, arg...))
 }
@@ -116,8 +119,8 @@ func (m *Message) ProcessReplace(url string, arg ...Any) {
 }
 func (m *Message) ProcessHistory(arg ...Any) { m.Process(PROCESS_HISTORY, arg...) }
 func (m *Message) ProcessConfirm(arg ...Any) { m.Process(PROCESS_CONFIRM, arg...) }
-func (m *Message) ProcessRefresh(arg ...string) {
-	m.Process(PROCESS_REFRESH).Option(PROCESS_ARG, int(kit.Duration(kit.Select("30ms", arg, 0))/time.Millisecond))
+func (m *Message) ProcessRefresh(arg ...string) *Message {
+	return m.Process(PROCESS_REFRESH).Options(PROCESS_ARG, int(kit.Duration(kit.Select("30ms", arg, 0))/time.Millisecond))
 }
 func (m *Message) ProcessRewrite(arg ...Any) { m.Process(PROCESS_REWRITE, arg...) }
 func (m *Message) ProcessDisplay(arg ...Any) { m.Process(PROCESS_DISPLAY).Option(MSG_DISPLAY, arg...) }

@@ -103,7 +103,7 @@ func _runtime_hostinfo(m *ice.Message) {
 	}
 }
 func _runtime_diskinfo(m *ice.Message) {
-	m.Spawn().Split(kit.Replace(m.Cmdx(SYSTEM, "df", "-h"), "Mounted on", "Mountedon"), "", lex.SP, lex.NL).Table(func(index int, value ice.Maps, head []string) {
+	m.Spawn().Split(kit.Replace(m.Cmdx(SYSTEM, "df", "-h"), "Mounted on", "Mountedon"), "", lex.SP, lex.NL).Table(func(value ice.Maps, index int, head []string) {
 		kit.If(strings.HasPrefix(value["Filesystem"], "/dev"), func() { m.Push("", value, head) })
 	})
 	m.RenameAppend("%iused", "piused", "Use%", "Usep")

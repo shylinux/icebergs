@@ -137,12 +137,11 @@ func (s relay) Stats(m *ice.Message) {
 		},
 	}
 	machine := m.Option(MACHINE)
-	web.GoToast(m.Message, "", func(toast func(string, int, int)) []string {
+	m.GoToast(func(toast func(string, int, int)) {
 		kit.For(cmds, func(key, value string, index int) {
 			toast(key, index/2, len(cmds)/2)
 			s.foreachModify(m, machine, key, value, trans[key])
 		})
-		return nil
 	}).ProcessInner()
 	s.foreach(m.Spawn(ice.Maps{MACHINE: machine}), func(msg *ice.Message, cmd []string) {
 		ssh.CombinedOutput(msg.Message, s.admins(msg, cli.RUNTIME), func(res string) {

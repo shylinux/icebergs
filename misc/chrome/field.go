@@ -19,7 +19,7 @@ type field struct {
 
 func (s field) Inputs(m *ice.Message, arg ...string) { s.daemon.Inputs(m, arg...) }
 func (s field) Command(m *ice.Message, arg ...string) {
-	s.Zone.List(m.Spawn(), kit.Simple(m.Option(web.DOMAIN), arg)...).Table(func(index int, value ice.Maps, head []string) {
+	s.Zone.List(m.Spawn(), kit.Simple(m.Option(web.DOMAIN), arg)...).Table(func(value ice.Maps, index int, head []string) {
 		if len(arg) == 0 {
 			m.Options(ice.MSG_OPTS, head, kit.Simple(value))
 			s.send(m, "1", m.Option(TID), m.CommandKey(), value[mdb.ID], value[ctx.ARGS])

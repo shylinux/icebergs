@@ -173,21 +173,13 @@ func init() {
 			SESSION: {Help: "会话", Hand: func(m *ice.Message, arg ...string) { _ssh_hold(m, _ssh_target(m, m.Option(mdb.NAME))) }},
 			DIRECT: {Name: "direct cmd=pwd", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(mdb.NAME) == "" {
-					msg := m.Cmds("")
-					web.GoToast(m, m.Option(ice.CMD), func(toast func(string, int, int)) []string {
-						count, total := 0, msg.Length()
-						toast("", count, total)
-						msg.Table(func(value ice.Maps) {
-							toast(value[mdb.NAME], count, total)
-							msg := m.Cmds("", m.ActionKey(), value)
-							kit.If(len(msg.Resultv()) == 0, func() { msg.TableEcho() })
-							m.Push(mdb.TIME, msg.Time())
-							m.Push(mdb.NAME, value[mdb.NAME])
-							m.Push(cli.COST, m.FormatCost())
-							m.Push(RES, msg.Result())
-							count++
-						})
-						return nil
+					web.GoToastTable(m.Cmds(""), mdb.NAME, func(value ice.Maps) {
+						msg := m.Cmds("", m.ActionKey(), value)
+						kit.If(len(msg.Resultv()) == 0, func() { msg.TableEcho() })
+						m.Push(mdb.TIME, msg.Time())
+						m.Push(mdb.NAME, value[mdb.NAME])
+						m.Push(cli.COST, m.FormatCost())
+						m.Push(RES, msg.Result())
 					}).ProcessInner()
 				} else if s, e := _ssh_target(m, m.Option(mdb.NAME)).NewSession(); !m.WarnNotValid(e) {
 					defer s.Close()

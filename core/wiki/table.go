@@ -10,7 +10,7 @@ import (
 
 func _table_run(m *ice.Message, arg ...string) {
 	list := [][]string{}
-	m.Cmd(arg).Table(func(index int, value ice.Maps, head []string) {
+	m.Cmd(arg).Table(func(value ice.Maps, index int, head []string) {
 		ls := []string{}
 		kit.If(index == 0, func() { m.Options(HEAD, head) })
 		kit.For(head, func(h string) { ls = append(ls, value[h]) })

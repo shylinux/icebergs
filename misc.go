@@ -108,7 +108,7 @@ func (m *Message) RenameAppend(arg ...string) *Message {
 	return m
 }
 func (m *Message) RewriteAppend(cb func(value, key string, index int) string) *Message {
-	m.Table(func(index int, value Maps, head []string) {
+	m.Table(func(value Maps, index int, head []string) {
 		for _, key := range head {
 			v := cb(value[key], key, index)
 			if m.FieldsIsDetail() {

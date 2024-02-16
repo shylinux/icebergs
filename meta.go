@@ -176,13 +176,18 @@ func (m *Message) Length() (max int) {
 	return max
 }
 func (m *Message) TablesLimit(count int, cb func(value Maps)) *Message {
-	return m.Table(func(index int, value Maps) { kit.If(index < count, func() { cb(value) }) })
+	return m.Table(func(value Maps, index int) { kit.If(index < count, func() { cb(value) }) })
 }
 func (m *Message) Stats(arg ...string) (res []string) {
 	stats := map[string]float64{}
 	m.Table(func(value Maps) { kit.For(arg, func(k string) { stats[k] += kit.Float(value[k]) }) })
 	kit.For(arg, func(k string) { res = append(res, k, kit.Format("%0.2f", stats[k])) })
 	return
+}
+func (m *Message) TableStats(field ...string) map[string]int {
+	stat := map[string]int{}
+	m.Table(func(value Maps) { kit.For(field, func(k string) { stat[value[k]]++ }) })
+	return stat
 }
 func (m *Message) TableAmount(cb func(Maps) float64) float64 {
 	var amount float64
@@ -196,14 +201,12 @@ func (m *Message) Table(cb Any) *Message {
 	}
 	cbs := func(index int, value Maps, head []string) {
 		switch cb := cb.(type) {
-		case func(index int, value Maps, head []string):
-			cb(index, value, head)
-		case func(index int, value Maps):
-			cb(index, value)
-		case func(value Maps, index int):
-			cb(value, index)
+		case func(value Maps, index int, head []string):
+			cb(value, index, head)
 		case func(value Maps, index, total int):
 			cb(value, index, n)
+		case func(value Maps, index int):
+			cb(value, index)
 		case func(value Maps):
 			cb(value)
 		default:

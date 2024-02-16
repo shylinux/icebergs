@@ -109,10 +109,14 @@ func _repos_open(m *ice.Message, p string) *git.Repository {
 	return mdb.HashSelectTarget(m, p, nil).(*git.Repository)
 }
 func _repos_each(m *ice.Message, title string, cb func(*git.Repository, ice.Maps) error) {
-	web.GoToastTable(m.Cmd(""), REPOS, func(value ice.Maps) {
-		if err := cb(_repos_open(m, value[REPOS]), value); err != nil && err != git.NoErrAlreadyUpToDate {
-			web.ToastFailure(m, value[REPOS], err.Error())
-		}
+	web.GoToast(m, func(toast func(string, int, int)) []string {
+		m.Cmd("").Table(func(value ice.Maps, index, total int) {
+			toast(value[REPOS], index, total)
+			if err := cb(_repos_open(m, value[REPOS]), value); err != nil && err != git.NoErrAlreadyUpToDate {
+				web.ToastFailure(m, value[REPOS], err.Error())
+			}
+		})
+		return nil
 	})
 }
 func _repos_each_origin(m *ice.Message, title string, cb func(*git.Repository, string, *http.BasicAuth, ice.Maps) error) {

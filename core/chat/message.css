@@ -1,7 +1,7 @@
 body.light fieldset.web.chat.message>div.output { background-color:white; }
 body.light fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list { background-color:#e3e3e2; }
 body.light fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item:not(.plug).myself div.content { background-color:#94ec69; }
-fieldset.web.chat.message>div.output>div.project>div.title { padding:var(--button-padding); display:flex; justify-content:space-between; position:sticky; top:0; z-index:10; }
+fieldset.web.chat.message>div.output>div.project>div.title { padding:var(--button-padding); display:flex; justify-content:space-between; position:sticky; top:0; z-index:2; }
 fieldset.web.chat.message>div.output>div.project>div.title i:hover { background-color:var(--hover-bg-color); cursor:pointer; }
 fieldset.web.chat.message>div.output>div.project>div.title span:hover { background-color:var(--hover-bg-color); cursor:pointer; }
 fieldset.web.chat.message>div.output>div.project>div.item.text.filter>i { left:var(--input-padding); }
@@ -12,7 +12,7 @@ fieldset.web.chat.message>div.output>div.project>div.item div.container { paddin
 fieldset.web.chat.message>div.output>div.project>div.item div.title { display:flex; justify-content:space-between; }
 fieldset.web.chat.message>div.output>div.project>div.item div.content { color:var(--disable-fg-color); font-size:var(--status-font-size); }
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content { overflow:hidden; }
-fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.title { padding:var(--button-padding); display:flex; justify-content:space-between; position:sticky; top:0; z-index:10; }
+fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.title { padding:var(--button-padding); display:flex; justify-content:space-between; position:sticky; top:0; z-index:2; }
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.title i:hover { background-color:var(--hover-bg-color); cursor:pointer; }
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.title span:hover { background-color:var(--hover-bg-color); cursor:pointer; }
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item { padding:var(--input-padding); min-height:fit-content; display:flex; }

@@ -119,27 +119,21 @@ func FavorAction() ice.Actions {
 }
 func FavorPreview(m *ice.Message, arg ...string) {
 	if kit.HasPrefixList(arg, ctx.RUN) {
-		if pod := arg[1]; pod != "" {
-			arg[1] = ""
-			m.Options(ice.MSG_USERPOD, pod).Cmdy(web.SPACE, pod, m.CommandKey(), ctx.ACTION, m.ActionKey(), arg)
+		web.ProcessPodCmd(m, "", "", nil, arg...)
+	} else {
+		msg := m
+		if m.Option(web.SPACE) == "" {
+			msg = mdb.HashSelects(m.Spawn(), m.Option(mdb.HASH))
 		} else {
-			index, args := favorPreview(m, arg[2], arg...)
-			ctx.ProcessField(m, index, args, kit.Simple(ctx.RUN, arg[3:])...)
+			msg = m.Cmd(web.SPACE, m.Option(web.SPACE), m.PrefixKey(), m.Option(mdb.HASH))
 		}
-	} else if !web.PodCmd(m, web.SPACE, kit.Simple(ctx.ACTION, m.ActionKey(), arg)...) {
-		index, args := favorPreview(m, m.Option(mdb.HASH), arg...)
-		ctx.ProcessField(m, index, args, arg...).Push(ice.MSG_SPACE, m.Option(ice.MSG_USERPOD))
-		m.Option(ice.FIELD_PREFIX, ctx.ACTION, m.ActionKey(), ctx.RUN, m.Option(ice.MSG_USERPOD), m.Option(mdb.HASH))
+		index, args := msg.Append(mdb.TYPE), kit.Split(msg.Append(mdb.TEXT))
+		switch msg.Append(mdb.TYPE) {
+		case ctx.INDEX:
+			index = msg.Append(mdb.NAME)
+		case nfs.SHY:
+			index = web.WIKI_WORD
+		}
+		web.ProcessPodCmd(m, m.Option(web.SPACE), index, args, arg...)
 	}
-}
-func favorPreview(m *ice.Message, h string, arg ...string) (string, []string) {
-	msg := mdb.HashSelects(m.Spawn(), h)
-	index, args := msg.Append(mdb.TYPE), kit.Split(msg.Append(mdb.TEXT))
-	switch msg.Append(mdb.TYPE) {
-	case ctx.INDEX:
-		index = msg.Append(mdb.NAME)
-	case nfs.SHY:
-		index = web.WIKI_WORD
-	}
-	return index, args
 }

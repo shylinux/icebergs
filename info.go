@@ -176,13 +176,6 @@ func MergeActions(arg ...Any) Actions {
 }
 func SplitCmd(name string, actions Actions) (list []Any) {
 	const (
-		TEXT     = "text"
-		TEXTAREA = "textarea"
-		PASSWORD = "password"
-		SELECT   = "select"
-		BUTTON   = "button"
-	)
-	const (
 		RUN     = "run"
 		REFRESH = "refresh"
 		LIST    = "list"
@@ -191,10 +184,11 @@ func SplitCmd(name string, actions Actions) (list []Any) {
 		PAGE    = "page"
 		ARGS    = "args"
 		CONTENT = "content"
+		FILTER  = "filter"
 	)
 	item, button := kit.Dict(), false
 	push := func(arg ...string) {
-		button = kit.Select("", arg, 0) == BUTTON
+		button = kit.Select("", arg, 0) == html.BUTTON
 		item = kit.Dict(TYPE, kit.Select("", arg, 0), NAME, kit.Select("", arg, 1), ACTION, kit.Select("", arg, 2))
 		list = append(list, item)
 	}
@@ -202,27 +196,29 @@ func SplitCmd(name string, actions Actions) (list []Any) {
 	for i := 1; i < len(ls); i++ {
 		switch ls[i] {
 		case RUN:
-			push(BUTTON, ls[i])
+			push(html.BUTTON, ls[i])
 		case REFRESH:
-			push(BUTTON, ls[i], AUTO)
+			push(html.BUTTON, ls[i], AUTO)
 		case LIST:
-			push(BUTTON, ls[i], AUTO)
+			push(html.BUTTON, ls[i], AUTO)
 		case AUTO:
-			push(BUTTON, LIST, AUTO)
-			push(BUTTON, BACK)
+			push(html.BUTTON, LIST, AUTO)
+			push(html.BUTTON, BACK)
 		case PAGE:
-			push(BUTTON, "prev")
-			push(BUTTON, "next")
-			push(TEXT, "offend")
-			push(TEXT, "limit")
-		case ARGS, CONTENT, TEXTAREA, TEXT, "extra":
-			push(TEXTAREA, ls[i])
-		case PASSWORD:
-			push(PASSWORD, ls[i])
+			push(html.BUTTON, "prev")
+			push(html.BUTTON, "next")
+			push(html.TEXT, "offend")
+			push(html.TEXT, "limit")
+		case ARGS, CONTENT, html.TEXTAREA, html.TEXT, "extra":
+			push(html.TEXTAREA, ls[i])
+		case html.PASSWORD:
+			push(html.PASSWORD, ls[i])
+		case FILTER:
+			push(html.TEXT, ls[i])
 		case "*":
 			item["need"] = "must"
 		case DF:
-			if item[TYPE] = kit.Select("", ls, i+1); item[TYPE] == BUTTON {
+			if item[TYPE] = kit.Select("", ls, i+1); item[TYPE] == html.BUTTON {
 				button = true
 			}
 			i++
@@ -244,7 +240,7 @@ func SplitCmd(name string, actions Actions) (list []Any) {
 			item[ACTION] = kit.Select("", ls, i+1)
 			i++
 		default:
-			push(kit.Select(TEXT, BUTTON, button || actions != nil && actions[ls[i]] != nil), ls[i])
+			push(kit.Select(html.TEXT, html.BUTTON, button || actions != nil && actions[ls[i]] != nil), ls[i])
 		}
 	}
 	return list

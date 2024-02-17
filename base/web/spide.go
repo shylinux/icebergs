@@ -467,13 +467,3 @@ func SpideCache(m *ice.Message, link string) *ice.Message {
 }
 func SpideOrigin(m *ice.Message, name string) string { return m.Cmdv(SPIDE, name, CLIENT_ORIGIN) }
 func SpideURL(m *ice.Message, name string) string    { return m.Cmdv(SPIDE, name, CLIENT_URL) }
-func ProcessIframe(m *ice.Message, title, link string, arg ...string) *ice.Message {
-	if m.IsMetaKey() {
-		m.ProcessOpen(link)
-		return m
-	}
-	if !kit.HasPrefixList(arg, ctx.RUN) {
-		defer m.Push(TITLE, title)
-	}
-	return ctx.ProcessFloat(m, CHAT_IFRAME, link, arg...)
-}

@@ -3,7 +3,6 @@ package web
 import (
 	"net/url"
 	"strings"
-	"time"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
@@ -79,8 +78,12 @@ func PushNotice(m *ice.Message, arg ...ice.Any) {
 	})
 	m.Cmd(SPACE, m.Option(ice.MSG_DAEMON), arg, opts)
 }
-func PushNoticeRefresh(m *ice.Message, arg ...ice.Any) { PushNotice(m, kit.List("refresh", arg)...) }
-func PushNoticeToast(m *ice.Message, arg ...ice.Any)   { PushNotice(m, kit.List("toast", arg)...) }
+func PushNoticeToast(m *ice.Message, arg ...ice.Any) {
+	PushNotice(m, kit.List(TOAST, arg)...)
+}
+func PushNoticeRefresh(m *ice.Message, arg ...ice.Any) {
+	PushNotice(m, kit.List("refresh", arg)...)
+}
 func PushNoticeGrow(m *ice.Message, arg ...ice.Any) {
 	PushNotice(m.StatusTimeCount(), kit.List("grow", arg)...)
 }
@@ -91,72 +94,35 @@ func PushStream(m *ice.Message) *ice.Message {
 	m.Options(cli.CMD_OUTPUT, file.NewWriteCloser(func(buf []byte) { PushNoticeGrow(m, string(buf)) }, nil)).ProcessHold(toastContent(m, ice.SUCCESS))
 	return m
 }
-func init() { ice.Info.PushStream = PushStream }
 func init() { ice.Info.PushNotice = PushNotice }
+func init() { ice.Info.PushStream = PushStream }
 
-func Toast(m *ice.Message, text string, arg ...ice.Any) *ice.Message { // [title [duration [progress [hash]]]]
-	if len(arg) > 1 {
-		switch val := arg[1].(type) {
-		case string:
-			if value, err := time.ParseDuration(val); err == nil {
-				arg[1] = int(value / time.Millisecond)
-			}
-		}
-	}
-	kit.If(len(arg) == 0, func() { arg = append(arg, m.PrefixKey()) })
-	kit.If(len(arg) > 0 && arg[0] == "", func() {
-		arg[0] = kit.Keys(m.Option(ice.MSG_USERPOD0), m.Option(ice.MSG_USERPOD), ctx.ShortCmd(m.PrefixKey()))
-	})
-	PushNoticeToast(m, text, arg)
-	return m
-}
-
-var Icons = map[string]string{ice.PROCESS: "🕑", ice.FAILURE: "❌", ice.SUCCESS: "✅"}
-
-func toastContent(m *ice.Message, state string, arg ...ice.Any) string {
-	if len(arg) == 0 {
-		return kit.JoinWord(kit.Simple(Icons[state], kit.Select(ice.LIST, m.ActionKey()), state)...)
-	} else {
-		return kit.JoinWord(kit.Simple(Icons[state], arg)...)
-	}
-}
-func ToastSuccess(m *ice.Message, arg ...ice.Any) {
-	Toast(m, toastContent(m, ice.SUCCESS, arg...), "", cli.TIME_3s)
-}
-func ToastFailure(m *ice.Message, arg ...ice.Any) {
-	Toast(m, toastContent(m, ice.FAILURE, arg...), "", m.OptionDefault(ice.TOAST_DURATION, cli.TIME_3s)).Sleep(m.OptionDefault(ice.TOAST_DURATION, cli.TIME_3s))
-}
-func ToastProcess(m *ice.Message, arg ...ice.Any) func(...ice.Any) {
-	h := kit.HashsUniq()
-	Toast(m, toastContent(m, ice.PROCESS, arg...), "", "-1", "", h)
-	return func(arg ...ice.Any) { Toast(m, toastContent(m, ice.SUCCESS, arg...), "", cli.TIME_3s, "", h) }
-}
-func GoToastTable(m *ice.Message, key string, cb func(value ice.Maps)) *ice.Message {
-	if m.Length() == 0 {
+func ProcessIframe(m *ice.Message, title, link string, arg ...string) *ice.Message {
+	if m.IsMetaKey() {
+		m.ProcessOpen(link)
 		return m
 	}
-	return GoToast(m, func(toast func(string, int, int)) []string {
-		m.Table(func(value ice.Maps, index, total int) { toast(value[key], index, total); cb(value) })
-		return nil
-	})
+	if !kit.HasPrefixList(arg, ctx.RUN) {
+		defer m.Push(TITLE, title)
+	}
+	return ctx.ProcessFloat(m, CHAT_IFRAME, link, arg...)
 }
-func GoToast(m *ice.Message, cb func(toast func(name string, count, total int)) []string) *ice.Message {
-	icon, _total, h := Icons[ice.PROCESS], 1, kit.HashsUniq()
-	toast := func(name string, count, total int) {
-		kit.If(total == 0, func() { total = 1 })
-		Toast(m, kit.Format("%s %s %s", icon, kit.JoinWord(kit.Select(ice.LIST, m.ActionKey()), name), strings.ReplaceAll(kit.FmtSize(count, total), "B", "")),
-			m.Option(ice.MSG_TITLE), m.OptionDefault(ice.TOAST_DURATION, "-1"), count*100/total, h)
-		_total = total
-	}
-	if list := cb(toast); len(list) > 0 {
-		icon = Icons[ice.FAILURE]
-		m.Option(ice.TOAST_DURATION, cli.TIME_30s)
-		toast(kit.JoinWord(list...), len(list), _total)
+func ProcessPodCmd(m *ice.Message, pod, cmd string, args ice.Any, arg ...string) *ice.Message {
+	if kit.HasPrefixList(arg, ctx.RUN) {
+		ctx.ProcessField(m.Options(ice.POD, arg[1]), arg[2], args, kit.Simple(arg[0], arg[3:])...)
 	} else {
-		icon = Icons[ice.SUCCESS]
-		m.Option(ice.TOAST_DURATION, cli.TIME_3s)
-		toast(ice.SUCCESS, _total, _total)
+		ctx.ProcessField(m.Options(ice.POD, pod), cmd, args, arg...).ProcessField(ctx.ACTION, m.ActionKey(), ctx.RUN, pod, cmd)
 	}
-	m.Sleep(m.Option(ice.TOAST_DURATION))
 	return m
+}
+func ProcessHashPodCmd(m *ice.Message, arg ...string) *ice.Message {
+	msg := m
+	if kit.HasPrefixList(arg, ctx.RUN) {
+		msg = mdb.HashSelects(m.Spawn(), arg[1])
+		arg = kit.Simple(arg[0], arg[2:])
+	} else {
+		msg = mdb.HashSelects(m.Spawn(), m.Option(mdb.HASH))
+		defer m.ProcessField(ctx.ACTION, m.ActionKey(), ctx.RUN, m.Option(mdb.HASH))
+	}
+	return ctx.ProcessField(m.Options(ice.POD, msg.Append(SPACE)), msg.Append(ctx.INDEX), kit.Split(msg.Append(ctx.ARGS)), arg...)
 }

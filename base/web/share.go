@@ -60,12 +60,11 @@ const (
 	STORM = "storm"
 	FIELD = "field"
 
-	LOCAL = "local"
 	PROXY = "proxy"
-	TOAST = "toast"
+	LOCAL = "local"
 
-	SHARE_LOCAL = "/share/local/"
 	SHARE_CACHE = "/share/cache/"
+	SHARE_LOCAL = "/share/local/"
 )
 const SHARE = "share"
 
@@ -128,12 +127,9 @@ func init() {
 				mdb.HashSelect(m, arg...).PushAction(OPEN, mdb.REMOVE)
 			}
 		}},
+		PP(SHARE, PROXY): {Hand: func(m *ice.Message, arg ...string) { _share_proxy(m) }},
 		PP(SHARE, CACHE): {Hand: func(m *ice.Message, arg ...string) { _share_cache(m, arg...) }},
 		PP(SHARE, LOCAL): {Hand: func(m *ice.Message, arg ...string) { ShareLocalFile(m, arg...) }},
-		PP(SHARE, PROXY): {Hand: func(m *ice.Message, arg ...string) { _share_proxy(m) }},
-		PP(SHARE, TOAST): {Hand: func(m *ice.Message, arg ...string) {
-			m.Options(ice.LOG_DISABLE, ice.TRUE).Cmdy(SPACE, arg[0], kit.UnMarshal(m.Option(ice.ARG)))
-		}},
 	})
 }
 func IsNotValidShare(m *ice.Message, time string) bool {

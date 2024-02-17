@@ -5,7 +5,7 @@ Volcanos(chat.ONIMPORT, {_init: function(can, msg) {},
 		can.onmotion.hidden(can, can._action)
 		// can.core.Item(can.ui.zone, function(key, item) { key == "favor" || item._legend.click() })
 		if (can.user.isMobile) {
-			can.page.style(can, can.ui.project, "z-index", 10, "position", "absolute", html.MAX_HEIGHT, can.ConfHeight()-120)
+			can.page.style(can, can.ui.project, "z-index", 2, "position", "absolute", html.MAX_HEIGHT, can.ConfHeight()-120)
 			can.page.style(can, can.ui.content, html.HEIGHT, can.ConfHeight(), html.WIDTH, can.ConfWidth())
 			can.onmotion.hidden(can, can._action), can.onmotion.hidden(can, can._status)
 		} else {

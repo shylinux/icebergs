@@ -123,23 +123,12 @@ func _dream_start(m *ice.Message, name string) {
 	if m.WarnNotValid(name == "", mdb.NAME) {
 		return
 	}
-	defer ToastProcess(m)()
-	defer m.ProcessOpen(m.MergePod(name))
-	defer mdb.Lock(m, m.PrefixKey(), cli.START, name)()
-	p := path.Join(ice.USR_LOCAL_WORK, name)
-	if p := path.Join(p, ice.Info.PidPath); nfs.Exists(m, p) {
-		if pid := m.Cmdx(nfs.CAT, p, kit.Dict(ice.MSG_USERROLE, aaa.TECH)); pid != "" && nfs.Exists(m, "/proc/"+pid) {
-			m.Info("already exists %v", pid)
-			return
-		}
-		for i := 0; i < 3; i++ {
-			if m.Cmd(SPACE, name).Length() > 0 {
-				m.Info("already exists %v", name)
-				return
-			}
-			m.Sleep300ms()
-		}
+	if !m.IsCliUA() {
+		defer ToastProcess(m)()
+		defer m.ProcessOpen(m.MergePod(name))
 	}
+	defer mdb.Lock(m, m.PrefixKey(), cli.START, name)()
+	p := _dream_check(m, name)
 	defer m.Options(cli.CMD_DIR, "", cli.CMD_ENV, "", cli.CMD_OUTPUT, "")
 	m.Options(cli.CMD_DIR, kit.Path(p), cli.CMD_ENV, kit.EnvList(kit.Simple(m.OptionSimple(ice.TCP_DOMAIN),
 		cli.CTX_OPS, HostPort(m, tcp.LOCALHOST, m.Cmdv(SERVE, tcp.PORT)), cli.CTX_LOG, ice.VAR_LOG_BOOT_LOG, cli.CTX_PID, ice.VAR_LOG_ICE_PID,
@@ -153,6 +142,23 @@ func _dream_start(m *ice.Message, name string) {
 	m.Cmd(cli.DAEMON, bin, SPACE, tcp.DIAL, ice.DEV, ice.OPS, mdb.TYPE, WORKER, m.OptionSimple(mdb.NAME), cli.DAEMON, ice.OPS)
 	gdb.WaitEvent(m, DREAM_OPEN, func(m *ice.Message, arg ...string) bool { return m.Option(mdb.NAME) == name })
 	m.Sleep300ms()
+}
+func _dream_check(m *ice.Message, name string) string {
+	p := path.Join(ice.USR_LOCAL_WORK, name)
+	if p := path.Join(p, ice.Info.PidPath); nfs.Exists(m, p) {
+		if pid := m.Cmdx(nfs.CAT, p, kit.Dict(ice.MSG_USERROLE, aaa.TECH)); pid != "" && nfs.Exists(m, "/proc/"+pid) {
+			m.Info("already exists %v", pid)
+			return p
+		}
+		for i := 0; i < 3; i++ {
+			if m.Cmd(SPACE, name).Length() > 0 {
+				m.Info("already exists %v", name)
+				return p
+			}
+			m.Sleep300ms()
+		}
+	}
+	return p
 }
 func _dream_binary(m *ice.Message, p string) {
 	if bin := path.Join(m.Option(cli.CMD_DIR), ice.BIN_ICE_BIN); nfs.Exists(m, bin) {
@@ -198,11 +204,11 @@ const (
 
 	DREAM_CREATE = "dream.create"
 	DREAM_REMOVE = "dream.remove"
+	DREAM_TRASH  = "dream.trash"
 	DREAM_START  = "dream.start"
 	DREAM_STOP   = "dream.stop"
 	DREAM_OPEN   = "dream.open"
 	DREAM_CLOSE  = "dream.close"
-	DREAM_TRASH  = "dream.trash"
 
 	DREAM_INPUTS = "dream.inputs"
 	DREAM_TABLES = "dream.tables"
@@ -323,7 +329,7 @@ func init() {
 				list := []string{cli.LINUX, cli.DARWIN, cli.WINDOWS}
 				msg := m.Spawn(ice.Maps{ice.MSG_DAEMON: ""})
 				func() {
-					defer ToastProcess(m, ice.Info.Pathname)(ice.Info.Pathname)
+					defer ToastProcess(m, PUBLISH, ice.Info.Pathname)(PUBLISH, ice.Info.Pathname)
 					m.Cmd(AUTOGEN, BINPACK)
 					kit.For(list, func(goos string) {
 						PushNoticeRich(m, mdb.NAME, ice.Info.NodeName, msg.Cmd(COMPILE, goos, cli.AMD64).AppendSimple())

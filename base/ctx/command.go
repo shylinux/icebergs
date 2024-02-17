@@ -51,6 +51,7 @@ const (
 	OPTS    = "opts"
 	STYLE   = "style"
 	DISPLAY = "display"
+	PREVIEW = "preview"
 	ACTION  = "action"
 	TOOLS   = "tools"
 	RUN     = "run"

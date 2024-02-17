@@ -300,13 +300,21 @@ func (m *Message) Sort(key string, arg ...Any) *Message {
 			switch v := arg[i].(type) {
 			case string:
 				cmp = v
-			case map[string]int:
-				order[k] = v
 			case []string:
 				list := map[string]int{}
 				for i, v := range v {
 					list[v] = i + 1
 				}
+				order[k] = list
+			case map[string]int:
+				order[k] = v
+			case func(string) int:
+				list := map[string]int{}
+				kit.For(m.Appendv(k), func(k string) {
+					if _, ok := list[k]; !ok {
+						list[k] = v(k)
+					}
+				})
 				order[k] = list
 			}
 		}

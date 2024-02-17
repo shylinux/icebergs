@@ -64,9 +64,13 @@ const (
 	PROFILE = "profile"
 	DISPLAY = "display"
 
+	TEXT     = "text"
+	TEXTAREA = "textarea"
+	PASSWORD = "password"
+	SELECT   = "select"
+	BUTTON   = "button"
+
 	VIEW    = "view"
-	TEXT    = "text"
-	BUTTON  = "button"
 	INPUT   = "input"
 	VALUE   = "value"
 	OUTPUT  = "output"

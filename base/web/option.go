@@ -96,33 +96,3 @@ func PushStream(m *ice.Message) *ice.Message {
 }
 func init() { ice.Info.PushNotice = PushNotice }
 func init() { ice.Info.PushStream = PushStream }
-
-func ProcessIframe(m *ice.Message, title, link string, arg ...string) *ice.Message {
-	if m.IsMetaKey() {
-		m.ProcessOpen(link)
-		return m
-	}
-	if !kit.HasPrefixList(arg, ctx.RUN) {
-		defer m.Push(TITLE, title)
-	}
-	return ctx.ProcessFloat(m, CHAT_IFRAME, link, arg...)
-}
-func ProcessPodCmd(m *ice.Message, pod, cmd string, args ice.Any, arg ...string) *ice.Message {
-	if kit.HasPrefixList(arg, ctx.RUN) {
-		ctx.ProcessField(m.Options(ice.POD, arg[1]), arg[2], args, kit.Simple(arg[0], arg[3:])...)
-	} else {
-		ctx.ProcessField(m.Options(ice.POD, pod), cmd, args, arg...).ProcessField(ctx.ACTION, m.ActionKey(), ctx.RUN, pod, cmd)
-	}
-	return m
-}
-func ProcessHashPodCmd(m *ice.Message, arg ...string) *ice.Message {
-	msg := m
-	if kit.HasPrefixList(arg, ctx.RUN) {
-		msg = mdb.HashSelects(m.Spawn(), arg[1])
-		arg = kit.Simple(arg[0], arg[2:])
-	} else {
-		msg = mdb.HashSelects(m.Spawn(), m.Option(mdb.HASH))
-		defer m.ProcessField(ctx.ACTION, m.ActionKey(), ctx.RUN, m.Option(mdb.HASH))
-	}
-	return ctx.ProcessField(m.Options(ice.POD, msg.Append(SPACE)), msg.Append(ctx.INDEX), kit.Split(msg.Append(ctx.ARGS)), arg...)
-}

@@ -634,13 +634,6 @@ func init() {
 					})
 				}
 			}},
-			web.SERVE_START: {Hand: func(m *ice.Message, arg ...string) {
-				return
-				m.Go(func() {
-					m.Cmd("", CLONE, REMOTE, "node_modules", mdb.NAME, "", nfs.PATH, "")
-					m.Cmd("", CLONE, REMOTE, "icons", mdb.NAME, "", nfs.PATH, "")
-				})
-			}},
 			web.STATS_TABLES: {Hand: func(m *ice.Message, _ ...string) {
 				if ice.Info.NodeType == web.SERVER {
 					if msg := mdb.HashSelects(m.Spawn()); msg.Length() > 0 {

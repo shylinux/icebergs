@@ -8,7 +8,6 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
-	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
@@ -19,24 +18,9 @@ const ADMIN = "admin"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		ADMIN: {Name: "admin index list", Help: "管理", Role: aaa.VOID, Actions: ice.Actions{
-			ice.CTX_INIT: {Hand: DreamWhiteHandle},
-			DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) { m.PushButton(kit.Dict(ADMIN, "后台")) }},
-			DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) {
-				if kit.HasPrefixList(arg, ctx.ACTION, ADMIN) && len(arg) == 2 {
-					link := m.MergePodCmd(m.Option(mdb.NAME), "")
-					if m.Option(mdb.TYPE) == MASTER {
-						link = SpideOrigin(m, m.Option(mdb.NAME)) + C(m.PrefixKey())
-					}
-					if m.IsMetaKey() {
-						m.ProcessOpen(link)
-					} else {
-						ctx.ProcessFloat(m, CHAT_IFRAME, link, arg...)
-						m.ProcessField(ctx.ACTION, ctx.RUN, CHAT_IFRAME)
-					}
-				}
-			}},
-		}, Hand: func(m *ice.Message, arg ...string) {
+		ADMIN: {Name: "admin index list", Help: "后台", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
+			DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { DreamProcessIframe(m, arg...) }},
+		}, DreamTablesAction()), Hand: func(m *ice.Message, arg ...string) {
 			if m.Option(ice.MSG_SOURCE) != "" {
 				RenderMain(m)
 			} else {

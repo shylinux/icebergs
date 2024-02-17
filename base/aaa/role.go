@@ -130,11 +130,8 @@ func init() {
 	})
 }
 func roleHandle(m *ice.Message, role string, key ...string) {
+	cmd := m.ShortKey()
 	role = kit.Select(VOID, role)
-	cmd := m.PrefixKey()
-	if c, ok := ice.Info.Index[m.CommandKey()].(*ice.Context); ok && c == m.Target() {
-		cmd = m.CommandKey()
-	}
 	m.Cmd(ROLE, WHITE, role, cmd)
 	m.Cmd(ROLE, BLACK, role, cmd, ice.ACTION)
 	kit.For(key, func(key string) { m.Cmd(ROLE, WHITE, role, cmd, ice.ACTION, key) })

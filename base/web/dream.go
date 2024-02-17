@@ -23,9 +23,6 @@ import (
 )
 
 func _dream_list(m *ice.Message, simple bool) *ice.Message {
-	if ice.Info.NodeType == WORKER {
-		return m
-	}
 	list := m.CmdMap(SPACE, mdb.NAME)
 	mdb.HashSelect(m).Table(func(value ice.Maps) {
 		if space, ok := list[value[mdb.NAME]]; ok {
@@ -78,10 +75,7 @@ func _dream_list_icon(m *ice.Message) {
 	})
 }
 func _dream_list_more(m *ice.Message, simple bool) *ice.Message {
-	if m.IsCliUA() {
-		return m
-	}
-	list := m.Spawn(ice.Maps{ice.MSG_FIELDS: ""}).CmdMap(SPIDE, CLIENT_NAME)
+	list := m.CmdMap(SPIDE, CLIENT_NAME)
 	m.Cmds(SPACE).Table(func(value ice.Maps) {
 		value[mdb.ICONS] = nfs.USR_ICONS_VOLCANOS
 		value[nfs.REPOS] = "https://" + value[nfs.MODULE]
@@ -90,7 +84,6 @@ func _dream_list_more(m *ice.Message, simple bool) *ice.Message {
 		case SERVER:
 			value[mdb.ICONS] = nfs.USR_ICONS_ICEBERGS
 			value[mdb.TEXT] = kit.JoinLine(value[nfs.MODULE], value[mdb.TEXT])
-
 			if simple {
 				defer m.PushButton("")
 			} else {
@@ -129,12 +122,12 @@ func _dream_start(m *ice.Message, name string) {
 	}
 	defer mdb.Lock(m, m.PrefixKey(), cli.START, name)()
 	p := _dream_check(m, name)
+	gdb.Event(m, DREAM_CREATE, m.OptionSimple(mdb.NAME))
 	defer m.Options(cli.CMD_DIR, "", cli.CMD_ENV, "", cli.CMD_OUTPUT, "")
 	m.Options(cli.CMD_DIR, kit.Path(p), cli.CMD_ENV, kit.EnvList(kit.Simple(m.OptionSimple(ice.TCP_DOMAIN),
 		cli.CTX_OPS, HostPort(m, tcp.LOCALHOST, m.Cmdv(SERVE, tcp.PORT)), cli.CTX_LOG, ice.VAR_LOG_BOOT_LOG, cli.CTX_PID, ice.VAR_LOG_ICE_PID,
 		cli.CTX_ROOT, kit.Path(""), cli.PATH, cli.BinPath(p, ""), cli.USER, ice.Info.Username,
 	)...), cli.CMD_OUTPUT, path.Join(p, ice.VAR_LOG_BOOT_LOG), mdb.CACHE_CLEAR_ONEXIT, ice.TRUE)
-	gdb.Event(m, DREAM_CREATE, m.OptionSimple(mdb.NAME, mdb.TYPE, cli.CMD_DIR))
 	kit.If(m.Option(nfs.BINARY) == "" && cli.SystemFind(m, "go") == "", func(p string) { m.Option(nfs.BINARY, SpideOrigin(m, ice.DEV_IP)+S(name)) })
 	kit.If(m.Option(nfs.BINARY), func(p string) { _dream_binary(m, p) })
 	kit.If(m.Option(nfs.TEMPLATE), func(p string) { _dream_template(m, p) })
@@ -178,7 +171,7 @@ func _dream_binary(m *ice.Message, p string) {
 }
 func _dream_template(m *ice.Message, p string) {
 	kit.For([]string{
-		ice.README_MD, ice.MAKEFILE, ice.LICENSE, ice.GO_MOD, ice.GO_SUM,
+		ice.LICENSE, ice.README_MD, ice.MAKEFILE, ice.GO_MOD, ice.GO_SUM,
 		ice.SRC_MAIN_SH, ice.SRC_MAIN_SHY, ice.SRC_MAIN_GO, ice.SRC_MAIN_JS,
 		ice.ETC_MISS_SH, ice.ETC_INIT_SHY, ice.ETC_EXIT_SHY,
 	}, func(file string) {
@@ -198,10 +191,10 @@ const (
 	ALWAYS   = "always"
 	STARTALL = "startall"
 	STOPALL  = "stopall"
-	PUBLISH  = "publish"
 	FOR_EACH = "forEach"
 	FOR_FLOW = "forFlow"
 
+	DREAM_INPUTS = "dream.inputs"
 	DREAM_CREATE = "dream.create"
 	DREAM_REMOVE = "dream.remove"
 	DREAM_TRASH  = "dream.trash"
@@ -210,7 +203,6 @@ const (
 	DREAM_OPEN   = "dream.open"
 	DREAM_CLOSE  = "dream.close"
 
-	DREAM_INPUTS = "dream.inputs"
 	DREAM_TABLES = "dream.tables"
 	DREAM_ACTION = "dream.action"
 )
@@ -223,19 +215,19 @@ func init() {
 		), Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m = m.Spawn()
+				m.GoSleep("1s", func() {
+					for _, cmd := range kit.Reverse(kit.Split(mdb.Config(m, html.BUTTON))) {
+						m.Cmd(gdb.EVENT, gdb.LISTEN, gdb.EVENT, DREAM_TABLES, ice.CMD, cmd)
+						m.Cmd(gdb.EVENT, gdb.LISTEN, gdb.EVENT, DREAM_ACTION, ice.CMD, cmd)
+						aaa.White(m, kit.Keys(m.PrefixKey(), ctx.ACTION, cmd))
+					}
+				})
 				m.GoSleep("10s", func() {
 					mdb.HashSelects(m).Table(func(value ice.Maps) {
 						if value[cli.RESTART] == ALWAYS && nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK+value[mdb.NAME])) {
 							m.Cmd(DREAM, cli.START, kit.Dict(mdb.NAME, value[mdb.NAME]))
 						}
 					})
-				})
-				m.GoSleep("1s", func() {
-					for _, cmd := range kit.Reverse(kit.Split(mdb.Config(m, html.BUTTON))) {
-						m.Cmd(gdb.EVENT, gdb.LISTEN, gdb.EVENT, DREAM_TABLES, ice.CMD, cmd)
-						m.Cmd(gdb.EVENT, gdb.LISTEN, gdb.EVENT, DREAM_ACTION, ice.CMD, cmd)
-					}
-					aaa.White(m, kit.Keys(m.PrefixKey(), ctx.ACTION, DREAM_ACTION, ctx.RUN))
 				})
 			}},
 			html.BUTTON: {Hand: func(m *ice.Message, arg ...string) { mdb.Config(m, html.BUTTON, kit.Join(arg)) }},
@@ -251,6 +243,9 @@ func init() {
 					case mdb.NAME, nfs.TEMPLATE:
 						_dream_list(m, true).Cut("name,status,time")
 						return
+					case mdb.ICONS:
+						mdb.HashInputs(m, arg)
+						return
 					case nfs.BINARY:
 						m.Cmdy(nfs.DIR, ice.BIN, "path,size,time", kit.Dict(nfs.DIR_TYPE, nfs.TYPE_BIN))
 						m.Cmd(nfs.DIR, ice.USR_LOCAL_WORK, kit.Dict(nfs.DIR_TYPE, nfs.TYPE_BOTH), func(value ice.Maps) {
@@ -263,17 +258,11 @@ func init() {
 								m.Push(arg[0], origin+S(value[mdb.NAME])).Push(nfs.SIZE, value[nfs.SIZE]).Push(mdb.TIME, value[mdb.TIME])
 							})
 						})
-					case mdb.ICONS:
-						mdb.HashInputs(m, arg)
-						return
 					}
 				case STARTALL:
 					DreamEach(m, "", cli.STOP, func(name string) { m.Push(arg[0], name) })
 					return
-				case MAIN:
-					m.Cmdy(SPACE, m.Option(mdb.NAME), SPACE, mdb.INPUTS, arg)
-					return
-				case "send":
+				case tcp.SEND:
 					m.Cmd(SPACE, func(value ice.Maps) {
 						kit.If(kit.IsIn(value[mdb.TYPE], SERVER), func() { m.Push(arg[0], value[mdb.NAME]) })
 					})
@@ -282,11 +271,11 @@ func init() {
 				switch arg[0] {
 				case mdb.NAME:
 					DreamEach(m, "", cli.START, func(name string) { m.Push(arg[0], name) })
+				case ctx.CMDS:
+					m.Cmdy(ctx.COMMAND)
 				case nfs.FILE:
 					m.Options(nfs.DIR_TYPE, nfs.TYPE_CAT, ice.MSG_FIELDS, nfs.PATH)
 					m.Cmdy(nfs.DIR, nfs.SRC).Cmdy(nfs.DIR, nfs.ETC).Cmdy(nfs.DIR, "")
-				case ctx.CMDS:
-					m.Cmdy(ctx.COMMAND)
 				default:
 					gdb.Event(m, DREAM_INPUTS, arg)
 				}
@@ -295,9 +284,9 @@ func init() {
 				kit.If(!strings.Contains(m.Option(mdb.NAME), "-") || !strings.HasPrefix(m.Option(mdb.NAME), "20"), func() { m.Option(mdb.NAME, m.Time("20060102-")+m.Option(mdb.NAME)) })
 				kit.If(mdb.Config(m, nfs.BINARY), func(p string) { m.OptionDefault(nfs.BINARY, p+m.Option(mdb.NAME)) })
 				kit.If(mdb.Config(m, nfs.REPOS), func(p string) { m.OptionDefault(nfs.REPOS, p+m.Option(mdb.NAME)) })
-				m.Option(nfs.REPOS, kit.Select("", kit.Slice(kit.Split(m.Option(nfs.REPOS)), -1), 0))
+				m.Option(nfs.REPOS, kit.Select("", kit.Split(m.Option(nfs.REPOS)), -1))
 				m.OptionDefault(mdb.ICONS, nfs.USR_ICONS_CONTEXTS)
-				if mdb.HashCreate(m); !m.IsCliUA() {
+				if mdb.HashCreate(m); ice.Info.Important == true {
 					_dream_start(m, m.Option(mdb.NAME))
 				}
 			}},
@@ -312,7 +301,7 @@ func init() {
 				})
 			}},
 			cli.BUILD: {Name: "build name", Hand: func(m *ice.Message, arg ...string) {
-				compile := cli.SystemFind(m, "go") != ""
+				compile := cli.SystemFindGo(m)
 				m.Option(ice.MSG_TITLE, kit.Keys(m.Option(ice.MSG_USERPOD0), m.Option(ice.MSG_USERPOD), m.CommandKey(), m.ActionKey()))
 				m.Cmd("", FOR_FLOW, m.Option(mdb.NAME), kit.JoinWord(cli.SH, ice.ETC_MISS_SH), func(p string) bool {
 					if compile && nfs.Exists(m, path.Join(p, ice.SRC_MAIN_GO)) {
@@ -324,7 +313,7 @@ func init() {
 				})
 				kit.If(m.Option(mdb.NAME) == "", func() { m.Sleep3s().Cmdy(ROUTE, cli.BUILD).ProcessInner() })
 			}},
-			PUBLISH: {Name: "publish name", Help: "发布", Icon: "bi bi-send-check", Hand: func(m *ice.Message, arg ...string) {
+			PUBLISH: {Name: "publish name", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(ice.MSG_TITLE, kit.Keys(m.Option(ice.MSG_USERPOD0), m.Option(ice.MSG_USERPOD), m.CommandKey(), m.ActionKey()))
 				list := []string{cli.LINUX, cli.DARWIN, cli.WINDOWS}
 				msg := m.Spawn(ice.Maps{ice.MSG_DAEMON: ""})
@@ -340,67 +329,60 @@ func init() {
 					kit.For(list, func(goos string) {
 						PushNoticeRich(m, mdb.NAME, name, msg.Cmd(SPACE, name, COMPILE, goos, cli.AMD64, kit.Dict(ice.MSG_USERPOD, name)).AppendSimple())
 					})
-				})
-				m.ProcessHold()
+				}).ProcessHold()
 			}},
 			FOR_FLOW: {Name: "forFlow name cmd*='sh etc/miss.sh'", Help: "流程", Icon: "bi bi-terminal", Hand: func(m *ice.Message, arg ...string) {
-				msg := m.Spawn()
-				DreamEach(m.Spawn(ice.Maps{ice.MSG_DAEMON: ""}), m.Option(mdb.NAME), "", func(name string) { msg.Push(SPACE, name) })
 				m.Options(ctx.DISPLAY, PLUGIN_XTERM, cli.CMD_OUTPUT, nfs.NewWriteCloser(func(buf []byte) (int, error) {
 					PushNoticeGrow(m.Options(ice.MSG_COUNT, "0"), strings.ReplaceAll(string(buf), lex.NL, "\r\n"))
 					return len(buf), nil
-				}, func() error { return nil }))
-				GoToastTable(msg, SPACE, func(value ice.Maps) {
-					p := path.Join(ice.USR_LOCAL_WORK, value[SPACE])
-					switch cb := m.OptionCB("").(type) {
-					case func(string) bool:
-						if cb(p) {
-							return
-						}
+				}, nil))
+				DreamEach(m, m.Option(mdb.NAME), "", func(name string) {
+					p := path.Join(ice.USR_LOCAL_WORK, name)
+					if cb, ok := m.OptionCB("").(func(string) bool); ok && cb(p) {
+						return
 					}
-					PushNoticeGrow(m, strings.ReplaceAll(kit.Format("[%s]%s$ %s\r\n", time.Now().Format(ice.MOD_TIME_ONLY), value[SPACE], m.Option(ice.CMD)), lex.NL, "\r\n"))
+					PushNoticeGrow(m, kit.Format("[%s]%s$ %s\r\n", time.Now().Format(ice.MOD_TIME_ONLY), name, m.Option(ice.CMD)))
 					m.Cmd(cli.SYSTEM, kit.Split(m.Option(ice.CMD)), kit.Dict(cli.CMD_DIR, p)).Sleep300ms()
 					PushNoticeGrow(m, "\r\n\r\n\r\n")
 				})
 			}},
 			ctx.CMDS: {Name: "cmds name cmds*", Help: "命令", Icon: "bi bi-terminal", Hand: func(m *ice.Message, arg ...string) {
 				DreamEach(m, m.Option(mdb.NAME), "", func(name string) {
-					m.Push(mdb.NAME, name).Push(mdb.TEXT, m.Cmdx(SPACE, name, kit.Split(m.Option(ice.CMD))))
+					m.Push(mdb.NAME, name).Push(mdb.TEXT, m.Cmdx(SPACE, name, kit.Split(m.Option(ctx.CMDS))))
 				}).StatusTimeCount(m.OptionSimple(ctx.CMDS))
 			}},
-			nfs.CAT: {Name: "cat name file*", Help: "文件", Icon: "bi bi-file-earmark-code", Hand: func(m *ice.Message, arg ...string) {
+			nfs.FILE: {Name: "file name file*", Help: "文件", Icon: "bi bi-file-earmark-code", Hand: func(m *ice.Message, arg ...string) {
 				DreamEach(m, m.Option(mdb.NAME), "", func(name string) {
 					m.Push(mdb.NAME, name).Push(mdb.TEXT, m.Cmdx(SPACE, name, nfs.CAT, m.Option(nfs.FILE)))
 				}).StatusTimeCount(m.OptionSimple(nfs.FILE))
 			}},
 			cli.START: {Hand: func(m *ice.Message, arg ...string) {
-				defer gdb.Event(m, DREAM_START, arg)
 				_dream_start(m, m.Option(mdb.NAME))
+				gdb.Event(m, DREAM_START, arg)
 			}},
 			cli.STOP: {Hand: func(m *ice.Message, arg ...string) {
 				defer ToastProcess(m)()
 				gdb.Event(m, DREAM_STOP, arg)
 				m.Cmd(SPACE, mdb.MODIFY, m.OptionSimple(mdb.NAME), mdb.STATUS, cli.STOP)
-				m.Cmd(SPACE, m.Option(mdb.NAME), ice.EXIT)
-				m.Sleep3s()
+				m.Cmd(SPACE, m.Option(mdb.NAME), ice.EXIT).Sleep3s()
 			}},
-			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
-				gdb.Event(m, DREAM_TRASH, arg)
-				nfs.Trash(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME)))
+			cli.RUNTIME: {Hand: func(m *ice.Message, arg ...string) {
+				ProcessPodCmd(m, m.Option(mdb.NAME), "", nil, arg...)
 			}},
 			tcp.SEND: {Name: "send space*", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(SPACE, m.Option(SPACE), DREAM, mdb.CREATE, m.OptionSimple(mdb.NAME, mdb.ICONS, nfs.REPOS, nfs.BINARY))
 				m.Cmd(SPACE, m.Option(SPACE), DREAM, cli.START, m.OptionSimple(mdb.NAME))
 				ProcessIframe(m, "", m.MergePod(kit.Keys(m.Option(SPACE), m.Option(mdb.NAME))))
 			}},
-			GRANT: {Help: "授权", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(CHAT_GRANT, aaa.CONFIRM, kit.Dict(SPACE, m.Option(mdb.NAME)))
+			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
+				gdb.Event(m, DREAM_TRASH, arg)
+				nfs.Trash(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME)))
 			}},
 			OPEN: {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
-				ProcessIframe(m, m.Option(mdb.NAME), kit.Select(m.MergePod(m.Option(mdb.NAME), SpideOrigin(m, m.Option(mdb.NAME))+C(ADMIN)), m.Option(mdb.TYPE) == MASTER), arg...)
+				ProcessIframe(m, m.Option(mdb.NAME), kit.Select(m.MergePod(m.Option(mdb.NAME)), SpideOrigin(m, m.Option(mdb.NAME)), m.Option(mdb.TYPE) == MASTER), arg...)
 			}},
-			MAIN: {Name: "main index", Help: "首页", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(SPACE, m.Option(mdb.NAME), SPACE, ice.MAIN, m.Option(ctx.INDEX))
+			GRANT: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(CHAT_GRANT, aaa.CONFIRM, kit.Dict(SPACE, m.Option(mdb.NAME)))
 			}},
 			DREAM_OPEN: {Hand: func(m *ice.Message, arg ...string) {}},
 			DREAM_CLOSE: {Hand: func(m *ice.Message, arg ...string) {
@@ -411,44 +393,44 @@ func init() {
 			DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				switch m.Option(mdb.TYPE) {
 				case WORKER:
-					m.PushButton(tcp.SEND, OPEN)
+					m.PushButton(cli.RUNTIME, tcp.SEND, OPEN)
 				default:
-					m.PushButton(OPEN)
+					m.PushButton(cli.RUNTIME, OPEN)
 				}
 			}},
 			STATS_TABLES: {Hand: func(m *ice.Message, arg ...string) {
-				if msg := mdb.HashSelects(m.Spawn()); msg.Length() > 0 {
+				if msg := _dream_list(m, true); msg.Length() > 0 {
 					stat := map[string]int{}
-					list := m.CmdMap(SPACE, mdb.NAME)
-					msg.Table(func(value ice.Maps) {
-						if _, ok := list[value[mdb.NAME]]; ok {
-							stat[cli.START]++
-						}
-					})
-					PushStats(m, kit.Keys(m.CommandKey(), cli.START), stat[cli.START], "", "空间总数")
-					PushStats(m, kit.Keys(m.CommandKey(), mdb.TOTAL), msg.Length(), "", "已启动空间")
+					msg.Table(func(value ice.Maps) { stat[value[mdb.TYPE]]++; stat[value[mdb.STATUS]]++ })
+					PushStats(m, kit.Keys(m.CommandKey(), MASTER), stat[MASTER], "", "已连接服务")
+					PushStats(m, kit.Keys(m.CommandKey(), SERVER), stat[SERVER], "", "已连接机器")
+					PushStats(m, kit.Keys(m.CommandKey(), cli.START), stat[cli.START], "", "已启动空间")
 				}
 			}},
-		}, StatsAction(), DreamAction(), mdb.ImportantHashAction(
-			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icons,repos,binary,template,restart", ctx.TOOLS, kit.Simple(STORE, SPIDE),
-			html.BUTTON, kit.JoinWord(PORTAL, ADMIN, DESKTOP, WIKI_WORD, STATUS, VIMER, XTERM, COMPILE),
+		}, StatsAction(), DreamAction(), DreamTablesAction(), mdb.ImportantHashAction(
+			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icons,repos,binary,template,restart",
+			html.BUTTON, kit.JoinWord(PORTAL, ADMIN, DESKTOP, WORD, STATUS, VIMER, COMPILE, XTERM, DREAM),
+			ctx.TOOLS, kit.Simple(SPIDE, STORE, MATRIX, ROUTE),
 		)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				simple := m.Option("dream.simple") == ice.TRUE
-				_dream_list(m, simple)
-				_dream_list_icon(m)
-				_dream_list_more(m, simple)
-				stat := map[string]int{}
-				m.Table(func(value ice.Maps) { stat[value[mdb.TYPE]]++; stat[value[mdb.STATUS]]++ })
-				kit.If(stat[cli.START] == stat[WORKER], func() { delete(stat, cli.START) })
-				m.Sort("type,status,name", []string{aaa.LOGIN, WORKER, SERVER, MASTER}, []string{cli.START, cli.STOP, cli.BEGIN}, ice.STR_R).StatusTimeCount(stat)
-				if ctx.DisplayTableCard(m); ice.Info.NodeType == WORKER || !aaa.IsTechOrRoot(m) || m.IsCliUA() {
-					m.Action()
-				} else if cli.SystemFind(m, "go") == "" {
-					m.Action(html.FILTER, mdb.CREATE, STARTALL, STOPALL)
-				} else {
-					m.Action(html.FILTER, mdb.CREATE, STARTALL, STOPALL, cli.BUILD, PUBLISH)
+				if ice.Info.NodeType != WORKER {
+					_dream_list(m, simple)
+					_dream_list_icon(m)
 				}
+				if !m.IsCliUA() {
+					_dream_list_more(m, simple)
+				}
+				if ice.Info.NodeType == WORKER || !aaa.IsTechOrRoot(m) || m.IsCliUA() {
+					m.Action()
+				} else if cli.SystemFindGo(m) {
+					m.Action(html.FILTER, mdb.CREATE, STARTALL, STOPALL, cli.BUILD, PUBLISH)
+				} else {
+					m.Action(html.FILTER, mdb.CREATE, STARTALL, STOPALL)
+				}
+				m.Sort("type,status,name", []string{aaa.LOGIN, WORKER, SERVER, MASTER}, []string{cli.START, cli.STOP, cli.BEGIN}, ice.STR_R)
+				m.StatusTimeCountStats(mdb.TYPE, mdb.STATUS)
+				ctx.DisplayTableCard(m)
 			} else if arg[0] == ctx.ACTION {
 				gdb.Event(m, DREAM_ACTION, arg)
 			} else {
@@ -458,68 +440,63 @@ func init() {
 	})
 }
 
-func DreamAction() ice.Actions {
-	return ice.MergeActions(ice.Actions{
-		DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { DreamProcess(m, nil, arg...) }},
-	}, gdb.EventsAction(DREAM_OPEN, DREAM_CLOSE, DREAM_INPUTS, DREAM_CREATE, DREAM_TRASH, DREAM_TABLES, DREAM_ACTION, SERVE_START))
-}
-func DreamProcess(m *ice.Message, args ice.Any, arg ...string) {
-	if kit.HasPrefixList(arg, ctx.RUN) {
-		ctx.ProcessFloat(m, m.PrefixKey(), args, kit.Slice(arg, 1)...)
-	} else if kit.HasPrefixList(arg, ctx.ACTION, m.PrefixKey()) || kit.HasPrefixList(arg, ctx.ACTION, m.CommandKey()) {
-		if m.Option(mdb.TYPE) == MASTER && (kit.IsIn(ctx.ShortCmd(m.PrefixKey()), PORTAL, DESKTOP)) {
-			if ProcessIframe(m, "", SpideOrigin(m, m.Option(mdb.NAME))+C(m.PrefixKey()), arg...); !m.IsMetaKey() {
-				m.ProcessField(ctx.ACTION, ctx.RUN, CHAT_IFRAME)
-			}
-		} else if arg = kit.Slice(arg, 2); kit.HasPrefixList(arg, DREAM) {
-			m.Cmdy(SPACE, m.Option(ice.MSG_USERPOD, arg[1]), m.PrefixKey(), ctx.ACTION, DREAM_ACTION, ctx.RUN, arg[2:])
-		} else if dream := m.Option(mdb.NAME); dream != "" {
-			m.Cmdy(SPACE, dream, m.PrefixKey(), ctx.ACTION, DREAM_ACTION, ctx.RUN, arg).Optionv(ice.FIELD_PREFIX, kit.Simple(ctx.ACTION, m.PrefixKey(), DREAM, dream, ctx.RUN))
-			m.Push("_space", dream)
-		}
+func DreamTablesAction() ice.Actions {
+	return ice.Actions{ice.CTX_INIT: {Hand: DreamWhiteHandle},
+		DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) { m.PushButton(kit.Dict(m.CommandKey(), m.Commands("").Help)) }},
+		DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { DreamProcess(m, "", nil, arg...) }},
 	}
+}
+func DreamAction() ice.Actions {
+	return gdb.EventsAction(DREAM_INPUTS, DREAM_CREATE, DREAM_TRASH, DREAM_OPEN, DREAM_CLOSE, SERVE_START)
+}
+func DreamWhiteHandle(m *ice.Message, arg ...string) {
+	aaa.White(m, kit.Keys(DREAM, ctx.ACTION, m.ShortKey()))
+	aaa.White(m, kit.Keys(m.ShortKey(), ctx.ACTION, DREAM_ACTION))
+}
+func DreamProcessIframe(m *ice.Message, arg ...string) {
+	if kit.HasPrefixList(arg, ctx.ACTION, m.CommandKey()) && len(arg) == 2 {
+		defer m.Push(TITLE, kit.Keys(m.Option(mdb.NAME), m.ShortKey()))
+	}
+	DreamProcess(m, CHAT_IFRAME, func() string {
+		if m.Option(mdb.TYPE) == MASTER {
+			return SpideOrigin(m, m.Option(mdb.NAME)) + C(m.ShortKey())
+		}
+		return m.MergePodCmd(m.Option(mdb.NAME), m.ShortKey())
+	}, arg...)
+}
+func DreamProcess(m *ice.Message, cmd string, args ice.Any, arg ...string) {
+	if !kit.HasPrefixList(arg, ctx.ACTION, m.ShortKey()) && !kit.HasPrefixList(arg, ctx.ACTION, m.CommandKey()) {
+		return
+	} else if arg = arg[2:]; len(arg) == 0 {
+		arg = append(arg, m.Option(mdb.NAME))
+		defer m.ProcessField(ctx.ACTION, m.ShortKey(), arg[0], ctx.RUN)
+		defer processSpace(m, arg[0], arg[0], m.ShortKey())
+	}
+	ctx.ProcessFloat(m.Options(ice.POD, arg[0]), kit.Select(m.ShortKey(), cmd), args, arg[1:]...)
 }
 func DreamEach(m *ice.Message, name string, status string, cb func(string)) *ice.Message {
 	reg, err := regexp.Compile(name)
 	if m.WarnNotValid(err) {
 		return m
 	}
-	list := []string{}
-	m.Spawn().Cmds(DREAM).Table(func(value ice.Maps) {
-		if value[mdb.STATUS] == kit.Select(cli.START, status) && reg.MatchString(value[mdb.NAME]) && value[mdb.TYPE] == WORKER {
-			list = append(list, value[mdb.NAME])
+	msg := m.Spawn()
+	m.Cmds(DREAM).Table(func(value ice.Maps) {
+		if value[mdb.STATUS] == kit.Select(cli.START, status) && (value[mdb.NAME] == name || reg.MatchString(kit.Format("%s:%s=%s@%d", value[mdb.NAME], value[mdb.TYPE], value[nfs.MODULE], value[nfs.VERSION]))) {
+			msg.Push(mdb.NAME, value[mdb.NAME])
 		}
 	})
-	if len(list) == 0 {
-		return m
-	}
-	GoToast(m, func(toast func(string, int, int)) []string {
-		kit.For(list, func(name string, index, total int) { toast(name, index, total); cb(name) })
-		return nil
-	})
-	return m
-}
-func DreamList(m *ice.Message) *ice.Message {
-	return m.SplitIndex(AdminCmd(m, DREAM).Result())
-}
-func DreamWhiteHandle(m *ice.Message, arg ...string) {
-	aaa.White(m, kit.Keys(DREAM, ctx.ACTION, m.CommandKey()))
-	aaa.White(m, kit.Keys(DREAM, ctx.ACTION, m.PrefixKey()))
-	aaa.White(m, kit.Keys(ctx.ShortCmd(m.PrefixKey()), ctx.ACTION, DREAM_ACTION))
+	return GoToastTable(msg, mdb.NAME, func(value ice.Maps) { cb(value[mdb.NAME]) })
 }
 func DreamListSpide(m *ice.Message, list []string, types string, cb func(dev, origin string)) {
-	m.Cmds(DREAM).Table(func(value ice.Maps) {
-		kit.If(value[mdb.TYPE] == types, func() { list = append(list, value[mdb.NAME]) })
-	})
+	msg := m.Spawn()
+	kit.For(list, func(name string) { msg.Push(mdb.NAME, name) })
+	m.Cmds(SPACE).Table(func(value ice.Maps) { kit.If(value[mdb.TYPE] == types, func() { msg.Push(mdb.NAME, value[mdb.NAME]) }) })
 	has := map[string]bool{}
-	GoToast(m, func(toast func(name string, count, total int)) []string {
-		kit.For(list, func(dev string, index, total int) {
-			toast(dev, index, total)
-			if origin := SpideOrigin(m, dev); !has[origin] {
-				has[origin] = true
-				cb(dev, origin)
-			}
-		})
-		return nil
+	GoToastTable(msg, mdb.NAME, func(value ice.Maps) {
+		origin := SpideOrigin(m, value[mdb.NAME])
+		kit.If(!has[origin], func() { has[origin] = true; cb(value[mdb.NAME], origin) })
 	})
+}
+func DreamList(m *ice.Message) *ice.Message {
+	return AdminCmd(m.Options("dream.simple", ice.TRUE), DREAM)
 }

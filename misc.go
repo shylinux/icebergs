@@ -159,7 +159,7 @@ func (m *Message) CmdAppend(arg ...Any) string {
 }
 func (m *Message) CmdMap(arg ...string) map[string]map[string]string {
 	field, list := kit.Slice(arg, -1)[0], map[string]map[string]string{}
-	m._command(kit.Slice(arg, 0, -1)).Table(func(value Maps) { list[value[field]] = value })
+	m._command(kit.Slice(arg, 0, -1), Maps{MSG_FIELDS: ""}).Table(func(value Maps) { list[value[field]] = value })
 	return list
 }
 func (m *Message) Toast(content string, arg ...string) { // title duration

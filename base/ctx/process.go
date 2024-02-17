@@ -29,15 +29,15 @@ func _process_args(m *ice.Message, args ice.Any) []string {
 }
 func ProcessField(m *ice.Message, cmd string, args ice.Any, arg ...string) *ice.Message {
 	if cmd = kit.Select(m.ActionKey(), cmd); !kit.HasPrefixList(arg, RUN) {
+		defer kit.If(m.IsMetaKey(), func() { m.Push(STYLE, html.FLOAT) })
+		defer m.Push(ARGS, kit.Format(_process_args(m, args)))
+		defer m.ProcessField(ACTION, m.ActionKey(), RUN)
+		defer m.Options(ice.MSG_INDEX, m.PrefixKey())
 		if PodCmd(m, COMMAND, cmd) {
 			m.Push(ice.SPACE, m.Option(ice.MSG_USERPOD))
 		} else {
 			m.Cmdy(COMMAND, cmd)
 		}
-		m.Push(ARGS, kit.Format(_process_args(m, args)))
-		kit.If(m.IsMetaKey(), func() { m.Push(STYLE, html.FLOAT) })
-		m.ProcessField(ACTION, m.ActionKey(), RUN)
-		m.Options(ice.MSG_INDEX, m.PrefixKey())
 	} else if !PodCmd(m, cmd, arg[1:]) && aaa.Right(m, cmd, arg[1:]) {
 		m.Cmdy(cmd, arg[1:])
 	}

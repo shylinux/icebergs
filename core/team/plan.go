@@ -74,9 +74,7 @@ func init() {
 					m.Cmdy(arg)
 				}
 			}},
-			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) { m.PushButton(kit.Dict(m.CommandKey(), "计划")) }},
-			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { web.DreamProcess(m, nil, arg...) }},
-		}, ctx.ConfAction(mdb.TOOLS, "todo,epic"), TASK), Hand: func(m *ice.Message, arg ...string) {
+		}, web.DreamTablesAction(), ctx.ConfAction(mdb.TOOLS, "todo,epic"), TASK), Hand: func(m *ice.Message, arg ...string) {
 			begin_time, end_time := _plan_scope(m, kit.Slice(arg, 0, 2)...)
 			_plan_list(m, begin_time.Format(ice.MOD_TIME), end_time.Format(ice.MOD_TIME))
 			web.PushPodCmd(m, "", arg...)

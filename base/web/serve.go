@@ -259,6 +259,11 @@ func init() {
 	})
 }
 
+func ServeCmdAction() ice.Actions {
+	return ice.MergeActions(ice.Actions{
+		nfs.PS: {Hand: func(m *ice.Message, arg ...string) { RenderCmd(m, "", arg) }},
+	})
+}
 func IsLocalHost(m *ice.Message) bool {
 	return (m.R == nil || m.R.Header.Get(html.XForwardedFor) == "") && tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP))
 }

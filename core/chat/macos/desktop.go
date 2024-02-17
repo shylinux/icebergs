@@ -44,11 +44,9 @@ func init() {
 			})
 			Notify(m, "usr/icons/Infomation.png", cli.RUNTIME, "系统启动成功", ctx.INDEX, cli.RUNTIME)
 		}},
-		DESKTOP: {Help: "应用桌面", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
-			ice.CTX_INIT:     {Hand: web.DreamWhiteHandle},
-			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) { m.PushButton(kit.Dict(m.CommandKey(), "桌面")) }},
-			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { web.DreamProcess(m, nil, arg...) }},
-		}, PodCmdAction(), CmdHashAction(), mdb.ExportHashAction())},
+		DESKTOP: {Help: "桌面", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
+			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { web.DreamProcessIframe(m, arg...) }},
+		}, web.DreamTablesAction(), PodCmdAction(), CmdHashAction(), mdb.ExportHashAction())},
 	})
 }
 

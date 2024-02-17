@@ -74,7 +74,7 @@ func init() {
 		}},
 	})
 	Index.MergeCommands(ice.Commands{
-		VIMER: {Name: "vimer path=src/ file=main.go line=1 list", Help: "编辑器", Icon: "vimer.png", Role: aaa.VOID, Meta: kit.Dict(
+		VIMER: {Name: "vimer path=src/ file=main.go line=1 list", Help: "编程", Icon: "vimer.png", Role: aaa.VOID, Meta: kit.Dict(
 			ctx.STYLE, INNER, ice.CTX_TRANS, kit.Dict(html.INPUT, kit.Dict(cli.MAIN, "程序")),
 		), Actions: ice.MergeActions(ice.Actions{
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
@@ -153,7 +153,6 @@ func init() {
 			nfs.SCRIPT: {Name: "script file*", Help: "脚本", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(nfs.DEFS, path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)), m.Cmdx("", TEMPLATE))
 			}},
-			nfs.REPOS: {Help: "仓库"}, web.SPACE: {Help: "空间"}, web.DREAM: {Help: "空间"},
 			cli.OPENS: {Hand: func(m *ice.Message, arg ...string) { cli.Opens(m, arg...) }},
 			cli.MAKE: {Hand: func(m *ice.Message, arg ...string) {
 				defer web.ToastProcess(m)()
@@ -202,16 +201,13 @@ func init() {
 					kit.If(m.Option(mdb.TYPE) == nfs.FILE, func() { m.Push(arg[0], ice.SRC_MAIN_SHY, ice.SRC_MAIN_GO, ice.SRC_MAIN_JS) })
 				}
 			}},
-			ice.CTX_INIT: {Hand: web.DreamWhiteHandle},
 			chat.FAVOR_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				kit.If(m.Option(mdb.TYPE) == nfs.FILE, func() { m.PushButton(kit.Dict(m.CommandKey(), "源码")) })
 			}},
 			chat.FAVOR_ACTION: {Hand: func(m *ice.Message, arg ...string) {
 				kit.If(m.Option(mdb.TYPE) == nfs.FILE, func() { ctx.ProcessField(m, m.PrefixKey(), nfs.SplitPath(m, m.Option(mdb.TEXT))) })
 			}},
-			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) { m.PushButton(kit.Dict(m.CommandKey(), "编程")) }},
-			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { web.DreamProcess(m, nil, arg...) }},
-		}, chat.FavorAction(), ctx.ConfAction(ctx.TOOLS, "xterm,compile,runtime")), Hand: func(m *ice.Message, arg ...string) {
+		}, ctx.ConfAction(ctx.TOOLS, "xterm,compile,runtime"), chat.FavorAction(), web.DreamTablesAction()), Hand: func(m *ice.Message, arg ...string) {
 			if m.Cmdy(INNER, arg); arg[0] != ctx.ACTION {
 				if web.IsLocalHost(m) {
 					m.Action(nfs.SAVE, COMPILE, mdb.SHOW, ice.APP)

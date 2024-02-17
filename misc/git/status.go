@@ -31,11 +31,10 @@ const STATUS = "status"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		STATUS: {Name: "status repos:text auto", Help: "代码库", Icon: "git.png", Role: aaa.VOID, Meta: kit.Dict(
-			ice.CTX_TRANS, kit.Dict(
-				html.INPUT, kit.Dict("actions", "操作", "message", "信息", "remote", "远程库"),
-			),
+		STATUS: {Name: "status repos:text auto", Help: "源码", Icon: "git.png", Role: aaa.VOID, Meta: kit.Dict(
+			ice.CTX_TRANS, kit.Dict(html.INPUT, kit.Dict("actions", "操作", "message", "信息", "remote", "远程库")),
 		), Actions: ice.MergeActions(ice.Actions{
+			ice.CTX_INIT: {Hand: web.DreamWhiteHandle},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case aaa.EMAIL:
@@ -51,10 +50,14 @@ func init() {
 				mdb.Config(m, aaa.USERNAME, m.Option(aaa.USERNAME))
 				mdb.Config(m, aaa.EMAIL, m.Option(aaa.EMAIL))
 			}},
-			ice.CTX_INIT: {Hand: web.DreamWhiteHandle},
+			STASH: {Help: "清空", Icon: "bi bi-trash", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(cli.SYSTEM, GIT, STASH)
+				m.Cmd(cli.SYSTEM, GIT, CHECKOUT, ".")
+				m.Go(func() { m.Sleep30ms(ice.QUIT, 1) })
+			}},
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				if !nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME), _GIT)) {
-					m.Push(mdb.TEXT, "").PushButton(kit.Dict(m.CommandKey(), "源码"))
+					m.Push(mdb.TEXT, "").PushButton(kit.Dict(m.CommandKey(), m.Commands("").Help))
 					return
 				}
 				text := []string{}
@@ -71,8 +74,7 @@ func init() {
 				m.Push(mdb.TEXT, strings.Join(text, ", "))
 				m.PushButton(kit.Dict(m.CommandKey(), "源码"))
 			}},
-			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { web.DreamProcess(m, nil, arg...) }},
-			mdb.DEV_REQUEST:  {Name: "dev.request origin*", Help: "授权"},
+			mdb.DEV_REQUEST: {Name: "dev.request origin*", Help: "授权"},
 			web.DEV_CREATE_TOKEN: {Hand: func(m *ice.Message, arg ...string) {
 				const FILE = ".git-credentials"
 				host, list := ice.Map{kit.ParseURL(m.Option(web.ORIGIN)).Host: true}, []string{strings.Replace(m.Option(web.ORIGIN), "://", kit.Format("://%s:%s@", m.Option(ice.MSG_USERNAME), m.Option(web.TOKEN)), 1)}
@@ -83,12 +85,7 @@ func init() {
 				m.Cmd(CONFIGS, mdb.CREATE, "credential.helper", "store")
 				m.ProcessClose()
 			}},
-			STASH: {Help: "清空", Icon: "bi bi-trash", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(cli.SYSTEM, GIT, STASH)
-				m.Cmd(cli.SYSTEM, GIT, CHECKOUT, ".")
-				m.Go(func() { m.Sleep30ms(ice.QUIT, 1) })
-			}},
-		}, web.DevTokenAction(web.ORIGIN, web.ORIGIN), ctx.ConfAction(ctx.TOOLS, "xterm,compile"), Prefix(REPOS)), Hand: func(m *ice.Message, arg ...string) {
+		}, ctx.ConfAction(ctx.TOOLS, "xterm,compile"), web.DreamTablesAction(), web.DevTokenAction(web.ORIGIN, web.ORIGIN), Prefix(REPOS)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 && arg[0] == ctx.ACTION {
 				m.Cmdy(REPOS, arg)
 			} else if config, err := config.LoadConfig(config.GlobalScope); err == nil && config.User.Email == "" && mdb.Config(m, aaa.EMAIL) == "" {

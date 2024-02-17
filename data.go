@@ -12,8 +12,15 @@ func (m *Message) ActionKey() string {
 	action := strings.TrimPrefix(strings.TrimSuffix(m._sub, PS), PS)
 	return kit.Select("", action, !kit.IsIn(action, LIST, SELECT))
 }
-func (m *Message) CommandKey() string          { return strings.TrimPrefix(strings.TrimSuffix(m._key, PS), PS) }
-func (m *Message) PrefixKey() string           { return m.Prefix(m.CommandKey()) }
+func (m *Message) CommandKey() string { return strings.TrimPrefix(strings.TrimSuffix(m._key, PS), PS) }
+func (m *Message) PrefixKey() string  { return m.Prefix(m.CommandKey()) }
+func (m *Message) ShortKey() string {
+	key := m.CommandKey()
+	if p, ok := Info.Index[key].(*Context); ok && p == m.target {
+		return key
+	}
+	return m.PrefixKey()
+}
 func (m *Message) Prefix(arg ...string) string { return m.Target().Prefix(arg...) }
 func (m *Message) Confv(arg ...Any) (val Any) { // key sub value
 	run := func(conf *Config) {

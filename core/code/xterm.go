@@ -69,7 +69,7 @@ const XTERM = "xterm"
 func init() {
 	shell := kit.Env("SHELL", "/bin/sh")
 	Index.MergeCommands(ice.Commands{
-		XTERM: {Name: "xterm hash auto", Icon: "Terminal.png", Help: "命令行", Actions: ice.MergeActions(ice.Actions{
+		XTERM: {Name: "xterm hash auto", Help: "终端", Icon: "Terminal.png", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				kit.If(m.Cmd("").Length() == 0, func() {
 					m.Cmd("", mdb.CREATE, mdb.TYPE, shell)
@@ -155,10 +155,10 @@ func init() {
 				})
 			}},
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
-				kit.If(aaa.IsTechOrRoot(m), func() { m.PushButton(kit.Dict(m.CommandKey(), "终端")) })
+				kit.If(aaa.IsTechOrRoot(m), func() { m.PushButton(kit.Dict(m.CommandKey(), m.Commands("").Help)) })
 			}},
-			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { web.DreamProcess(m, cli.Shell(m), arg...) }},
-		}, chat.FavorAction(), mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,path")), Hand: func(m *ice.Message, arg ...string) {
+			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { web.DreamProcess(m, "", cli.Shell(m), arg...) }},
+		}, web.DreamTablesAction(), chat.FavorAction(), mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,path")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) == 0 {
 				if web.IsLocalHost(m) {
 					m.Action(mdb.CREATE, mdb.PRUNES, ice.APP)

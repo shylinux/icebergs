@@ -60,11 +60,7 @@ func (m *Message) MergePod(pod string, arg ...Any) string {
 func (m *Message) MergePodCmd(pod, cmd string, arg ...Any) string {
 	ls := []string{}
 	kit.If(kit.Keys(m.Option(MSG_USERPOD), pod), func(p string) { ls = append(ls, "s", p) })
-	if cmd == "" {
-		p, ok := Info.Index[m.CommandKey()]
-		cmd = kit.Select(m.PrefixKey(), m.CommandKey(), ok && p == m.target)
-	}
-	ls = append(ls, "c", cmd)
+	ls = append(ls, "c", kit.Select(m.ShortKey(), cmd))
 	return m.MergeLink(PS+path.Join(ls...), arg...)
 }
 func (m *Message) MergeLink(url string, arg ...Any) string {

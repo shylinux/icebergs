@@ -64,10 +64,10 @@ type relay struct {
 	field       string `data:"time,machine,username,host,port,portal,dream,module,version,commitTime,compileTime,bootTime,go,git,package,shell,kernel,arch,ncpu,vcpu,mhz,mem,disk,network,listen,socket,proc,vendor"`
 	statsTables string `name:"statsTables" event:"stats.tables"`
 	create      string `name:"create machine* username* host* port*=22"`
-	stats       string `name:"stats machine" help:"采集" icon:"bi bi-pc-display"`
+	stats       string `name:"stats machine" help:"采集" icon:"bi bi-card-list"`
 	dream       string `name:"dream" help:"空间" icon:"bi bi-grid-3x3-gap"`
-	forEach     string `name:"forEach machine cmd*:textarea=pwd" help:"遍历" icon:"bi bi-card-list"`
-	forFlow     string `name:"forFlow machine cmd*:textarea=pwd" help:"流程" icon:"bi bi-terminal"`
+	forEach     string `name:"forEach machine cmd*:textarea=pwd"`
+	forFlow     string `name:"forFlow machine cmd*:textarea=pwd"`
 	pubkey      string `name:"pubkey" help:"公钥" icon:"bi bi-person-vcard"`
 	publish     string `name:"publish" help:"发布" icon:"bi bi-send-check"`
 	list        string `name:"list machine auto" help:"机器" icon:"relay.png"`

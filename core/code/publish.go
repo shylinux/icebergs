@@ -28,7 +28,7 @@ func _publish_list(m *ice.Message, arg ...string) *ice.Message {
 	m.Option(nfs.DIR_REG, kit.Select("", arg, 0))
 	defer m.Table(func(value ice.Maps) {
 		if p := value[nfs.PATH]; strings.Contains(p, "ice.windows.") {
-			m.PushDownload(mdb.LINK, "ice.exe", p)
+			m.PushDownload(mdb.LINK, "ice.exe", "/publish/"+p)
 		} else {
 			m.Push(mdb.LINK, kit.MergeURL2(web.UserHost(m), "/publish/"+p))
 		}

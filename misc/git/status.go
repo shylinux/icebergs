@@ -31,7 +31,7 @@ const STATUS = "status"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		STATUS: {Name: "status repos:text auto", Help: "源码", Icon: "git.png", Role: aaa.VOID, Meta: kit.Dict(
+		STATUS: {Name: "status repos:text auto", Help: "源代码", Icon: "git.png", Role: aaa.VOID, Meta: kit.Dict(
 			ice.CTX_TRANS, kit.Dict(html.INPUT, kit.Dict("actions", "操作", "message", "信息", "remote", "远程库")),
 		), Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: web.DreamWhiteHandle},
@@ -57,7 +57,7 @@ func init() {
 			}},
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				if !nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME), _GIT)) {
-					m.Push(mdb.TEXT, "").PushButton(kit.Dict(m.CommandKey(), m.Commands("").Help))
+					m.Push(mdb.TEXT, "").PushButton(kit.Dict(m.CommandKey(), "源码"))
 					return
 				}
 				text := []string{}
@@ -94,7 +94,12 @@ func init() {
 				m.EchoInfoButton(nfs.Template(m, "init.html"), INIT)
 			} else if len(arg) == 0 {
 				kit.If(config != nil, func() { m.Option(aaa.EMAIL, kit.Select(mdb.Config(m, aaa.EMAIL), config.User.Email)) })
-				m.Cmdy(REPOS, STATUS).Action(PULL, PUSH, INSTEADOF, mdb.DEV_REQUEST, ctx.CONFIG, STASH)
+				m.Cmdy(REPOS, STATUS)
+				if m.IsMobileUA() {
+					m.Action(PULL, PUSH)
+				} else {
+					m.Action(PULL, PUSH, INSTEADOF, mdb.DEV_REQUEST, ctx.CONFIG, STASH)
+				}
 				kit.If(!m.IsCliUA(), func() { m.Cmdy(code.PUBLISH, ice.CONTEXTS, ice.DEV) })
 				ctx.Toolkit(m)
 			} else {

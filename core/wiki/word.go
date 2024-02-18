@@ -25,7 +25,7 @@ const WORD = "word"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		WORD: {Name: "word path=src/main.shy@key auto play favor", Help: "文档", Icon: "Books.png", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
+		WORD: {Name: "word path=src/main.shy@key auto play favor", Help: "上下文", Icon: "Books.png", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				WordAlias(m, NAVMENU, TITLE, NAVMENU)
 				WordAlias(m, PREMENU, TITLE, PREMENU)
@@ -68,12 +68,11 @@ func init() {
 			code.COMPLETE: {Hand: func(m *ice.Message, arg ...string) {
 				kit.If(kit.IsIn(kit.Split(m.Option(mdb.TEXT))[0], IMAGE, VIDEO, AUDIO), func() { m.Cmdy(FEEL).CutTo(nfs.PATH, mdb.NAME) })
 			}},
-			// "favor": {Help: "收藏", Icon: "bi bi-star", Hand: func(m *ice.Message, arg ...string) {
-			"favor": {Help: "收藏", Hand: func(m *ice.Message, arg ...string) {
+			"favor": {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(web.CHAT_FAVOR, mdb.CREATE, mdb.TYPE, nfs.SHY, mdb.NAME, path.Base(arg[0]), mdb.TEXT, arg[0])
 				m.ProcessHold("favor success")
 			}},
-		}, WikiAction("", nfs.SHY), web.DreamTablesAction(), mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path")), Hand: func(m *ice.Message, arg ...string) {
+		}, WikiAction("", nfs.SHY), web.DreamTablesAction("文档"), mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 && !strings.HasPrefix(arg[0], nfs.USR_LEARNING_PORTAL) {
 				mdb.HashCreate(m.Spawn(), nfs.PATH, arg[0])
 			}

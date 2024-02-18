@@ -153,13 +153,14 @@ func (m *Message) WarnAlreadyExists(err Any, arg ...Any) bool {
 	return m.Warn(err, ErrAlreadyExists, kit.Simple(arg...), logs.FileLineMeta(2))
 }
 func (m *Message) ErrorNotImplement(arg ...Any) *Message {
-	m.Error(true, append(kit.List(ErrNotImplement), arg...)...)
+	m.Error(true, append(kit.List(ErrNotImplement), append(arg, logs.FileLineMeta(2)))...)
 	return m
 }
 func (m *Message) Error(err bool, arg ...Any) bool {
-	if err {
-		str, meta := m.join(arg...)
-		m.log(LOG_ERROR, m.FormatChain()).log(LOG_ERROR, str, meta).log(LOG_ERROR, m.FormatStack(2, 100)).error(arg...)
+	if m.Warn(err, arg...) {
+		str, _ := m.join(arg...)
+		m.error(arg...)
+		panic(str)
 		return true
 	}
 	return false

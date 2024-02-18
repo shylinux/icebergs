@@ -97,13 +97,13 @@ func GoToast(m *ice.Message, cb func(toast func(name string, count, total int)) 
 		icon = Icons[ice.FAILURE]
 		m.Option(ice.TOAST_DURATION, cli.TIME_30s)
 		toast(kit.JoinWord(list...), len(list), _total)
+		m.Sleep(m.Option(ice.TOAST_DURATION))
 	} else {
 		icon = Icons[ice.SUCCESS]
 		m.Option(ice.TOAST_DURATION, cli.TIME_3s)
 		toast(ice.SUCCESS, _total, _total)
 	}
 	Count(m, kit.FuncName(1), toastTitle(m), kit.FmtDuration(time.Now().Sub(begin)))
-	m.Sleep(m.Option(ice.TOAST_DURATION))
 	return m
 }
 func Toast(m *ice.Message, text string, arg ...ice.Any) *ice.Message { // [title [duration [progress [hash]]]]

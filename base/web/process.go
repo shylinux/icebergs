@@ -11,8 +11,7 @@ func ProcessIframe(m *ice.Message, title, link string, arg ...string) *ice.Messa
 	if m.IsMetaKey() {
 		m.ProcessOpen(link)
 		return m
-	}
-	if !kit.HasPrefixList(arg, ctx.RUN) {
+	} else if !kit.HasPrefixList(arg, ctx.RUN) {
 		defer m.Push(TITLE, title)
 	}
 	return ctx.ProcessFloat(m, CHAT_IFRAME, link, arg...)

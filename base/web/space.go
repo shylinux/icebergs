@@ -381,14 +381,12 @@ func init() {
 	ice.Info.AdminCmd = AdminCmd
 	ctx.PodCmd = func(m *ice.Message, arg ...ice.Any) bool {
 		Upload(m)
-		for _, key := range []string{ice.POD} {
-			if pod := m.Option(key); pod != "" {
-				if ls := kit.Simple(m.Optionv(ice.MSG_UPLOAD)); len(ls) > 1 {
-					m.Cmd(SPACE, pod, SPIDE, ice.DEV, CACHE, SHARE_CACHE+ls[0])
-				}
-				m.Options(key, []string{}, ice.MSG_USERPOD, pod).Cmdy(append(kit.List(ice.SPACE, pod), arg...)...)
-				return true
+		if pod := m.Option(ice.POD); pod != "" {
+			if ls := kit.Simple(m.Optionv(ice.MSG_UPLOAD)); len(ls) > 1 {
+				m.Cmd(SPACE, pod, SPIDE, ice.DEV, CACHE, SHARE_CACHE+ls[0])
 			}
+			m.Options(ice.POD, []string{}, ice.MSG_USERPOD, pod).Cmdy(append(kit.List(ice.SPACE, pod), arg...)...)
+			return true
 		}
 		return false
 	}

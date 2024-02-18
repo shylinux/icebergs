@@ -74,7 +74,7 @@ func init() {
 		}},
 	})
 	Index.MergeCommands(ice.Commands{
-		VIMER: {Name: "vimer path=src/ file=main.go line=1 list", Help: "编程", Icon: "vimer.png", Role: aaa.VOID, Meta: kit.Dict(
+		VIMER: {Name: "vimer path=src/ file=main.go line=1 list", Help: "编辑器", Icon: "vimer.png", Role: aaa.VOID, Meta: kit.Dict(
 			ctx.STYLE, INNER, ice.CTX_TRANS, kit.Dict(html.INPUT, kit.Dict(cli.MAIN, "程序")),
 		), Actions: ice.MergeActions(ice.Actions{
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
@@ -207,10 +207,12 @@ func init() {
 			chat.FAVOR_ACTION: {Hand: func(m *ice.Message, arg ...string) {
 				kit.If(m.Option(mdb.TYPE) == nfs.FILE, func() { ctx.ProcessField(m, m.PrefixKey(), nfs.SplitPath(m, m.Option(mdb.TEXT))) })
 			}},
-		}, ctx.ConfAction(ctx.TOOLS, "xterm,compile,runtime"), chat.FavorAction(), web.DreamTablesAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, ctx.ConfAction(ctx.TOOLS, "xterm,compile,runtime"), chat.FavorAction(), web.DreamTablesAction("编程")), Hand: func(m *ice.Message, arg ...string) {
 			if m.Cmdy(INNER, arg); arg[0] != ctx.ACTION {
 				if web.IsLocalHost(m) {
 					m.Action(nfs.SAVE, COMPILE, mdb.SHOW, ice.APP)
+				} else if m.IsMobileUA() {
+					m.Action(nfs.SAVE, COMPILE)
 				} else {
 					m.Action(nfs.SAVE, COMPILE, mdb.SHOW)
 				}

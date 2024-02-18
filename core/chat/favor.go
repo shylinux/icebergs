@@ -132,7 +132,7 @@ func FavorPreview(m *ice.Message, arg ...string) {
 		case ctx.INDEX:
 			index = msg.Append(mdb.NAME)
 		case nfs.SHY:
-			index = web.WIKI_WORD
+			index = web.WORD
 		}
 		web.ProcessPodCmd(m, m.Option(web.SPACE), index, args, arg...)
 	}

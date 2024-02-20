@@ -53,7 +53,7 @@ func PushPodCmd(m *ice.Message, cmd string, arg ...string) *ice.Message {
 	})
 	kit.If(m.Length() > 0 && len(m.Appendv(SPACE)) == 0, func() { m.Table(func(value ice.Maps) { m.Push(SPACE, "") }) })
 	GoToastTable(msg, SPACE, func(value ice.Maps) {
-		m.Cmd(SPACE, value[SPACE], kit.Dict(ice.MSG_USERPOD, value[SPACE]), kit.Select(m.PrefixKey(), cmd), arg).Table(func(val ice.Maps, index int, head []string) {
+		m.Cmd(SPACE, value[SPACE], kit.Dict(ice.MSG_USERPOD, value[SPACE]), kit.Select(m.ShortKey(), cmd), arg).Table(func(val ice.Maps, index int, head []string) {
 			kit.If(!kit.IsIn(SPACE, head...), func() { head = append(head, SPACE) })
 			val[SPACE] = kit.Keys(value[SPACE], val[SPACE])
 			m.Push("", val, head)

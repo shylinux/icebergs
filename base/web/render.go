@@ -129,7 +129,7 @@ func RenderCmds(m *ice.Message, cmds ...ice.Any) {
 	RenderMain(m.Options(ctx.CMDS, kit.Format(cmds)))
 }
 func RenderPodCmd(m *ice.Message, pod, cmd string, arg ...ice.Any) {
-	if msg := m.Cmd(Space(m, pod), ctx.COMMAND, kit.Select(m.PrefixKey(), cmd)); msg.Length() == 0 {
+	if msg := m.Cmd(Space(m, pod), ctx.COMMAND, kit.Select(m.ShortKey(), cmd)); msg.Length() == 0 {
 		RenderResult(m, kit.Format("not found command %s", cmd))
 	} else {
 		RenderCmds(m, kit.Dict(msg.AppendSimple(), ctx.ARGS, kit.Simple(arg), ctx.DISPLAY, m.Option(ice.MSG_DISPLAY)))

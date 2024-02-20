@@ -183,7 +183,7 @@ func ShareLocal(m *ice.Message, p string) string {
 	return m.MergeLink(PP(SHARE, LOCAL, p))
 }
 func ShareField(m *ice.Message, cmd string, arg ...ice.Any) *ice.Message {
-	return m.EchoQRCode(tcp.PublishLocalhost(m, m.MergeLink(P(SHARE, AdminCmd(m, SHARE, mdb.CREATE, mdb.TYPE, FIELD, mdb.NAME, kit.Select(m.PrefixKey(), cmd), mdb.TEXT, kit.Format(kit.Simple(arg...)), SPACE, m.Option(ice.MSG_USERPOD)).Result()))))
+	return m.EchoQRCode(tcp.PublishLocalhost(m, m.MergeLink(P(SHARE, AdminCmd(m, SHARE, mdb.CREATE, mdb.TYPE, FIELD, mdb.NAME, kit.Select(m.ShortKey(), cmd), mdb.TEXT, kit.Format(kit.Simple(arg...)), SPACE, m.Option(ice.MSG_USERPOD)).Result()))))
 }
 func ProxyUpload(m *ice.Message, pod string, p string) string {
 	pp := path.Join(ice.VAR_PROXY, pod, p)

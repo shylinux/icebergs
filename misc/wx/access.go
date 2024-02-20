@@ -50,7 +50,7 @@ const ACCESS = "access"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		ACCESS: {Help: "认证", Role: aaa.VOID, Meta: Meta(), Actions: ice.MergeActions(ice.Actions{
+		ACCESS: {Help: "认证", Meta: Meta(), Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(web.SPIDE, mdb.CREATE, WX, mdb.Config(m, tcp.SERVER), "", "usr/icons/wechat.png")
 			}},

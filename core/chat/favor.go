@@ -125,7 +125,7 @@ func FavorPreview(m *ice.Message, arg ...string) {
 		if m.Option(web.SPACE) == "" {
 			msg = mdb.HashSelects(m.Spawn(), m.Option(mdb.HASH))
 		} else {
-			msg = m.Cmd(web.SPACE, m.Option(web.SPACE), m.PrefixKey(), m.Option(mdb.HASH))
+			msg = m.Cmd(web.SPACE, m.Option(web.SPACE), m.ShortKey(), m.Option(mdb.HASH))
 		}
 		index, args := msg.Append(mdb.TYPE), kit.Split(msg.Append(mdb.TEXT))
 		switch msg.Append(mdb.TYPE) {

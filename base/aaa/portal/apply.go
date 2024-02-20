@@ -23,8 +23,8 @@ type apply struct {
 
 func (s apply) Sso(m *ice.Message, arg ...string) {
 	m.AddHeaderLogin(cli.QRCODE, cli.QRCODE, "扫码登录", "10")
-	m.AddHeaderLogin(mdb.PLUGIN, aaa.EMAIL, "邮箱登录", "20", ctx.INDEX, m.PrefixKey(), ctx.ARGS, kit.FuncName(s.Login))
-	m.AddHeaderLogin(mdb.PLUGIN, aaa.APPLY, "注册用户", "30", ctx.INDEX, m.PrefixKey(), ctx.ARGS, kit.FuncName(s.Apply))
+	m.AddHeaderLogin(mdb.PLUGIN, aaa.EMAIL, "邮箱登录", "20", ctx.INDEX, m.ShortKey(), ctx.ARGS, kit.FuncName(s.Login))
+	m.AddHeaderLogin(mdb.PLUGIN, aaa.APPLY, "注册用户", "30", ctx.INDEX, m.ShortKey(), ctx.ARGS, kit.FuncName(s.Apply))
 }
 func (s apply) Apply(m *ice.Message, arg ...string) {
 	if m.IsGetMethod() {

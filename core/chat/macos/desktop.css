@@ -31,7 +31,7 @@ fieldset.macos.desktop>div.output>div.desktop>div.item img { object-fit:contain;
 fieldset.macos.desktop>div.output>div.desktop>div.item>div.name { font-size:var(--code-font-size); width:var(--desktop-icon-size); overflow:hidden; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset { border-radius:var(--plugin-radius); position:absolute; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset.select { z-index:9; }
-fieldset.macos.desktop>div.output>div.desktop>fieldset>div.item.button { border-radius:var(--plugin-radius); box-shadow:var(--box-shadow); padding:8px; height:23px; width:23px; scale:0.7; position:absolute; top:10px; right:var(--plugin-padding); cursor:pointer; }
+fieldset.macos.desktop>div.output>div.desktop>fieldset>div.item.button { border-radius:var(--plugin-radius); box-shadow:var(--box-shadow); padding:8px; height:23px; width:23px; scale:0.7; position:absolute; top:15px; right:var(--plugin-padding); cursor:pointer; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>div.item.button:not(:hover)>span { display:none; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>legend { padding:0 var(--input-padding); margin:var(--button-margin); box-shadow:none; }
 body.mobile fieldset.macos.desktop>div.output>div.desktop>fieldset>legend { float:none; }

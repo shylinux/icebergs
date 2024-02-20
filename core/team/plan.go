@@ -66,7 +66,7 @@ func init() {
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(TODO, mdb.INPUTS, arg) }},
 			mdb.PLUGIN: {Name: "plugin extra.index extra.args", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(TASK, mdb.MODIFY, arg) }},
 			ctx.RUN: {Hand: func(m *ice.Message, arg ...string) {
-				if m.RenameOption(TASK_POD, ice.POD); ctx.PodCmd(m, m.PrefixKey(), ctx.RUN, arg) {
+				if m.RenameOption(TASK_POD, ice.POD); ctx.PodCmd(m, m.ShortKey(), ctx.RUN, arg) {
 					return
 				} else if cmd := m.CmdAppend(TASK, kit.Slice(arg, 0, 2), ctx.INDEX); cmd != "" {
 					m.Cmdy(cmd, arg[2:])

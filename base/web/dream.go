@@ -117,8 +117,8 @@ func _dream_start(m *ice.Message, name string) {
 		return
 	}
 	if !m.IsCliUA() {
-		defer ToastProcess(m)()
 		defer m.ProcessOpen(m.MergePod(name))
+		defer ToastProcess(m, mdb.CREATE, name)()
 	}
 	defer mdb.Lock(m, m.PrefixKey(), cli.START, name)()
 	p := _dream_check(m, name)
@@ -157,14 +157,7 @@ func _dream_binary(m *ice.Message, p string) {
 	if bin := path.Join(m.Option(cli.CMD_DIR), ice.BIN_ICE_BIN); nfs.Exists(m, bin) {
 		return
 	} else if kit.IsUrl(p) || strings.HasPrefix(p, S()) {
-		GoToast(m, func(toast func(string, int, int)) []string {
-			begin := time.Now()
-			SpideSave(m, bin, kit.MergeURL(p, cli.GOOS, runtime.GOOS, cli.GOARCH, runtime.GOARCH), func(count, total, value int) {
-				toast(m.Option(mdb.NAME)+lex.NL+kit.FormatShow(cli.COST, kit.FmtDuration(time.Now().Sub(begin))), count, total)
-			})
-			return nil
-		})
-		os.Chmod(bin, ice.MOD_DIR)
+		m.Cmd(DREAM, DOWNLOAD, bin, p)
 	} else {
 		m.Cmd(nfs.LINK, bin, kit.Path(p))
 	}
@@ -219,7 +212,7 @@ func init() {
 					for _, cmd := range kit.Reverse(kit.Split(mdb.Config(m, html.BUTTON))) {
 						m.Cmd(gdb.EVENT, gdb.LISTEN, gdb.EVENT, DREAM_TABLES, ice.CMD, cmd)
 						m.Cmd(gdb.EVENT, gdb.LISTEN, gdb.EVENT, DREAM_ACTION, ice.CMD, cmd)
-						aaa.White(m, kit.Keys(m.PrefixKey(), ctx.ACTION, cmd))
+						aaa.White(m, kit.Keys(m.ShortKey(), ctx.ACTION, cmd))
 					}
 				})
 				m.GoSleep("10s", func() {
@@ -290,6 +283,15 @@ func init() {
 					_dream_start(m, m.Option(mdb.NAME))
 				}
 			}},
+			DOWNLOAD: {Name: "download path link", Hand: func(m *ice.Message, arg ...string) {
+				GoToast(m, func(toast func(string, int, int)) []string {
+					SpideSave(m, m.Option(nfs.PATH), kit.MergeURL(m.Option(mdb.LINK), cli.GOOS, runtime.GOOS, cli.GOARCH, runtime.GOARCH), func(count, total, value int) {
+						toast(m.Option(mdb.NAME), count, total)
+					})
+					return nil
+				})
+				os.Chmod(m.Option(nfs.PATH), ice.MOD_DIR)
+			}},
 			STARTALL: {Name: "startall name", Help: "启动", Icon: "bi bi-play-circle", Hand: func(m *ice.Message, arg ...string) {
 				DreamEach(m, m.Option(mdb.NAME), cli.STOP, func(name string) {
 					m.Cmd("", cli.START, ice.Maps{mdb.NAME: name, ice.MSG_DAEMON: ""})
@@ -318,7 +320,7 @@ func init() {
 				list := []string{cli.LINUX, cli.DARWIN, cli.WINDOWS}
 				msg := m.Spawn(ice.Maps{ice.MSG_DAEMON: ""})
 				func() {
-					defer ToastProcess(m, PUBLISH, ice.Info.Pathname)(PUBLISH, ice.Info.Pathname)
+					defer ToastProcess(m, PUBLISH, ice.Info.Pathname)()
 					m.Cmd(AUTOGEN, BINPACK)
 					kit.For(list, func(goos string) {
 						PushNoticeRich(m, mdb.NAME, ice.Info.NodeName, msg.Cmd(COMPILE, goos, cli.AMD64).AppendSimple())

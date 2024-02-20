@@ -25,7 +25,7 @@ func (m *Message) OptionDefault(arg ...string) string {
 }
 func (m *Message) OptionSimple(key ...string) (res []string) {
 	kit.If(len(key) == 0, func() {
-		key = kit.Filters(kit.Split(kit.Select("type,name,text", m.Conf(m.PrefixKey(), kit.Keym(FIELD)))), TIME, HASH)
+		key = kit.Filters(kit.Split(kit.Select("type,name,text", m.Conf(m.ShortKey(), kit.Keym(FIELD)))), TIME, HASH)
 	})
 	kit.For(kit.Filters(kit.Split(kit.Join(key)), ""), func(k string) { res = append(res, k, m.Option(k)) })
 	return

@@ -151,7 +151,7 @@ func init() {
 			}},
 			chat.FAVOR_ACTION: {Hand: func(m *ice.Message, arg ...string) {
 				kit.If(m.Option(mdb.TYPE) == SHELL, func() {
-					ctx.ProcessField(m, m.PrefixKey(), m.Cmdx("", mdb.CREATE, mdb.TYPE, m.Option(mdb.TEXT), mdb.NAME, m.Option(mdb.NAME), mdb.TEXT, ""))
+					ctx.ProcessField(m, m.ShortKey(), m.Cmdx("", mdb.CREATE, mdb.TYPE, m.Option(mdb.TEXT), mdb.NAME, m.Option(mdb.NAME), mdb.TEXT, ""))
 				})
 			}},
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {

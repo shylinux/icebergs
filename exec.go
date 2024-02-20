@@ -199,7 +199,7 @@ func (c *Context) _command(m *Message, cmd *Command, key string, arg ...string) 
 	if m._cmd, m._key = cmd, key; cmd == nil {
 		return m
 	}
-	if m.value(MSG_DETAIL, kit.Simple(m.PrefixKey(), arg)...); cmd.Actions != nil {
+	if m.value(MSG_DETAIL, kit.Simple(m.ShortKey(), arg)...); cmd.Actions != nil {
 		if len(arg) > 1 && arg[0] == ACTION {
 			if h, ok := cmd.Actions[arg[1]]; ok {
 				return c._action(m, cmd, key, arg[1], h, arg[2:]...)

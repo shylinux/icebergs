@@ -62,7 +62,7 @@ func init() {
 				kit.If(m.Option(mdb.TYPE) == web.LINK, func() { m.PushButton(kit.Dict(m.CommandKey(), "网页")) })
 			}},
 			FAVOR_ACTION: {Hand: func(m *ice.Message, arg ...string) {
-				kit.If(m.Option(mdb.TYPE) == web.LINK, func() { ctx.ProcessField(m, m.PrefixKey(), m.Option(mdb.TEXT)) })
+				kit.If(m.Option(mdb.TYPE) == web.LINK, func() { ctx.ProcessField(m, m.ShortKey(), m.Option(mdb.TEXT)) })
 			}},
 		}, FavorAction(), mdb.HashAction(mdb.SHORT, web.LINK, mdb.FIELD, "time,hash,type,name,link")), Hand: func(m *ice.Message, arg ...string) {
 			list := []string{m.MergePodCmd("", web.PORTAL), m.MergePodCmd("", web.ADMIN)}

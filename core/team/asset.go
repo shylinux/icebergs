@@ -28,15 +28,15 @@ func _sub_amount(m *ice.Message, arg []string) {
 func _asset_check(m *ice.Message, account string) {
 	var amount float64
 	m.OptionCB(mdb.SELECT, func(key string, value ice.Map) { amount += kit.Float(kit.Value(value, AMOUNT)) })
-	m.Cmd(mdb.SELECT, m.PrefixKey(), "", mdb.ZONE, account, ice.OptionFields(mdb.ZoneField(m)))
-	m.Cmd(mdb.MODIFY, m.PrefixKey(), "", mdb.HASH, ACCOUNT, account, AMOUNT, amount)
+	m.Cmd(mdb.SELECT, m.ShortKey(), "", mdb.ZONE, account, ice.OptionFields(mdb.ZoneField(m)))
+	m.Cmd(mdb.MODIFY, m.ShortKey(), "", mdb.HASH, ACCOUNT, account, AMOUNT, amount)
 }
 func _asset_insert(m *ice.Message, account string, arg ...string) {
-	m.Cmd(mdb.INSERT, m.PrefixKey(), "", mdb.HASH, ACCOUNT, account)
-	m.Cmd(mdb.INSERT, m.PrefixKey(), "", mdb.ZONE, account, arg)
-	amount := kit.Float(m.Cmdv(mdb.SELECT, m.PrefixKey(), "", mdb.HASH, ACCOUNT, account, AMOUNT))
+	m.Cmd(mdb.INSERT, m.ShortKey(), "", mdb.HASH, ACCOUNT, account)
+	m.Cmd(mdb.INSERT, m.ShortKey(), "", mdb.ZONE, account, arg)
+	amount := kit.Float(m.Cmdv(mdb.SELECT, m.ShortKey(), "", mdb.HASH, ACCOUNT, account, AMOUNT))
 	amount += kit.Float(_sub_value(m, AMOUNT, arg...))
-	m.Cmd(mdb.MODIFY, m.PrefixKey(), "", mdb.HASH, ACCOUNT, account, AMOUNT, amount)
+	m.Cmd(mdb.MODIFY, m.ShortKey(), "", mdb.HASH, ACCOUNT, account, AMOUNT, amount)
 }
 
 const (

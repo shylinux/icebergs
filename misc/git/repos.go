@@ -511,7 +511,7 @@ func init() {
 				if nfs.Exists(m, path.Join(m.Option(nfs.PATH), _GIT)) {
 					return
 				}
-				defer web.ToastProcess(m)()
+				defer web.ToastProcess(m, CLONE, m.Option(mdb.NAME))()
 				for _, dev := range []string{"dev_ip", ice.DEV, ice.SHY} {
 					p := m.Option(REMOTE)
 					kit.If(!kit.HasPrefix(p, nfs.PS, web.HTTP), func() { p = m.Cmdv(web.SPIDE, dev, web.CLIENT_ORIGIN) + web.X(p) })

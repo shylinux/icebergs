@@ -5,7 +5,6 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
-	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/web/html"
 	kit "shylinux.com/x/toolkits"
@@ -107,7 +106,7 @@ func init() {
 }
 
 func Count(m *ice.Message, arg ...string) *ice.Message {
-	kit.If(len(arg) > 0 && arg[0] == "", func() { arg[0] = ctx.ShortCmd(m.PrefixKey()) })
+	kit.If(len(arg) > 0 && arg[0] == "", func() { arg[0] = m.ShortKey() })
 	kit.If(len(arg) > 1 && arg[1] == "", func() { arg[1] = m.ActionKey() })
 	m.Cmd(COUNT, mdb.CREATE, arg, kit.Dict(ice.LOG_DISABLE, ice.TRUE))
 	return m

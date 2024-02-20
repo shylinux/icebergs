@@ -34,7 +34,7 @@ func _cat_list(m *ice.Message, p string) {
 		return
 	}
 	f, e := _cat_find(m, p)
-	if m.WarnNotFound(e, p) {
+	if m.WarnNotFound(e, FILE, p) {
 		return
 	}
 	defer f.Close()

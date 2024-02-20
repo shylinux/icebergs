@@ -42,8 +42,10 @@ func _matrix_action(m *ice.Message, action string, arg ...string) {
 		if kit.HasPrefixList(arg, ctx.RUN) {
 			ProcessIframe(m, "", "", arg...)
 		} else {
-			title, link := kit.Keys(domain, action), m.MergePodCmd(domain, action)
-			kit.If(action == OPEN, func() { title, link = domain, m.MergePod(domain) })
+			// title, link := kit.Keys(domain, action), m.MergePodCmd(domain, action)
+			// kit.If(action == OPEN, func() { title, link = domain, m.MergePod(domain) })
+			title, link := kit.Keys(domain, action), S(domain)+C(action)
+			kit.If(action == OPEN, func() { title, link = domain, S(domain) })
 			ProcessIframe(m, title, link, arg...).ProcessField(ctx.ACTION, action, ctx.RUN)
 		}
 	default:
@@ -88,7 +90,6 @@ func init() {
 					m.OptionDefault(nfs.BINARY, UserHost(m)+S(m.Option(mdb.NAME)))
 				}
 				_matrix_dream(m, mdb.CREATE, kit.Simple(m.OptionSimple(mdb.ICONS, nfs.REPOS, nfs.BINARY))...)
-				_matrix_dream(m, cli.START)
 			}},
 		}, ctx.ConfAction(mdb.FIELD, "time,domain,status,type,name,text,icons,repos,binary,module,version")), Hand: func(m *ice.Message, arg ...string) {
 			if kit.HasPrefixList(arg, ctx.ACTION) {

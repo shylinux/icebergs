@@ -42,5 +42,5 @@ func init() {
 	})
 }
 func Go(m *ice.Message, cb ice.Any, arg ...string) {
-	m.Cmd(ROUTINE, mdb.CREATE, kit.Select(m.PrefixKey(), arg, 0), logs.FileLine(cb), cb)
+	m.Cmd(ROUTINE, mdb.CREATE, kit.Select(m.ShortKey(), arg, 0), logs.FileLine(cb), cb)
 }

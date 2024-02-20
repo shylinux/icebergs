@@ -62,7 +62,7 @@ func _spide_show(m *ice.Message, name string, arg ...string) {
 		kit.For(req.Header, func(k string, v []string) { m.Logs(REQUEST, k, v) })
 	}
 	res, e := _spide_send(m, name, req, kit.Format(m.OptionDefault(CLIENT_TIMEOUT, msg.Append(CLIENT_TIMEOUT))))
-	if m.WarnNotFound(e, uri) {
+	if m.WarnNotFound(e, SPIDE, uri) {
 		return
 	}
 	defer res.Body.Close()

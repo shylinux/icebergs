@@ -10,6 +10,7 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/web/html"
 	kit "shylinux.com/x/toolkits"
+	"shylinux.com/x/toolkits/logs"
 )
 
 const (
@@ -32,7 +33,7 @@ func init() {
 	})
 }
 func toastCreate(m *ice.Message, arg ...string) (string, time.Time) {
-	return m.Cmdx(TOAST, mdb.CREATE, mdb.TYPE, kit.FuncName(2), mdb.NAME, toastTitle(m), mdb.STATUS, TOAST_INIT, ctx.INDEX, m.PrefixKey(), ParseUA(m), arg), time.Now()
+	return m.Cmdx(TOAST, mdb.CREATE, mdb.TYPE, kit.FuncName(2), mdb.NAME, toastTitle(m), mdb.STATUS, TOAST_INIT, ctx.INDEX, m.ShortKey(), ParseUA(m), arg), time.Now()
 }
 func toastUpdate(m *ice.Message, h string, begin time.Time, arg ...string) string {
 	cost := kit.FmtDuration(time.Now().Sub(begin))
@@ -46,7 +47,7 @@ func toastTitle(m *ice.Message) string {
 	return kit.GetValid(
 		func() string { return m.Option(ice.MSG_TITLE) },
 		func() string {
-			return kit.Keys(m.Option(ice.MSG_USERPOD0), m.Option(ice.MSG_USERPOD), ctx.ShortCmd(m.PrefixKey()))
+			return kit.Keys(m.Option(ice.MSG_USERPOD0), m.Option(ice.MSG_USERPOD), ctx.ShortCmd(m.ShortKey()))
 		},
 	)
 }
@@ -68,8 +69,9 @@ func ToastProcess(m *ice.Message, arg ...ice.Any) func(...ice.Any) {
 	h, begin := toastCreate(m, mdb.TEXT, text)
 	Toast(m, text, "", "-1", "", h)
 	Count(m, kit.FuncName(1), toastTitle(m), text)
-	return func(arg ...ice.Any) {
-		text := toastContent(m, ice.SUCCESS, arg...)
+	return func(_arg ...ice.Any) {
+		kit.If(len(_arg) == 0, func() { _arg = arg })
+		text := toastContent(m, ice.SUCCESS, _arg...)
 		toastUpdate(m, h, begin, mdb.TEXT, text, mdb.STATUS, TOAST_DONE)
 		Toast(m, text, "", cli.TIME_3s, "", h)
 	}
@@ -117,6 +119,9 @@ func Toast(m *ice.Message, text string, arg ...ice.Any) *ice.Message { // [title
 	}
 	kit.If(len(arg) == 0, func() { arg = append(arg, "") })
 	kit.If(len(arg) > 0 && arg[0] == "", func() { arg[0] = toastTitle(m) })
+	if m.IsDebug() {
+		text += "\n" + logs.FileLine(-1)
+	}
 	PushNoticeToast(m, text, arg)
 	return m
 }

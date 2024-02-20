@@ -146,7 +146,7 @@ func PlugAction(arg ...ice.Any) ice.Actions {
 				}
 			}
 			kit.For([]string{mdb.PLUGIN, mdb.RENDER, mdb.ENGINE}, func(cmd string) {
-				m.Cmd(cmd, mdb.CREATE, m.CommandKey(), m.PrefixKey())
+				m.Cmd(cmd, mdb.CREATE, m.CommandKey(), m.ShortKey())
 			})
 			LoadPlug(m, m.CommandKey())
 		}},

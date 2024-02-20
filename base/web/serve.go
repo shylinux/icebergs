@@ -151,7 +151,7 @@ func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.Response
 			m.Cost(kit.Format("%s: %s %v", r.Method, r.URL.String(), m.FormatSize())).Options(ice.MSG_COST, m.FormatCost())
 		}()
 		m.Option(ice.MSG_OPTS, kit.Simple(m.Optionv(ice.MSG_OPTION), func(k string) bool { return !strings.HasPrefix(k, ice.MSG_SESSID) }))
-		if m.Detailv(m.PrefixKey(), cmds); len(cmds) > 1 && cmds[0] == ctx.ACTION && cmds[1] != ctx.ACTION {
+		if m.Detailv(m.ShortKey(), cmds); len(cmds) > 1 && cmds[0] == ctx.ACTION && cmds[1] != ctx.ACTION {
 			if !kit.IsIn(cmds[1], aaa.LOGIN, ctx.RUN, ctx.COMMAND) && m.WarnNotAllow(r.Method == http.MethodGet) {
 				return
 			}
@@ -287,7 +287,7 @@ func Script(m *ice.Message, str string, arg ...ice.Any) string {
 	return ice.Render(m, ice.RENDER_SCRIPT, kit.Format(str, arg...))
 }
 func ChatCmdPath(m *ice.Message, arg ...string) string {
-	return m.MergePodCmd("", kit.Select(m.PrefixKey(), path.Join(arg...)))
+	return m.MergePodCmd("", kit.Select(m.ShortKey(), path.Join(arg...)))
 }
 func RequireFile(m *ice.Message, file string) string {
 	if strings.HasPrefix(file, nfs.PS) || strings.HasPrefix(file, ice.HTTP) {

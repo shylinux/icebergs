@@ -22,22 +22,22 @@ func init() {
 			ice.CTX_TRANS, kit.Dict(html.INPUT, kit.Dict(AREA, "面积(平方公里)", POPULATION, "人口(万人)", GDP, "产值(亿元)")),
 		), Actions: ice.MergeActions(ice.Actions{
 			GDP: {Help: "产值", Hand: func(m *ice.Message, arg ...string) {
-				ctx.ProcessField(m, m.PrefixKey(), func() {
+				ctx.ProcessField(m, m.ShortKey(), func() {
 					m.Push(ctx.DISPLAY, "/plugin/story/china.js?title=全国产值分布(亿元)&field=gdp&style=float")
 				}, arg...)
 			}},
 			POPULATION: {Help: "人口", Hand: func(m *ice.Message, arg ...string) {
-				ctx.ProcessField(m, m.PrefixKey(), func() {
+				ctx.ProcessField(m, m.ShortKey(), func() {
 					m.Push(ctx.DISPLAY, "/plugin/story/china.js?title=全国人口分布(万人)&field=population&style=float")
 				}, arg...)
 			}},
 			AREA: {Help: "土地", Hand: func(m *ice.Message, arg ...string) {
-				ctx.ProcessField(m, m.PrefixKey(), func() {
+				ctx.ProcessField(m, m.ShortKey(), func() {
 					m.Push(ctx.DISPLAY, "/plugin/story/china.js?title=全国土地分布(平方公里)&field=area&style=float")
 				}, arg...)
 			}},
 			CITY: {Help: "本地", Hand: func(m *ice.Message, arg ...string) {
-				ctx.ProcessField(m, m.PrefixKey(), func() {
+				ctx.ProcessField(m, m.ShortKey(), func() {
 					m.Push(ctx.DISPLAY, "/plugin/story/china.js?title=深圳资源分布&field=area&style=float&path=深圳市")
 				}, arg...)
 			}},

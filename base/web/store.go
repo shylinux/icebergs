@@ -58,7 +58,7 @@ func init() {
 					m.PushAction(mdb.REMOVE).Action(html.FILTER, mdb.CREATE)
 				}
 			} else {
-				defer ToastProcess(m, ice.LIST, arg[0])(ice.LIST, arg[0])
+				defer ToastProcess(m, ice.LIST, arg[0])()
 				if arg[0] == ice.OPS && ice.Info.NodeType == SERVER {
 					m.Cmdy(DREAM)
 					return

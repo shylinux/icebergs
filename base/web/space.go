@@ -144,7 +144,7 @@ func _space_handle(m *ice.Message, safe bool, name string, c *websocket.Conn) {
 				case ice.Handler: // 接收响应
 					msg.Go(func() { c(msg) })
 				}
-			}), next)
+			}), SPACE, next)
 		}
 	}
 }
@@ -399,7 +399,7 @@ func Space(m *ice.Message, arg ice.Any) []string {
 }
 func PodCmd(m *ice.Message, key string, arg ...string) bool {
 	if pod := m.Option(key); pod != "" {
-		m.Options(key, "", ice.MSG_USERPOD, pod).Cmdy(SPACE, pod, m.PrefixKey(), arg)
+		m.Options(key, "", ice.MSG_USERPOD, pod).Cmdy(SPACE, pod, m.ShortKey(), arg)
 		return true
 	} else {
 		return false

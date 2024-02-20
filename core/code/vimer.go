@@ -101,6 +101,16 @@ func init() {
 					m.Cmdy(m.Option(ctx.ACTION), mdb.INPUTS, arg)
 				default:
 					switch arg[0] {
+					case ice.CMD:
+						m.OptionFields(ctx.INDEX)
+						m.Cmd(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND).Table(func(value ice.Maps) {
+							kit.If(strings.HasPrefix(value[ctx.INDEX], kit.Select("", arg, 1)), func() { m.Push(arg[0], strings.TrimPrefix(value[ctx.INDEX], arg[1]+".")) })
+						})
+					case ctx.INDEX:
+						m.OptionFields(ctx.INDEX)
+						m.Cmd(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND).Table(func(value ice.Maps) {
+							kit.If(strings.HasPrefix(value[ctx.INDEX], kit.Select("", arg, 1)), func() { m.Push(arg[0], value[ctx.INDEX]) })
+						})
 					case nfs.PATH:
 						p := kit.Select(nfs.PWD, arg, 1)
 						m.Cmdy(nfs.DIR, p, nfs.DIR_CLI_FIELDS)
@@ -205,7 +215,7 @@ func init() {
 				kit.If(m.Option(mdb.TYPE) == nfs.FILE, func() { m.PushButton(kit.Dict(m.CommandKey(), "源码")) })
 			}},
 			chat.FAVOR_ACTION: {Hand: func(m *ice.Message, arg ...string) {
-				kit.If(m.Option(mdb.TYPE) == nfs.FILE, func() { ctx.ProcessField(m, m.PrefixKey(), nfs.SplitPath(m, m.Option(mdb.TEXT))) })
+				kit.If(m.Option(mdb.TYPE) == nfs.FILE, func() { ctx.ProcessField(m, m.ShortKey(), nfs.SplitPath(m, m.Option(mdb.TEXT))) })
 			}},
 		}, ctx.ConfAction(ctx.TOOLS, "xterm,compile,runtime"), chat.FavorAction(), web.DreamTablesAction("编程")), Hand: func(m *ice.Message, arg ...string) {
 			if m.Cmdy(INNER, arg); arg[0] != ctx.ACTION {
@@ -236,7 +246,7 @@ func init() {
 	ice.AddMergeAction(func(c *ice.Context, key string, cmd *ice.Command, sub string, action *ice.Action) ice.Handler {
 		switch sub {
 		case TEMPLATE, COMPLETE, NAVIGATE:
-			return func(m *ice.Message, arg ...string) { m.Cmd(sub, mdb.CREATE, key, m.PrefixKey()) }
+			return func(m *ice.Message, arg ...string) { m.Cmd(sub, mdb.CREATE, key, m.ShortKey()) }
 		default:
 			return nil
 		}

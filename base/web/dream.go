@@ -132,9 +132,10 @@ func _dream_start(m *ice.Message, name string) {
 	kit.If(m.Option(nfs.BINARY), func(p string) { _dream_binary(m, p) })
 	kit.If(m.Option(nfs.TEMPLATE), func(p string) { _dream_template(m, p) })
 	bin := kit.Select(kit.Path(os.Args[0]), cli.SystemFind(m, ice.ICE_BIN, nfs.PWD+path.Join(p, ice.BIN), nfs.PWD+ice.BIN))
-	m.Cmd(cli.DAEMON, bin, SPACE, tcp.DIAL, ice.DEV, ice.OPS, mdb.TYPE, WORKER, m.OptionSimple(mdb.NAME), cli.DAEMON, ice.OPS)
-	gdb.WaitEvent(m, DREAM_OPEN, func(m *ice.Message, arg ...string) bool { return m.Option(mdb.NAME) == name })
-	m.Sleep300ms()
+	if cli.IsSuccess(m.Cmd(cli.DAEMON, bin, SPACE, tcp.DIAL, ice.DEV, ice.OPS, mdb.TYPE, WORKER, m.OptionSimple(mdb.NAME), cli.DAEMON, ice.OPS)) {
+		gdb.WaitEvent(m, DREAM_OPEN, func(m *ice.Message, arg ...string) bool { return m.Option(mdb.NAME) == name })
+		m.Sleep300ms()
+	}
 }
 func _dream_check(m *ice.Message, name string) string {
 	p := path.Join(ice.USR_LOCAL_WORK, name)
@@ -208,14 +209,14 @@ func init() {
 		), Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m = m.Spawn()
-				m.GoSleep("1s", func() {
+				m.GoSleep(cli.TIME_1s, func() {
 					for _, cmd := range kit.Reverse(kit.Split(mdb.Config(m, html.BUTTON))) {
 						m.Cmd(gdb.EVENT, gdb.LISTEN, gdb.EVENT, DREAM_TABLES, ice.CMD, cmd)
 						m.Cmd(gdb.EVENT, gdb.LISTEN, gdb.EVENT, DREAM_ACTION, ice.CMD, cmd)
 						aaa.White(m, kit.Keys(m.ShortKey(), ctx.ACTION, cmd))
 					}
 				})
-				m.GoSleep("10s", func() {
+				m.GoSleep(cli.TIME_30s, func() {
 					mdb.HashSelects(m).Table(func(value ice.Maps) {
 						if value[cli.RESTART] == ALWAYS && nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK+value[mdb.NAME])) {
 							m.Cmd(DREAM, cli.START, kit.Dict(mdb.NAME, value[mdb.NAME]))
@@ -381,7 +382,7 @@ func init() {
 				nfs.Trash(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME)))
 			}},
 			OPEN: {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
-				ProcessIframe(m, m.Option(mdb.NAME), kit.Select(m.MergePod(m.Option(mdb.NAME)), SpideOrigin(m, m.Option(mdb.NAME)), m.Option(mdb.TYPE) == MASTER), arg...)
+				ProcessIframe(m, m.Option(mdb.NAME), kit.Select(S(m.Option(mdb.NAME)), SpideOrigin(m, m.Option(mdb.NAME)), m.Option(mdb.TYPE) == MASTER), arg...)
 			}},
 			GRANT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(CHAT_GRANT, aaa.CONFIRM, kit.Dict(SPACE, m.Option(mdb.NAME)))
@@ -465,7 +466,7 @@ func DreamProcessIframe(m *ice.Message, arg ...string) {
 		if m.Option(mdb.TYPE) == MASTER {
 			return SpideOrigin(m, m.Option(mdb.NAME)) + C(m.ShortKey())
 		}
-		return m.MergePodCmd(m.Option(mdb.NAME), m.ShortKey())
+		return S(m.Option(mdb.NAME)) + C(m.ShortKey())
 	}, arg...)
 }
 func DreamProcess(m *ice.Message, cmd string, args ice.Any, arg ...string) {

@@ -53,7 +53,7 @@ func _xterm_get(m *ice.Message, h string) xterm.XTerm {
 }
 func _xterm_echo(m *ice.Message, h string, str string) {
 	m.Options(ice.MSG_DAEMON, mdb.HashSelectField(m, h, cli.DAEMON), ice.MSG_COUNT, "0")
-	// m.Options(ice.LOG_DISABLE, ice.TRUE)
+	m.Options(ice.LOG_DISABLE, ice.TRUE)
 	web.PushNoticeGrow(m, h, str)
 }
 func _xterm_cmds(m *ice.Message, h string, cmd string, arg ...ice.Any) {

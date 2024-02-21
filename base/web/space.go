@@ -194,8 +194,8 @@ func _space_echo(m *ice.Message, source, target []string, c *websocket.Conn) {
 }
 func _space_send(m *ice.Message, name string, arg ...string) (h string) {
 	withecho := true
-	kit.If(len(arg) > 0 && arg[0] == "toast", func() { withecho = false; m.Option(ice.MSG_DEBUG, ice.FALSE) })
-	wait, done := m.Wait(kit.Select("", m.OptionDefault("space.timeout", "300s"), withecho), func(msg *ice.Message, arg ...string) {
+	kit.If(len(arg) > 0 && arg[0] == TOAST, func() { withecho = false; m.Option(ice.MSG_DEBUG, ice.FALSE) })
+	wait, done := m.Wait(kit.Select("", m.OptionDefault("space.timeout", "600s"), withecho), func(msg *ice.Message, arg ...string) {
 		m.Cost(kit.Format("%v->[%v] %v %v", m.Optionv(ice.MSG_SOURCE), name, m.Detailv(), msg.FormatSize())).Copy(msg)
 	})
 	if withecho {
@@ -329,7 +329,12 @@ func init() {
 				m.Sort("", kit.Simple(aaa.LOGIN, WEIXIN, PORTAL, WORKER, SERVER, MASTER))
 			} else {
 				m.OptionDefault(ice.MSG_USERPOD, arg[0])
-				_space_send(m, arg[0], kit.Simple(kit.Split(arg[1]), arg[2:])...)
+				for i := 0; i < 5; i++ {
+					if _space_send(m, arg[0], kit.Simple(kit.Split(arg[1]), arg[2:])...); !m.IsErrNotFound() {
+						break
+					}
+					m.SetAppend().SetResult().Sleep3s()
+				}
 			}
 		}},
 	})

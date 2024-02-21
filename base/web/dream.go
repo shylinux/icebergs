@@ -122,6 +122,9 @@ func _dream_start(m *ice.Message, name string) {
 	}
 	defer mdb.Lock(m, m.PrefixKey(), cli.START, name)()
 	p := _dream_check(m, name)
+	if p == "" {
+		return
+	}
 	gdb.Event(m, DREAM_CREATE, m.OptionSimple(mdb.NAME))
 	defer m.Options(cli.CMD_DIR, "", cli.CMD_ENV, "", cli.CMD_OUTPUT, "")
 	m.Options(cli.CMD_DIR, kit.Path(p), cli.CMD_ENV, kit.EnvList(kit.Simple(m.OptionSimple(ice.TCP_DOMAIN),
@@ -139,17 +142,18 @@ func _dream_start(m *ice.Message, name string) {
 }
 func _dream_check(m *ice.Message, name string) string {
 	p := path.Join(ice.USR_LOCAL_WORK, name)
-	if p := path.Join(p, ice.Info.PidPath); nfs.Exists(m, p) {
+	if p := path.Join(p, ice.VAR_LOG_ICE_PID); nfs.Exists(m, p) {
 		if pid := m.Cmdx(nfs.CAT, p, kit.Dict(ice.MSG_USERROLE, aaa.TECH)); pid != "" && nfs.Exists(m, "/proc/"+pid) {
 			m.Info("already exists %v", pid)
-			return p
-		}
-		for i := 0; i < 3; i++ {
-			if m.Cmd(SPACE, name).Length() > 0 {
-				m.Info("already exists %v", name)
-				return p
+			return ""
+		} else {
+			for i := 0; i < 3; i++ {
+				if m.Cmd(SPACE, name).Length() > 0 {
+					m.Info("already exists %v", name)
+					return ""
+				}
+				m.Sleep300ms()
 			}
-			m.Sleep300ms()
 		}
 	}
 	return p

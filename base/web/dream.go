@@ -468,9 +468,9 @@ func DreamProcessIframe(m *ice.Message, arg ...string) {
 	}
 	DreamProcess(m, CHAT_IFRAME, func() string {
 		if m.Option(mdb.TYPE) == MASTER {
-			return SpideOrigin(m, m.Option(mdb.NAME)) + C(m.ShortKey())
+			return SpideOrigin(m, kit.Keys(m.Option(ice.MSG_USERPOD), m.Option(mdb.NAME))) + C(m.ShortKey())
 		}
-		return S(m.Option(mdb.NAME)) + C(m.ShortKey())
+		return S(kit.Keys(m.Option(ice.MSG_USERPOD), m.Option(mdb.NAME))) + C(m.ShortKey())
 	}, arg...)
 }
 func DreamProcess(m *ice.Message, cmd string, args ice.Any, arg ...string) {

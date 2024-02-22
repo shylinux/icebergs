@@ -21,5 +21,5 @@ fieldset.web.matrix>div.output>table.content div.item.notice div.status div.item
 fieldset.web.matrix>div.output>table.content div.item.stop div.title>span { color:var(--disable-fg-color); }
 fieldset.web.matrix>div.output>table.content tr:not(:hover) div.action { visibility:hidden; }
 body:not(.mobile) fieldset.web.matrix>div.output>table.content th:first-child { position:sticky; left:2px; z-index:2; }
-body:not(.mobile) fieldset.web.matrix>div.output>table.content td:first-child { background-color:var(--plugin-bg-color); position:sticky; left:2px; }
+body:not(.mobile) fieldset.web.matrix>div.output>table.content td:first-child { background-color:var(--plugin-bg-color); position:sticky; left:2px; z-index:1; }
 body:not(.mobile) fieldset.web.matrix>div.output>table.content tr.danger td:first-child { background-color:transparent; }

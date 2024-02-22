@@ -332,8 +332,9 @@ func init() {
 				for i := 0; i < 5; i++ {
 					if _space_send(m, arg[0], kit.Simple(kit.Split(arg[1]), arg[2:])...); !m.IsErrNotFound() {
 						break
+					} else if i < 4 {
+						m.SetAppend().SetResult().Sleep("10s")
 					}
-					m.SetAppend().SetResult().Sleep3s()
 				}
 			}
 		}},

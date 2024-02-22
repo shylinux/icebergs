@@ -120,7 +120,8 @@ func Toast(m *ice.Message, text string, arg ...ice.Any) *ice.Message { // [title
 	kit.If(len(arg) == 0, func() { arg = append(arg, "") })
 	kit.If(len(arg) > 0 && arg[0] == "", func() { arg[0] = toastTitle(m) })
 	if m.IsDebug() {
-		text += "\n" + logs.FileLine(-1)
+		arg[0] = kit.Format(arg[0]) + "\t" + logs.FileLine(-1, "2")
+		// text += "\n" + logs.FileLine(-1)
 	}
 	PushNoticeToast(m, text, arg)
 	return m

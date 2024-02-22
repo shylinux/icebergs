@@ -37,7 +37,7 @@ Volcanos(chat.ONACTION, {
 			sub.onexport.output = function() { can.page.style(can, sub._output, html.HEIGHT, "", html.MAX_HEIGHT, "")
 				if (done) { return } done = true, action(true)
 			}
-			tr._sub = sub
+			tr && (tr._sub = sub)
 			// msg.Option(ctx.STYLE) == html.HIDE || can.onmotion.delay(can, function() { can.onmotion.scrollIntoView(can, sub._target) }, 300)
 		})
 	},

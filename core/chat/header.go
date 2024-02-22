@@ -104,7 +104,7 @@ func init() {
 			aaa.LOGOUT: {Hand: aaa.SessLogout},
 			cli.QRCODE: {Hand: func(m *ice.Message, arg ...string) {
 				link := tcp.PublishLocalhost(m, m.Option(ice.MSG_USERWEB))
-				m.Push(mdb.NAME, link).PushQRCode(mdb.TEXT, link)
+				m.Push(mdb.NAME, link).PushQRCode(mdb.TEXT, kit.MergeURL(link, ice.FROM_DAEMON, m.Option(ice.MSG_DAEMON)))
 			}},
 			mdb.CREATE: {Name: "create type*=plugin,qrcode,oauth name* help icons link order space index args", Hand: func(m *ice.Message, arg ...string) { mdb.HashCreate(m, m.OptionSimple()) }},
 			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) { mdb.HashRemove(m, m.OptionSimple(mdb.NAME)) }},

@@ -138,6 +138,9 @@ func (m *Message) IsMetaKey() bool {
 func (m *Message) IsGetMethod() bool {
 	return m.Option(MSG_METHOD) == http.MethodGet
 }
+func (m *Message) IsLocalhost() bool {
+	return strings.HasPrefix(m.Option(MSG_USERWEB), "http://localhost:9020")
+}
 func (m *Message) PushSearch(arg ...Any) {
 	data := kit.Dict(arg...)
 	kit.For(arg, func(k, v Any) {

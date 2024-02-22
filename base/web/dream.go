@@ -386,7 +386,13 @@ func init() {
 				nfs.Trash(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME)))
 			}},
 			OPEN: {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
-				ProcessIframe(m, m.Option(mdb.NAME), kit.Select(S(m.Option(mdb.NAME)), SpideOrigin(m, m.Option(mdb.NAME)), m.Option(mdb.TYPE) == MASTER), arg...)
+				m.Debug("what %v", m.Option(ice.MSG_USERHOST))
+				m.Debug("what %v", m.Option(ice.MSG_USERWEB))
+				if m.Option(mdb.TYPE) == MASTER && m.IsLocalhost() {
+					m.ProcessOpen(SpideOrigin(m, m.Option(mdb.NAME)))
+				} else {
+					ProcessIframe(m, m.Option(mdb.NAME), kit.Select(S(m.Option(mdb.NAME)), SpideOrigin(m, m.Option(mdb.NAME)), m.Option(mdb.TYPE) == MASTER), arg...)
+				}
 			}},
 			GRANT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(CHAT_GRANT, aaa.CONFIRM, kit.Dict(SPACE, m.Option(mdb.NAME)))
@@ -463,12 +469,19 @@ func DreamWhiteHandle(m *ice.Message, arg ...string) {
 	aaa.White(m, kit.Keys(m.ShortKey(), ctx.ACTION, DREAM_ACTION))
 }
 func DreamProcessIframe(m *ice.Message, arg ...string) {
-	if kit.HasPrefixList(arg, ctx.ACTION, m.CommandKey()) && len(arg) == 2 {
+	if !kit.HasPrefixList(arg, ctx.ACTION, m.ShortKey()) && !kit.HasPrefixList(arg, ctx.ACTION, m.CommandKey()) {
+		return
+	}
+	if m.Option(mdb.TYPE) == MASTER && m.IsLocalhost() {
+		m.ProcessOpen(SpideOrigin(m, m.Option(mdb.NAME)) + C(m.ShortKey()))
+		return
+	}
+	if len(arg) == 2 {
 		defer m.Push(TITLE, kit.Keys(m.Option(mdb.NAME), m.ShortKey()))
 	}
 	DreamProcess(m, CHAT_IFRAME, func() string {
 		if m.Option(mdb.TYPE) == MASTER {
-			return SpideOrigin(m, kit.Keys(m.Option(ice.MSG_USERPOD), m.Option(mdb.NAME))) + C(m.ShortKey())
+			return SpideOrigin(m, m.Option(mdb.NAME)) + C(m.ShortKey())
 		}
 		return S(kit.Keys(m.Option(ice.MSG_USERPOD), m.Option(mdb.NAME))) + C(m.ShortKey())
 	}, arg...)

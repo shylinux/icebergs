@@ -241,6 +241,7 @@ const ( // MSG
 	LOG_TRACEID  = "log.id"
 	MSG_NODETYPE = "node.type"
 
+	FROM_DAEMON    = "from.daemon"
 	TABLE_CHECKBOX = "table.checkbox"
 	TOAST_DURATION = "toast.duration"
 )

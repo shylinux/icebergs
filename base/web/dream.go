@@ -344,13 +344,14 @@ func init() {
 					PushNoticeGrow(m.Options(ice.MSG_COUNT, "0", ice.LOG_DISABLE, ice.TRUE, "space.noecho", ice.TRUE), strings.ReplaceAll(string(buf), lex.NL, "\r\n"))
 					return len(buf), nil
 				}, nil))
+				msg := m.Spawn(ice.Maps{ice.MSG_DEBUG: ice.FALSE})
 				DreamEach(m, m.Option(mdb.NAME), "", func(name string) {
 					p := path.Join(ice.USR_LOCAL_WORK, name)
 					if cb, ok := m.OptionCB("").(func(string) bool); ok && cb(p) {
 						return
 					}
-					defer PushNoticeGrow(m, "\r\n\r\n\r\n")
-					PushNoticeGrow(m, kit.Format("[%s]%s$ %s\r\n", time.Now().Format(ice.MOD_TIME_ONLY), name, m.Option(ice.CMD)))
+					defer PushNoticeGrow(msg, "\r\n\r\n\r\n")
+					PushNoticeGrow(msg, kit.Format("[%s]%s$ %s\r\n", time.Now().Format(ice.MOD_TIME_ONLY), name, m.Option(ice.CMD)))
 					m.Cmd(cli.SYSTEM, kit.Split(m.Option(ice.CMD)), kit.Dict(cli.CMD_DIR, p)).Sleep300ms()
 				})
 			}},

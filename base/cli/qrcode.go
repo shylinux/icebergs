@@ -37,7 +37,7 @@ func _qrcode_web(m *ice.Message, text string) string {
 	sc.ForegroundColor = ParseColor(m.Option(FG))
 	sc.BackgroundColor = ParseColor(m.Option(BG))
 	if data, err := sc.PNG(kit.Int(m.Option(SIZE))); m.Assert(err) {
-		m.Echo(`<img src="data:image/png;base64,%s" title='%s'>`, base64.StdEncoding.EncodeToString(data), text)
+		m.Echo(`<img class="qrcode" src="data:image/png;base64,%s" title='%s'>`, base64.StdEncoding.EncodeToString(data), text)
 	}
 	return text
 }

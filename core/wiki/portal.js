@@ -1,5 +1,6 @@
 Volcanos(chat.ONIMPORT, {
-	_init: function(can, msg) { can.isCmdMode() && (can.user.toast = function() {})
+	_init: function(can, msg) {
+		// can.isCmdMode() && (can.user.toast = function() {})
 		var p = "/cmd/"+web.PORTAL; can.db.prefix = location.pathname.indexOf(p) > -1? location.pathname.split(p)[0]+p: nfs.WIKI_PORTAL
 		var p = "/c/"+web.PORTAL; can.db.prefix = location.pathname.indexOf(p) > -1? location.pathname.split(p)[0]+p: nfs.WIKI_PORTAL
 		can.db.current = can.isCmdMode()? can.base.trimPrefix(location.pathname, can.db.prefix+nfs.PS, can.db.prefix): can.Option(nfs.PATH)

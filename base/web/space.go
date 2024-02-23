@@ -205,10 +205,10 @@ func _space_send(m *ice.Message, name string, arg ...string) (h string) {
 	if target := kit.Split(name, nfs.PT, nfs.PT); !mdb.HashSelectDetail(m, target[0], func(value ice.Map) {
 		if c, ok := value[mdb.TARGET].(*websocket.Conn); !m.WarnNotValid(!ok, mdb.TARGET) {
 			kit.If(kit.Format(value[mdb.TYPE]) == MASTER, func() {
-				m.Options(ice.MSG_USERWEB, value[mdb.TEXT],
-					ice.MSG_USERPOD, "",
-					ice.MSG_USERPOD0, name,
-					ice.MSG_USERHOST, "")
+				m.Options(
+					ice.MSG_USERWEB0, m.Option(ice.MSG_USERWEB), ice.MSG_USERPOD0, name,
+					ice.MSG_USERWEB, value[mdb.TEXT], ice.MSG_USERPOD, "", ice.MSG_USERHOST, "",
+				)
 			})
 			kit.For([]string{ice.MSG_USERROLE, ice.LOG_TRACEID}, func(k string) { m.Optionv(k, m.Optionv(k)) })
 			kit.For(m.Optionv(ice.MSG_OPTS), func(k string) { m.Optionv(k, m.Optionv(k)) })

@@ -283,9 +283,10 @@ func Module(prefix string, arg ...Any) {
 	}
 }
 func (m *Message) FileURI(dir string) string {
-	if dir == "" {
-		return ""
-	} else if strings.Contains(dir, "/pkg/mod/") {
+	if dir == "" || kit.HasPrefix(dir, HTTP) {
+		return dir
+	}
+	if strings.Contains(dir, "/pkg/mod/") {
 		dir = strings.Split(dir, "/pkg/mod/")[1]
 	} else if Info.Make.Path != "" && strings.HasPrefix(dir, Info.Make.Path) {
 		dir = strings.TrimPrefix(dir, Info.Make.Path)
@@ -293,12 +294,16 @@ func (m *Message) FileURI(dir string) string {
 		dir = strings.TrimPrefix(dir, kit.Path("")+PS)
 	} else if strings.HasPrefix(dir, ISH_PLUGED) {
 		dir = strings.TrimPrefix(dir, ISH_PLUGED)
-	} else if kit.HasPrefix(dir, PS, HTTP) {
-		return dir
 	}
-	if strings.HasPrefix(dir, USR_VOLCANOS) {
-		return strings.TrimPrefix(dir, USR)
+	if strings.HasPrefix(dir, PS) {
+
+	} else if strings.HasPrefix(dir, USR_VOLCANOS) {
+		dir = strings.TrimPrefix(dir, USR)
 	} else {
-		return kit.MergeURL(path.Join(PS, REQUIRE, dir), POD, m.Option(MSG_USERPOD))
+		dir = kit.MergeURL(path.Join(PS, REQUIRE, dir), POD, m.Option(MSG_USERPOD))
 	}
+	if m.Option(MSG_USERWEB0) != "" {
+		dir = kit.MergeURL2(m.Option(MSG_USERWEB), dir)
+	}
+	return dir
 }

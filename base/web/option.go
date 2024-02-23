@@ -73,7 +73,7 @@ func PushNotice(m *ice.Message, arg ...ice.Any) {
 		return
 	}
 	opts := ice.Map{ice.MSG_OPTION: []string{}, ice.MSG_OPTS: []string{}}
-	kit.For([]string{ctx.DISPLAY, ctx.STYLE, cli.DELAY, ice.MSG_TITLE, ice.MSG_STATUS, ice.LOG_DEBUG, ice.LOG_TRACEID}, func(key string) {
+	kit.For([]string{ctx.DISPLAY, ctx.STYLE, cli.DELAY, ice.MSG_TITLE, ice.MSG_STATUS, ice.LOG_DEBUG, ice.LOG_TRACEID, ice.LOG_DISABLE}, func(key string) {
 		opts[ice.MSG_OPTION], opts[key] = kit.Simple(opts[ice.MSG_OPTION], key), m.Option(key)
 	})
 	m.Cmd(SPACE, m.Option(ice.MSG_DAEMON), arg, opts)

@@ -32,7 +32,7 @@ func _serve_start(m *ice.Message) {
 	cli.NodeInfo(m, kit.Select(kit.Split(ice.Info.Hostname, nfs.PT)[0], m.Option(tcp.NODENAME)), SERVER)
 	m.Go(func() {
 		m.Cmd(SPIDE, ice.OPS, _serve_address(m)+"/exit", ice.Maps{CLIENT_TIMEOUT: cli.TIME_30ms, ice.LOG_DISABLE: ice.TRUE})
-	}).Sleep300ms()
+	}).Sleep(cli.TIME_1s)
 	m.Start("", m.OptionSimple(tcp.HOST, tcp.PORT)...)
 	m.Cmd(nfs.SAVE, ice.VAR_LOG_ICE_PORT, m.Option(tcp.PORT))
 	if m.Cmd(tcp.HOST).Length() == 0 {

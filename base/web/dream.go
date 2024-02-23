@@ -117,7 +117,8 @@ func _dream_start(m *ice.Message, name string) {
 		return
 	}
 	if !m.IsCliUA() {
-		defer m.ProcessOpen(m.MergePod(name))
+		// defer m.ProcessOpen(m.MergePod(name))
+		defer m.ProcessOpenAndRefresh(m.MergePod(name))
 		defer ToastProcess(m, mdb.CREATE, name)()
 	}
 	defer mdb.Lock(m, m.PrefixKey(), cli.START, name)()
@@ -334,7 +335,7 @@ func init() {
 				DreamEach(m, m.Option(mdb.NAME), "", func(name string) {
 					m.Cmd(SPACE, name, AUTOGEN, BINPACK)
 					kit.For(list, func(goos string) {
-						PushNoticeRich(m, mdb.NAME, name, msg.Cmd(SPACE, name, COMPILE, goos, cli.AMD64, kit.Dict(ice.MSG_USERPOD, name)).AppendSimple())
+						PushNoticeRich(m.Options(ice.MSG_COUNT, "0", ice.LOG_DISABLE, ice.TRUE), mdb.NAME, name, msg.Cmd(SPACE, name, COMPILE, goos, cli.AMD64, kit.Dict(ice.MSG_USERPOD, name)).AppendSimple())
 					})
 				}).ProcessHold()
 			}},

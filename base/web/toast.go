@@ -62,7 +62,7 @@ func ToastSuccess(m *ice.Message, arg ...ice.Any) {
 	Toast(m, toastContent(m, ice.SUCCESS, arg...), "", cli.TIME_3s)
 }
 func ToastFailure(m *ice.Message, arg ...ice.Any) {
-	Toast(m, toastContent(m, ice.FAILURE, arg...), "", m.OptionDefault(ice.TOAST_DURATION, cli.TIME_3s)).Sleep(m.OptionDefault(ice.TOAST_DURATION, cli.TIME_3s))
+	Toast(m, toastContent(m, ice.FAILURE, arg...), "", m.OptionDefault(ice.TOAST_DURATION, "-1")).Sleep(m.OptionDefault(ice.TOAST_DURATION, cli.TIME_3s))
 }
 func ToastProcess(m *ice.Message, arg ...ice.Any) func(...ice.Any) {
 	text := toastContent(m, ice.PROCESS, arg...)

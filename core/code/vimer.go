@@ -107,8 +107,7 @@ func init() {
 							kit.If(strings.HasPrefix(value[ctx.INDEX], kit.Select("", arg, 1)), func() { m.Push(arg[0], strings.TrimPrefix(value[ctx.INDEX], arg[1]+".")) })
 						})
 					case ctx.INDEX:
-						m.OptionFields(ctx.INDEX)
-						m.Cmd(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND).Table(func(value ice.Maps) {
+						m.Cmd(ctx.COMMAND).Table(func(value ice.Maps) {
 							kit.If(strings.HasPrefix(value[ctx.INDEX], kit.Select("", arg, 1)), func() { m.Push(arg[0], value[ctx.INDEX]) })
 						})
 					case nfs.PATH:

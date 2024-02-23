@@ -64,7 +64,13 @@ func init() {
 					return
 				}
 				origin := SpideOrigin(m, arg[0])
-				kit.If(kit.IsIn(arg[0], ice.OPS, ice.DEV), func() { origin = tcp.PublishLocalhost(m, origin) })
+				kit.If(kit.IsIn(arg[0], ice.OPS, ice.DEV), func() {
+					if kit.IsIn(kit.ParseURL(origin).Hostname(), m.Cmds(tcp.HOST).Appendv(aaa.IP)...) {
+						origin = m.Option(ice.MSG_USERHOST)
+					} else {
+						origin = tcp.PublishLocalhost(m, origin)
+					}
+				})
 				list := m.Spawn(ice.Maps{ice.MSG_FIELDS: ""}).CmdMap(DREAM, mdb.NAME)
 				m.SetAppend().Spawn().SplitIndex(m.Cmdx(SPIDE, arg[0], C(DREAM), kit.Dict(mdb.ConfigSimple(m, CLIENT_TIMEOUT)))).Table(func(value ice.Maps) {
 					if value[mdb.TYPE] != WORKER {

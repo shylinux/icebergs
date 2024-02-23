@@ -96,7 +96,14 @@ func init() {
 					})
 				}
 			}},
-		}), Hand: func(m *ice.Message, arg ...string) { kit.For(arg, func(k string) { _command_list(m, k) }) }},
+		}), Hand: func(m *ice.Message, arg ...string) {
+			if len(arg) == 0 {
+				m.OptionFields(INDEX)
+				m.Cmdy("", mdb.SEARCH, COMMAND)
+			} else {
+				kit.For(arg, func(k string) { _command_list(m, k) })
+			}
+		}},
 	})
 }
 

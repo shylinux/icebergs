@@ -360,11 +360,13 @@ func init() {
 			m.Cmdy(nfs.DIR, ice.USR_ICONS, nfs.PATH)
 			m.CutTo(nfs.PATH, arg[0])
 		case ctx.INDEX, ice.CMD:
+			m.OptionFields(ctx.INDEX)
 			if space := m.Option(SPACE); space != "" {
 				m.Options(SPACE, []string{}).Cmdy(SPACE, space, ctx.COMMAND)
 			} else {
 				m.Cmdy(ctx.COMMAND)
 			}
+			m.CutTo(ctx.INDEX, arg[0])
 		case ctx.ARGS:
 			m.OptionDefault(ctx.INDEX, m.Option("extra.index"))
 			if space := m.Option(SPACE); space != "" {

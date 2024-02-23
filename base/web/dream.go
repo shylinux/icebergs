@@ -341,7 +341,7 @@ func init() {
 			}},
 			FOR_FLOW: {Name: "forFlow name cmd*='sh etc/miss.sh'", Help: "流程", Icon: "bi bi-terminal", Hand: func(m *ice.Message, arg ...string) {
 				m.Options(ctx.DISPLAY, PLUGIN_XTERM, cli.CMD_OUTPUT, nfs.NewWriteCloser(func(buf []byte) (int, error) {
-					PushNoticeGrow(m.Options(ice.MSG_COUNT, "0", ice.LOG_DISABLE, ice.TRUE), strings.ReplaceAll(string(buf), lex.NL, "\r\n"))
+					PushNoticeGrow(m.Options(ice.MSG_COUNT, "0", ice.LOG_DISABLE, ice.TRUE, "space.noecho", ice.TRUE), strings.ReplaceAll(string(buf), lex.NL, "\r\n"))
 					return len(buf), nil
 				}, nil))
 				DreamEach(m, m.Option(mdb.NAME), "", func(name string) {

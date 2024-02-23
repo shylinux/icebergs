@@ -195,12 +195,12 @@ func _space_echo(m *ice.Message, source, target []string, c *websocket.Conn) {
 func _space_send(m *ice.Message, name string, arg ...string) (h string) {
 	withecho := m.Option("space.noecho") != ice.TRUE
 	kit.If(len(arg) > 0 && arg[0] == TOAST, func() { withecho = false; m.Option(ice.MSG_DEBUG, ice.FALSE) })
-	wait, done := m.Wait(kit.Select("", m.OptionDefault("space.timeout", "600s"), withecho), func(msg *ice.Message, arg ...string) {
+	wait, done := m.Wait(kit.Select("", m.OptionDefault("space.timeout", "180s"), withecho), func(msg *ice.Message, arg ...string) {
 		m.Cost(kit.Format("%v->[%v] %v %v", m.Optionv(ice.MSG_SOURCE), name, m.Detailv(), msg.FormatSize())).Copy(msg)
 	})
 	if withecho {
-		h = mdb.HashCreate(m.Spawn(), mdb.TYPE, tcp.SEND, mdb.NAME, kit.Keys(name, m.Target().ID()), mdb.TEXT, kit.Join(arg, lex.SP), kit.Dict(mdb.TARGET, done))
-		defer mdb.HashRemove(m.Spawn(), mdb.HASH, h)
+		h = mdb.HashCreate(m.SpawnSilent(), mdb.TYPE, tcp.SEND, mdb.NAME, kit.Keys(name, m.Target().ID()), mdb.TEXT, kit.Join(arg, lex.SP), kit.Dict(mdb.TARGET, done))
+		defer mdb.HashRemove(m.SpawnSilent(), mdb.HASH, h)
 	}
 	if target := kit.Split(name, nfs.PT, nfs.PT); !mdb.HashSelectDetail(m, target[0], func(value ice.Map) {
 		if c, ok := value[mdb.TARGET].(*websocket.Conn); !m.WarnNotValid(!ok, mdb.TARGET) {
@@ -396,7 +396,7 @@ func init() {
 			if ls := kit.Simple(m.Optionv(ice.MSG_UPLOAD)); len(ls) > 1 {
 				m.Cmd(SPACE, pod, SPIDE, ice.DEV, CACHE, SHARE_CACHE+ls[0])
 			}
-			m.Options(ice.POD, []string{}, ice.MSG_USERPOD, pod).Cmdy(append(kit.List(ice.SPACE, pod), arg...)...)
+			m.Options(ice.POD, []string{}, ice.MSG_USERPOD, pod, ice.MSG_DEBUG, ice.FALSE).Cmdy(append(kit.List(ice.SPACE, pod), arg...)...)
 			return true
 		}
 		return false

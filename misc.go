@@ -184,3 +184,7 @@ func (m *Message) Trans(en string, zh string) string {
 func (m *Message) IsEnglish() bool {
 	return kit.IsIn(strings.ToLower(m.Option(MSG_LANGUAGE)), "en", "en-us")
 }
+
+func (m *Message) SpawnSilent(arg ...Any) *Message {
+	return m.Spawn(Maps{LOG_DISABLE: TRUE})
+}

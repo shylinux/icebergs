@@ -324,7 +324,12 @@ func (s relay) Upgrade(m *ice.Message, arg ...string) {
 				return
 			}
 			ssh.PushShell(msg.Message, strings.Split(msg.Template(UPGRADE_SH), lex.NL), func(res string) {
-				web.PushNoticeGrow(m.Options(ice.MSG_COUNT, "0", ctx.DISPLAY, web.PLUGIN_XTERM).Message, res)
+				web.PushNoticeGrow(m.Options(
+					ctx.DISPLAY, web.PLUGIN_XTERM,
+					ice.MSG_COUNT, "0",
+					ice.MSG_DEBUG, ice.FALSE,
+					ice.LOG_DISABLE, ice.TRUE,
+				).Message, res)
 			})
 		})
 	} else {
@@ -338,7 +343,12 @@ func (s relay) Version(m *ice.Message, arg ...string) {
 			return
 		}
 		ssh.PushShell(msg.Message, strings.Split(msg.Template(VERSION_SH), lex.NL), func(res string) {
-			web.PushNoticeGrow(m.Options(ctx.DISPLAY, web.PLUGIN_XTERM).Message, res)
+			web.PushNoticeGrow(m.Options(
+				ctx.DISPLAY, web.PLUGIN_XTERM,
+				ice.MSG_COUNT, "0",
+				ice.MSG_DEBUG, ice.FALSE,
+				ice.LOG_DISABLE, ice.TRUE,
+			).Message, res)
 		})
 	})
 }

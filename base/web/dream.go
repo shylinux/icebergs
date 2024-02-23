@@ -386,12 +386,11 @@ func init() {
 				nfs.Trash(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME)))
 			}},
 			OPEN: {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
-				m.Debug("what %v", m.Option(ice.MSG_USERHOST))
-				m.Debug("what %v", m.Option(ice.MSG_USERWEB))
 				if m.Option(mdb.TYPE) == MASTER && m.IsLocalhost() {
 					m.ProcessOpen(SpideOrigin(m, m.Option(mdb.NAME)))
 				} else {
-					ProcessIframe(m, m.Option(mdb.NAME), kit.Select(S(m.Option(mdb.NAME)), SpideOrigin(m, m.Option(mdb.NAME)), m.Option(mdb.TYPE) == MASTER), arg...)
+					m.ProcessOpen(S(m.Option(mdb.NAME)))
+					// ProcessIframe(m, m.Option(mdb.NAME), kit.Select(S(m.Option(mdb.NAME)), SpideOrigin(m, m.Option(mdb.NAME)), m.Option(mdb.TYPE) == MASTER), arg...)
 				}
 			}},
 			GRANT: {Hand: func(m *ice.Message, arg ...string) {

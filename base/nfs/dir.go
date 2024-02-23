@@ -278,6 +278,7 @@ func Show(m *ice.Message, file string) bool {
 		if IsSourceFile(m, kit.Ext(file)) {
 			m.Cmdy(CAT, file)
 		} else {
+			m.ProcessOpen(p)
 			return false
 		}
 	}

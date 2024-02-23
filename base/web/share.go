@@ -193,10 +193,14 @@ func ProxyUpload(m *ice.Message, pod string, p string) string {
 	} else if s, e := file.StatFile(p); e == nil {
 		size, cache = s.Size(), s.ModTime()
 	}
-	kit.If(p == ice.BIN_ICE_BIN, func() { m.Option(ice.MSG_USERROLE, aaa.TECH) })
-	share := m.Cmdx(SHARE, mdb.CREATE, mdb.TYPE, PROXY, mdb.NAME, p, mdb.TEXT, pod)
-	defer m.Cmd(SHARE, mdb.REMOVE, mdb.HASH, share)
-	url := tcp.PublishLocalhost(m, m.MergeLink(PP(SHARE, PROXY), SHARE, share))
-	m.Cmd(SPACE, pod, SPIDE, PROXY, URL, url, nfs.SIZE, size, CACHE, cache.Format(ice.MOD_TIME), UPLOAD, mdb.AT+p)
+	if m.Cmdv(SPACE, pod, mdb.TYPE) == MASTER {
+		m.Cmd(SPIDE, pod, SPIDE_SAVE, pp, p)
+	} else {
+		kit.If(p == ice.BIN_ICE_BIN, func() { m.Option(ice.MSG_USERROLE, aaa.TECH) })
+		share := m.Cmdx(SHARE, mdb.CREATE, mdb.TYPE, PROXY, mdb.NAME, p, mdb.TEXT, pod)
+		defer m.Cmd(SHARE, mdb.REMOVE, mdb.HASH, share)
+		url := tcp.PublishLocalhost(m, m.MergeLink(PP(SHARE, PROXY), SHARE, share))
+		m.Cmd(SPACE, pod, SPIDE, PROXY, URL, url, nfs.SIZE, size, CACHE, cache.Format(ice.MOD_TIME), UPLOAD, mdb.AT+p)
+	}
 	return kit.Select(p, pp, file.ExistsFile(pp))
 }

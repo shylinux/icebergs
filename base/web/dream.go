@@ -82,7 +82,7 @@ func _dream_list_more(m *ice.Message, simple bool) *ice.Message {
 		value[mdb.STATUS] = cli.START
 		switch value[mdb.TYPE] {
 		case SERVER:
-			value[mdb.ICONS] = nfs.USR_ICONS_ICEBERGS
+			value[mdb.ICONS] = m.FileURI(nfs.USR_ICONS_ICEBERGS)
 			value[mdb.TEXT] = kit.JoinLine(value[nfs.MODULE], value[mdb.TEXT])
 			if simple {
 				defer m.PushButton("")

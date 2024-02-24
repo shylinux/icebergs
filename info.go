@@ -62,6 +62,7 @@ var Info = struct {
 	System    string
 	Domain    string
 	PidPath   string
+	CtxRoot   string
 	Traceid   string
 	Localhost bool
 	Important bool

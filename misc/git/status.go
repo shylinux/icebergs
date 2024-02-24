@@ -54,6 +54,7 @@ func init() {
 				m.Cmd(cli.SYSTEM, GIT, STASH)
 				m.Cmd(cli.SYSTEM, GIT, CHECKOUT, ".")
 				m.Go(func() { m.Sleep30ms(ice.QUIT, 1) })
+				m.ProcessHold()
 			}},
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				if !nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME), _GIT)) {

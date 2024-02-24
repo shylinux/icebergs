@@ -396,7 +396,7 @@ func init() {
 			if ls := kit.Simple(m.Optionv(ice.MSG_UPLOAD)); len(ls) > 1 {
 				m.Cmd(SPACE, pod, SPIDE, ice.DEV, CACHE, SHARE_CACHE+ls[0])
 			}
-			m.Options(ice.POD, []string{}, ice.MSG_USERPOD, pod, ice.MSG_DEBUG, ice.FALSE).Cmdy(append(kit.List(ice.SPACE, pod), arg...)...)
+			m.Options(ice.POD, []string{}, ice.MSG_USERPOD, pod).Cmdy(append(kit.List(ice.SPACE, pod), arg...)...)
 			return true
 		}
 		return false

@@ -438,7 +438,7 @@ func init() {
 				if ice.Info.NodeType == WORKER || !aaa.IsTechOrRoot(m) || m.IsCliUA() {
 					m.Action()
 				} else if cli.SystemFindGo(m) {
-					m.Action(html.FILTER, mdb.CREATE, STARTALL, STOPALL, cli.BUILD, PUBLISH)
+					m.Action(html.FILTER, mdb.CREATE, STARTALL, STOPALL, cli.BUILD, PUBLISH, nfs.FILE)
 				} else {
 					m.Action(html.FILTER, mdb.CREATE, STARTALL, STOPALL)
 				}

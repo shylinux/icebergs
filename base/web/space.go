@@ -188,7 +188,7 @@ func _space_echo(m *ice.Message, source, target []string, c *websocket.Conn) {
 	defer func() { m.WarnNotValid(recover()) }()
 	if m.Options(ice.MSG_SOURCE, source, ice.MSG_TARGET, target[1:]); !m.WarnNotValid(c.WriteMessage(1, []byte(m.FormatMeta()))) {
 		if source != nil {
-			m.Log(tcp.SEND, "%v->%v %v %v", source, target, m.Detailv(), m.FormatsMeta(nil))
+			m.Log(tcp.SEND, "%v->%v %v %v", source, target, kit.ReplaceAll(kit.Format("%v", m.Detailv()), "\r\n", "\\r\\n", "\t", "\\t", "\n", "\\n"), m.FormatsMeta(nil))
 		}
 	}
 }

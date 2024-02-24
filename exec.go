@@ -118,9 +118,9 @@ func (m *Message) CmdHand(cmd *Command, key string, arg ...string) *Message {
 		return m
 	}
 	if m._target = cmd.FileLines(); key == SELECT {
-		m.Log(LOG_CMDS, "%s.%s %d %v %v", m.Target().Name, key, len(arg), arg, m.Optionv(MSG_FIELDS), logs.FileLineMeta(m._fileline()))
+		m.Log(LOG_CMDS, "%s.%s %v %v", m.Target().Name, key, formatArg(arg...), m.Optionv(MSG_FIELDS), logs.FileLineMeta(m._fileline()))
 	} else {
-		m.Log(LOG_CMDS, "%s.%s %d %v", m.Target().Name, key, len(arg), arg, logs.FileLineMeta(m._fileline()))
+		m.Log(LOG_CMDS, "%s.%s %v", m.Target().Name, key, formatArg(arg...), logs.FileLineMeta(m._fileline()))
 	}
 	if cmd.Hand != nil {
 		cmd.Hand(m, arg...)
@@ -237,9 +237,12 @@ func (c *Context) _action(m *Message, cmd *Command, key string, sub string, h *A
 		}
 	}
 	m._target = kit.Select(logs.FileLine(h.Hand), cmd.FileLines(), cmd.RawHand != nil)
-	m.Log(LOG_CMDS, "%s.%s %s %d %v", c.Name, key, sub, len(arg), arg, logs.FileLineMeta(m._fileline()))
+	m.Log(LOG_CMDS, "%s.%s %s %v", c.Name, key, sub, formatArg(arg...), logs.FileLineMeta(m._fileline()))
 	h.Hand(m, arg...)
 	return m
+}
+func formatArg(arg ...string) string {
+	return kit.Format("%d %v", len(arg), kit.ReplaceAll(kit.Format("%v", arg), "\r\n", "\\r\\n", "\t", "\\t", "\n", "\\n"))
 }
 func (c *Command) FileLines() string {
 	return kit.Join(kit.Slice(kit.Split(c.FileLine(), PS), -3), PS)

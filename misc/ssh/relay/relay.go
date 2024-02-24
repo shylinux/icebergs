@@ -61,9 +61,10 @@ type relay struct {
 	ice.Code
 	checkbox    string `data:"true"`
 	short       string `data:"machine"`
-	field       string `data:"time,machine,username,host,port,portal,dream,module,version,commitTime,compileTime,bootTime,go,git,package,shell,kernel,arch,ncpu,vcpu,mhz,mem,disk,network,listen,socket,proc,vendor"`
+	tools       string `data:"ssh.matrix"`
+	field       string `data:"time,icons,machine,username,host,port,portal,dream,module,version,commitTime,compileTime,bootTime,go,git,package,shell,kernel,arch,ncpu,vcpu,mhz,mem,disk,network,listen,socket,proc,vendor"`
 	statsTables string `name:"statsTables" event:"stats.tables"`
-	create      string `name:"create machine* username* host* port*=22"`
+	create      string `name:"create machine* username* host* port*=22" icons`
 	stats       string `name:"stats machine" help:"采集" icon:"bi bi-card-list"`
 	dream       string `name:"dream" help:"空间" icon:"bi bi-grid-3x3-gap"`
 	forEach     string `name:"forEach machine cmd*:textarea=pwd"`
@@ -184,6 +185,7 @@ func (s relay) Dream(m *ice.Message) {
 			m.Push(MACHINE, tcp.LOCALHOST).Push(tcp.HOST, tcp.PublishLocalhost(m.Message, tcp.LOCALHOST))
 			m.Push("", kit.Dict(cli.ParseMake(_msg.Result()), ice.SPACE, ice.CONTEXTS), kit.Split("time,space,module,version,commitTime,compileTime,bootTime"))
 			m.Push(mdb.TYPE, web.SERVER).Push(mdb.STATUS, web.ONLINE).Push(web.LINK, web.UserHost(m.Message))
+			m.Push(mdb.ICONS, "src/main.ico")
 		}
 		if _msg := m.Spawn().SplitIndex(m.Cmdx(cli.SYSTEM, kit.Split(s.admin(m, web.ROUTE)))); _msg.Length() > 0 {
 			m.Message.Copy(_msg.Table(func(value ice.Maps) {
@@ -192,6 +194,19 @@ func (s relay) Dream(m *ice.Message) {
 			}).Cut(fields))
 		}
 	}
+	m.RewriteAppend(func(value, key string, index int) string {
+		if key == mdb.ICONS {
+			if value == "" {
+				value = kit.MergeURL2(m.Appendv(web.LINK)[index], "/require/"+nfs.USR_ICONS_ICEBERGS)
+			} else if strings.HasPrefix(value, nfs.REQUIRE) && m.Appendv(MACHINE)[index] != tcp.LOCALHOST {
+				value = kit.MergeURL2(m.Appendv(web.LINK)[index], value)
+			} else if kit.HasPrefix(value, nfs.USR, nfs.SRC) {
+				value = m.Option(ice.MSG_USERHOST) + "/require/" + value
+
+			}
+		}
+		return value
+	})
 }
 func (s relay) ForEach(m *ice.Message, arg ...string) *ice.Message {
 	s.foreach(m, func(msg *ice.Message, cmd []string) {

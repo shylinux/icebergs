@@ -1,5 +1,5 @@
 Volcanos(chat.ONIMPORT, {
-	_init: function(can, msg) { var list = {"contexts": {}}, machine = []
+	_init: function(can, msg) { var list = {"contexts": {}}, machine = ["localhost"]
 		msg.Table(function(value) { var space = value.space, _machine = value.machine;
 			machine.indexOf(_machine) == -1 && (machine.push(_machine))
 			list[space] = list[space]||{}, list[space][_machine] = value })

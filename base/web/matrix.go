@@ -80,9 +80,7 @@ func init() {
 			COMPILE: {Hand: func(m *ice.Message, arg ...string) {
 				_matrix_cmd(m, "", cli.AMD64, cli.LINUX, ice.SRC_MAIN_GO).ProcessHold()
 			}},
-			UPGRADE: {Hand: func(m *ice.Message, arg ...string) {
-				_matrix_cmd(m, "").ProcessRefresh().Sleep3s()
-			}},
+			UPGRADE: {Hand: func(m *ice.Message, arg ...string) { _matrix_cmd(m, "").ProcessRefresh().Sleep3s() }},
 			INSTALL: {Hand: func(m *ice.Message, arg ...string) {
 				if kit.IsIn(m.Cmdv(Space(m, m.Option(DOMAIN)), SPIDE, ice.DEV_IP, CLIENT_HOSTNAME), m.Cmd(tcp.HOST).Appendv(aaa.IP)...) {
 					m.Option(nfs.BINARY, S(m.Option(mdb.NAME)))
@@ -91,7 +89,7 @@ func init() {
 				}
 				_matrix_dream(m, mdb.CREATE, kit.Simple(m.OptionSimple(mdb.ICONS, nfs.REPOS, nfs.BINARY))...)
 			}},
-		}, ctx.ConfAction(mdb.FIELD, "time,domain,status,type,name,text,icons,repos,binary,module,version")), Hand: func(m *ice.Message, arg ...string) {
+		}, ctx.ConfAction(mdb.FIELD, "time,domain,status,type,name,text,icons,repos,binary,module,version", ctx.TOOLS, kit.Simple(STATUS, VERSION))), Hand: func(m *ice.Message, arg ...string) {
 			if kit.HasPrefixList(arg, ctx.ACTION) {
 				_matrix_action(m, arg[1], arg[2:]...)
 				return
@@ -112,6 +110,7 @@ func init() {
 				m.StatusTimeCountStats(mdb.TYPE, mdb.STATUS)
 				return nil
 			}).Action(html.FILTER, mdb.CREATE).Display("")
+			ctx.Toolkit(m)
 		}},
 	})
 }

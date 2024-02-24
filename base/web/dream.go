@@ -339,6 +339,9 @@ func init() {
 					})
 				}).ProcessHold()
 			}},
+			VERSION: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy("web.code.version")
+			}},
 			FOR_FLOW: {Name: "forFlow name cmd*='sh etc/miss.sh'", Help: "流程", Icon: "bi bi-terminal", Hand: func(m *ice.Message, arg ...string) {
 				m.Options(ctx.DISPLAY, PLUGIN_XTERM, cli.CMD_OUTPUT, nfs.NewWriteCloser(func(buf []byte) (int, error) {
 					PushNoticeGrow(m.Options(ice.MSG_COUNT, "0", ice.LOG_DEBUG, ice.FALSE), strings.ReplaceAll(string(buf), lex.NL, "\r\n"))
@@ -438,7 +441,7 @@ func init() {
 				if ice.Info.NodeType == WORKER || !aaa.IsTechOrRoot(m) || m.IsCliUA() {
 					m.Action()
 				} else if cli.SystemFindGo(m) {
-					m.Action(html.FILTER, mdb.CREATE, STARTALL, STOPALL, cli.BUILD, PUBLISH, nfs.FILE)
+					m.Action(html.FILTER, mdb.CREATE, STARTALL, STOPALL, cli.BUILD, PUBLISH, nfs.FILE, VERSION)
 				} else {
 					m.Action(html.FILTER, mdb.CREATE, STARTALL, STOPALL)
 				}

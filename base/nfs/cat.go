@@ -43,6 +43,10 @@ func _cat_list(m *ice.Message, p string) {
 		list := []string{}
 		kit.For(f, func(s string, i int) { list = append(list, cb(s, i)) })
 		m.Echo(strings.Join(list, ice.NL) + ice.NL)
+	case func([]string, string) string:
+		list := []string{}
+		kit.For(f, func(s string, i int) { list = append(list, cb(kit.Split(s), s)) })
+		m.Echo(strings.Join(list, ice.NL) + ice.NL)
 	case func(string, int):
 		kit.For(f, cb)
 	case func(string):

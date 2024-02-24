@@ -160,6 +160,7 @@ const (
 	BINPACK = "binpack"
 	COMPILE = "compile"
 	PUBLISH = "publish"
+	VERSION = "version"
 	UPGRADE = "upgrade"
 	INSTALL = "install"
 

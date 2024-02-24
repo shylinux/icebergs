@@ -78,6 +78,8 @@ const (
 	RESIZE  = "resize"
 	REFRESH = "refresh"
 	FILTER  = "filter"
+
+	DANGER = "danger"
 )
 
 const (

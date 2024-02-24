@@ -157,13 +157,13 @@ func (s relay) Dream(m *ice.Message) {
 		m.ProcessOpen(web.HostPort(m.Message, m.Option(tcp.HOST), m.Option(web.PORTAL), "", web.DREAM))
 		return
 	}
-	// s.foreach(m, func(msg *ice.Message, cmd []string) {
-	// 	ssh.CombinedOutput(msg.Message, s.admins(msg, cli.RUNTIME), func(res string) {
-	// 		if !strings.HasPrefix(res, "warn: ") {
-	// 			s.Modify(m, kit.Simple(MACHINE, msg.Option(MACHINE), kit.Dict(cli.ParseMake(res)))...)
-	// 		}
-	// 	})
-	// })
+	s.foreach(m, func(msg *ice.Message, cmd []string) {
+		ssh.CombinedOutput(msg.Message, s.admins(msg, cli.RUNTIME), func(res string) {
+			if !strings.HasPrefix(res, "warn: ") {
+				s.Modify(m, kit.Simple(MACHINE, msg.Option(MACHINE), kit.Dict(cli.ParseMake(res)))...)
+			}
+		})
+	})
 	fields := "time,machine,host,space,type,status,module,version,commitTime,compileTime,bootTime,link,icons"
 	s.foreach(m, func(msg *ice.Message, cmd []string) {
 		m.Push("", kit.Dict(msg.OptionSimple(fields), mdb.TYPE, web.SERVER, mdb.STATUS, web.ONLINE, web.SPACE, ice.CONTEXTS, web.LINK, web.HostPort(m.Message, msg.Option(tcp.HOST), msg.Option(web.PORTAL))), kit.Split(fields))

@@ -476,6 +476,17 @@ func init() {
 				m.Echo(_repos_remote(m, _repos_origin(m, _repos_open(m, path.Base(kit.Path(""))))))
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
+				if arg[0] == VERSION {
+					ls := kit.Split(kit.Split(strings.TrimPrefix(m.Option(VERSION), "v"), "-")[0], ".")
+					if len(ls) > 2 {
+						m.Push(arg[0], kit.Format("v%d.%d.%d", kit.Int(ls[0]), kit.Int(ls[1]), kit.Int(ls[2])+1))
+						m.Push(arg[0], kit.Format("v%d.%d.%d", kit.Int(ls[0]), kit.Int(ls[1])+1, 0))
+						m.Push(arg[0], kit.Format("v%d.%d.%d", kit.Int(ls[0])+1, 0, 0))
+					} else {
+						m.Push(arg[0], "v0.0.1")
+					}
+					return
+				}
 				switch mdb.HashInputs(m, arg); m.Option(ctx.ACTION) {
 				case INIT:
 					m.Cmd(web.SPIDE, ice.OptionFields(web.CLIENT_ORIGIN), func(value ice.Maps) { m.Push(arg[0], value[web.CLIENT_ORIGIN]+web.X(path.Base(kit.Path("")))) })
@@ -494,7 +505,6 @@ func init() {
 						m.Push(arg[0], kit.Join(kit.Slice(ls, -2), nfs.PS))
 						m.Push(arg[0], m.Option(nfs.FILE))
 					case VERSION:
-						m.Push(arg[0], _repos_tag(m, m.Option(TAGS)))
 					}
 				}
 			}},
@@ -640,7 +650,15 @@ func init() {
 			}},
 		}, web.StatsAction("", "代码库总数"), web.DreamAction(), mdb.HashAction(mdb.SHORT, REPOS, mdb.FIELD, "time,repos,branch,version,message,origin"), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
-				mdb.HashSelect(m, arg...).Sort(REPOS).PushAction(STATUS, mdb.REMOVE).Action(CLONE, PULL, PUSH, STATUS)
+				mdb.HashSelect(m, arg...).Sort(REPOS)
+				m.Table(func(value ice.Maps) {
+					if strings.Contains(value[VERSION], "-") {
+						m.PushButton(STATUS, TAG, mdb.REMOVE)
+					} else {
+						m.PushButton(STATUS, mdb.REMOVE)
+					}
+				})
+				m.Action(CLONE, PULL, PUSH, STATUS)
 			} else if repos := _repos_open(m, arg[0]); len(arg) == 1 {
 				_repos_branch(m, repos)
 			} else if len(arg) == 2 {

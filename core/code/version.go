@@ -42,6 +42,9 @@ func init() {
 				m.Cmd(SPACE, m.Option(SPACE), cli.SYSTEM, GO, MOD, "tidy")
 			}},
 			"add": {Name: "add version", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(SPACE, m.Option(SPACE), cli.SYSTEM, GIT, TAG, m.Option(VERSION))
+				m.Cmd(SPACE, m.Option(SPACE), VIMER, COMPILE)
+				m.Sleep3s()
 			}},
 		}), Hand: func(m *ice.Message, arg ...string) {
 			repos := map[string]string{}
@@ -81,7 +84,7 @@ func init() {
 				if diff {
 					m.Push(mdb.STATUS, html.DANGER).PushButton("sync", "add")
 				} else {
-					if strings.Contains(m.Option(VERSION), "-") {
+					if strings.Contains(list[space][VERSION], "-") {
 						m.Push(mdb.STATUS, "").PushButton("add")
 					} else {
 						m.Push(mdb.STATUS, "").PushButton("")

@@ -137,6 +137,7 @@ const (
 	ENV = "env"
 	DOC = "doc"
 	GET = "get"
+	TAG = "tag"
 )
 const SUM = "sum"
 const MOD = "mod"

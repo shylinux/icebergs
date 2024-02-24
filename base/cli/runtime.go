@@ -270,15 +270,19 @@ func IsWindows() bool { return runtime.GOOS == WINDOWS }
 func ParseMake(str string) []string {
 	res := kit.UnMarshal(str)
 	data := kit.Value(res, MAKE)
+	version := kit.Format(kit.Value(data, nfs.VERSION))
+	if kit.Format(kit.Value(data, "forword")) != "0" {
+		version = kit.Join(kit.TrimArg(kit.Simple(
+			kit.Format(kit.Value(data, nfs.VERSION)),
+			kit.Format(kit.Value(data, "forword")),
+			kit.Cut(kit.Format(kit.Value(data, mdb.HASH)), 6),
+		)...), "-")
+	}
 	return kit.Simple(
 		mdb.TIME, kit.Format(kit.Value(data, mdb.TIME)),
 		ice.SPACE, kit.Format(kit.Value(res, kit.Keys(NODE, mdb.NAME))),
 		nfs.MODULE, kit.Format(kit.Value(data, nfs.MODULE)),
-		nfs.VERSION, kit.Join(kit.TrimArg(kit.Simple(
-			kit.Format(kit.Value(data, nfs.VERSION)),
-			kit.Format(kit.Value(data, "forword")),
-			kit.Cut(kit.Format(kit.Value(data, mdb.HASH)), 6),
-		)...), "-"),
+		nfs.VERSION, version,
 		COMMIT_TIME, kit.Format(kit.Value(data, "when")),
 		COMPILE_TIME, kit.Format(kit.Value(data, mdb.TIME)),
 		BOOT_TIME, kit.Format(kit.Value(res, kit.Keys(BOOT, mdb.TIME))),

@@ -106,7 +106,8 @@ func init() {
 						value = kit.MergeURL(strings.Split(value, "?")[0], ice.POD, kit.Keys(m.Appendv(DOMAIN)[index], m.Appendv(mdb.NAME)[index]))
 					}
 					return value
-				}).Sort("type,status,name,domain", []string{SERVER, WORKER, ""}, []string{cli.START, cli.STOP, ""}, "str_r", "str_r")
+				})
+				m.Sort("type,status,name,domain", []string{SERVER, WORKER, ""}, []string{cli.START, cli.STOP, ""}, "str_r", "str_r")
 				m.StatusTimeCountStats(mdb.TYPE, mdb.STATUS)
 				return nil
 			}).Action(html.FILTER, mdb.CREATE).Display("")

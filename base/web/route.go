@@ -142,6 +142,7 @@ func init() {
 			} else {
 				m.OptionFields("")
 				list := m.CmdMap(SPACE, mdb.NAME)
+				lists := m.CmdMap(DREAM, mdb.NAME)
 				mem, disk, stat := 0, 0, map[string]int{}
 				m.Table(func(value ice.Maps) {
 					disk += kit.Int(kit.Select("", kit.Split(value[nfs.SIZE], nfs.PS), 2))
@@ -152,6 +153,11 @@ func init() {
 					} else {
 						m.Push(mdb.STATUS, OFFLINE)
 						stat[OFFLINE]++
+					}
+					if v, ok := lists[value[SPACE]]; ok {
+						m.Push(mdb.ICONS, v[mdb.ICONS])
+					} else {
+						m.Push(mdb.ICONS, "")
 					}
 				}).Sort("status,space", ice.STR_R, ice.STR).StatusTimeCount(stat, nfs.SIZE, kit.Format("%s/%s", kit.FmtSize(mem), kit.FmtSize(disk))).Options(ice.MSG_ACTION, "")
 			}

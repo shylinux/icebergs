@@ -1,0 +1,25 @@
+fieldset.ssh.matrix>div.output>table.content th { padding:var(--input-padding); }
+fieldset.ssh.matrix>div.output>table.content th i { padding:var(--input-padding); }
+fieldset.ssh.matrix>div.output>table.content th i:hover { background-color:var(--hover-bg-color); color:var(--hover-fg-color); }
+fieldset.ssh.matrix>div.output>table.content td { padding:var(--input-padding); }
+fieldset.ssh.matrix>div.output>table.content td:hover { color:unset; }
+fieldset.ssh.matrix>div.output>table.content div.item { display:flex; align-items:center; cursor:default; }
+fieldset.ssh.matrix>div.output>table.content div.item img { height:var(--header-height); width:var(--header-height); margin:var(--input-margin); cursor:pointer; }
+fieldset.ssh.matrix>div.output>table.content div.item div.title { text-align:left; padding:var(--input-padding); }
+fieldset.ssh.matrix>div.output>table.content div.item div.title>span { cursor:pointer; }
+fieldset.ssh.matrix>div.output>table.content div.item div.status i { font-size:var(--status-font-size); padding:0; }
+fieldset.ssh.matrix>div.output>table.content div.item div.action { margin-top:var(--input-margin); overflow:hidden; }
+fieldset.ssh.matrix>div.output>table.content div.item div.action input.icons { display:none; }
+fieldset.ssh.matrix>div.output>table.content div.item div.title:hover { background-color:unset; }
+fieldset.ssh.matrix>div.output>table.content div.item div.title span:hover { background-color:var(--hover-bg-color); }
+fieldset.ssh.matrix>div.output>table.content div.item div.status div.item:hover { background-color:var(--hover-bg-color); }
+fieldset.ssh.matrix>div.output>table.content div.item:hover { background-color:unset; color:unset; }
+fieldset.ssh.matrix>div.output>table.content div.item.notice { background-color:var(--notice-bg-color); color:var(--notice-fg-color); }
+fieldset.ssh.matrix>div.output>table.content div.item.danger { background-color:var(--danger-bg-color); color:var(--danger-fg-color); }
+fieldset.ssh.matrix>div.output>table.content div.item.danger div.status div.item { color:var(--danger-fg-color); }
+fieldset.ssh.matrix>div.output>table.content div.item.notice div.status div.item { color:var(--notice-fg-color); }
+fieldset.ssh.matrix>div.output>table.content div.item.stop div.title>span { color:var(--disable-fg-color); }
+fieldset.ssh.matrix>div.output>table.content tr:not(:hover) div.action { visibility:hidden; }
+body:not(.mobile) fieldset.ssh.matrix>div.output>table.content th:first-child { position:sticky; left:2px; z-index:2; }
+body:not(.mobile) fieldset.ssh.matrix>div.output>table.content td:first-child { background-color:var(--plugin-bg-color); position:sticky; left:2px; z-index:1; }
+body:not(.mobile) fieldset.ssh.matrix>div.output>table.content tr.danger td:first-child { background-color:transparent; }

@@ -156,12 +156,17 @@ func (s relay) Dream(m *ice.Message) {
 		m.ProcessOpen(web.HostPort(m.Message, m.Option(tcp.HOST), m.Option(web.PORTAL), "", web.DREAM))
 		return
 	}
-	fields := "time,machine,host,space,type,status,module,version,commitTime,compileTime,bootTime,link"
+	// s.foreach(m, func(msg *ice.Message, cmd []string) {
+	// 	ssh.CombinedOutput(msg.Message, s.admins(msg, cli.RUNTIME), func(res string) {
+	// 		if !strings.HasPrefix(res, "warn: ") {
+	// 			s.Modify(m, kit.Simple(MACHINE, msg.Option(MACHINE), kit.Dict(cli.ParseMake(res)))...)
+	// 		}
+	// 	})
+	// })
+	fields := "time,machine,host,space,type,status,module,version,commitTime,compileTime,bootTime,link,icons"
 	s.foreach(m, func(msg *ice.Message, cmd []string) {
 		m.Push("", kit.Dict(msg.OptionSimple(fields), mdb.TYPE, web.SERVER, mdb.STATUS, web.ONLINE, web.SPACE, ice.CONTEXTS, web.LINK, web.HostPort(m.Message, msg.Option(tcp.HOST), msg.Option(web.PORTAL))), kit.Split(fields))
 		ssh.CombinedOutput(msg.Message, s.admins(msg, web.ROUTE), func(res string) {
-			if strings.HasPrefix(res, "status") {
-			}
 			_msg := m.Spawn().SplitIndex(res)
 			m.Message.Copy(_msg.Table(func(value ice.Maps) {
 				switch _msg.Push(MACHINE, msg.Option(MACHINE)).Push(tcp.HOST, msg.Option(tcp.HOST)); msg.Option(web.PORTAL) {
@@ -177,7 +182,7 @@ func (s relay) Dream(m *ice.Message) {
 	if m.Action(s.Dream, "filter:text"); tcp.IsLocalHost(m.Message, m.Option(ice.MSG_USERIP)) {
 		if _msg := m.Cmd(cli.SYSTEM, ice.BIN_ICE_BIN, web.ADMIN, cli.RUNTIME); len(_msg.Result()) > 0 {
 			m.Push(MACHINE, tcp.LOCALHOST).Push(tcp.HOST, tcp.PublishLocalhost(m.Message, tcp.LOCALHOST))
-			m.Push("", kit.Dict(cli.ParseMake(_msg.Result())), kit.Split("time,space,module,version,commitTime,compileTime,bootTime"))
+			m.Push("", kit.Dict(cli.ParseMake(_msg.Result()), ice.SPACE, ice.CONTEXTS), kit.Split("time,space,module,version,commitTime,compileTime,bootTime"))
 			m.Push(mdb.TYPE, web.SERVER).Push(mdb.STATUS, web.ONLINE).Push(web.LINK, web.UserHost(m.Message))
 		}
 		if _msg := m.Spawn().SplitIndex(m.Cmdx(cli.SYSTEM, kit.Split(s.admin(m, web.ROUTE)))); _msg.Length() > 0 {
@@ -360,7 +365,7 @@ func (s relay) Repos(m *ice.Message, arg ...string) { s.iframeCmd(m, web.CODE_GI
 func (s relay) Vimer(m *ice.Message, arg ...string) { s.iframeCmd(m, web.CODE_VIMER, arg...) }
 func (s relay) Admin(m *ice.Message, arg ...string) { s.iframeCmd(m, web.ADMIN, arg...) }
 
-func init() { ice.Cmd(SSH_RELAY, relay{}) }
+func init() { ice.Cmd("ssh.relay", relay{}) }
 
 func (s relay) xterm(m *ice.Message) {
 	xterm.AddCommand(m.Option(MACHINE), func(msg *icebergs.Message, arg ...string) (x xterm.XTerm, e error) {

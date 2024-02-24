@@ -33,11 +33,11 @@ func init() {
 	})
 }
 func toastCreate(m *ice.Message, arg ...string) (string, time.Time) {
-	return m.Cmdx(TOAST, mdb.CREATE, mdb.TYPE, kit.FuncName(2), mdb.NAME, toastTitle(m), mdb.STATUS, TOAST_INIT, ctx.INDEX, m.ShortKey(), ParseUA(m), arg), time.Now()
+	return m.Cmdx(TOAST, mdb.CREATE, mdb.TYPE, kit.FuncName(2), mdb.NAME, toastTitle(m), mdb.STATUS, TOAST_INIT, ctx.INDEX, m.ShortKey(), ParseUA(m), arg, ice.OptionSilent()), time.Now()
 }
 func toastUpdate(m *ice.Message, h string, begin time.Time, arg ...string) string {
 	cost := kit.FmtDuration(time.Now().Sub(begin))
-	m.Cmd(TOAST, mdb.MODIFY, mdb.HASH, h, cli.COST, cost, arg)
+	m.Cmd(TOAST, mdb.MODIFY, mdb.HASH, h, cli.COST, cost, arg, ice.OptionSilent())
 	return cost
 }
 
@@ -121,7 +121,6 @@ func Toast(m *ice.Message, text string, arg ...ice.Any) *ice.Message { // [title
 	kit.If(len(arg) > 0 && arg[0] == "", func() { arg[0] = toastTitle(m) })
 	if m.IsDebug() {
 		arg[0] = kit.Format(arg[0]) + "\t" + logs.FileLine(-1, "2")
-		// text += "\n" + logs.FileLine(-1)
 	}
 	PushNoticeToast(m, text, arg)
 	return m

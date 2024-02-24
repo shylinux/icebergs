@@ -228,7 +228,7 @@ func init() {
 func Relative(m *ice.Message, p string) string {
 	if _p := kit.ExtChange(p, JS); Exists(m, _p) {
 		return _p
-	} else if _p := kit.ExtChange(path.Join(ice.USR_VOLCANOS, ice.PLUGIN_LOCAL, path.Join(kit.Slice(kit.Split(p, PS), -2)...)), JS); Exists(m, _p) {
+	} else if _p := kit.ExtChange(path.Join(ice.USR_VOLCANOS, ice.PLUGIN_LOCAL, path.Join(kit.Slice(kit.Split(p, PS), -2)...)), JS); Exists(m, kit.Split(_p, "?")[0]) {
 		return _p
 	} else {
 		return p

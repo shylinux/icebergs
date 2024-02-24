@@ -82,6 +82,8 @@ func init() {
 				defer web.ToastProcess(m)()
 				defer m.StatusTime(web.SPACE, m.Option(web.SPACE, ls[0]))
 			}
+			m.Info("what %v", arg)
+			m.Info("what %v", arg)
 			if len(arg) == 0 {
 				m.Option(nfs.DIR_DEEP, ice.TRUE)
 				arg = append(arg, nfs.SRC)

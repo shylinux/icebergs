@@ -298,3 +298,8 @@ func PushShell(m *ice.Message, cmds []string, cb func(string)) {
 		}
 	})
 }
+func RunConnect(arg ...string) string {
+	defer func() { recover() }()
+	kit.If(len(arg) == 0, func() { arg = append(arg, os.Args...) })
+	return ice.Run(kit.Simple("ssh.connect", "open", "authfile", kit.HomePath(".ssh/", path.Base(arg[0])+".json"), arg[1:])...)
+}

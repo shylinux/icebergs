@@ -503,7 +503,7 @@ func DreamEach(m *ice.Message, name string, status string, cb func(string)) *ice
 		return m
 	}
 	msg := m.Spawn()
-	m.Cmds(DREAM).Table(func(value ice.Maps) {
+	m.Cmds(DREAM, kit.Dict("dream.simple", ice.TRUE)).Table(func(value ice.Maps) {
 		if value[mdb.STATUS] == kit.Select(cli.START, status) && value[mdb.TYPE] == WORKER && (value[mdb.NAME] == name || reg.MatchString(kit.Format("%s:%s=%s@%d", value[mdb.NAME], value[mdb.TYPE], value[nfs.MODULE], value[nfs.VERSION]))) {
 			msg.Push(mdb.NAME, value[mdb.NAME])
 		}

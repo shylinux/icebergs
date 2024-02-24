@@ -15,17 +15,28 @@ import (
 )
 
 type matrix struct {
-	list string `name:"list refresh" help:"矩阵"`
+	status string `name:"status" icon:"bi bi-git"`
+	list   string `name:"list refresh" help:"矩阵"`
 }
 
 func (s matrix) List(m *ice.Message, arg ...string) *ice.Message {
-	m.Cmdy(SSH_RELAY, web.DREAM).PushAction(s.Portal, s.Admin, s.Desktop, s.Xterm, s.Runtime).Action(html.FILTER).Display("")
+	m.Cmdy(SSH_RELAY, web.DREAM)
+	m.Table(func(value ice.Maps) {
+		if value[MACHINE] == tcp.LOCALHOST {
+			m.PushButton(s.Portal, s.Word, s.Status, s.Vimer, s.Compile, s.Runtime, s.Xterm, s.Admin, s.Desktop, s.Open)
+		} else {
+			m.PushButton(s.Portal, s.Admin, s.Desktop, s.Xterm, s.Runtime, s.Vimer, s.Open)
+		}
+	})
+	m.Action(html.FILTER).Display("")
 	m.Sort("type,status,space,machine", []string{web.SERVER, web.WORKER, ""}, []string{cli.START, cli.STOP, ""}, "str_r", "str")
 	return m
 }
 func (s matrix) Portal(m *ice.Message, arg ...string)  { s.iframe(m, arg...) }
-func (s matrix) Admin(m *ice.Message, arg ...string)   { s.open(m, arg...) }
-func (s matrix) Desktop(m *ice.Message, arg ...string) { s.open(m, arg...) }
+func (s matrix) Word(m *ice.Message, arg ...string)    { s.plug(m, arg...) }
+func (s matrix) Status(m *ice.Message, arg ...string)  { s.plug(m, arg...) }
+func (s matrix) Vimer(m *ice.Message, arg ...string)   { s.plug(m, arg...) }
+func (s matrix) Compile(m *ice.Message, arg ...string) { s.plug(m, arg...) }
 func (s matrix) Runtime(m *ice.Message, arg ...string) { s.plug(m, arg...) }
 func (s matrix) Xterm(m *ice.Message, arg ...string) {
 	m.ProcessXterm(func() []string {
@@ -44,11 +55,17 @@ func (s matrix) Xterm(m *ice.Message, arg ...string) {
 		m.Push(web.TITLE, s.title(m))
 	})
 }
+func (s matrix) Admin(m *ice.Message, arg ...string)   { s.open(m, arg...) }
+func (s matrix) Desktop(m *ice.Message, arg ...string) { s.open(m, arg...) }
+func (s matrix) Open(m *ice.Message, arg ...string)    { s.open(m, arg...) }
 
 func init() { ice.Cmd("ssh.matrix", matrix{}) }
 
 func (s matrix) title(m *ice.Message) string {
-	return kit.Keys(kit.Select("", m.Option(MACHINE), m.Option(MACHINE) != tcp.LOCALHOST), m.Option(web.SPACE), m.ActionKey())
+	return kit.Select("contexts", kit.Keys(kit.Select("", m.Option(MACHINE), m.Option(MACHINE) != tcp.LOCALHOST),
+		kit.Select("", m.Option(web.SPACE), m.Option(web.SPACE) != ice.CONTEXTS),
+		kit.Select("", m.ActionKey(), m.ActionKey() != web.OPEN),
+	))
 }
 func (s matrix) iframe(m *ice.Message, arg ...string) {
 	m.ProcessIframe(s.title(m), s.link(m), arg...)

@@ -346,7 +346,11 @@ func init() {
 			}},
 			FOR_FLOW: {Name: "forFlow name cmd*='sh etc/miss.sh'", Help: "流程", Icon: "bi bi-terminal", Hand: func(m *ice.Message, arg ...string) {
 				m.Options(ctx.DISPLAY, PLUGIN_XTERM, cli.CMD_OUTPUT, nfs.NewWriteCloser(func(buf []byte) (int, error) {
-					PushNoticeGrow(m.Options(ice.MSG_COUNT, "0", ice.LOG_DEBUG, ice.FALSE), strings.ReplaceAll(string(buf), lex.NL, "\r\n"))
+					PushNoticeGrow(m.Options(
+						ice.MSG_COUNT, "0",
+						ice.LOG_DEBUG, ice.FALSE,
+						ice.LOG_DISABLE, ice.TRUE,
+					), strings.ReplaceAll(string(buf), lex.NL, "\r\n"))
 					return len(buf), nil
 				}, nil))
 				msg := m.Spawn(ice.Maps{ice.MSG_DEBUG: ice.FALSE})

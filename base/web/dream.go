@@ -432,7 +432,7 @@ func init() {
 			}},
 		}, StatsAction(), DreamAction(), DreamTablesAction(), mdb.ImportantHashAction(
 			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icons,repos,binary,template,restart",
-			html.BUTTON, kit.JoinWord(PORTAL, ADMIN, DESKTOP, WORD, STATUS, VIMER, COMPILE, XTERM, DREAM),
+			html.BUTTON, kit.JoinWord(PORTAL, DESKTOP, ADMIN, WORD, STATUS, VIMER, COMPILE, XTERM, DREAM),
 			ctx.TOOLS, kit.Simple(SPIDE, STORE, MATRIX, ROUTE),
 		)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
@@ -482,17 +482,10 @@ func DreamProcessIframe(m *ice.Message, arg ...string) {
 	if !kit.HasPrefixList(arg, ctx.ACTION, m.ShortKey()) && !kit.HasPrefixList(arg, ctx.ACTION, m.CommandKey()) {
 		return
 	}
-	if m.Option(mdb.TYPE) == MASTER && m.IsLocalhost() {
-		m.ProcessOpen(SpideOrigin(m, m.Option(mdb.NAME)) + C(m.ShortKey()))
-		return
-	}
 	if len(arg) == 2 {
 		defer m.Push(TITLE, kit.Keys(m.Option(mdb.NAME), m.ShortKey()))
 	}
 	DreamProcess(m, CHAT_IFRAME, func() string {
-		if m.Option(mdb.TYPE) == MASTER {
-			return SpideOrigin(m, m.Option(mdb.NAME)) + C(m.ShortKey())
-		}
 		return S(kit.Keys(m.Option(ice.MSG_USERPOD), m.Option(mdb.NAME))) + C(m.ShortKey())
 	}, arg...)
 }

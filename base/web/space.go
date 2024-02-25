@@ -141,7 +141,8 @@ func _space_handle(m *ice.Message, safe bool, name string, c *websocket.Conn) {
 				switch c := value[mdb.TARGET].(type) {
 				case (*websocket.Conn): // 转发报文
 					kit.If(value[mdb.TYPE] == MASTER && msg.Option(ice.MSG_HANDLE) == ice.FALSE, func() {
-						msg.Options(ice.MSG_USERWEB, value[mdb.TEXT], ice.MSG_USERPOD, kit.Keys(target[1:]))
+						msg.Optionv(ice.MSG_USERWEB, kit.Simple(value[mdb.TEXT], msg.Optionv(ice.MSG_USERWEB)))
+						msg.Optionv(ice.MSG_USERPOD, kit.Simple(kit.Keys(target[1:]), msg.Optionv(ice.MSG_USERPOD)))
 					})
 					_space_echo(msg, source, target, c)
 				case ice.Handler: // 接收响应
@@ -189,7 +190,8 @@ func _space_exec(m *ice.Message, name string, source, target []string, c *websoc
 	}
 	m.Option(ice.MSG_HANDLE, ice.TRUE)
 	defer m.Cost(kit.Format("%v->%v %v %v", source, target, m.Detailv(), m.FormatSize()))
-	_space_echo(m.Set(ice.MSG_OPTS).Options(m.OptionSimple(ice.MSG_USERWEB, ice.MSG_USERPOD, ice.MSG_HANDLE, ice.LOG_DEBUG, ice.LOG_DISABLE, ice.LOG_TRACEID)), []string{}, kit.Reverse(kit.Simple(source)), c)
+	m.Options(ice.MSG_USERWEB, m.Optionv(ice.MSG_USERWEB), ice.MSG_USERPOD, m.Optionv(ice.MSG_USERPOD))
+	_space_echo(m.Set(ice.MSG_OPTS).Options(m.OptionSimple(ice.MSG_HANDLE, ice.LOG_DEBUG, ice.LOG_DISABLE, ice.LOG_TRACEID)), []string{}, kit.Reverse(kit.Simple(source)), c)
 }
 func _space_echo(m *ice.Message, source, target []string, c *websocket.Conn) {
 	defer func() { m.WarnNotValid(recover()) }()
@@ -211,8 +213,10 @@ func _space_send(m *ice.Message, name string, arg ...string) (h string) {
 	}
 	if target := kit.Split(name, nfs.PT, nfs.PT); !mdb.HashSelectDetail(m, target[0], func(value ice.Map) {
 		if c, ok := value[mdb.TARGET].(*websocket.Conn); !m.WarnNotValid(!ok, mdb.TARGET) {
-			kit.If(kit.Format(value[mdb.TYPE]) == MASTER && value[mdb.NAME] != ice.OPS, func() {
-				m.Options(ice.MSG_USERWEB, value[mdb.TEXT], ice.MSG_USERPOD, "", ice.MSG_USERHOST, "", ice.MSG_USERWEB0, m.Option(ice.MSG_USERWEB), ice.MSG_USERPOD0, name)
+			kit.If(kit.Format(value[mdb.TYPE]) == MASTER, func() {
+				m.Optionv(ice.MSG_USERWEB, kit.Simple(value[mdb.TEXT], m.Optionv(ice.MSG_USERWEB)))
+				m.Optionv(ice.MSG_USERPOD, kit.Simple(kit.Keys(target[1:]), m.Optionv(ice.MSG_USERPOD)))
+				m.Options(ice.MSG_USERHOST, "", ice.MSG_USERWEB0, m.Option(ice.MSG_USERWEB), ice.MSG_USERPOD0, name)
 			})
 			kit.For([]string{ice.MSG_USERROLE, ice.LOG_TRACEID}, func(k string) { m.Optionv(k, m.Optionv(k)) })
 			m.Option(ice.MSG_HANDLE, ice.FALSE)

@@ -3,7 +3,7 @@ Volcanos(chat.ONIMPORT, {
 		msg.Table(function(value) {
 			if (value.space == ice.CONTEXTS) { value.space = "" }
 			if (value.machine == tcp.LOCALHOST) { value.machine = "" }
-			var space = value.space, _machine = value.machine;
+			var space = value.space, _machine = value.machine
 			machine.indexOf(_machine) == -1 && (machine.push(_machine))
 			list[space] = list[space]||{}, list[space][_machine] = value
 		})
@@ -30,6 +30,6 @@ Volcanos(chat.ONIMPORT, {
 		]}
 	},
 	style: function(can, item, list) { var space = item.space, machine = item.machine, worker = list[space][""]
-		return !worker? html.NOTICE: (worker.status != cli.STOP && item.status != cli.STOP && (item.version != worker.version || item.time < worker.time))? html.DANGER: ""
+		return !worker? html.NOTICE: (worker.status != cli.STOP && item.status != cli.STOP && (item.version != worker.version || item.time > worker.time))? html.DANGER: ""
 	},
 }, [""])

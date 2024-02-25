@@ -1,16 +1,20 @@
 Volcanos(chat.ONIMPORT, {
-	_init: function(can, msg) { var list = {}, domain = {"": true}
-		msg.Table(function(value) { var name = value.name||"", _domain = value.domain||""; domain[_domain] = true, list[name] = list[name]||{}, list[name][_domain] = value })
+	_init: function(can, msg) { var list = {}, domain = [""]
+		msg.Table(function(value) {
+			var name = value.name, _domain = value.domain
+			domain.indexOf(_domain) == -1 && (domain.push(_domain))
+			list[name] = list[name]||{}, list[name][_domain] = value
+		})
 		can.ui = can.page.Appends(can, can._output, [{view: [wiki.CONTENT, html.TABLE], list: [
-			{type: html.THEAD, list: [{type: html.TR, list: can.core.Item(domain, function(domain) {
+			{type: html.THEAD, list: [{type: html.TR, list: can.core.List(domain, function(domain) {
 				return {type: html.TH, list: [can.onimport.item(can, list[""][domain], list)]}
 			}) }]},
 			{type: html.TBODY, list: can.core.Item(list, function(name, value) { if (!name) { return }
-				return {type: html.TR, list: can.core.Item(domain, function(domain) { var item = value[domain]
+				return {type: html.TR, list: can.core.List(domain, function(domain) { var item = value[domain]
 					return {type: html.TD, list: [item? can.onimport.item(can, item, list): can.onimport.void(can, name, domain, list)]}
 				})}
 			})},
-		] }]), can.onmotion.delay(can, function() { can.Status(mdb.COUNT, can.core.Item(list).length+"x"+can.core.Item(domain).length) })
+		] }]), can.onmotion.delay(can, function() { can.Status(mdb.COUNT, can.core.Item(list).length+"x"+can.core.List(domain).length) })
 	},
 	void: function(can, name, domain, list) {
 		return {view: html.ACTION, _init: function(target) { var worker = list[name][""], server = list[""][domain]

@@ -157,7 +157,9 @@ func init() {
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				kit.If(aaa.IsTechOrRoot(m), func() { m.PushButton(kit.Dict(m.CommandKey(), m.Commands("").Help)) })
 			}},
-			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { web.DreamProcess(m, "", cli.Shell(m), arg...) }},
+			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) {
+				web.DreamProcess(m, "", cli.SH, arg...)
+			}},
 		}, web.DreamTablesAction(), chat.FavorAction(), mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,path")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) == 0 {
 				if web.IsLocalHost(m) {
@@ -167,13 +169,12 @@ func init() {
 				}
 			} else {
 				kit.If(m.Length() == 0, func() {
-					if arg[0] == SH {
-						arg[0] = cli.Shell(m)
-					}
+					kit.If(arg[0] == cli.SH, func() { arg[0] = cli.Shell(m) })
 					arg[0] = m.Cmdx("", mdb.CREATE, arg)
 					mdb.HashSelect(m, arg[0])
 				})
-				m.Push(mdb.HASH, arg[0]).Action(ice.APP)
+				m.Push(mdb.HASH, arg[0])
+				kit.If(m.IsLocalhost(), func() { m.Action(ice.APP) })
 				ctx.DisplayLocal(m, "")
 			}
 		}},

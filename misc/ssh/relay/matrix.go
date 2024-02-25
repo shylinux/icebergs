@@ -21,14 +21,14 @@ type matrix struct {
 
 func (s matrix) List(m *ice.Message, arg ...string) {
 	m.Cmdy(SSH_RELAY, web.DREAM).Table(func(value ice.Maps) {
-		if value[mdb.STATUS] == cli.STOP {
-			m.PushButton()
-		} else if value[web.SPACE] == ice.CONTEXTS {
+		if value[web.SPACE] == ice.CONTEXTS {
 			m.PushButton(s.Portal, s.Desktop, s.Dream, s.Admin, s.Open, s.Word, s.Status, s.Vimer, s.Compile, s.Runtime, s.Xterm)
+		} else if value[mdb.STATUS] == cli.STOP {
+			m.PushButton()
 		} else if value[MACHINE] == tcp.LOCALHOST {
 			m.PushButton(s.Portal, s.Word, s.Status, s.Vimer, s.Compile, s.Runtime, s.Xterm, s.Desktop, s.Admin, s.Open)
 		} else {
-			m.PushButton(s.Portal, s.Vimer, s.Runtime, s.Xterm, s.Desktop, s.Admin, s.Open)
+			m.PushButton(s.Portal, s.Desktop, s.Admin, s.Open, s.Vimer, s.Runtime, s.Xterm)
 		}
 	}).Action(html.FILTER).Display("").Sort("type,status,space,machine", []string{web.SERVER, web.WORKER, ""}, []string{cli.START, cli.STOP, ""}, "str_r", "str")
 }
@@ -69,6 +69,10 @@ func (s matrix) iframe(m *ice.Message, arg ...string) {
 	m.ProcessIframe(s.title(m), s.link(m), arg...)
 }
 func (s matrix) open(m *ice.Message, arg ...string) {
+	if m.ActionKey() == web.OPEN {
+		m.ProcessOpen(s.link(m))
+		return
+	}
 	if kit.HasPrefixList(arg, ctx.RUN) || m.Option(MACHINE) == "" {
 		m.ProcessIframe(s.title(m), s.link(m), arg...)
 	} else {

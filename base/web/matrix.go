@@ -34,7 +34,7 @@ func _matrix_list(m *ice.Message, domain string, fields ...string) (server []str
 			kit.If(value[mdb.STATUS] == cli.STOP, func() { value[mdb.ICONS] = nfs.USR_ICONS_ICEBERGS })
 			kit.If(value[mdb.STATUS] == cli.STOP, func() { button = []ice.Any{cli.START, mdb.REMOVE} })
 			m.PushRecord(value, fields...).PushButton(button...)
-		case SERVER:
+		case SERVER, MASTER:
 			server = append(server, kit.Keys(domain, value[mdb.NAME]))
 		}
 	})
@@ -42,13 +42,15 @@ func _matrix_list(m *ice.Message, domain string, fields ...string) (server []str
 }
 func _matrix_action(m *ice.Message, action string, arg ...string) {
 	switch domain := kit.Keys(m.Option(DOMAIN), m.Option(mdb.NAME)); action {
-	case PORTAL, ADMIN, DESKTOP, OPEN:
+	case PORTAL, ADMIN:
 		if kit.HasPrefixList(arg, ctx.RUN) {
 			ProcessIframe(m, "", "", arg...)
 		} else {
 			title, link := kit.Keys(domain, kit.Select("", action, action != OPEN)), kit.Select("", S(domain), domain != "")+kit.Select("", C(action), action != OPEN)
 			ProcessIframe(m, kit.Select(ice.CONTEXTS, title), kit.Select(nfs.PS, link), arg...).ProcessField(ctx.ACTION, action, ctx.RUN)
 		}
+	case OPEN:
+		m.ProcessOpen(kit.Select(nfs.PS, S(domain), domain != ""))
 	default:
 		if !kit.HasPrefixList(arg, ctx.RUN) {
 			kit.If(action == XTERM, func() { arg = []string{cli.SH} })

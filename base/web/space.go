@@ -141,8 +141,7 @@ func _space_handle(m *ice.Message, safe bool, name string, c *websocket.Conn) {
 				switch c := value[mdb.TARGET].(type) {
 				case (*websocket.Conn): // 转发报文
 					kit.If(value[mdb.TYPE] == MASTER, func() {
-						msg.Option(ice.MSG_USERWEB, value[mdb.TEXT])
-						msg.Option(ice.MSG_USERPOD, kit.Keys(target[1:]))
+						msg.Options(ice.MSG_USERWEB, value[mdb.TEXT], ice.MSG_USERPOD, kit.Keys(target[1:]))
 					})
 					_space_echo(msg, source, target, c)
 				case ice.Handler: // 接收响应
@@ -212,14 +211,15 @@ func _space_send(m *ice.Message, name string, arg ...string) (h string) {
 	}
 	if target := kit.Split(name, nfs.PT, nfs.PT); !mdb.HashSelectDetail(m, target[0], func(value ice.Map) {
 		if c, ok := value[mdb.TARGET].(*websocket.Conn); !m.WarnNotValid(!ok, mdb.TARGET) {
-			kit.If(kit.Format(value[mdb.TYPE]) == MASTER, func() {
-				m.Options(
-					ice.MSG_USERWEB0, m.Option(ice.MSG_USERWEB), ice.MSG_USERPOD0, name,
-					ice.MSG_USERWEB, value[mdb.TEXT], ice.MSG_USERPOD, "", ice.MSG_USERHOST, "",
-				)
+			kit.If(kit.Format(value[mdb.TYPE]) == MASTER && value[mdb.NAME] != ice.OPS, func() {
+				m.Options(ice.MSG_USERWEB, value[mdb.TEXT], ice.MSG_USERPOD, "", ice.MSG_USERHOST, "", ice.MSG_USERWEB0, m.Option(ice.MSG_USERWEB), ice.MSG_USERPOD0, name)
 			})
 			kit.For([]string{ice.MSG_USERROLE, ice.LOG_TRACEID}, func(k string) { m.Optionv(k, m.Optionv(k)) })
-			kit.For(m.Optionv(ice.MSG_OPTS), func(k string) { m.Optionv(k, m.Optionv(k)) })
+			kit.For(m.Optionv(ice.MSG_OPTS), func(k string) {
+				kit.If(!kit.IsIn(k, "task.id", "work.id"), func() {
+					m.Optionv(k, m.Optionv(k))
+				})
+			})
 			if withecho {
 				_space_echo(m.Set(ice.MSG_DETAIL, arg...), []string{h}, target, c)
 			} else {
@@ -339,7 +339,7 @@ func init() {
 				})
 				m.Sort("", kit.Simple(aaa.LOGIN, WEIXIN, PORTAL, WORKER, SERVER, MASTER))
 			} else {
-				m.OptionDefault(ice.MSG_USERPOD, arg[0])
+				// m.OptionDefault(ice.MSG_USERPOD, arg[0])
 				for i := 0; i < 5; i++ {
 					if _space_send(m, arg[0], kit.Simple(kit.Split(arg[1]), arg[2:])...); !m.IsErrNotFound() {
 						break

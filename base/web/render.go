@@ -80,6 +80,8 @@ func Render(m *ice.Message, cmd string, args ...ice.Any) bool {
 			ice.MSG_LANGUAGE, ice.MSG_THEME, ice.MSG_BG, ice.MSG_FG,
 			ice.MSG_RIVER, ice.MSG_STORM, ice.MSG_INDEX, ice.MSG_FIELDS,
 			ice.MSG_SOURCE, ice.MSG_TARGET,
+			"task.id", "work.id", "space.timeout",
+			ice.MSG_USERWEB0, ice.MSG_USERPOD0,
 		)
 	}
 	m.Render(ice.RENDER_VOID)

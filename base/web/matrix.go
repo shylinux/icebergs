@@ -17,7 +17,7 @@ import (
 func _matrix_list(m *ice.Message, domain string, fields ...string) (server []string) {
 	value := kit.Dict(cli.ParseMake(m.Cmdx(Space(m, domain), cli.RUNTIME)))
 	value[DOMAIN], value[mdb.TYPE], value[mdb.ICONS] = domain, SERVER, kit.Select(nfs.USR_ICONS_ICEBERGS, ice.SRC_MAIN_ICO, domain == "")
-	button := []ice.Any{PORTAL, ADMIN, DESKTOP, XTERM, UPGRADE, cli.RUNTIME, WORD, STATUS, VIMER, OPEN}
+	button := []ice.Any{PORTAL, ADMIN, DESKTOP, OPEN, UPGRADE, cli.RUNTIME, WORD, STATUS, VIMER, XTERM}
 	if domain == "" {
 		button = []ice.Any{PORTAL, WORD, STATUS, VIMER, COMPILE, cli.RUNTIME, XTERM, ADMIN, DESKTOP, OPEN}
 	}

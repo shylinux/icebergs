@@ -13,12 +13,13 @@ import (
 
 type apply struct {
 	ice.Hash
-	email string `data:"admin"`
-	field string `data:"time,hash,status,email,usernick,username,userrole,icons,agent,system,ip,ua"`
-	apply string `name:"apply" help:"申请" role:"void"`
-	agree string `name:"agree userrole=tech,void" help:"同意" icon:"bi bi-check2-square"`
-	login string `name:"login" help:"登录" role:"void"`
-	list  string `name:"list hash auto sso" help:"注册"`
+	email    string `data:"admin"`
+	checkbox string `data:"true"`
+	field    string `data:"time,hash,status,email,usernick,username,userrole,icons,agent,system,ip,ua"`
+	apply    string `name:"apply" help:"申请" role:"void"`
+	agree    string `name:"agree userrole=tech,void" help:"同意" icon:"bi bi-check2-square"`
+	login    string `name:"login" help:"登录" role:"void"`
+	list     string `name:"list hash auto sso" help:"注册"`
 }
 
 func (s apply) Sso(m *ice.Message, arg ...string) {

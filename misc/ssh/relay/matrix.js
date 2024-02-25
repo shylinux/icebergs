@@ -15,6 +15,7 @@ Volcanos(chat.ONIMPORT, {
 		] }]), can.onmotion.delay(can, function() { can.Status(mdb.COUNT, can.core.Item(list).length+"x"+can.core.Item(machine).length) })
 	},
 	void: function(can, space, machine, list) {
+		return
 		return {view: html.ACTION, _init: function(target) { var worker = list[space]["localhost"], server = list["contexts"][machine]
 			worker && can.onappend.input(can, {type: html.BUTTON, name: code.INSTALL, onclick: function(event) {
 				can.Update(can.request(event, {space: space, machine: machine}, worker), [ctx.ACTION, code.INSTALL])

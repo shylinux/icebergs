@@ -4,6 +4,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/web/html"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -54,7 +55,7 @@ func init() {
 			mdb.CREATE: {Name: "create usernick username* userrole=void,tech userzone language", Hand: func(m *ice.Message, arg ...string) {
 				_user_create(m, m.Option(USERNAME), m.OptionSimple(USERNICK, USERROLE, USERZONE, LANGUAGE, EMAIL, BACKGROUND, AVATAR)...)
 			}},
-		}, mdb.ImportantHashAction(mdb.SHORT, USERNAME, mdb.FIELD, "time,usernick,username,userrole,userzone,language"))},
+		}, mdb.ImportantHashAction(mdb.SHORT, USERNAME, mdb.FIELD, "time,usernick,username,userrole,userzone,language", html.CHECKBOX, ice.TRUE))},
 	})
 }
 

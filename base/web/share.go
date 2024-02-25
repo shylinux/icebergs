@@ -166,7 +166,7 @@ func ShareLocalFile(m *ice.Message, arg ...string) {
 			return
 		}
 	}
-	if m.Option(ice.POD) == "" {
+	if m.Option(ice.POD) == "" || (strings.HasPrefix(p, ice.USR_ICONS) && nfs.Exists(m, p)) {
 		m.RenderDownload(p)
 	} else if pp := kit.Path(ice.USR_LOCAL_WORK, m.Option(ice.POD), p); nfs.Exists(m, pp) {
 		m.RenderDownload(pp)

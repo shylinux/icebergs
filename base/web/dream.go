@@ -319,7 +319,9 @@ func init() {
 						return true
 					}
 				})
-				kit.If(m.Option(mdb.NAME) == "", func() { m.Sleep3s().Cmdy(ROUTE, cli.BUILD).ProcessInner() })
+				kit.If(m.Option(mdb.NAME) == "", func() {
+					m.Sleep("5s").Cmdy(ROUTE, cli.BUILD).ProcessInner()
+				})
 			}},
 			PUBLISH: {Name: "publish name", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(ice.MSG_TITLE, kit.Keys(m.Option(ice.MSG_USERPOD0), m.Option(ice.MSG_USERPOD), m.CommandKey(), m.ActionKey()))

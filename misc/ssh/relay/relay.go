@@ -185,7 +185,7 @@ func (s relay) Dream(m *ice.Message) {
 			m.Push(MACHINE, tcp.LOCALHOST).Push(tcp.HOST, tcp.PublishLocalhost(m.Message, tcp.LOCALHOST))
 			m.Push("", kit.Dict(cli.ParseMake(_msg.Result()), ice.SPACE, ice.CONTEXTS), kit.Split("time,space,module,version,commitTime,compileTime,bootTime"))
 			m.Push(mdb.TYPE, web.SERVER).Push(mdb.STATUS, web.ONLINE).Push(web.LINK, web.UserHost(m.Message))
-			m.Push(mdb.ICONS, "src/main.ico")
+			m.Push(mdb.ICONS, ice.SRC_MAIN_ICO)
 		}
 		if _msg := m.Spawn().SplitIndex(m.Cmdx(cli.SYSTEM, kit.Split(s.admin(m, web.ROUTE)))); _msg.Length() > 0 {
 			m.Message.Copy(_msg.Table(func(value ice.Maps) {
@@ -202,7 +202,6 @@ func (s relay) Dream(m *ice.Message) {
 				value = kit.MergeURL2(m.Appendv(web.LINK)[index], value)
 			} else if kit.HasPrefix(value, nfs.USR, nfs.SRC) {
 				value = m.Option(ice.MSG_USERHOST) + "/require/" + value
-
 			}
 		}
 		return value

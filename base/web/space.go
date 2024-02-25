@@ -163,7 +163,10 @@ func _space_domain(m *ice.Message) (link string) {
 	)
 }
 func _space_exec(m *ice.Message, name string, source, target []string, c *websocket.Conn) {
-	switch kit.Select(cli.PWD, m.Detailv(), 0) {
+	switch kit.Select("", m.Detailv(), 0) {
+	case "":
+		m.Warn(true, ice.ErrNotValid)
+		return
 	case cli.PWD:
 		mdb.HashModify(m, mdb.HASH, name,
 			aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERROLE, m.Option(ice.MSG_USERROLE),

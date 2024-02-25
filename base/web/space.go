@@ -140,6 +140,10 @@ func _space_handle(m *ice.Message, safe bool, name string, c *websocket.Conn) {
 			m.WarnNotFound(!mdb.HashSelectDetail(m, next, func(value ice.Map) {
 				switch c := value[mdb.TARGET].(type) {
 				case (*websocket.Conn): // 转发报文
+					kit.If(value[mdb.TYPE] == MASTER, func() {
+						msg.Option(ice.MSG_USERWEB, value[mdb.TEXT])
+						msg.Option(ice.MSG_USERPOD, kit.Keys(target[1:]))
+					})
 					_space_echo(msg, source, target, c)
 				case ice.Handler: // 接收响应
 					msg.Go(func() { c(msg) })
@@ -185,7 +189,8 @@ func _space_exec(m *ice.Message, name string, source, target []string, c *websoc
 		kit.If(m.Optionv(ice.MSG_ARGS) != nil, func() { m.Options(ice.MSG_ARGS, kit.Simple(m.Optionv(ice.MSG_ARGS))) })
 	}
 	defer m.Cost(kit.Format("%v->%v %v %v", source, target, m.Detailv(), m.FormatSize()))
-	_space_echo(m.Set(ice.MSG_OPTS).Options(m.OptionSimple(ice.LOG_DEBUG, ice.LOG_TRACEID)), []string{}, kit.Reverse(kit.Simple(source)), c)
+	_space_echo(m.Set(ice.MSG_OPTS).Options(m.OptionSimple(ice.MSG_USERWEB, ice.MSG_USERPOD, ice.LOG_DEBUG, ice.LOG_DISABLE, ice.LOG_TRACEID)), []string{}, kit.Reverse(kit.Simple(source)), c)
+	m.Option(ice.MSG_HANDLE, ice.TRUE)
 }
 func _space_echo(m *ice.Message, source, target []string, c *websocket.Conn) {
 	defer func() { m.WarnNotValid(recover()) }()

@@ -164,6 +164,7 @@ func (s relay) Dream(m *ice.Message) {
 			}
 		})
 	})
+
 	fields := "time,machine,host,space,type,status,module,version,commitTime,compileTime,bootTime,link,icons"
 	s.foreach(m, func(msg *ice.Message, cmd []string) {
 		m.Push("", kit.Dict(msg.OptionSimple(fields), mdb.TYPE, web.SERVER, mdb.STATUS, web.ONLINE, web.SPACE, ice.CONTEXTS, web.LINK, web.HostPort(m.Message, msg.Option(tcp.HOST), msg.Option(web.PORTAL))), kit.Split(fields))
@@ -179,33 +180,29 @@ func (s relay) Dream(m *ice.Message) {
 			}).Cut(fields))
 		})
 	})
-	m.Options(ice.MSG_PROCESS, "")
-	if m.Action(s.Dream, "filter:text"); tcp.IsLocalHost(m.Message, m.Option(ice.MSG_USERIP)) {
-		if _msg := m.Cmd(cli.SYSTEM, ice.BIN_ICE_BIN, web.ADMIN, cli.RUNTIME); len(_msg.Result()) > 0 {
-			m.Push(MACHINE, tcp.LOCALHOST).Push(tcp.HOST, tcp.PublishLocalhost(m.Message, tcp.LOCALHOST))
-			m.Push("", kit.Dict(cli.ParseMake(_msg.Result()), ice.SPACE, ice.CONTEXTS), kit.Split("time,space,module,version,commitTime,compileTime,bootTime"))
-			m.Push(mdb.TYPE, web.SERVER).Push(mdb.STATUS, web.ONLINE).Push(web.LINK, web.UserHost(m.Message))
-			m.Push(mdb.ICONS, ice.SRC_MAIN_ICO)
-		}
-		if _msg := m.Spawn().SplitIndex(m.Cmdx(cli.SYSTEM, kit.Split(s.admin(m, web.ROUTE)))); _msg.Length() > 0 {
-			m.Message.Copy(_msg.Table(func(value ice.Maps) {
-				_msg.Push(MACHINE, tcp.LOCALHOST).Push(tcp.HOST, tcp.PublishLocalhost(m.Message, tcp.LOCALHOST))
-				_msg.Push(web.LINK, web.UserHost(m.Message)+web.S(value[web.SPACE]))
-			}).Cut(fields))
-		}
-	}
+
+	m.Push(MACHINE, tcp.LOCALHOST).Push(tcp.HOST, tcp.PublishLocalhost(m.Message, tcp.LOCALHOST))
+	m.Push("", kit.Dict(cli.ParseMake(m.AdminCmd(cli.RUNTIME).Result()), ice.SPACE, ice.CONTEXTS), kit.Split("time,space,module,version,commitTime,compileTime,bootTime"))
+	m.Push(mdb.TYPE, web.SERVER).Push(mdb.STATUS, web.ONLINE).Push(web.LINK, web.UserHost(m.Message))
+	m.Push(mdb.ICONS, ice.SRC_MAIN_ICO)
+	_msg := m.AdminCmd(web.ROUTE)
+	m.Message.Copy(_msg.Table(func(value ice.Maps) {
+		_msg.Push(MACHINE, tcp.LOCALHOST).Push(tcp.HOST, tcp.PublishLocalhost(m.Message, tcp.LOCALHOST))
+		_msg.Push(web.LINK, web.UserHost(m.Message)+web.S(value[web.SPACE]))
+	}).Cut(fields))
+
 	m.RewriteAppend(func(value, key string, index int) string {
 		if key == mdb.ICONS {
 			if value == "" {
-				value = kit.MergeURL2(m.Appendv(web.LINK)[index], "/require/"+nfs.USR_ICONS_ICEBERGS)
+				value = kit.MergeURL2(m.Appendv(web.LINK)[index], nfs.REQUIRE+nfs.USR_ICONS_ICEBERGS)
 			} else if strings.HasPrefix(value, nfs.REQUIRE) && m.Appendv(MACHINE)[index] != tcp.LOCALHOST {
 				value = kit.MergeURL2(m.Appendv(web.LINK)[index], value)
 			} else if kit.HasPrefix(value, nfs.USR, nfs.SRC) {
-				value = m.Option(ice.MSG_USERHOST) + "/require/" + value
+				value = m.Option(ice.MSG_USERHOST) + nfs.REQUIRE + value
 			}
 		}
 		return value
-	})
+	}).Action(s.Dream, "filter:text").Options(ice.MSG_PROCESS, "")
 }
 func (s relay) ForEach(m *ice.Message, arg ...string) *ice.Message {
 	s.foreach(m, func(msg *ice.Message, cmd []string) {

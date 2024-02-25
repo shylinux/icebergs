@@ -26,6 +26,7 @@ const (
 	RESPONSE = "response"
 	CONTENT  = "content"
 	TITLE    = "title"
+	STYLE    = "style"
 )
 
 func Render(m *ice.Message, cmd string, args ...ice.Any) bool {
@@ -74,8 +75,8 @@ func Render(m *ice.Message, cmd string, args ...ice.Any) bool {
 	default:
 		kit.If(cmd != "" && cmd != ice.RENDER_RAW, func() { m.Echo(kit.Format(cmd, args...)) })
 		RenderType(m.W, nfs.JSON, "")
-		m.FormatsMeta(m.W, ice.MSG_USERIP, ice.MSG_USERUA, ice.MSG_METHOD,
-			ice.MSG_USERWEB, ice.MSG_REFERER, ice.MSG_DAEMON, ice.MSG_USERPOD,
+		m.FormatsMeta(m.W,
+			ice.MSG_USERIP, ice.MSG_USERUA, ice.MSG_METHOD, ice.MSG_REFERER, ice.MSG_DAEMON,
 			ice.MSG_LANGUAGE, ice.MSG_THEME, ice.MSG_BG, ice.MSG_FG,
 			ice.MSG_RIVER, ice.MSG_STORM, ice.MSG_INDEX, ice.MSG_FIELDS,
 			ice.MSG_SOURCE, ice.MSG_TARGET,

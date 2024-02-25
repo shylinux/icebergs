@@ -17,11 +17,15 @@ import (
 func _matrix_list(m *ice.Message, domain string, fields ...string) (server []string) {
 	value := kit.Dict(cli.ParseMake(m.Cmdx(Space(m, domain), cli.RUNTIME)))
 	value[DOMAIN], value[mdb.TYPE], value[mdb.ICONS] = domain, SERVER, kit.Select(nfs.USR_ICONS_ICEBERGS, ice.SRC_MAIN_ICO, domain == "")
-	button := []ice.Any{PORTAL, ADMIN, DESKTOP, OPEN, UPGRADE, cli.RUNTIME, WORD, STATUS, VIMER, XTERM}
+	button := []ice.Any{PORTAL, DESKTOP, ADMIN, OPEN, UPGRADE, cli.RUNTIME, DREAM, WORD, STATUS, VIMER, XTERM}
 	if domain == "" {
-		button = []ice.Any{PORTAL, WORD, STATUS, VIMER, COMPILE, cli.RUNTIME, XTERM, ADMIN, DESKTOP, OPEN}
+		button = []ice.Any{PORTAL, WORD, STATUS, VIMER, COMPILE, cli.RUNTIME, XTERM, DESKTOP, DREAM, ADMIN, OPEN}
 	}
 	m.PushRecord(value, fields...).PushButton(button...)
+	button = []ice.Any{PORTAL, DESKTOP, ADMIN, OPEN, UPGRADE, cli.RUNTIME, WORD, STATUS, VIMER, XTERM}
+	if domain == "" {
+		button = []ice.Any{PORTAL, WORD, STATUS, VIMER, COMPILE, cli.RUNTIME, XTERM, DESKTOP, ADMIN, OPEN}
+	}
 	button = append(button, cli.STOP)
 	m.Cmd(Space(m, domain), DREAM).Table(func(value ice.Maps) {
 		switch value[mdb.TYPE] {
@@ -42,11 +46,8 @@ func _matrix_action(m *ice.Message, action string, arg ...string) {
 		if kit.HasPrefixList(arg, ctx.RUN) {
 			ProcessIframe(m, "", "", arg...)
 		} else {
-			// title, link := kit.Keys(domain, action), m.MergePodCmd(domain, action)
-			// kit.If(action == OPEN, func() { title, link = domain, m.MergePod(domain) })
-			title, link := kit.Keys(domain, action), S(domain)+C(action)
-			kit.If(action == OPEN, func() { title, link = domain, S(domain) })
-			ProcessIframe(m, title, link, arg...).ProcessField(ctx.ACTION, action, ctx.RUN)
+			title, link := kit.Keys(domain, kit.Select("", action, action != OPEN)), kit.Select("", S(domain), domain != "")+kit.Select("", C(action), action != OPEN)
+			ProcessIframe(m, kit.Select(ice.CONTEXTS, title), kit.Select(nfs.PS, link), arg...).ProcessField(ctx.ACTION, action, ctx.RUN)
 		}
 	default:
 		if !kit.HasPrefixList(arg, ctx.RUN) {

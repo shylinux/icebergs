@@ -140,7 +140,7 @@ func _space_handle(m *ice.Message, safe bool, name string, c *websocket.Conn) {
 			m.WarnNotFound(!mdb.HashSelectDetail(m, next, func(value ice.Map) {
 				switch c := value[mdb.TARGET].(type) {
 				case (*websocket.Conn): // 转发报文
-					kit.If(value[mdb.TYPE] == MASTER, func() {
+					kit.If(value[mdb.TYPE] == MASTER && msg.Option(ice.MSG_HANDLE) == ice.FALSE, func() {
 						msg.Options(ice.MSG_USERWEB, value[mdb.TEXT], ice.MSG_USERPOD, kit.Keys(target[1:]))
 					})
 					_space_echo(msg, source, target, c)
@@ -187,9 +187,9 @@ func _space_exec(m *ice.Message, name string, source, target []string, c *websoc
 		kit.If(aaa.Right(m, m.Detailv()), func() { m.TryCatch(true, func(_ *ice.Message) { m = m.Cmd() }) })
 		kit.If(m.Optionv(ice.MSG_ARGS) != nil, func() { m.Options(ice.MSG_ARGS, kit.Simple(m.Optionv(ice.MSG_ARGS))) })
 	}
-	defer m.Cost(kit.Format("%v->%v %v %v", source, target, m.Detailv(), m.FormatSize()))
-	_space_echo(m.Set(ice.MSG_OPTS).Options(m.OptionSimple(ice.MSG_USERWEB, ice.MSG_USERPOD, ice.LOG_DEBUG, ice.LOG_DISABLE, ice.LOG_TRACEID)), []string{}, kit.Reverse(kit.Simple(source)), c)
 	m.Option(ice.MSG_HANDLE, ice.TRUE)
+	defer m.Cost(kit.Format("%v->%v %v %v", source, target, m.Detailv(), m.FormatSize()))
+	_space_echo(m.Set(ice.MSG_OPTS).Options(m.OptionSimple(ice.MSG_USERWEB, ice.MSG_USERPOD, ice.MSG_HANDLE, ice.LOG_DEBUG, ice.LOG_DISABLE, ice.LOG_TRACEID)), []string{}, kit.Reverse(kit.Simple(source)), c)
 }
 func _space_echo(m *ice.Message, source, target []string, c *websocket.Conn) {
 	defer func() { m.WarnNotValid(recover()) }()
@@ -215,6 +215,7 @@ func _space_send(m *ice.Message, name string, arg ...string) (h string) {
 				m.Options(ice.MSG_USERWEB, value[mdb.TEXT], ice.MSG_USERPOD, "", ice.MSG_USERHOST, "", ice.MSG_USERWEB0, m.Option(ice.MSG_USERWEB), ice.MSG_USERPOD0, name)
 			})
 			kit.For([]string{ice.MSG_USERROLE, ice.LOG_TRACEID}, func(k string) { m.Optionv(k, m.Optionv(k)) })
+			m.Option(ice.MSG_HANDLE, ice.FALSE)
 			kit.For(m.Optionv(ice.MSG_OPTS), func(k string) {
 				kit.If(!kit.IsIn(k, "task.id", "work.id"), func() {
 					m.Optionv(k, m.Optionv(k))
@@ -404,7 +405,7 @@ func init() {
 			if ls := kit.Simple(m.Optionv(ice.MSG_UPLOAD)); len(ls) > 1 {
 				m.Cmd(SPACE, pod, SPIDE, ice.DEV, CACHE, SHARE_CACHE+ls[0])
 			}
-			m.Options(ice.POD, []string{}, ice.MSG_USERPOD, pod).Cmdy(append(kit.List(ice.SPACE, pod), arg...)...)
+			m.Options(ice.POD, []string{}, ice.MSG_USERPOD, strings.TrimPrefix(pod, "ops.")).Cmdy(append(kit.List(ice.SPACE, pod), arg...)...)
 			return true
 		}
 		return false
@@ -418,7 +419,7 @@ func Space(m *ice.Message, arg ice.Any) []string {
 }
 func PodCmd(m *ice.Message, key string, arg ...string) bool {
 	if pod := m.Option(key); pod != "" {
-		m.Options(key, "", ice.MSG_USERPOD, pod).Cmdy(SPACE, pod, m.ShortKey(), arg)
+		m.Options(key, "", ice.MSG_USERPOD, strings.TrimPrefix(pod, "ops.")).Cmdy(SPACE, pod, m.ShortKey(), arg)
 		return true
 	} else {
 		return false

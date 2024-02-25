@@ -15,14 +15,16 @@ import (
 )
 
 type matrix struct {
-	status string `name:"status" icon:"bi bi-git"`
+	status string `name:"status" help:"源码" icon:"bi bi-git"`
 	list   string `name:"list refresh" help:"矩阵"`
 }
 
 func (s matrix) List(m *ice.Message, arg ...string) {
 	m.Cmdy(SSH_RELAY, web.DREAM).Table(func(value ice.Maps) {
-		if value[web.SPACE] == ice.CONTEXTS {
-			m.PushButton(s.Portal, s.Desktop, s.Admin, s.Open, s.Word, s.Status, s.Vimer, s.Compile, s.Runtime, s.Xterm)
+		if value[mdb.STATUS] == cli.STOP {
+			m.PushButton()
+		} else if value[web.SPACE] == ice.CONTEXTS {
+			m.PushButton(s.Portal, s.Desktop, s.Dream, s.Admin, s.Open, s.Word, s.Status, s.Vimer, s.Compile, s.Runtime, s.Xterm)
 		} else if value[MACHINE] == tcp.LOCALHOST {
 			m.PushButton(s.Portal, s.Word, s.Status, s.Vimer, s.Compile, s.Runtime, s.Xterm, s.Desktop, s.Admin, s.Open)
 		} else {
@@ -32,6 +34,7 @@ func (s matrix) List(m *ice.Message, arg ...string) {
 }
 func (s matrix) Portal(m *ice.Message, arg ...string)  { s.iframe(m, arg...) }
 func (s matrix) Desktop(m *ice.Message, arg ...string) { s.plug(m, arg...) }
+func (s matrix) Dream(m *ice.Message, arg ...string)   { s.plug(m, arg...) }
 func (s matrix) Admin(m *ice.Message, arg ...string)   { s.open(m, arg...) }
 func (s matrix) Open(m *ice.Message, arg ...string)    { s.open(m, arg...) }
 func (s matrix) Word(m *ice.Message, arg ...string)    { s.plug(m, arg...) }

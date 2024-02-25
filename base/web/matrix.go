@@ -49,13 +49,11 @@ func _matrix_action(m *ice.Message, action string, arg ...string) {
 			ProcessIframe(m, title, link, arg...).ProcessField(ctx.ACTION, action, ctx.RUN)
 		}
 	default:
-		if kit.HasPrefixList(arg, ctx.RUN) {
-			ctx.ProcessFloat(m, action, arg, arg...)
-		} else {
-			m.Option(ice.POD, domain)
+		if !kit.HasPrefixList(arg, ctx.RUN) {
 			kit.If(action == XTERM, func() { arg = []string{cli.SH} })
-			ctx.ProcessFloat(m, action, arg, arg...).ProcessField(ctx.ACTION, action, ctx.RUN)
+			defer m.ProcessField(ctx.ACTION, action, ctx.RUN, domain, action)
 		}
+		ProcessPodCmd(m, domain, action, arg, arg...)
 	}
 }
 func _matrix_dream(m *ice.Message, action string, arg ...string) {

@@ -168,7 +168,7 @@ func ShareLocalFile(m *ice.Message, arg ...string) {
 	}
 	if m.Option(ice.POD) == "" || (strings.HasPrefix(p, ice.USR_ICONS) && nfs.Exists(m, p)) {
 		m.RenderDownload(p)
-	} else if pp := kit.Path(ice.USR_LOCAL_WORK, m.Option(ice.POD), p); nfs.Exists(m, pp) {
+	} else if pp := kit.Path(ice.USR_LOCAL_WORK, kit.Select("", kit.Split(m.Option(ice.POD), nfs.PT), -1), p); nfs.Exists(m, pp) {
 		m.RenderDownload(pp)
 	} else if pp := kit.Path(ice.USR_LOCAL_WORK, m.Option(ice.POD)); nfs.Exists(m, pp) {
 		m.RenderDownload(p)

@@ -185,7 +185,7 @@ func _space_exec(m *ice.Message, name string, source, target []string, c *websoc
 		kit.If(m.Option(ice.MSG_DAEMON), func(p string) {
 			m.Option(ice.MSG_DAEMON, kit.Keys(kit.Slice(kit.Reverse(kit.Simple(source)), 0, -1), p))
 		})
-		m.Option(ice.FROM_SPACE, kit.Keys(kit.Reverse(source[1:])))
+		m.Option(ice.FROM_SPACE, kit.Keys(kit.Reverse(kit.Simple(source[1:]))))
 		kit.If(aaa.Right(m, m.Detailv()), func() { m.TryCatch(true, func(_ *ice.Message) { m = m.Cmd() }) })
 		kit.If(m.Optionv(ice.MSG_ARGS) != nil, func() { m.Options(ice.MSG_ARGS, kit.Simple(m.Optionv(ice.MSG_ARGS))) })
 	}

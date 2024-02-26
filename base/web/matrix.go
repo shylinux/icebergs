@@ -136,7 +136,7 @@ func init() {
 					return value
 				})
 				m.Action(html.FILTER, mdb.CREATE).StatusTimeCountStats(mdb.TYPE, mdb.STATUS).Display("")
-				m.Sort("type,status,name,domain", []string{WORKER, MYSELF, SERVER, MASTER, ""}, []string{cli.START, cli.STOP, ""}, "str_r", "str_r")
+				m.Sort("type,status,name,domain", []string{MYSELF, SERVER, MASTER, WORKER, ""}, []string{cli.START, cli.STOP, ""}, "str_r", "str_r")
 				return nil
 			})
 			ctx.Toolkit(m)

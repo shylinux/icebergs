@@ -14,9 +14,9 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _matrix_list(m *ice.Message, domain string, fields ...string) (server []string) {
+func _matrix_list(m *ice.Message, domain, icon string, fields ...string) (server, icons []string) {
 	value := kit.Dict(cli.ParseMake(m.Cmdx(Space(m, domain), cli.RUNTIME)))
-	value[DOMAIN], value[mdb.TYPE], value[mdb.ICONS] = domain, SERVER, kit.Select(nfs.USR_ICONS_ICEBERGS, ice.SRC_MAIN_ICO, domain == "")
+	value[DOMAIN], value[mdb.TYPE], value[mdb.ICONS] = domain, SERVER, icon
 	button := []ice.Any{PORTAL, DESKTOP, ADMIN, OPEN, UPGRADE, cli.RUNTIME, DREAM, WORD, STATUS, VIMER, XTERM}
 	if domain == "" {
 		button = []ice.Any{PORTAL, WORD, STATUS, VIMER, COMPILE, cli.RUNTIME, XTERM, DESKTOP, DREAM, ADMIN, OPEN}
@@ -36,6 +36,7 @@ func _matrix_list(m *ice.Message, domain string, fields ...string) (server []str
 			m.PushRecord(value, fields...).PushButton(button...)
 		case SERVER, MASTER:
 			server = append(server, kit.Keys(domain, value[mdb.NAME]))
+			icons = append(icons, value[mdb.ICONS])
 		}
 	})
 	return
@@ -98,9 +99,10 @@ func init() {
 			GoToast(m, func(toast func(name string, count, total int)) []string {
 				field := kit.Split(mdb.Config(m, mdb.FIELD))
 				m.Options("space.timeout", cli.TIME_300ms, "dream.simple", ice.TRUE)
-				kit.For(_matrix_list(m, "", field...), func(domain string, index int, total int) {
+				list, icons := _matrix_list(m, "", ice.SRC_MAIN_ICO, field...)
+				kit.For(list, func(domain string, index int, total int) {
 					toast(domain, index, total)
-					_matrix_list(m, domain, field...)
+					_matrix_list(m, domain, icons[index], field...)
 				})
 				m.RewriteAppend(func(value, key string, index int) string {
 					if key == mdb.ICONS && strings.HasPrefix(value, nfs.REQUIRE) && m.Appendv(DOMAIN)[index] != "" {
@@ -108,7 +110,7 @@ func init() {
 					}
 					return value
 				})
-				m.Sort("type,status,name,domain", []string{SERVER, WORKER, ""}, []string{cli.START, cli.STOP, ""}, "str_r", "str_r")
+				m.Sort("type,status,name,domain", []string{MASTER, SERVER, WORKER, ""}, []string{cli.START, cli.STOP, ""}, "str_r", "str")
 				m.StatusTimeCountStats(mdb.TYPE, mdb.STATUS)
 				return nil
 			}).Action(html.FILTER, mdb.CREATE).Display("")

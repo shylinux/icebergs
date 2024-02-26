@@ -158,6 +158,7 @@ const (
 	XTERM   = "xterm"
 	GRANT   = "grant"
 	DESKTOP = "desktop"
+	MESSAGE = "message"
 
 	AUTOGEN = "autogen"
 	BINPACK = "binpack"

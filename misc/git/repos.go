@@ -109,14 +109,15 @@ func _repos_open(m *ice.Message, p string) *git.Repository {
 	return mdb.HashSelectTarget(m, p, nil).(*git.Repository)
 }
 func _repos_each(m *ice.Message, title string, cb func(*git.Repository, ice.Maps) error) {
-	web.GoToast(m, func(toast func(string, int, int)) []string {
+	web.GoToast(m, func(toast func(string, int, int)) (res []string) {
 		m.Cmd("").Table(func(value ice.Maps, index, total int) {
 			toast(value[REPOS], index, total)
 			if err := cb(_repos_open(m, value[REPOS]), value); err != nil && err != git.NoErrAlreadyUpToDate {
 				web.ToastFailure(m, value[REPOS], err.Error())
+				res = append(res, value[REPOS])
 			}
 		})
-		return nil
+		return
 	})
 }
 func _repos_each_origin(m *ice.Message, title string, cb func(*git.Repository, string, *http.BasicAuth, ice.Maps) error) {
@@ -650,15 +651,13 @@ func init() {
 			}},
 		}, web.StatsAction("", "代码库总数"), web.DreamAction(), mdb.HashAction(mdb.SHORT, REPOS, mdb.FIELD, "time,repos,branch,version,message,origin"), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
-				mdb.HashSelect(m, arg...).Sort(REPOS)
-				m.Table(func(value ice.Maps) {
+				mdb.HashSelect(m, arg...).Table(func(value ice.Maps) {
 					if strings.Contains(value[VERSION], "-") {
 						m.PushButton(STATUS, TAG, mdb.REMOVE)
 					} else {
 						m.PushButton(STATUS, mdb.REMOVE)
 					}
-				})
-				m.Action(CLONE, PULL, PUSH, STATUS)
+				}).Action(CLONE, PULL, PUSH, STATUS).Sort(REPOS)
 			} else if repos := _repos_open(m, arg[0]); len(arg) == 1 {
 				_repos_branch(m, repos)
 			} else if len(arg) == 2 {

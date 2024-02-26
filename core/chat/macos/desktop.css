@@ -74,10 +74,10 @@ fieldset.macos.dock>div.output>div.space { background-color:#ececec36; margin:va
 fieldset.macos.dock>div.output>div.item { text-align:center; align-self:baseline; transition:margin-top 0.3s; }
 fieldset.macos.dock>div.output>div.item img { object-fit:contain; min-height:var(--desktop-icon-size); width:var(--desktop-icon-size); transition:width 0.3s; }
 fieldset.macos.dock>div.output>div.item>div.name { display:none; }
-fieldset.macos.finder>div.output div.content>div.item { text-align:center; float:left; }
+fieldset.macos.finder>div.output div.content>div.item { text-align:center; float:left; width:var(--desktop-icon-size); }
 fieldset.macos.finder>div.output div.content>div.item img { object-fit:contain; width:var(--desktop-icon-size); }
 fieldset.macos.finder>div.output div.content>div.item img { object-fit:contain; width:var(--desktop-icon-size); height:var(--desktop-icon-size); }
-fieldset.macos.finder>div.output div.content>div.item div.name { font-size:var(--code-font-size); text-align:center; }
+fieldset.macos.finder>div.output div.content>div.item div.name { font-size:var(--code-font-size); white-space:pre; text-align:center; overflow:hidden; }
 body.dark fieldset.macos.desktop>div.output>fieldset.macos { background-color:#08234ad1; }
 body.dark fieldset.macos.desktop>div.output>div.desktop fieldset table.content tbody tr:nth-child(odd):not(:hover) { background-color:#282B2F; }
 body.dark fieldset.macos.desktop>div.output>div.desktop fieldset table.content tbody tr:nth-child(even):not(:hover) { background-color:#1a1d1e; }

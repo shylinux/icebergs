@@ -14,17 +14,26 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _matrix_list(m *ice.Message, domain, icon string, fields ...string) (server, icons []string) {
+func _matrix_list(m *ice.Message, domain, icon, typ string, fields ...string) (server, icons, types []string) {
 	value := kit.Dict(cli.ParseMake(m.Cmdx(Space(m, domain), cli.RUNTIME)))
-	value[DOMAIN], value[mdb.TYPE], value[mdb.ICONS] = domain, SERVER, icon
-	button := []ice.Any{PORTAL, DESKTOP, ADMIN, OPEN, UPGRADE, cli.RUNTIME, DREAM, WORD, STATUS, VIMER, XTERM}
-	if domain == "" {
-		button = []ice.Any{PORTAL, WORD, STATUS, VIMER, COMPILE, cli.RUNTIME, XTERM, DESKTOP, DREAM, ADMIN, OPEN}
+	value[DOMAIN], value[mdb.ICONS], value[mdb.TYPE] = domain, icon, typ
+	button := []ice.Any{}
+	switch typ {
+	case MYSELF:
+		button = []ice.Any{PORTAL, WORD, STATUS, VIMER, COMPILE, cli.RUNTIME, DREAM, XTERM, DESKTOP, ADMIN, OPEN}
+	case SERVER:
+		button = []ice.Any{PORTAL, DESKTOP, ADMIN, OPEN, UPGRADE, cli.RUNTIME, DREAM, WORD, STATUS, VIMER, XTERM}
+	default:
+		button = []ice.Any{PORTAL, DESKTOP, ADMIN, OPEN, XTERM, cli.RUNTIME, DREAM, WORD, STATUS, VIMER}
 	}
 	m.PushRecord(value, fields...).PushButton(button...)
-	button = []ice.Any{PORTAL, DESKTOP, ADMIN, OPEN, UPGRADE, cli.RUNTIME, WORD, STATUS, VIMER, XTERM}
-	if domain == "" {
+	switch typ {
+	case MYSELF:
 		button = []ice.Any{PORTAL, WORD, STATUS, VIMER, COMPILE, cli.RUNTIME, XTERM, DESKTOP, ADMIN, OPEN}
+	case SERVER:
+		button = []ice.Any{PORTAL, DESKTOP, ADMIN, OPEN, UPGRADE, cli.RUNTIME, WORD, STATUS, VIMER, XTERM}
+	default:
+		button = []ice.Any{PORTAL, DESKTOP, ADMIN, OPEN, XTERM, cli.RUNTIME, WORD, STATUS, VIMER}
 	}
 	button = append(button, cli.STOP)
 	m.Cmd(Space(m, domain), DREAM).Table(func(value ice.Maps) {
@@ -37,6 +46,7 @@ func _matrix_list(m *ice.Message, domain, icon string, fields ...string) (server
 		case SERVER, MASTER:
 			server = append(server, kit.Keys(domain, value[mdb.NAME]))
 			icons = append(icons, value[mdb.ICONS])
+			types = append(types, value[mdb.TYPE])
 		}
 	})
 	return
@@ -47,11 +57,24 @@ func _matrix_action(m *ice.Message, action string, arg ...string) {
 		if kit.HasPrefixList(arg, ctx.RUN) {
 			ProcessIframe(m, "", "", arg...)
 		} else {
-			title, link := kit.Keys(domain, kit.Select("", action, action != OPEN)), kit.Select("", S(domain), domain != "")+kit.Select("", C(action), action != OPEN)
-			ProcessIframe(m, kit.Select(ice.CONTEXTS, title), kit.Select(nfs.PS, link), arg...).ProcessField(ctx.ACTION, action, ctx.RUN)
+			title, link := kit.Keys(domain, action), kit.Select("", S(domain), domain != "")+C(action)
+			if m.Option(mdb.TYPE) == MASTER {
+				link = kit.MergeURL2(SpideOrigin(m, m.Option(DOMAIN)), C(action))
+				if kit.IsIn(action, ADMIN) {
+					m.ProcessOpen(link)
+					break
+				}
+			}
+			ProcessIframe(m, title, kit.Select(nfs.PS, link), arg...).ProcessField(ctx.ACTION, action, ctx.RUN)
 		}
 	case OPEN:
-		m.ProcessOpen(kit.Select(nfs.PS, S(domain), domain != ""))
+		link := kit.Select(nfs.PS, S(domain), domain != "")
+		if m.Option(mdb.TYPE) == MASTER {
+			link = SpideOrigin(m, m.Option(DOMAIN))
+		} else if m.Option("server.type") == MASTER {
+			link = kit.MergeURL2(SpideOrigin(m, m.Option(DOMAIN)), S(m.Option(mdb.NAME)))
+		}
+		m.ProcessOpen(link)
 	default:
 		if !kit.HasPrefixList(arg, ctx.RUN) {
 			kit.If(action == XTERM, func() { arg = []string{cli.SH} })
@@ -71,8 +94,10 @@ const MATRIX = "matrix"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		MATRIX: {Name: "matrix refresh", Help: "矩阵", Meta: kit.Dict(
-			ice.CTX_ICONS, kit.Dict(STATUS, "bi bi-git"), ice.CTX_TRANS, kit.Dict(STATUS, "源码"),
+		MATRIX: {Name: "matrix refresh", Help: "矩阵", Icon: "Mission Control.png", Meta: kit.Dict(
+			ice.CTX_ICONS, kit.Dict(STATUS, "bi bi-git"), ice.CTX_TRANS, kit.Dict(
+				STATUS, "源码", html.INPUT, kit.Dict(MYSELF, "本机", MASTER, "主机"),
+			),
 		), Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(DREAM, mdb.INPUTS, arg) }},
 			mdb.CREATE: {Name: "create name*=hi icons repos binary template", Hand: func(m *ice.Message, arg ...string) { m.Cmd(DREAM, mdb.CREATE, arg) }},
@@ -82,7 +107,7 @@ func init() {
 			COMPILE: {Hand: func(m *ice.Message, arg ...string) {
 				_matrix_cmd(m, "", cli.AMD64, cli.LINUX, ice.SRC_MAIN_GO).ProcessHold()
 			}},
-			UPGRADE: {Hand: func(m *ice.Message, arg ...string) { _matrix_cmd(m, "").ProcessRefresh().Sleep3s() }},
+			UPGRADE: {Hand: func(m *ice.Message, arg ...string) { _matrix_cmd(m, "").Sleep3s().ProcessRefresh() }},
 			INSTALL: {Hand: func(m *ice.Message, arg ...string) {
 				if kit.IsIn(m.Cmdv(Space(m, m.Option(DOMAIN)), SPIDE, ice.DEV_IP, CLIENT_HOSTNAME), m.Cmd(tcp.HOST).Appendv(aaa.IP)...) {
 					m.Option(nfs.BINARY, S(m.Option(mdb.NAME)))
@@ -98,11 +123,11 @@ func init() {
 			}
 			GoToast(m, func(toast func(name string, count, total int)) []string {
 				field := kit.Split(mdb.Config(m, mdb.FIELD))
-				m.Options("space.timeout", cli.TIME_300ms, "dream.simple", ice.TRUE)
-				list, icons := _matrix_list(m, "", ice.SRC_MAIN_ICO, field...)
+				m.Options("space.timeout", cli.TIME_1s, "dream.simple", ice.TRUE)
+				list, icons, types := _matrix_list(m, "", ice.SRC_MAIN_ICO, MYSELF, field...)
 				kit.For(list, func(domain string, index int, total int) {
 					toast(domain, index, total)
-					_matrix_list(m, domain, icons[index], field...)
+					_matrix_list(m, domain, icons[index], types[index], field...)
 				})
 				m.RewriteAppend(func(value, key string, index int) string {
 					if key == mdb.ICONS && strings.HasPrefix(value, nfs.REQUIRE) && m.Appendv(DOMAIN)[index] != "" {
@@ -110,10 +135,10 @@ func init() {
 					}
 					return value
 				})
-				m.Sort("type,status,name,domain", []string{MASTER, SERVER, WORKER, ""}, []string{cli.START, cli.STOP, ""}, "str_r", "str")
-				m.StatusTimeCountStats(mdb.TYPE, mdb.STATUS)
+				m.Action(html.FILTER, mdb.CREATE).StatusTimeCountStats(mdb.TYPE, mdb.STATUS).Display("")
+				m.Sort("type,status,name,domain", []string{WORKER, MYSELF, SERVER, MASTER, ""}, []string{cli.START, cli.STOP, ""}, "str_r", "str_r")
 				return nil
-			}).Action(html.FILTER, mdb.CREATE).Display("")
+			})
 			ctx.Toolkit(m)
 		}},
 	})

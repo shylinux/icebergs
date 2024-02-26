@@ -1,6 +1,6 @@
 Volcanos(chat.ONIMPORT, {
 	_init: function(can, msg) {
-		if (can.isCmdMode()) { can.onappend.style(can, html.OUTPUT) }
+		// if (can.isCmdMode()) { can.onappend.style(can, html.OUTPUT) }
 		can.ui = can.onappend.layout(can), can.onimport._project(can, msg)
 	},
 	_project: function(can, msg) { var select, current = can.db.hash[0]||ice.DEV
@@ -12,27 +12,27 @@ Volcanos(chat.ONIMPORT, {
 		msg.Table(function(value) {
 			var _target = can.page.Append(can, can.ui.project, [{view: html.ITEM, list: [
 				{img: can.misc.Resource(can, value.icons||"usr/icons/Messages.png")}, {view: html.CONTAINER, list: [
-					{view: wiki.TITLE, list: [{text: value.name||"[未命名]"}, {text: [can.base.TimeTrim(value.time), "", mdb.TIME]}]},
+					{view: wiki.TITLE, list: [{text: value.zone||"[未命名]"}, {text: [can.base.TimeTrim(value.time), "", mdb.TIME]}]},
 					{view: wiki.CONTENT, list: [{text: value.text||"[未知消息]"}]},
 				]},
-			], onclick: function(event) { can.isCmdMode() && can.misc.SearchHash(can, value.name), can.onimport._switch(can, false)
+			], onclick: function(event) { can.isCmdMode() && can.misc.SearchHash(can, value.zone), can.onimport._switch(can, false)
 				can.db.zone = value, can.db.hash = value.hash, can.onmotion.select(can, can.ui.project, html.DIV_ITEM, _target)
 				if (can.onmotion.cache(can, function(save, load) {
 					can.ui.message && save({title: can.ui.title, message: can.ui.message, scroll: can.ui.message.scrollTop})
-					return load(value.name, function(bak) { can.ui.title = bak.title, can.ui.message = bak.message
+					return load(value.zone, function(bak) { can.ui.title = bak.title, can.ui.message = bak.message
 						can.onmotion.delay(can, function() { can.ui.message.scrollTop = bak.scroll })
 					})
 				}, can.ui.content, can.ui.profile, can.ui.display, can._status)) { return can.onimport.layout(can) }
 				can.run(can.request(event, {"cache.limit": 10}), [value.hash], function(msg) {
 					can.onimport._display(can), can.onimport._content(can, msg)
 				})
-			}}])._target; select = (value.name == current? _target: select)||_target
+			}}])._target; select = (value.zone == current? _target: select)||_target
 		}), can.user.isMobile? can.onimport._switch(can, true): select && select.click()
 	},
 	_content: function(can, msg) {
 		can.ui.title = can.page.Appends(can, can.ui.content, [{view: wiki.TITLE, list: [
 			{icon: "bi bi-chevron-left", onclick: function() { can.onimport._switch(can, true) }},
-			{text: can.db.zone.name},
+			{text: can.db.zone.zone},
 			{icon: "bi bi-three-dots", onclick: function() { can.onmotion.toggle(can, can.ui.profile), can.onimport.layout(can) }},
 		]}])._target
 		can.ui.message = can.page.Append(can, can.ui.content, [{view: html.LIST}])._target, can.onimport._message(can, msg)
@@ -52,8 +52,8 @@ Volcanos(chat.ONIMPORT, {
 				can.page.Append(can, can.ui.message, [{view: [[html.ITEM, mdb.TIME], "", time]}])
 			}
 			can.page.Append(can, can.ui.message, [{view: [[html.ITEM, value.type, myself? "myself": ""]], list: [
-				{img: can.misc.Resource(can, (value.avatar == can.db.zone.name? "": value.avatar)||can.db.zone.icons||"usr/icons/Messages.png")},
-				{view: html.CONTAINER, list: [{text: [value.usernick, "", nfs.FROM]}, can.onfigure[value.type](can, value)]},
+				{img: can.misc.Resource(can, (value.avatar == can.db.zone.zone? "": value.avatar)||can.db.zone.icons||"usr/icons/Messages.png")},
+				{view: html.CONTAINER, list: [{text: [value.usernick, "", nfs.FROM]}, can.onfigure[value.type||"text"](can, value)]},
 			]}])
 		}), can.onappend._status(can, msg.Option(ice.MSG_STATUS)), can.onimport.layout(can)
 		if (can.Status(mdb.TOTAL) > can.db.zone.id) { can.onimport._request(can) }
@@ -114,19 +114,19 @@ Volcanos(chat.ONFIGURE, {
 })
 Volcanos(chat.ONINPUTS, {
 	_show: function(event, can, msg, target, name) {
-		function show(value) {
-			if (target == target.parentNode.firstChild) { can.ui = can.ui||{}
+		function show(value) { can.ui = can.ui||{}
+			if (!can.ui.img) {
 				can.ui.img = can.page.insertBefore(can, [{type: html.IMG}], target)
 				can.ui.span = can.page.insertBefore(can, [{type: html.SPAN}], target)
 				can.onappend.style(can, mdb.ICONS, can.page.parentNode(can, target, html.TR))
 				can.page.style(can, target, html.COLOR, html.TRANSPARENT)
 			}
-			can.ui.img.src = can.misc.Resource(can, value.icons), can.ui.span.innerText = value.name
+			can.ui.img.src = can.misc.Resource(can, value.icons||"usr/icons/Messages.png"), can.ui.span.innerText = value.zone
 			target.value = value.hash, can.onmotion.hidden(can, can._target)
 		}
 		can.page.Appends(can, can._output, msg.Table(function(value) {
-			return value.name && {view: html.ITEM, list: [
-				{img: can.misc.Resource(can, value.icons)}, {text: value.name},
+			return value.zone && {view: html.ITEM, list: [
+				{img: can.misc.Resource(can, value.icons||"usr/icons/Messages.png")}, {text: value.zone},
 			], onclick: function(event) { show(value) }}
 		}))
 	},

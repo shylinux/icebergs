@@ -244,6 +244,7 @@ const ( // MSG
 	MSG_NODETYPE = "node.type"
 
 	FROM_DAEMON    = "from.daemon"
+	FROM_SPACE     = "from.space"
 	TABLE_CHECKBOX = "table.checkbox"
 	TOAST_DURATION = "toast.duration"
 )

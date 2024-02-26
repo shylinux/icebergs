@@ -6,6 +6,7 @@ import (
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
@@ -20,17 +21,18 @@ func init() {
 				messageCreate(m, cli.SYSTEM, "usr/icons/System Settings.png")
 				messageInsert(m, cli.SYSTEM, mdb.TYPE, "plug", ctx.INDEX, cli.RUNTIME)
 			}},
-			mdb.CREATE: {Name: "create type*=tech,void name* icons*"},
+			mdb.CREATE: {Name: "create type*=tech,void zone* icons*"},
 			mdb.INSERT: {Hand: func(m *ice.Message, arg ...string) {
-				mdb.ZoneInsert(m, append(arg, aaa.AVATAR, aaa.UserInfo(m, "", aaa.AVATAR, aaa.AVATAR),
-					aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.USERNAME, m.Option(ice.MSG_USERNAME),
-				))
+				mdb.ZoneInsert(m, append(arg, aaa.AVATAR, aaa.UserInfo(m, "", aaa.AVATAR, aaa.AVATAR), aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.USERNAME, m.Option(ice.MSG_USERNAME)))
+			}},
+			tcp.RECV: {Hand: func(m *ice.Message, arg ...string) {
+				mdb.ZoneInsert(m, kit.Simple(mdb.ZONE, m.Option(ice.FROM_SPACE), arg, aaa.AVATAR, aaa.UserInfo(m, "", aaa.AVATAR, aaa.AVATAR), aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.USERNAME, m.Option(ice.MSG_USERNAME)))
 			}},
 			web.DREAM_CREATE: {Hand: func(m *ice.Message, arg ...string) {
 				messageInsert(m, web.DREAM, mdb.TYPE, "plug", ctx.INDEX, IFRAME, ctx.ARGS, web.S(m.Option(mdb.NAME)))
 			}},
 		}, web.DreamAction(), mdb.ZoneAction(
-			mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,type,name,icons", mdb.FIELDS, "time,id,avatar,usernick,username,type,name,text,space,index,args",
+			mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,hash,type,zone,icons", mdb.FIELDS, "time,id,avatar,usernick,username,type,name,text,space,index,args",
 		)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				mdb.ZoneSelect(m.Display("").Spawn(), arg...).Table(func(value ice.Maps) {
@@ -44,9 +46,9 @@ func init() {
 		}},
 	})
 }
-func messageCreate(m *ice.Message, name, icon string) {
-	kit.Value(m.Target().Configs[m.CommandKey()].Value, kit.Keys(mdb.HASH, name, mdb.META), kit.Dict(
-		mdb.TIME, m.Time(), mdb.TYPE, aaa.TECH, mdb.NAME, name, mdb.ICONS, icon,
+func messageCreate(m *ice.Message, zone, icons string) {
+	kit.Value(m.Target().Configs[m.CommandKey()].Value, kit.Keys(mdb.HASH, zone, mdb.META), kit.Dict(
+		mdb.TIME, m.Time(), mdb.TYPE, aaa.TECH, mdb.ZONE, zone, mdb.ICONS, icons,
 	))
 }
 func messageInsert(m *ice.Message, zone string, arg ...string) {

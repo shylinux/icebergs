@@ -418,7 +418,7 @@ func init() {
 				case WORKER:
 					m.PushButton(cli.RUNTIME, tcp.SEND, OPEN)
 				default:
-					m.PushButton(cli.RUNTIME, OPEN)
+					m.PushButton(cli.RUNTIME, DREAM, OPEN)
 				}
 			}},
 			STATS_TABLES: {Hand: func(m *ice.Message, arg ...string) {
@@ -432,7 +432,7 @@ func init() {
 			}},
 		}, StatsAction(), DreamAction(), DreamTablesAction(), mdb.ImportantHashAction(
 			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icons,repos,binary,template,restart",
-			html.BUTTON, kit.JoinWord(PORTAL, DESKTOP, ADMIN, WORD, STATUS, VIMER, COMPILE, XTERM, DREAM),
+			html.BUTTON, kit.JoinWord(PORTAL, DESKTOP, ADMIN, MESSAGE, WORD, STATUS, VIMER, COMPILE, XTERM, DREAM),
 			ctx.TOOLS, kit.Simple(SPIDE, STORE, MATRIX, ROUTE),
 		)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {

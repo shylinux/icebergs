@@ -19,7 +19,7 @@ func init() {
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				messageCreate(m, web.DREAM, "usr/icons/Launchpad.png")
 				messageCreate(m, cli.SYSTEM, "usr/icons/System Settings.png")
-				messageInsert(m, cli.SYSTEM, mdb.TYPE, "plug", ctx.INDEX, cli.RUNTIME)
+				messageInsert(m, cli.SYSTEM, mdb.TYPE, "text", mdb.NAME, cli.RUNTIME, mdb.TEXT, m.Cmdx(cli.RUNTIME), ctx.DISPLAY, "/plugin/story/json.js")
 			}},
 			mdb.CREATE: {Name: "create type*=tech,void zone* icons* target"},
 			mdb.INSERT: {Hand: func(m *ice.Message, arg ...string) {
@@ -33,10 +33,12 @@ func init() {
 				mdb.HashSelectUpdate(m, m.Option(ice.FROM_SPACE), func(value ice.Map) { kit.Value(value, mdb.TIME, m.Time()) })
 			}},
 			web.DREAM_CREATE: {Hand: func(m *ice.Message, arg ...string) {
-				messageInsert(m, web.DREAM, mdb.TYPE, "plug", ctx.INDEX, IFRAME, ctx.ARGS, web.S(m.Option(mdb.NAME)))
+				if ice.Info.Important {
+					messageInsert(m, web.DREAM, mdb.TYPE, "plug", ctx.INDEX, IFRAME, ctx.ARGS, web.S(m.Option(mdb.NAME)))
+				}
 			}},
-		}, web.DreamAction(), mdb.ZoneAction(
-			mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,hash,type,zone,icons,target", mdb.FIELDS, "time,id,avatar,usernick,username,type,name,text,space,index,args",
+		}, web.DreamAction(), web.DreamTablesAction(), mdb.ZoneAction(
+			mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,hash,type,zone,icons,title,count,target", mdb.FIELDS, "time,id,avatar,usernick,username,type,name,text,space,index,args,style,display",
 		)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				mdb.ZoneSelect(m.Display("").Spawn(), arg...).Table(func(value ice.Maps) {

@@ -152,9 +152,10 @@ func init() {
 				}
 			}},
 		}, mdb.HashAction(mdb.SHORT, mdb.TEXT, mdb.FIELD, "time,hash,size,type,name,text,file"), ice.RenderAction(ice.RENDER_DOWNLOAD)), Hand: func(m *ice.Message, arg ...string) {
-			if mdb.HashSelect(m, arg...); len(arg) == 0 || m.R != nil && m.R.Method == http.MethodGet {
-				m.Option(ice.MSG_ACTION, "")
-			} else if m.Length() == 0 {
+			if mdb.HashSelect(m, arg...); len(arg) == 0 {
+				return
+			}
+			if m.Length() == 0 {
 				return
 			} else if m.Append(nfs.FILE) == "" {
 				m.PushScript(mdb.TEXT, m.Append(mdb.TEXT))

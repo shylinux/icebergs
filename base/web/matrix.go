@@ -29,9 +29,9 @@ func _matrix_list(m *ice.Message, domain, icon, typ string, fields ...string) (s
 	m.PushRecord(value, fields...).PushButton(button...)
 	switch typ {
 	case MYSELF:
-		button = []ice.Any{PORTAL, WORD, STATUS, VIMER, COMPILE, cli.RUNTIME, XTERM, DESKTOP, ADMIN, OPEN}
+		button = []ice.Any{PORTAL, WORD, STATUS, VIMER, COMPILE, cli.RUNTIME, MESSAGE, XTERM, DESKTOP, ADMIN, OPEN}
 	case SERVER:
-		button = []ice.Any{PORTAL, DESKTOP, ADMIN, OPEN, UPGRADE, cli.RUNTIME, WORD, STATUS, VIMER, XTERM}
+		button = []ice.Any{PORTAL, DESKTOP, ADMIN, OPEN, UPGRADE, cli.RUNTIME, MESSAGE, WORD, STATUS, VIMER, XTERM}
 	default:
 		button = []ice.Any{PORTAL, DESKTOP, ADMIN, OPEN, XTERM, cli.RUNTIME, WORD, STATUS, VIMER}
 	}

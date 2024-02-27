@@ -12,8 +12,8 @@ Volcanos(chat.ONIMPORT, {
 		msg.Table(function(value) {
 			var _target = can.page.Append(can, can.ui.project, [{view: html.ITEM, list: [
 				{img: can.misc.Resource(can, value.icons||"usr/icons/Messages.png")}, {view: html.CONTAINER, list: [
-					{view: wiki.TITLE, list: [{text: value.zone||"[未命名]"}, {text: [can.base.TimeTrim(value.time), "", mdb.TIME]}]},
-					{view: wiki.CONTENT, list: [{text: value.text||"[未知消息]"}]},
+					{view: wiki.TITLE, list: [{text: value.title||value.zone||"[未命名]"}, {text: [can.base.TimeTrim(value.time), "", mdb.TIME]}]},
+					{view: wiki.CONTENT, list: [{text: value.target||"[未知消息]"}]},
 				]},
 			], onclick: function(event) { can.isCmdMode() && can.misc.SearchHash(can, value.zone), can.onimport._switch(can, false)
 				can.db.zone = value, can.db.hash = value.hash, can.onmotion.select(can, can.ui.project, html.DIV_ITEM, _target)
@@ -58,7 +58,7 @@ Volcanos(chat.ONIMPORT, {
 			]}])
 		}), can.onappend._status(can, msg.Option(ice.MSG_STATUS)), can.onimport.layout(can)
 		if (can.Status(mdb.TOTAL) > can.db.zone.id) { can.onimport._request(can) }
-		can.onmotion.delay(can, function() { can.ui.message && (can.ui.message.scrollTop += 10000) })
+		can.onmotion.delay(can, function() { can.ui.message && (can.ui.message.scrollTop += 10000) }, 300)
 	},
 	_request: function(can) {
 		can.run(can.request(event, {"cache.begin": parseInt(can.db.zone.id||0)+1, "cache.limit": 10}), [can.db.hash], function(msg) {
@@ -82,6 +82,14 @@ Volcanos(chat.ONIMPORT, {
 		can.ui.title && can.page.style(can, can.ui.message, html.HEIGHT, can.ui.content.offsetHeight-can.ui.title.offsetHeight)
 	},
 }, [""])
+Volcanos(chat.ONEXPORT, {
+	plugHeight: function(can, value) { var height = can.base.Min(can.ui.content.offsetHeight-240, 240)
+		return can.base.Max(html.STORY_HEIGHT, height, height/(can.base.isIn(value.index, html.IFRAME)? 1: 2))
+	},
+	plugWidth: function(can, value) {
+		return can.ui.content.offsetWidth-(can.user.isMobile? 60: 180)
+	},
+})
 Volcanos(chat.ONDETAIL, {
 	"bi bi-mic": function(event, can) {},
 	"bi bi-card-image": function(event, can) {
@@ -101,13 +109,22 @@ Volcanos(chat.ONDETAIL, {
 })
 Volcanos(chat.ONFIGURE, {
 	image: function(can, value) { return {view: wiki.CONTENT, list: [{img: can.misc.Resource(can, value.text)}]} },
-	text: function(can, value) { return {view: wiki.CONTENT, list: [{text: value.text||"[未知消息]"}]} },
-	plug: function(can, value) { var height = can.base.Min(can.ui.content.offsetHeight-210, 240)
-		var height = can.base.Max(html.PLUG_HEIGHT, height, height/(can.base.isIn(value.index, html.IFRAME)? 1: 2)), width = can.ui.content.offsetWidth-(can.user.isMobile? 60: 180)
-		return {view: wiki.CONTENT, style: {height: height, width: width}, _init: function(target) { value.type = chat.STORY
+	text: function(can, value) {
+		return {view: wiki.CONTENT, list: [{text: value.text||"[未知消息]"}], _init: function(target) {
+			if (value.display) { var msg = can.request(); msg.Echo(value.text), can.onmotion.clear(can, target)
+				var height = can.onexport.plugHeight(can, value), width = can.onexport.plugWidth(can, value)
+				can.onappend.plugin(can, {title: value.name, index: "can._plugin", height: height, display: value.display, msg: msg}, function(sub) {
+					delete(sub._legend.onclick)
+				}, target)
+			}
+		}}
+	},
+	plug: function(can, value) {
+		var height = can.onexport.plugHeight(can, value), width = can.onexport.plugWidth(can, value)
+		return {view: wiki.CONTENT, style: {height: height+2, width: width}, _init: function(target) { value.type = chat.STORY
 			can.onappend.plugin(can, value, function(sub) {
 				sub.onexport.output = function() { sub.onimport.size(sub, height, width)
-					can.page.style(can, target, html.HEIGHT, sub._target.offsetHeight, html.WIDTH, sub._target.offsetWidth)
+					can.page.style(can, target, html.HEIGHT, sub._target.offsetHeight+2, html.WIDTH, sub._target.offsetWidth)
 				}
 			}, target)
 		}}

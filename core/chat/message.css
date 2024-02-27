@@ -1,18 +1,20 @@
 body.light fieldset.web.chat.message>div.output { background-color:white; }
 body.light fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list { background-color:#e3e3e2; }
 body.light fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item:not(.plug).myself div.content { background-color:#94ec69; }
-fieldset.web.chat.message>div.output>div.project>div.title { padding:var(--button-padding); display:flex; justify-content:space-between; position:sticky; top:0; z-index:2; }
+fieldset.web.chat.message>div.output>div.project>div.title { background-color:var(--plugin-bg-color); padding:var(--button-padding); display:flex; justify-content:space-between; position:sticky; top:0; z-index:2; }
 fieldset.web.chat.message>div.output>div.project>div.title i:hover { background-color:var(--hover-bg-color); cursor:pointer; }
 fieldset.web.chat.message>div.output>div.project>div.title span:hover { background-color:var(--hover-bg-color); cursor:pointer; }
 fieldset.web.chat.message>div.output>div.project>div.item.text.filter>i { left:var(--input-padding); }
-fieldset.web.chat.message>div.output>div.project>div.item { height:58px; padding:var(--input-padding); }
+fieldset.web.chat.message>div.output>div.project>div.item:not(.filter) { height:58px; padding:var(--input-padding); }
+fieldset.web.chat.message>div.output>div.project>div.item.select { border-right:unset; }
 fieldset.web.chat.message>div.output>div.project>div.item img { height:var(--header-height); width:var(--header-height); display:block; float:left; }
 fieldset.web.chat.message>div.output>div.project>div.item span.time { color:var(--disable-fg-color); font-size:var(--status-font-size); }
-fieldset.web.chat.message>div.output>div.project>div.item div.container { padding:0 var(--input-padding); width:calc(100% - var(--header-height)); float:left; }
+fieldset.web.chat.message>div.output>div.project>div.item div.container { padding:0 var(--input-padding); width:calc(100% - var(--header-height) - 2*var(--input-padding)); float:left; }
 fieldset.web.chat.message>div.output>div.project>div.item div.title { display:flex; justify-content:space-between; }
+fieldset.web.chat.message>div.output>div.project>div.item div.title>span:first-child { margin-right:var(--input-margin); overflow:hidden; flex-shrink:1; }
 fieldset.web.chat.message>div.output>div.project>div.item div.content { color:var(--disable-fg-color); font-size:var(--status-font-size); }
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content { overflow:hidden; }
-fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.title { padding:var(--button-padding); display:flex; justify-content:space-between; position:sticky; top:0; z-index:2; }
+fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.title { background-color:var(--plugin-bg-color); padding:var(--button-padding); display:flex; justify-content:space-between; position:sticky; top:0; z-index:2; }
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.title i:hover { background-color:var(--hover-bg-color); cursor:pointer; }
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.title span:hover { background-color:var(--hover-bg-color); cursor:pointer; }
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item { padding:var(--input-padding); min-height:fit-content; display:flex; }
@@ -24,13 +26,21 @@ fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item div.container>span.from { color:var(--disable-fg-color); font-size:var(--status-font-size); padding:0 var(--input-padding); }
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.myself div.container>span.from { float:right; }
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.myself div.container { display:flex; flex-direction:column; align-items:flex-end; }
-fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.text div.content { padding:var(--input-padding) var(--button-padding); }
-fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item>div.container>div.content { display:flex; align-items:center; border-radius:var(--plugin-radius); min-height:var(--header-height); width:fit-content; }
+fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.text div.content { white-space:pre; padding:var(--input-padding) var(--button-padding); }
+fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.plug>div.container>div.content {
+	box-shadow:var(--box-shadow);
+}
+fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.plug>div.container>div.content:hover {
+	box-shadow:var(--notice-box-shadow);
+}
+fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item>div.container>div.content {
+	display:flex; align-items:center; border-radius:var(--plugin-radius);
+	min-height:var(--header-height); width:fit-content; }
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.plug { height:fit-content; }
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.plug div.content { padding:0; }
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.myself { flex-direction:row-reverse; }
 fieldset.web.chat.message>div.output>div.layout>div.display { height:120px; overflow:hidden; }
-fieldset.web.chat.message>div.output>div.layout>div.display div.toolkit { height:var(--action-height); display:flex; }
+fieldset.web.chat.message>div.output>div.layout>div.display div.toolkit { background-color:var(--plugin-bg-color); height:var(--action-height); display:flex; align-items:center; }
 fieldset.web.chat.message>div.output>div.layout>div.display div.toolkit i { padding:var(--input-padding); }
 fieldset.web.chat.message>div.output>div.layout>div.display div.toolkit i:hover { background-color:var(--hover-bg-color); }
 fieldset.web.chat.message>div.output>div.layout>div.display textarea { height:calc(100% - var(--action-height)); }

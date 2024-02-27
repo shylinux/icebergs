@@ -184,6 +184,7 @@ const (
 	WIKI_WORD         = "web.wiki.word"
 	WIKI_PORTAL       = "web.wiki.portal"
 	CHAT_OAUTH_CLIENT = "web.chat.oauth.client"
+	CHAT_MESSAGE      = "web.chat.message"
 	CHAT_HEADER       = "web.chat.header"
 	CHAT_IFRAME       = "web.chat.iframe"
 	CHAT_FAVOR        = "web.chat.favor"

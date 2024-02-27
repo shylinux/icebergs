@@ -24,6 +24,7 @@ func init() {
 				DeskAppend(m, "Photos.png", web.WIKI_FEEL)
 				DeskAppend(m, "Grapher.png", web.WIKI_DRAW)
 				DeskAppend(m, "Calendar.png", web.TEAM_PLAN)
+				DeskAppend(m, "Messages.png", web.CHAT_MESSAGE)
 			}
 			if m.Cmd(DOCK).Length() == 0 {
 				DockAppend(m, "Finder.png", Prefix(FINDER))

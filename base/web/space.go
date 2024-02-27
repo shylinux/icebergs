@@ -233,6 +233,14 @@ func _space_send(m *ice.Message, name string, arg ...string) (h string) {
 			}
 		}
 	}) {
+		if target[0] == ice.OPS {
+			if ice.Info.NodeType == SERVER {
+				if name == ice.OPS {
+					m.Cmdy(arg)
+					return
+				}
+			}
+		}
 		kit.If(m.IsDebug(), func() {
 			m.WarnNotFound(kit.IndexOf([]string{ice.OPS, ice.DEV}, target[0]) == -1, SPACE, name)
 		})

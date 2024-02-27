@@ -29,9 +29,9 @@ func _matrix_list(m *ice.Message, domain, icon, typ string, fields ...string) (s
 	m.PushRecord(value, fields...).PushButton(button...)
 	switch typ {
 	case MYSELF:
-		button = []ice.Any{PORTAL, WORD, STATUS, VIMER, COMPILE, cli.RUNTIME, MESSAGE, XTERM, DESKTOP, ADMIN, OPEN}
+		button = []ice.Any{PORTAL, WORD, STATUS, VIMER, COMPILE, MESSAGE, cli.RUNTIME, XTERM, DESKTOP, ADMIN, OPEN}
 	case SERVER:
-		button = []ice.Any{PORTAL, DESKTOP, ADMIN, OPEN, UPGRADE, cli.RUNTIME, MESSAGE, WORD, STATUS, VIMER, XTERM}
+		button = []ice.Any{PORTAL, DESKTOP, ADMIN, OPEN, UPGRADE, MESSAGE, cli.RUNTIME, WORD, STATUS, VIMER, XTERM}
 	default:
 		button = []ice.Any{PORTAL, DESKTOP, ADMIN, OPEN, XTERM, cli.RUNTIME, WORD, STATUS, VIMER}
 	}
@@ -115,6 +115,18 @@ func init() {
 					m.OptionDefault(nfs.BINARY, UserHost(m)+S(m.Option(mdb.NAME)))
 				}
 				_matrix_dream(m, mdb.CREATE, kit.Simple(m.OptionSimple(mdb.ICONS, nfs.REPOS, nfs.BINARY))...)
+				m.Cmd(SPACE, kit.Keys(m.Option(DOMAIN), m.Option(mdb.NAME)), MESSAGE, mdb.CREATE,
+					mdb.TYPE, aaa.VOID,
+					mdb.ZONE, "ops.dev",
+					mdb.ICONS, "usr/icons/icebergs.jpg",
+					"target", "ops.dev",
+				)
+				m.Cmd(SPACE, m.Option(mdb.NAME), MESSAGE, mdb.CREATE,
+					mdb.TYPE, aaa.VOID,
+					mdb.ZONE, kit.Keys("ops", m.Option(DOMAIN), m.Option(mdb.NAME)),
+					mdb.ICONS, "usr/icons/icebergs.jpg",
+					"target", kit.Keys("ops", m.Option(DOMAIN), m.Option(mdb.NAME)),
+				)
 			}},
 		}, ctx.ConfAction(mdb.FIELD, "time,domain,status,type,name,text,icons,repos,binary,module,version", ctx.TOOLS, kit.Simple(STATUS, VERSION))), Hand: func(m *ice.Message, arg ...string) {
 			if kit.HasPrefixList(arg, ctx.ACTION) {

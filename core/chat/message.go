@@ -37,6 +37,10 @@ func init() {
 					messageInsert(m, web.DREAM, mdb.TYPE, "plug", ctx.INDEX, IFRAME, ctx.ARGS, web.S(m.Option(mdb.NAME)))
 				}
 			}},
+			ctx.COMMAND: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(web.Space(m, m.Option("target")), ctx.COMMAND, arg[0]).ProcessField(ctx.ACTION, ctx.RUN, m.Option("target"), arg[0])
+			}},
+			ctx.RUN: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(web.Space(m, arg[0]), arg[1], arg[2:]) }},
 		}, web.DreamAction(), web.DreamTablesAction(), mdb.ZoneAction(
 			mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,hash,type,zone,icons,title,count,target", mdb.FIELDS, "time,id,avatar,usernick,username,type,name,text,space,index,args,style,display",
 		)), Hand: func(m *ice.Message, arg ...string) {

@@ -27,6 +27,12 @@ fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.myself div.container>span.from { float:right; }
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.myself div.container { display:flex; flex-direction:column; align-items:flex-end; }
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.text div.content { white-space:pre; padding:var(--input-padding) var(--button-padding); }
+fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.plug>div.container>div.content div.item.text.path>input {
+	width:var(--input-width);
+}
+fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.plug>div.container>div.content legend {
+	// float:unset;
+}
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.plug>div.container>div.content {
 	box-shadow:var(--box-shadow);
 }

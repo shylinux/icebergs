@@ -12,7 +12,7 @@ Volcanos(chat.ONIMPORT, {
 		msg.Table(function(value) {
 			var _target = can.page.Append(can, can.ui.project, [{view: html.ITEM, list: [
 				{img: can.misc.Resource(can, value.icons||"usr/icons/Messages.png")}, {view: html.CONTAINER, list: [
-					{view: wiki.TITLE, list: [{text: value.title||value.zone||"[未命名]"}, {text: [can.base.TimeTrim(value.time), "", mdb.TIME]}]},
+					{view: wiki.TITLE, list: [{text: value.title||can.base.trimPrefix(value.zone, "ops.")||"[未命名]"}, {text: [can.base.TimeTrim(value.time), "", mdb.TIME]}]},
 					{view: wiki.CONTENT, list: [{text: value.target||"[未知消息]"}]},
 				]},
 			], onclick: function(event) { can.isCmdMode() && can.misc.SearchHash(can, value.zone), can.onimport._switch(can, false)
@@ -47,7 +47,7 @@ Volcanos(chat.ONIMPORT, {
 	},
 	_message: function(can, msg) { var now = new Date(), last = ""
 		msg.Table(function(value) { can.db.zone.id = value.id
-			value.space = value.space||can.base.trimPrefix(can.db.zone.target, "ops.")
+			// value.space = value.space||can.base.trimPrefix(can.db.zone.target, "ops.")
 			var myself = value.username == can.user.info.username, time = can.base.TimeTrim(value.time)
 			var t = new Date(value.time); if (!last || (t - last > 3*60*1000)) { last = t
 				can.page.Append(can, can.ui.message, [{view: [[html.ITEM, mdb.TIME], "", time]}])
@@ -119,12 +119,17 @@ Volcanos(chat.ONFIGURE, {
 			}
 		}}
 	},
-	plug: function(can, value) {
-		var height = can.onexport.plugHeight(can, value), width = can.onexport.plugWidth(can, value)
+	plug: function(can, value) { var height = can.onexport.plugHeight(can, value), width = can.onexport.plugWidth(can, value)
 		return {view: wiki.CONTENT, style: {height: height+2, width: width}, _init: function(target) { value.type = chat.STORY
+			value._commands = {target: can.db.zone.target}
 			can.onappend.plugin(can, value, function(sub) {
 				sub.onexport.output = function() { sub.onimport.size(sub, height, width)
 					can.page.style(can, target, html.HEIGHT, sub._target.offsetHeight+2, html.WIDTH, sub._target.offsetWidth)
+				}
+				sub.onexport.link = function() {
+					var args = sub.Option(); args.pod = can.core.Keys(can.ConfSpace()||can.misc.Search(can, ice.POD), can.db.zone.target), args.cmd = sub.ConfIndex()
+					can.core.Item(args, function(key, value) { !value && delete(args[key]) })
+					return can.misc.MergePodCmd(can, args, true)
 				}
 			}, target)
 		}}

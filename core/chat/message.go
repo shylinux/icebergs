@@ -27,7 +27,7 @@ func init() {
 				kit.If(mdb.HashSelectField(m, arg[0], "target"), func(p string) { m.Cmd(web.SPACE, p, MESSAGE, tcp.RECV, arg[1:]) })
 				mdb.HashSelectUpdate(m, arg[0], func(value ice.Map) { kit.Value(value, mdb.TIME, m.Time()) })
 			}},
-			tcp.RECV: {Hand: func(m *ice.Message, arg ...string) {
+			tcp.RECV: {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
 				mdb.ZoneInsert(m, kit.Simple(mdb.ZONE, m.Option(ice.FROM_SPACE), web.SPACE, m.Option(ice.FROM_SPACE), arg, aaa.AVATAR, aaa.UserInfo(m, "", aaa.AVATAR, aaa.AVATAR), aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.USERNAME, m.Option(ice.MSG_USERNAME)))
 				mdb.HashSelectUpdate(m, m.Option(ice.FROM_SPACE), func(value ice.Map) { kit.Value(value, "target", m.Option(ice.FROM_SPACE)) })
 				mdb.HashSelectUpdate(m, m.Option(ice.FROM_SPACE), func(value ice.Map) { kit.Value(value, mdb.TIME, m.Time()) })

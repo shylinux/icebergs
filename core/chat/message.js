@@ -47,6 +47,7 @@ Volcanos(chat.ONIMPORT, {
 	},
 	_message: function(can, msg) { var now = new Date(), last = ""
 		msg.Table(function(value) { can.db.zone.id = value.id
+			value.space = value.space||can.base.trimPrefix(can.db.zone.target, "ops.")
 			var myself = value.username == can.user.info.username, time = can.base.TimeTrim(value.time)
 			var t = new Date(value.time); if (!last || (t - last > 3*60*1000)) { last = t
 				can.page.Append(can, can.ui.message, [{view: [[html.ITEM, mdb.TIME], "", time]}])

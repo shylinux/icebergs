@@ -21,18 +21,30 @@ func init() {
 				messageCreate(m, cli.SYSTEM, "usr/icons/System Settings.png")
 				messageInsert(m, cli.SYSTEM, mdb.TYPE, "plug", ctx.INDEX, cli.RUNTIME)
 			}},
-			mdb.CREATE: {Name: "create type*=tech,void zone* icons*"},
+			mdb.CREATE: {Name: "create type*=tech,void zone* icons* target"},
 			mdb.INSERT: {Hand: func(m *ice.Message, arg ...string) {
 				mdb.ZoneInsert(m, append(arg, aaa.AVATAR, aaa.UserInfo(m, "", aaa.AVATAR, aaa.AVATAR), aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.USERNAME, m.Option(ice.MSG_USERNAME)))
+				kit.If(mdb.HashSelectField(m, arg[0], "target"), func(p string) {
+					m.Cmd(web.SPACE, p, MESSAGE, tcp.RECV, arg[1:])
+				})
+				mdb.HashSelectUpdate(m, arg[0], func(value ice.Map) {
+					kit.Value(value, mdb.TIME, m.Time())
+				})
 			}},
 			tcp.RECV: {Hand: func(m *ice.Message, arg ...string) {
-				mdb.ZoneInsert(m, kit.Simple(mdb.ZONE, m.Option(ice.FROM_SPACE), arg, aaa.AVATAR, aaa.UserInfo(m, "", aaa.AVATAR, aaa.AVATAR), aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.USERNAME, m.Option(ice.MSG_USERNAME)))
+				mdb.ZoneInsert(m, kit.Simple(mdb.ZONE, m.Option(ice.FROM_SPACE), web.SPACE, m.Option(ice.FROM_SPACE), arg, aaa.AVATAR, aaa.UserInfo(m, "", aaa.AVATAR, aaa.AVATAR), aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.USERNAME, m.Option(ice.MSG_USERNAME)))
+				mdb.HashSelectUpdate(m, m.Option(ice.FROM_SPACE), func(value ice.Map) {
+					kit.Value(value, "target", m.Option(ice.FROM_SPACE))
+				})
+				mdb.HashSelectUpdate(m, m.Option(ice.FROM_SPACE), func(value ice.Map) {
+					kit.Value(value, mdb.TIME, m.Time())
+				})
 			}},
 			web.DREAM_CREATE: {Hand: func(m *ice.Message, arg ...string) {
 				messageInsert(m, web.DREAM, mdb.TYPE, "plug", ctx.INDEX, IFRAME, ctx.ARGS, web.S(m.Option(mdb.NAME)))
 			}},
 		}, web.DreamAction(), mdb.ZoneAction(
-			mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,hash,type,zone,icons", mdb.FIELDS, "time,id,avatar,usernick,username,type,name,text,space,index,args",
+			mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,hash,type,zone,icons,target", mdb.FIELDS, "time,id,avatar,usernick,username,type,name,text,space,index,args",
 		)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				mdb.ZoneSelect(m.Display("").Spawn(), arg...).Table(func(value ice.Maps) {
@@ -40,6 +52,7 @@ func init() {
 						m.PushRecord(value, mdb.Config(m, mdb.FIELD))
 					}
 				})
+				m.Sort(mdb.TIME, "str_r")
 			} else {
 				mdb.ZoneSelect(m, arg...).Sort(mdb.ID, ice.INT)
 			}

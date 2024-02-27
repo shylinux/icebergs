@@ -402,6 +402,10 @@ func init() {
 			m.Cmdy(tcp.WIFI).CutTo(tcp.SSID, arg[0])
 		case MESSAGE:
 			m.Cmdy(MESSAGE).Cut(mdb.HASH, mdb.ZONE, mdb.ICONS)
+		case "target":
+			m.AdminCmd(MATRIX).Table(func(value ice.Maps) {
+				m.Push(arg[0], kit.Keys(kit.Select("", ice.OPS, ice.Info.NodeType == WORKER), value[DOMAIN], value[mdb.NAME]))
+			})
 		}
 	})
 	ice.Info.AdminCmd = AdminCmd

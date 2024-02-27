@@ -25,7 +25,7 @@ fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.myself div.container>span.from { float:right; }
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.myself div.container { display:flex; flex-direction:column; align-items:flex-end; }
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.text div.content { padding:var(--input-padding) var(--button-padding); }
-fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item>div.container>div.content { display:flex; align-items:center; border-radius:5px; min-height:var(--header-height); width:fit-content; }
+fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item>div.container>div.content { display:flex; align-items:center; border-radius:var(--plugin-radius); min-height:var(--header-height); width:fit-content; }
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.plug { height:fit-content; }
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.plug div.content { padding:0; }
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.myself { flex-direction:row-reverse; }

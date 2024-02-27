@@ -53,7 +53,7 @@ Volcanos(chat.ONIMPORT, {
 				can.page.Append(can, can.ui.message, [{view: [[html.ITEM, mdb.TIME], "", time]}])
 			}
 			can.page.Append(can, can.ui.message, [{view: [[html.ITEM, value.type, myself? "myself": ""]], list: [
-				{img: can.misc.Resource(can, (value.avatar == can.db.zone.zone? "": value.avatar)||can.db.zone.icons||"usr/icons/Messages.png")},
+				{img: can.misc.Resource(can, (can.base.isIn(value.avatar, can.db.zone.zone, mdb.TYPE)? "": value.avatar)||can.db.zone.icons||"usr/icons/Messages.png")},
 				{view: html.CONTAINER, list: [{text: [value.usernick, "", nfs.FROM]}, can.onfigure[value.type||"text"](can, value)]},
 			]}])
 		}), can.onappend._status(can, msg.Option(ice.MSG_STATUS)), can.onimport.layout(can)
@@ -103,7 +103,7 @@ Volcanos(chat.ONFIGURE, {
 	image: function(can, value) { return {view: wiki.CONTENT, list: [{img: can.misc.Resource(can, value.text)}]} },
 	text: function(can, value) { return {view: wiki.CONTENT, list: [{text: value.text||"[未知消息]"}]} },
 	plug: function(can, value) { var height = can.base.Min(can.ui.content.offsetHeight-210, 240)
-		var height = can.base.Max(320, height, height/(can.base.isIn(value.index, html.IFRAME)? 1: 2)), width = can.ui.content.offsetWidth-(can.user.isMobile? 60: 180)
+		var height = can.base.Max(html.PLUG_HEIGHT, height, height/(can.base.isIn(value.index, html.IFRAME)? 1: 2)), width = can.ui.content.offsetWidth-(can.user.isMobile? 60: 180)
 		return {view: wiki.CONTENT, style: {height: height, width: width}, _init: function(target) { value.type = chat.STORY
 			can.onappend.plugin(can, value, function(sub) {
 				sub.onexport.output = function() { sub.onimport.size(sub, height, width)

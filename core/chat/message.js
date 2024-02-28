@@ -127,15 +127,14 @@ Volcanos(chat.ONFIGURE, {
 	},
 	plug: function(can, value) { var height = can.onexport.plugHeight(can, value), width = can.onexport.plugWidth(can, value)
 		return {view: wiki.CONTENT, style: {height: height+2, width: width}, _init: function(target) { value.type = chat.STORY
+			var list = can.core.Split(can.ConfSpace()||can.misc.Search(can, ice.POD)||"", ".")
+			var _list = can.core.Split(value.direct == "recv"? can.db.zone.target: "", ".")
+			can.base.isIn(_list[0], "ops", "dev") && (list.pop(), _list.shift())
+			value._space = list.concat(_list).join(".").replaceAll("..", ".")
 			value._commands = {direct: value.direct, target: can.db.zone.target}
 			can.onappend.plugin(can, value, function(sub) {
 				sub.onexport.output = function() { sub.onimport.size(sub, height, width)
 					can.page.style(can, target, html.HEIGHT, sub._target.offsetHeight+2, html.WIDTH, sub._target.offsetWidth)
-				}
-				sub.onexport.link = function() {
-					var args = sub.Option(); args.pod = can.core.Keys(can.ConfSpace()||can.misc.Search(can, ice.POD), value.direct == "recv"? can.db.zone.target: ""), args.cmd = sub.ConfIndex()
-					can.core.Item(args, function(key, value) { !value && delete(args[key]) })
-					return can.misc.MergePodCmd(can, args, true)
 				}
 			}, target)
 		}}

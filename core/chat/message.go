@@ -21,7 +21,9 @@ func init() {
 				messageCreate(m, cli.SYSTEM, "usr/icons/System Settings.png")
 				messageInsert(m, cli.SYSTEM, mdb.TYPE, "text", mdb.NAME, cli.RUNTIME, mdb.TEXT, m.Cmdx(cli.RUNTIME), ctx.DISPLAY, "/plugin/story/json.js")
 			}},
-			mdb.CREATE: {Name: "create type*=tech,void zone* icons* target"},
+			mdb.CREATE: {Name: "create type=tech,void title icons target", Hand: func(m *ice.Message, arg ...string) {
+				mdb.ZoneCreate(m, kit.Simple(arg, mdb.ZONE, kit.Select(kit.Hashs(mdb.UNIQ), m.Option("target"))))
+			}},
 			mdb.INSERT: {Hand: func(m *ice.Message, arg ...string) {
 				mdb.ZoneInsert(m, append(arg, aaa.AVATAR, aaa.UserInfo(m, "", aaa.AVATAR, aaa.AVATAR), aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.USERNAME, m.Option(ice.MSG_USERNAME)))
 				kit.If(mdb.HashSelectField(m, arg[0], "target"), func(p string) { m.Cmd(web.SPACE, p, MESSAGE, tcp.RECV, arg[1:]) })
@@ -37,6 +39,9 @@ func init() {
 					messageInsert(m, web.DREAM, mdb.TYPE, "plug", ctx.INDEX, IFRAME, ctx.ARGS, web.S(m.Option(mdb.NAME)))
 				}
 			}},
+			web.OPEN: {Hand: func(m *ice.Message, arg ...string) {
+				m.ProcessOpen(m.MergePod(m.Option("target")))
+			}},
 			ctx.COMMAND: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(web.Space(m, m.Option("target")), ctx.COMMAND, arg[0]).ProcessField(ctx.ACTION, ctx.RUN, m.Option("target"), arg[0])
 			}},
@@ -48,6 +53,11 @@ func init() {
 				mdb.ZoneSelect(m.Display("").Spawn(), arg...).Table(func(value ice.Maps) {
 					if kit.IsIn(m.Option(ice.MSG_USERROLE), value[mdb.TYPE], aaa.TECH, aaa.ROOT) {
 						m.PushRecord(value, mdb.Config(m, mdb.FIELD))
+					}
+					if value["target"] == "" {
+						m.PushButton(mdb.REMOVE)
+					} else {
+						m.PushButton(web.OPEN, mdb.REMOVE)
 					}
 				})
 				m.Sort(mdb.TIME, "str_r")

@@ -26,13 +26,17 @@ Volcanos(chat.ONIMPORT, {
 				can.run(can.request(event, {"cache.limit": 10}), [value.hash], function(msg) {
 					can.onimport._display(can), can.onimport._content(can, msg)
 				})
+			}, oncontextmenu: function(event) {
+				can.user.carteRight(event, can, {}, can.page.parseAction(can, value), function(event, button) {
+					can.runAction(can.request(event, value), button)
+				})
 			}}])._target; select = (value.zone == current? _target: select)||_target
 		}), can.user.isMobile? can.onimport._switch(can, true): select && select.click()
 	},
 	_content: function(can, msg) {
 		can.ui.title = can.page.Appends(can, can.ui.content, [{view: wiki.TITLE, list: [
 			{icon: "bi bi-chevron-left", onclick: function() { can.onimport._switch(can, true) }},
-			{text: can.db.zone.zone},
+			{text: can.db.zone.title||can.db.zone.zone},
 			{icon: "bi bi-three-dots", onclick: function() { can.onmotion.toggle(can, can.ui.profile), can.onimport.layout(can) }},
 		]}])._target
 		can.ui.message = can.page.Append(can, can.ui.content, [{view: html.LIST}])._target, can.onimport._message(can, msg)

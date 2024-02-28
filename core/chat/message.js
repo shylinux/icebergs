@@ -36,7 +36,7 @@ Volcanos(chat.ONIMPORT, {
 	_content: function(can, msg) {
 		can.ui.title = can.page.Appends(can, can.ui.content, [{view: wiki.TITLE, list: [
 			{icon: "bi bi-chevron-left", onclick: function() { can.onimport._switch(can, true) }},
-			{text: can.db.zone.title||can.db.zone.zone},
+			{text: can.db.zone.title||can.base.trimPrefix(can.db.zone.zone, "ops.")},
 			{icon: "bi bi-three-dots", onclick: function() { can.onmotion.toggle(can, can.ui.profile), can.onimport.layout(can) }},
 		]}])._target
 		can.ui.message = can.page.Append(can, can.ui.content, [{view: html.LIST}])._target, can.onimport._message(can, msg)
@@ -150,12 +150,12 @@ Volcanos(chat.ONINPUTS, {
 				can.onappend.style(can, mdb.ICONS, can.page.parentNode(can, target, html.TR))
 				can.page.style(can, target, html.COLOR, html.TRANSPARENT)
 			}
-			can.ui.img.src = can.misc.Resource(can, value.icons||"usr/icons/Messages.png"), can.ui.span.innerText = value.zone
+			can.ui.img.src = can.misc.Resource(can, value.icons||"usr/icons/Messages.png"), can.ui.span.innerText = value.title||can.base.trimPrefix(value.zone, "ops.")
 			target.value = value.hash, can.onmotion.hidden(can, can._target)
 		}
 		can.page.Appends(can, can._output, msg.Table(function(value) {
-			return value.zone && {view: html.ITEM, list: [
-				{img: can.misc.Resource(can, value.icons||"usr/icons/Messages.png")}, {text: value.zone},
+			return {view: html.ITEM, list: [
+				{img: can.misc.Resource(can, value.icons||"usr/icons/Messages.png")}, {text: value.title||can.base.trimPrefix(value.zone, "ops.")},
 			], onclick: function(event) { show(value) }}
 		}))
 	},

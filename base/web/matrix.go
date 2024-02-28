@@ -90,6 +90,9 @@ func _matrix_cmd(m *ice.Message, cmd string, arg ...string) *ice.Message {
 	return m.Cmdy(Space(m, kit.Keys(m.Option(DOMAIN), m.Option(mdb.NAME))), kit.Select(m.ActionKey(), cmd), arg)
 }
 
+const (
+	TARGET = "target"
+)
 const MATRIX = "matrix"
 
 func init() {
@@ -100,7 +103,11 @@ func init() {
 			),
 		), Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(DREAM, mdb.INPUTS, arg) }},
-			mdb.CREATE: {Name: "create name*=hi icons repos binary template", Hand: func(m *ice.Message, arg ...string) { m.Cmd(DREAM, mdb.CREATE, arg) }},
+			mdb.CREATE: {Name: "create name*=hi icons origin*", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(SPIDE, mdb.CREATE, arg, mdb.TYPE, nfs.REPOS)
+				m.Options(m.Cmd(SPIDE, m.Option(mdb.NAME)).AppendSimple())
+				m.Cmdy(SPIDE, mdb.DEV_REQUEST)
+			}},
 			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) { _matrix_dream(m, nfs.TRASH); _matrix_dream(m, "") }},
 			cli.START:  {Hand: func(m *ice.Message, arg ...string) { _matrix_dream(m, "") }},
 			cli.STOP:   {Hand: func(m *ice.Message, arg ...string) { _matrix_dream(m, "") }},
@@ -116,20 +123,23 @@ func init() {
 				}
 				_matrix_dream(m, mdb.CREATE, kit.Simple(m.OptionSimple(mdb.ICONS, nfs.REPOS, nfs.BINARY))...)
 				m.Cmd(SPACE, kit.Keys(m.Option(DOMAIN), m.Option(mdb.NAME)), MESSAGE, mdb.CREATE,
-					mdb.TYPE, aaa.TECH, "target", kit.Keys("ops.dev", m.Option(mdb.NAME)),
+					mdb.TYPE, aaa.TECH, mdb.ICONS, nfs.USR_ICONS_VOLCANOS,
+					TARGET, kit.Keys("from", m.Option(mdb.NAME)),
+					// "target", kit.Keys(ice.OPS, ice.DEV, m.Option(mdb.NAME)),
 				)
 				m.Cmd(SPACE, m.Option(mdb.NAME), MESSAGE, mdb.CREATE,
-					mdb.TYPE, aaa.TECH, "target", kit.Keys("ops", m.Option(DOMAIN), m.Option(mdb.NAME)),
+					mdb.TYPE, aaa.TECH, mdb.ICONS, nfs.USR_ICONS_ICEBERGS,
+					TARGET, kit.Keys(ice.OPS, m.Option(DOMAIN), m.Option(mdb.NAME)),
 				)
 			}},
-		}, ctx.ConfAction(mdb.FIELD, "time,domain,status,type,name,text,icons,repos,binary,module,version", ctx.TOOLS, kit.Simple(STATUS, VERSION))), Hand: func(m *ice.Message, arg ...string) {
+		}, ctx.ConfAction(mdb.FIELD, "time,domain,status,type,name,text,icons,repos,binary,module,version", ctx.TOOLS, kit.Simple(SPIDE, STATUS, VERSION))), Hand: func(m *ice.Message, arg ...string) {
 			if kit.HasPrefixList(arg, ctx.ACTION) {
 				_matrix_action(m, arg[1], arg[2:]...)
 				return
 			}
 			GoToast(m, func(toast func(name string, count, total int)) []string {
 				field := kit.Split(mdb.Config(m, mdb.FIELD))
-				m.Options("space.timeout", cli.TIME_1s, "dream.simple", ice.TRUE)
+				m.Options("space.timeout", cli.TIME_3s, "dream.simple", ice.TRUE)
 				list, icons, types := _matrix_list(m, "", ice.SRC_MAIN_ICO, MYSELF, field...)
 				kit.For(list, func(domain string, index int, total int) {
 					toast(domain, index, total)
@@ -143,9 +153,9 @@ func init() {
 				})
 				m.Action(html.FILTER, mdb.CREATE).StatusTimeCountStats(mdb.TYPE, mdb.STATUS).Display("")
 				m.Sort("type,status,name,domain", []string{MYSELF, SERVER, MASTER, WORKER, ""}, []string{cli.START, cli.STOP, ""}, "str_r", "str_r")
+				ctx.Toolkit(m)
 				return nil
 			})
-			ctx.Toolkit(m)
 		}},
 	})
 }

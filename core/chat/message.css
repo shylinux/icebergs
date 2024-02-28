@@ -1,10 +1,7 @@
 body.light fieldset.web.chat.message>div.output { background-color:white; }
 body.light fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list { background-color:#e3e3e2; }
-body.light fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item:not(.plug).myself div.content { background-color:#94ec69; }
-fieldset.web.chat.message>div.output>div.project {
-	width:320px;
-	flex:0 0 260px;
-}
+body.light fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item:not(.plug).send div.content { background-color:#94ec69; }
+fieldset.web.chat.message>div.output>div.project { width:260px; flex:0 0 260px; }
 fieldset.web.chat.message>div.output>div.project>div.title { background-color:var(--plugin-bg-color); padding:var(--button-padding); display:flex; justify-content:space-between; position:sticky; top:0; z-index:2; }
 fieldset.web.chat.message>div.output>div.project>div.title i:hover { background-color:var(--hover-bg-color); cursor:pointer; }
 fieldset.web.chat.message>div.output>div.project>div.title span:hover { background-color:var(--hover-bg-color); cursor:pointer; }
@@ -14,7 +11,7 @@ fieldset.web.chat.message>div.output>div.project>div.item:not(.filter) { height:
 fieldset.web.chat.message>div.output>div.project>div.item.select { border-right:unset; }
 fieldset.web.chat.message>div.output>div.project>div.item img { height:var(--header-height); width:var(--header-height); display:block; float:left; }
 fieldset.web.chat.message>div.output>div.project>div.item span.time { color:var(--disable-fg-color); font-size:var(--status-font-size); }
-fieldset.web.chat.message>div.output>div.project>div.item div.container { padding:0 var(--input-padding); width:calc(100% - var(--header-height) - 2*var(--input-padding)); float:left; }
+fieldset.web.chat.message>div.output>div.project>div.item div.container { width:calc(100% - var(--header-height)); float:left; }
 fieldset.web.chat.message>div.output>div.project>div.item div.title { display:flex; justify-content:space-between; }
 fieldset.web.chat.message>div.output>div.project>div.item div.title>span:first-child { margin-right:var(--input-margin); overflow:hidden; flex-shrink:1; }
 fieldset.web.chat.message>div.output>div.project>div.item div.content { color:var(--disable-fg-color); font-size:var(--status-font-size); }
@@ -25,22 +22,23 @@ fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.title
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.title span { padding:0 var(--input-padding); }
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item { padding:var(--input-padding); min-height:fit-content; display:flex; }
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item:hover { background-color:unset; }
-fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.time { color:var(--disable-fg-color); font-size:var(--status-font-size); padding:0; height:fit-content; justify-content:center; }
+fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.time { color:var(--disable-fg-color); font-size:var(--status-font-size); padding:0; margin-top:var(--button-margin); height:fit-content; justify-content:center; }
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item>img { height:var(--header-height); width:var(--header-height); }
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item div.content img { max-width:256px; }
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item div.container { width:fit-content; max-width:calc(100% - var(--header-height)); margin:0 var(--button-margin); }
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item div.container>span.from { color:var(--disable-fg-color); font-size:var(--status-font-size); padding:0 var(--input-padding); }
-fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.myself div.container>span.from { float:right; }
-fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.myself div.container { display:flex; flex-direction:column; align-items:flex-end; }
+fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.send div.container>span.from { float:right; }
+fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.send div.container { display:flex; flex-direction:column; align-items:flex-end; }
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.text div.content { white-space:pre; padding:var(--input-padding) var(--button-padding); }
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.plug>div.container>div.content div.item.text.path>input { width:var(--input-width); }
+fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.plug>div.container>div.content fieldset.xterm.story>form.option>div.item.hash input { width:var(--input-width); }
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.plug>div.container>div.content { box-shadow:var(--box-shadow); }
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.plug>div.container>div.content:hover { box-shadow:var(--notice-box-shadow); }
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item>div.container>div.content { display:flex; align-items:center; border-radius:var(--plugin-radius); min-height:var(--header-height); width:fit-content; }
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.plug { height:fit-content; }
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.plug div.content { padding:0; }
-fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.myself { flex-direction:row-reverse; }
-fieldset.web.chat.message>div.output>div.layout>div.display { height:120px; overflow:hidden; }
+fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.send { flex-direction:row-reverse; }
+fieldset.web.chat.message>div.output>div.layout>div.display { height:80px; overflow:hidden; }
 fieldset.web.chat.message>div.output>div.layout>div.display div.toolkit { background-color:var(--plugin-bg-color); height:var(--action-height); display:flex; align-items:center; }
 fieldset.web.chat.message>div.output>div.layout>div.display div.toolkit i { padding:var(--input-padding); }
 fieldset.web.chat.message>div.output>div.layout>div.display div.toolkit i:hover { background-color:var(--hover-bg-color); }

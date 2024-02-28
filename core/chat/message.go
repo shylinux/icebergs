@@ -1,6 +1,8 @@
 package chat
 
 import (
+	"strings"
+
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
@@ -22,16 +24,19 @@ func init() {
 				messageInsert(m, cli.SYSTEM, mdb.TYPE, "text", mdb.NAME, cli.RUNTIME, mdb.TEXT, m.Cmdx(cli.RUNTIME), ctx.DISPLAY, "/plugin/story/json.js")
 			}},
 			mdb.CREATE: {Name: "create type=tech,void title icons target", Hand: func(m *ice.Message, arg ...string) {
-				mdb.ZoneCreate(m, kit.Simple(arg, mdb.ZONE, kit.Select(kit.Hashs(mdb.UNIQ), m.Option("target"))))
+				if strings.HasPrefix(m.Option(web.TARGET), "from.") {
+					m.Option(web.TARGET, strings.Replace(m.Option(web.TARGET), "from", m.Option(ice.FROM_SPACE), 1))
+				}
+				mdb.ZoneCreate(m, kit.Simple(arg, web.TARGET, m.Option(web.TARGET), mdb.ZONE, kit.Select(kit.Hashs(mdb.UNIQ), m.Option(web.TARGET))))
 			}},
 			mdb.INSERT: {Hand: func(m *ice.Message, arg ...string) {
-				mdb.ZoneInsert(m, append(arg, aaa.AVATAR, aaa.UserInfo(m, "", aaa.AVATAR, aaa.AVATAR), aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.USERNAME, m.Option(ice.MSG_USERNAME)))
-				kit.If(mdb.HashSelectField(m, arg[0], "target"), func(p string) { m.Cmd(web.SPACE, p, MESSAGE, tcp.RECV, arg[1:]) })
+				mdb.ZoneInsert(m, append(arg, "direct", tcp.SEND, aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.AVATAR, m.Option(ice.MSG_AVATAR)))
+				kit.If(mdb.HashSelectField(m, arg[0], web.TARGET), func(p string) { m.Cmd(web.SPACE, p, MESSAGE, tcp.RECV, arg[1:]) })
 				mdb.HashSelectUpdate(m, arg[0], func(value ice.Map) { kit.Value(value, mdb.TIME, m.Time()) })
 			}},
 			tcp.RECV: {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
-				mdb.ZoneInsert(m, kit.Simple(mdb.ZONE, m.Option(ice.FROM_SPACE), web.SPACE, m.Option(ice.FROM_SPACE), arg, aaa.AVATAR, aaa.UserInfo(m, "", aaa.AVATAR, aaa.AVATAR), aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.USERNAME, m.Option(ice.MSG_USERNAME)))
-				mdb.HashSelectUpdate(m, m.Option(ice.FROM_SPACE), func(value ice.Map) { kit.Value(value, "target", m.Option(ice.FROM_SPACE)) })
+				mdb.ZoneInsert(m, kit.Simple(mdb.ZONE, m.Option(ice.FROM_SPACE), arg, "direct", tcp.RECV, aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.AVATAR, m.Option(ice.MSG_AVATAR)))
+				mdb.HashSelectUpdate(m, m.Option(ice.FROM_SPACE), func(value ice.Map) { kit.Value(value, web.TARGET, m.Option(ice.FROM_SPACE)) })
 				mdb.HashSelectUpdate(m, m.Option(ice.FROM_SPACE), func(value ice.Map) { kit.Value(value, mdb.TIME, m.Time()) })
 			}},
 			web.DREAM_CREATE: {Hand: func(m *ice.Message, arg ...string) {
@@ -40,27 +45,34 @@ func init() {
 				}
 			}},
 			web.OPEN: {Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessOpen(m.MergePod(m.Option("target")))
+				m.ProcessOpen(m.MergePod(m.Option(web.TARGET)))
 			}},
 			ctx.COMMAND: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(web.Space(m, m.Option("target")), ctx.COMMAND, arg[0]).ProcessField(ctx.ACTION, ctx.RUN, m.Option("target"), arg[0])
+				if m.Option("direct") == "recv" {
+					m.Cmdy(web.Space(m, m.Option(web.TARGET)), ctx.COMMAND, arg[0]).ProcessField(ctx.ACTION, ctx.RUN, m.Option(web.TARGET), arg[0])
+				} else {
+					m.Cmdy(ctx.COMMAND, arg[0]).ProcessField(ctx.ACTION, ctx.RUN, "", arg[0])
+				}
 			}},
-			ctx.RUN: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(web.Space(m, arg[0]), arg[1], arg[2:]) }},
+			ctx.RUN: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(web.Space(m, arg[0]), arg[1], arg[2:])
+			}},
 		}, web.DreamAction(), web.DreamTablesAction(), mdb.ZoneAction(
-			mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,hash,type,zone,icons,title,count,target", mdb.FIELDS, "time,id,avatar,usernick,username,type,name,text,space,index,args,style,display",
+			mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,hash,type,zone,icons,title,count,target",
+			mdb.FIELDS, "time,id,type,name,text,space,index,args,style,display,username,usernick,avatar,direct",
 		)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				mdb.ZoneSelect(m.Display("").Spawn(), arg...).Table(func(value ice.Maps) {
 					if kit.IsIn(m.Option(ice.MSG_USERROLE), value[mdb.TYPE], aaa.TECH, aaa.ROOT) {
 						m.PushRecord(value, mdb.Config(m, mdb.FIELD))
 					}
-					if value["target"] == "" {
+					if value[web.TARGET] == "" {
 						m.PushButton(mdb.REMOVE)
 					} else {
 						m.PushButton(web.OPEN, mdb.REMOVE)
 					}
 				})
-				m.Sort(mdb.TIME, "str_r")
+				m.Sort(mdb.TIME, ice.STR_R)
 			} else {
 				mdb.ZoneSelect(m, arg...).Sort(mdb.ID, ice.INT)
 			}

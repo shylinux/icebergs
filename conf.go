@@ -221,6 +221,7 @@ const ( // MSG
 	MSG_USERROLE = "user.role"
 	MSG_USERZONE = "user.zone"
 	MSG_LANGUAGE = "user.lang"
+	MSG_AVATAR   = "user.avatar"
 
 	MSG_BG       = "sess.bg"
 	MSG_FG       = "sess.fg"

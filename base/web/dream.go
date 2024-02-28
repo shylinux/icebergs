@@ -341,9 +341,7 @@ func init() {
 					})
 				}).ProcessHold()
 			}},
-			VERSION: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy("web.code.version")
-			}},
+			VERSION: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy("web.code.version") }},
 			FOR_FLOW: {Name: "forFlow name cmd*='sh etc/miss.sh'", Help: "流程", Icon: "bi bi-terminal", Hand: func(m *ice.Message, arg ...string) {
 				m.Options(ctx.DISPLAY, PLUGIN_XTERM, cli.CMD_OUTPUT, nfs.NewWriteCloser(func(buf []byte) (int, error) {
 					PushNoticeGrow(m.Options(
@@ -433,7 +431,7 @@ func init() {
 		}, StatsAction(), DreamAction(), DreamTablesAction(), mdb.ImportantHashAction(
 			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icons,repos,binary,template,restart",
 			html.BUTTON, kit.JoinWord(PORTAL, DESKTOP, ADMIN, MESSAGE, WORD, STATUS, VIMER, COMPILE, XTERM, DREAM),
-			ctx.TOOLS, kit.Simple(SPIDE, STORE, MATRIX, ROUTE),
+			ctx.TOOLS, kit.Simple(SPIDE, ROUTE, STORE, MATRIX),
 		)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				simple := m.Option("dream.simple") == ice.TRUE
@@ -447,7 +445,7 @@ func init() {
 				if ice.Info.NodeType == WORKER || !aaa.IsTechOrRoot(m) || m.IsCliUA() {
 					m.Action()
 				} else if cli.SystemFindGo(m) {
-					m.Action(html.FILTER, mdb.CREATE, STARTALL, STOPALL, cli.BUILD, PUBLISH, nfs.FILE, VERSION)
+					m.Action(html.FILTER, mdb.CREATE, STARTALL, STOPALL, cli.BUILD, PUBLISH)
 				} else {
 					m.Action(html.FILTER, mdb.CREATE, STARTALL, STOPALL)
 				}

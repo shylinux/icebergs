@@ -4,7 +4,8 @@ fieldset.web.matrix>div.output>table.content th i:hover { background-color:var(-
 fieldset.web.matrix>div.output>table.content td { padding:var(--input-padding); }
 fieldset.web.matrix>div.output>table.content td:hover { color:unset; }
 fieldset.web.matrix>div.output>table.content div.item { display:flex; align-items:center; cursor:default; }
-fieldset.web.matrix>div.output>table.content div.item img { height:var(--header-height); width:var(--header-height); margin:var(--input-margin); cursor:pointer; }
+fieldset.web.matrix>div.output>table.content div.item img { height:var(--header-height); width:var(--header-height); cursor:pointer; }
+fieldset.web.matrix>div.output>table.content div.item img.jpg { padding:var(--input-padding); }
 fieldset.web.matrix>div.output>table.content div.item div.title { text-align:left; padding:var(--input-padding); }
 fieldset.web.matrix>div.output>table.content div.item div.title>span { cursor:pointer; }
 fieldset.web.matrix>div.output>table.content div.item div.status i { font-size:var(--status-font-size); padding:0; }

@@ -56,8 +56,10 @@ Volcanos(chat.ONIMPORT, {
 			var t = new Date(value.time); if (!last || (t - last > 3*60*1000)) { last = t
 				can.page.Append(can, can.ui.message, [{view: [[html.ITEM, mdb.TIME], "", time]}])
 			}
-			can.page.Append(can, can.ui.message, [{view: [[html.ITEM, value.type, myself? "myself": ""]], list: [
-				{img: can.misc.Resource(can, (can.base.isIn(value.avatar, can.db.zone.zone, mdb.TYPE)? "": value.avatar)||can.db.zone.icons||"usr/icons/Messages.png")},
+			can.page.Append(can, can.ui.message, [{view: [[html.ITEM, value.direct, value.type]], list: [
+				{img: value.direct == "recv"? (
+					can.misc.Resource(can, (can.base.isIn(value.avatar, can.db.zone.zone, mdb.TYPE)? "": value.avatar)||can.db.zone.icons||"usr/icons/Messages.png")
+				): can.user.info.avatar},
 				{view: html.CONTAINER, list: [{text: [value.usernick, "", nfs.FROM]}, can.onfigure[value.type||"text"](can, value)]},
 			]}])
 		}), can.onappend._status(can, msg.Option(ice.MSG_STATUS)), can.onimport.layout(can)
@@ -125,13 +127,13 @@ Volcanos(chat.ONFIGURE, {
 	},
 	plug: function(can, value) { var height = can.onexport.plugHeight(can, value), width = can.onexport.plugWidth(can, value)
 		return {view: wiki.CONTENT, style: {height: height+2, width: width}, _init: function(target) { value.type = chat.STORY
-			value._commands = {target: can.db.zone.target}
+			value._commands = {direct: value.direct, target: can.db.zone.target}
 			can.onappend.plugin(can, value, function(sub) {
 				sub.onexport.output = function() { sub.onimport.size(sub, height, width)
 					can.page.style(can, target, html.HEIGHT, sub._target.offsetHeight+2, html.WIDTH, sub._target.offsetWidth)
 				}
 				sub.onexport.link = function() {
-					var args = sub.Option(); args.pod = can.core.Keys(can.ConfSpace()||can.misc.Search(can, ice.POD), can.db.zone.target), args.cmd = sub.ConfIndex()
+					var args = sub.Option(); args.pod = can.core.Keys(can.ConfSpace()||can.misc.Search(can, ice.POD), value.direct == "recv"? can.db.zone.target: ""), args.cmd = sub.ConfIndex()
 					can.core.Item(args, function(key, value) { !value && delete(args[key]) })
 					return can.misc.MergePodCmd(can, args, true)
 				}

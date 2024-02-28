@@ -161,8 +161,8 @@ const (
 	USR_LEARNING_PORTAL = "usr/learning/portal/"
 	USR_ICONS_AVATAR    = "usr/icons/avatar.jpg"
 	USR_ICONS_CONTEXTS  = "usr/icons/contexts.png"
-	USR_ICONS_ICEBERGS  = "usr/icons/icebergs.jpg"
-	USR_ICONS_VOLCANOS  = "usr/icons/volcanos.jpg"
+	USR_ICONS_ICEBERGS  = "usr/icons/icebergs.png"
+	USR_ICONS_VOLCANOS  = "usr/icons/volcanos.png"
 
 	TYPE_ALL  = "all"
 	TYPE_BIN  = "bin"

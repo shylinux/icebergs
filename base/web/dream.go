@@ -404,7 +404,6 @@ func init() {
 					m.ProcessOpen(SpideOrigin(m, m.Option(mdb.NAME)))
 				} else {
 					m.ProcessOpen(S(m.Option(mdb.NAME)))
-					// ProcessIframe(m, m.Option(mdb.NAME), kit.Select(S(m.Option(mdb.NAME)), SpideOrigin(m, m.Option(mdb.NAME)), m.Option(mdb.TYPE) == MASTER), arg...)
 				}
 			}},
 			GRANT: {Hand: func(m *ice.Message, arg ...string) {
@@ -412,9 +411,11 @@ func init() {
 			}},
 			DREAM_OPEN: {Hand: func(m *ice.Message, arg ...string) {}},
 			DREAM_CLOSE: {Hand: func(m *ice.Message, arg ...string) {
-				if m.Option(cli.DAEMON) == ice.OPS && m.Cmdv(SPACE, m.Option(mdb.NAME), mdb.STATUS) != cli.STOP {
-					m.GoSleep300ms(func() { m.Cmd(DREAM, cli.START, m.OptionSimple(mdb.NAME)) })
-				}
+				kit.For(arg, func(k, v string) {
+					if k == cli.DAEMON && v == ice.OPS && m.Cmdv(SPACE, m.Option(mdb.NAME), mdb.STATUS) != cli.STOP {
+						m.GoSleep300ms(func() { m.Cmd(DREAM, cli.START, m.OptionSimple(mdb.NAME)) })
+					}
+				})
 			}},
 			DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				switch m.Option(mdb.TYPE) {

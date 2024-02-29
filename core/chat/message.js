@@ -4,7 +4,7 @@ Volcanos(chat.ONIMPORT, {
 		can.ui = can.onappend.layout(can), can.onimport._project(can, msg)
 		can.onimport._online(can)
 	},
-	_project: function(can, msg) { var select, current = can.db.hash[0]||ice.DEV
+	_project: function(can, msg) { var select, current = can.db.hash[0]||can.sup.db.current||ice.DEV
 		can.page.insertBefore(can, [{view: wiki.TITLE, list: [
 			{icon: "bi bi-three-dots", onclick: function() { can._legend.onclick(event) }},
 			{text: "message"||can.ConfIndex(), onclick: function(event) { can._legend.onclick(event) }},
@@ -17,6 +17,7 @@ Volcanos(chat.ONIMPORT, {
 					{view: wiki.CONTENT, list: [{text: value.target||"[未知消息]"}]},
 				]},
 			], onclick: function(event) { can.isCmdMode() && can.misc.SearchHash(can, value.zone), can.onimport._switch(can, false)
+				can.sup.db.current = value.zone
 				can.db.zone = value, can.db.hash = value.hash, can.onmotion.select(can, can.ui.project, html.DIV_ITEM, _target)
 				if (can.onmotion.cache(can, function(save, load) {
 					can.ui.message && save({title: can.ui.title, message: can.ui.message, scroll: can.ui.message.scrollTop})
@@ -89,6 +90,9 @@ Volcanos(chat.ONIMPORT, {
 		can.ui.title && can.page.style(can, can.ui.message, html.HEIGHT, can.ui.content.offsetHeight-can.ui.title.offsetHeight)
 	},
 }, [""])
+Volcanos(chat.ONDAEMON, {
+	refresh: function(can, msg, sub, arg) { can.base.isFunc(sub.Update) && sub.Update(), can.user.toast(can, "new message") },
+})
 Volcanos(chat.ONEXPORT, {
 	plugHeight: function(can, value) { var height = can.base.Min(can.ui.content.offsetHeight-240, 240)
 		return can.base.Max(html.STORY_HEIGHT, height, height/(can.base.isIn(value.index, html.IFRAME)? 1: 2))

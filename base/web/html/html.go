@@ -77,6 +77,7 @@ const (
 	LAYOUT  = "layout"
 	RESIZE  = "resize"
 	REFRESH = "refresh"
+	CONFIRM = "confirm"
 	FILTER  = "filter"
 
 	DANGER = "danger"

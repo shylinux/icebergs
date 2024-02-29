@@ -92,6 +92,7 @@ func _space_fork(m *ice.Message) {
 				gdb.Event(m, SPACE_LOGIN, args)
 				defer gdb.Event(m, SPACE_LOGIN_CLOSE, args)
 			case PORTAL:
+				defer gdb.EventDeferEvent(m, PORTAL_OPEN, args)(PORTAL_CLOSE, args)
 				m.Go(func() { m.Cmd(SPACE, name, cli.PWD, name) })
 			case WORKER:
 				defer gdb.EventDeferEvent(m, DREAM_OPEN, args)(DREAM_CLOSE, args)
@@ -267,6 +268,8 @@ const (
 	SPACE_GRANT       = "space.grant"
 	SPACE_OPEN        = "space.open"
 	SPACE_CLOSE       = "space.close"
+	PORTAL_OPEN       = "portal.open"
+	PORTAL_CLOSE      = "portal.close"
 )
 const SPACE = "space"
 

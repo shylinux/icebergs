@@ -25,10 +25,7 @@ import (
 func _dream_list(m *ice.Message, simple bool) *ice.Message {
 	list := m.CmdMap(SPACE, mdb.NAME)
 	mdb.HashSelects(m.Spawn()).Table(func(value ice.Maps, index int, head []string) {
-		if value["access"] == "private" {
-			// return
-		}
-		if value["access"] == "private" && !aaa.IsTechOrRoot(m) {
+		if value[aaa.ACCESS] == aaa.PRIVATE && (m.Option(ice.FROM_SPACE) != "" || !aaa.IsTechOrRoot(m)) {
 			return
 		}
 		m.Push("", value, kit.Slice(head, 0, -1))
@@ -294,6 +291,7 @@ func init() {
 				m.OptionDefault(mdb.ICONS, nfs.USR_ICONS_CONTEXTS)
 				if mdb.HashCreate(m); ice.Info.Important == true {
 					_dream_start(m, m.Option(mdb.NAME))
+					StreamPushRefreshConfirm(m, m.Trans("refresh for new space ", "刷新列表查看新空间 ")+m.Option(mdb.NAME))
 				}
 			}},
 			DOWNLOAD: {Name: "download path link", Hand: func(m *ice.Message, arg ...string) {
@@ -427,7 +425,9 @@ func init() {
 				}
 			}},
 			"settings": {Name: "settings restart=manual,always access=public,private", Help: "设置", Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashModify(m, m.OptionSimple(mdb.NAME, "restart", "access"))
+				kit.If(m.Option(cli.RESTART) == "manual", func() { m.Option(cli.RESTART, "") })
+				kit.If(m.Option(aaa.ACCESS) == aaa.PUBLIC, func() { m.Option(aaa.ACCESS, "") })
+				mdb.HashModify(m, m.OptionSimple(mdb.NAME, cli.RESTART, aaa.ACCESS))
 			}},
 			STATS_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				if msg := _dream_list(m.Spawn(), true); msg.Length() > 0 {

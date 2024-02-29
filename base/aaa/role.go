@@ -63,6 +63,7 @@ const (
 )
 const (
 	AUTH    = "auth"
+	ACCESS  = "access"
 	PUBLIC  = "public"
 	PRIVATE = "private"
 	CONFIRM = "confirm"

@@ -131,6 +131,7 @@ func init() {
 					mdb.TYPE, aaa.TECH, mdb.ICONS, nfs.USR_ICONS_ICEBERGS,
 					TARGET, kit.Keys(ice.OPS, m.Option(DOMAIN), m.Option(mdb.NAME)),
 				)
+				StreamPushRefreshConfirm(m, m.Trans("refresh for new space ", "刷新列表查看新空间 ")+kit.Keys(m.Option(DOMAIN), m.Option(mdb.NAME)))
 			}},
 		}, ctx.ConfAction(mdb.FIELD, "time,domain,status,type,name,text,icons,repos,binary,module,version", ctx.TOOLS, kit.Simple(SPIDE, STATUS, VERSION))), Hand: func(m *ice.Message, arg ...string) {
 			if kit.HasPrefixList(arg, ctx.ACTION) {

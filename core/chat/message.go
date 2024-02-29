@@ -33,20 +33,20 @@ func init() {
 				mdb.ZoneInsert(m, append(arg, "direct", tcp.SEND, aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.AVATAR, m.Option(ice.MSG_AVATAR)))
 				kit.If(mdb.HashSelectField(m, arg[0], web.TARGET), func(p string) { m.Cmd(web.SPACE, p, MESSAGE, tcp.RECV, arg[1:]) })
 				mdb.HashSelectUpdate(m, arg[0], func(value ice.Map) { kit.Value(value, mdb.TIME, m.Time()) })
+				web.StreamPushRefreshConfirm(m, m.Trans("refresh for new message ", "刷新列表查看新消息 "))
 			}},
 			tcp.RECV: {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
 				mdb.ZoneInsert(m, kit.Simple(mdb.ZONE, m.Option(ice.FROM_SPACE), arg, "direct", tcp.RECV, aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.AVATAR, m.Option(ice.MSG_AVATAR)))
 				mdb.HashSelectUpdate(m, m.Option(ice.FROM_SPACE), func(value ice.Map) { kit.Value(value, web.TARGET, m.Option(ice.FROM_SPACE)) })
 				mdb.HashSelectUpdate(m, m.Option(ice.FROM_SPACE), func(value ice.Map) { kit.Value(value, mdb.TIME, m.Time()) })
+				web.StreamPushRefreshConfirm(m, m.Trans("refresh for new message ", "刷新列表查看新消息 "))
 			}},
 			web.DREAM_CREATE: {Hand: func(m *ice.Message, arg ...string) {
 				if ice.Info.Important {
 					messageInsert(m, web.DREAM, mdb.TYPE, "plug", ctx.INDEX, IFRAME, ctx.ARGS, web.S(m.Option(mdb.NAME)))
 				}
 			}},
-			web.OPEN: {Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessOpen(m.MergePod(m.Option(web.TARGET)))
-			}},
+			web.OPEN: {Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen(m.MergePod(m.Option(web.TARGET))) }},
 			ctx.COMMAND: {Hand: func(m *ice.Message, arg ...string) {
 				if m.Option("direct") == "recv" {
 					m.Cmdy(web.Space(m, m.Option(web.TARGET)), ctx.COMMAND, arg[0]).ProcessField(ctx.ACTION, ctx.RUN, m.Option(web.TARGET), arg[0])
@@ -54,9 +54,7 @@ func init() {
 					m.Cmdy(ctx.COMMAND, arg[0]).ProcessField(ctx.ACTION, ctx.RUN, "", arg[0])
 				}
 			}},
-			ctx.RUN: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(web.Space(m, arg[0]), arg[1], arg[2:])
-			}},
+			ctx.RUN: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(web.Space(m, arg[0]), arg[1], arg[2:]) }},
 		}, web.DreamAction(), web.DreamTablesAction(), mdb.ZoneAction(
 			mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,hash,type,zone,icons,title,count,target",
 			mdb.FIELDS, "time,id,type,name,text,space,index,args,style,display,username,usernick,avatar,direct",

@@ -268,20 +268,24 @@ func IsLocalHost(m *ice.Message) bool {
 	return (m.R == nil || m.R.Header.Get(html.XForwardedFor) == "") && tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP))
 }
 func ParseUA(m *ice.Message) (res []string) {
-	res = append(res, aaa.IP, m.Option(ice.MSG_USERIP), aaa.UA, m.Option(ice.MSG_USERUA))
+	res = append(res, aaa.USERROLE, m.Option(ice.MSG_USERROLE))
+	res = append(res, aaa.USERNAME, m.Option(ice.MSG_USERNAME))
+	res = append(res, aaa.USERNICK, m.Option(ice.MSG_USERNICK))
+	res = append(res, aaa.AVATAR, m.Option(ice.MSG_AVATAR))
+	res = append(res, cli.DAEMON, m.Option(ice.MSG_DAEMON))
+	for _, p := range html.AgentList {
+		if strings.Contains(m.Option(ice.MSG_USERUA), p) {
+			res = append(res, mdb.ICONS, agentIcons[p], AGENT, p)
+			break
+		}
+	}
 	for _, p := range html.SystemList {
 		if strings.Contains(m.Option(ice.MSG_USERUA), p) {
 			res = append(res, cli.SYSTEM, p)
 			break
 		}
 	}
-	for _, p := range html.AgentList {
-		if strings.Contains(m.Option(ice.MSG_USERUA), p) {
-			res = append(res, AGENT, p, mdb.ICONS, agentIcons[p])
-			break
-		}
-	}
-	return
+	return append(res, aaa.IP, m.Option(ice.MSG_USERIP), aaa.UA, m.Option(ice.MSG_USERUA))
 }
 func Script(m *ice.Message, str string, arg ...ice.Any) string {
 	return ice.Render(m, ice.RENDER_SCRIPT, kit.Format(str, arg...))

@@ -2,6 +2,7 @@ Volcanos(chat.ONIMPORT, {
 	_init: function(can, msg) {
 		// if (can.isCmdMode()) { can.onappend.style(can, html.OUTPUT) }
 		can.ui = can.onappend.layout(can), can.onimport._project(can, msg)
+		can.onimport._online(can)
 	},
 	_project: function(can, msg) { var select, current = can.db.hash[0]||ice.DEV
 		can.page.insertBefore(can, [{view: wiki.TITLE, list: [

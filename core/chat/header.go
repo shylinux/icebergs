@@ -101,6 +101,7 @@ func init() {
 				}
 			}},
 			aaa.LOGOUT: {Hand: aaa.SessLogout},
+			web.ONLINE: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(web.STREAM, web.ONLINE) }},
 			cli.QRCODE: {Hand: func(m *ice.Message, arg ...string) {
 				link := tcp.PublishLocalhost(m, m.Option(ice.MSG_USERWEB))
 				m.Push(mdb.NAME, link).PushQRCode(mdb.TEXT, kit.MergeURL(link, ice.FROM_DAEMON, m.Option(ice.MSG_DAEMON)))

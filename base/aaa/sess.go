@@ -9,9 +9,19 @@ import (
 
 func _sess_create(m *ice.Message, username string, arg ...string) {
 	if msg := m.Cmd(USER, username); msg.Length() > 0 {
-		mdb.HashCreate(m, msg.AppendSimple(USERNICK, USERNAME, USERROLE), arg)
+		mdb.HashCreate(m, msg.AppendSimple(
+			USERROLE,
+			USERNAME,
+			USERNICK,
+			AVATAR,
+		), arg)
 	} else {
-		mdb.HashCreate(m, m.OptionSimple(USERNICK, USERNAME, USERROLE), arg)
+		mdb.HashCreate(m, m.OptionSimple(
+			USERROLE,
+			USERNAME,
+			USERNICK,
+			AVATAR,
+		), arg)
 	}
 }
 func _sess_check(m *ice.Message, sessid string) {
@@ -38,7 +48,7 @@ func init() {
 				_sess_create(m, m.Option(USERNAME), UA, m.Option(ice.MSG_USERUA), IP, m.Option(ice.MSG_USERIP))
 			}},
 			CHECK: {Name: "check sessid*", Hand: func(m *ice.Message, arg ...string) { _sess_check(m, m.Option(ice.MSG_SESSID)) }},
-		}, mdb.ImportantHashAction(mdb.EXPIRE, mdb.MONTH, mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,usernick,username,userrole,ip,ua"))},
+		}, mdb.ImportantHashAction(mdb.EXPIRE, mdb.MONTH, mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,userrole,username,usernick,avatar,ip,ua"))},
 	})
 }
 
@@ -60,6 +70,7 @@ func SessAuth(m *ice.Message, value ice.Any, arg ...string) *ice.Message {
 		USERROLE, m.Option(ice.MSG_USERROLE, kit.Format(kit.Value(value, USERROLE))),
 		USERNAME, m.Option(ice.MSG_USERNAME, kit.Format(kit.Value(value, USERNAME))),
 		USERNICK, m.Option(ice.MSG_USERNICK, kit.Format(kit.Value(value, USERNICK))),
+		AVATAR, m.Option(ice.MSG_AVATAR, kit.Format(kit.Value(value, AVATAR))),
 		LANGUAGE, m.OptionDefault(ice.MSG_LANGUAGE, kit.Format(kit.Value(value, LANGUAGE))),
 		arg, logs.FileLineMeta(kit.Select(logs.FileLine(-1), m.Option("aaa.checker"))),
 	)

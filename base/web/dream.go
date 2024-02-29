@@ -24,7 +24,14 @@ import (
 
 func _dream_list(m *ice.Message, simple bool) *ice.Message {
 	list := m.CmdMap(SPACE, mdb.NAME)
-	mdb.HashSelects(m).Table(func(value ice.Maps) {
+	mdb.HashSelects(m.Spawn()).Table(func(value ice.Maps, index int, head []string) {
+		if value["access"] == "private" {
+			// return
+		}
+		if value["access"] == "private" && !aaa.IsTechOrRoot(m) {
+			return
+		}
+		m.Push("", value, kit.Slice(head, 0, -1))
 		if space, ok := list[value[mdb.NAME]]; ok {
 			if m.IsCliUA() || simple {
 				m.Push(mdb.TYPE, space[mdb.TYPE]).Push(cli.STATUS, cli.START)
@@ -414,10 +421,13 @@ func init() {
 			DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				switch m.Option(mdb.TYPE) {
 				case WORKER:
-					m.PushButton(cli.RUNTIME, tcp.SEND, OPEN)
+					m.PushButton(cli.RUNTIME, tcp.SEND, OPEN, "settings")
 				default:
 					m.PushButton(cli.RUNTIME, DREAM, OPEN)
 				}
+			}},
+			"settings": {Name: "settings restart=manual,always access=public,private", Help: "设置", Hand: func(m *ice.Message, arg ...string) {
+				mdb.HashModify(m, m.OptionSimple(mdb.NAME, "restart", "access"))
 			}},
 			STATS_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				if msg := _dream_list(m.Spawn(), true); msg.Length() > 0 {
@@ -429,7 +439,7 @@ func init() {
 				}
 			}},
 		}, StatsAction(), DreamAction(), DreamTablesAction(), mdb.ImportantHashAction(
-			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icons,repos,binary,template,restart",
+			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icons,repos,binary,template,restart,access",
 			html.BUTTON, kit.JoinWord(PORTAL, DESKTOP, ADMIN, MESSAGE, WORD, STATUS, VIMER, COMPILE, XTERM, DREAM),
 			ctx.TOOLS, kit.Simple(SPIDE, ROUTE, STORE, MATRIX),
 		)), Hand: func(m *ice.Message, arg ...string) {

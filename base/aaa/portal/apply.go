@@ -15,6 +15,7 @@ type apply struct {
 	ice.Hash
 	email    string `data:"admin"`
 	checkbox string `data:"true"`
+	online   string `data:"true"`
 	field    string `data:"time,hash,status,email,usernick,username,userrole,icons,agent,system,ip,ua"`
 	apply    string `name:"apply" help:"申请" role:"void"`
 	agree    string `name:"agree userrole=tech,void" help:"同意" icon:"bi bi-check2-square"`
@@ -33,7 +34,9 @@ func (s apply) Apply(m *ice.Message, arg ...string) {
 			m.DisplayForm(m, "email*", aaa.USERNICK, s.Apply)
 		}
 	} else if !m.WarnAlreadyExists(m.Options(arg).Cmd(aaa.USER, m.Option(aaa.EMAIL)).Length() > 0, m.Option(aaa.EMAIL)) {
-		m.ProcessCookie(_cookie_key(m), s.Hash.Create(m, kit.Simple(append(arg, mdb.STATUS, kit.FuncName(s.Apply), aaa.USERNAME, m.Option(aaa.EMAIL)), web.ParseUA(m.Message), cli.DAEMON, m.Option(ice.MSG_DAEMON))...))
+		m.Option(ice.MSG_USERNAME, m.Option(aaa.EMAIL), ice.MSG_USERNICK, kit.Split(m.Option(aaa.EMAIL), "@")[0])
+		m.ProcessCookie(_cookie_key(m), s.Hash.Create(m, kit.Simple(arg, mdb.STATUS, kit.FuncName(s.Apply), web.ParseUA(m.Message))...))
+		m.StreamPushRefreshConfirm()
 	}
 }
 func (s apply) Agree(m *ice.Message, arg ...string) {

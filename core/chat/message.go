@@ -83,5 +83,5 @@ func messageCreate(m *ice.Message, zone, icons string) {
 	))
 }
 func messageInsert(m *ice.Message, zone string, arg ...string) {
-	m.Cmd("", mdb.INSERT, zone, arg, ice.Maps{ice.MSG_USERNICK: zone, ice.MSG_USERNAME: zone})
+	mdb.ZoneInsert(m, kit.Simple(mdb.ZONE, zone, arg, "direct", tcp.RECV, aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.AVATAR, m.Option(ice.MSG_AVATAR)))
 }

@@ -344,7 +344,8 @@ func init() {
 					kit.For(list, func(goos string) {
 						PushNoticeRich(m.Options(ice.MSG_COUNT, "0", ice.LOG_DISABLE, ice.TRUE), mdb.NAME, name, msg.Cmd(SPACE, name, COMPILE, goos, cli.AMD64, kit.Dict(ice.MSG_USERPOD, name)).AppendSimple())
 					})
-				}).ProcessHold()
+				})
+				m.ProcessHold()
 			}},
 			VERSION: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy("web.code.version") }},
 			FOR_FLOW: {Name: "forFlow name cmd*='sh etc/miss.sh'", Help: "流程", Icon: "bi bi-terminal", Hand: func(m *ice.Message, arg ...string) {

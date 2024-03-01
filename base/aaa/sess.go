@@ -25,7 +25,9 @@ func _sess_create(m *ice.Message, username string, arg ...string) {
 	}
 }
 func _sess_check(m *ice.Message, sessid string) {
-	if val := mdb.HashSelectDetails(m, sessid, func(value ice.Map) bool { return !m.WarnNotValidTime(value[mdb.TIME], sessid) }); len(val) > 0 {
+	if val := mdb.HashSelectDetails(m, sessid, func(value ice.Map) bool {
+		return kit.Format(value[mdb.TIME]) > m.Time()
+	}); len(val) > 0 {
 		SessAuth(m, val)
 	}
 }

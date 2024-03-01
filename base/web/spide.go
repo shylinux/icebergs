@@ -285,9 +285,9 @@ func init() {
 				conf := mdb.Confm(m, cli.RUNTIME, cli.CONF)
 				dev := kit.Select("https://2021.shylinux.com", ice.Info.Make.Domain, conf[cli.CTX_DEV])
 				m.Cmd("", mdb.CREATE, ice.SHY, kit.Select("https://shylinux.com", conf[cli.CTX_SHY]), nfs.REPOS)
-				m.Cmd("", mdb.CREATE, ice.DEV, dev, nfs.REPOS)
+				m.Cmd("", mdb.CREATE, ice.DEV, dev, nfs.REPOS, ice.SRC_MAIN_ICO)
 				m.Cmd("", mdb.CREATE, ice.DEV_IP, kit.Select(dev, os.Getenv("ctx_dev_ip")))
-				m.Cmd("", mdb.CREATE, ice.OPS, kit.Select("http://localhost:9020", conf[cli.CTX_OPS]), nfs.REPOS)
+				m.Cmd("", mdb.CREATE, ice.OPS, kit.Select("http://localhost:9020", conf[cli.CTX_OPS]), nfs.REPOS, nfs.USR_ICONS_CONTEXTS)
 				m.Cmd("", mdb.CREATE, ice.DEMO, kit.Select("http://localhost:20000", conf[cli.CTX_DEMO]), "", nfs.USR_ICONS_VOLCANOS)
 				m.Cmd("", mdb.CREATE, ice.MAIL, kit.Select("https://mail.shylinux.com", conf[cli.CTX_MAIL]), "", "usr/icons/Mail.png")
 				if m.Cmd(tcp.HOST).Length() == 0 {

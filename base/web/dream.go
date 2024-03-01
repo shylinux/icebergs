@@ -99,6 +99,7 @@ func _dream_list_more(m *ice.Message, simple bool) *ice.Message {
 				value[mdb.ICONS] = kit.Select(value[mdb.ICONS], spide[mdb.ICONS])
 			}
 			value[mdb.TEXT] = kit.JoinLine(value[nfs.MODULE], value[mdb.TEXT])
+			value[aaa.ACCESS] = value[aaa.USERROLE]
 			if simple {
 				defer m.PushButton("")
 			} else {
@@ -418,12 +419,17 @@ func init() {
 					}
 				})
 			}},
+			TOKEN: {Hand: func(m *ice.Message, arg ...string) {
+				m.Options(m.Cmd(SPIDE, m.Option(mdb.NAME)).AppendSimple()).Cmdy(SPIDE, mdb.DEV_REQUEST)
+			}},
 			DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				switch m.Option(mdb.TYPE) {
 				case WORKER:
 					m.PushButton(cli.RUNTIME, "settings", tcp.SEND, OPEN)
+				case MASTER:
+					m.PushButton(cli.RUNTIME, DREAM, TOKEN, OPEN)
 				default:
-					m.PushButton(cli.RUNTIME, DREAM, OPEN)
+					m.PushButton(cli.RUNTIME, DREAM, TOKEN, OPEN)
 				}
 			}},
 			"settings": {Name: "settings restart=manual,always access=public,private", Help: "设置", Hand: func(m *ice.Message, arg ...string) {

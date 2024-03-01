@@ -370,7 +370,7 @@ func init() {
 				m.Table(func(value ice.Maps) {
 					if value[CLIENT_TYPE] == nfs.REPOS {
 						if _, ok := list[value[CLIENT_NAME]]; ok {
-							m.Push(mdb.STATUS, ONLINE).PushButton("disconn", mdb.REMOVE)
+							m.Push(mdb.STATUS, ONLINE).PushButton("disconn", mdb.DEV_REQUEST, mdb.REMOVE)
 						} else {
 							m.Push(mdb.STATUS, "").PushButton(mdb.DEV_REQUEST, mdb.REMOVE)
 						}

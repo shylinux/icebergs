@@ -173,10 +173,7 @@ func _space_exec(m *ice.Message, name string, source, target []string, c *websoc
 		m.Warn(true, ice.ErrNotValid)
 		return
 	case cli.PWD:
-		mdb.HashModify(m, mdb.HASH, name,
-			aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERROLE, m.Option(ice.MSG_USERROLE),
-			ParseUA(m), m.OptionSimple(mdb.TIME, nfs.MODULE, nfs.VERSION, AGENT, cli.SYSTEM),
-		)
+		mdb.HashModify(m, mdb.HASH, name, ParseUA(m), m.OptionSimple(mdb.TIME, nfs.MODULE, nfs.VERSION, AGENT, cli.SYSTEM))
 		m.Push(mdb.LINK, m.MergePod(kit.Select("", source, -1)))
 	default:
 		if m.IsErr() {

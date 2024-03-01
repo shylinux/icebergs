@@ -20,20 +20,20 @@ func _matrix_list(m *ice.Message, domain, icon, typ string, fields ...string) (s
 	button := []ice.Any{}
 	switch typ {
 	case MYSELF:
-		button = []ice.Any{PORTAL, WORD, STATUS, VIMER, COMPILE, DREAM, cli.RUNTIME, XTERM, DESKTOP, ADMIN, OPEN}
+		button = []ice.Any{PORTAL, WORD, STATUS, VIMER, COMPILE, DREAM, DESKTOP, ADMIN, OPEN, cli.RUNTIME, XTERM}
 	case SERVER:
-		button = []ice.Any{PORTAL, DESKTOP, ADMIN, OPEN, UPGRADE, DREAM, cli.RUNTIME, XTERM, WORD, STATUS, VIMER}
+		button = []ice.Any{PORTAL, DESKTOP, ADMIN, OPEN, UPGRADE, DREAM, WORD, STATUS, VIMER, cli.RUNTIME, XTERM}
 	default:
-		button = []ice.Any{PORTAL, DESKTOP, ADMIN, OPEN, XTERM, DREAM, cli.RUNTIME, WORD, STATUS, VIMER}
+		button = []ice.Any{PORTAL, DESKTOP, ADMIN, OPEN, COMPILE, DREAM, WORD, STATUS, VIMER, cli.RUNTIME, XTERM}
 	}
 	m.PushRecord(value, fields...).PushButton(button...)
 	switch typ {
 	case MYSELF:
-		button = []ice.Any{PORTAL, WORD, STATUS, VIMER, COMPILE, MESSAGE, cli.RUNTIME, XTERM, DESKTOP, ADMIN, OPEN}
+		button = []ice.Any{PORTAL, WORD, STATUS, VIMER, COMPILE, MESSAGE, DESKTOP, ADMIN, OPEN, cli.RUNTIME, XTERM}
 	case SERVER:
-		button = []ice.Any{PORTAL, DESKTOP, ADMIN, OPEN, UPGRADE, MESSAGE, cli.RUNTIME, XTERM, WORD, STATUS, VIMER}
+		button = []ice.Any{PORTAL, DESKTOP, ADMIN, OPEN, UPGRADE, MESSAGE, WORD, STATUS, VIMER, cli.RUNTIME, XTERM}
 	default:
-		button = []ice.Any{PORTAL, DESKTOP, ADMIN, OPEN, XTERM, cli.RUNTIME, WORD, STATUS, VIMER}
+		button = []ice.Any{PORTAL, DESKTOP, ADMIN, OPEN, WORD, STATUS, VIMER, cli.RUNTIME, XTERM}
 	}
 	button = append(button, cli.STOP)
 	m.Cmd(Space(m, domain), DREAM).Table(func(value ice.Maps) {

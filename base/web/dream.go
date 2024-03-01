@@ -421,7 +421,7 @@ func init() {
 			DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				switch m.Option(mdb.TYPE) {
 				case WORKER:
-					m.PushButton(cli.RUNTIME, tcp.SEND, OPEN, "settings")
+					m.PushButton(cli.RUNTIME, "settings", tcp.SEND, OPEN)
 				default:
 					m.PushButton(cli.RUNTIME, DREAM, OPEN)
 				}

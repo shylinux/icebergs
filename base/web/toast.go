@@ -24,7 +24,7 @@ func init() {
 		TOAST: {Help: "进度条", Actions: ice.MergeActions(ice.Actions{
 			ctx.PREVIEW: &ice.Action{Hand: func(m *ice.Message, arg ...string) { ProcessHashPodCmd(m, arg...) }},
 			mdb.PRUNES:  &ice.Action{Name: "prunes status=done"},
-		}, mdb.StatusHashAction(html.CHECKBOX, ice.TRUE,
+		}, mdb.ClearOnExitHashAction(), mdb.StatusHashAction(html.CHECKBOX, ice.TRUE,
 			mdb.FIELD, "time,hash,type,name,text,cost,status,index,icons,agent,system,ip,ua",
 		)), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, arg...).PushAction(ctx.PREVIEW, mdb.REMOVE).Action(mdb.PRUNES, html.FILTER)

@@ -37,12 +37,16 @@ func init() {
 				}
 				ProcessIframe(m, m.Option(mdb.NAME), S(m.Option(mdb.NAME)), arg...)
 			}},
-			OPEN: {Hand: func(m *ice.Message, arg ...string) {
-				ProcessIframe(m, m.Option(mdb.NAME), S(m.Option(mdb.NAME)), arg...)
-			}},
 			PORTAL: {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
-				ProcessIframe(m, m.Option(mdb.NAME), m.Option(ORIGIN)+S(m.Option(mdb.NAME))+C(PORTAL), arg...)
+				ProcessIframe(m, m.Option(mdb.NAME), m.Option(ORIGIN)+S(m.Option(mdb.NAME))+C(m.ActionKey()), arg...)
 			}},
+			DESKTOP: {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
+				ProcessIframe(m, kit.Keys(m.Option(mdb.NAME), m.ActionKey()), S(m.Option(mdb.NAME))+C(m.ActionKey()), arg...)
+			}},
+			ADMIN: {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
+				ProcessIframe(m, kit.Keys(m.Option(mdb.NAME), m.ActionKey()), S(m.Option(mdb.NAME))+C(m.ActionKey()), arg...)
+			}},
+			OPEN: {Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen(S(m.Option(mdb.NAME))) }},
 		}, ctx.ConfAction(CLIENT_TIMEOUT, cli.TIME_3s), DREAM), Hand: func(m *ice.Message, arg ...string) {
 			if kit.HasPrefixList(arg, ctx.ACTION) {
 				m.Cmdy(DREAM, arg)
@@ -79,7 +83,7 @@ func init() {
 					m.Push("", value, kit.Split("time,name,icons,repos,binary,module,version"))
 					m.Push(mdb.TEXT, value[nfs.REPOS]).Push(ORIGIN, origin)
 					if _, ok := list[value[mdb.NAME]]; ok || arg[0] == ice.OPS {
-						m.PushButton(PORTAL, OPEN)
+						m.PushButton(PORTAL, DESKTOP, ADMIN, OPEN)
 					} else if ice.Info.NodeType == WORKER || !aaa.IsTechOrRoot(m) {
 						m.PushButton(PORTAL)
 					} else {

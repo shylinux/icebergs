@@ -7,6 +7,7 @@ import (
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/base/web"
@@ -47,6 +48,14 @@ func init() {
 				m.Cmd("", mdb.INSERT, m.Option(ice.FROM_SPACE), arg, tcp.DIRECT, tcp.RECV)
 				mdb.HashSelectUpdate(m, m.Option(ice.FROM_SPACE), func(value ice.Map) { kit.Value(value, web.TARGET, m.Option(ice.FROM_SPACE)) })
 			}},
+			aaa.USER_CREATE: {Hand: func(m *ice.Message, arg ...string) {
+				if ice.Info.Important {
+					MessageInsert(m, aaa.APPLY, mdb.TYPE, html.PLUG, mdb.NAME, m.ActionKey(), ctx.INDEX, aaa.USER, ctx.ARGS, m.Option(aaa.USERNAME))
+				}
+			}},
+			aaa.USER_REMOVE: {Hand: func(m *ice.Message, arg ...string) {
+				MessageInsert(m, aaa.APPLY, mdb.TYPE, html.PLUG, mdb.NAME, m.ActionKey(), ctx.INDEX, aaa.USER, ctx.ARGS, m.Option(aaa.USERNAME))
+			}},
 			web.DREAM_CREATE: {Hand: func(m *ice.Message, arg ...string) {
 				if ice.Info.Important {
 					MessageInsert(m, web.DREAM, mdb.TYPE, html.PLUG, ctx.INDEX, IFRAME, ctx.ARGS, web.S(m.Option(mdb.NAME)))
@@ -61,7 +70,7 @@ func init() {
 				}
 			}},
 			ctx.RUN: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(web.Space(m, arg[0]), arg[1], arg[2:]) }},
-		}, web.DreamAction(), web.DreamTablesAction(), mdb.ZoneAction(
+		}, web.DreamAction(), web.DreamTablesAction(), gdb.EventsAction(aaa.USER_CREATE, aaa.USER_REMOVE), mdb.ZoneAction(
 			mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,hash,type,zone,icons,title,count,target",
 			mdb.FIELDS, "time,id,type,name,text,space,index,args,style,display,username,usernick,avatar,direct",
 		)), Hand: func(m *ice.Message, arg ...string) {

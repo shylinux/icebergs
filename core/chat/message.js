@@ -71,7 +71,7 @@ Volcanos(chat.ONIMPORT, {
 		can.onmotion.delay(can, function() { can.ui.message && (can.ui.message.scrollTop += 10000) }, 300)
 	},
 	_request: function(can) {
-		can.run(can.request(event, {"cache.begin": parseInt(can.db.zone.id||0)+1, "cache.limit": 10}), [can.db.hash], function(msg) {
+		can.Update(can.request({}, {"cache.begin": parseInt(can.db.zone.id||0)+1, "cache.limit": 10}), [can.db.hash], function(msg) {
 			can.onimport._message(can, msg)
 		})
 	},
@@ -93,7 +93,7 @@ Volcanos(chat.ONIMPORT, {
 	},
 }, [""])
 Volcanos(chat.ONDAEMON, {
-	refresh: function(can, msg, sub, arg) { can.base.isFunc(sub.Update) && sub.Update(), can.user.toast(can, "new message") },
+	refresh: function(can, msg, sub, arg) { sub.sub.onimport._request(sub.sub) },
 })
 Volcanos(chat.ONEXPORT, {
 	plugHeight: function(can, value) { var height = can.base.Min(can.ui.content.offsetHeight-240, 240)

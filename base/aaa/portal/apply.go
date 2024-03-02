@@ -38,7 +38,7 @@ func (s apply) Apply(m *ice.Message, arg ...string) {
 		h := s.Hash.Create(m, kit.Simple(arg, mdb.STATUS, kit.FuncName(s.Apply), web.ParseUA(m.Message))...)
 		m.ProcessCookie(_cookie_key(m), h)
 		m.StreamPushRefreshConfirm()
-		m.ChatMessageInsertPlug(aaa.APPLY, "apply.signup", m.PrefixKey(), h)
+		m.ChatMessageInsertPlug(aaa.APPLY, "user.signup", m.PrefixKey(), h)
 	}
 }
 func (s apply) Agree(m *ice.Message, arg ...string) {
@@ -50,7 +50,7 @@ func (s apply) Agree(m *ice.Message, arg ...string) {
 		return
 	}
 	s.Hash.Modify(m, kit.Simple(m.OptionSimple(mdb.HASH, aaa.USERROLE), mdb.STATUS, s.Agree)...)
-	m.UserCreate(m.Option(aaa.USERROLE), msg.Append(aaa.USERNAME), msg.Append(aaa.USERNICK))
+	// m.UserCreate(m.Option(aaa.USERROLE), msg.Append(aaa.USERNAME), msg.Append(aaa.USERNICK))
 	m.PushRefresh(msg.Append(cli.DAEMON))
 }
 func (s apply) Login(m *ice.Message, arg ...string) {
@@ -72,7 +72,6 @@ func (s apply) Login(m *ice.Message, arg ...string) {
 		s.Hash.Modify(m, kit.Simple(m.OptionSimple(mdb.HASH), mdb.STATUS, s.Login)...)
 		m.ProcessLocation(nfs.PS)
 		m.StreamPushRefreshConfirm()
-		m.ChatMessageInsertPlug(aaa.APPLY, "user.create", aaa.USER, msg.Append(aaa.USERNAME))
 	} else {
 		if m.WarnNotFound(m.Cmd(aaa.USER, m.Option(aaa.EMAIL)).Length() == 0, m.Option(aaa.EMAIL)) {
 			return

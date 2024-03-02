@@ -28,7 +28,7 @@ func init() {
 			msg := m.Cmd(web.SPIDE, LARK, "/open-apis/authen/v1/access_token", "grant_type", "authorization_code",
 				cli.CODE, m.Option(cli.CODE), "app_access_token", m.Cmdx(APP, TOKEN, appid))
 			msg = m.Cmd(EMPLOYEE, appid, m.Option(aaa.USERNAME, msg.Append("data.open_id")))
-			m.Cmd(aaa.USER, mdb.CREATE, m.Option(aaa.USERNAME), "", msg.Append(mdb.NAME), LARK, kit.Select(aaa.VOID, aaa.TECH, msg.Append("is_tenant_manager") == ice.TRUE))
+			m.Cmd(aaa.USER, mdb.CREATE, kit.Select(aaa.VOID, aaa.TECH, msg.Append("is_tenant_manager") == ice.TRUE), m.Option(aaa.USERNAME), "", "", LARK)
 			m.Cmd(aaa.USER, mdb.MODIFY, aaa.AVATAR, msg.Append("avatar_url"), aaa.GENDER, kit.Select("女", "男", msg.Append(aaa.GENDER) == "1"),
 				msg.AppendSimple(aaa.MOBILE, aaa.EMAIL, aaa.CITY, aaa.COUNTRY))
 			m.RenderRedirect(m.MergeLink(kit.Select(home, m.Option(cli.BACK)), ice.MSG_SESSID, aaa.SessCreate(m, m.Option(aaa.USERNAME))))

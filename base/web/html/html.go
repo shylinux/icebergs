@@ -65,10 +65,13 @@ const (
 	DISPLAY = "display"
 
 	TEXT     = "text"
+	PLUG     = "plug"
 	TEXTAREA = "textarea"
 	PASSWORD = "password"
 	SELECT   = "select"
 	BUTTON   = "button"
+
+	PLUGIN_STORY_JSON = "/plugin/story/json.js"
 
 	VIEW    = "view"
 	INPUT   = "input"

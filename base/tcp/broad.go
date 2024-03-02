@@ -41,9 +41,10 @@ func _client_dial_udp4(m *ice.Message, arg ...string) {
 }
 
 const (
-	UDP4 = "udp4"
-	SEND = "send"
-	RECV = "recv"
+	UDP4   = "udp4"
+	SEND   = "send"
+	RECV   = "recv"
+	DIRECT = "direct"
 )
 
 func UDPAddr(m *ice.Message, host, port string) *net.UDPAddr {

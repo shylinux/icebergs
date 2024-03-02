@@ -23,6 +23,9 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		STREAM: {Name: "stream hash daemon auto", Help: "推送流", Actions: ice.MergeActions(ice.Actions{
 			ONLINE: {Hand: func(m *ice.Message, arg ...string) {
+				if m.Option(ice.MSG_DAEMON) == "" {
+					return
+				}
 				mdb.HashCreate(m, SPACE, m.Option(ice.MSG_SPACE), ctx.INDEX, m.Option(ice.MSG_INDEX), mdb.SHORT, cli.DAEMON, mdb.FIELD, mdb.Config(m, mdb.FIELDS))
 				mdb.HashCreate(_stream_subkey(m), ParseUA(m))
 				mdb.HashSelect(m)

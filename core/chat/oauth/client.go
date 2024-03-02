@@ -95,12 +95,11 @@ func (s Client) Auth(m *ice.Message, arg ...string) {
 func (s Client) User(m *ice.Message, arg ...string) {
 	if res := s.Get(m, m.Option(mdb.HASH), m.Option(USERS_URL), arg...); res != nil {
 		m.Options(res).Cmd(aaa.USER, mdb.CREATE,
-			aaa.USERNICK, m.Option(kit.Select("full_name", m.Option(NICK_KEY))),
-			aaa.USERNAME, m.Option(aaa.USERNAME, m.Option(kit.Select(aaa.USERNAME, m.Option(USER_KEY)))),
-			aaa.AVATAR, m.Option(aaa.AVATAR_URL),
 			aaa.USERROLE, kit.Select(aaa.VOID, aaa.TECH, m.Option("is_admin") == ice.TRUE),
-			aaa.USERZONE, m.Option(web.DOMAIN),
-			m.OptionSimple(aaa.EMAIL, aaa.LANGUAGE))
+			aaa.USERNAME, m.Option(aaa.USERNAME, m.Option(kit.Select(aaa.USERNAME, m.Option(USER_KEY)))),
+			aaa.USERNICK, m.Option(kit.Select("full_name", m.Option(NICK_KEY))),
+			aaa.USERZONE, m.Option(web.DOMAIN), aaa.AVATAR, m.Option(aaa.AVATAR_URL),
+			m.OptionSimple(aaa.LANGUAGE, aaa.EMAIL))
 	}
 }
 func (s Client) Orgs(m *ice.Message, arg ...string) {}

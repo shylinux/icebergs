@@ -59,10 +59,12 @@ Volcanos(chat.ONIMPORT, {
 				can.page.Append(can, can.ui.message, [{view: [[html.ITEM, mdb.TIME], "", time]}])
 			}
 			can.page.Append(can, can.ui.message, [{view: [[html.ITEM, value.direct, value.type]], list: [
-				{img: value.direct == "recv"? (
-					can.misc.Resource(can, (can.base.isIn(value.avatar, can.db.zone.zone, mdb.TYPE)? "": value.avatar)||can.db.zone.icons||"usr/icons/Messages.png")
-				): can.user.info.avatar},
-				{view: html.CONTAINER, list: [{text: [value.usernick, "", nfs.FROM]}, can.onfigure[value.type||"text"](can, value)]},
+				{img: can.misc.Resource(can, value.direct == "recv"? (
+					(can.base.isIn(value.avatar, can.db.zone.zone, mdb.TYPE)? "": value.avatar)||can.db.zone.icons||"usr/icons/Messages.png"
+				): (can.user.info.avatar)||"usr/icons/Messages.png")},
+				{view: html.CONTAINER, list: [{text: [
+					value.direct == "recv"? value.usernick||can.db.zone.title||can.db.zone.zone: value.usernick||value.username
+					, "", nfs.FROM]}, can.onfigure[value.type||"text"](can, value)]},
 			]}])
 		}), can.onappend._status(can, msg.Option(ice.MSG_STATUS)), can.onimport.layout(can)
 		if (can.Status(mdb.TOTAL) > can.db.zone.id) { can.onimport._request(can) }
@@ -74,7 +76,7 @@ Volcanos(chat.ONIMPORT, {
 		})
 	},
 	_insert: function(can, args) {
-		can.runAction(event, mdb.INSERT, [can.db.hash].concat(args), function() {
+		can.runAction(event, tcp.SEND, [can.db.hash].concat(args), function() {
 			can.onimport._request(can)
 		})
 	},
@@ -137,6 +139,7 @@ Volcanos(chat.ONFIGURE, {
 			can.base.isIn(_list[0], "ops", "dev") && (list.pop(), _list.shift())
 			value._space = list.concat(_list).join(".").replaceAll("..", ".")
 			value._commands = {direct: value.direct, target: can.db.zone.target}
+			value.title = value.name
 			can.onappend.plugin(can, value, function(sub) {
 				sub.onexport.output = function() { sub.onimport.size(sub, height, width)
 					can.page.style(can, target, html.HEIGHT, sub._target.offsetHeight+2, html.WIDTH, sub._target.offsetWidth)

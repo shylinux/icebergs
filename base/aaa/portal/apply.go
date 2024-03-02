@@ -16,7 +16,7 @@ type apply struct {
 	email    string `data:"admin"`
 	checkbox string `data:"true"`
 	online   string `data:"true"`
-	field    string `data:"time,hash,status,email,usernick,username,userrole,icons,agent,system,ip,ua"`
+	field    string `data:"time,hash,status,email,userrole,username,usernick,icons,agent,system,ip,ua"`
 	apply    string `name:"apply" help:"申请" role:"void"`
 	agree    string `name:"agree userrole=tech,void" help:"同意" icon:"bi bi-check2-square"`
 	login    string `name:"login" help:"登录" role:"void"`
@@ -34,9 +34,11 @@ func (s apply) Apply(m *ice.Message, arg ...string) {
 			m.DisplayForm(m, "email*", aaa.USERNICK, s.Apply)
 		}
 	} else if !m.WarnAlreadyExists(m.Options(arg).Cmd(aaa.USER, m.Option(aaa.EMAIL)).Length() > 0, m.Option(aaa.EMAIL)) {
-		m.Option(ice.MSG_USERNAME, m.Option(aaa.EMAIL), ice.MSG_USERNICK, kit.Split(m.Option(aaa.EMAIL), "@")[0])
-		m.ProcessCookie(_cookie_key(m), s.Hash.Create(m, kit.Simple(arg, mdb.STATUS, kit.FuncName(s.Apply), web.ParseUA(m.Message))...))
+		m.Options(ice.MSG_USERNAME, m.Option(aaa.EMAIL), ice.MSG_USERNICK, kit.Split(m.Option(aaa.EMAIL), "@")[0])
+		h := s.Hash.Create(m, kit.Simple(arg, mdb.STATUS, kit.FuncName(s.Apply), web.ParseUA(m.Message))...)
+		m.ProcessCookie(_cookie_key(m), h)
 		m.StreamPushRefreshConfirm()
+		m.ChatMessageInsertPlug(aaa.APPLY, "apply.signup", m.PrefixKey(), h)
 	}
 }
 func (s apply) Agree(m *ice.Message, arg ...string) {
@@ -48,7 +50,7 @@ func (s apply) Agree(m *ice.Message, arg ...string) {
 		return
 	}
 	s.Hash.Modify(m, kit.Simple(m.OptionSimple(mdb.HASH, aaa.USERROLE), mdb.STATUS, s.Agree)...)
-	m.Cmd(aaa.USER, mdb.CREATE, msg.AppendSimple(aaa.USERNICK, aaa.USERNAME), m.OptionSimple(aaa.USERROLE))
+	m.UserCreate(m.Option(aaa.USERROLE), msg.Append(aaa.USERNAME), msg.Append(aaa.USERNICK))
 	m.PushRefresh(msg.Append(cli.DAEMON))
 }
 func (s apply) Login(m *ice.Message, arg ...string) {
@@ -65,9 +67,12 @@ func (s apply) Login(m *ice.Message, arg ...string) {
 			m.ProcessCookie(_cookie_key(m), "")
 			return
 		}
-		s.Hash.Modify(m, kit.Simple(m.OptionSimple(mdb.HASH), mdb.STATUS, s.Login)...)
+		m.UserCreate(m.Option(aaa.USERROLE), msg.Append(aaa.USERNAME), msg.Append(aaa.USERNICK))
 		web.RenderCookie(m.Message, m.Cmdx(aaa.SESS, mdb.CREATE, msg.Append(aaa.USERNAME)))
+		s.Hash.Modify(m, kit.Simple(m.OptionSimple(mdb.HASH), mdb.STATUS, s.Login)...)
 		m.ProcessLocation(nfs.PS)
+		m.StreamPushRefreshConfirm()
+		m.ChatMessageInsertPlug(aaa.APPLY, "user.create", aaa.USER, msg.Append(aaa.USERNAME))
 	} else {
 		if m.WarnNotFound(m.Cmd(aaa.USER, m.Option(aaa.EMAIL)).Length() == 0, m.Option(aaa.EMAIL)) {
 			return
@@ -81,19 +86,19 @@ func (s apply) Login(m *ice.Message, arg ...string) {
 }
 func (s apply) List(m *ice.Message, arg ...string) *ice.Message {
 	kit.If(m.Option(_cookie_key(m)), func(p string) { arg = []string{p} })
-	s.Hash.List(m, arg...).Table(func(value ice.Maps) {
-		switch value[mdb.STATUS] {
-		case kit.FuncName(s.Apply):
-			m.PushButton(s.Agree, s.Remove)
-		case kit.FuncName(s.Agree):
-			m.PushButton(s.Login, s.Remove)
-		default:
-			m.PushButton(s.Remove)
-		}
-	})
-	if len(arg) == 0 {
-		m.EchoQRCode(m.MergePodCmd("", "", ctx.ACTION, s.Apply))
-	} else if m.Option(_cookie_key(m)) != "" || m.ActionKey() != "" {
+	if m.IsTech() || (len(arg) > 0 && arg[0] != "") {
+		s.Hash.List(m, arg...).Table(func(value ice.Maps) {
+			switch value[mdb.STATUS] {
+			case kit.FuncName(s.Apply):
+				m.PushButton(s.Agree, s.Remove)
+			case kit.FuncName(s.Agree):
+				m.PushButton(s.Login, s.Remove)
+			default:
+				m.PushButton(s.Remove)
+			}
+		})
+	}
+	if m.Option(_cookie_key(m)) != "" || m.ActionKey() != "" {
 		switch m.Append(mdb.STATUS) {
 		case kit.FuncName(s.Login):
 			if m.ActionKey() == kit.FuncName(s.Apply) {
@@ -106,6 +111,8 @@ func (s apply) List(m *ice.Message, arg ...string) *ice.Message {
 		case kit.FuncName(s.Apply):
 			m.SetAppend().EchoInfoButton(m.Trans("please wait admin agree", "请等待管理员同意"), nil)
 		}
+	} else if len(arg) == 0 {
+		m.EchoQRCode(m.MergePodCmd("", "", ctx.ACTION, s.Apply))
 	}
 	return m
 }

@@ -89,7 +89,7 @@ func init() {
 			}},
 			aaa.USER: {Help: "用户", Hand: func(m *ice.Message, arg ...string) {
 				if m.Cmd(aaa.USER, m.Option(aaa.USERNAME, m.Option(ice.MSG_USERNAME))).Length() == 0 {
-					m.Cmd(aaa.USER, mdb.CREATE, aaa.USERNICK, "", m.OptionSimple(aaa.USERNAME))
+					m.Cmd(aaa.USER, mdb.CREATE, aaa.USERROLE, aaa.VOID, m.OptionSimple(aaa.USERNAME))
 				}
 				m.Cmd(aaa.USER, mdb.MODIFY, m.OptionSimple(aaa.USERNAME), aaa.USERNICK, m.Option("nickName"), aaa.USERZONE, WX,
 					aaa.AVATAR, m.Option("avatarUrl"), aaa.GENDER, kit.Select("女", "男", m.Option(aaa.GENDER) == "1"),

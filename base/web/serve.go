@@ -225,7 +225,10 @@ func init() {
 			}},
 			tcp.HOST:   {Help: "公网", Hand: func(m *ice.Message, arg ...string) { m.Echo(kit.Formats(PublicIP(m))) }},
 			cli.SYSTEM: {Help: "系统", Hand: func(m *ice.Message, arg ...string) { cli.Opens(m, "System Settings.app") }},
-			cli.START:  {Name: "start dev proto host port=9020 nodename username usernick", Hand: func(m *ice.Message, arg ...string) { _serve_start(m) }},
+			cli.START: {Name: "start dev proto host port=9020 nodename username usernick", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(nfs.SAVE, "etc/local.sh", m.Spawn(ice.Maps{"pwd": kit.Path(""), "user": kit.UserName(), "args": kit.JoinCmds(arg...)}).Template("local.sh")+lex.NL)
+				_serve_start(m)
+			}},
 			SERVE_START: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(SPIDE, mdb.CREATE, ice.OPS, kit.Format("http://localhost:%s", m.Option(tcp.PORT)), nfs.REPOS, nfs.USR_ICONS_CONTEXTS)
 				Count(m, m.ActionKey(), m.Option(tcp.PORT))

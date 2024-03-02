@@ -68,6 +68,14 @@ func init() {
 				m.Cmdy(mdb.MODIFY, RIVER, _storm_key(m), mdb.LIST, m.OptionSimple(mdb.ID), arg)
 			}},
 			web.SHARE: {Hand: func(m *ice.Message, arg ...string) { _action_share(m, arg...) }},
+			ctx.COMMAND: {Hand: func(m *ice.Message, arg ...string) {
+				if msg := m.Cmd(REWRITE, kit.Hashs(kit.Fields(m.Option(ice.POD), arg[0]))); msg.Length() > 0 {
+					kit.If(msg.Append("to_space"), func(p string) { m.Option(ice.POD, p) })
+					kit.If(msg.Append("to_index"), func(p string) { arg[0] = p })
+					defer m.Push(web.SPACE, m.Option(ice.POD))
+				}
+				ctx.Command(m, arg...)
+			}},
 		}, web.ApiAction(""), aaa.WhiteAction("", web.SHARE)), Hand: func(m *ice.Message, arg ...string) {
 			if m.WarnNotLogin(m.Option(ice.MSG_USERNAME) == "", arg) {
 				return

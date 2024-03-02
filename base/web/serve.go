@@ -209,6 +209,7 @@ const (
 
 	OPS_SERVER_OPEN = "ops.server.open"
 	SERVE_START     = "serve.start"
+	PROXY_CONF      = "proxyConf"
 )
 const SERVE = "serve"
 
@@ -241,6 +242,14 @@ func init() {
 					ssh.PrintQRCode(m, tcp.PublishLocalhost(m, _serve_address(m)))
 					cli.Opens(m, mdb.Config(m, cli.OPEN))
 				})
+				m.Cmd("", PROXY_CONF, ice.Info.NodeName)
+			}},
+			PROXY_CONF: {Name: "proxyConf name* port path", Hand: func(m *ice.Message, arg ...string) {
+				if dir := m.OptionDefault(nfs.PATH, "usr/local/daemon/10000/"); nfs.Exists(m, dir) {
+					for _, p := range []string{"server.conf", "location.conf", "upstream.conf"} {
+						m.Cmd(nfs.SAVE, kit.Format("%s/conf/portal/%s/%s", dir, m.Option(mdb.NAME), p), m.Template(p)+lex.NL)
+					}
+				}
 			}},
 		}, gdb.EventsAction(SERVE_START), mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,status,name,proto,host,port"), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, arg...).Action().StatusTimeCount(kit.Dict(ice.MAIN, mdb.Config(m, ice.MAIN)))

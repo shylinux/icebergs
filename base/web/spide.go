@@ -359,10 +359,7 @@ func init() {
 			DEV_CREATE_TOKEN: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(SPACE, tcp.DIAL, ice.DEV, m.Option(CLIENT_NAME), m.OptionSimple(TOKEN)).Sleep300ms()
 			}},
-		}, DevTokenAction(CLIENT_NAME, CLIENT_URL),
-			mdb.HashAction(mdb.SHORT, CLIENT_NAME, mdb.FIELD, "time,icons,client.name,client.url,client.type,token"),
-			mdb.ImportantHashAction(),
-		), Hand: func(m *ice.Message, arg ...string) {
+		}, DevTokenAction(CLIENT_NAME, CLIENT_URL), mdb.ImportantHashAction(mdb.SHORT, CLIENT_NAME, mdb.FIELD, "time,icons,client.name,client.url,client.type,token")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 || arg[0] == "" || (len(arg) > 3 && arg[3] == "") {
 				list := m.CmdMap(SPACE, mdb.NAME)
 				mdb.HashSelect(m, kit.Slice(arg, 0, 1)...).Sort("client.type,client.name", []string{nfs.REPOS, ""})

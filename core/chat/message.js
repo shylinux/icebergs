@@ -34,6 +34,7 @@ Volcanos(chat.ONIMPORT, {
 				})
 			}}])._target; select = (value.zone == current? _target: select)||_target
 		}), can.user.isMobile? can.onimport._switch(can, true): select && select.click()
+		can.onmotion.orderShow(can, can.ui.project)
 	},
 	_content: function(can, msg) {
 		can.ui.title = can.page.Appends(can, can.ui.content, [{view: wiki.TITLE, list: [

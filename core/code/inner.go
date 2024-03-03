@@ -104,6 +104,9 @@ func init() {
 			}},
 		}), Hand: func(m *ice.Message, arg ...string) {
 			if kit.HasPrefix(arg[0], "/volcanos/", "/require/", ice.HTTP) {
+				if kit.HasPrefix(arg[0], ice.HTTP) && strings.Contains(arg[0], "/plugin/") && !strings.Contains(arg[0], "/volcanos/plugin/") {
+					arg[0] = strings.Replace(arg[0], "/plugin/", "/volcanos/plugin/", 1)
+				}
 				if kit.HasPrefix(arg[0], nfs.REQUIRE_SRC) {
 					m.Option(nfs.FILE, strings.Split(strings.TrimPrefix(arg[0], nfs.REQUIRE_SRC), "?")[0])
 					m.Option(nfs.PATH, nfs.SRC)

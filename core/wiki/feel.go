@@ -14,6 +14,7 @@ import (
 )
 
 func _feel_path(m *ice.Message, p string) string {
+	return p
 	if nfs.Exists(m, ice.USR_LOCAL_IMAGE) {
 		return path.Join(ice.USR_LOCAL_IMAGE, p)
 	}

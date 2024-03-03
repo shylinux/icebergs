@@ -9,11 +9,14 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _river_right(m *ice.Message, hash string) bool {
+func _river_right(m *ice.Message, hash string) (ok bool) {
 	if m.Option(ice.MSG_USERROLE) == aaa.ROOT {
 		return true
 	}
-	return kit.IsIn(mdb.Conf(m, RIVER, kit.Keys(mdb.HASH, hash, mdb.META, mdb.TYPE)), "", aaa.VOID, m.Option(ice.MSG_USERROLE))
+	m.Cmd(mdb.SELECT, RIVER, "", mdb.HASH, hash).Table(func(value ice.Maps) {
+		ok = kit.IsIn(m.Option(ice.MSG_USERROLE), value[mdb.TYPE], aaa.TECH, aaa.ROOT)
+	})
+	return
 }
 func _river_key(m *ice.Message, key ...ice.Any) string {
 	return kit.Keys(mdb.HASH, m.Option(ice.MSG_RIVER), kit.Simple(key))
@@ -26,8 +29,8 @@ func _river_list(m *ice.Message) {
 			return
 		}
 	}
-	m.Cmd(mdb.SELECT, m.ShortKey(), "", mdb.HASH, ice.OptionFields(mdb.HASH, mdb.NAME, mdb.ICON, "main"), func(value ice.Maps) {
-		kit.If(_river_right(m, value[mdb.HASH]), func() { m.PushRecord(value, mdb.HASH, mdb.NAME, mdb.ICON, "main") })
+	mdb.HashSelects(m.Spawn()).Table(func(value ice.Maps) {
+		kit.If(kit.IsIn(m.Option(ice.MSG_USERROLE), value[mdb.TYPE], aaa.TECH, aaa.ROOT), func() { m.PushRecord(value, mdb.HASH, mdb.NAME, mdb.ICON, "main") })
 	})
 	m.Sort(mdb.NAME)
 }
@@ -46,7 +49,7 @@ func init() {
 				kit.If(m.Option(mdb.TYPE) == aaa.VOID, func() { m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, kit.Keys(RIVER, h)) })
 				gdb.Event(m, RIVER_CREATE, RIVER, m.Option(ice.MSG_RIVER, h), arg)
 			}},
-		}, web.ApiWhiteAction(), mdb.ImportantHashAction(mdb.FIELD, "time,hash,type,icon,name,text,template"), mdb.ExportHashAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, web.ApiWhiteAction(), mdb.ImportantHashAction(mdb.FIELD, "time,hash,type,name,icon,text,main,template"), mdb.ExportHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if m.WarnNotLogin(m.Option(ice.MSG_USERNAME) == "") || !aaa.Right(m, RIVER, arg) {
 				return
 			} else if len(arg) == 0 {

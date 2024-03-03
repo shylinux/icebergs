@@ -120,6 +120,7 @@ func (m *Message) Warn(err Any, arg ...Any) bool {
 	}
 	str, meta := m.join(arg...)
 	if m.log(LOG_WARN, str, meta...); len(arg) > 0 {
+		m.Option(MSG_TITLE, kit.JoinWord(kit.Keys(m.Option(MSG_USERPOD), m.CommandKey(), m.ActionKey()), logs.FileLines(-2)))
 		m.error(arg...)
 		kit.If(map[string]int{
 			ErrNotLogin: http.StatusUnauthorized,

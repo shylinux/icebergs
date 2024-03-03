@@ -43,13 +43,22 @@ func init() {
 						aaa.SessCreate(m, m.Option(ice.MSG_USERNAME))
 					}
 					m.Cmd(web.SPACE, m.Option(web.SPACE), ice.MSG_SESSID, m.Option(ice.MSG_SESSID))
-					m.ProcessLocation(m.MergeLink(msg.Append(mdb.TEXT)))
-					kit.If(m.IsWeixinUA(), func() { m.Echo(ice.SUCCESS) })
+					if m.IsWeixinUA() {
+						m.Echo(ice.SUCCESS)
+					} else if web.UserWeb(m).Path == "/c/web.chat.grant" {
+						m.ProcessLocation(m.MergeLink(msg.Append(mdb.TEXT)))
+					} else {
+						m.Echo(ice.SUCCESS)
+						m.ProcessInner()
+					}
 					gdb.Event(m, web.SPACE_GRANT, m.OptionSimple(web.SPACE))
 				}
 			}},
 		}, gdb.EventsAction(web.SPACE_LOGIN)), Hand: func(m *ice.Message, arg ...string) {
 			msg := m.Cmd(web.SPACE, m.Option(web.SPACE, arg[0]))
+			if msg.Length() == 0 {
+				return
+			}
 			m.Options(tcp.HOSTNAME, ice.Info.Hostname, nfs.PATH, msg.Append(mdb.TEXT))
 			if !m.WarnNotValid(m.Option(nfs.PATH) == "", arg[0]) {
 				if m.EchoInfoButton(nfs.Template(m, "auth.html"), aaa.CONFIRM); m.IsWeixinUA() {

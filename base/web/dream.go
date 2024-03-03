@@ -83,6 +83,7 @@ func _dream_list_more(m *ice.Message, simple bool) *ice.Message {
 	m.Cmds(SPACE).Table(func(value ice.Maps) {
 		value[mdb.ICONS] = nfs.USR_ICONS_VOLCANOS
 		value[nfs.REPOS] = "https://" + value[nfs.MODULE]
+		value[aaa.ACCESS] = kit.Select("", value[aaa.USERROLE], value[aaa.USERROLE] != aaa.VOID)
 		value[mdb.STATUS] = cli.START
 		switch value[mdb.TYPE] {
 		case SERVER:
@@ -99,7 +100,6 @@ func _dream_list_more(m *ice.Message, simple bool) *ice.Message {
 				value[mdb.ICONS] = kit.Select(value[mdb.ICONS], spide[mdb.ICONS])
 			}
 			value[mdb.TEXT] = kit.JoinLine(value[nfs.MODULE], value[mdb.TEXT])
-			value[aaa.ACCESS] = value[aaa.USERROLE]
 			if simple {
 				defer m.PushButton("")
 			} else {
@@ -488,7 +488,7 @@ func DreamTablesAction(arg ...string) ice.Actions {
 	}
 }
 func DreamAction() ice.Actions {
-	return gdb.EventsAction(DREAM_INPUTS, DREAM_CREATE, DREAM_TRASH, DREAM_OPEN, DREAM_CLOSE, SERVE_START)
+	return gdb.EventsAction(DREAM_INPUTS, DREAM_CREATE, DREAM_TRASH, DREAM_OPEN, DREAM_CLOSE, SPACE_LOGIN, SERVE_START)
 }
 func DreamWhiteHandle(m *ice.Message, arg ...string) {
 	aaa.White(m, kit.Keys(DREAM, ctx.ACTION, m.ShortKey()))

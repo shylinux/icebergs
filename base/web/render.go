@@ -29,6 +29,16 @@ const (
 	STYLE    = "style"
 )
 
+func renderMsg(m *ice.Message) {
+	m.FormatsMeta(m.W,
+		ice.MSG_USERIP, ice.MSG_USERUA, ice.MSG_METHOD, ice.MSG_REFERER, ice.MSG_DAEMON,
+		ice.MSG_LANGUAGE, ice.MSG_THEME, ice.MSG_BG, ice.MSG_FG,
+		ice.MSG_RIVER, ice.MSG_STORM, ice.MSG_INDEX, ice.MSG_FIELDS,
+		ice.MSG_SOURCE, ice.MSG_TARGET,
+		"task.id", "work.id", "space.timeout",
+		ice.MSG_USERWEB0, ice.MSG_USERPOD0,
+	)
+}
 func Render(m *ice.Message, cmd string, args ...ice.Any) bool {
 	if cmd == ice.RENDER_VOID {
 		return true
@@ -46,7 +56,10 @@ func Render(m *ice.Message, cmd string, args ...ice.Any) bool {
 	case COOKIE: // value [name [path [expire]]]
 		RenderCookie(m, arg[0], arg[1:]...)
 	case STATUS, ice.RENDER_STATUS: // [code [text]]
-		RenderStatus(m.W, kit.Int(kit.Select("200", arg, 0)), kit.Select(m.Result(), strings.Join(kit.Slice(arg, 1), " ")))
+		// RenderStatus(m.W, kit.Int(kit.Select("200", arg, 0)), m.FormatsMeta(nil))
+		m.W.WriteHeader(kit.Int(kit.Select("200", arg, 0)))
+		renderMsg(m)
+		// RenderStatus(m.W, kit.Int(kit.Select("200", arg, 0)), kit.Select(m.Result(), strings.Join(kit.Slice(arg, 1), " ")))
 	case ice.RENDER_REDIRECT: // url [arg...]
 		http.Redirect(m.W, m.R, m.MergeLink(arg[0], arg[1:]), http.StatusTemporaryRedirect)
 	case ice.RENDER_DOWNLOAD: // file [type [name]]
@@ -75,14 +88,7 @@ func Render(m *ice.Message, cmd string, args ...ice.Any) bool {
 	default:
 		kit.If(cmd != "" && cmd != ice.RENDER_RAW, func() { m.Echo(kit.Format(cmd, args...)) })
 		RenderType(m.W, nfs.JSON, "")
-		m.FormatsMeta(m.W,
-			ice.MSG_USERIP, ice.MSG_USERUA, ice.MSG_METHOD, ice.MSG_REFERER, ice.MSG_DAEMON,
-			ice.MSG_LANGUAGE, ice.MSG_THEME, ice.MSG_BG, ice.MSG_FG,
-			ice.MSG_RIVER, ice.MSG_STORM, ice.MSG_INDEX, ice.MSG_FIELDS,
-			ice.MSG_SOURCE, ice.MSG_TARGET,
-			"task.id", "work.id", "space.timeout",
-			ice.MSG_USERWEB0, ice.MSG_USERPOD0,
-		)
+		renderMsg(m)
 	}
 	m.Render(ice.RENDER_VOID)
 	return true
@@ -196,3 +202,11 @@ const (
 
 	PLUGIN_XTERM = "/plugin/local/code/xterm.js"
 )
+
+func MessageInsertJSON(m *ice.Message, zone, name, text string, arg ...string) {
+	MessageInsert(m, zone, kit.Simple(mdb.TYPE, html.TEXT, mdb.NAME, kit.Select(m.CommandKey(), name),
+		mdb.TEXT, text, ctx.DISPLAY, html.PLUGIN_STORY_JSON, arg)...)
+}
+func MessageInsert(m *ice.Message, zone string, arg ...string) {
+	m.Cmd(MESSAGE, mdb.INSERT, zone, tcp.DIRECT, tcp.RECV, arg)
+}

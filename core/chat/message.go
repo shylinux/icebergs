@@ -24,7 +24,7 @@ func init() {
 				MessageCreate(m, aaa.APPLY, html.ICONS_MAIL)
 				MessageCreate(m, web.DREAM, html.ICONS_DREAM)
 				MessageCreate(m, cli.SYSTEM, html.ICONS_SETTINGS)
-				MessageInsert(m, cli.SYSTEM, mdb.TYPE, html.TEXT, mdb.NAME, cli.BOOTINFO, mdb.TEXT, m.Cmdx(cli.RUNTIME), ctx.DISPLAY, html.PLUGIN_STORY_JSON)
+				web.MessageInsertJSON(m, cli.SYSTEM, cli.BOOTINFO, m.Cmdx(cli.RUNTIME))
 			}},
 			mdb.CREATE: {Name: "create type*=tech,void title icons target zone", Hand: func(m *ice.Message, arg ...string) {
 				if strings.HasPrefix(m.Option(web.TARGET), "from.") {
@@ -40,6 +40,8 @@ func init() {
 				mdb.HashSelectUpdate(m, arg[0], func(value ice.Map) { kit.Value(value, mdb.TIME, m.Time()) })
 				web.StreamPushRefreshConfirm(m, m.Trans("refresh for new message ", "刷新列表，查看最新消息 "))
 			}},
+			cli.CLEAR: {Hand: func(m *ice.Message, arg ...string) {
+			}},
 			tcp.SEND: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd("", mdb.INSERT, arg, tcp.DIRECT, tcp.SEND)
 				kit.If(mdb.HashSelectField(m, arg[0], web.TARGET), func(p string) { m.Cmd(web.SPACE, p, MESSAGE, tcp.RECV, arg[1:]) })
@@ -53,6 +55,9 @@ func init() {
 				if ice.Info.Important {
 					MessageInsert(m, web.DREAM, mdb.TYPE, html.PLUG, ctx.INDEX, IFRAME, ctx.ARGS, web.S(m.Option(mdb.NAME)))
 				}
+			}},
+			web.SPACE_LOGIN: {Hand: func(m *ice.Message, arg ...string) {
+				MessageInsert(m, aaa.APPLY, mdb.TYPE, html.PLUG, mdb.NAME, m.ActionKey(), ctx.INDEX, web.CHAT_GRANT, ctx.ARGS, m.Option(mdb.NAME))
 			}},
 			aaa.USER_CREATE: {Hand: func(m *ice.Message, arg ...string) {
 				if ice.Info.Important {
@@ -80,11 +85,14 @@ func init() {
 						return
 					}
 					m.PushRecord(value, mdb.Config(m, mdb.FIELD))
-					if value[web.TARGET] == "" {
-						m.PushButton(mdb.REMOVE)
-					} else {
-						m.PushButton(web.OPEN, mdb.REMOVE)
+					list := []ice.Any{}
+					if value[web.TARGET] != "" {
+						list = append(list, web.OPEN)
 					}
+					if aaa.IsTechOrRoot(m) {
+						list = append(list, cli.CLEAR, mdb.REMOVE)
+					}
+					m.PushButton(list...)
 				})
 				m.Sort(mdb.TIME, ice.STR_R)
 			} else {

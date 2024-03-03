@@ -123,6 +123,7 @@ func _space_handle(m *ice.Message, safe bool, name string, c *websocket.Conn) {
 		}
 		msg := m.Spawn(b)
 		if safe { // 下行权限
+			kit.If(msg.Option(ice.MSG_USERROLE) == aaa.VOID, func() { msg.Option(ice.MSG_USERROLE, "") })
 			msg.OptionDefault(ice.MSG_USERROLE, aaa.UserRole(msg, msg.Option(ice.MSG_USERNAME)))
 		} else { // 上行权限
 			kit.If(msg.Option(ice.MSG_USERROLE), func() { msg.Option(ice.MSG_USERROLE, aaa.VOID) })

@@ -127,7 +127,8 @@ Volcanos(chat.ONFIGURE, {
 		return {view: wiki.CONTENT, list: [{text: value.text||"[未知消息]"}], _init: function(target) {
 			if (value.display) { var msg = can.request(); msg.Echo(value.text), can.onmotion.clear(can, target)
 				var height = can.onexport.plugHeight(can, value), width = can.onexport.plugWidth(can, value)
-				can.onappend.plugin(can, {title: value.name, index: "can._plugin", height: height, display: value.display, msg: msg}, function(sub) {
+				can.onappend.plugin(can, {title: value.name, index: "can._filter", height: height, display: value.display, msg: msg}, function(sub) {
+					sub.onimport.size(sub, height, width)
 					delete(sub._legend.onclick)
 				}, target)
 			}
@@ -142,7 +143,9 @@ Volcanos(chat.ONFIGURE, {
 			value._commands = {direct: value.direct, target: can.db.zone.target}
 			value.title = value.name
 			can.onappend.plugin(can, value, function(sub) {
-				sub.onexport.output = function() { sub.onimport.size(sub, height, width)
+				sub.onimport.size(sub, height, width)
+				sub.onexport.output = function() {
+					sub.onimport.size(sub, height, width)
 					can.page.style(can, target, html.HEIGHT, sub._target.offsetHeight+2, html.WIDTH, sub._target.offsetWidth)
 				}
 			}, target)

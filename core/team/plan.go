@@ -6,6 +6,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/web"
 	"shylinux.com/x/icebergs/base/web/html"
@@ -65,6 +66,13 @@ func init() {
 		), Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(TODO, mdb.INPUTS, arg) }},
 			mdb.PLUGIN: {Name: "plugin extra.index extra.args", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(TASK, mdb.MODIFY, arg) }},
+			mdb.INSERT: {Name: "insert space zone* type*=once,step,week name* text begin_time@date end_time@date", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(TASK, mdb.INSERT, arg)
+				web.StreamPushRefreshConfirm(m, m.Trans("refresh for new message ", "刷新列表，查看最新消息 "))
+			}},
+			aaa.USER_CREATE: {Hand: func(m *ice.Message, arg ...string) {
+				PlanInsert(m, aaa.APPLY, "", m.Option(aaa.USERNAME), aaa.USER, m.Option(aaa.USERNAME))
+			}},
 			ctx.RUN: {Hand: func(m *ice.Message, arg ...string) {
 				if m.RenameOption(TASK_POD, ice.POD); ctx.PodCmd(m, m.ShortKey(), ctx.RUN, arg) {
 					return
@@ -74,7 +82,7 @@ func init() {
 					m.Cmdy(arg)
 				}
 			}},
-		}, web.DreamTablesAction(), ctx.ConfAction(mdb.TOOLS, "todo,epic"), TASK), Hand: func(m *ice.Message, arg ...string) {
+		}, web.DreamTablesAction(), gdb.EventsAction(aaa.USER_CREATE, aaa.USER_REMOVE), ctx.ConfAction(mdb.TOOLS, "todo,epic"), TASK), Hand: func(m *ice.Message, arg ...string) {
 			begin_time, end_time := _plan_scope(m, kit.Slice(arg, 0, 2)...)
 			_plan_list(m, begin_time.Format(ice.MOD_TIME), end_time.Format(ice.MOD_TIME))
 			web.PushPodCmd(m, "", arg...)
@@ -82,4 +90,10 @@ func init() {
 			ctx.Toolkit(m, "")
 		}},
 	})
+}
+func PlanInsert(m *ice.Message, zone, name, text, index, args string, arg ...string) {
+	m.Cmd(PLAN, mdb.INSERT, web.SPACE, "", mdb.ZONE, zone, mdb.TYPE, "one",
+		mdb.NAME, kit.Select(m.ActionKey(), name), mdb.TEXT, text, BEGIN_TIME, m.Time(),
+		"extra.index", index, "extra.args", args, arg,
+	)
 }

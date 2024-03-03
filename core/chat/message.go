@@ -21,10 +21,10 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		MESSAGE: {Name: "message", Help: "聊天", Icon: "Messages.png", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				MessageCreate(m, aaa.APPLY, "usr/icons/Mail.png")
-				MessageCreate(m, web.DREAM, "usr/icons/Launchpad.png")
-				MessageCreate(m, cli.SYSTEM, "usr/icons/System Settings.png")
-				MessageInsert(m, cli.SYSTEM, mdb.TYPE, html.TEXT, mdb.NAME, cli.RUNTIME, mdb.TEXT, m.Cmdx(cli.RUNTIME), ctx.DISPLAY, html.PLUGIN_STORY_JSON)
+				MessageCreate(m, aaa.APPLY, html.ICONS_MAIL)
+				MessageCreate(m, web.DREAM, html.ICONS_DREAM)
+				MessageCreate(m, cli.SYSTEM, html.ICONS_SETTINGS)
+				MessageInsert(m, cli.SYSTEM, mdb.TYPE, html.TEXT, mdb.NAME, cli.BOOTINFO, mdb.TEXT, m.Cmdx(cli.RUNTIME), ctx.DISPLAY, html.PLUGIN_STORY_JSON)
 			}},
 			mdb.CREATE: {Name: "create type*=tech,void title icons target zone", Hand: func(m *ice.Message, arg ...string) {
 				if strings.HasPrefix(m.Option(web.TARGET), "from.") {
@@ -38,7 +38,7 @@ func init() {
 			mdb.INSERT: {Hand: func(m *ice.Message, arg ...string) {
 				mdb.ZoneInsert(m, kit.Simple(arg[0], tcp.DIRECT, tcp.SEND, arg[1:], aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.AVATAR, m.Option(ice.MSG_AVATAR)))
 				mdb.HashSelectUpdate(m, arg[0], func(value ice.Map) { kit.Value(value, mdb.TIME, m.Time()) })
-				web.StreamPushRefreshConfirm(m, m.Trans("refresh for new message ", "刷新列表查看新消息 "))
+				web.StreamPushRefreshConfirm(m, m.Trans("refresh for new message ", "刷新列表，查看最新消息 "))
 			}},
 			tcp.SEND: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd("", mdb.INSERT, arg, tcp.DIRECT, tcp.SEND)
@@ -48,6 +48,12 @@ func init() {
 				m.Cmd("", mdb.INSERT, m.Option(ice.FROM_SPACE), arg, tcp.DIRECT, tcp.RECV)
 				mdb.HashSelectUpdate(m, m.Option(ice.FROM_SPACE), func(value ice.Map) { kit.Value(value, web.TARGET, m.Option(ice.FROM_SPACE)) })
 			}},
+			web.OPEN: {Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen(m.MergePod(m.Option(web.TARGET))) }},
+			web.DREAM_CREATE: {Hand: func(m *ice.Message, arg ...string) {
+				if ice.Info.Important {
+					MessageInsert(m, web.DREAM, mdb.TYPE, html.PLUG, ctx.INDEX, IFRAME, ctx.ARGS, web.S(m.Option(mdb.NAME)))
+				}
+			}},
 			aaa.USER_CREATE: {Hand: func(m *ice.Message, arg ...string) {
 				if ice.Info.Important {
 					MessageInsert(m, aaa.APPLY, mdb.TYPE, html.PLUG, mdb.NAME, m.ActionKey(), ctx.INDEX, aaa.USER, ctx.ARGS, m.Option(aaa.USERNAME))
@@ -56,12 +62,6 @@ func init() {
 			aaa.USER_REMOVE: {Hand: func(m *ice.Message, arg ...string) {
 				MessageInsert(m, aaa.APPLY, mdb.TYPE, html.PLUG, mdb.NAME, m.ActionKey(), ctx.INDEX, aaa.USER, ctx.ARGS, m.Option(aaa.USERNAME))
 			}},
-			web.DREAM_CREATE: {Hand: func(m *ice.Message, arg ...string) {
-				if ice.Info.Important {
-					MessageInsert(m, web.DREAM, mdb.TYPE, html.PLUG, ctx.INDEX, IFRAME, ctx.ARGS, web.S(m.Option(mdb.NAME)))
-				}
-			}},
-			web.OPEN: {Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen(m.MergePod(m.Option(web.TARGET))) }},
 			ctx.COMMAND: {Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(tcp.DIRECT) == tcp.RECV {
 					m.Cmdy(web.Space(m, m.Option(web.TARGET)), ctx.COMMAND, arg[0]).ProcessField(ctx.ACTION, ctx.RUN, m.Option(web.TARGET), arg[0])
@@ -88,13 +88,18 @@ func init() {
 				})
 				m.Sort(mdb.TIME, ice.STR_R)
 			} else {
+				if msg := mdb.ZoneSelects(m.Spawn(), arg[0]); !kit.IsIn(m.Option(ice.MSG_USERROLE), msg.Append(mdb.TYPE), aaa.TECH, aaa.ROOT) {
+					return
+				}
 				mdb.ZoneSelect(m, arg...).Sort(mdb.ID, ice.INT)
 			}
 		}},
 	})
 }
 func MessageCreate(m *ice.Message, zone, icons string) {
-	m.Cmd(MESSAGE, mdb.CREATE, mdb.TYPE, aaa.TECH, mdb.ICONS, icons, mdb.ZONE, zone)
+	if _, ok := m.CmdMap(MESSAGE, mdb.ZONE)[zone]; !ok {
+		m.Cmd(MESSAGE, mdb.CREATE, mdb.TYPE, aaa.TECH, mdb.ICONS, icons, mdb.ZONE, zone)
+	}
 }
 func MessageInsert(m *ice.Message, zone string, arg ...string) {
 	m.Cmd(MESSAGE, mdb.INSERT, zone, tcp.DIRECT, tcp.RECV, arg)

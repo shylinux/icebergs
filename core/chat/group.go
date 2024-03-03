@@ -12,7 +12,7 @@ const GROUP = "group"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		GROUP: {Help: "群组", Icon: "Contacts.png", Actions: ice.MergeActions(ice.Actions{
+		GROUP: {Help: "群组", Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case mdb.NAME:

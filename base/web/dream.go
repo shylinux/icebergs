@@ -449,7 +449,7 @@ func init() {
 		}, StatsAction(), DreamAction(), DreamTablesAction(), mdb.ImportantHashAction(
 			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icons,repos,binary,template,restart,access",
 			html.BUTTON, kit.JoinWord(PORTAL, DESKTOP, ADMIN, MESSAGE, WORD, STATUS, VIMER, COMPILE, XTERM, DREAM),
-			ctx.TOOLS, kit.Simple(SPIDE, ROUTE, STORE, MATRIX),
+			ctx.TOOLS, kit.Simple(ROUTE, SPIDE, STORE, MATRIX),
 		)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				simple := m.Option("dream.simple") == ice.TRUE

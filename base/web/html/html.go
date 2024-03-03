@@ -37,15 +37,24 @@ const (
 	ApplicationForm  = "application/x-www-form-urlencoded"
 	ApplicationOctet = "application/octet-stream"
 	ApplicationJSON  = "application/json"
+	TEXT_PLAIN       = "text/plain"
 )
 const (
 	H1       = "h1"
 	H2       = "h2"
 	H3       = "h3"
 	SPAN     = "span"
+	TEXT     = "text"
+	PLUG     = "plug"
+	TEXTAREA = "textarea"
+	PASSWORD = "password"
 	CHECKBOX = "checkbox"
+	SELECT   = "select"
+	BUTTON   = "button"
+	CHROME   = "chrome"
 
 	STYLE  = "style"
+	FLOAT  = "float"
 	WIDTH  = "width"
 	HEIGHT = "height"
 
@@ -58,39 +67,34 @@ const (
 	WHITE  = "white"
 	BLACK  = "black"
 	SILVER = "silver"
+	DANGER = "danger"
 
 	PROJECT = "project"
 	CONTENT = "content"
 	PROFILE = "profile"
 	DISPLAY = "display"
 
-	TEXT     = "text"
-	PLUG     = "plug"
-	TEXTAREA = "textarea"
-	PASSWORD = "password"
-	SELECT   = "select"
-	BUTTON   = "button"
-
-	PLUGIN_STORY_JSON = "/plugin/story/json.js"
-
 	VIEW    = "view"
-	INPUT   = "input"
 	VALUE   = "value"
+	INPUT   = "input"
 	OUTPUT  = "output"
 	LAYOUT  = "layout"
 	RESIZE  = "resize"
+	FILTER  = "filter"
 	REFRESH = "refresh"
 	CONFIRM = "confirm"
-	FILTER  = "filter"
 
-	DANGER = "danger"
-)
-
-const (
-	FLOAT  = "float"
-	CHROME = "chrome"
-
-	TEXT_PLAIN = "text/plain"
+	PLUGIN_STORY_JSON = "/plugin/story/json.js"
+	ICONS_MAIL        = "usr/icons/Mail.png"
+	ICONS_DREAM       = "usr/icons/Launchpad.png"
+	ICONS_SETTINGS    = "usr/icons/System Settings.png"
+	GetLocation       = "getLocation"
+	ConnectWifi       = "ConnectWifi"
+	GetClipboardData  = "getClipboardData"
+	ScanQRCode        = "scanQRCode"
+	ChooseImage       = "chooseImage"
+	Record1           = "record1"
+	Record2           = "record2"
 )
 
 func IsImage(name, mime string) bool {
@@ -103,16 +107,6 @@ func IsAudio(name, mime string) bool {
 	return strings.HasPrefix(mime, "audio/")
 }
 
-const (
-	GetLocation      = "getLocation"
-	ConnectWifi      = "ConnectWifi"
-	GetClipboardData = "getClipboardData"
-	ScanQRCode       = "scanQRCode"
-	ChooseImage      = "chooseImage"
-	Record1          = "record1"
-	Record2          = "record2"
-)
-
 func Format(tag string, inner string, arg ...string) string {
 	return kit.Format("<%s %s>%s</%s>", tag, kit.JoinProperty(arg...), inner, tag)
 }
@@ -123,13 +117,6 @@ func FormatDanger(value string) string {
 	return Format(SPAN, value, STYLE, kit.JoinCSS(BG_COLOR, "var(--danger-bg-color)", FG_COLOR, "var(--danger-fg-color)"))
 }
 
-var SystemList = []string{
-	Android,
-	IPhone,
-	Mac,
-	Linux,
-	Windows,
-}
 var AgentList = []string{
 	MicroMessenger,
 	Alipay,
@@ -138,4 +125,11 @@ var AgentList = []string{
 	Safari,
 	Firefox,
 	"Go-http-client",
+}
+var SystemList = []string{
+	Android,
+	IPhone,
+	Mac,
+	Linux,
+	Windows,
 }

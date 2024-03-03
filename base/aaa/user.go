@@ -48,7 +48,7 @@ const USER = "user"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		USER: {Help: "用户", Actions: ice.MergeActions(ice.Actions{
+		USER: {Help: "用户", Icon: "Contacts.png", Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch mdb.HashInputs(m, arg); arg[0] {
 				case USERNICK:

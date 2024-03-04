@@ -2,6 +2,7 @@ package web
 
 import (
 	"net/http"
+	"path"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
@@ -29,7 +30,7 @@ func DevTokenAction(name, origin string) ice.Actions {
 	return ice.Actions{
 		DEV_REQUEST_TEXT: {Hand: func(m *ice.Message, arg ...string) { m.Echo(UserHost(m)) }},
 		DEV_CREATE_TOKEN: {Hand: func(m *ice.Message, arg ...string) {}},
-		mdb.DEV_REQUEST: {Name: "dev.request", Help: "连接", Icon: "bi bi-person-down", Hand: func(m *ice.Message, arg ...string) {
+		mdb.DEV_REQUEST: {Help: "请求", Icon: "bi bi-person-down", Hand: func(m *ice.Message, arg ...string) {
 			back := m.Options(ice.MSG_USERWEB, m.Option(ice.MSG_USERHOST)).MergePod("")
 			m.ProcessOpen(m.Options(ice.MSG_USERWEB, m.Option(origin), ice.MSG_USERPOD, "").MergePodCmd("", m.ShortKey(),
 				ctx.ACTION, mdb.DEV_CHOOSE, cli.BACK, back, cli.DAEMON, m.Option(ice.MSG_DAEMON),
@@ -37,7 +38,7 @@ func DevTokenAction(name, origin string) ice.Actions {
 			))
 		}},
 		mdb.DEV_CHOOSE: {Hand: func(m *ice.Message, arg ...string) {
-			m.EchoInfoButton(kit.JoinWord(m.ShortKey(), m.Cmdx(nfs.CAT, nfs.SRC_TEMPLATE+"web.token/saveto.html"), m.Option(cli.BACK)), mdb.DEV_RESPONSE)
+			m.EchoInfoButton(kit.JoinWord(m.ShortKey(), m.Cmdx(nfs.CAT, path.Join(nfs.SRC_TEMPLATE, m.PrefixKey(), "saveto.html")), m.Option(cli.BACK)), mdb.DEV_RESPONSE)
 		}},
 		mdb.DEV_RESPONSE: {Help: "确认", Hand: func(m *ice.Message, arg ...string) {
 			if !m.WarnNotAllow(m.Option(ice.MSG_METHOD) != http.MethodPost) {
@@ -46,7 +47,7 @@ func DevTokenAction(name, origin string) ice.Actions {
 			}
 		}},
 		mdb.DEV_CONFIRM: {Hand: func(m *ice.Message, arg ...string) {
-			m.EchoInfoButton(kit.JoinWord(m.ShortKey(), m.Cmdx(nfs.CAT, nfs.SRC_TEMPLATE+"web.token/savefrom.html"), m.Option(name)), mdb.DEV_CREATE)
+			m.EchoInfoButton(kit.JoinWord(m.ShortKey(), m.Cmdx(nfs.CAT, path.Join(nfs.SRC_TEMPLATE, m.PrefixKey(), "savefrom.html")), m.Option(name)), mdb.DEV_CREATE)
 		}},
 		mdb.DEV_CREATE: {Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 			if !m.WarnNotAllow(m.Option(ice.MSG_METHOD) != http.MethodPost) {

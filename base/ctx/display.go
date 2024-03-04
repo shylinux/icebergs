@@ -71,6 +71,6 @@ func DisplayBase(m *ice.Message, file string, arg ...ice.Any) *ice.Message {
 	return Toolkit(m, "")
 }
 func Toolkit(m *ice.Message, arg ...string) *ice.Message {
-	m.Option("sess.online", mdb.Config(m, "online"))
+	m.OptionDefault(ice.MSG_ONLINE, mdb.Config(m, "online"))
 	return m.Options(ice.MSG_TOOLKIT, kit.Select(mdb.Config(m, mdb.TOOLS), kit.Fields(arg)))
 }

@@ -85,6 +85,7 @@ func (s apply) Login(m *ice.Message, arg ...string) {
 }
 func (s apply) List(m *ice.Message, arg ...string) *ice.Message {
 	kit.If(m.Option(_cookie_key(m)), func(p string) { arg = []string{p} })
+	kit.If(!m.IsTech(), func() { m.Option(ice.MSG_ONLINE, ice.FALSE) })
 	if m.IsTech() || (len(arg) > 0 && arg[0] != "") {
 		s.Hash.List(m, arg...).Table(func(value ice.Maps) {
 			switch value[mdb.STATUS] {

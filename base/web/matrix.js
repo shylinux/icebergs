@@ -13,7 +13,6 @@ Volcanos(chat.ONIMPORT, {
 				})}
 			})},
 		] }]), can.onmotion.delay(can, function() { can.Status(mdb.COUNT, can.core.Item(list).length+"x"+can.core.List(domain).length) })
-		can.onimport._online(can)
 		can.onmotion.orderShow(can, can.page.SelectOne(can, can._output, "table>tbody"), "tr")
 	},
 	void: function(can, name, domain, list) { var worker = list[name][""], server = list[""][domain]

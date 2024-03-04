@@ -449,7 +449,7 @@ func init() {
 		}, StatsAction(), DreamAction(), DreamTablesAction(), mdb.ImportantHashAction(
 			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icons,repos,binary,template,restart,access",
 			html.BUTTON, kit.JoinWord(PORTAL, DESKTOP, ADMIN, MESSAGE, WORD, STATUS, VIMER, COMPILE, XTERM, DREAM),
-			ctx.TOOLS, kit.Simple(ROUTE, SPIDE, STORE, MATRIX),
+			ctx.TOOLS, kit.Simple(ROUTE, SPIDE, STORE, MATRIX), ONLINE, ice.TRUE,
 		)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				simple := m.Option("dream.simple") == ice.TRUE
@@ -470,6 +470,7 @@ func init() {
 				m.Sort("type,status,name", []string{aaa.LOGIN, WORKER, SERVER, MASTER}, []string{cli.START, cli.STOP, cli.BEGIN}, ice.STR_R)
 				m.StatusTimeCountStats(mdb.TYPE, mdb.STATUS)
 				ctx.DisplayTableCard(m)
+				ctx.Toolkit(m)
 			} else if arg[0] == ctx.ACTION {
 				gdb.Event(m, DREAM_ACTION, arg)
 			} else {

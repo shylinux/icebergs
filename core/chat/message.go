@@ -19,7 +19,7 @@ const MESSAGE = "message"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		MESSAGE: {Name: "message", Help: "聊天", Icon: "Messages.png", Actions: ice.MergeActions(ice.Actions{
+		MESSAGE: {Name: "message refresh", Help: "聊天", Icon: "Messages.png", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				MessageCreate(m, aaa.APPLY, html.ICONS_MAIL)
 				MessageCreate(m, web.DREAM, html.ICONS_DREAM)
@@ -78,6 +78,7 @@ func init() {
 		}, web.DreamAction(), web.DreamTablesAction(), gdb.EventsAction(aaa.USER_CREATE, aaa.USER_REMOVE), mdb.ZoneAction(
 			mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,hash,type,zone,icons,title,count,target",
 			mdb.FIELDS, "time,id,type,name,text,space,index,args,style,display,username,usernick,avatar,direct",
+			web.ONLINE, ice.TRUE,
 		)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				mdb.ZoneSelect(m.Display("").Spawn(), arg...).Table(func(value ice.Maps) {
@@ -95,6 +96,7 @@ func init() {
 					m.PushButton(list...)
 				})
 				m.Sort(mdb.TIME, ice.STR_R)
+				ctx.Toolkit(m)
 			} else {
 				if msg := mdb.ZoneSelects(m.Spawn(), arg[0]); !kit.IsIn(m.Option(ice.MSG_USERROLE), msg.Append(mdb.TYPE), aaa.TECH, aaa.ROOT) {
 					return

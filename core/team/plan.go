@@ -82,7 +82,7 @@ func init() {
 					m.Cmdy(arg)
 				}
 			}},
-		}, web.DreamTablesAction(), gdb.EventsAction(aaa.USER_CREATE, aaa.USER_REMOVE), ctx.ConfAction(mdb.TOOLS, "todo,epic"), TASK), Hand: func(m *ice.Message, arg ...string) {
+		}, web.DreamTablesAction(), gdb.EventsAction(aaa.USER_CREATE, aaa.USER_REMOVE), ctx.ConfAction(mdb.TOOLS, "todo,epic", "online", ice.TRUE), TASK), Hand: func(m *ice.Message, arg ...string) {
 			begin_time, end_time := _plan_scope(m, kit.Slice(arg, 0, 2)...)
 			_plan_list(m, begin_time.Format(ice.MOD_TIME), end_time.Format(ice.MOD_TIME))
 			web.PushPodCmd(m, "", arg...)

@@ -133,7 +133,10 @@ func init() {
 				)
 				StreamPushRefreshConfirm(m, m.Trans("refresh for new space ", "刷新列表查看新空间 ")+kit.Keys(m.Option(DOMAIN), m.Option(mdb.NAME)))
 			}},
-		}, ctx.ConfAction(mdb.FIELD, "time,domain,status,type,name,text,icons,repos,binary,module,version", ctx.TOOLS, kit.Simple(SPIDE, STATUS, VERSION))), Hand: func(m *ice.Message, arg ...string) {
+		}, ctx.ConfAction(
+			mdb.FIELD, "time,domain,status,type,name,text,icons,repos,binary,module,version",
+			ctx.TOOLS, kit.Simple(SPIDE, STATUS, VERSION), ONLINE, ice.TRUE,
+		)), Hand: func(m *ice.Message, arg ...string) {
 			if kit.HasPrefixList(arg, ctx.ACTION) {
 				_matrix_action(m, arg[1], arg[2:]...)
 				return

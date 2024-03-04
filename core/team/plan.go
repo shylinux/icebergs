@@ -70,8 +70,17 @@ func init() {
 				m.Cmdy(TASK, mdb.INSERT, arg)
 				web.StreamPushRefreshConfirm(m, m.Trans("refresh for new message ", "刷新列表，查看最新消息 "))
 			}},
+			web.DREAM_CREATE: {Hand: func(m *ice.Message, arg ...string) {
+				PlanInsert(m, web.DREAM, "", "", web.CHAT_IFRAME, web.S(m.Option(mdb.NAME)))
+			}},
+			aaa.OFFER_CREATE: {Hand: func(m *ice.Message, arg ...string) {
+				PlanInsert(m, aaa.APPLY, "", m.Option(aaa.EMAIL), aaa.OFFER, m.Option(mdb.HASH))
+			}},
+			aaa.OFFER_ACCEPT: {Hand: func(m *ice.Message, arg ...string) {
+				PlanInsert(m, aaa.APPLY, "", m.Option(aaa.EMAIL), aaa.OFFER, m.Option(mdb.HASH))
+			}},
 			aaa.USER_CREATE: {Hand: func(m *ice.Message, arg ...string) {
-				PlanInsert(m, aaa.APPLY, "", m.Option(aaa.USERNAME), aaa.USER, m.Option(aaa.USERNAME))
+				PlanInsert(m, aaa.APPLY, "", "", aaa.USER, m.Option(aaa.USERNAME))
 			}},
 			ctx.RUN: {Hand: func(m *ice.Message, arg ...string) {
 				if m.RenameOption(TASK_POD, ice.POD); ctx.PodCmd(m, m.ShortKey(), ctx.RUN, arg) {
@@ -82,7 +91,10 @@ func init() {
 					m.Cmdy(arg)
 				}
 			}},
-		}, web.DreamTablesAction(), gdb.EventsAction(aaa.USER_CREATE, aaa.USER_REMOVE), ctx.ConfAction(mdb.TOOLS, "todo,epic", "online", ice.TRUE), TASK), Hand: func(m *ice.Message, arg ...string) {
+		}, web.DreamTablesAction(), web.DreamAction(), gdb.EventsAction(
+			aaa.OFFER_CREATE, aaa.OFFER_ACCEPT,
+			aaa.USER_CREATE, aaa.USER_REMOVE,
+		), ctx.ConfAction(mdb.TOOLS, "todo,epic", "online", ice.TRUE), TASK), Hand: func(m *ice.Message, arg ...string) {
 			begin_time, end_time := _plan_scope(m, kit.Slice(arg, 0, 2)...)
 			_plan_list(m, begin_time.Format(ice.MOD_TIME), end_time.Format(ice.MOD_TIME))
 			web.PushPodCmd(m, "", arg...)
@@ -92,8 +104,8 @@ func init() {
 	})
 }
 func PlanInsert(m *ice.Message, zone, name, text, index, args string, arg ...string) {
-	m.Cmd(PLAN, mdb.INSERT, web.SPACE, "", mdb.ZONE, zone, mdb.TYPE, "one",
-		mdb.NAME, kit.Select(m.ActionKey(), name), mdb.TEXT, text, BEGIN_TIME, m.Time(),
+	m.Cmd(PLAN, mdb.INSERT, web.SPACE, "", mdb.ZONE, zone, mdb.TYPE, "once",
+		mdb.NAME, kit.Select(m.ActionKey(), name), mdb.TEXT, kit.Select(args, text), BEGIN_TIME, m.Time(),
 		"extra.index", index, "extra.args", args, arg,
 	)
 }

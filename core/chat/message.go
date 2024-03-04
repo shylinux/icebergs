@@ -40,8 +40,7 @@ func init() {
 				mdb.HashSelectUpdate(m, arg[0], func(value ice.Map) { kit.Value(value, mdb.TIME, m.Time()) })
 				web.StreamPushRefreshConfirm(m, m.Trans("refresh for new message ", "刷新列表，查看最新消息 "))
 			}},
-			cli.CLEAR: {Hand: func(m *ice.Message, arg ...string) {
-			}},
+			cli.CLEAR: {Hand: func(m *ice.Message, arg ...string) {}},
 			tcp.SEND: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd("", mdb.INSERT, arg, tcp.DIRECT, tcp.SEND)
 				kit.If(mdb.HashSelectField(m, arg[0], web.TARGET), func(p string) { m.Cmd(web.SPACE, p, MESSAGE, tcp.RECV, arg[1:]) })
@@ -52,20 +51,22 @@ func init() {
 			}},
 			web.OPEN: {Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen(m.MergePod(m.Option(web.TARGET))) }},
 			web.DREAM_CREATE: {Hand: func(m *ice.Message, arg ...string) {
-				if ice.Info.Important {
-					MessageInsert(m, web.DREAM, mdb.TYPE, html.PLUG, ctx.INDEX, IFRAME, ctx.ARGS, web.S(m.Option(mdb.NAME)))
-				}
+				MessageInsertPlug(m, web.DREAM, "", "", IFRAME, web.S(m.Option(mdb.NAME)))
 			}},
 			web.SPACE_LOGIN: {Hand: func(m *ice.Message, arg ...string) {
-				MessageInsert(m, aaa.APPLY, mdb.TYPE, html.PLUG, mdb.NAME, m.ActionKey(), ctx.INDEX, web.CHAT_GRANT, ctx.ARGS, m.Option(mdb.NAME))
+				MessageInsertPlug(m, aaa.APPLY, "", "", web.CHAT_GRANT, m.Option(mdb.NAME))
+			}},
+			aaa.OFFER_CREATE: {Hand: func(m *ice.Message, arg ...string) {
+				MessageInsertPlug(m, aaa.APPLY, "", "", aaa.OFFER, m.Option(mdb.HASH))
+			}},
+			aaa.OFFER_ACCEPT: {Hand: func(m *ice.Message, arg ...string) {
+				MessageInsertPlug(m, aaa.APPLY, "", "", aaa.OFFER, m.Option(mdb.HASH))
 			}},
 			aaa.USER_CREATE: {Hand: func(m *ice.Message, arg ...string) {
-				if ice.Info.Important {
-					MessageInsert(m, aaa.APPLY, mdb.TYPE, html.PLUG, mdb.NAME, m.ActionKey(), ctx.INDEX, aaa.USER, ctx.ARGS, m.Option(aaa.USERNAME))
-				}
+				MessageInsertPlug(m, aaa.APPLY, "", "", aaa.USER, m.Option(aaa.USERNAME))
 			}},
 			aaa.USER_REMOVE: {Hand: func(m *ice.Message, arg ...string) {
-				MessageInsert(m, aaa.APPLY, mdb.TYPE, html.PLUG, mdb.NAME, m.ActionKey(), ctx.INDEX, aaa.USER, ctx.ARGS, m.Option(aaa.USERNAME))
+				MessageInsertPlug(m, aaa.APPLY, "", "", aaa.USER, m.Option(aaa.USERNAME))
 			}},
 			ctx.COMMAND: {Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(tcp.DIRECT) == tcp.RECV {
@@ -75,7 +76,10 @@ func init() {
 				}
 			}},
 			ctx.RUN: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(web.Space(m, arg[0]), arg[1], arg[2:]) }},
-		}, web.DreamAction(), web.DreamTablesAction(), gdb.EventsAction(aaa.USER_CREATE, aaa.USER_REMOVE), mdb.ZoneAction(
+		}, web.DreamAction(), web.DreamTablesAction(), gdb.EventsAction(
+			aaa.OFFER_CREATE, aaa.OFFER_ACCEPT,
+			aaa.USER_CREATE, aaa.USER_REMOVE,
+		), mdb.ZoneAction(
 			mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,hash,type,zone,icons,title,count,target",
 			mdb.FIELDS, "time,id,type,name,text,space,index,args,style,display,username,usernick,avatar,direct",
 			web.ONLINE, ice.TRUE,
@@ -113,4 +117,7 @@ func MessageCreate(m *ice.Message, zone, icons string) {
 }
 func MessageInsert(m *ice.Message, zone string, arg ...string) {
 	m.Cmd(MESSAGE, mdb.INSERT, zone, tcp.DIRECT, tcp.RECV, arg)
+}
+func MessageInsertPlug(m *ice.Message, zone, name, text, index, args string, arg ...string) {
+	MessageInsert(m, zone, kit.Simple(mdb.TYPE, html.PLUG, mdb.NAME, kit.Select(m.ActionKey(), name), mdb.TEXT, text, ctx.INDEX, index, ctx.ARGS, args, arg)...)
 }

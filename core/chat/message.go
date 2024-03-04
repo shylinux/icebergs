@@ -121,11 +121,9 @@ func MessageInsert(m *ice.Message, zone string, arg ...string) {
 }
 func MessageInsertPlug(m *ice.Message, zone, name, text, index, args string, arg ...string) {
 	kit.If(text == "", func() {
-		msg := m.Cmd(index, args)
-		if msg.Option(ice.MSG_STATUS) == "" {
-			msg.StatusTimeCount()
-		}
+		msg := m.Cmds(index, args, ice.Maps{ice.MSG_USERUA: html.Mozilla})
+		kit.If(msg.Option(ice.MSG_STATUS) == "", func() { msg.StatusTimeCount() })
 		text = msg.FormatMeta()
 	})
-	MessageInsert(m, zone, kit.Simple(mdb.TYPE, html.PLUG, mdb.NAME, kit.Select(m.ActionKey(), name), mdb.TEXT, text, ctx.INDEX, index, ctx.ARGS, args, arg)...)
+	MessageInsert(m, zone, kit.Simple(mdb.TYPE, html.PLUG, mdb.NAME, kit.Select(m.ActionKey(), name), mdb.TEXT, text, ctx.INDEX, kit.Select(m.ShortKey(), index), ctx.ARGS, args, arg)...)
 }

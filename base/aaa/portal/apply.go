@@ -38,7 +38,7 @@ func (s apply) Apply(m *ice.Message, arg ...string) {
 		h := s.Hash.Create(m, kit.Simple(arg, mdb.STATUS, kit.FuncName(s.Apply), web.ParseUA(m.Message))...)
 		m.ProcessCookie(_cookie_key(m), h)
 		m.StreamPushRefreshConfirm()
-		m.ChatMessageInsertPlug(aaa.APPLY, "user.signup", m.PrefixKey(), h)
+		m.ChatMessageInsertPlug(aaa.APPLY, "user.signup", "", m.PrefixKey(), h)
 	}
 }
 func (s apply) Agree(m *ice.Message, arg ...string) {

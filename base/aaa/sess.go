@@ -72,8 +72,8 @@ func SessAuth(m *ice.Message, value ice.Any, arg ...string) *ice.Message {
 		USERROLE, m.Option(ice.MSG_USERROLE, kit.Format(kit.Value(value, USERROLE))),
 		USERNAME, m.Option(ice.MSG_USERNAME, kit.Format(kit.Value(value, USERNAME))),
 		USERNICK, m.Option(ice.MSG_USERNICK, kit.Format(kit.Value(value, USERNICK))),
-		AVATAR, m.Option(ice.MSG_AVATAR, kit.Format(kit.Value(value, AVATAR))),
 		LANGUAGE, m.OptionDefault(ice.MSG_LANGUAGE, kit.Format(kit.Value(value, LANGUAGE))),
+		AVATAR, m.Option(ice.MSG_AVATAR, kit.Format(kit.Value(value, AVATAR))),
 		arg, logs.FileLineMeta(kit.Select(logs.FileLine(-1), m.Option("aaa.checker"))),
 	)
 }

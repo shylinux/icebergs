@@ -295,6 +295,10 @@ func init() {
 					StreamPushRefreshConfirm(m, m.Trans("refresh for new space ", "刷新列表查看新空间 ")+m.Option(mdb.NAME))
 				}
 			}},
+			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) {
+				gdb.Event(m, DREAM_REMOVE, m.OptionSimple(mdb.NAME))
+				mdb.HashRemove(m)
+			}},
 			DOWNLOAD: {Name: "download path link", Hand: func(m *ice.Message, arg ...string) {
 				GoToast(m, func(toast func(string, int, int)) []string {
 					SpideSave(m, m.Option(nfs.PATH), kit.MergeURL(m.Option(mdb.LINK), cli.GOOS, runtime.GOOS, cli.GOARCH, runtime.GOARCH), func(count, total, value int) {
@@ -474,7 +478,7 @@ func init() {
 			} else if arg[0] == ctx.ACTION {
 				gdb.Event(m, DREAM_ACTION, arg)
 			} else {
-				mdb.HashSelects(m, arg[0])
+				mdb.HashSelects(m, arg[0]).PushAction(PORTAL, DESKTOP, ADMIN, OPEN, mdb.REMOVE)
 			}
 		}},
 	})
@@ -489,7 +493,7 @@ func DreamTablesAction(arg ...string) ice.Actions {
 	}
 }
 func DreamAction() ice.Actions {
-	return gdb.EventsAction(DREAM_INPUTS, DREAM_CREATE, DREAM_TRASH, DREAM_OPEN, DREAM_CLOSE, SPACE_LOGIN, SERVE_START)
+	return gdb.EventsAction(DREAM_INPUTS, DREAM_CREATE, DREAM_REMOVE, DREAM_TRASH, DREAM_OPEN, DREAM_CLOSE, SPACE_LOGIN, SERVE_START)
 }
 func DreamWhiteHandle(m *ice.Message, arg ...string) {
 	aaa.White(m, kit.Keys(DREAM, ctx.ACTION, m.ShortKey()))

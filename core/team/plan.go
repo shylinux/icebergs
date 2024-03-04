@@ -6,7 +6,6 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/ctx"
-	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/web"
 	"shylinux.com/x/icebergs/base/web/html"
@@ -71,6 +70,9 @@ func init() {
 				web.StreamPushRefreshConfirm(m, m.Trans("refresh for new message ", "刷新列表，查看最新消息 "))
 			}},
 			web.DREAM_CREATE: {Hand: func(m *ice.Message, arg ...string) {
+				PlanInsert(m, web.DREAM, "", m.Option(mdb.NAME), web.CHAT_IFRAME, web.S(m.Option(mdb.NAME)))
+			}},
+			web.DREAM_REMOVE: {Hand: func(m *ice.Message, arg ...string) {
 				PlanInsert(m, web.DREAM, "", "", web.CHAT_IFRAME, web.S(m.Option(mdb.NAME)))
 			}},
 			aaa.OFFER_CREATE: {Hand: func(m *ice.Message, arg ...string) {
@@ -82,6 +84,9 @@ func init() {
 			aaa.USER_CREATE: {Hand: func(m *ice.Message, arg ...string) {
 				PlanInsert(m, aaa.APPLY, "", "", aaa.USER, m.Option(aaa.USERNAME))
 			}},
+			aaa.USER_REMOVE: {Hand: func(m *ice.Message, arg ...string) {
+				PlanInsert(m, aaa.APPLY, "", "", aaa.USER, m.Option(aaa.USERNAME))
+			}},
 			ctx.RUN: {Hand: func(m *ice.Message, arg ...string) {
 				if m.RenameOption(TASK_POD, ice.POD); ctx.PodCmd(m, m.ShortKey(), ctx.RUN, arg) {
 					return
@@ -91,10 +96,7 @@ func init() {
 					m.Cmdy(arg)
 				}
 			}},
-		}, web.DreamTablesAction(), web.DreamAction(), gdb.EventsAction(
-			aaa.OFFER_CREATE, aaa.OFFER_ACCEPT,
-			aaa.USER_CREATE, aaa.USER_REMOVE,
-		), ctx.ConfAction(mdb.TOOLS, "todo,epic", "online", ice.TRUE), TASK), Hand: func(m *ice.Message, arg ...string) {
+		}, web.DreamTablesAction(), web.DreamAction(), aaa.OfferAction(), ctx.ConfAction(mdb.TOOLS, kit.Simple(TODO, EPIC), web.ONLINE, ice.TRUE), TASK), Hand: func(m *ice.Message, arg ...string) {
 			begin_time, end_time := _plan_scope(m, kit.Slice(arg, 0, 2)...)
 			_plan_list(m, begin_time.Format(ice.MOD_TIME), end_time.Format(ice.MOD_TIME))
 			web.PushPodCmd(m, "", arg...)
@@ -104,8 +106,10 @@ func init() {
 	})
 }
 func PlanInsert(m *ice.Message, zone, name, text, index, args string, arg ...string) {
-	m.Cmd(PLAN, mdb.INSERT, web.SPACE, "", mdb.ZONE, zone, mdb.TYPE, "once",
-		mdb.NAME, kit.Select(m.ActionKey(), name), mdb.TEXT, kit.Select(args, text), BEGIN_TIME, m.Time(),
-		"extra.index", index, "extra.args", args, arg,
-	)
+	if ice.Info.Important {
+		m.Cmd(PLAN, mdb.INSERT, web.SPACE, "", mdb.ZONE, zone, mdb.TYPE, "once",
+			mdb.NAME, kit.Select(m.ActionKey(), name), mdb.TEXT, kit.Select(args, text), BEGIN_TIME, m.Time(),
+			"extra.index", index, "extra.args", args, arg,
+		)
+	}
 }

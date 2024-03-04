@@ -218,13 +218,9 @@ func _space_send(m *ice.Message, name string, arg ...string) (h string) {
 				m.Optionv(ice.MSG_USERPOD, kit.Simple(kit.Keys(target[1:]), m.Optionv(ice.MSG_USERPOD)))
 				m.Options(ice.MSG_USERHOST, "", ice.MSG_USERWEB0, m.Option(ice.MSG_USERWEB), ice.MSG_USERPOD0, name)
 			})
-			kit.For([]string{ice.MSG_USERROLE, ice.LOG_TRACEID}, func(k string) { m.Optionv(k, m.Optionv(k)) })
 			m.Option(ice.MSG_HANDLE, ice.FALSE)
-			kit.For(m.Optionv(ice.MSG_OPTS), func(k string) {
-				kit.If(!kit.IsIn(k, "task.id", "work.id"), func() {
-					m.Optionv(k, m.Optionv(k))
-				})
-			})
+			kit.For([]string{ice.MSG_USERROLE, ice.LOG_TRACEID, "space.noecho"}, func(k string) { m.Optionv(k, m.Optionv(k)) })
+			kit.For(kit.Filters(kit.Simple(m.Optionv(ice.MSG_OPTS)), "task.id", "work.id"), func(k string) { m.Optionv(k, m.Optionv(k)) })
 			if withecho {
 				_space_echo(m.Set(ice.MSG_DETAIL, arg...), []string{h}, target, c)
 			} else {

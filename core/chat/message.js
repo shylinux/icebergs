@@ -126,7 +126,7 @@ Volcanos(chat.ONFIGURE, {
 		return {view: wiki.CONTENT, list: [{text: value.text||"[未知消息]"}], _init: function(target) {
 			if (value.display) { var msg = can.request(); msg.Echo(value.text), can.onmotion.clear(can, target)
 				var height = can.onexport.plugHeight(can, value), width = can.onexport.plugWidth(can, value)
-				can.onappend.plugin(can, {title: value.name, index: "can._filter", height: height, display: value.display, msg: msg}, function(sub) {
+				can.onappend.plugin(can, {title: value.name, index: "can._plugin", args: value.args, height: height, display: value.display, msg: msg}, function(sub) {
 					sub.onimport.size(sub, height, width)
 					delete(sub._legend.onclick)
 				}, target)
@@ -134,17 +134,16 @@ Volcanos(chat.ONFIGURE, {
 		}}
 	},
 	plug: function(can, value) { var height = can.onexport.plugHeight(can, value), width = can.onexport.plugWidth(can, value)
-		return {view: wiki.CONTENT, style: {height: height+2, width: width}, _init: function(target) { value.type = chat.STORY
+		return {view: wiki.CONTENT, style: {height: height+2}, _init: function(target) { value.type = chat.STORY
 			var list = can.core.Split(can.ConfSpace()||can.misc.Search(can, ice.POD)||"", ".")
 			var _list = can.core.Split(value.direct == "recv"? can.db.zone.target: "", ".")
 			can.base.isIn(_list[0], "ops", "dev") && (list.pop(), _list.shift())
 			value._space = list.concat(_list).join(".").replaceAll("..", ".")
 			value._commands = {direct: value.direct, target: can.db.zone.target}
-			value.title = value.name
-			can.onappend.plugin(can, value, function(sub) {
-				sub.onimport.size(sub, height, width)
-				sub.onexport.output = function() {
-					sub.onimport.size(sub, height, width)
+			value.title = value.name; if (value.text) { var msg = can.request(); msg._xhr = {responseText: value.text}, value.msg = msg, msg.Copy(JSON.parse(value.text)) }
+			can.onappend.plugin(can, value, function(sub) { sub.onimport.size(sub, height, width, false)
+				sub.onexport.output = function() { sub.onimport.size(sub, height, width, false)
+					can.page.style(can, target, html.HEIGHT, sub._target.offsetHeight+2)
 					can.page.style(can, target, html.HEIGHT, sub._target.offsetHeight+2, html.WIDTH, sub._target.offsetWidth)
 				}
 			}, target)

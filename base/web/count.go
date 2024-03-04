@@ -52,6 +52,7 @@ func init() {
 		), Actions: ice.MergeActions(ice.Actions{
 			mdb.CREATE: {Name: "create type name text", Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashSelectUpdate(m, mdb.HashCreate(m), func(value ice.Map) { value[mdb.COUNT] = kit.Int(value[mdb.COUNT]) + 1 })
+				// m.Cmd("count", mdb.CREATE, OFFER, m.Option(FROM), kit.Dict(ice.LOG_DISABLE, ice.TRUE))
 			}},
 			mdb.VALID: {Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashSelect(m.Spawn(), arg...).Table(func(value ice.Maps) {

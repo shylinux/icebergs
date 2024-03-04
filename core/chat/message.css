@@ -30,11 +30,11 @@ fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.send div.container>span.from { float:right; }
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.send div.container { display:flex; flex-direction:column; align-items:flex-end; }
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.text div.content { white-space:pre; padding:var(--input-padding) var(--button-padding); }
-fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.plug>div.container>div.content div.item.text.path>input { width:var(--input-width); }
-fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.plug>div.container>div.content fieldset.story.xterm>form.option>div.item.hash input { width:var(--form-width); }
-fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.plug>div.container>div.content fieldset.story.web.chat.grant>form.option>div.item.space input { width:var(--form-width); }
-fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.plug>div.container>div.content fieldset.story.iframe>form.option>div.item.hash input { width:var(--form-width); }
-fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.plug>div.container>div.content fieldset.story.user>form.option>div.item.username input { width:var(--form-width); }
+/* fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.plug>div.container>div.content div.item.text.path>input { width:var(--input-width); } */
+/* fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.plug>div.container>div.content fieldset.story.xterm>form.option>div.item.hash input { width:var(--form-width); } */
+/* fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.plug>div.container>div.content fieldset.story.web.chat.grant>form.option>div.item.space input { width:var(--form-width); } */
+/* fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.plug>div.container>div.content fieldset.story.iframe>form.option>div.item.hash input { width:var(--form-width); } */
+fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.plug>div.container>div.content fieldset.story>form.option>div.item.text input { width:var(--form-width); }
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.plug>div.container>div.content fieldset.story>div.action>div.item.chat.icons { display:none; }
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.plug>div.container>div.content { box-shadow:var(--box-shadow); }
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.plug>div.container>div.content:hover { box-shadow:var(--notice-box-shadow); }

@@ -7,7 +7,6 @@ import (
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
-	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/base/web"
@@ -38,9 +37,8 @@ func init() {
 			mdb.INSERT: {Hand: func(m *ice.Message, arg ...string) {
 				mdb.ZoneInsert(m, kit.Simple(arg[0], tcp.DIRECT, tcp.SEND, arg[1:], aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.AVATAR, m.Option(ice.MSG_AVATAR)))
 				mdb.HashSelectUpdate(m, arg[0], func(value ice.Map) { kit.Value(value, mdb.TIME, m.Time()) })
-				web.StreamPushRefreshConfirm(m, m.Trans("refresh for new message ", "刷新列表，查看最新消息 "))
+				web.StreamPushRefresh(m)
 			}},
-			cli.CLEAR: {Hand: func(m *ice.Message, arg ...string) {}},
 			tcp.SEND: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd("", mdb.INSERT, arg, tcp.DIRECT, tcp.SEND)
 				kit.If(mdb.HashSelectField(m, arg[0], web.TARGET), func(p string) { m.Cmd(web.SPACE, p, MESSAGE, tcp.RECV, arg[1:]) })
@@ -49,9 +47,13 @@ func init() {
 				m.Cmd("", mdb.INSERT, m.Option(ice.FROM_SPACE), arg, tcp.DIRECT, tcp.RECV)
 				mdb.HashSelectUpdate(m, m.Option(ice.FROM_SPACE), func(value ice.Map) { kit.Value(value, web.TARGET, m.Option(ice.FROM_SPACE)) })
 			}},
-			web.OPEN: {Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen(m.MergePod(m.Option(web.TARGET))) }},
+			cli.CLEAR: {Hand: func(m *ice.Message, arg ...string) {}},
+			web.OPEN:  {Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen(m.MergePod(m.Option(web.TARGET))) }},
 			web.DREAM_CREATE: {Hand: func(m *ice.Message, arg ...string) {
-				MessageInsertPlug(m, web.DREAM, "", "", IFRAME, web.S(m.Option(mdb.NAME)))
+				MessageInsertPlug(m, web.DREAM, "", "", web.DREAM, m.Option(mdb.NAME))
+			}},
+			web.DREAM_REMOVE: {Hand: func(m *ice.Message, arg ...string) {
+				MessageInsertPlug(m, web.DREAM, "", "", web.DREAM, m.Option(mdb.NAME))
 			}},
 			web.SPACE_LOGIN: {Hand: func(m *ice.Message, arg ...string) {
 				MessageInsertPlug(m, aaa.APPLY, "", "", web.CHAT_GRANT, m.Option(mdb.NAME))
@@ -76,10 +78,7 @@ func init() {
 				}
 			}},
 			ctx.RUN: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(web.Space(m, arg[0]), arg[1], arg[2:]) }},
-		}, web.DreamAction(), web.DreamTablesAction(), gdb.EventsAction(
-			aaa.OFFER_CREATE, aaa.OFFER_ACCEPT,
-			aaa.USER_CREATE, aaa.USER_REMOVE,
-		), mdb.ZoneAction(
+		}, web.DreamTablesAction(), web.DreamAction(), aaa.OfferAction(), mdb.ZoneAction(
 			mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,hash,type,zone,icons,title,count,target",
 			mdb.FIELDS, "time,id,type,name,text,space,index,args,style,display,username,usernick,avatar,direct",
 			web.ONLINE, ice.TRUE,
@@ -116,8 +115,17 @@ func MessageCreate(m *ice.Message, zone, icons string) {
 	}
 }
 func MessageInsert(m *ice.Message, zone string, arg ...string) {
-	m.Cmd(MESSAGE, mdb.INSERT, zone, tcp.DIRECT, tcp.RECV, arg)
+	if ice.Info.Important {
+		m.Cmd(MESSAGE, mdb.INSERT, zone, tcp.DIRECT, tcp.RECV, arg)
+	}
 }
 func MessageInsertPlug(m *ice.Message, zone, name, text, index, args string, arg ...string) {
+	kit.If(text == "", func() {
+		msg := m.Cmd(index, args)
+		if msg.Option(ice.MSG_STATUS) == "" {
+			msg.StatusTimeCount()
+		}
+		text = msg.FormatMeta()
+	})
 	MessageInsert(m, zone, kit.Simple(mdb.TYPE, html.PLUG, mdb.NAME, kit.Select(m.ActionKey(), name), mdb.TEXT, text, ctx.INDEX, index, ctx.ARGS, args, arg)...)
 }

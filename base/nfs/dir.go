@@ -164,6 +164,8 @@ const (
 	USR_ICONS_CONTEXTS  = "usr/icons/contexts.jpg"
 	USR_ICONS_ICEBERGS  = "usr/icons/icebergs.png"
 	USR_ICONS_VOLCANOS  = "usr/icons/volcanos.png"
+	USR_ICONS           = "usr/icons/"
+	USR_LOCAL_IMAGE     = "usr/local/image/"
 
 	TYPE_ALL  = "all"
 	TYPE_BIN  = "bin"

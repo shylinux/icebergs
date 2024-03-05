@@ -124,7 +124,7 @@ func _spark_project(m *ice.Message, arg ...string) {
 	m.Cmdy(SPARK, html.BUTTON, "文 档", ROUTE, "started/")
 	m.Cmdy(STYLE, END)
 	m.Cmdy(STYLE, END)
-	m.Cmdy(STYLE, COLUMN, FLEX, "0 0 480px")
+	m.Cmdy(STYLE, COLUMN, FLEX, "0 0 500px", "padding", "10px")
 	m.Cmdy(SPARK, INNER, ice.SRC_MAIN_GO, html.WIDTH, "480px")
 	m.Cmdy(SPARK, SHELL, kit.Renders(`
 git clone {{ .Make.Remote }}

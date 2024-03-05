@@ -46,7 +46,7 @@ func Render(m *ice.Message, cmd string, args ...ice.Any) bool {
 	arg := kit.Simple(args...)
 	kit.If(len(arg) == 0, func() { args = nil })
 	if cmd != "" {
-		if cmd != ice.RENDER_DOWNLOAD || !kit.HasPrefix(arg[0], ice.SRC_TEMPLATE, ice.USR_INTSHELL, ice.USR_VOLCANOS) {
+		if cmd != ice.RENDER_DOWNLOAD || !kit.HasPrefix(arg[0], nfs.SRC, nfs.USR, ice.SRC_TEMPLATE, ice.USR_INTSHELL, ice.USR_VOLCANOS) {
 			if !(cmd == ice.RENDER_RESULT && len(args) == 0) {
 				defer func() { m.Logs("Render", cmd, args) }()
 			}

@@ -14,7 +14,6 @@ Volcanos(chat.ONIMPORT, {
 		can.ui.header.innerHTML = msg.Append(html.HEADER), can.ui.nav.innerHTML = msg.Append(html.NAV)
 		if (msg.Append(html.NAV) == "") {
 			can.onmotion.hidden(can, can.ui.nav), can.onmotion.hidden(can, can.ui.aside)
-			can.onimport.content(can, "content.shy")
 		} else {
 			can.page.styleWidth(can, can.ui.nav, 230), can.page.styleWidth(can, can.ui.aside, 200)
 			if (can.ConfWidth() < 1000) { can.onmotion.hidden(can, can.ui.aside) }
@@ -24,7 +23,7 @@ Volcanos(chat.ONIMPORT, {
 			can.db.nav = {}, can.page.Select(can, can._output, wiki.STORY_ITEM, function(target) { var meta = target.dataset||{}
 				can.core.CallFunc([can.onimport, can.onimport[meta.name]? meta.name: meta.type||target.tagName.toLowerCase()], [can, meta, target])
 				meta.style && can.page.style(can, target, can.base.Obj(meta.style))
-			}); var nav = can.db.nav[file]; nav && nav.click()
+			}); var nav = can.db.nav[file]; nav? nav.click(): can.onimport.content(can, "content.shy")
 		})
 	},
 	_scroll: function(can) { can.ui.main.onscroll = function(event) { var top = can.ui.main.scrollTop, select

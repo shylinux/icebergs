@@ -40,8 +40,8 @@ fieldset.web.wiki.portal>div.output>div.layout>div.main fieldset.inner.output di
 	--code-object:silver; --code-datatype:silver; --code-package:silver;
 }
 fieldset.web.wiki.portal>div.output>div.layout>div.main div.story[data-type=spark][data-name=shell] {
-	background-color:var(--code-bg-color); color:var(--code-fg-color); padding:var(--button-padding) var(--input-padding); margin:var(--plugin-margin) 0; box-shadow:var(--box-shadow);
-	margin:10px 0;
+	background-color:var(--code-bg-color); color:var(--code-fg-color); box-shadow:var(--box-shadow);
+	padding:var(--button-padding) var(--input-padding); margin-top:10px;
 }
 fieldset.web.wiki.portal>div.output>div.layout>div.main table.content div.story[data-type=spark][data-name=shell] { margin-top:unset; }
 fieldset.web.wiki.portal.home>div.output>div.layout>div.main p { white-space:pre-wrap; text-align:center; }

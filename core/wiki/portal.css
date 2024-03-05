@@ -32,6 +32,9 @@ fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column b { fon
 fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column input[type=button] { background-color:var(--notice-bg-color); color:var(--notice-fg-color); }
 fieldset.web.wiki.portal>div.output>div.layout>div.main fieldset.inner.output div.content {
 	background-color:var(--code-bg-color); color:var(--code-fg-color); padding:var(--input-padding) 0;
+	--code-comment:silver; --code-keyword:orange;
+	--code-function:cyan; --code-constant:silver; --code-string:silver;
+	--code-object:silver; --code-datatype:silver; --code-package:silver;
 }
 fieldset.web.wiki.portal>div.output>div.layout>div.main div.story[data-type=spark][data-name=shell] {
 	background-color:var(--code-bg-color); color:var(--code-fg-color); padding:var(--button-padding) var(--input-padding); margin:var(--plugin-margin) 0; box-shadow:var(--box-shadow);

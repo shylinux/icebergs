@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"path"
 	"regexp"
+	"runtime"
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
@@ -228,7 +229,9 @@ func init() {
 			tcp.HOST:   {Help: "公网", Hand: func(m *ice.Message, arg ...string) { m.Echo(kit.Formats(PublicIP(m))) }},
 			cli.SYSTEM: {Help: "系统", Hand: func(m *ice.Message, arg ...string) { cli.Opens(m, "System Settings.app") }},
 			cli.START: {Name: "start dev proto host port=9020 nodename username usernick", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(nfs.SAVE, "etc/local.sh", m.Spawn(ice.Maps{"pwd": kit.Path(""), "user": kit.UserName(), "args": kit.JoinCmds(arg...)}).Template("local.sh")+lex.NL)
+				if runtime.GOOS == cli.LINUX {
+					m.Cmd(nfs.SAVE, "etc/local.sh", m.Spawn(ice.Maps{"pwd": kit.Path(""), "user": kit.UserName(), "args": kit.JoinCmds(arg...)}).Template("local.sh")+lex.NL)
+				}
 				_serve_start(m)
 			}},
 			SERVE_START: {Hand: func(m *ice.Message, arg ...string) {
@@ -243,7 +246,9 @@ func init() {
 					ssh.PrintQRCode(m, tcp.PublishLocalhost(m, _serve_address(m)))
 					cli.Opens(m, mdb.Config(m, cli.OPEN))
 				})
-				m.Cmd("", PROXY_CONF, ice.Info.NodeName)
+				if runtime.GOOS == cli.LINUX {
+					m.Cmd("", PROXY_CONF, ice.Info.NodeName)
+				}
 			}},
 			PROXY_CONF: {Name: "proxyConf name* port path", Hand: func(m *ice.Message, arg ...string) {
 				if dir := m.OptionDefault(nfs.PATH, PROXY_PATH); nfs.Exists(m, dir) {

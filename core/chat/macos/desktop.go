@@ -25,7 +25,6 @@ func init() {
 					DeskAppend(m, "Photos.png", web.WIKI_FEEL, ctx.ARGS, nfs.USR_LOCAL_IMAGE)
 				} else {
 					DeskAppend(m, "Photos.png", web.WIKI_FEEL, ctx.ARGS, nfs.USR_ICONS)
-
 				}
 				DeskAppend(m, "Grapher.png", web.WIKI_DRAW)
 				DeskAppend(m, "Calendar.png", web.TEAM_PLAN)

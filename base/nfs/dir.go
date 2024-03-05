@@ -158,7 +158,6 @@ const (
 	PATHNAME        = "pathname"
 	FILENAME        = "filename"
 
-	SRC_TEMPLATE        = "src/template/"
 	SRC_DOCUMENT        = "src/document/"
 	USR_LEARNING_PORTAL = "usr/learning/portal/"
 	USR_ICONS_AVATAR    = "usr/icons/avatar.jpg"

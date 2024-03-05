@@ -100,6 +100,7 @@ func init() {
 			PROJECT: {Hand: func(m *ice.Message, arg ...string) { _spark_project(m, arg...) }},
 			PRODUCT: {Hand: func(m *ice.Message, arg ...string) { _spark_product(m, arg...) }},
 		}), Hand: func(m *ice.Message, arg ...string) {
+			m.Option(mdb.META, "")
 			if kit.Ext(arg[0]) == "md" {
 				_spark_md(m, arg...)
 			} else if arg[0] == SHELL && kit.IsIn(kit.Select("", arg, 1), cli.ALPINE, "centos", cli.LINUX, cli.DARWIN, cli.MACOS, cli.WINDOWS) {

@@ -3,13 +3,15 @@ fieldset.web.wiki.portal {
 	--code-font-size:14px; --code-line-height:20px;
 }
 fieldset.web.wiki.portal.home { --portal-max-width:1500px; }
+fieldset.web.wiki.portal>div.header { display:none; }
 fieldset.web.wiki.portal>div.output { padding:0; }
 fieldset.web.wiki.portal>div.output>div.header { background-color:rgb(22 31 49); height:var(--portal-header-height); --hover-bg-color:var(--plugin-bg-color); }
+fieldset.web.wiki.portal>div.output>div.header div.list { display:flex; }
+fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] { --hover-fg-color:white; }
 fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] { display:flex; justify-content:center; }
 fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.item { text-align:center; padding:var(--legend-padding); height:var(--portal-header-height); }
 fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.item { display:flex; align-items:center; }
-fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.item:first-child { line-height:calc(var(--portal-header-height) - 2 * var(--legend-padding)); }
-body.mobile fieldset.web.wiki.portal.cmd>div.output>div.header div.story[data-name=navmenu] div.item { line-height:calc(var(--portal-header-height) - 2 * var(--legend-padding)); }
+fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.item:first-child { line-height:calc(var(--portal-header-height) - 2 * var(--legend-padding)); font-size:24px; }
 fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.item.select { background-color:var(--output-bg-color); }
 fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.item:hover { background-color:var(--output-bg-color); }
 fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.item.space { padding:0px; margin:0 var(--portal-main-padding); }
@@ -26,34 +28,31 @@ fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column { displ
 fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column fieldset.inner>div.output>div.layout>div.layout div.content div.tips { top:10px; right:10px; }
 fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column h1 { font-size:48px; }
 fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column h2 { margin:0; }
-body.mobile fieldset.web.wiki.portal>div.output>div.layout>div.main fieldset { width:fit-content; }
-body.mobile fieldset.web.wiki.portal>div.output>div.layout>div.main fieldset>div.action { display:none; }
+fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column b { font-size:22px; }
+fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column input[type=button] { background-color:var(--notice-bg-color); color:var(--notice-fg-color); }
 fieldset.web.wiki.portal>div.output>div.layout>div.main fieldset.inner.output div.content {
 	background-color:var(--code-bg-color); color:var(--code-fg-color); padding:var(--input-padding) 0;
-	--code-comment:silver; --code-keyword:orange;
-	--code-function:cyan; --code-constant:silver; --code-string:silver;
-	--code-object:silver; --code-datatype:silver; --code-package:silver;
 }
 fieldset.web.wiki.portal>div.output>div.layout>div.main div.story[data-type=spark][data-name=shell] {
 	background-color:var(--code-bg-color); color:var(--code-fg-color); padding:var(--button-padding) var(--input-padding); margin:var(--plugin-margin) 0; box-shadow:var(--box-shadow);
 }
-fieldset.web.wiki.portal>div.output>div.layout>div.main table.content div.story[data-type=spark][data-name=shell] {
-	margin-top:unset;
-}
-body.cmd.web.wiki.portal { background-color:rgb(22 31 49); }
+fieldset.web.wiki.portal>div.output>div.layout>div.main table.content div.story[data-type=spark][data-name=shell] { margin-top:unset; }
 fieldset.web.wiki.portal.home>div.output>div.layout>div.main p { white-space:pre-wrap; text-align:center; }
-
 body.dark fieldset.web.wiki.portal>div.output>div.layout { background-color:var(--plugin-bg-color); --code-bg-color:var(--output-bg-color); }
 body.dark fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.item:hover { background-color:var(--plugin-bg-color); }
 body.dark fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.item.select { background-color:var(--plugin-bg-color); }
 body.white fieldset.web.wiki.portal>div.output>div.header { color:silver; }
 body.light fieldset.web.wiki.portal>div.output>div.header { color:white; }
 body.light fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] { --hover-fg-color:black; }
-fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] { --hover-fg-color:white; }
-fieldset.web.wiki.portal>div.output>div.header div.list { display:flex; }
-
-body.mobile fieldset.web.wiki.portal { --portal-main-padding:10px; --legend-padding:10px; }
+body.web.wiki.portal.cmd { background-color:rgb(22 31 49); }
+body.web.wiki.portal fieldset.Action.home>div.toast { display:none; }
+body.mobile fieldset.web.wiki.portal { --portal-main-padding:5px; --legend-padding:10px; }
 body.mobile fieldset.web.wiki.portal>div.output>div.layout { display:block; }
 body.mobile fieldset.web.wiki.portal>div.output>div.layout>div.nav { height:400px; }
 body.mobile fieldset.web.wiki.portal>div.output>div.layout>div.main { height:unset; }
+body.mobile fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column { padding:10px 0 !important; }
+body.mobile fieldset.web.wiki.portal>div.output>div.layout>div.main fieldset { width:fit-content; }
+body.mobile fieldset.web.wiki.portal>div.output>div.layout>div.main fieldset>div.action { display:none; }
+body.mobile fieldset.web.wiki.portal.cmd>div.output>div.header div.story[data-name=navmenu] div.item { line-height:calc(var(--portal-header-height) - 2 * var(--legend-padding)); }
+body.mobile fieldset.web.wiki.portal.home>div.output>div.layout>div.main p { white-space:normal; text-align:center; }
 body.width2 fieldset.web.wiki.portal>div.output>div.layout>div.main>div.flex { flex-direction:column; }

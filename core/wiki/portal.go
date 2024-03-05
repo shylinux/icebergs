@@ -81,12 +81,18 @@ func init() {
 			}},
 			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { web.DreamProcessIframe(m, arg...) }},
 		}, web.ServeCmdAction(), web.DreamTablesAction()), Hand: func(m *ice.Message, arg ...string) {
-			if m.Push(HEADER, m.Cmdx(WORD, path.Join(nfs.USR_LEARNING_PORTAL, INDEX_SHY))); len(arg) > 0 {
+			if m.Push(HEADER, m.Cmdx(WORD, _portal_path(m, INDEX_SHY))); len(arg) > 0 {
 				kit.If(path.Join(arg...) == "commands", func() { _portal_commands(m, arg...) })
-				m.Push(NAV, m.Cmdx(WORD, path.Join(nfs.USR_LEARNING_PORTAL, path.Join(arg...), INDEX_SHY)))
+				m.Push(NAV, m.Cmdx(WORD, _portal_path(m, path.Join(arg...), INDEX_SHY)))
 			}
 			web.Count(m, "", path.Join(arg...))
 			m.Display("")
 		}},
 	})
+}
+func _portal_path(m *ice.Message, arg ...string) (res string) {
+	if !nfs.Exists(m, path.Join("src/document/", path.Join(arg...)), func(p string) { res = p }) {
+		res = path.Join(nfs.USR_LEARNING_PORTAL, path.Join(arg...))
+	}
+	return res
 }

@@ -18,6 +18,12 @@ import (
 func _word_show(m *ice.Message, name string, arg ...string) {
 	kit.If(kit.HasPrefix(name, nfs.PS, web.HTTP), func() { m.Option(nfs.CAT_CONTENT, m.Cmdx(web.SPIDE, ice.OPS, web.SPIDE_RAW, http.MethodGet, name)) })
 	m.Options(ice.SSH_TARGET, m.Target(), ice.SSH_ALIAS, mdb.Configv(m, mdb.ALIAS), TITLE, map[string]int{})
+	if strings.HasPrefix(name, nfs.USR_LEARNING_PORTAL) {
+		nfs.Exists(m, path.Join(nfs.SRC_DOCUMENT, strings.TrimPrefix(name, nfs.USR_LEARNING_PORTAL)), func(p string) { name = p })
+	}
+	if strings.HasPrefix(name, nfs.SRC_DOCUMENT) && !nfs.Exists(m, name) {
+		name = path.Join(nfs.USR_LEARNING_PORTAL, strings.TrimPrefix(name, nfs.SRC_DOCUMENT))
+	}
 	m.Cmdy(ssh.SOURCE, name, kit.Dict(nfs.DIR_ROOT, _wiki_path(m)))
 }
 
@@ -82,8 +88,6 @@ func init() {
 				defer web.ToastProcess(m)()
 				defer m.StatusTime(web.SPACE, m.Option(web.SPACE, ls[0]))
 			}
-			m.Info("what %v", arg)
-			m.Info("what %v", arg)
 			if len(arg) == 0 {
 				m.Option(nfs.DIR_DEEP, ice.TRUE)
 				arg = append(arg, nfs.SRC)

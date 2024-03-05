@@ -66,6 +66,7 @@ fieldset.macos.desktop>div.output>fieldset.web.chat.macos.dock>div.output div.it
 fieldset.macos.desktop>div.output>div.desktop>div.item.disable { display:none; }
 fieldset.macos.menu>div.output>div.item { padding:0 var(--button-padding); height:var(--desktop-menu-height); float:right; }
 fieldset.macos.menu>div.output>div.item.avatar { padding:0; }
+fieldset.macos.menu>div.output>div.item.avatar { margin-right:10px; }
 fieldset.macos.menu>div.output>div.item.avatar>img { padding:0; height:var(--desktop-menu-height); }
 fieldset.macos.menu>div.output>div.menu { padding:0 var(--button-padding); float:left; }
 fieldset.macos.menu>div.output>div.tabs { font-style:italic; padding:0 var(--button-padding); float:left; }

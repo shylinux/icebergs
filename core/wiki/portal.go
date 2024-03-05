@@ -74,7 +74,7 @@ func init() {
 			ctx.RUN: {Hand: func(m *ice.Message, arg ...string) {
 				if p := path.Join(ice.USR_PORTAL, path.Join(arg...)); (m.Option(ice.DEBUG) == ice.TRUE || !nfs.ExistsFile(m, p)) && aaa.Right(m.Spawn(), arg) {
 					ctx.Run(m, arg...)
-					// m.Cmd(nfs.SAVE, p, ice.Maps{nfs.CONTENT: m.FormatMeta(), nfs.DIR_ROOT: ""})
+					m.Cmd(nfs.SAVE, p, ice.Maps{nfs.CONTENT: m.FormatMeta(), nfs.DIR_ROOT: ""})
 				} else {
 					m.Copy(m.Spawn([]byte(m.Cmdx(nfs.CAT, p))))
 				}

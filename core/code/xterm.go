@@ -155,7 +155,7 @@ func init() {
 				})
 			}},
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
-				kit.If(aaa.IsTechOrRoot(m), func() { m.PushButton(kit.Dict(m.CommandKey(), m.Commands("").Help)) })
+				kit.If(m.IsDebug() && aaa.IsTechOrRoot(m), func() { m.PushButton(kit.Dict(m.CommandKey(), m.Commands("").Help)) })
 			}},
 			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) {
 				web.DreamProcess(m, "", cli.SH, arg...)

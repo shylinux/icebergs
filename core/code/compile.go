@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/lex"
@@ -105,7 +106,7 @@ func init() {
 				m.Cmdy(INSTALL, web.DOWNLOAD, kit.Format("%s/go%s.%s-%s.%s", m.Option(SERVICE), m.Option(VERSION), runtime.GOOS, runtime.GOARCH, kit.Select("tar.gz", "zip", runtime.GOOS == cli.WINDOWS)), ice.USR_LOCAL)
 			}},
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
-				kit.If(m.Option(mdb.TYPE) == web.WORKER && nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME), ice.SRC_MAIN_GO)), func() {
+				kit.If(m.IsDebug() && aaa.IsTechOrRoot(m) && m.Option(mdb.TYPE) == web.WORKER && nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME), ice.SRC_MAIN_GO)), func() {
 					kit.If(cli.SystemFindGo(m), func() { m.PushButton(kit.Dict(m.CommandKey(), m.Commands("").Help)) })
 				})
 			}},

@@ -90,6 +90,7 @@ Volcanos(chat.ONIMPORT, {
 	},
 	layout: function(can) { can.ui.layout(can.ConfHeight(), can.ConfWidth())
 		can.ui.title && can.page.style(can, can.ui.message, html.HEIGHT, can.ui.content.offsetHeight-can.ui.title.offsetHeight)
+		can.page.style(can, can._output, html.HEIGHT, can.ConfHeight())
 	},
 }, [""])
 Volcanos(chat.ONDAEMON, {
@@ -100,7 +101,7 @@ Volcanos(chat.ONEXPORT, {
 		return can.base.Max(html.STORY_HEIGHT, height, height/(can.base.isIn(value.index, html.IFRAME)? 1: 2))
 	},
 	plugWidth: function(can, value) {
-		return can.ui.content.offsetWidth-(can.user.isMobile? 60: 180)
+		return can.ui.content.offsetWidth-(can.user.isMobile? 80: 180)
 	},
 })
 Volcanos(chat.ONDETAIL, {

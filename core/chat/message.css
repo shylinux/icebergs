@@ -10,6 +10,7 @@ fieldset.web.chat.message>div.output>div.project>div.item.text.filter>i { left:v
 fieldset.web.chat.message>div.output>div.project>div.item:not(.filter) { height:58px; padding:var(--input-padding); }
 fieldset.web.chat.message>div.output>div.project>div.item.select { border-right:unset; }
 fieldset.web.chat.message>div.output>div.project>div.item img { height:var(--header-height); width:var(--header-height); display:block; float:left; }
+body.mobile fieldset.web.chat.message>div.output>div.project { border-right:none; }
 fieldset.web.chat.message>div.output>div.project>div.item span.time { color:var(--disable-fg-color); font-size:var(--status-font-size); }
 fieldset.web.chat.message>div.output>div.project>div.item div.container { width:calc(100% - var(--header-height)); float:left; }
 fieldset.web.chat.message>div.output>div.project>div.item div.title { display:flex; justify-content:space-between; }

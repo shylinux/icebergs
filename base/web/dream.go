@@ -28,27 +28,43 @@ func _dream_list(m *ice.Message, simple bool) *ice.Message {
 		if value[aaa.ACCESS] == aaa.PRIVATE && (m.Option(ice.FROM_SPACE) != "" || !aaa.IsTechOrRoot(m)) {
 			return
 		}
-		m.Push("", value, kit.Slice(head, 0, -1))
 		if space, ok := list[value[mdb.NAME]]; ok {
+			m.Push("", value, kit.Slice(head, 0, -1))
 			if m.IsCliUA() || simple {
 				m.Push(mdb.TYPE, space[mdb.TYPE]).Push(cli.STATUS, cli.START)
 				m.Push(nfs.MODULE, space[nfs.MODULE]).Push(nfs.VERSION, space[nfs.VERSION]).Push(mdb.TEXT, "")
-				m.PushButton(cli.STOP)
+				if aaa.IsTechOrRoot(m) {
+					m.PushButton(cli.STOP)
+				} else {
+					m.PushButton()
+				}
 			} else {
-				msg := gdb.Event(m.Spawn(value, space), DREAM_TABLES).Copy(m.Spawn().PushButton(cli.STOP))
+				msg := gdb.Event(m.Spawn(value, space), DREAM_TABLES)
+				if aaa.IsTechOrRoot(m) {
+					msg.Copy(m.Spawn().PushButton(cli.STOP))
+				}
 				m.Push(mdb.TYPE, space[mdb.TYPE]).Push(cli.STATUS, cli.START)
 				m.Push(nfs.MODULE, space[nfs.MODULE]).Push(nfs.VERSION, space[nfs.VERSION]).Push(mdb.TEXT, msg.Append(mdb.TEXT))
 				m.PushButton(strings.Join(msg.Appendv(ctx.ACTION), ""))
 			}
-		} else {
+		} else if aaa.IsTechOrRoot(m) {
+			m.Push("", value, kit.Slice(head, 0, -1))
 			if m.Push(mdb.TYPE, WORKER); nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, value[mdb.NAME])) {
 				m.Push(cli.STATUS, cli.STOP)
 				m.Push(nfs.MODULE, "").Push(nfs.VERSION, "").Push(mdb.TEXT, "")
-				m.PushButton(cli.START, nfs.TRASH)
+				if aaa.IsTechOrRoot(m) {
+					m.PushButton(cli.START, nfs.TRASH)
+				} else {
+					m.PushButton()
+				}
 			} else {
 				m.Push(cli.STATUS, cli.BEGIN)
 				m.Push(nfs.MODULE, "").Push(nfs.VERSION, "").Push(mdb.TEXT, "")
-				m.PushButton(cli.START, mdb.REMOVE)
+				if aaa.IsTechOrRoot(m) {
+					m.PushButton(cli.START, mdb.REMOVE)
+				} else {
+					m.PushButton()
+				}
 			}
 		}
 	})
@@ -427,14 +443,19 @@ func init() {
 				m.Options(m.Cmd(SPIDE, m.Option(mdb.NAME)).AppendSimple()).Cmdy(SPIDE, mdb.DEV_REQUEST)
 			}},
 			DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
+				if !aaa.IsTechOrRoot(m) {
+					m.PushButton(OPEN)
+					return
+				}
+				list := []ice.Any{}
+				kit.If(m.IsDebug(), func() { list = append(list, cli.RUNTIME) })
 				switch m.Option(mdb.TYPE) {
 				case WORKER:
-					m.PushButton(cli.RUNTIME, "settings", tcp.SEND, OPEN)
-				case MASTER:
-					m.PushButton(cli.RUNTIME, DREAM, TOKEN, OPEN)
+					list = append(list, "settings", tcp.SEND, OPEN)
 				default:
-					m.PushButton(cli.RUNTIME, DREAM, TOKEN, OPEN)
+					list = append(list, TOKEN, DREAM, OPEN)
 				}
+				m.PushButton(list...)
 			}},
 			"settings": {Name: "settings restart=manual,always access=public,private", Help: "设置", Hand: func(m *ice.Message, arg ...string) {
 				kit.If(m.Option(cli.RESTART) == "manual", func() { m.Option(cli.RESTART, "") })
@@ -453,7 +474,7 @@ func init() {
 		}, StatsAction(), DreamAction(), DreamTablesAction(), mdb.ImportantHashAction(
 			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icons,repos,binary,template,restart,access",
 			html.BUTTON, kit.JoinWord(PORTAL, DESKTOP, ADMIN, MESSAGE, WORD, STATUS, VIMER, COMPILE, XTERM, DREAM),
-			ctx.TOOLS, kit.Simple(ROUTE, SPIDE, STORE, MATRIX), ONLINE, ice.TRUE,
+			ctx.TOOLS, kit.Simple(SPIDE, ROUTE), ONLINE, ice.TRUE,
 		)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				simple := m.Option("dream.simple") == ice.TRUE
@@ -461,12 +482,12 @@ func init() {
 					_dream_list(m, simple)
 					_dream_list_icon(m)
 				}
-				if !m.IsCliUA() {
+				if !m.IsCliUA() && aaa.IsTechOrRoot(m) {
 					_dream_list_more(m, simple)
 				}
 				if ice.Info.NodeType == WORKER || !aaa.IsTechOrRoot(m) || m.IsCliUA() {
 					m.Action()
-				} else if cli.SystemFindGo(m) {
+				} else if m.IsDebug() && cli.SystemFindGo(m) {
 					m.Action(html.FILTER, mdb.CREATE, STARTALL, STOPALL, cli.BUILD, PUBLISH)
 				} else {
 					m.Action(html.FILTER, mdb.CREATE, STARTALL, STOPALL)
@@ -474,7 +495,13 @@ func init() {
 				m.Sort("type,status,name", []string{aaa.LOGIN, WORKER, SERVER, MASTER}, []string{cli.START, cli.STOP, cli.BEGIN}, ice.STR_R)
 				m.StatusTimeCountStats(mdb.TYPE, mdb.STATUS)
 				ctx.DisplayTableCard(m)
-				ctx.Toolkit(m)
+				if !m.IsDebug() {
+					m.Options(ice.MSG_TOOLKIT, "")
+				}
+				if !aaa.IsTechOrRoot(m) {
+					m.Options(ice.MSG_TOOLKIT, "")
+					m.Option(ice.MSG_ONLINE, ice.FALSE)
+				}
 			} else if arg[0] == ctx.ACTION {
 				gdb.Event(m, DREAM_ACTION, arg)
 			} else {

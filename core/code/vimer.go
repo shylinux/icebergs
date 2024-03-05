@@ -216,6 +216,9 @@ func init() {
 			chat.FAVOR_ACTION: {Hand: func(m *ice.Message, arg ...string) {
 				kit.If(m.Option(mdb.TYPE) == nfs.FILE, func() { ctx.ProcessField(m, m.ShortKey(), nfs.SplitPath(m, m.Option(mdb.TEXT))) })
 			}},
+			web.DREAM_TABLES: {Hand: func(m *ice.Message, _ ...string) {
+				kit.If(m.IsDebug(), func() { m.PushButton(kit.Dict(m.CommandKey(), "编程")) })
+			}},
 		}, chat.FavorAction(), web.DreamTablesAction("编程"), ctx.ConfAction(ctx.TOOLS, "xterm,compile,runtime", web.ONLINE, ice.TRUE)), Hand: func(m *ice.Message, arg ...string) {
 			if m.Cmdy(INNER, arg); arg[0] != ctx.ACTION {
 				if web.IsLocalHost(m) {

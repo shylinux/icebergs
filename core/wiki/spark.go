@@ -60,8 +60,11 @@ func _spark_show(m *ice.Message, name, text string, arg ...string) *ice.Message 
 }
 
 const (
-	INNER = "inner"
-	SHELL = "shell"
+	INNER   = "inner"
+	SHELL   = "shell"
+	ROUTE   = "route"
+	PROJECT = "project"
+	PRODUCT = "product"
 )
 
 const SPARK = "spark"
@@ -92,8 +95,10 @@ func init() {
 					arg = append(arg, kit.Simple(ctx.ARGS, kit.Join(nfs.SplitPath(m, p), lex.SP))...)
 					arg[0] = m.Cmdx(nfs.CAT, p)
 				}
-				m.Cmdy(FIELD, "", web.CODE_INNER, ice.MSG_RESULT, arg[0], ctx.DISPLAY, "/plugin/local/code/inner.js", ctx.STYLE, html.OUTPUT, arg[1:])
+				m.Cmdy(FIELD, "", web.CODE_INNER, ice.MSG_RESULT, arg[0], ctx.DISPLAY, html.PLUGIN_LOCAL_CODE_INNER, ctx.STYLE, html.OUTPUT, arg[1:])
 			}},
+			PROJECT: {Hand: func(m *ice.Message, arg ...string) { _spark_project(m, arg...) }},
+			PRODUCT: {Hand: func(m *ice.Message, arg ...string) { _spark_product(m, arg...) }},
 		}), Hand: func(m *ice.Message, arg ...string) {
 			if kit.Ext(arg[0]) == "md" {
 				_spark_md(m, arg...)
@@ -107,4 +112,31 @@ func init() {
 			}
 		}},
 	})
+}
+func _spark_project(m *ice.Message, arg ...string) {
+	defer m.Cmdy(STYLE, FLEX).Cmdy(STYLE, END)
+	m.Cmdy(STYLE, COLUMN)
+	m.Cmdy(TITLE, kit.Capital(path.Base(kit.Select(ice.Info.Pathname, ice.Info.Make.Remote))))
+	m.Cmdy(SPARK, TITLE, arg[0]).Cmdy(ORDER, arg[1])
+	m.Cmdy(STYLE, FLEX)
+	m.Cmdy(SPARK, html.BUTTON, "体 验", ROUTE, web.SpideOrigin(m, ice.DEMO))
+	m.Cmdy(SPARK, html.BUTTON, "下 载", ROUTE, "download/")
+	m.Cmdy(SPARK, html.BUTTON, "文 档", ROUTE, "started/")
+	m.Cmdy(STYLE, END)
+	m.Cmdy(STYLE, END)
+	m.Cmdy(STYLE, COLUMN, FLEX, "0 0 480px")
+	m.Cmdy(SPARK, INNER, ice.SRC_MAIN_GO, html.WIDTH, "480px")
+	m.Cmdy(SPARK, SHELL, kit.Renders(`
+git clone {{ .Make.Remote }}
+cd {{ .Make.Remote | Base }} && source etc/miss.sh
+
+./bin/ice.bin
+
+open http://localhost:9020
+`, ice.Info), "style.width", "480px")
+	m.Cmdy(STYLE, END)
+}
+func _spark_product(m *ice.Message, arg ...string) {
+	m.Cmdy(SPARK, TITLE, arg[1]).Cmdy(SPARK, arg[2])
+	m.Cmdy(FIELD, arg[1], arg[0], arg[3:])
 }

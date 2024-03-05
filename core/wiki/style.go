@@ -5,6 +5,11 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
+const (
+	COLUMN = "column"
+	FLEX   = "flex"
+	END    = "end"
+)
 const STYLE = "style"
 
 func init() {

@@ -1,7 +1,7 @@
 body.light fieldset.web.chat.message>div.output { background-color:white; }
 body.light fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list { background-color:#e3e3e2; }
 body.light fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item:not(.plug).send div.content { background-color:#94ec69; }
-fieldset.web.chat.message>div.output>div.project { width:260px; flex:0 0 260px; }
+// fieldset.web.chat.message>div.output>div.project { width:260px; flex:0 0 260px; }
 fieldset.web.chat.message>div.output>div.project>div.title { background-color:var(--plugin-bg-color); padding:var(--button-padding); display:flex; justify-content:space-between; position:sticky; top:0; z-index:2; }
 fieldset.web.chat.message>div.output>div.project>div.title i:hover { background-color:var(--hover-bg-color); cursor:pointer; }
 fieldset.web.chat.message>div.output>div.project>div.title span:hover { background-color:var(--hover-bg-color); cursor:pointer; }
@@ -24,7 +24,7 @@ fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item:hover { background-color:unset; }
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.time { color:var(--disable-fg-color); font-size:var(--status-font-size); padding:0; margin-top:var(--button-margin); height:fit-content; justify-content:center; }
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item>img { height:var(--header-height); width:var(--header-height); }
-fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item div.content img { max-width:256px; }
+fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item div.content img { max-width:var(--form-width); }
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item div.container { width:fit-content; max-width:calc(100% - var(--header-height)); margin:0 var(--button-margin); }
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item div.container>span.from { color:var(--disable-fg-color); font-size:var(--status-font-size); padding:0 var(--input-padding); }
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.send div.container>span.from { float:right; }

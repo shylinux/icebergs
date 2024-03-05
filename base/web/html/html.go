@@ -84,17 +84,19 @@ const (
 	REFRESH = "refresh"
 	CONFIRM = "confirm"
 
-	PLUGIN_STORY_JSON = "/plugin/story/json.js"
-	ICONS_MAIL        = "usr/icons/Mail.png"
-	ICONS_DREAM       = "usr/icons/Launchpad.png"
-	ICONS_SETTINGS    = "usr/icons/System Settings.png"
-	GetLocation       = "getLocation"
-	ConnectWifi       = "ConnectWifi"
-	GetClipboardData  = "getClipboardData"
-	ScanQRCode        = "scanQRCode"
-	ChooseImage       = "chooseImage"
-	Record1           = "record1"
-	Record2           = "record2"
+	PLUGIN_LOCAL_CODE_INNER = "/plugin/local/code/inner.js"
+	PLUGIN_STORY_JSON       = "/plugin/story/json.js"
+
+	ICONS_MAIL       = "usr/icons/Mail.png"
+	ICONS_DREAM      = "usr/icons/Launchpad.png"
+	ICONS_SETTINGS   = "usr/icons/System Settings.png"
+	GetLocation      = "getLocation"
+	ConnectWifi      = "ConnectWifi"
+	GetClipboardData = "getClipboardData"
+	ScanQRCode       = "scanQRCode"
+	ChooseImage      = "chooseImage"
+	Record1          = "record1"
+	Record2          = "record2"
 )
 
 func IsImage(name, mime string) bool {

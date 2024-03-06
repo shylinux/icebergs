@@ -44,8 +44,15 @@ func (s MakeInfo) Versions() string {
 		return kit.Format("%s-%s-%s", s.Version, s.Forword, s.Hash[:6])
 	}
 }
+func (s info) Title() string {
+	p := path.Base(kit.Select(s.Pathname, s.Make.Remote))
+	if strings.HasPrefix(p, "20") {
+		p = kit.Join(strings.Split(p, "-")[1:], "-")
+	}
+	return kit.Capital(p)
+}
 
-var Info = struct {
+type info struct {
 	Make MakeInfo
 	Time string
 	Size string
@@ -86,7 +93,9 @@ var Info = struct {
 	Save       func(m *Message, key ...string) *Message
 	Load       func(m *Message, key ...string) *Message
 	Log        func(m *Message, p, l, s string)
-}{
+}
+
+var Info = info{
 	Localhost: true,
 
 	File:  Maps{},

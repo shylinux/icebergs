@@ -117,7 +117,7 @@ func init() {
 func _spark_project(m *ice.Message, arg ...string) {
 	defer m.Cmdy(STYLE, FLEX).Cmdy(STYLE, END)
 	m.Cmdy(STYLE, COLUMN)
-	m.Cmdy(TITLE, kit.Capital(path.Base(kit.Select(ice.Info.Pathname, ice.Info.Make.Remote))))
+	m.Cmdy(TITLE, ice.Info.Title())
 	m.Cmdy(SPARK, TITLE, arg[0]).Cmdy(ORDER, arg[1])
 	m.Cmdy(STYLE, FLEX)
 	m.Cmdy(SPARK, html.BUTTON, "体 验", ROUTE, web.SpideOrigin(m, ice.DEMO))

@@ -150,7 +150,7 @@ func (s relay) Stats(m *ice.Message) {
 		})
 	}).ProcessInner()
 	s.foreach(m.Spawn(ice.Maps{MACHINE: machine}), func(msg *ice.Message, cmd []string) {
-		msg.CombinedOutput(s.admins(msg, cli.RUNTIME), func(res string) {
+		ssh.CombinedOutput(msg.Message, s.admins(msg, cli.RUNTIME), func(res string) {
 			if !strings.HasPrefix(res, "warn: ") {
 				s.Modify(m, kit.Simple(MACHINE, msg.Option(MACHINE), kit.Dict(cli.ParseMake(res)))...)
 			}
@@ -177,7 +177,7 @@ func (s relay) ForEach(m *ice.Message, arg ...string) *ice.Message {
 	s.foreach(m, func(msg *ice.Message, cmd []string) {
 		kit.For(cmd, func(cmd string) {
 			begin := time.Now()
-			msg.CombinedOutput(cmd, func(res string) {
+			ssh.CombinedOutput(msg.Message, cmd, func(res string) {
 				m.Push(mdb.TIME, begin.Format(ice.MOD_TIME))
 				m.Push(MACHINE, msg.Option(MACHINE)).Push(tcp.HOST, msg.Option(tcp.HOST))
 				m.Push(cli.COST, kit.FmtDuration(time.Now().Sub(begin)))
@@ -285,7 +285,7 @@ func (s relay) Xterm(m *ice.Message, arg ...string) {
 func (s relay) Login(m *ice.Message, arg ...string) {
 	if m.Options(s.Hash.List(m.Spawn(), m.Option(MACHINE)).AppendSimple()); m.Option(ice.BACK) == "" {
 		defer m.ToastProcess()()
-		m.CombinedOutput(s.admins(m, kit.JoinCmds(web.HEADER, mdb.CREATE,
+		ssh.CombinedOutput(m.Message, s.admins(m, kit.JoinCmds(web.HEADER, mdb.CREATE,
 			"--", mdb.TYPE, "oauth", mdb.NAME, m.CommandKey(), mdb.ICONS, "usr/icons/ssh.png", mdb.ORDER, "100",
 			web.LINK, m.MergePodCmd("", "", ctx.ACTION, m.ActionKey(), MACHINE, m.Option(MACHINE)),
 		)), func(res string) { m.ProcessHold() })
@@ -294,7 +294,7 @@ func (s relay) Login(m *ice.Message, arg ...string) {
 		m.EchoInfoButton("")
 	} else {
 		defer m.ToastProcess()()
-		m.CombinedOutput(s.admins(m, kit.JoinCmds(web.SHARE, mdb.CREATE, mdb.TYPE, aaa.LOGIN, "--", mdb.TEXT, m.Option(ice.BACK))), func(res string) {
+		ssh.CombinedOutput(m.Message, s.admins(m, kit.JoinCmds(web.SHARE, mdb.CREATE, mdb.TYPE, aaa.LOGIN, "--", mdb.TEXT, m.Option(ice.BACK))), func(res string) {
 			m.ProcessReplace(kit.MergeURL2(m.Option(ice.BACK), "/share/"+strings.TrimSpace(res)))
 		})
 	}

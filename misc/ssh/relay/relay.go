@@ -73,6 +73,8 @@ type relay struct {
 	install     string `name:"install dream param='forever start' dev portal=9020 nodename" help:"安装"`
 	pushbin     string `name:"pushbin dream param='forever start' dev portal=9020 nodename" help:"部署" icon:"bi bi-box-arrow-in-up"`
 	adminCmd    string `name:"adminCmd cmd" help:"命令" icon:"bi bi-terminal-plus"`
+	proxy       string `name:"proxy" help:"代理"`
+	trash       string `name:"trash" help:"清理"`
 }
 
 func (s relay) Init(m *ice.Message, arg ...string) {
@@ -221,7 +223,7 @@ func (s relay) List(m *ice.Message, arg ...string) *ice.Message {
 			return
 		}
 		m.Push(web.LINK, web.HostPort(m.Message, value[tcp.HOST], value[web.PORTAL]))
-		m.PushButton(s.Portal, s.Desktop, s.Dream, s.Admin, s.Vimer, s.Login, s.AdminCmd, s.Upgrade, s.Pushbin, s.Xterm, s.Remove)
+		m.PushButton(s.Portal, s.Desktop, s.Dream, s.Admin, s.Vimer, s.Login, s.Proxy, s.AdminCmd, s.Upgrade, s.Pushbin, s.Xterm, s.Trash, s.Remove)
 		kit.If(len(arg) > 0, func() { m.PushQRCode(cli.QRCODE, m.Append(web.LINK)) })
 	})
 	_stats := kit.Dict(MEM, kit.FmtSize(stats[MEM_FREE], stats[MEM_TOTAL]), DISK, kit.FmtSize(stats[DISK_USED], stats[DISK_TOTAL]))
@@ -294,6 +296,19 @@ func (s relay) Login(m *ice.Message, arg ...string) {
 			m.ProcessReplace(kit.MergeURL2(m.Option(ice.BACK), "/share/"+strings.TrimSpace(res)))
 		})
 	}
+}
+func (s relay) Proxy(m *ice.Message, arg ...string) {
+	p := kit.Format("/home/%s/%s/usr/local/daemon/10000/", m.Option(aaa.USERNAME), kit.Select(CONTEXTS, m.Option(web.DREAM)))
+	ssh.CombinedOutput(m.Message, kit.Format("sudo %s/sbin/nginx -s reload -p %s", p, p), func(res string) {})
+	s.Modify(m, m.Options(web.PORTAL, tcp.PORT_443).OptionSimple(MACHINE, web.PORTAL)...)
+	m.Options(m.Cmd("", m.Option(MACHINE)).AppendSimple())
+	m.Cmdy("", s.Login).ProcessOpenAndRefresh(kit.MergeURL2(m.Option(mdb.LINK), web.C(web.ADMIN)))
+}
+func (s relay) Trash(m *ice.Message, arg ...string) {
+	p := kit.Format("/home/%s/%s", m.Option(aaa.USERNAME), kit.Select(CONTEXTS, m.Option(web.DREAM)))
+	ssh.CombinedOutput(m.Message, kit.Format("%s/bin/ice.bin quit", p), func(res string) {})
+	ssh.CombinedOutput(m.Message, kit.Format("mv %s /tmp/%s", p, path.Base(p)+"-"+kit.ReplaceAll(m.Time(), " ", "-")), func(res string) {})
+	s.Modify(m, MACHINE, m.Option(MACHINE), web.PORTAL, "", web.DREAM, "")
 }
 func (s relay) Repos(m *ice.Message, arg ...string)   { s.iframe(m, web.CODE_GIT_STATUS, arg...) }
 func (s relay) Vimer(m *ice.Message, arg ...string)   { s.iframe(m, "", arg...) }

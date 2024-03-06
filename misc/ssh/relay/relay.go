@@ -70,8 +70,8 @@ type relay struct {
 	forFlow     string `name:"forFlow machine cmd*:textarea=pwd"`
 	statsTables string `name:"statsTables" event:"stats.tables"`
 	list        string `name:"list machine auto" help:"机器" icon:"relay.png"`
-	install     string `name:"install dream param='forever start' dev portal=9020 nodename" help:"安装"`
-	pushbin     string `name:"pushbin dream param='forever start' dev portal=9020 nodename" help:"部署" icon:"bi bi-box-arrow-in-up"`
+	install     string `name:"install dream param='forever start' dev portal nodename" help:"安装"`
+	pushbin     string `name:"pushbin dream param='forever start' dev portal nodename" help:"部署" icon:"bi bi-box-arrow-in-up"`
 	adminCmd    string `name:"adminCmd cmd" help:"命令" icon:"bi bi-terminal-plus"`
 	proxy       string `name:"proxy" help:"代理"`
 	trash       string `name:"trash" help:"清理"`
@@ -297,17 +297,36 @@ func (s relay) Login(m *ice.Message, arg ...string) {
 		})
 	}
 }
+func (s relay) cmds(m *ice.Message, cmd string, arg ...ice.Any) {
+	ssh.CombinedOutput(m.Message, kit.Format(cmd, arg...), func(res string) {})
+}
+func (s relay) cmdsPath(m *ice.Message) (string, string) {
+	p := kit.Format("/home/%s/%s", m.Option(aaa.USERNAME), kit.Select(CONTEXTS, m.Option(web.DREAM)))
+	pp := kit.Format("%s/%s", p, web.PROXY_PATH)
+	return p, pp
+}
+func (s relay) cmdsAdmin(m *ice.Message, p string, arg ...string) {
+	s.cmds(m, "%s/%s %s "+kit.JoinWord(arg...), p, ice.BIN_ICE_BIN, web.ADMIN)
+}
+func (s relay) cmdsReload(m *ice.Message, pp string) {
+	s.cmds(m, "sudo %s/sbin/nginx -s reload -p %s", pp, pp)
+}
+func (s relay) cmdsRemove(m *ice.Message, p string) {
+	s.cmds(m, "mv %s /tmp/%s", p, path.Base(p)+"-"+kit.ReplaceAll(m.Time(), " ", "-"))
+}
 func (s relay) Proxy(m *ice.Message, arg ...string) {
-	p := kit.Format("/home/%s/%s/usr/local/daemon/10000/", m.Option(aaa.USERNAME), kit.Select(CONTEXTS, m.Option(web.DREAM)))
-	ssh.CombinedOutput(m.Message, kit.Format("sudo %s/sbin/nginx -s reload -p %s", p, p), func(res string) {})
+	_, pp := s.cmdsPath(m)
+	s.cmdsReload(m, pp)
 	s.Modify(m, m.Options(web.PORTAL, tcp.PORT_443).OptionSimple(MACHINE, web.PORTAL)...)
-	m.Options(m.Cmd("", m.Option(MACHINE)).AppendSimple())
-	m.Cmdy("", s.Login).ProcessOpenAndRefresh(kit.MergeURL2(m.Option(mdb.LINK), web.C(web.ADMIN)))
+	m.Options(m.Cmd("", m.Option(MACHINE)).AppendSimple()).Cmdy("", s.Login)
+	m.ProcessOpenAndRefresh(kit.MergeURL2(m.Option(mdb.LINK), web.C(web.ADMIN)))
 }
 func (s relay) Trash(m *ice.Message, arg ...string) {
-	p := kit.Format("/home/%s/%s", m.Option(aaa.USERNAME), kit.Select(CONTEXTS, m.Option(web.DREAM)))
-	ssh.CombinedOutput(m.Message, kit.Format("%s/bin/ice.bin quit", p), func(res string) {})
-	ssh.CombinedOutput(m.Message, kit.Format("mv %s /tmp/%s", p, path.Base(p)+"-"+kit.ReplaceAll(m.Time(), " ", "-")), func(res string) {})
+	p, pp := s.cmdsPath(m)
+	s.cmdsRemove(m, kit.Format("%s/conf/portal/%s", pp, m.Option(MACHINE)))
+	s.cmdsReload(m, pp)
+	s.cmdsAdmin(m, p, ice.QUIT)
+	s.cmdsRemove(m, p)
 	s.Modify(m, MACHINE, m.Option(MACHINE), web.PORTAL, "", web.DREAM, "")
 }
 func (s relay) Repos(m *ice.Message, arg ...string)   { s.iframe(m, web.CODE_GIT_STATUS, arg...) }

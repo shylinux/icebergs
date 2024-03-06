@@ -71,7 +71,7 @@ type relay struct {
 	statsTables string `name:"statsTables" event:"stats.tables"`
 	list        string `name:"list machine auto" help:"机器" icon:"relay.png"`
 	install     string `name:"install dream param='forever start' dev portal=9020 nodename" help:"安装"`
-	pushbin     string `name:"pushbin dream param" help:"部署" icon:"bi bi-box-arrow-in-up"`
+	pushbin     string `name:"pushbin dream param='forever start' dev portal=9020 nodename" help:"部署" icon:"bi bi-box-arrow-in-up"`
 	adminCmd    string `name:"adminCmd cmd" help:"命令" icon:"bi bi-terminal-plus"`
 }
 
@@ -249,14 +249,14 @@ func (s relay) Upgrade(m *ice.Message, arg ...string) { s.foreachScript(m, UPGRA
 func (s relay) Version(m *ice.Message, arg ...string) { s.foreachScript(m, VERSION_SH, arg...) }
 func (s relay) Pushbin(m *ice.Message, arg ...string) {
 	bin := "ice"
-	switch m.Option(KERNEL) {
-	case "Linux", cli.LINUX:
+	switch strings.ToLower(m.Option(KERNEL)) {
+	case cli.LINUX:
 		bin = kit.Keys(bin, cli.LINUX)
 	default:
 		bin = kit.Keys(bin, cli.LINUX)
 	}
 	switch m.Option(ARCH) {
-	case "i686", cli.X86:
+	case cli.X86, "i686":
 		bin = kit.Keys(bin, cli.X86)
 	default:
 		bin = kit.Keys(bin, cli.AMD64)
@@ -268,8 +268,8 @@ func (s relay) Pushbin(m *ice.Message, arg ...string) {
 		m.Options(nfs.FROM, ice.USR_PUBLISH+bin, nfs.PATH, path.Base(kit.Path("")), nfs.FILE, ice.BIN_ICE_BIN)
 	})
 	m.Cmd(SSH_TRANS, tcp.SEND)
-	s.shell(m, m.Template(PUSHBIN_SH), arg...)
-	s.Modify(m, kit.Simple(m.OptionSimple(MACHINE, web.DREAM))...)
+	s.shell(m, m.Template(PUSHBIN_SH)+lex.SP+kit.JoinCmds(ice.DEV, m.Option(ice.DEV), tcp.PORT, m.Option(web.PORTAL), tcp.NODENAME, m.OptionDefault(tcp.NODENAME, m.Option(MACHINE))), arg...)
+	s.Modify(m, kit.Simple(m.OptionSimple(MACHINE, web.DREAM, web.PORTAL))...)
 }
 
 func (s relay) AdminCmd(m *ice.Message, arg ...string) {

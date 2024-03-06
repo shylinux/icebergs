@@ -1,8 +1,6 @@
 Volcanos(chat.ONIMPORT, {
 	_init: function(can, msg, cb) {
-		can.Conf(html.PADDING, 20)
 		can.require(["/plugin/local/wiki/word.js"]), can.isCmdMode() && can.onappend.style(can, html.OUTPUT)
-		can.Conf(html.PADDING, 20)
 		var p = "/cmd/"+web.PORTAL; can.db.prefix = location.pathname.indexOf(p) > -1? location.pathname.split(p)[0]+p: nfs.WIKI_PORTAL
 		var p = "/c/"+web.PORTAL; can.db.prefix = location.pathname.indexOf(p) > -1? location.pathname.split(p)[0]+p: nfs.WIKI_PORTAL
 		can.db.current = can.isCmdMode()? can.base.trimPrefix(location.pathname, can.db.prefix+nfs.PS, can.db.prefix): can.Option(nfs.PATH)
@@ -22,7 +20,7 @@ Volcanos(chat.ONIMPORT, {
 			if (can.ConfWidth() < 1000) { can.onmotion.hidden(can, can.ui.aside) }
 		}
 		can.onmotion.delay(can, function() { can.Conf(html.PADDING, can.page.styleValueInt(can, "--portal-main-padding", can._output)), cb(msg)
-			can.user.isMobile && can.Conf(html.PADDING, 15)
+			can.user.isMobile && can.Conf(html.PADDING, can.isCmdMode()? 5: 15)
 			var file = can.isCmdMode()? can.db.hash[0]: can.Option(nfs.FILE); can.base.beginWith(file, nfs.SRC, nfs.USR) || (file = can.db.current+file)
 			can.db.nav = {}, can.page.Select(can, can._output, wiki.STORY_ITEM, function(target) { var meta = target.dataset||{}
 				can.core.CallFunc([can.onimport, can.onimport[meta.name]? meta.name: meta.type||target.tagName.toLowerCase()], [can, meta, target])

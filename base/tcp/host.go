@@ -51,10 +51,11 @@ const (
 	MAC_ADDRESS = "mac-address"
 	MASK        = "mask"
 
+	DOMAIN  = "domain"
+	GATEWAY = "gateway"
+	MACHINE = "machine"
 	ISLOCAL = "islocal"
 	PUBLISH = "publish"
-	GATEWAY = "gateway"
-	DOMAIN  = "domain"
 )
 const HOST = "host"
 

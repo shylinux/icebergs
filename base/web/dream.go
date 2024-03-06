@@ -370,7 +370,7 @@ func init() {
 			}},
 			VERSION: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy("web.code.version") }},
 			FOR_FLOW: {Name: "forFlow name cmd*='sh etc/miss.sh'", Help: "流程", Icon: "bi bi-terminal", Hand: func(m *ice.Message, arg ...string) {
-				m.Options(ctx.DISPLAY, PLUGIN_XTERM, cli.CMD_OUTPUT, nfs.NewWriteCloser(func(buf []byte) (int, error) {
+				m.Options(ctx.DISPLAY, html.PLUGIN_XTERM, cli.CMD_OUTPUT, nfs.NewWriteCloser(func(buf []byte) (int, error) {
 					PushNoticeGrow(m.Options(
 						ice.MSG_COUNT, "0",
 						ice.LOG_DEBUG, ice.FALSE,

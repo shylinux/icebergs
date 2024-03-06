@@ -95,7 +95,7 @@ func init() {
 					arg = append(arg, kit.Simple(ctx.ARGS, kit.Join(nfs.SplitPath(m, p), lex.SP))...)
 					arg[0] = m.Cmdx(nfs.CAT, p)
 				}
-				m.Cmdy(FIELD, "", web.CODE_INNER, ice.MSG_RESULT, arg[0], ctx.DISPLAY, html.PLUGIN_LOCAL_CODE_INNER, ctx.STYLE, html.OUTPUT, arg[1:])
+				m.Cmdy(FIELD, "", web.CODE_INNER, ice.MSG_RESULT, arg[0], ctx.DISPLAY, html.PLUGIN_INNER, ctx.STYLE, html.OUTPUT, arg[1:])
 			}},
 			PROJECT: {Hand: func(m *ice.Message, arg ...string) { _spark_project(m, arg...) }},
 			PRODUCT: {Hand: func(m *ice.Message, arg ...string) { _spark_product(m, arg...) }},

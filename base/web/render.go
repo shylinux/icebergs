@@ -199,13 +199,11 @@ const (
 	CHAT_POD          = "web.chat.pod"
 	CHAT_CMD          = "web.chat.cmd"
 	TEAM_PLAN         = "web.team.plan"
-
-	PLUGIN_XTERM = "/plugin/local/code/xterm.js"
 )
 
 func MessageInsertJSON(m *ice.Message, zone, name, text string, arg ...string) {
 	MessageInsert(m, zone, kit.Simple(mdb.TYPE, html.TEXT, mdb.NAME, kit.Select(m.CommandKey(), name),
-		mdb.TEXT, text, ctx.DISPLAY, html.PLUGIN_STORY_JSON, arg)...)
+		mdb.TEXT, text, ctx.DISPLAY, html.PLUGIN_JSON, arg)...)
 }
 func MessageInsert(m *ice.Message, zone string, arg ...string) {
 	m.Cmd(MESSAGE, mdb.INSERT, zone, tcp.DIRECT, tcp.RECV, arg)

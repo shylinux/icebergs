@@ -55,6 +55,7 @@ func _zone_select(m *ice.Message, prefix, chain, zone string, id string) {
 		Grows(m, prefix, chain, ID, id, func(value ice.Map) {
 			_mdb_select(m, m.OptionCB(""), key, value, fields, val)
 		})
+		m.StatusTimeCountTotal(val[COUNT], "step", "0")
 	})
 }
 func _zone_export(m *ice.Message, prefix, chain, file string) {
@@ -236,13 +237,14 @@ func ZoneModify(m *ice.Message, arg ...Any) {
 }
 func ZoneSelect(m *ice.Message, arg ...string) *ice.Message {
 	arg = kit.Slice(arg, 0, 2)
-	m.Fields(len(arg), kit.Select(kit.Fields(TIME, Config(m, SHORT), COUNT), Config(m, FIELD)), ZoneField(m))
+	short, field, fields := Config(m, SHORT), Config(m, FIELD), ZoneField(m)
+	m.Fields(len(arg), kit.Select(kit.Fields(TIME, short, COUNT), field), fields)
 	if m.Cmdy(SELECT, m.PrefixKey(), "", ZONE, arg, logs.FileLineMeta(-1)); len(arg) == 0 {
-		m.Sort(ZoneShort(m)).PushAction(Config(m, ACTION), REMOVE).Action(CREATE)
+		m.Sort(short).PushAction(REMOVE).Action(CREATE)
 	} else if len(arg) == 1 {
-		m.Action(INSERT).StatusTimeCountTotal(_zone_meta(m, m.PrefixKey(), kit.Keys(HASH, HashSelectField(m, arg[0], HASH)), COUNT), "step", "0")
+		m.Action(INSERT)
 	} else {
-		sortByField(m, ZoneField(m))
+		sortByField(m, fields)
 	}
 	return m
 }

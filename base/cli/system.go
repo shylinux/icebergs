@@ -143,6 +143,8 @@ const (
 	CMD_OUT = "cmd_out"
 
 	SH    = "sh"
+	GO    = "go"
+	GIT   = "git"
 	MAN   = "man"
 	RUN   = "run"
 	KILL  = "kill"

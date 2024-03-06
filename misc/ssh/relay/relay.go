@@ -76,8 +76,7 @@ type relay struct {
 }
 
 func (s relay) Init(m *ice.Message, arg ...string) {
-	s.Hash.Init(m).TransInput(
-		MACHINE, "机器",
+	s.Hash.Init(m).TransInput(MACHINE, "机器",
 		PACKAGE, "软件包", SHELL, "命令行", KERNEL, "内核", ARCH, "架构", VCPU, "虚拟核", NCPU, "处理器", MHZ, "频率",
 		MEM, "内存", DISK, "磁盘", NETWORK, "流量", LISTEN, "服务", SOCKET, "连接", PROC, "进程",
 		ice.DEV, "上位机", tcp.NODENAME, "节点名",
@@ -100,8 +99,7 @@ func (s relay) Inputs(m *ice.Message, arg ...string) {
 	case cli.PARAM:
 		m.Push(arg[0], `forever start`)
 	case ice.DEV:
-		s.Hash.List(m).CutTo(web.LINK, arg[0])
-		m.Push(arg[0], "http://localhost:9020")
+		s.Hash.List(m).CutTo(web.LINK, arg[0]).Push(arg[0], "http://localhost:9020")
 	case web.PORTAL:
 		kit.If(m.Option(tcp.LISTEN), func(p string) { m.Push(arg[0], kit.Split(p)) })
 		m.Push(arg[0], tcp.PORT_443, tcp.PORT_80, tcp.PORT_9020, "9030", "9040", "9050")
@@ -278,15 +276,13 @@ func (s relay) AdminCmd(m *ice.Message, arg ...string) {
 	s.shell(m, "cd "+kit.Select(ice.CONTEXTS, m.Option(web.DREAM))+"; "+s.admin(m, m.Option(ice.CMD)), arg...)
 }
 func (s relay) Xterm(m *ice.Message, arg ...string) {
-	m.ProcessXterm(kit.JoinWord(m.Option(MACHINE),
-		ice.INIT, kit.Format("%q", "cd "+kit.Select(ice.CONTEXTS, m.Option(web.DREAM))),
-	), arg...)
+	m.ProcessXterm(kit.JoinWord(m.Option(MACHINE), ice.INIT, kit.Format("%q", "cd "+kit.Select(ice.CONTEXTS, m.Option(web.DREAM)))), arg...)
 }
 func (s relay) Login(m *ice.Message, arg ...string) {
 	if m.Options(s.Hash.List(m.Spawn(), m.Option(MACHINE)).AppendSimple()); m.Option(ice.BACK) == "" {
 		defer m.ToastProcess()()
 		ssh.CombinedOutput(m.Message, s.admins(m, kit.JoinCmds(web.HEADER, mdb.CREATE,
-			"--", mdb.TYPE, "oauth", mdb.NAME, m.CommandKey(), mdb.ICONS, "usr/icons/ssh.png", mdb.ORDER, "100",
+			"--", mdb.TYPE, "oauth", mdb.NAME, m.CommandKey(), mdb.ICONS, html.ICONS_SSH, mdb.ORDER, "100",
 			web.LINK, m.MergePodCmd("", "", ctx.ACTION, m.ActionKey(), MACHINE, m.Option(MACHINE)),
 		)), func(res string) { m.ProcessHold() })
 		m.ProcessOpen(kit.MergeURL2(m.Option(mdb.LINK), web.C(web.HEADER)))
@@ -306,7 +302,7 @@ func (s relay) Dream(m *ice.Message, arg ...string)   { s.iframe(m, "", arg...) 
 func (s relay) Desktop(m *ice.Message, arg ...string) { s.iframe(m, "", arg...) }
 func (s relay) Portal(m *ice.Message, arg ...string)  { s.iframe(m, "", arg...) }
 
-func init() { ice.Cmd("ssh.relay", relay{}) }
+func init() { ice.Cmd(SSH_RELAY, relay{}) }
 
 func (s relay) iframe(m *ice.Message, cmd string, arg ...string) {
 	p := kit.MergeURL2(m.Option(web.LINK), web.C(kit.Select(m.ActionKey(), cmd)))

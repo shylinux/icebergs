@@ -140,14 +140,25 @@ const (
 	VAR = "var/"
 	USR = "usr/"
 
-	SRC_TEMPLATE    = ice.SRC_TEMPLATE
-	USR_ICEBERGS    = ice.USR_ICEBERGS
-	USR_PUBLISH     = ice.USR_PUBLISH
-	USR_PORTAL      = ice.USR_PORTAL
-	USR_LOCAL       = ice.USR_LOCAL
-	USR_LOCAL_WORK  = ice.USR_LOCAL_WORK
-	USR_PACKAGE     = "usr/package.json"
-	USR_MODULES     = "usr/node_modules/"
+	ETC_LOCAL_SH        = "etc/local.sh"
+	SRC_DOCUMENT        = "src/document/"
+	SRC_TEMPLATE        = ice.SRC_TEMPLATE
+	USR_ICEBERGS        = ice.USR_ICEBERGS
+	USR_PUBLISH         = ice.USR_PUBLISH
+	USR_PORTAL          = ice.USR_PORTAL
+	USR_LOCAL           = ice.USR_LOCAL
+	USR_LOCAL_WORK      = ice.USR_LOCAL_WORK
+	USR_LOCAL_IMAGE     = "usr/local/image/"
+	USR_LEARNING_PORTAL = "usr/learning/portal/"
+	USR_MODULES         = "usr/node_modules/"
+	USR_PACKAGE         = "usr/package.json"
+
+	USR_ICONS_AVATAR   = "usr/icons/avatar.jpg"
+	USR_ICONS_CONTEXTS = "usr/icons/contexts.jpg"
+	USR_ICONS_ICEBERGS = "usr/icons/icebergs.png"
+	USR_ICONS_VOLCANOS = "usr/icons/volcanos.png"
+	USR_ICONS          = "usr/icons/"
+
 	REQUIRE_MODULES = "/require/modules/"
 	REQUIRE_USR     = "/require/usr/"
 	REQUIRE_SRC     = "/require/src/"
@@ -157,15 +168,6 @@ const (
 	SHARE_LOCAL     = "/share/local/"
 	PATHNAME        = "pathname"
 	FILENAME        = "filename"
-
-	SRC_DOCUMENT        = "src/document/"
-	USR_LEARNING_PORTAL = "usr/learning/portal/"
-	USR_ICONS_AVATAR    = "usr/icons/avatar.jpg"
-	USR_ICONS_CONTEXTS  = "usr/icons/contexts.jpg"
-	USR_ICONS_ICEBERGS  = "usr/icons/icebergs.png"
-	USR_ICONS_VOLCANOS  = "usr/icons/volcanos.png"
-	USR_ICONS           = "usr/icons/"
-	USR_LOCAL_IMAGE     = "usr/local/image/"
 
 	TYPE_ALL  = "all"
 	TYPE_BIN  = "bin"

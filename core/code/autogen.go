@@ -139,12 +139,13 @@ func init() {
 					return
 				}
 				m.OptionDefault(mdb.ZONE, m.Option(mdb.NAME), mdb.HELP, m.Option(mdb.NAME))
-				m.OptionDefault(mdb.KEY, Prefix(m.Option(mdb.ZONE), m.Option(mdb.NAME)))
+				m.OptionDefault(mdb.KEY, Prefix(strings.ReplaceAll(m.Option(mdb.ZONE), "/", "."), m.Option(mdb.NAME)))
 				m.Option(nfs.FILE, path.Join(m.Option(mdb.ZONE), kit.Keys(m.Option(mdb.NAME), GO)))
 				m.Option(mdb.TEXT, kit.Format("`name:\"list %s\" help:\"%s\"`", _autogen_list(m), m.Option(mdb.HELP)))
 				defer m.Go(func() { _autogen_version(m.Spawn()) })
 				if p := path.Join(ice.SRC, m.Option(nfs.FILE)); !nfs.Exists(m, p) {
 					_autogen_import(m, path.Join(ice.SRC, m.Option(cli.MAIN)), m.Option(mdb.ZONE), _autogen_mod(m, ice.GO_MOD))
+					m.Option(mdb.ZONE, path.Base(m.Option(mdb.ZONE)))
 					_autogen_module(m, p)
 				}
 				return

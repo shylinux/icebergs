@@ -123,7 +123,7 @@ func init() {
 			} else {
 				m.Logs(nfs.SAVE, nfs.TARGET, file, nfs.SOURCE, main)
 				m.Cmdy(nfs.DIR, file, "time,path,size,hash,link")
-				web.MessageInsertJSON(m, cli.SYSTEM, "", m.Spawn().Copy(m).FormatMeta())
+				web.MessageInsertJSON(m, cli.SYSTEM, "", m.Spawn().Copy(m).FormatMeta(), ctx.ARGS, m.Append(mdb.HASH))
 				kit.If(!m.IsCliUA() && strings.Contains(file, ice.ICE), func() { m.Cmdy(PUBLISH, ice.CONTEXTS, ice.APP) })
 				web.Count(m, "", file)
 			}

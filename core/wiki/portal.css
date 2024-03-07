@@ -43,6 +43,9 @@ fieldset.web.wiki.portal>div.output>div.layout>div.main div.story[data-type=spar
 	background-color:var(--code-bg-color); color:var(--code-fg-color); box-shadow:var(--box-shadow);
 	padding:var(--button-padding) var(--input-padding); margin-top:10px;
 }
+fieldset.web.wiki.portal>div.output>div.layout>div.main div.story[data-type=spark][data-name=shell]:hover {
+	box-shadow:var(--notice-box-shadow);
+}
 fieldset.web.wiki.portal>div.output>div.layout>div.main table.content div.story[data-type=spark][data-name=shell] { margin-top:unset; }
 fieldset.web.wiki.portal.home>div.output>div.layout>div.main p { white-space:pre-wrap; text-align:center; }
 fieldset.web.wiki.portal.home>div.output>div.layout>div.main p:hover { background-color:var(--hover-bg-color); color:var(--hover-fg-color); }

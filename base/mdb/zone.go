@@ -55,7 +55,7 @@ func _zone_select(m *ice.Message, prefix, chain, zone string, id string) {
 		Grows(m, prefix, chain, ID, id, func(value ice.Map) {
 			_mdb_select(m, m.OptionCB(""), key, value, fields, val)
 		})
-		m.StatusTimeCountTotal(val[COUNT], "step", "0")
+		m.StatusTimeCountTotal(kit.Value(val, "meta.count"), "step", "0")
 	})
 }
 func _zone_export(m *ice.Message, prefix, chain, file string) {

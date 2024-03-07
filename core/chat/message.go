@@ -23,7 +23,7 @@ func init() {
 				MessageCreate(m, aaa.APPLY, html.ICONS_MAIL)
 				MessageCreate(m, web.DREAM, html.ICONS_DREAM)
 				MessageCreate(m, cli.SYSTEM, html.ICONS_SETTINGS)
-				web.MessageInsertJSON(m, cli.SYSTEM, cli.BOOTINFO, m.Cmdx(cli.RUNTIME))
+				web.MessageInsertJSON(m, cli.SYSTEM, cli.BOOTINFO, m.Cmdx(cli.RUNTIME), ctx.ARGS, m.Cmdx(cli.RUNTIME, "boot.time"))
 			}},
 			mdb.CREATE: {Name: "create type*=tech,void title icons target zone", Hand: func(m *ice.Message, arg ...string) {
 				if strings.HasPrefix(m.Option(web.TARGET), "from.") {
@@ -50,7 +50,9 @@ func init() {
 			cli.CLEAR: {Hand: func(m *ice.Message, arg ...string) {}},
 			web.OPEN:  {Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen(m.MergePod(m.Option(web.TARGET))) }},
 			web.DREAM_CREATE: {Hand: func(m *ice.Message, arg ...string) {
-				MessageInsertPlug(m, web.DREAM, "", "", web.DREAM, m.Option(mdb.NAME))
+				if !m.IsCliUA() {
+					MessageInsertPlug(m, web.DREAM, "", "", web.DREAM, m.Option(mdb.NAME))
+				}
 			}},
 			web.DREAM_REMOVE: {Hand: func(m *ice.Message, arg ...string) {
 				MessageInsertPlug(m, web.DREAM, "", "", web.DREAM, m.Option(mdb.NAME))

@@ -69,3 +69,6 @@ func init() {
 		}},
 	})
 }
+func PublicKey(m *ice.Message) string {
+	return m.Cmdx(nfs.CAT, kit.HomePath(".ssh/id_rsa.pub"))
+}

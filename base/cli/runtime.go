@@ -242,7 +242,7 @@ func init() {
 					m.Cmdy("", REBOOT)
 				}
 			}},
-			REBOOT: {Help: "重启", Icon: "bi bi-bootstrap-reboot", Hand: func(m *ice.Message, arg ...string) {
+			REBOOT: {Help: "重启", Hand: func(m *ice.Message, arg ...string) {
 				m.Go(func() { m.Sleep30ms(ice.EXIT, 1) })
 			}},
 			"lock": {Help: "锁屏", Icon: "bi bi-file-lock", Hand: func(m *ice.Message, arg ...string) {

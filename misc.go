@@ -93,6 +93,15 @@ func (m *Message) RenameOption(from, to string) *Message {
 	return m.Options(to, m.Option(from), from, "")
 }
 func (m *Message) RenameAppend(arg ...string) *Message {
+	if m.FieldsIsDetail() {
+		list := m.value(KEY)
+		kit.For(list, func(k string, i int) {
+			kit.For(arg, func(from, to string) {
+				kit.If(k == from, func() { list[i] = to })
+			})
+		})
+		return m
+	}
 	kit.For(arg, func(from, to string) {
 		if from == to {
 			return

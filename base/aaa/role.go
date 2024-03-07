@@ -158,7 +158,7 @@ func Right(m *ice.Message, key ...ice.Any) bool {
 	} else if len(key) > 0 && key[0] == ice.ETC_PATH {
 		return true
 	}
-	m.Option(ice.MSG_TITLE, kit.Keys(m.Option(ice.MSG_USERPOD), m.CommandKey(), m.ActionKey())+" "+logs.FileLine(-2))
+	// m.Option(ice.MSG_TITLE, kit.Keys(m.Option(ice.MSG_USERPOD), m.CommandKey(), m.ActionKey())+" "+logs.FileLine(-2))
 	return !ice.Info.Important || m.Option(ice.MSG_USERROLE) == ROOT || !m.WarnNotRight(m.Cmdx(ROLE, RIGHT, m.Option(ice.MSG_USERROLE), key, logs.FileLineMeta(-1)) != ice.OK,
 		kit.Keys(key...), USERROLE, m.Option(ice.MSG_USERROLE))
 }

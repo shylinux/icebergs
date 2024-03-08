@@ -58,6 +58,7 @@ func init() {
 			}},
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				if !m.IsDebug() || !aaa.IsTechOrRoot(m) || !nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME), _GIT)) {
+					m.Push(mdb.TEXT, "")
 					return
 				}
 				m.Push(mdb.TEXT, web.DreamStat(m, m.Option(mdb.NAME)))

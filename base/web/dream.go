@@ -473,7 +473,7 @@ func init() {
 			}},
 		}, StatsAction(), DreamAction(), DreamTablesAction(), mdb.ImportantHashAction(
 			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icons,repos,binary,template,restart,access",
-			html.BUTTON, kit.JoinWord(PORTAL, DESKTOP, ADMIN, MESSAGE, WORD, STATUS, VIMER, COMPILE, XTERM, DREAM),
+			html.BUTTON, kit.JoinWord(PORTAL, DESKTOP, MESSAGE, ADMIN, WORD, STATUS, VIMER, COMPILE, XTERM, DREAM),
 			ctx.TOOLS, kit.Simple(SPIDE, ROUTE), ONLINE, ice.TRUE,
 		)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {

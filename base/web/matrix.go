@@ -14,34 +14,29 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _matrix_list(m *ice.Message, domain, icon, typ string, fields ...string) (server, icons, types []string) {
+func _matrix_list(m *ice.Message, domain, typ string, meta ice.Maps, fields ...string) (server, icons, types []string) {
 	value := kit.Dict(cli.ParseMake(m.Cmdx(Space(m, domain), cli.RUNTIME)))
-	value[DOMAIN], value[mdb.ICONS], value[mdb.TYPE] = domain, icon, typ
-	button := []ice.Any{}
-	switch typ {
-	case MYSELF:
-		button = []ice.Any{PORTAL, WORD, STATUS, VIMER, COMPILE, DREAM, DESKTOP, ADMIN, OPEN, cli.RUNTIME, XTERM}
-	case SERVER:
-		button = []ice.Any{PORTAL, DESKTOP, ADMIN, OPEN, UPGRADE, DREAM, WORD, STATUS, VIMER, cli.RUNTIME, XTERM}
-	default:
-		button = []ice.Any{PORTAL, DESKTOP, ADMIN, OPEN, COMPILE, DREAM, WORD, STATUS, VIMER, cli.RUNTIME, XTERM}
-	}
+	value[DOMAIN], value[mdb.TYPE] = domain, typ
+	kit.For(meta, func(k, v string) { value[k] = v })
+
+	istech, isdebug := typ == SERVER || kit.IsIn(meta[aaa.ACCESS], aaa.TECH, aaa.ROOT), m.IsDebug()
+	compile := kit.Select("", kit.Select(COMPILE, UPGRADE, typ == SERVER), istech)
+	vimer := kit.Select("", VIMER, istech && isdebug)
+
+	button := []ice.Any{PORTAL, DESKTOP, DREAM, ADMIN, OPEN, compile}
+	kit.If(istech, func() { button = append(button, WORD, STATUS) })
+	kit.If(istech && isdebug, func() { button = append(button, vimer, cli.RUNTIME, XTERM) })
 	m.PushRecord(value, fields...).PushButton(button...)
-	switch typ {
-	case MYSELF:
-		button = []ice.Any{PORTAL, WORD, STATUS, VIMER, COMPILE, MESSAGE, DESKTOP, ADMIN, OPEN, cli.RUNTIME, XTERM}
-	case SERVER:
-		button = []ice.Any{PORTAL, DESKTOP, ADMIN, OPEN, UPGRADE, MESSAGE, WORD, STATUS, VIMER, cli.RUNTIME, XTERM}
-	default:
-		button = []ice.Any{PORTAL, DESKTOP, ADMIN, OPEN, WORD, STATUS, VIMER, cli.RUNTIME, XTERM}
-	}
-	button = append(button, cli.STOP)
+
+	button = []ice.Any{PORTAL, DESKTOP, MESSAGE, ADMIN, OPEN, compile}
+	kit.If(istech, func() { button = append(button, WORD, STATUS) })
+	kit.If(istech && isdebug, func() { button = append(button, vimer, cli.RUNTIME, XTERM, cli.STOP) })
 	m.Cmd(Space(m, domain), DREAM).Table(func(value ice.Maps) {
 		switch value[mdb.TYPE] {
 		case WORKER:
 			value[DOMAIN] = domain
 			kit.If(value[mdb.STATUS] == cli.STOP, func() { value[mdb.ICONS] = nfs.USR_ICONS_ICEBERGS })
-			kit.If(value[mdb.STATUS] == cli.STOP, func() { button = []ice.Any{cli.START, mdb.REMOVE} })
+			kit.If(value[mdb.STATUS] == cli.STOP && istech, func() { button = []ice.Any{cli.START, mdb.REMOVE} })
 			m.PushRecord(value, fields...).PushButton(button...)
 		case SERVER, MASTER:
 			server = append(server, kit.Keys(domain, value[mdb.NAME]))
@@ -111,10 +106,10 @@ func init() {
 			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) { _matrix_dream(m, nfs.TRASH); _matrix_dream(m, "") }},
 			cli.START:  {Hand: func(m *ice.Message, arg ...string) { _matrix_dream(m, "") }},
 			cli.STOP:   {Hand: func(m *ice.Message, arg ...string) { _matrix_dream(m, "") }},
-			COMPILE: {Hand: func(m *ice.Message, arg ...string) {
-				_matrix_cmd(m, "", cli.AMD64, cli.LINUX, ice.SRC_MAIN_GO).ProcessHold()
+			UPGRADE: {Hand: func(m *ice.Message, arg ...string) {
+				_matrix_cmd(m, "").Sleep3s()
+				m.ProcessRefresh()
 			}},
-			UPGRADE: {Hand: func(m *ice.Message, arg ...string) { _matrix_cmd(m, "").Sleep3s().ProcessRefresh() }},
 			INSTALL: {Hand: func(m *ice.Message, arg ...string) {
 				if kit.IsIn(m.Cmdv(Space(m, m.Option(DOMAIN)), SPIDE, ice.DEV_IP, CLIENT_HOSTNAME), m.Cmd(tcp.HOST).Appendv(aaa.IP)...) {
 					m.Option(nfs.BINARY, S(m.Option(mdb.NAME)))
@@ -129,7 +124,7 @@ func init() {
 				StreamPushRefreshConfirm(m, m.Trans("refresh for new space ", "刷新列表查看新空间 ")+kit.Keys(m.Option(DOMAIN), m.Option(mdb.NAME)))
 			}},
 		}, ctx.ConfAction(
-			mdb.FIELD, "time,domain,status,type,name,text,icons,repos,binary,module,version",
+			mdb.FIELD, "time,domain,status,type,name,text,icons,repos,binary,module,version,access",
 			ctx.TOOLS, kit.Simple(SPIDE, STATUS, VERSION), ONLINE, ice.TRUE,
 		)), Hand: func(m *ice.Message, arg ...string) {
 			if kit.HasPrefixList(arg, ctx.ACTION) {
@@ -138,11 +133,16 @@ func init() {
 			}
 			GoToast(m, func(toast func(name string, count, total int)) []string {
 				field := kit.Split(mdb.Config(m, mdb.FIELD))
+				space := m.CmdMap(SPACE, mdb.NAME)
 				m.Options("space.timeout", cli.TIME_3s, "dream.simple", ice.TRUE)
-				list, icons, types := _matrix_list(m, "", ice.SRC_MAIN_ICO, MYSELF, field...)
+				list, icons, types := _matrix_list(m, "", MYSELF, ice.Maps{
+					mdb.ICONS: ice.SRC_MAIN_ICO, aaa.ACCESS: m.Option(ice.MSG_USERROLE),
+				}, field...)
 				kit.For(list, func(domain string, index int, total int) {
 					toast(domain, index, total)
-					_matrix_list(m, domain, icons[index], types[index], field...)
+					_matrix_list(m, domain, types[index], ice.Maps{
+						mdb.ICONS: icons[index], aaa.ACCESS: kit.Format(kit.Value(space[domain], aaa.USERROLE)),
+					}, field...)
 				})
 				m.RewriteAppend(func(value, key string, index int) string {
 					if key == mdb.ICONS && strings.HasPrefix(value, nfs.REQUIRE) && m.Appendv(DOMAIN)[index] != "" {

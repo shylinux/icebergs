@@ -223,7 +223,7 @@ func (s relay) List(m *ice.Message, arg ...string) *ice.Message {
 			return
 		}
 		m.Push(web.LINK, web.HostPort(m.Message, value[tcp.HOST], value[web.PORTAL]))
-		m.PushButton(s.Portal, s.Desktop, s.Dream, s.Admin, s.Vimer, s.Login, s.Proxy, s.AdminCmd, s.Upgrade, s.Pushbin, s.Xterm, s.Trash, s.Remove)
+		m.PushButton(s.Portal, s.Desktop, s.Dream, s.Admin, s.Vimer, s.Proxy, s.Login, s.AdminCmd, s.Upgrade, s.Pushbin, s.Xterm, s.Trash, s.Remove)
 		kit.If(len(arg) > 0, func() { m.PushQRCode(cli.QRCODE, m.Append(web.LINK)) })
 	})
 	_stats := kit.Dict(MEM, kit.FmtSize(stats[MEM_FREE], stats[MEM_TOTAL]), DISK, kit.FmtSize(stats[DISK_USED], stats[DISK_TOTAL]))

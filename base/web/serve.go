@@ -224,7 +224,7 @@ func init() {
 				if m.Option(ctx.INDEX) == "" {
 					mdb.Config(m, ice.MAIN, "")
 				} else {
-					mdb.Config(m, ice.MAIN, C(m.Option(ctx.INDEX)+nfs.PS))
+					mdb.Config(m, ice.MAIN, C(m.Option(ctx.INDEX)))
 				}
 			}},
 			tcp.HOST:   {Help: "公网", Hand: func(m *ice.Message, arg ...string) { m.Echo(kit.Formats(PublicIP(m))) }},

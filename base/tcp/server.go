@@ -52,10 +52,12 @@ func _server_listen(m *ice.Message, arg ...string) {
 }
 
 const (
-	PROTOCOL = "protocol"
-	HOSTPORT = "hostport"
-	HOSTNAME = "hostname"
-	NODENAME = "nodename"
+	PROTOCOL  = "protocol"
+	HOSTPORT  = "hostport"
+	HOSTNAME  = "hostname"
+	NODENAME  = "nodename"
+	BANDWIDTH = "bandwidth"
+	ADDRESS   = "address"
 )
 const (
 	PROTO  = "proto"

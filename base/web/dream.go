@@ -32,7 +32,7 @@ func _dream_list(m *ice.Message, simple bool) *ice.Message {
 			m.Push("", value, kit.Slice(head, 0, -1))
 			if m.IsCliUA() || simple {
 				m.Push(mdb.TYPE, space[mdb.TYPE]).Push(cli.STATUS, cli.START)
-				m.Push(nfs.MODULE, space[nfs.MODULE]).Push(nfs.VERSION, space[nfs.VERSION]).Push(mdb.TEXT, "")
+				m.Push(nfs.MODULE, space[nfs.MODULE]).Push(nfs.VERSION, space[nfs.VERSION]).Push(mdb.TEXT, DreamStat(m, value[mdb.NAME]))
 				if aaa.IsTechOrRoot(m) {
 					m.PushButton(cli.STOP)
 				} else {
@@ -572,4 +572,20 @@ func DreamListSpide(m *ice.Message, list []string, types string, cb func(dev, or
 }
 func DreamList(m *ice.Message) *ice.Message {
 	return AdminCmd(m.Options("dream.simple", ice.TRUE), DREAM)
+}
+func DreamStat(m *ice.Message, name string) (res string) {
+	if cli.SystemFindGit(m) {
+		text := []string{}
+		for _, line := range kit.Split(m.Cmdx(cli.SYSTEM, cli.GIT, "diff", "--shortstat", kit.Dict(cli.CMD_DIR, path.Join(ice.USR_LOCAL_WORK, name))), mdb.FS, mdb.FS) {
+			if list := kit.Split(line); strings.Contains(line, nfs.FILE) {
+				text = append(text, kit.Format("<span class='files'>%s file</span>", list[0]))
+			} else if strings.Contains(line, "ins") {
+				text = append(text, kit.Format("<span class='add'>%s+++</span>", list[0]))
+			} else if strings.Contains(line, "del") {
+				text = append(text, kit.Format("<span class='del'>%s---</span>", list[0]))
+			}
+		}
+		res = strings.Join(text, "")
+	}
+	return
 }

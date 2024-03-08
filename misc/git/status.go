@@ -60,18 +60,7 @@ func init() {
 				if !m.IsDebug() || !aaa.IsTechOrRoot(m) || !nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME), _GIT)) {
 					return
 				}
-				text := []string{}
-				for _, line := range kit.Split(m.Cmdx(cli.SYSTEM, GIT, DIFF, "--shortstat", kit.Dict(cli.CMD_DIR, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME)))), mdb.FS, mdb.FS) {
-					if list := kit.Split(line); strings.Contains(line, nfs.FILE) {
-						text = append(text, list[0]+" file")
-					} else if strings.Contains(line, "ins") {
-						text = append(text, list[0]+" +++")
-					} else if strings.Contains(line, "del") {
-						text = append(text, list[0]+" ---")
-					}
-				}
-				// m.Push(mdb.TEXT, kit.JoinLine(m.Option(nfs.MODULE), strings.Join(text, ", ")))
-				m.Push(mdb.TEXT, strings.Join(text, ", "))
+				m.Push(mdb.TEXT, web.DreamStat(m, m.Option(mdb.NAME)))
 				m.PushButton(kit.Dict(m.CommandKey(), "源码"))
 			}},
 			mdb.DEV_REQUEST: {Name: "dev.request origin*", Help: "授权"},

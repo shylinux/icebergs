@@ -189,7 +189,8 @@ func init() {
 	}
 }
 
-func SystemFindGo(m *ice.Message) bool { return SystemFind(m, "go") != "" }
+func SystemFindGit(m *ice.Message) bool { return SystemFind(m, GIT) != "" }
+func SystemFindGo(m *ice.Message) bool  { return SystemFind(m, GO) != "" }
 func SystemFind(m *ice.Message, bin string, dir ...string) string {
 	dir = append(dir, EtcPath(m)...)
 	return _system_find(m, bin, append(dir, _path_split(kit.Env(PATH))...)...)

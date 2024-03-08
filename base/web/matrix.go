@@ -123,14 +123,9 @@ func init() {
 				}
 				_matrix_dream(m, mdb.CREATE, kit.Simple(m.OptionSimple(mdb.ICONS, nfs.REPOS, nfs.BINARY))...)
 				m.Cmd(SPACE, kit.Keys(m.Option(DOMAIN), m.Option(mdb.NAME)), MESSAGE, mdb.CREATE,
-					mdb.TYPE, aaa.TECH, mdb.ICONS, nfs.USR_ICONS_VOLCANOS,
-					TARGET, kit.Keys("from", m.Option(mdb.NAME)),
-					// "target", kit.Keys(ice.OPS, ice.DEV, m.Option(mdb.NAME)),
-				)
+					mdb.TYPE, aaa.TECH, mdb.ICONS, nfs.USR_ICONS_VOLCANOS, TARGET, kit.Keys(nfs.FROM, m.Option(mdb.NAME)))
 				m.Cmd(SPACE, m.Option(mdb.NAME), MESSAGE, mdb.CREATE,
-					mdb.TYPE, aaa.TECH, mdb.ICONS, nfs.USR_ICONS_ICEBERGS,
-					TARGET, kit.Keys(ice.OPS, m.Option(DOMAIN), m.Option(mdb.NAME)),
-				)
+					mdb.TYPE, aaa.TECH, mdb.ICONS, nfs.USR_ICONS_ICEBERGS, TARGET, kit.Keys(ice.OPS, m.Option(DOMAIN), m.Option(mdb.NAME)))
 				StreamPushRefreshConfirm(m, m.Trans("refresh for new space ", "刷新列表查看新空间 ")+kit.Keys(m.Option(DOMAIN), m.Option(mdb.NAME)))
 			}},
 		}, ctx.ConfAction(
@@ -156,7 +151,7 @@ func init() {
 					return value
 				})
 				m.Action(html.FILTER, mdb.CREATE).StatusTimeCountStats(mdb.TYPE, mdb.STATUS).Display("")
-				m.Sort("type,status,name,domain", []string{MYSELF, SERVER, MASTER, WORKER, ""}, []string{cli.START, cli.STOP, ""}, "str_r", "str_r")
+				m.Sort("type,status,name,domain", []string{MYSELF, SERVER, MASTER, WORKER, ""}, []string{cli.START, cli.STOP, ""}, ice.STR_R, ice.STR_R)
 				ctx.Toolkit(m)
 				return nil
 			})

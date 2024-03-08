@@ -8,6 +8,11 @@ fieldset.web.matrix>div.output>table.content div.item img { height:var(--header-
 fieldset.web.matrix>div.output>table.content div.item img.jpg { padding:var(--input-padding); }
 fieldset.web.matrix>div.output>table.content div.item div.title { text-align:left; padding:var(--input-padding); }
 fieldset.web.matrix>div.output>table.content div.item div.title>span { cursor:pointer; }
+fieldset.web.matrix>div.output>table.content div.item div.title>span.status { font-size:var(--status-font-size); }
+fieldset.web.matrix>div.output>table.content div.item div.title>span.status>span { padding:0 var(--input-padding); }
+fieldset.web.matrix>div.output>table.content div.item div.title>span.status>span.files { background-color:purple; color:var(--notice-fg-color);}
+fieldset.web.matrix>div.output>table.content div.item div.title>span.status>span.add { background-color:var(--notice-bg-color); color:var(--notice-fg-color);}
+fieldset.web.matrix>div.output>table.content div.item div.title>span.status>span.del { background-color:var(--danger-bg-color); color:var(--danger-fg-color);}
 fieldset.web.matrix>div.output>table.content div.item div.status i { font-size:var(--status-font-size); padding:0; }
 fieldset.web.matrix>div.output>table.content div.item div.action { margin-top:var(--input-margin); overflow:hidden; }
 fieldset.web.matrix>div.output>table.content div.item div.action input.icons { display:none; }

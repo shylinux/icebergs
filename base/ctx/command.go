@@ -96,6 +96,24 @@ func init() {
 					})
 				}
 			}},
+			"default": {Hand: func(m *ice.Message, arg ...string) {
+				m.Spawn(m.Source()).Search(arg[0], func(key string, cmd *ice.Command) {
+					if arg[1] == ACTION {
+						list := kit.Value(cmd.Meta, arg[2])
+						kit.For(arg[3:], func(k, v string) {
+							kit.For(list, func(value ice.Map) {
+								kit.If(value[mdb.NAME] == k, func() {
+									value[mdb.VALUE] = v
+								})
+							})
+						})
+						return
+					}
+					for i, v := range arg[1:] {
+						kit.Value(cmd.List, kit.Keys(i, "value"), v)
+					}
+				})
+			}},
 		}), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				m.OptionFields(INDEX)

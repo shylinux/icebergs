@@ -75,7 +75,9 @@ func init() {
 	})
 	Index.MergeCommands(ice.Commands{
 		VIMER: {Name: "vimer path=src/ file=main.go line=1 list", Help: "编辑器", Icon: "vimer.png", Role: aaa.VOID, Meta: kit.Dict(
-			ctx.STYLE, INNER, ice.CTX_TRANS, kit.Dict(html.INPUT, kit.Dict(cli.MAIN, "程序")),
+			ctx.STYLE, INNER, ice.CTX_TRANS, kit.Dict(html.INPUT, kit.Dict(
+				cli.MAIN, "程序", "top", "顶域",
+			)),
 		), Actions: ice.MergeActions(ice.Actions{
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if mdb.IsSearchPreview(m, arg) {
@@ -156,7 +158,7 @@ func init() {
 				gdb.Event(m, VIMER_SAVE)
 			}},
 			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) { nfs.Trash(m, arg[0]) }},
-			nfs.MODULE: {Name: "create name*=client help=示例 type*=Hash,Zone,Data,Code main*=main.go zone=cloud/tencent/lighthouse key=ssh.cloud.tencent.lighthouse.client", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
+			nfs.MODULE: {Name: "create name*=hi help=示例 type*=Hash,Zone,Data,Code main*=main.go zone=hi top=web.chat", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(AUTOGEN, nfs.MODULE, arg)
 			}},
 			nfs.SCRIPT: {Name: "script file*", Help: "脚本", Hand: func(m *ice.Message, arg ...string) {

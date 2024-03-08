@@ -53,7 +53,7 @@ func (s matrix) plug(m *ice.Message, arg ...string) {
 	m.ProcessPodCmd(kit.Keys(kit.Select("", ice.OPS, ice.Info.NodeType == web.WORKER), m.Option(MACHINE), m.Option(web.SPACE)), m.ActionKey(), arg, arg...)
 }
 func (s matrix) xterm(m *ice.Message, arg ...string) {
-	m.ProcessXterm(func() []string {
+	m.ProcessXterm("", func() []string {
 		cmd, dir := cli.SH, ice.CONTEXTS
 		if m.Option(MACHINE) == "" {
 			cmd = cli.Shell(m.Message)

@@ -278,7 +278,7 @@ func (s relay) AdminCmd(m *ice.Message, arg ...string) {
 	s.shell(m, "cd "+kit.Select(ice.CONTEXTS, m.Option(web.DREAM))+"; "+s.admin(m, m.Option(ice.CMD)), arg...)
 }
 func (s relay) Xterm(m *ice.Message, arg ...string) {
-	m.ProcessXterm(kit.JoinWord(m.Option(MACHINE), ice.INIT, kit.Format("%q", "cd "+kit.Select(ice.CONTEXTS, m.Option(web.DREAM)))), arg...)
+	m.ProcessXterm("", kit.JoinWord(m.Option(MACHINE), ice.INIT, kit.Format("%q", "cd "+kit.Select(ice.CONTEXTS, m.Option(web.DREAM)))), arg...)
 }
 func (s relay) Login(m *ice.Message, arg ...string) {
 	if m.Options(s.Hash.List(m.Spawn(), m.Option(MACHINE)).AppendSimple()); m.Option(ice.BACK) == "" {
@@ -347,7 +347,7 @@ func (s relay) iframe(m *ice.Message, cmd string, arg ...string) {
 	}
 }
 func (s relay) shell(m *ice.Message, init string, arg ...string) {
-	m.ProcessXterm(kit.JoinWord(m.Option(MACHINE), ice.INIT, kit.Format("%q", strings.ReplaceAll(init, lex.NL, "; "))), arg...)
+	m.ProcessXterm("", kit.JoinWord(m.Option(MACHINE), ice.INIT, kit.Format("%q", strings.ReplaceAll(init, lex.NL, "; "))), arg...)
 }
 func (s relay) foreachScript(m *ice.Message, script string, arg ...string) {
 	m.Option(ice.MSG_TITLE, kit.Keys(m.Option(ice.MSG_USERPOD), m.CommandKey(), m.ActionKey()))

@@ -21,11 +21,7 @@ func init() {
 		ice.CTX_OPEN: {Hand: func(m *ice.Message, arg ...string) {
 			if m.Cmd(DESKTOP).Length() == 0 {
 				DeskAppend(m, "Books.png", web.WIKI_WORD)
-				if nfs.Exists(m, nfs.USR_LOCAL_IMAGE) {
-					DeskAppend(m, "Photos.png", web.WIKI_FEEL, ctx.ARGS, nfs.USR_LOCAL_IMAGE)
-				} else {
-					DeskAppend(m, "Photos.png", web.WIKI_FEEL, ctx.ARGS, nfs.USR_ICONS)
-				}
+				DeskAppend(m, "Photos.png", web.WIKI_FEEL)
 				DeskAppend(m, "Grapher.png", web.WIKI_DRAW)
 				DeskAppend(m, "Calendar.png", web.TEAM_PLAN)
 				DeskAppend(m, "Messages.png", web.CHAT_MESSAGE)

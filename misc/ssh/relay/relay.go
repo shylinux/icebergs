@@ -229,9 +229,14 @@ func (s relay) List(m *ice.Message, arg ...string) *ice.Message {
 	_stats := kit.Dict(MEM, kit.FmtSize(stats[MEM_FREE], stats[MEM_TOTAL]), DISK, kit.FmtSize(stats[DISK_USED], stats[DISK_TOTAL]))
 	m.StatusTimeCount(m.Spawn().Options(stats, _stats).OptionSimple(VCPU, MEM, DISK, SOCKET, PROC))
 	m.RewriteAppend(func(value, key string, index int) string {
-		if key == MEM {
+		switch key {
+		case MEM:
 			if ls := kit.Split(value, " /"); len(ls) > 0 && kit.Int(ls[0]) < 256*1024*1024 {
-				return html.FormatDanger(value)
+				value = html.FormatDanger(value)
+			}
+		case DISK:
+			if ls := kit.Split(value, " /"); len(ls) > 1 && kit.Int(ls[0])*100/kit.Int(ls[1]) > 80 {
+				value = html.FormatDanger(value)
 			}
 		}
 		return value
@@ -302,6 +307,9 @@ func (s relay) cmds(m *ice.Message, cmd string, arg ...ice.Any) {
 }
 func (s relay) cmdsPath(m *ice.Message) (string, string) {
 	p := kit.Format("/home/%s/%s", m.Option(aaa.USERNAME), kit.Select(CONTEXTS, m.Option(web.DREAM)))
+	if m.Option(aaa.USERNAME) == aaa.ROOT {
+		p = kit.Format("/%s/%s", m.Option(aaa.USERNAME), kit.Select(CONTEXTS, m.Option(web.DREAM)))
+	}
 	pp := kit.Format("%s/%s", p, web.PROXY_PATH)
 	return p, pp
 }

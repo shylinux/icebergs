@@ -30,7 +30,7 @@ Volcanos(chat.ONIMPORT, {
 			{img: can.misc.Resource(can, item.icons, can.core.Keys(item.domain, item.name)), onclick: cb(web.DESKTOP)}, {view: wiki.TITLE, list: [
 				{text: item.name||item.domain||location.host, onclick: cb(web.OPEN)},
 				item.status != cli.STOP && can.onappend.label(can, item, {version: icon.version, time: icon.compile, access: "bi bi-file-lock"}),
-				{text: [item.text, "", "status"]},
+				{text: [item.text, "", mdb.STATUS]},
 				can.onappend.buttons(can, item),
 			]},
 		], _init: function(target) {
@@ -47,13 +47,15 @@ Volcanos(chat.ONACTION, {
 		can.page.ClassList.add(can, can._output, "process")
 		can.core.Next(can.db.server, function(server, next, index) {
 			can.core.Next(can.core.Item(can.db.list, function(key, value) { return value }), function(list, next, i) {
-				var item = list[server]; if (!item) { return next() }
-				if (!item.name || item.status != cli.START) { return next() }
+				var item = list[server]; if (!item) { return next() } if (!item.name || item.status != cli.START) { return next() }
 				can.page.ClassList.add(can, item._target, "process")
-				can.Update(can.request({}, item, {_handle: ice.TRUE}), [ctx.ACTION, code.UPGRADE], function(msg) {
-					next()
-				})
+				can.Update(can.request({}, item, {_handle: ice.TRUE}), [ctx.ACTION, code.UPGRADE], function(msg) { next() })
 			}, next)
-		}, function() { can.Update() })
+		}, function() {
+			can.core.Next(can.db.server, function(server, next, index) {
+				var item = can.db.list[""][server]; can.page.ClassList.add(can, item._target, "process")
+				can.Update(can.request({}, item, {_handle: ice.TRUE}), [ctx.ACTION, code.UPGRADE], function(msg) { next() })
+			}, function() { can.onmotion.delay(can, function() {can.Update() }, 3000) })
+		})
 	},
 })

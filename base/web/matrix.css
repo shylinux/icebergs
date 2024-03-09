@@ -30,5 +30,16 @@ fieldset.web.matrix>div.output:not(.process)>table.content div.item.stop div.tit
 fieldset.web.matrix>div.output.process>table.content div.item.process { background-color:blue; color:var(--notice-fg-color); }
 fieldset.web.matrix>div.output>table.content tr:not(:hover) div.action { visibility:hidden; }
 body:not(.mobile) fieldset.web.matrix>div.output>table.content th:first-child { position:sticky; left:2px; z-index:2; }
-body:not(.mobile) fieldset.web.matrix>div.output>table.content td:first-child { background-color:var(--plugin-bg-color); position:sticky; left:2px; z-index:1; }
+body:not(.mobile) fieldset.web.matrix>div.output>table.content td:first-child { background-color:var(--plugin-bg-color);
+box-shadow:var(--box-shadow);
+position:sticky; left:2px; z-index:1; }
+body:not(.mobile) fieldset.web.matrix>div.output>table.content td:hover {
+box-shadow:var(--notice-box-shadow);
+}
+body:not(.mobile) fieldset.web.matrix>div.output>table.content th:hover {
+box-shadow:var(--notice-box-shadow);
+}
+body:not(.mobile) fieldset.web.matrix>div.output>table.content td:first-child:hover {
+box-shadow:var(--notice-box-shadow);
+}
 body:not(.mobile) fieldset.web.matrix>div.output>table.content tr.danger td:first-child { background-color:transparent; }

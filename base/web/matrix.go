@@ -34,6 +34,9 @@ func _matrix_list(m *ice.Message, domain, typ string, meta ice.Maps, fields ...s
 	m.Cmd(Space(m, domain), DREAM).Table(func(value ice.Maps) {
 		switch value[mdb.TYPE] {
 		case WORKER:
+			if value[aaa.ACCESS] == aaa.PRIVATE {
+				break
+			}
 			value[DOMAIN] = domain
 			kit.If(value[mdb.STATUS] == cli.STOP, func() { value[mdb.ICONS] = nfs.USR_ICONS_ICEBERGS })
 			kit.If(value[mdb.STATUS] == cli.STOP && istech, func() { button = []ice.Any{cli.START, mdb.REMOVE} })

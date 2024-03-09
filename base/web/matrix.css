@@ -20,13 +20,14 @@ fieldset.web.matrix>div.output>table.content div.item div.title:hover { backgrou
 fieldset.web.matrix>div.output>table.content div.item div.title span:hover { background-color:var(--hover-bg-color); }
 fieldset.web.matrix>div.output>table.content div.item div.status div.item:hover { background-color:var(--hover-bg-color); }
 fieldset.web.matrix>div.output>table.content div.item:hover { background-color:unset; color:unset; }
-fieldset.web.matrix>div.output>table.content div.item.notice { background-color:var(--notice-bg-color); color:var(--notice-fg-color); }
-fieldset.web.matrix>div.output>table.content div.item.danger { background-color:var(--danger-bg-color); color:var(--danger-fg-color); }
-fieldset.web.matrix>div.output>table.content div.item.server { border:var(--notice-bg-color) solid 3px; }
-fieldset.web.matrix>div.output>table.content div.item.master { border:var(--danger-bg-color) solid 3px; }
-fieldset.web.matrix>div.output>table.content div.item.danger div.status div.item { color:var(--danger-fg-color); }
-fieldset.web.matrix>div.output>table.content div.item.notice div.status div.item { color:var(--notice-fg-color); }
-fieldset.web.matrix>div.output>table.content div.item.stop div.title>span { color:var(--disable-fg-color); }
+fieldset.web.matrix>div.output:not(.process)>table.content div.item.notice { background-color:var(--notice-bg-color); color:var(--notice-fg-color); }
+fieldset.web.matrix>div.output:not(.process)>table.content div.item.danger { background-color:var(--danger-bg-color); color:var(--danger-fg-color); }
+fieldset.web.matrix>div.output:not(.process)>table.content div.item.server { border:var(--notice-bg-color) solid 3px; }
+fieldset.web.matrix>div.output:not(.process)>table.content div.item.master { border:var(--danger-bg-color) solid 3px; }
+fieldset.web.matrix>div.output:not(.process)>table.content div.item.danger div.status div.item { color:var(--danger-fg-color); }
+fieldset.web.matrix>div.output:not(.process)>table.content div.item.notice div.status div.item { color:var(--notice-fg-color); }
+fieldset.web.matrix>div.output:not(.process)>table.content div.item.stop div.title>span { color:var(--disable-fg-color); }
+fieldset.web.matrix>div.output.process>table.content div.item.process { background-color:blue; color:var(--notice-fg-color); }
 fieldset.web.matrix>div.output>table.content tr:not(:hover) div.action { visibility:hidden; }
 body:not(.mobile) fieldset.web.matrix>div.output>table.content th:first-child { position:sticky; left:2px; z-index:2; }
 body:not(.mobile) fieldset.web.matrix>div.output>table.content td:first-child { background-color:var(--plugin-bg-color); position:sticky; left:2px; z-index:1; }

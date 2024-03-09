@@ -1,7 +1,8 @@
 Volcanos(chat.ONIMPORT, {
-	_init: function(can, msg) { var list = {}, domain = [""]
+	_init: function(can, msg) { var list = {}, domain = [""], server = []
 		msg.Table(function(value) { var name = value.name, _domain = value.domain
 			list[name] = list[name]||{}, list[name][_domain] = value, domain.indexOf(_domain) == -1 && domain.push(_domain)
+			value.type == web.SERVER && server.push(value.domain)
 		})
 		can.ui = can.page.Appends(can, can._output, [{view: [wiki.CONTENT, html.TABLE], list: [
 			{type: html.THEAD, list: [{type: html.TR, list: can.core.List(domain, function(domain) {
@@ -14,6 +15,7 @@ Volcanos(chat.ONIMPORT, {
 			})},
 		] }]), can.onmotion.delay(can, function() { can.Status(mdb.COUNT, can.core.Item(list).length+"x"+can.core.List(domain).length) })
 		can.onmotion.orderShow(can, can.page.SelectOne(can, can._output, "table>tbody"), "tr")
+		can.db.list = list, can.db.domain = domain, can.db.server = server
 	},
 	void: function(can, name, domain, list) { var worker = list[name][""], server = list[""][domain]
 		return {view: html.ACTION, _init: function(target) {
@@ -31,9 +33,27 @@ Volcanos(chat.ONIMPORT, {
 				{text: [item.text, "", "status"]},
 				can.onappend.buttons(can, item),
 			]},
-		]}
+		], _init: function(target) {
+			item._target = target
+		}}
 	},
 	style: function(can, item, list) { var name = item.name, domain = item.domain, worker = list[name][""]
 		return !worker? html.NOTICE: (worker.status != cli.STOP && item.status != cli.STOP && (item.version != worker.version || item.time < worker.time))? html.DANGER: ""
 	},
 }, [""])
+Volcanos(chat.ONACTION, {
+	upgrade: function(event, can) {
+		var msg = can.request(event); if (msg.Option(mdb.NAME) || msg.Option(web.DOMAIN)) { return can.Update(event, [ctx.ACTION, code.UPGRADE]) }
+		can.page.ClassList.add(can, can._output, "process")
+		can.core.Next(can.db.server, function(server, next, index) {
+			can.core.Next(can.core.Item(can.db.list, function(key, value) { return value }), function(list, next, i) {
+				var item = list[server]; if (!item) { return next() }
+				if (!item.name || item.status != cli.START) { return next() }
+				can.page.ClassList.add(can, item._target, "process")
+				can.Update(can.request({}, item, {_handle: ice.TRUE}), [ctx.ACTION, code.UPGRADE], function(msg) {
+					next()
+				})
+			}, next)
+		}, function() { can.Update() })
+	},
+})

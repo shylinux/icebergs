@@ -534,7 +534,7 @@ func DreamProcessIframe(m *ice.Message, arg ...string) {
 		defer m.Push(TITLE, kit.Keys(m.Option(mdb.NAME), m.ShortKey()))
 	}
 	DreamProcess(m, CHAT_IFRAME, func() string {
-		return S(kit.Keys(m.Option(ice.MSG_USERPOD), m.Option(mdb.NAME))) + C(m.ShortKey())
+		return kit.MergeURL(S(kit.Keys(m.Option(ice.MSG_USERPOD), m.Option(mdb.NAME)))+C(m.ShortKey()), ice.MSG_DEBUG, m.Option(ice.MSG_DEBUG))
 	}, arg...)
 }
 func DreamProcess(m *ice.Message, cmd string, args ice.Any, arg ...string) {

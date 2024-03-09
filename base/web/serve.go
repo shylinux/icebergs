@@ -203,7 +203,6 @@ const (
 	HTTP   = "http"
 	HTTPS  = "https"
 	DOMAIN = "domain"
-	ORIGIN = "origin"
 	FORM   = "form"
 	BODY   = "body"
 	HOME   = "home"

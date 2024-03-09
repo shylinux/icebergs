@@ -111,7 +111,7 @@ func _dream_list_more(m *ice.Message, simple bool) *ice.Message {
 				msg := gdb.Event(m.Spawn(value), DREAM_TABLES)
 				defer m.PushButton(strings.Join(msg.Appendv(ctx.ACTION), ""))
 			}
-		case MASTER:
+		case ORIGIN:
 			if spide, ok := list[value[mdb.NAME]]; ok {
 				value[mdb.ICONS] = kit.Select(value[mdb.ICONS], spide[mdb.ICONS])
 			}
@@ -231,7 +231,7 @@ const DREAM = "dream"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		DREAM: {Name: "dream refresh", Help: "梦想家", Icon: "Launchpad.png", Role: aaa.VOID, Meta: kit.Dict(
-			ice.CTX_TRANS, kit.Dict(html.INPUT, kit.Dict(WORKER, "空间", SERVER, "机器", MASTER, "服务")),
+			ice.CTX_TRANS, kit.Dict(html.INPUT, kit.Dict(WORKER, "空间", SERVER, "机器", ORIGIN, "主机")),
 		), Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m = m.Spawn()
@@ -273,7 +273,7 @@ func init() {
 						})
 						m.RenameAppend(nfs.PATH, arg[0])
 						mdb.HashInputs(m, arg)
-						DreamListSpide(m, []string{ice.DEV}, MASTER, func(dev, origin string) {
+						DreamListSpide(m, []string{ice.DEV}, ORIGIN, func(dev, origin string) {
 							m.Spawn().SplitIndex(m.Cmdx(SPIDE, dev, SPIDE_RAW, http.MethodGet, S(), cli.GOOS, runtime.GOOS, cli.GOARCH, runtime.GOARCH)).Table(func(value ice.Maps) {
 								m.Push(arg[0], origin+S(value[mdb.NAME])).Push(nfs.SIZE, value[nfs.SIZE]).Push(mdb.TIME, value[mdb.TIME])
 							})
@@ -422,7 +422,7 @@ func init() {
 				nfs.Trash(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME)))
 			}},
 			OPEN: {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
-				if m.Option(mdb.TYPE) == MASTER && m.IsLocalhost() {
+				if m.Option(mdb.TYPE) == ORIGIN && m.IsLocalhost() {
 					m.ProcessOpen(SpideOrigin(m, m.Option(mdb.NAME)))
 				} else {
 					m.ProcessOpen(S(m.Option(mdb.NAME)))
@@ -468,7 +468,7 @@ func init() {
 					msg.Table(func(value ice.Maps) { stat[value[mdb.TYPE]]++; stat[value[mdb.STATUS]]++ })
 					PushStats(m, kit.Keys(m.CommandKey(), cli.START), stat[cli.START], "", "已启动空间")
 					PushStats(m, kit.Keys(m.CommandKey(), SERVER), stat[SERVER], "", "已连接机器")
-					PushStats(m, kit.Keys(m.CommandKey(), MASTER), stat[MASTER], "", "已连接服务")
+					PushStats(m, kit.Keys(m.CommandKey(), ORIGIN), stat[ORIGIN], "", "已连接主机")
 				}
 			}},
 		}, StatsAction(), DreamAction(), DreamTablesAction(), mdb.ImportantHashAction(
@@ -492,7 +492,7 @@ func init() {
 				} else {
 					m.Action(html.FILTER, mdb.CREATE, STARTALL, STOPALL)
 				}
-				m.Sort("type,status,name", []string{aaa.LOGIN, WORKER, SERVER, MASTER}, []string{cli.START, cli.STOP, cli.BEGIN}, ice.STR_R)
+				m.Sort("type,status,name", []string{aaa.LOGIN, WORKER, SERVER, ORIGIN}, []string{cli.START, cli.STOP, cli.BEGIN}, ice.STR_R)
 				m.StatusTimeCountStats(mdb.TYPE, mdb.STATUS)
 				ctx.DisplayTableCard(m)
 				if !m.IsDebug() {

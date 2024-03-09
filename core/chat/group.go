@@ -22,7 +22,7 @@ func init() {
 					})
 				}
 			}},
-			mdb.CREATE: {Name: "create type*=worker,server,master, name*"},
+			mdb.CREATE: {Name: "create type*=worker,server,origin, name*"},
 			tcp.SEND: {Name: "send text=hi", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(web.SPACE, m.Option(mdb.NAME), Prefix(MESSAGE), tcp.RECV, mdb.TEXT, m.Option(mdb.TEXT))
 			}},

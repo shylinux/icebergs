@@ -193,7 +193,7 @@ func ProxyUpload(m *ice.Message, pod string, p string) string {
 	} else if s, e := file.StatFile(p); e == nil {
 		size, cache = s.Size(), s.ModTime()
 	}
-	if m.Cmdv(SPACE, pod, mdb.TYPE) == MASTER {
+	if m.Cmdv(SPACE, pod, mdb.TYPE) == ORIGIN {
 		m.Cmd(SPIDE, pod, SPIDE_SAVE, pp, p)
 	} else {
 		kit.If(p == ice.BIN_ICE_BIN, func() { m.Option(ice.MSG_USERROLE, aaa.TECH) })

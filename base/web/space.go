@@ -41,7 +41,7 @@ func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 			next := time.Duration(rand.Intn(a*(i+1))+b*i) * time.Millisecond
 			m.Cmd(tcp.CLIENT, tcp.DIAL, args, func(c net.Conn) {
 				if c, e := websocket.NewClient(c, u); !m.WarnNotValid(e, tcp.DIAL, dev, SPACE, u.String()) {
-					defer mdb.HashCreateDeferRemove(m, kit.SimpleKV("", MASTER, dev, origin), kit.Dict(mdb.TARGET, c))()
+					defer mdb.HashCreateDeferRemove(m, kit.SimpleKV("", ORIGIN, dev, origin), kit.Dict(mdb.TARGET, c))()
 					kit.If(ice.Info.Colors, func() { once.Do(func() { m.Go(func() { _space_qrcode(m, dev) }) }) })
 					_space_handle(m.Spawn(), true, dev, c)
 					i = 0
@@ -144,7 +144,7 @@ func _space_handle(m *ice.Message, safe bool, name string, c *websocket.Conn) {
 			m.WarnNotFound(!mdb.HashSelectDetail(m, next, func(value ice.Map) {
 				switch c := value[mdb.TARGET].(type) {
 				case (*websocket.Conn): // 转发报文
-					kit.If(value[mdb.TYPE] == MASTER && msg.Option(ice.MSG_HANDLE) == ice.FALSE, func() {
+					kit.If(value[mdb.TYPE] == ORIGIN && msg.Option(ice.MSG_HANDLE) == ice.FALSE, func() {
 						msg.Optionv(ice.MSG_USERWEB, kit.Simple(value[mdb.TEXT], msg.Optionv(ice.MSG_USERWEB)))
 						msg.Optionv(ice.MSG_USERPOD, kit.Simple(kit.Keys(target[1:]), msg.Optionv(ice.MSG_USERPOD)))
 					})
@@ -215,7 +215,7 @@ func _space_send(m *ice.Message, name string, arg ...string) (h string) {
 	}
 	if target := kit.Split(name, nfs.PT, nfs.PT); !mdb.HashSelectDetail(m, target[0], func(value ice.Map) {
 		if c, ok := value[mdb.TARGET].(*websocket.Conn); !m.WarnNotValid(!ok, mdb.TARGET) {
-			kit.If(kit.Format(value[mdb.TYPE]) == MASTER, func() {
+			kit.If(kit.Format(value[mdb.TYPE]) == ORIGIN, func() {
 				m.Optionv(ice.MSG_USERWEB, kit.Simple(value[mdb.TEXT], m.Optionv(ice.MSG_USERWEB)))
 				m.Optionv(ice.MSG_USERPOD, kit.Simple(kit.Keys(target[1:]), m.Optionv(ice.MSG_USERPOD)))
 				m.Options(ice.MSG_USERHOST, "", ice.MSG_USERWEB0, m.Option(ice.MSG_USERWEB), ice.MSG_USERPOD0, name)
@@ -253,7 +253,7 @@ const (
 	WORKER = "worker"
 	SERVER = "server"
 	MYSELF = "myself"
-	MASTER = "master"
+	ORIGIN = "origin"
 
 	REDIAL = "redial"
 	AGENT  = "agent"
@@ -289,7 +289,7 @@ func init() {
 						switch value[mdb.TYPE] {
 						case SERVER:
 							m.PushSearch(mdb.TEXT, m.MergePod(value[mdb.NAME]), value)
-						case MASTER:
+						case ORIGIN:
 							m.PushSearch(mdb.TEXT, m.Cmdv(SPIDE, value[mdb.NAME], CLIENT_ORIGIN), value)
 						}
 					})
@@ -320,7 +320,7 @@ func init() {
 			}},
 			OPEN: {Hand: func(m *ice.Message, arg ...string) {
 				switch m.Option(mdb.TYPE) {
-				case MASTER:
+				case ORIGIN:
 					ProcessIframe(m, m.Option(mdb.NAME), SpideOrigin(m, m.Option(mdb.NAME)), arg...)
 				default:
 					ProcessIframe(m, m.Option(mdb.NAME), m.MergePod(m.Option(mdb.NAME)), arg...)
@@ -344,14 +344,14 @@ func init() {
 						m.Push(mdb.LINK, m.MergeLink(value[mdb.TEXT]))
 					} else if kit.IsIn(value[mdb.TYPE], WORKER, SERVER) {
 						m.Push(mdb.LINK, m.MergePod(value[mdb.NAME]))
-					} else if kit.IsIn(value[mdb.TYPE], MASTER) {
+					} else if kit.IsIn(value[mdb.TYPE], ORIGIN) {
 						m.Push(mdb.LINK, value[mdb.TEXT])
 					} else {
 						m.Push(mdb.LINK, "")
 					}
 					m.PushButton(kit.Select(OPEN, LOGIN, value[mdb.TYPE] == LOGIN), mdb.REMOVE)
 				})
-				m.Sort("", kit.Simple(aaa.LOGIN, WEIXIN, PORTAL, WORKER, SERVER, MASTER))
+				m.Sort("", kit.Simple(aaa.LOGIN, WEIXIN, PORTAL, WORKER, SERVER, ORIGIN))
 			} else {
 				// m.OptionDefault(ice.MSG_USERPOD, arg[0])
 				for i := 0; i < 5; i++ {

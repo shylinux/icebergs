@@ -38,7 +38,7 @@ func _matrix_list(m *ice.Message, domain, typ string, meta ice.Maps, fields ...s
 			kit.If(value[mdb.STATUS] == cli.STOP, func() { value[mdb.ICONS] = nfs.USR_ICONS_ICEBERGS })
 			kit.If(value[mdb.STATUS] == cli.STOP && istech, func() { button = []ice.Any{cli.START, mdb.REMOVE} })
 			m.PushRecord(value, fields...).PushButton(button...)
-		case SERVER, MASTER:
+		case SERVER, ORIGIN:
 			server = append(server, kit.Keys(domain, value[mdb.NAME]))
 			icons = append(icons, value[mdb.ICONS])
 			types = append(types, value[mdb.TYPE])
@@ -53,7 +53,7 @@ func _matrix_action(m *ice.Message, action string, arg ...string) {
 			ProcessIframe(m, "", "", arg...)
 		} else {
 			title, link := kit.Keys(domain, action), kit.Select("", S(domain), domain != "")+C(action)
-			if m.Option(mdb.TYPE) == MASTER {
+			if m.Option(mdb.TYPE) == ORIGIN {
 				link = kit.MergeURL2(SpideOrigin(m, m.Option(DOMAIN)), C(action))
 				if kit.IsIn(action, ADMIN) {
 					m.ProcessOpen(link)
@@ -64,9 +64,9 @@ func _matrix_action(m *ice.Message, action string, arg ...string) {
 		}
 	case OPEN:
 		link := kit.Select(nfs.PS, S(domain), domain != "")
-		if m.Option(mdb.TYPE) == MASTER {
+		if m.Option(mdb.TYPE) == ORIGIN {
 			link = SpideOrigin(m, m.Option(DOMAIN))
-		} else if m.Option("server.type") == MASTER {
+		} else if m.Option("server.type") == ORIGIN {
 			link = kit.MergeURL2(SpideOrigin(m, m.Option(DOMAIN)), S(m.Option(mdb.NAME)))
 		}
 		m.ProcessOpen(link)
@@ -94,7 +94,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		MATRIX: {Name: "matrix refresh", Help: "矩阵", Icon: "Mission Control.png", Meta: kit.Dict(
 			ice.CTX_ICONS, kit.Dict(STATUS, "bi bi-git"), ice.CTX_TRANS, kit.Dict(
-				STATUS, "源码", html.INPUT, kit.Dict(MYSELF, "本机", MASTER, "主机"),
+				STATUS, "源码", html.INPUT, kit.Dict(MYSELF, "本机", ORIGIN, "主机"),
 			),
 		), Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(DREAM, mdb.INPUTS, arg) }},
@@ -151,7 +151,7 @@ func init() {
 					return value
 				})
 				m.Action(html.FILTER, mdb.CREATE, UPGRADE).StatusTimeCountStats(mdb.TYPE, mdb.STATUS).Display("")
-				m.Sort("type,status,name,domain", []string{MYSELF, SERVER, MASTER, WORKER, ""}, []string{cli.START, cli.STOP, ""}, ice.STR_R, ice.STR_R)
+				m.Sort("type,status,name,domain", []string{MYSELF, SERVER, ORIGIN, WORKER, ""}, []string{cli.START, cli.STOP, ""}, ice.STR_R, ice.STR_R)
 				ctx.Toolkit(m)
 				return nil
 			})

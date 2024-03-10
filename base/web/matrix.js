@@ -28,14 +28,12 @@ Volcanos(chat.ONIMPORT, {
 		function cb(action) { return function(event) { can.Update(can.request(event, item), [ctx.ACTION, action]) } }
 		return {view: [[html.ITEM, item.type, item.status, can.onimport.style(can, item, list)]], list: [
 			{img: can.misc.Resource(can, item.icons, can.core.Keys(item.domain, item.name)), onclick: cb(web.DESKTOP)}, {view: wiki.TITLE, list: [
-				{text: item.name||item.domain||"中华人民共和国中央人民政府"||location.host, onclick: cb(web.OPEN)},
+				{text: item.name||item.domain||location.host, onclick: cb(web.OPEN)},
 				item.status != cli.STOP && can.onappend.label(can, item, {version: icon.version, time: icon.compile, access: "bi bi-file-lock"}),
 				{text: [item.text, "", mdb.STATUS]},
 				can.onappend.buttons(can, item),
 			]},
-		], _init: function(target) {
-			item._target = target
-		}}
+		], _init: function(target) { item._target = target }}
 	},
 	style: function(can, item, list) { var name = item.name, domain = item.domain, worker = list[name][""]
 		return !worker? html.NOTICE: (worker.status != cli.STOP && item.status != cli.STOP && (item.version != worker.version || item.time < worker.time))? html.DANGER: ""

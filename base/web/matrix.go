@@ -101,10 +101,8 @@ func init() {
 			),
 		), Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(DREAM, mdb.INPUTS, arg) }},
-			mdb.CREATE: {Name: "create name*=hi icons origin*", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(SPIDE, mdb.CREATE, arg, mdb.TYPE, nfs.REPOS)
-				m.Options(m.Cmd(SPIDE, m.Option(mdb.NAME)).AppendSimple())
-				m.Cmdy(SPIDE, mdb.DEV_REQUEST)
+			mdb.CREATE: {Name: "create name*=hi icons repos binary template", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(DREAM, mdb.CREATE, arg)
 			}},
 			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) { _matrix_dream(m, nfs.TRASH); _matrix_dream(m, "") }},
 			cli.START:  {Hand: func(m *ice.Message, arg ...string) { _matrix_dream(m, "") }},

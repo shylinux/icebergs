@@ -145,6 +145,8 @@ const (
 	SH    = "sh"
 	GO    = "go"
 	GIT   = "git"
+	WGET  = "wget"
+	CURL  = "curl"
 	MAN   = "man"
 	RUN   = "run"
 	KILL  = "kill"

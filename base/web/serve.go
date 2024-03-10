@@ -253,8 +253,8 @@ func init() {
 					}
 				}
 			}},
-			PROXY_CONF: {Name: "proxyConf name* port path", Hand: func(m *ice.Message, arg ...string) {
-				if dir := m.OptionDefault(nfs.PATH, PROXY_PATH); nfs.Exists(m, dir) {
+			PROXY_CONF: {Name: "proxyConf name* port host path", Hand: func(m *ice.Message, arg ...string) {
+				if dir := m.OptionDefault(nfs.PATH, PROXY_PATH, tcp.HOST, "127.0.0.1"); nfs.Exists(m, dir) {
 					for _, p := range []string{"server.conf", "location.conf", "upstream.conf"} {
 						m.Cmd(nfs.SAVE, kit.Format("%s/conf/portal/%s/%s", dir, m.Option(mdb.NAME), p), m.Template(p)+lex.NL)
 					}

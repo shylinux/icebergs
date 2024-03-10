@@ -45,32 +45,36 @@ func _publish_file(m *ice.Message, file string, arg ...string) string {
 	return m.Cmdx(nfs.LINK, path.Join(ice.USR_PUBLISH, kit.Select(path.Base(file), arg, 0)), file)
 }
 func _publish_contexts(m *ice.Message, arg ...string) {
-	m.Options(nfs.DIR_ROOT, "").OptionDefault(ice.MSG_USERNAME, "demo")
-	m.Option("tcp_localhost", strings.ToLower(ice.Info.Hostname))
+	m.Options(nfs.DIR_ROOT, "").OptionDefault(ice.MSG_USERNAME, ice.DEMO)
+
 	host := tcp.PublishLocalhost(m, web.UserHost(m))
+	m.Option(ice.TCP_DOMAIN, kit.ParseURL(host).Hostname())
+	m.Option("tcp_localhost", strings.ToLower(ice.Info.Hostname))
+	m.OptionDefault(web.DOMAIN, host)
+
+	env := []string{}
+	kit.If(m.Option("ctx_dev_ip"), func(p string) { env = append(env, "ctx_dev_ip", p) })
+	kit.If(m.Option(ice.MSG_USERPOD), func(p string) { env = append(env, cli.CTX_POD, p) })
+	kit.If(len(env) > 0, func() { m.Options(cli.CTX_ENV, lex.SP+kit.JoinKV(mdb.EQ, lex.SP, env...)) })
+	m.OptionDefault("ctx_cli", "temp=$(mktemp); if curl -h &>/dev/null; then curl -o $temp -fsSL $ctx_dev; else wget -O $temp -q $ctx_dev; fi; source $temp")
+	m.OptionDefault("ctx_arg", kit.JoinCmds(aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERNICK, m.Option(ice.MSG_USERNICK)))
+
 	for _, k := range kit.Default(arg, ice.MISC) {
-		m.OptionDefault(web.DOMAIN, host)
-		m.Options(cli.CTX_ENV, kit.Select("", lex.SP+kit.JoinKV(mdb.EQ, lex.SP, cli.CTX_POD, m.Option(ice.MSG_USERPOD)), m.Option(ice.MSG_USERPOD) != ""))
-		kit.If(m.Option("ctx_dev_ip"), func(p string) {
-			m.Option(cli.CTX_ENV, m.Option(cli.CTX_ENV)+" "+"ctx_dev_ip="+tcp.PublishLocalhost(m, p))
-		})
-		m.Option(ice.TCP_DOMAIN, kit.ParseURL(host).Hostname())
 		switch k {
 		case INSTALL:
 			m.Option("format", "raw")
 		case ice.BASE:
-			m.Option(web.DOMAIN, m.Cmd(web.SPIDE, ice.SHY).Append(web.CLIENT_ORIGIN))
+			m.Option(web.DOMAIN, web.SpideOrigin(m, ice.SHY))
 		case ice.CORE:
-			m.Option(web.DOMAIN, m.Cmd(web.SPIDE, ice.DEV).Append(web.CLIENT_ORIGIN))
+			m.Option(web.DOMAIN, web.SpideOrigin(m, ice.DEV))
 		case nfs.SOURCE, ice.DEV:
 			m.OptionDefault(nfs.SOURCE, ice.Info.Make.Remote)
 		case nfs.BINARY, ice.APP:
-		case "curl", "wget":
+		case cli.CURL, cli.WGET:
 		case "manual":
-			m.Options(nfs.BINARY, "ice.linux.amd64")
+			m.Option(nfs.BINARY, "ice.linux.amd64")
 		}
-		template := strings.TrimSpace(nfs.Template(m, kit.Keys(k, SH)))
-		if m.Option("format") == "raw" {
+		if template := strings.TrimSpace(nfs.Template(m, kit.Keys(k, SH))); m.Option("format") == "raw" {
 			m.Echo(template)
 		} else {
 			m.EchoScript(template)

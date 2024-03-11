@@ -38,7 +38,7 @@ func DevTokenAction(name, origin string) ice.Actions {
 			))
 		}},
 		mdb.DEV_CHOOSE: {Hand: func(m *ice.Message, arg ...string) {
-			m.EchoInfoButton(kit.JoinWord(m.ShortKey(), m.Cmdx(nfs.CAT, path.Join(nfs.SRC_TEMPLATE, m.PrefixKey(), "saveto.html")), m.Option(cli.BACK)), mdb.DEV_RESPONSE)
+			m.EchoInfoButton(kit.JoinWord(m.ShortKey(), m.Cmdx(nfs.CAT, path.Join(nfs.SRC_TEMPLATE, "web.token", "saveto.html")), m.Option(cli.BACK)), mdb.DEV_RESPONSE)
 		}},
 		mdb.DEV_RESPONSE: {Help: "确认", Hand: func(m *ice.Message, arg ...string) {
 			if !m.WarnNotAllow(m.Option(ice.MSG_METHOD) != http.MethodPost) {
@@ -47,7 +47,7 @@ func DevTokenAction(name, origin string) ice.Actions {
 			}
 		}},
 		mdb.DEV_CONFIRM: {Hand: func(m *ice.Message, arg ...string) {
-			m.EchoInfoButton(kit.JoinWord(m.ShortKey(), m.Cmdx(nfs.CAT, path.Join(nfs.SRC_TEMPLATE, m.PrefixKey(), "savefrom.html")), m.Option(name)), mdb.DEV_CREATE)
+			m.EchoInfoButton(kit.JoinWord(m.ShortKey(), m.Cmdx(nfs.CAT, path.Join(nfs.SRC_TEMPLATE, "web.token", "savefrom.html")), m.Option(name)), mdb.DEV_CREATE)
 		}},
 		mdb.DEV_CREATE: {Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 			if !m.WarnNotAllow(m.Option(ice.MSG_METHOD) != http.MethodPost) {

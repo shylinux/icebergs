@@ -192,6 +192,9 @@ func _space_exec(m *ice.Message, name string, source, target []string, c *websoc
 	}
 	m.Option(ice.MSG_HANDLE, ice.TRUE)
 	defer m.Cost(kit.Format("%v->%v %v %v", source, target, m.Detailv(), m.FormatSize()))
+	if m.Option("space.noecho") == ice.TRUE {
+		return
+	}
 	m.Options(ice.MSG_USERWEB, m.Optionv(ice.MSG_USERWEB), ice.MSG_USERPOD, m.Optionv(ice.MSG_USERPOD))
 	_space_echo(m.Set(ice.MSG_OPTS).Options(m.OptionSimple(ice.MSG_HANDLE, ice.LOG_DEBUG, ice.LOG_DISABLE, ice.LOG_TRACEID)), []string{}, kit.Reverse(kit.Simple(source)), c)
 }

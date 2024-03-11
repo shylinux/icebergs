@@ -53,7 +53,8 @@ func _publish_contexts(m *ice.Message, arg ...string) {
 	m.OptionDefault(web.DOMAIN, host)
 
 	env := []string{}
-	kit.If(m.Option("ctx_dev_ip"), func(p string) { env = append(env, "ctx_dev_ip", p) })
+	m.Option("ctx_dev_ip", web.HostPort(m, m.Cmd(tcp.HOST).Append(aaa.IP), m.Cmd(web.SERVE).Append(tcp.PORT)))
+	// kit.If(m.Option("ctx_dev_ip"), func(p string) { env = append(env, "ctx_dev_ip", p) })
 	kit.If(m.Option(ice.MSG_USERPOD), func(p string) { env = append(env, cli.CTX_POD, p) })
 	kit.If(len(env) > 0, func() { m.Options(cli.CTX_ENV, lex.SP+kit.JoinKV(mdb.EQ, lex.SP, env...)) })
 	m.OptionDefault("ctx_cli", "temp=$(mktemp); if curl -h &>/dev/null; then curl -o $temp -fsSL $ctx_dev; else wget -O $temp -q $ctx_dev; fi; source $temp")
@@ -87,8 +88,8 @@ const PUBLISH = "publish"
 func init() {
 	web.Index.MergeCommands(ice.Commands{
 		web.PP(ice.PUBLISH): {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
-			web.Count(m, PUBLISH, path.Join(arg...))
 			web.ShareLocalFile(m, ice.USR_PUBLISH, path.Join(arg...))
+			web.Count(m, PUBLISH, path.Join(arg...))
 		}},
 	})
 	Index.MergeCommands(ice.Commands{
@@ -99,8 +100,8 @@ func init() {
 			ice.CONTEXTS: {Hand: func(m *ice.Message, arg ...string) { _publish_contexts(m, arg...) }},
 			nfs.SOURCE:   {Hand: func(m *ice.Message, arg ...string) { _publish_contexts(m, nfs.SOURCE) }},
 			nfs.BINARY:   {Hand: func(m *ice.Message, arg ...string) { _publish_contexts(m, nfs.BINARY) }},
-			"curl":       {Hand: func(m *ice.Message, arg ...string) { _publish_contexts(m, "curl") }},
-			"wget":       {Hand: func(m *ice.Message, arg ...string) { _publish_contexts(m, "wget") }},
+			cli.CURL:     {Hand: func(m *ice.Message, arg ...string) { _publish_contexts(m, cli.CURL) }},
+			cli.WGET:     {Hand: func(m *ice.Message, arg ...string) { _publish_contexts(m, cli.WGET) }},
 			"manual": {Hand: func(m *ice.Message, arg ...string) {
 				host, args := web.UserHost(m), ""
 				kit.If(m.Option(ice.MSG_USERPOD), func(p string) { args = "?pod=" + p })

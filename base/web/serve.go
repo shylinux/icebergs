@@ -254,7 +254,7 @@ func init() {
 				}
 			}},
 			PROXY_CONF: {Name: "proxyConf name* port host path", Hand: func(m *ice.Message, arg ...string) {
-				if dir := m.OptionDefault(nfs.PATH, PROXY_PATH, tcp.HOST, "127.0.0.1"); nfs.Exists(m, dir) {
+				if dir := m.OptionDefault(nfs.PATH, PROXY_PATH, tcp.HOST, "127.0.0.1", tcp.PORT, "9020"); nfs.Exists(m, dir) {
 					for _, p := range []string{"server.conf", "location.conf", "upstream.conf"} {
 						m.Cmd(nfs.SAVE, kit.Format("%s/conf/portal/%s/%s", dir, m.Option(mdb.NAME), p), m.Template(p)+lex.NL)
 					}
@@ -308,6 +308,13 @@ func ParseUA(m *ice.Message) (res []string) {
 		}
 	}
 	return append(res, aaa.IP, m.Option(ice.MSG_USERIP), aaa.UA, m.Option(ice.MSG_USERUA))
+}
+func ProxyDomain(m *ice.Message, name string) string {
+	domain := ""
+	m.Cmd(nfs.CAT, path.Join(PROXY_PATH, "conf/portal", name, "server.conf"), func(ls []string) {
+		kit.If(ls[0] == "server_name", func() { domain = ls[1] })
+	})
+	return "https://" + domain
 }
 func Script(m *ice.Message, str string, arg ...ice.Any) string {
 	return ice.Render(m, ice.RENDER_SCRIPT, kit.Format(str, arg...))

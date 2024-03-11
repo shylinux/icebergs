@@ -337,6 +337,7 @@ func init() {
 			cli.BUILD: {Name: "build name", Hand: func(m *ice.Message, arg ...string) {
 				compile := cli.SystemFindGo(m)
 				m.Option(ice.MSG_TITLE, kit.Keys(m.Option(ice.MSG_USERPOD0), m.Option(ice.MSG_USERPOD), m.CommandKey(), m.ActionKey()))
+				m.Option("dream.simple", ice.TRUE)
 				m.Cmd("", FOR_FLOW, m.Option(mdb.NAME), kit.JoinWord(cli.SH, ice.ETC_MISS_SH), func(p string) bool {
 					if compile && nfs.Exists(m, path.Join(p, ice.SRC_MAIN_GO)) {
 						return false
@@ -345,9 +346,7 @@ func init() {
 						return true
 					}
 				})
-				kit.If(m.Option(mdb.NAME) == "", func() {
-					m.Sleep("5s").Cmdy(ROUTE, cli.BUILD).ProcessInner()
-				})
+				kit.If(m.Option(mdb.NAME) == "", func() { m.Sleep("5s").Cmdy(ROUTE, cli.BUILD).ProcessInner() })
 			}},
 			PUBLISH: {Name: "publish name", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(ice.MSG_TITLE, kit.Keys(m.Option(ice.MSG_USERPOD0), m.Option(ice.MSG_USERPOD), m.CommandKey(), m.ActionKey()))

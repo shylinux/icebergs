@@ -38,7 +38,7 @@ func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 		redial := kit.Dict(mdb.Configv(m, REDIAL))
 		a, b, _c := kit.Int(redial["a"]), kit.Int(redial["b"]), kit.Int(redial["c"])
 		for i := 1; i < _c; i++ {
-			next := time.Duration(rand.Intn(a*(i+1))+b*i) * time.Millisecond
+			next := time.Duration(rand.Intn(a*i*i)+b*(i+1)) * time.Millisecond
 			m.Cmd(tcp.CLIENT, tcp.DIAL, args, func(c net.Conn) {
 				if c, e := websocket.NewClient(c, u); !m.WarnNotValid(e, tcp.DIAL, dev, SPACE, u.String()) {
 					defer mdb.HashCreateDeferRemove(m, kit.SimpleKV("", ORIGIN, dev, origin), kit.Dict(mdb.TARGET, c))()
@@ -125,9 +125,10 @@ func _space_handle(m *ice.Message, safe bool, name string, c *websocket.Conn) {
 			break
 		}
 		msg := m.Spawn(b)
-		if safe { // 下行权限
+		if safe && msg.Option(ice.MSG_UNSAFE) != ice.TRUE { // 下行权限
 			kit.If(kit.IsIn(msg.Option(ice.MSG_USERROLE), "", aaa.VOID), func() { msg.Option(ice.MSG_USERROLE, aaa.UserRole(msg, msg.Option(ice.MSG_USERNAME))) })
 		} else { // 上行权限
+			msg.Option(ice.MSG_UNSAFE, ice.TRUE)
 			kit.If(msg.Option(ice.MSG_USERROLE), func() { msg.Option(ice.MSG_USERROLE, aaa.VOID) })
 		}
 		source, target := kit.Simple(msg.Optionv(ice.MSG_SOURCE), name), kit.Simple(msg.Optionv(ice.MSG_TARGET))
@@ -141,18 +142,23 @@ func _space_handle(m *ice.Message, safe bool, name string, c *websocket.Conn) {
 				_space_exec(msg, name, source, target, c)
 			}, strings.Join(kit.Simple(SPACE, name, msg.Detailv()), lex.SP))
 		} else {
-			m.WarnNotFound(!mdb.HashSelectDetail(m, next, func(value ice.Map) {
-				switch c := value[mdb.TARGET].(type) {
-				case (*websocket.Conn): // 转发报文
-					kit.If(value[mdb.TYPE] == ORIGIN && msg.Option(ice.MSG_HANDLE) == ice.FALSE, func() {
-						msg.Optionv(ice.MSG_USERWEB, kit.Simple(value[mdb.TEXT], msg.Optionv(ice.MSG_USERWEB)))
-						msg.Optionv(ice.MSG_USERPOD, kit.Simple(kit.Keys(target[1:]), msg.Optionv(ice.MSG_USERPOD)))
-					})
-					_space_echo(msg, source, target, c)
-				case ice.Handler: // 接收响应
-					msg.Go(func() { c(msg) })
+			for i := 0; i < 5; i++ {
+				if !m.WarnNotFoundSpace(!mdb.HashSelectDetail(m, next, func(value ice.Map) {
+					switch c := value[mdb.TARGET].(type) {
+					case (*websocket.Conn): // 转发报文
+						kit.If(value[mdb.TYPE] == ORIGIN && msg.Option(ice.MSG_HANDLE) == ice.FALSE, func() {
+							msg.Optionv(ice.MSG_USERWEB, kit.Simple(value[mdb.TEXT], msg.Optionv(ice.MSG_USERWEB)))
+							msg.Optionv(ice.MSG_USERPOD, kit.Simple(kit.Keys(target[1:]), msg.Optionv(ice.MSG_USERPOD)))
+						})
+						_space_echo(msg, source, target, c)
+					case ice.Handler: // 接收响应
+						msg.Go(func() { c(msg) })
+					}
+				}), SPACE, next) {
+					break
 				}
-			}), SPACE, next)
+				m.Sleep3s()
+			}
 		}
 	}
 }
@@ -184,6 +190,7 @@ func _space_exec(m *ice.Message, name string, source, target []string, c *websoc
 		}
 		m.OptionDefault(ice.MSG_COUNT, "0")
 		kit.If(m.Option(ice.MSG_DAEMON), func(p string) {
+			m.Option(ice.MSG_DAEMON0, m.Option(ice.MSG_DAEMON))
 			m.Option(ice.MSG_DAEMON, kit.Keys(kit.Slice(kit.Reverse(kit.Simple(source)), 0, -1), p))
 		})
 		m.Option(ice.FROM_SPACE, kit.Keys(kit.Reverse(kit.Simple(source[1:]))))
@@ -191,6 +198,9 @@ func _space_exec(m *ice.Message, name string, source, target []string, c *websoc
 		kit.If(m.Optionv(ice.MSG_ARGS) != nil, func() { m.Options(ice.MSG_ARGS, kit.Simple(m.Optionv(ice.MSG_ARGS))) })
 	}
 	m.Option(ice.MSG_HANDLE, ice.TRUE)
+	if m.Option(ice.SPACE_NOECHO) == ice.TRUE {
+		return
+	}
 	defer m.Cost(kit.Format("%v->%v %v %v", source, target, m.Detailv(), m.FormatSize()))
 	m.Options(ice.MSG_USERWEB, m.Optionv(ice.MSG_USERWEB), ice.MSG_USERPOD, m.Optionv(ice.MSG_USERPOD))
 	_space_echo(m.Set(ice.MSG_OPTS).Options(m.OptionSimple(ice.MSG_HANDLE, ice.LOG_DEBUG, ice.LOG_DISABLE, ice.LOG_TRACEID)), []string{}, kit.Reverse(kit.Simple(source)), c)
@@ -199,14 +209,14 @@ func _space_echo(m *ice.Message, source, target []string, c *websocket.Conn) {
 	defer func() { m.WarnNotValid(recover()) }()
 	if m.Options(ice.MSG_SOURCE, source, ice.MSG_TARGET, target[1:]); !m.WarnNotValid(c.WriteMessage(1, []byte(m.FormatMeta()))) {
 		if source != nil {
-			m.Log(tcp.SEND, "%v->%v %v %v", source, target, kit.ReplaceAll(kit.Format("%v", m.Detailv()), "\r\n", "\\r\\n", "\t", "\\t", "\n", "\\n"), m.FormatsMeta(nil))
+			m.Log(kit.Select(tcp.SEND, tcp.ECHO, m.Option(ice.MSG_HANDLE) == ice.TRUE), "%v->%v %v %v", source, target, kit.ReplaceAll(kit.Format("%v", m.Detailv()), "\r\n", "\\r\\n", "\t", "\\t", "\n", "\\n"), m.FormatsMeta(nil))
 		}
 	}
 }
 func _space_send(m *ice.Message, name string, arg ...string) (h string) {
-	withecho := m.Option("space.noecho") != ice.TRUE
+	withecho := m.Option(ice.SPACE_NOECHO) != ice.TRUE
 	kit.If(len(arg) > 0 && arg[0] == TOAST, func() { withecho = false; m.Option(ice.MSG_DEBUG, ice.FALSE) })
-	wait, done := m.Wait(kit.Select("", m.OptionDefault("space.timeout", "180s"), withecho), func(msg *ice.Message, arg ...string) {
+	wait, done := m.Wait(kit.Select("", m.OptionDefault(ice.SPACE_TIMEOUT, "180s"), withecho), func(msg *ice.Message, arg ...string) {
 		m.Cost(kit.Format("%v->[%v] %v %v", m.Optionv(ice.MSG_SOURCE), name, m.Detailv(), msg.FormatSize())).Copy(msg)
 	})
 	if withecho {
@@ -221,7 +231,7 @@ func _space_send(m *ice.Message, name string, arg ...string) (h string) {
 				m.Options(ice.MSG_USERHOST, "", ice.MSG_USERWEB0, m.Option(ice.MSG_USERWEB), ice.MSG_USERPOD0, name)
 			})
 			m.Option(ice.MSG_HANDLE, ice.FALSE)
-			kit.For([]string{ice.MSG_USERROLE, ice.LOG_TRACEID, "space.noecho"}, func(k string) { m.Optionv(k, m.Optionv(k)) })
+			kit.For([]string{ice.MSG_USERROLE, ice.LOG_TRACEID, ice.SPACE_NOECHO}, func(k string) { m.Optionv(k, m.Optionv(k)) })
 			kit.For(kit.Filters(kit.Simple(m.Optionv(ice.MSG_OPTS)), "task.id", "work.id"), func(k string) { m.Optionv(k, m.Optionv(k)) })
 			if withecho {
 				_space_echo(m.Set(ice.MSG_DETAIL, arg...), []string{h}, target, c)
@@ -230,16 +240,12 @@ func _space_send(m *ice.Message, name string, arg ...string) (h string) {
 			}
 		}
 	}) {
-		if target[0] == ice.OPS {
-			if ice.Info.NodeType == SERVER {
-				if name == ice.OPS {
-					m.Cmdy(arg)
-					return
-				}
-			}
+		if name == ice.OPS && ice.Info.NodeType == SERVER {
+			m.Cmdy(arg)
+			return
 		}
 		kit.If(m.IsDebug(), func() {
-			m.WarnNotFound(kit.IndexOf([]string{ice.OPS, ice.DEV}, target[0]) == -1, SPACE, name)
+			m.WarnNotFoundSpace(kit.IndexOf([]string{ice.OPS, ice.DEV}, target[0]) == -1, SPACE, name)
 		})
 	} else if withecho {
 		m.Warn(!wait(), kit.Format("space %v %v time out", name, arg))
@@ -327,7 +333,11 @@ func init() {
 				}
 			}},
 			nfs.PS: {Hand: func(m *ice.Message, arg ...string) { _space_fork(m) }},
-		}, gdb.EventsAction(SPACE_LOGIN), mdb.HashAction(mdb.LIMIT, 1000, mdb.LEAST, 500, mdb.SHORT, mdb.NAME, mdb.FIELD, "time,type,name,text,module,version,agent,system,ip,usernick,username,userrole", ctx.ACTION, OPEN, REDIAL, kit.Dict("a", 3000, "b", 1000, "c", 1000)), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, gdb.EventsAction(SPACE_LOGIN), mdb.HashAction(
+			mdb.LIMIT, 1000, mdb.LEAST, 500,
+			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,type,name,text,module,version,agent,system,ip,usernick,username,userrole",
+			ctx.ACTION, OPEN, REDIAL, kit.Dict("a", 1000, "b", 100, "c", 1000),
+		), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 {
 				if len(arg) == 1 && strings.Contains(arg[0], nfs.PT) {
 					ls := kit.Split(arg[0], nfs.PT)
@@ -353,12 +363,11 @@ func init() {
 				})
 				m.Sort("", kit.Simple(aaa.LOGIN, WEIXIN, PORTAL, WORKER, SERVER, ORIGIN))
 			} else {
-				// m.OptionDefault(ice.MSG_USERPOD, arg[0])
 				for i := 0; i < 5; i++ {
-					if _space_send(m, arg[0], kit.Simple(kit.Split(arg[1]), arg[2:])...); !m.IsErrNotFound() {
+					if _space_send(m, arg[0], kit.Simple(kit.Split(arg[1]), arg[2:])...); !m.IsErrNotFoundSpace() {
 						break
 					} else if i < 4 {
-						m.SetAppend().SetResult().Sleep("10s")
+						m.SetAppend().SetResult().Sleep3s()
 					}
 				}
 			}
@@ -412,7 +421,9 @@ func init() {
 		case "target":
 			m.AdminCmd(MATRIX).Table(func(value ice.Maps) {
 				m.Push(arg[0], kit.Keys(kit.Select("", ice.OPS, ice.Info.NodeType == WORKER), value[DOMAIN], value[mdb.NAME]))
+				m.Push(mdb.TYPE, value[mdb.TYPE])
 			})
+			m.Sort("type,target", []string{MYSELF, SERVER, ORIGIN, WORKER}, ice.STR_R)
 		}
 	})
 	ice.Info.AdminCmd = AdminCmd

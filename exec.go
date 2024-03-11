@@ -131,7 +131,7 @@ func (m *Message) CmdHand(cmd *Command, key string, arg ...string) *Message {
 	return m
 }
 func (m *Message) ActionHand(cmd *Command, key, sub string, arg ...string) *Message {
-	if action, ok := cmd.Actions[sub]; !m.WarnNotFound(!ok, sub, cmd.FileLines()) {
+	if action, ok := cmd.Actions[sub]; !m.WarnNotFoundIndex(!ok, sub, cmd.FileLines()) {
 		return m.Target()._action(m, cmd, key, sub, action, arg...)
 	}
 	return m
@@ -192,7 +192,7 @@ func (m *Message) _command(arg ...Any) *Message {
 			run(m.Spawn(s), s, cmd, key, list[1:]...)
 		})
 	}
-	m.WarnNotFound(!ok, kit.Format(list))
+	m.WarnNotFoundIndex(!ok, kit.Format(list))
 	return m
 }
 func (c *Context) _command(m *Message, cmd *Command, key string, arg ...string) *Message {

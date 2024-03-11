@@ -337,7 +337,6 @@ func init() {
 			cli.BUILD: {Name: "build name", Hand: func(m *ice.Message, arg ...string) {
 				compile := cli.SystemFindGo(m)
 				m.Option(ice.MSG_TITLE, kit.Keys(m.Option(ice.MSG_USERPOD0), m.Option(ice.MSG_USERPOD), m.CommandKey(), m.ActionKey()))
-				m.Option("dream.simple", ice.TRUE)
 				m.Cmd("", FOR_FLOW, m.Option(mdb.NAME), kit.JoinWord(cli.SH, ice.ETC_MISS_SH), func(p string) bool {
 					if compile && nfs.Exists(m, path.Join(p, ice.SRC_MAIN_GO)) {
 						return false
@@ -370,11 +369,7 @@ func init() {
 			VERSION: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy("web.code.version") }},
 			FOR_FLOW: {Name: "forFlow name cmd*='sh etc/miss.sh'", Help: "流程", Icon: "bi bi-terminal", Hand: func(m *ice.Message, arg ...string) {
 				m.Options(ctx.DISPLAY, html.PLUGIN_XTERM, cli.CMD_OUTPUT, nfs.NewWriteCloser(func(buf []byte) (int, error) {
-					PushNoticeGrow(m.Options(
-						ice.MSG_COUNT, "0",
-						ice.LOG_DEBUG, ice.FALSE,
-						ice.LOG_DISABLE, ice.TRUE,
-					), strings.ReplaceAll(string(buf), lex.NL, "\r\n"))
+					PushNoticeGrow(m.Options(ice.MSG_COUNT, "0", ice.LOG_DEBUG, ice.FALSE, ice.LOG_DISABLE, ice.TRUE), strings.ReplaceAll(string(buf), lex.NL, "\r\n"))
 					return len(buf), nil
 				}, nil))
 				msg := m.Spawn(ice.Maps{ice.MSG_DEBUG: ice.FALSE})
@@ -476,7 +471,7 @@ func init() {
 			ctx.TOOLS, kit.Simple(SPIDE, ROUTE), ONLINE, ice.TRUE,
 		)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
-				simple := m.Option("dream.simple") == ice.TRUE
+				simple := m.Option(ice.DREAM_SIMPLE) == ice.TRUE
 				if ice.Info.NodeType != WORKER {
 					_dream_list(m, simple)
 					_dream_list_icon(m)
@@ -552,7 +547,7 @@ func DreamEach(m *ice.Message, name string, status string, cb func(string)) *ice
 		return m
 	}
 	msg := m.Spawn()
-	m.Cmds(DREAM, kit.Dict("dream.simple", ice.TRUE)).Table(func(value ice.Maps) {
+	m.Cmds(DREAM, kit.Dict(ice.DREAM_SIMPLE, ice.TRUE)).Table(func(value ice.Maps) {
 		if value[mdb.STATUS] == kit.Select(cli.START, status) && value[mdb.TYPE] == WORKER && (value[mdb.NAME] == name || reg.MatchString(kit.Format("%s:%s=%s@%d", value[mdb.NAME], value[mdb.TYPE], value[nfs.MODULE], value[nfs.VERSION]))) {
 			msg.Push(mdb.NAME, value[mdb.NAME])
 		}
@@ -570,7 +565,7 @@ func DreamListSpide(m *ice.Message, list []string, types string, cb func(dev, or
 	})
 }
 func DreamList(m *ice.Message) *ice.Message {
-	return AdminCmd(m.Options("dream.simple", ice.TRUE), DREAM)
+	return AdminCmd(m.Options(ice.DREAM_SIMPLE, ice.TRUE), DREAM)
 }
 func DreamStat(m *ice.Message, name string) (res string) {
 	if cli.SystemFindGit(m) {

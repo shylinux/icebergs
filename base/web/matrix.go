@@ -23,7 +23,7 @@ func _matrix_list(m *ice.Message, domain, typ string, meta ice.Maps, fields ...s
 	compile := kit.Select("", kit.Select(COMPILE, UPGRADE, typ == SERVER), istech)
 	vimer := kit.Select("", VIMER, istech && isdebug)
 
-	button := []ice.Any{PORTAL, DESKTOP, DREAM, ADMIN, OPEN, compile}
+	button := []ice.Any{PORTAL, DESKTOP, DREAM, ADMIN, OPEN, compile, MESSAGE}
 	kit.If(istech, func() { button = append(button, WORD, STATUS) })
 	kit.If(istech && isdebug, func() { button = append(button, vimer, cli.RUNTIME, XTERM) })
 	m.PushRecord(value, fields...).PushButton(button...)

@@ -233,6 +233,8 @@ const ( // MSG
 	MSG_STORM   = "sess.storm"
 	MSG_COUNT   = "sess.count"
 	MSG_DAEMON  = "sess.daemon"
+	MSG_DAEMON0 = "sess.daemon0"
+	MSG_UNSAFE  = "sess.unsafe"
 	MSG_ONLINE  = "sess.online"
 	MSG_REFERER = "sess.referer"
 	MSG_CHECKER = "aaa.checker"
@@ -249,6 +251,9 @@ const ( // MSG
 	FROM_DAEMON    = "from.daemon"
 	TABLE_CHECKBOX = "table.checkbox"
 	TOAST_DURATION = "toast.duration"
+	DREAM_SIMPLE   = "dream.simple"
+	SPACE_NOECHO   = "space.noecho"
+	SPACE_TIMEOUT  = "space.timeout"
 )
 const ( // RENDER
 	RENDER_BUTTON = "_button"
@@ -329,6 +334,8 @@ const ( // Err
 	ErrNotValid = "not valid: "
 	ErrNotStart = "not start: "
 
+	ErrNotFoundSpace = "not found space: "
+	ErrNotFoundIndex = "not found index: "
 	ErrAlreadyExists = "already exists: "
 	ErrNotImplement  = "not implement: "
 	ErrTooDeepCount  = "too deep count: "

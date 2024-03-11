@@ -144,6 +144,12 @@ func (m *Message) WarnNotAllow(err Any, arg ...Any) bool {
 func (m *Message) WarnNotFound(err Any, arg ...Any) bool {
 	return m.Warn(err, ErrNotFound, kit.Simple(arg...), logs.FileLineMeta(2))
 }
+func (m *Message) WarnNotFoundSpace(err Any, arg ...Any) bool {
+	return m.Warn(err, ErrNotFoundSpace, kit.Simple(arg...), logs.FileLineMeta(2))
+}
+func (m *Message) WarnNotFoundIndex(err Any, arg ...Any) bool {
+	return m.Warn(err, ErrNotFoundIndex, kit.Simple(arg...), logs.FileLineMeta(2))
+}
 func (m *Message) WarnNotValid(err Any, arg ...Any) bool {
 	return m.Warn(err, ErrNotValid, kit.Simple(arg...), logs.FileLineMeta(2))
 }
@@ -178,7 +184,8 @@ func (m *Message) IsOk() bool { return m.Result() == OK }
 func (m *Message) IsErr(arg ...string) bool {
 	return len(arg) == 0 && m.index(MSG_RESULT, 0) == ErrWarn || len(arg) > 0 && m.index(MSG_RESULT, 1) == arg[0]
 }
-func (m *Message) IsErrNotFound() bool { return m.IsErr(ErrNotFound) }
+func (m *Message) IsErrNotFound() bool      { return m.IsErr(ErrNotFound) }
+func (m *Message) IsErrNotFoundSpace() bool { return m.IsErr(ErrNotFoundSpace) }
 func (m *Message) Debug(str string, arg ...Any) {
 	if m.Option(MSG_DEBUG) == TRUE {
 		kit.Format(str == "", func() { str = m.FormatMeta() })

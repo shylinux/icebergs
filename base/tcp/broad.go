@@ -44,6 +44,7 @@ const (
 	UDP4   = "udp4"
 	SEND   = "send"
 	RECV   = "recv"
+	ECHO   = "echo"
 	DIRECT = "direct"
 )
 

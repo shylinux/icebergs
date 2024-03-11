@@ -142,11 +142,14 @@ Volcanos(chat.ONFIGURE, {
 			value._space = list.concat(_list).join(".").replaceAll("..", "."), value._commands = {direct: value.direct, target: can.db.zone.target}
 			value.title = value.name; if (value.text) { var msg = can.request(); msg._xhr = {responseText: value.text}, value.msg = msg, msg.Copy(JSON.parse(value.text)) }
 			can.onappend.plugin(can, value, function(sub) { sub.onimport.size(sub, height, width, false)
-				sub.Conf("_plugin_action", [{view: "item.button.pluginCreate.icons.state", _init: function(target) {
-					can.page.Append(can, target, [{icon: "bi bi-box-arrow-in-down", onclick: function(event) {
-						can.core.Next(sub._msg.Table(), function(value, next, index, list) { can.user.toastProcess(can, "create "+index+"/"+list.length, sub.ConfIndex())
+				sub.Conf("_plugin_action", [{view: "item.button.localCreate.icons.state", _init: function(target) {
+					can.page.Append(can, target, [{icon: icon.localCreate, title: "localCreate", onclick: function(event) {
+						can.core.Next(sub._msg.IsDetail()? [sub._msg.TableDetail()]: sub._msg.Table(), function(value, next, index, list) { can.user.toastProcess(can, "create "+index+"/"+list.length, sub.ConfIndex())
 							can.runAction(can.request(event, sub.Option(), value), ctx.RUN, ["", sub.ConfIndex(), mdb.CREATE], function() { next() })
-						}, function() { can.user.toastSuccess(can, mdb.CREATE) })
+						}, function() {
+							can.user.toastSuccess(can, mdb.CREATE)
+							can.onappend._float(can, sub.ConfIndex(), [])
+						})
 					}}])
 				}}])
 				sub.onexport.output = function() { sub.onimport.size(sub, height, width, false)

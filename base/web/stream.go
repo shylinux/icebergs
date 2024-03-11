@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/gdb"
@@ -33,10 +34,10 @@ func init() {
 				mdb.HashCreate(_stream_subkey(m), ParseUA(m))
 				mdb.HashSelect(m)
 			}},
-			PUSH: {Hand: func(m *ice.Message, arg ...string) {
+			PUSH: {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
 				m.Options(ice.MSG_SPACE, arg[0], ice.MSG_INDEX, arg[1])
 				mdb.HashSelect(_stream_subkey(m)).Table(func(value ice.Maps) {
-					if value[cli.DAEMON] != m.Option(ice.MSG_DAEMON) {
+					if !kit.IsIn(value[cli.DAEMON], strings.TrimPrefix(m.Option(ice.MSG_DAEMON), "ops."), m.Option(ice.MSG_DAEMON0)) {
 						m.Options(mdb.SUBKEY, "").Cmd(SPACE, value[cli.DAEMON], arg[2:])
 					}
 				})
@@ -67,10 +68,11 @@ func StreamPush(m *ice.Message, arg ...string) {
 }
 func StreamPushRefresh(m *ice.Message, arg ...string) {
 	StreamPush(m.Spawn(ice.Maps{"space.noecho": ice.TRUE}), kit.Simple(html.REFRESH, arg)...)
+	if strings.Contains(m.Option(ice.MSG_USERPOD), ".") {
+		AdminCmd(m.Spawn(ice.Maps{"space.noecho": ice.TRUE}), SPACE, ice.DEV, STREAM, PUSH, m.Option(ice.MSG_USERPOD), m.ShortKey(), kit.Simple(html.REFRESH, arg))
+	}
 }
 func StreamPushRefreshConfirm(m *ice.Message, arg ...string) {
-	if len(arg) == 0 {
-		arg = append(arg, m.Trans("refresh for new data ", "刷新列表，查看最新数据 "))
-	}
+	kit.If(len(arg) == 0, func() { arg = append(arg, m.Trans("refresh for new data ", "刷新列表，查看最新数据 ")) })
 	StreamPushRefresh(m, kit.Simple(html.CONFIRM, arg)...)
 }

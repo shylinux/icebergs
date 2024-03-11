@@ -157,9 +157,19 @@ const CONNECT = "connect"
 func init() {
 	psh.Index.MergeCommands(ice.Commands{
 		CONNECT: {Help: "连接", Actions: ice.MergeActions(ice.Actions{
-			tcp.OPEN: {Name: "open authfile username=shy password verfiy host=shylinux.com port=22 private=.ssh/id_rsa", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
-				defer nfs.OptionLoad(m, m.Option("authfile")).Echo("exit %s@%s:%s\n", m.Option(aaa.USERNAME), m.Option(tcp.HOST), m.Option(tcp.PORT))
-				_ssh_open(m, arg...)
+			tcp.OPEN: {Name: "open authfile username=shy password verfiy host=shylinux.com port=22 private=.ssh/id_rsa cmds", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
+				if m.Option("cmds") == "" {
+					defer nfs.OptionLoad(m, m.Option("authfile")).Echo("exit %s@%s:%s\n", m.Option(aaa.USERNAME), m.Option(tcp.HOST), m.Option(tcp.PORT))
+					_ssh_open(m, arg...)
+				} else {
+					_ssh_conn(m, func(c *ssh.Client) {
+						s, _ := c.NewSession()
+						defer s.Close()
+						if b, e := s.CombinedOutput(m.Option("cmds")); !m.WarnNotValid(e) {
+							m.Echo(string(b))
+						}
+					})
+				}
 			}},
 			tcp.DIAL: {Name: "dial name=shylinux host=shylinux.com port=22 username=shy private=.ssh/id_rsa", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				m.Go(func() {

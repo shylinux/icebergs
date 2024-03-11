@@ -97,7 +97,7 @@ func init() {
 				if arg[0] == mdb.INPUTS || arg[0] == mdb.ACTION && arg[1] == mdb.INPUTS {
 					m.Cmdy(web.Space(m, m.Option(ice.POD)), MESSAGE, arg)
 				} else {
-					m.Cmdy(web.Space(m, m.Option(ice.POD)), MESSAGE, tcp.SEND, arg).ToastSuccess()
+					m.Cmdy(web.Space(m, m.Option(ice.POD)), MESSAGE, mdb.INSERT, arg).ToastSuccess()
 				}
 			}},
 			aaa.LOGOUT: {Hand: aaa.SessLogout},

@@ -70,7 +70,7 @@ func init() {
 				web.StreamPushRefreshConfirm(m, m.Trans("refresh for new message ", "刷新列表，查看最新消息 "))
 			}},
 			web.DREAM_CREATE: {Hand: func(m *ice.Message, arg ...string) {
-				if ice.Info.Important {
+				if ice.Info.Important && !m.IsCliUA() {
 					PlanInsertPlan(m, web.DREAM, "", m.Option(mdb.NAME), web.CHAT_IFRAME, web.S(m.Option(mdb.NAME)))
 				}
 			}},

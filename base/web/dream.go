@@ -242,7 +242,7 @@ func init() {
 						aaa.White(m, kit.Keys(m.ShortKey(), ctx.ACTION, cmd))
 					}
 				})
-				m.GoSleep(cli.TIME_30s, func() {
+				m.GoSleep(cli.TIME_3s, func() {
 					mdb.HashSelects(m).Table(func(value ice.Maps) {
 						if value[cli.RESTART] == ALWAYS && nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK+value[mdb.NAME])) {
 							m.Cmd(DREAM, cli.START, kit.Dict(mdb.NAME, value[mdb.NAME]))

@@ -75,6 +75,15 @@ func init() {
 					m.Cmd("", mdb.CREATE, mdb.TYPE, shell)
 					m.Cmd("", mdb.CREATE, mdb.TYPE, "/bin/ish")
 				})
+				kit.For([]string{
+					"xterm/lib/xterm.js",
+					"xterm/css/xterm.css",
+					"xterm-addon-fit/lib/xterm-addon-fit.js",
+					"xterm-addon-web-links/lib/xterm-addon-web-links.js",
+				}, func(p string) {
+					m.Cmd(WEBPACK, mdb.INSERT, p)
+					m.Cmd(BINPACK, mdb.INSERT, nfs.USR_MODULES+p)
+				})
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if mdb.IsSearchPreview(m, arg) || kit.HasPrefixList(arg, SHELL) {

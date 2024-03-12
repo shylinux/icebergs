@@ -18,6 +18,9 @@ const DESKTOP = "desktop"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
+		ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+			m.Cmd(web.BINPACK, mdb.INSERT, nfs.USR_ICONS)
+		}},
 		ice.CTX_OPEN: {Hand: func(m *ice.Message, arg ...string) {
 			if m.Cmd(DESKTOP).Length() == 0 {
 				DeskAppend(m, "Books.png", web.WIKI_WORD)

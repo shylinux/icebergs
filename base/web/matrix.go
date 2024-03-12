@@ -14,12 +14,9 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _matrix_list(m *ice.Message, domain, typ string, meta ice.Maps, fields ...string) (server, icons, types []string) {
-	value := kit.Dict(cli.ParseMake(m.Cmdx(Space(m, domain), cli.RUNTIME)))
+func _matrix_list(m *ice.Message, domain, typ string, value ice.Maps, fields ...string) (server, icons, types []string) {
 	value[DOMAIN], value[mdb.TYPE] = domain, typ
-	kit.For(meta, func(k, v string) { value[k] = v })
-
-	istech, isdebug := typ == SERVER || kit.IsIn(meta[aaa.ACCESS], aaa.TECH, aaa.ROOT), m.IsDebug()
+	istech, isdebug := typ == SERVER || kit.IsIn(value[aaa.ACCESS], aaa.TECH, aaa.ROOT), m.IsDebug()
 	compile := kit.Select("", kit.Select(COMPILE, UPGRADE, typ == SERVER), istech)
 	vimer := kit.Select("", VIMER, istech && isdebug)
 
@@ -137,17 +134,27 @@ func init() {
 				space := m.CmdMap(SPACE, mdb.NAME)
 				m.Options("space.timeout", cli.TIME_3s, "dream.simple", ice.TRUE)
 				list, icons, types := _matrix_list(m, "", MYSELF, ice.Maps{
-					mdb.ICONS: ice.SRC_MAIN_ICO, aaa.ACCESS: m.Option(ice.MSG_USERROLE),
+					mdb.TIME:    ice.Info.Make.Time,
+					mdb.ICONS:   ice.SRC_MAIN_ICO,
+					nfs.MODULE:  ice.Info.Make.Module,
+					nfs.VERSION: ice.Info.Make.Versions(),
+					aaa.ACCESS:  m.Option(ice.MSG_USERROLE),
 				}, field...)
 				kit.For(list, func(domain string, index int, total int) {
 					toast(domain, index, total)
 					_matrix_list(m, domain, types[index], ice.Maps{
-						mdb.ICONS: icons[index], aaa.ACCESS: kit.Format(kit.Value(space[domain], aaa.USERROLE)),
+						mdb.TIME:    space[domain][mdb.TIME],
+						mdb.ICONS:   icons[index],
+						nfs.MODULE:  space[domain][nfs.MODULE],
+						nfs.VERSION: space[domain][nfs.VERSION],
+						aaa.ACCESS:  kit.Format(kit.Value(space[domain], aaa.USERROLE)),
 					}, field...)
 				})
 				m.RewriteAppend(func(value, key string, index int) string {
-					if key == mdb.ICONS && strings.HasPrefix(value, nfs.REQUIRE) && m.Appendv(DOMAIN)[index] != "" {
-						value = kit.MergeURL(strings.Split(value, "?")[0], ice.POD, kit.Keys(m.Appendv(DOMAIN)[index], m.Appendv(mdb.NAME)[index]))
+					if key == mdb.ICONS && strings.HasPrefix(value, nfs.REQUIRE) {
+						if domain := m.Appendv(DOMAIN)[index]; domain != "" {
+							value = kit.MergeURL2(space[domain][mdb.TEXT], value, ice.POD, m.Appendv(mdb.NAME)[index])
+						}
 					}
 					return value
 				})

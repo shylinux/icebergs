@@ -475,6 +475,10 @@ func init() {
 				if ice.Info.NodeType != WORKER {
 					_dream_list(m, simple)
 					_dream_list_icon(m)
+					if m.Length() == 0 {
+						m.EchoInfoButton(m.Trans("please create new dream", "请创建新空间"), mdb.CREATE).Action(mdb.CREATE)
+						return
+					}
 				}
 				if !m.IsCliUA() && aaa.IsTechOrRoot(m) {
 					_dream_list_more(m, simple)

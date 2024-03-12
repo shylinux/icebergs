@@ -100,7 +100,6 @@ func _space_fork(m *ice.Message) {
 				defer gdb.EventDeferEvent(m, SPACE_OPEN, args)(SPACE_CLOSE, args)
 				m.Go(func() {
 					m.Cmd(SPACE, name, cli.PWD, name, kit.Dict(
-						ice.MSG_USERROLE, aaa.TECH, ice.MSG_USERNAME, ice.Info.Make.Username,
 						mdb.TIME, ice.Info.Make.Time, nfs.MODULE, ice.Info.Make.Module, nfs.VERSION, ice.Info.Make.Versions(),
 						AGENT, "Go-http-client", cli.SYSTEM, runtime.GOOS))
 					m.Cmd(SPACE).Table(func(value ice.Maps) {

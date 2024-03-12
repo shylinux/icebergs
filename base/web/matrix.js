@@ -19,7 +19,7 @@ Volcanos(chat.ONIMPORT, {
 	},
 	void: function(can, name, domain, list) { var worker = list[name][""], server = list[""][domain]
 		return {view: html.ACTION, _init: function(target) {
-			worker && can.onappend.input(can, {type: html.BUTTON, name: code.INSTALL, onclick: function(event) {
+			worker && server.type != web.ORIGIN && can.onappend.input(can, {type: html.BUTTON, name: code.INSTALL, onclick: function(event) {
 				can.Update(can.request(event, {name: name, domain: domain}, worker), [ctx.ACTION, code.INSTALL])
 			}}, "", target)
 		}}

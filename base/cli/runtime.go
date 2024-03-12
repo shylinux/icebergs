@@ -18,6 +18,10 @@ import (
 )
 
 func _runtime_init(m *ice.Message) {
+	if ice.Info.Make.Remote == "" {
+		ice.Info.Make.Remote = m.Cmdx(SYSTEM, GIT, "config", "--get", "remote.origin.url")
+		ice.Info.Make.Module = srtings.Split(ice.Info.Make.Remote, "://")[1]
+	}
 	count := kit.Int(m.Conf(RUNTIME, kit.Keys(BOOT, mdb.COUNT)))
 	defer m.Conf(RUNTIME, kit.Keys(BOOT, mdb.COUNT), count+1)
 	kit.For(kit.UnMarshal(kit.Format(ice.Info.Make)), func(k string, v ice.Any) { m.Conf(RUNTIME, kit.Keys(MAKE, strings.ToLower(k)), v) })

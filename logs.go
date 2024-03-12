@@ -186,6 +186,7 @@ func (m *Message) IsErr(arg ...string) bool {
 }
 func (m *Message) IsErrNotFound() bool      { return m.IsErr(ErrNotFound) }
 func (m *Message) IsErrNotFoundSpace() bool { return m.IsErr(ErrNotFoundSpace) }
+func (m *Message) IsErrNotFoundIndex() bool { return m.IsErr(ErrNotFoundIndex) }
 func (m *Message) Debug(str string, arg ...Any) {
 	if m.Option(MSG_DEBUG) == TRUE {
 		kit.Format(str == "", func() { str = m.FormatMeta() })

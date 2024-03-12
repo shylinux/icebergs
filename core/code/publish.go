@@ -53,12 +53,16 @@ func _publish_contexts(m *ice.Message, arg ...string) {
 	m.OptionDefault(web.DOMAIN, host)
 
 	env := []string{}
-	m.Option("ctx_dev_ip", web.HostPort(m, m.Cmd(tcp.HOST).Append(aaa.IP), m.Cmd(web.SERVE).Append(tcp.PORT)))
+	// m.Option("ctx_dev_ip", tcp.PublishLocalhost(m, web.SpideOrigin(m, ice.OPS)))
+	m.Option("ctx_dev_ip", web.HostPort(m, web.AdminCmd(m, tcp.HOST).Append(aaa.IP), web.AdminCmd(m, web.SERVE).Append(tcp.PORT)))
 	// kit.If(m.Option("ctx_dev_ip"), func(p string) { env = append(env, "ctx_dev_ip", p) })
 	kit.If(m.Option(ice.MSG_USERPOD), func(p string) { env = append(env, cli.CTX_POD, p) })
 	kit.If(len(env) > 0, func() { m.Options(cli.CTX_ENV, lex.SP+kit.JoinKV(mdb.EQ, lex.SP, env...)) })
 	m.OptionDefault("ctx_cli", "temp=$(mktemp); if curl -h &>/dev/null; then curl -o $temp -fsSL $ctx_dev; else wget -O $temp -q $ctx_dev; fi; source $temp")
-	m.OptionDefault("ctx_arg", kit.JoinCmds(aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERNICK, m.Option(ice.MSG_USERNICK)))
+	m.OptionDefault("ctx_arg", kit.JoinCmds(
+		aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERNICK, m.Option(ice.MSG_USERNICK),
+		aaa.LANGUAGE, m.Option(ice.MSG_LANGUAGE),
+	))
 
 	for _, k := range kit.Default(arg, ice.MISC) {
 		switch k {
@@ -69,7 +73,11 @@ func _publish_contexts(m *ice.Message, arg ...string) {
 		case ice.CORE:
 			m.Option(web.DOMAIN, web.SpideOrigin(m, ice.DEV))
 		case nfs.SOURCE, ice.DEV:
-			m.OptionDefault(nfs.SOURCE, ice.Info.Make.Remote)
+			if m.Option(ice.MSG_USERPOD) == "" {
+				m.Option(nfs.SOURCE, web.AdminCmd(m, cli.RUNTIME, "make.remote").Result())
+			} else {
+				m.Option(nfs.SOURCE, web.AdminCmd(m, web.SPACE, m.Option(ice.MSG_USERPOD), cli.RUNTIME, "make.remote").Result())
+			}
 		case nfs.BINARY, ice.APP:
 		case cli.CURL, cli.WGET:
 		case "manual":

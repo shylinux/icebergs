@@ -97,7 +97,7 @@ func (f *Frame) parse(m *ice.Message, h, line string) string {
 	}
 	msg := m.Spawn(f.target)
 	kit.If(h == STDIO, func() { msg.Option(ice.LOG_TRACEID, log.Traceid(m)) })
-	if msg.Cmdy(ls); h == STDIO && msg.IsErrNotFound() {
+	if msg.Cmdy(ls); h == STDIO && msg.IsErrNotFoundIndex() {
 		msg.SetResult().Cmdy(cli.SYSTEM, ls)
 	}
 	kit.If(m.Option(ice.MSG_STATUS) == "", func() { m.StatusTimeCount() })

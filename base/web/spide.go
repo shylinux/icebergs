@@ -434,6 +434,7 @@ func init() {
 }
 
 func HostPort(m *ice.Message, host, port string, arg ...string) string {
+	m.Info("what %v", host, port)
 	p := ""
 	if len(arg) > 0 {
 		kit.If(kit.Select("", arg, 0), func(pod string) { p += S(pod) })
@@ -466,7 +467,13 @@ func SpideDelete(m *ice.Message, arg ...ice.Any) ice.Any {
 	return kit.UnMarshal(m.Cmdx(http.MethodDelete, arg))
 }
 func SpideSave(m *ice.Message, file, link string, cb func(count, total, value int)) *ice.Message {
-	return m.Cmd(Prefix(SPIDE), ice.DEV_IP, SPIDE_SAVE, file, http.MethodGet, link, cb)
+	for _, p := range []string{ice.DEV_IP, ice.DEV} {
+		msg := m.Cmd(Prefix(SPIDE), p, SPIDE_SAVE, file, http.MethodGet, link, cb)
+		if !msg.IsErr() {
+			return msg
+		}
+	}
+	return m
 }
 func SpideCache(m *ice.Message, link string) *ice.Message {
 	return m.Cmd(Prefix(SPIDE), ice.DEV_IP, SPIDE_CACHE, http.MethodGet, link)

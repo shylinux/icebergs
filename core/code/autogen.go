@@ -40,12 +40,11 @@ func _autogen_module(m *ice.Message, file string) {
 	ReposAddFile(m, "", file)
 }
 func _autogen_defs(m *ice.Message, arg ...string) {
-	kit.For(arg, func(p string) {
-		m.Cmd(nfs.DEFS, p, m.Cmdx(nfs.CAT, p))
-		ReposAddFile(m, "", p)
-	})
+	kit.For(arg, func(p string) { m.Cmd(nfs.DEFS, p, m.Cmdx(nfs.CAT, p)); ReposAddFile(m, "", p) })
 }
 func _autogen_import(m *ice.Message, main string, ctx string, mod string) {
+	m.Cmd(nfs.DEFS, ice.ETC_MISS_SH, m.Template("miss.sh"))
+	_autogen_defs(m, ice.README_MD, ice.MAKEFILE, ice.LICENSE)
 	_autogen_defs(m, ice.SRC_MAIN_GO, ice.ETC_MISS_SH, ice.README_MD, ice.MAKEFILE, ice.LICENSE)
 	begin, done, list := false, false, []string{}
 	m.Cmd(nfs.CAT, main, func(line string, index int) {

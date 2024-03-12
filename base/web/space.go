@@ -3,7 +3,6 @@ package web
 import (
 	"math/rand"
 	"net"
-	"net/http"
 	"path"
 	"runtime"
 	"strings"
@@ -376,9 +375,9 @@ func init() {
 	ice.Info.Inputs = append(ice.Info.Inputs, func(m *ice.Message, arg ...string) {
 		switch kit.TrimPrefix(arg[0], "extra.") {
 		case DREAM:
-			m.SplitIndex(m.Cmdx(SPIDE, ice.OPS, SPIDE_RAW, http.MethodGet, C(DREAM))).CutTo(mdb.NAME, DREAM)
+			m.Copy(AdminCmd(m, DREAM).CutTo(mdb.NAME, DREAM))
 		case SPACE:
-			m.Cmd(SPACE, func(value ice.Maps) {
+			AdminCmd(m, SPACE).Table(func(value ice.Maps) {
 				kit.If(kit.IsIn(value[mdb.TYPE], WORKER, SERVER), func() { m.Push(arg[0], value[mdb.NAME]) })
 			})
 		case ORIGIN:

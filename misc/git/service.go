@@ -10,12 +10,6 @@ import (
 	"strconv"
 	"strings"
 
-	git "shylinux.com/x/go-git/v5"
-	"shylinux.com/x/go-git/v5/plumbing"
-	"shylinux.com/x/go-git/v5/plumbing/protocol/packp"
-	"shylinux.com/x/go-git/v5/plumbing/transport"
-	"shylinux.com/x/go-git/v5/plumbing/transport/server"
-
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
@@ -26,6 +20,12 @@ import (
 	"shylinux.com/x/icebergs/base/web/html"
 	"shylinux.com/x/icebergs/core/code"
 	kit "shylinux.com/x/toolkits"
+
+	git "shylinux.com/x/go-git/v5"
+	"shylinux.com/x/go-git/v5/plumbing"
+	"shylinux.com/x/go-git/v5/plumbing/protocol/packp"
+	"shylinux.com/x/go-git/v5/plumbing/transport"
+	"shylinux.com/x/go-git/v5/plumbing/transport/server"
 )
 
 func _service_path(m *ice.Message, p string, arg ...string) string {
@@ -140,6 +140,13 @@ func init() {
 					return
 				}
 			}
+			if !nfs.Exists(m, repos) {
+				list := m.CmdMap(Prefix(REPOS), REPOS)
+				name := path.Base(repos)
+				if _repos, ok := list[name]; ok {
+					m.Cmd(Prefix(SERVICE), CLONE, name, _repos[ORIGIN])
+				}
+			}
 			if m.WarnNotFound(!nfs.Exists(m, repos), arg[0]) {
 				return
 			}
@@ -150,6 +157,10 @@ func init() {
 		SERVICE: {Name: "service repos branch commit file auto", Help: "代码源", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.DIR, ice.USR_LOCAL_REPOS, func(value ice.Maps) { _repos_insert(m, value[nfs.PATH]) })
+			}},
+			CLONE: {Name: "clone name*=demo origin", Hand: func(m *ice.Message, arg ...string) {
+				git.PlainClone(_service_path(m, m.Option(mdb.NAME)), true, &git.CloneOptions{URL: m.Option(ORIGIN), Auth: _repos_auth(m, m.Option(ORIGIN))})
+				_repos_insert(m, _service_path(m, m.Option(mdb.NAME)))
 			}},
 			mdb.CREATE: {Name: "create name*=demo", Hand: func(m *ice.Message, arg ...string) {
 				git.PlainInit(_service_path(m, m.Option(mdb.NAME)), true)

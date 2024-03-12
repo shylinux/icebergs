@@ -125,3 +125,11 @@ func Toast(m *ice.Message, text string, arg ...ice.Any) *ice.Message { // [title
 	PushNoticeToast(m, text, arg)
 	return m
 }
+func PushGrow() {
+	m.Options(ctx.DISPLAY, html.PLUGIN_XTERM, cli.CMD_OUTPUT, nfs.NewWriteCloser(func(buf []byte) (int, error) {
+		web.PushNoticeGrow(m.Options(ice.MSG_TITLE, m.Option(DOMAIN), ice.MSG_COUNT, "0", ice.LOG_DEBUG, ice.FALSE, ice.LOG_DISABLE, ice.TRUE).Message, strings.ReplaceAll(string(buf), lex.NL, "\r\n"))
+		return len(buf), nil
+	}, nil))
+	m.Cmd(cli.DAEMON, kit.Split(m.Config(ctx.CMDS)), "logs", "-f", strings.TrimSpace(msg.Result()))
+
+}

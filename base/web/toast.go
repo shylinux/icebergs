@@ -7,7 +7,9 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web/html"
 	kit "shylinux.com/x/toolkits"
 	"shylinux.com/x/toolkits/logs"
@@ -125,11 +127,9 @@ func Toast(m *ice.Message, text string, arg ...ice.Any) *ice.Message { // [title
 	PushNoticeToast(m, text, arg)
 	return m
 }
-func PushGrow() {
+func PushNoticeGrowXterm(m *ice.Message, title string, cmd ...ice.Any) {
 	m.Options(ctx.DISPLAY, html.PLUGIN_XTERM, cli.CMD_OUTPUT, nfs.NewWriteCloser(func(buf []byte) (int, error) {
-		web.PushNoticeGrow(m.Options(ice.MSG_TITLE, m.Option(DOMAIN), ice.MSG_COUNT, "0", ice.LOG_DEBUG, ice.FALSE, ice.LOG_DISABLE, ice.TRUE).Message, strings.ReplaceAll(string(buf), lex.NL, "\r\n"))
+		PushNoticeGrow(m.Options(ice.MSG_TITLE, title, ice.MSG_COUNT, "0", ice.LOG_DEBUG, ice.FALSE, ice.LOG_DISABLE, ice.TRUE), strings.ReplaceAll(string(buf), lex.NL, "\r\n"))
 		return len(buf), nil
-	}, nil))
-	m.Cmd(cli.DAEMON, kit.Split(m.Config(ctx.CMDS)), "logs", "-f", strings.TrimSpace(msg.Result()))
-
+	}, nil)).Cmd(cli.SYSTEM, cmd)
 }

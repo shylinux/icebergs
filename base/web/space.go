@@ -374,7 +374,13 @@ func init() {
 	ice.Info.Inputs = append(ice.Info.Inputs, func(m *ice.Message, arg ...string) {
 		switch kit.TrimPrefix(arg[0], "extra.") {
 		case DREAM:
-			m.Copy(AdminCmd(m, DREAM).CutTo(mdb.NAME, DREAM))
+			m.SetAppend()
+			AdminCmd(m, DREAM).Table(func(value ice.Maps) {
+				kit.If(kit.IsIn(value[mdb.TYPE], WORKER), func() {
+					m.Push(arg[0], value[mdb.NAME])
+					m.PushRecord(value, nfs.VERSION, mdb.TIME, nfs.MODULE, mdb.ICONS)
+				})
+			})
 		case SPACE:
 			AdminCmd(m, SPACE).Table(func(value ice.Maps) {
 				kit.If(kit.IsIn(value[mdb.TYPE], WORKER, SERVER), func() { m.Push(arg[0], value[mdb.NAME]) })

@@ -162,19 +162,13 @@ Volcanos(chat.ONFIGURE, {
 })
 Volcanos(chat.ONINPUTS, {
 	_show: function(event, can, msg, target, name) {
-		function show(value) { can.ui = can.ui||{}
-			if (!can.ui.img) {
-				can.ui.img = can.page.insertBefore(can, [{type: html.IMG}], target)
-				can.ui.span = can.page.insertBefore(can, [{type: html.SPAN}], target)
-				can.onappend.style(can, mdb.ICONS, can.page.parentNode(can, target, html.TR))
-				can.page.style(can, target, html.COLOR, html.TRANSPARENT)
-			}
-			can.ui.img.src = can.misc.Resource(can, value.icons||"usr/icons/Messages.png"), can.ui.span.innerText = value.title||can.base.trimPrefix(value.zone, "ops.")
-			target.value = value.hash, can.onmotion.hidden(can, can._target)
+		function show(value) {
+			can.showIcons(value.hash, value.icons||"usr/icons/Messages.png", value.title||can.base.trimPrefix(value.zone, "ops."))
 		}
 		can.page.Appends(can, can._output, msg.Table(function(value) {
 			return {view: html.ITEM, list: [
-				{img: can.misc.Resource(can, value.icons||"usr/icons/Messages.png")}, {text: value.title||can.base.trimPrefix(value.zone, "ops.")},
+				{img: can.misc.Resource(can, value.icons||"usr/icons/Messages.png")},
+				{text: value.title||can.base.trimPrefix(value.zone, "ops.")},
 			], onclick: function(event) { show(value) }}
 		}))
 	},

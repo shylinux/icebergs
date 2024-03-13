@@ -436,7 +436,6 @@ func init() {
 }
 
 func HostPort(m *ice.Message, host, port string, arg ...string) string {
-	m.Info("what %v", host, port)
 	p := ""
 	if len(arg) > 0 {
 		kit.If(kit.Select("", arg, 0), func(pod string) { p += S(pod) })

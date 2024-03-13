@@ -148,17 +148,21 @@ const (
 	TZ    = "TZ"
 )
 const (
-	CTX_SHY  = "ctx_shy"
-	CTX_DEV  = "ctx_dev"
-	CTX_OPS  = "ctx_ops"
-	CTX_DEMO = "ctx_demo"
-	CTX_MAIL = "ctx_mail"
-	CTX_ROOT = "ctx_root"
+	CTX_SHY    = "ctx_shy"
+	CTX_DEV    = "ctx_dev"
+	CTX_DEV_IP = "ctx_dev_ip"
+	CTX_REPOS  = "ctx_repos"
+	CTX_OPS    = "ctx_ops"
+	CTX_DEMO   = "ctx_demo"
+	CTX_MAIL   = "ctx_mail"
+	CTX_ROOT   = "ctx_root"
 
 	CTX_PID = "ctx_pid"
 	CTX_LOG = "ctx_log"
 	CTX_POD = "ctx_pod"
 	CTX_ENV = "ctx_env"
+	CTX_CLI = "ctx_cli"
+	CTX_ARG = "ctx_arg"
 )
 
 var ENV_LIST = []string{TZ, LANG, TERM, SHELL, CTX_SHY, CTX_DEV, CTX_OPS, CTX_DEMO, CTX_MAIL, CTX_ROOT, CTX_PID}

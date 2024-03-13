@@ -45,44 +45,35 @@ func _publish_file(m *ice.Message, file string, arg ...string) string {
 	return m.Cmdx(nfs.LINK, path.Join(ice.USR_PUBLISH, kit.Select(path.Base(file), arg, 0)), file)
 }
 func _publish_contexts(m *ice.Message, arg ...string) {
-	m.Options(nfs.DIR_ROOT, "").OptionDefault(ice.MSG_USERNAME, ice.DEMO)
-
-	host := tcp.PublishLocalhost(m, web.UserHost(m))
-	m.Option(ice.TCP_DOMAIN, kit.ParseURL(host).Hostname())
-	m.Option("tcp_localhost", strings.ToLower(ice.Info.Hostname))
-	m.OptionDefault(web.DOMAIN, host)
-
-	env := []string{}
-	// m.Option("ctx_dev_ip", tcp.PublishLocalhost(m, web.SpideOrigin(m, ice.OPS)))
-	m.Option("ctx_dev_ip", web.HostPort(m, web.AdminCmd(m, tcp.HOST).Append(aaa.IP), web.AdminCmd(m, web.SERVE).Append(tcp.PORT)))
-	// kit.If(m.Option("ctx_dev_ip"), func(p string) { env = append(env, "ctx_dev_ip", p) })
-	kit.If(m.Option(ice.MSG_USERPOD), func(p string) { env = append(env, cli.CTX_POD, p) })
-	kit.If(len(env) > 0, func() { m.Options(cli.CTX_ENV, lex.SP+kit.JoinKV(mdb.EQ, lex.SP, env...)) })
-	m.OptionDefault("ctx_cli", "temp=$(mktemp); if curl -h &>/dev/null; then curl -o $temp -fsSL $ctx_dev; else wget -O $temp -q $ctx_dev; fi; source $temp")
-	m.OptionDefault("ctx_arg", kit.JoinCmds(
-		aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERNICK, m.Option(ice.MSG_USERNICK),
-		aaa.LANGUAGE, m.Option(ice.MSG_LANGUAGE),
-	))
-
+	m.Options(nfs.DIR_ROOT, "")
+	m.OptionDefault(web.DOMAIN, tcp.PublishLocalhost(m, web.UserHost(m)))
+	m.OptionDefault(cli.CTX_CLI, "temp=$(mktemp); if curl -h &>/dev/null; then curl -o $temp -fsSL $ctx_dev; else wget -O $temp -q $ctx_dev; fi; source $temp")
+	m.OptionDefault(cli.CTX_ARG, kit.JoinCmds(aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.LANGUAGE, m.Option(ice.MSG_LANGUAGE)))
 	for _, k := range kit.Default(arg, ice.MISC) {
+		env := []string{}
 		switch k {
-		case INSTALL:
-			m.Option("format", "raw")
-		case ice.BASE:
-			m.Option(web.DOMAIN, web.SpideOrigin(m, ice.SHY))
-		case ice.CORE:
-			m.Option(web.DOMAIN, web.SpideOrigin(m, ice.DEV))
 		case nfs.SOURCE, ice.DEV:
-			if m.Option(ice.MSG_USERPOD) == "" {
+			if ice.Info.NodeType == web.SERVER {
+				m.Options(nfs.SOURCE, ice.Info.Make.Remote)
+			} else if m.Option(ice.MSG_USERPOD) == "" {
 				m.Option(nfs.SOURCE, web.AdminCmd(m, cli.RUNTIME, "make.remote").Result())
 			} else {
-				m.Option(nfs.SOURCE, web.AdminCmd(m, web.SPACE, m.Option(ice.MSG_USERPOD), cli.RUNTIME, "make.remote").Result())
+				m.Option(nfs.SOURCE, web.AdminCmd(m, web.SPACE, kit.KeyBase(m.Option(ice.MSG_USERPOD)), cli.RUNTIME, "make.remote").Result())
 			}
+			env = append(env, cli.CTX_REPOS, m.Option(nfs.SOURCE))
+			fallthrough
 		case nfs.BINARY, ice.APP:
+			if host := web.HostPort(m, web.AdminCmd(m, tcp.HOST).Append(aaa.IP), web.AdminCmd(m, web.SERVE).Append(tcp.PORT)); m.Option(web.DOMAIN) != host {
+				env = append(env, cli.CTX_DEV_IP, host)
+			}
+			if ice.Info.NodeType == web.WORKER && m.Option(ice.MSG_USERPOD) != "" {
+				env = append(env, cli.CTX_POD, m.Option(ice.MSG_USERPOD))
+			} else if name := web.AdminCmd(m, cli.RUNTIME, "boot.pathname").Result(); !kit.IsIn(name, path.Base(m.Option(nfs.SOURCE)), ice.CONTEXTS) {
+				env = append(env, "ctx_name", name)
+			}
 		case cli.CURL, cli.WGET:
-		case "manual":
-			m.Option(nfs.BINARY, "ice.linux.amd64")
 		}
+		kit.If(len(env) > 0, func() { m.Options(cli.CTX_ENV, lex.SP+kit.JoinKV(mdb.EQ, lex.SP, env...)) })
 		if template := strings.TrimSpace(nfs.Template(m, kit.Keys(k, SH))); m.Option("format") == "raw" {
 			m.Echo(template)
 		} else {

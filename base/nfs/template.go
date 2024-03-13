@@ -39,14 +39,13 @@ func init() {
 func init() { ice.Info.Template = Template }
 
 func Template(m *ice.Message, p string, data ...ice.Any) string {
-	text := TemplateText(m, p)
-	if text == "" {
+	if text := TemplateText(m, p); text == "" {
 		return ""
-	}
-	if len(data) == 0 {
+	} else if len(data) == 0 {
 		return kit.Renders(text, m)
+	} else {
+		return kit.Renders(text, data[0])
 	}
-	return kit.Renders(text, data[0])
 }
 
 var TemplateText = func(m *ice.Message, p string) string {

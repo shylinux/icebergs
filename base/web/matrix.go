@@ -97,9 +97,15 @@ func init() {
 				STATUS, "源码", html.INPUT, kit.Dict(MYSELF, "本机", ORIGIN, "主机"),
 			),
 		), Actions: ice.MergeActions(ice.Actions{
-			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(DREAM, mdb.INPUTS, arg) }},
-			mdb.CREATE: {Name: "create name*=hi icons repos binary template", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(DREAM, mdb.CREATE, arg)
+			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(SPIDE, mdb.INPUTS, arg) }},
+			mdb.CREATE: {Name: "create origin* name icons", Hand: func(m *ice.Message, arg ...string) {
+				if u := kit.ParseURL(m.Option(ORIGIN)); m.Warn(u.Query().Get(TOKEN) == "", ice.ErrNotValid, TOKEN) {
+					return
+				} else {
+					m.OptionDefault(mdb.NAME, kit.Split(u.Hostname(),".")[0])
+				}
+				m.Cmd(SPIDE, mdb.CREATE, mdb.NAME, "", arg, mdb.TYPE, nfs.REPOS)
+				m.Cmd(SPIDE, DEV_CREATE_TOKEN, ice.Maps{CLIENT_NAME: m.Option(mdb.NAME)})
 			}},
 			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) { _matrix_dream(m, nfs.TRASH); _matrix_dream(m, "") }},
 			cli.START:  {Hand: func(m *ice.Message, arg ...string) { _matrix_dream(m, "") }},

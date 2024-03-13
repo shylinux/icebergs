@@ -24,12 +24,12 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _spide_create(m *ice.Message, name, link, types, icons string) {
+func _spide_create(m *ice.Message, name, link, types, icons, token string) {
 	if u, e := url.Parse(link); !m.WarnNotValid(e != nil || link == "", link) {
 		dir, file := path.Split(u.EscapedPath())
 		m.Logs(mdb.INSERT, SPIDE, name, LINK, link)
 		mdb.HashSelectUpdate(m, mdb.HashCreate(m, CLIENT_NAME, name), func(value ice.Map) {
-			value[mdb.ICONS] = icons
+			value[mdb.ICONS], value[TOKEN] = icons, token
 			value[SPIDE_CLIENT] = kit.Dict(mdb.NAME, name, mdb.TYPE, types,
 				SPIDE_METHOD, http.MethodGet, URL, link, ORIGIN, u.Scheme+"://"+u.Host,
 				tcp.PROTOCOL, u.Scheme, tcp.HOSTNAME, u.Hostname(), tcp.HOST, u.Host, nfs.PATH, dir, nfs.FILE, file, cli.TIMEOUT, "300s",
@@ -336,8 +336,9 @@ func init() {
 					}
 				}
 			}},
-			mdb.CREATE: {Name: "create name* origin* type icons", Hand: func(m *ice.Message, arg ...string) {
-				_spide_create(m, m.Option(mdb.NAME), m.Option(ORIGIN), m.Option(mdb.TYPE), m.OptionDefault(mdb.ICONS, nfs.USR_ICONS_VOLCANOS))
+			mdb.CREATE: {Name: "create name origin* type icons token", Hand: func(m *ice.Message, arg ...string) {
+				u := kit.ParseURL(m.Option(ORIGIN))
+				_spide_create(m, m.OptionDefault(mdb.NAME, u.Hostname()), m.Option(ORIGIN), m.Option(mdb.TYPE), m.OptionDefault(mdb.ICONS, nfs.USR_ICONS_VOLCANOS), m.OptionDefault(TOKEN, u.Query().Get(TOKEN)))
 			}},
 			COOKIE: {Name: "cookie key* value", Help: "状态量", Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashModify(m, m.OptionSimple(CLIENT_NAME), kit.Keys(COOKIE, m.Option(mdb.KEY)), m.Option(mdb.VALUE))

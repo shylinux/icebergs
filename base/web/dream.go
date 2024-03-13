@@ -272,7 +272,7 @@ func init() {
 							m.Cmdy(nfs.DIR, path.Join(value[nfs.PATH], ice.BIN), "path,size,time", kit.Dict(nfs.DIR_TYPE, nfs.TYPE_BIN))
 						})
 						m.RenameAppend(nfs.PATH, arg[0])
-						mdb.HashInputs(m, arg)
+						// mdb.HashInputs(m, arg)
 						DreamListSpide(m, []string{ice.DEV}, ORIGIN, func(dev, origin string) {
 							m.Spawn().SplitIndex(m.Cmdx(SPIDE, dev, SPIDE_RAW, http.MethodGet, S(), cli.GOOS, runtime.GOOS, cli.GOARCH, runtime.GOARCH)).Table(func(value ice.Maps) {
 								m.Push(arg[0], origin+S(value[mdb.NAME])).Push(nfs.SIZE, value[nfs.SIZE]).Push(mdb.TIME, value[mdb.TIME])

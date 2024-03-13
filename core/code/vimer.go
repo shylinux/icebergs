@@ -202,6 +202,7 @@ func init() {
 				m.Cmdy(TEMPLATE, kit.Ext(m.Option(mdb.FILE)), m.Option(nfs.FILE), m.Option(nfs.PATH))
 			}},
 			COMPLETE: {Hand: func(m *ice.Message, arg ...string) {
+				return
 				m.Cmdy(COMPLETE, kit.Ext(m.Option(mdb.FILE)), m.Option(nfs.FILE), m.Option(nfs.PATH))
 			}},
 			chat.FAVOR_INPUTS: {Hand: func(m *ice.Message, arg ...string) {

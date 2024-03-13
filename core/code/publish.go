@@ -45,7 +45,9 @@ func _publish_file(m *ice.Message, file string, arg ...string) string {
 	return m.Cmdx(nfs.LINK, path.Join(ice.USR_PUBLISH, kit.Select(path.Base(file), arg, 0)), file)
 }
 func _publish_contexts(m *ice.Message, arg ...string) {
-	m.Options(nfs.DIR_ROOT, "")
+	// m.Options(nfs.DIR_ROOT, "")
+	m.Debug("what %v", m.Option(web.DREAM))
+	m.Debug("what %v", m.Option(nfs.SOURCE))
 	m.OptionDefault(web.DOMAIN, tcp.PublishLocalhost(m, web.UserHost(m)))
 	m.OptionDefault(cli.CTX_CLI, "temp=$(mktemp); if curl -h &>/dev/null; then curl -o $temp -fsSL $ctx_dev; else wget -O $temp -q $ctx_dev; fi; source $temp")
 	m.OptionDefault(cli.CTX_ARG, kit.JoinCmds(aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.LANGUAGE, m.Option(ice.MSG_LANGUAGE)))
@@ -54,11 +56,11 @@ func _publish_contexts(m *ice.Message, arg ...string) {
 		switch k {
 		case nfs.SOURCE, ice.DEV:
 			if ice.Info.NodeType == web.SERVER {
-				m.Options(nfs.SOURCE, ice.Info.Make.Remote)
+				m.OptionDefault(nfs.SOURCE, ice.Info.Make.Remote)
 			} else if m.Option(ice.MSG_USERPOD) == "" {
-				m.Option(nfs.SOURCE, web.AdminCmd(m, cli.RUNTIME, "make.remote").Result())
+				m.OptionDefault(nfs.SOURCE, web.AdminCmd(m, cli.RUNTIME, "make.remote").Result())
 			} else {
-				m.Option(nfs.SOURCE, web.AdminCmd(m, web.SPACE, kit.KeyBase(m.Option(ice.MSG_USERPOD)), cli.RUNTIME, "make.remote").Result())
+				m.OptionDefault(nfs.SOURCE, web.AdminCmd(m, web.SPACE, kit.KeyBase(m.Option(ice.MSG_USERPOD)), cli.RUNTIME, "make.remote").Result())
 			}
 			env = append(env, cli.CTX_REPOS, m.Option(nfs.SOURCE))
 			fallthrough
@@ -66,7 +68,8 @@ func _publish_contexts(m *ice.Message, arg ...string) {
 			if host := web.HostPort(m, web.AdminCmd(m, tcp.HOST).Append(aaa.IP), web.AdminCmd(m, web.SERVE).Append(tcp.PORT)); m.Option(web.DOMAIN) != host {
 				env = append(env, cli.CTX_DEV_IP, host)
 			}
-			if ice.Info.NodeType == web.WORKER && m.Option(ice.MSG_USERPOD) != "" {
+			// if ice.Info.NodeType == web.WORKER && m.Option(ice.MSG_USERPOD) != "" {
+			if m.Option(ice.MSG_USERPOD) != "" {
 				env = append(env, cli.CTX_POD, m.Option(ice.MSG_USERPOD))
 			} else if name := web.AdminCmd(m, cli.RUNTIME, "boot.pathname").Result(); !kit.IsIn(name, path.Base(m.Option(nfs.SOURCE)), ice.CONTEXTS) {
 				env = append(env, "ctx_name", name)

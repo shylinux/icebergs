@@ -29,7 +29,7 @@ func _spide_create(m *ice.Message, name, link, types, icons, token string) {
 		dir, file := path.Split(u.EscapedPath())
 		m.Logs(mdb.INSERT, SPIDE, name, LINK, link)
 		mdb.HashSelectUpdate(m, mdb.HashCreate(m, CLIENT_NAME, name), func(value ice.Map) {
-			value[mdb.ICONS], value[TOKEN] = icons, token
+			value[mdb.ICONS], value[TOKEN] = icons, kit.Select(kit.Format(value[TOKEN]), token)
 			value[SPIDE_CLIENT] = kit.Dict(mdb.NAME, name, mdb.TYPE, types,
 				SPIDE_METHOD, http.MethodGet, URL, link, ORIGIN, u.Scheme+"://"+u.Host,
 				tcp.PROTOCOL, u.Scheme, tcp.HOSTNAME, u.Hostname(), tcp.HOST, u.Host, nfs.PATH, dir, nfs.FILE, file, cli.TIMEOUT, "300s",

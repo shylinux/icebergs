@@ -98,19 +98,18 @@ func _autogen_git(m *ice.Message, arg ...string) ice.Map {
 	)
 }
 func _autogen_mod(m *ice.Message, file string) (mod string) {
-	host := m.Cmdx(REPOS, REMOTE_URL)
-	if host != "" {
-		host = strings.Split(host, "://")[1]
-		if strings.Contains(host, ":") {
-			host = path.Base(host)
-		}
-	} else {
-		host = kit.ParseURL(kit.Select(m.Option(ice.MSG_USERHOST), ice.Info.Make.Remote)).Hostname()
-		if host == "" {
+	host := kit.Select(ice.Info.Make.Remote, m.Cmdx(REPOS, REMOTE_URL))
+	if host == "" {
+		host = m.Option(ice.MSG_USERHOST)
+		if host == "" || !strings.HasPrefix(host, ice.HTTP) {
 			host = path.Base(kit.Path(""))
 		} else {
+			host = strings.Split(host, "://")[1]
 			host = path.Join(host, "x", path.Base(kit.Path("")))
+			kit.If(strings.Contains(host, ":"), func() { host = path.Base(host) })
 		}
+	} else {
+		host = strings.Split(host, "://")[1]
 	}
 	m.Cmd(nfs.DEFS, file, kit.Format(nfs.Template(m, ice.GO_MOD), host))
 	// ReposAddFile(m, "", ice.GO_MOD)

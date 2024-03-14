@@ -46,11 +46,9 @@ func _publish_file(m *ice.Message, file string, arg ...string) string {
 }
 func _publish_contexts(m *ice.Message, arg ...string) {
 	// m.Options(nfs.DIR_ROOT, "")
-	m.Debug("what %v", m.Option(web.DREAM))
-	m.Debug("what %v", m.Option(nfs.SOURCE))
 	m.OptionDefault(web.DOMAIN, tcp.PublishLocalhost(m, web.UserHost(m)))
 	m.OptionDefault(cli.CTX_CLI, "temp=$(mktemp); if curl -h &>/dev/null; then curl -o $temp -fsSL $ctx_dev; else wget -O $temp -q $ctx_dev; fi; source $temp")
-	m.OptionDefault(cli.CTX_ARG, kit.JoinCmds(aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.LANGUAGE, m.Option(ice.MSG_LANGUAGE)))
+	m.OptionDefault(cli.CTX_ARG, kit.JoinCmdArgs(aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.LANGUAGE, m.Option(ice.MSG_LANGUAGE)))
 	for _, k := range kit.Default(arg, ice.MISC) {
 		env := []string{}
 		switch k {

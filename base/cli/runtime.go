@@ -277,8 +277,8 @@ func ParseMake(str string) []string {
 	version := kit.Format(kit.Value(data, nfs.VERSION))
 	if kit.Format(kit.Value(data, "forword")) != "0" {
 		version = kit.Join(kit.TrimArg(kit.Simple(
-			kit.Format(kit.Value(data, nfs.VERSION)),
-			kit.Format(kit.Value(data, "forword")),
+			kit.Select("v0.0.0", kit.Format(kit.Value(data, nfs.VERSION))),
+			kit.Select("0", kit.Format(kit.Value(data, "forword"))),
 			kit.Cut(kit.Format(kit.Value(data, mdb.HASH)), 6),
 		)...), "-")
 	}

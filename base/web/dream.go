@@ -451,6 +451,8 @@ func init() {
 				switch m.Option(mdb.TYPE) {
 				case WORKER:
 					list = append(list, "settings", tcp.SEND, OPEN)
+				case SERVER:
+					list = append(list, DREAM, OPEN)
 				default:
 					list = append(list, TOKEN, DREAM, OPEN)
 				}

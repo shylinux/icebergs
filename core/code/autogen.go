@@ -47,9 +47,12 @@ func _autogen_import(m *ice.Message, main string, ctx string, mod string) {
 	_autogen_defs(m, ice.README_MD, ice.MAKEFILE, ice.LICENSE)
 	_autogen_defs(m, ice.SRC_MAIN_GO, ice.ETC_MISS_SH, ice.README_MD, ice.MAKEFILE, ice.LICENSE)
 	begin, done, list := false, false, []string{}
+	imports := kit.Format(`_ "%s/src/%s"`, mod, ctx)
 	m.Cmd(nfs.CAT, main, func(line string, index int) {
-		if begin && !done && strings.HasPrefix(line, ")") {
-			done, list = true, append(list, "", kit.Format(`	_ "%s/src/%s"`, mod, ctx))
+		if strings.HasSuffix(line, imports) {
+			done = true
+		} else if begin && !done && strings.HasPrefix(line, ")") {
+			done, list = true, append(list, "", kit.Format(`	%s`, imports))
 		}
 		if list = append(list, line); done {
 			return
@@ -57,7 +60,7 @@ func _autogen_import(m *ice.Message, main string, ctx string, mod string) {
 		if strings.HasPrefix(line, "import (") {
 			begin = true
 		} else if strings.HasPrefix(line, IMPORT) {
-			done, list = true, append(list, kit.Format(`import _ "%s/src/%s"`, mod, ctx))
+			done, list = true, append(list, kit.Format(`import %s`, imports))
 		}
 	})
 	m.Cmd(nfs.SAVE, main, kit.Join(list, lex.NL))
@@ -106,11 +109,11 @@ func _autogen_mod(m *ice.Message, file string) (mod string) {
 		} else {
 			host = strings.Split(host, "://")[1]
 			host = path.Join(host, "x", path.Base(kit.Path("")))
-			kit.If(strings.Contains(host, ":"), func() { host = path.Base(host) })
 		}
 	} else {
 		host = strings.Split(host, "://")[1]
 	}
+	kit.If(strings.Contains(host, ":"), func() { host = path.Base(host) })
 	m.Cmd(nfs.DEFS, file, kit.Format(nfs.Template(m, ice.GO_MOD), host))
 	// ReposAddFile(m, "", ice.GO_MOD)
 	m.Cmd(nfs.CAT, file, func(line string) {

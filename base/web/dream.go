@@ -138,7 +138,6 @@ func _dream_start(m *ice.Message, name string) {
 		return
 	}
 	if !m.IsCliUA() {
-		// defer m.ProcessOpen(m.MergePod(name))
 		defer m.ProcessOpenAndRefresh(m.MergePod(name))
 		defer ToastProcess(m, mdb.CREATE, name)()
 	}
@@ -147,15 +146,19 @@ func _dream_start(m *ice.Message, name string) {
 	if p == "" {
 		return
 	}
-	gdb.Event(m, DREAM_CREATE, m.OptionSimple(mdb.NAME))
+	if !nfs.Exists(m, p) {
+		gdb.Event(m, DREAM_CREATE, m.OptionSimple(mdb.NAME))
+	}
 	defer m.Options(cli.CMD_DIR, "", cli.CMD_ENV, "", cli.CMD_OUTPUT, "")
 	m.Options(cli.CMD_DIR, kit.Path(p), cli.CMD_ENV, kit.EnvList(kit.Simple(m.OptionSimple(ice.TCP_DOMAIN),
 		cli.CTX_OPS, HostPort(m, tcp.LOCALHOST, m.Cmdv(SERVE, tcp.PORT)), cli.CTX_LOG, ice.VAR_LOG_BOOT_LOG, cli.CTX_PID, ice.VAR_LOG_ICE_PID,
 		cli.CTX_ROOT, kit.Path(""), cli.PATH, cli.BinPath(p, ""), cli.USER, ice.Info.Username,
 	)...), cli.CMD_OUTPUT, path.Join(p, ice.VAR_LOG_BOOT_LOG), mdb.CACHE_CLEAR_ONEXIT, ice.TRUE)
-	kit.If(m.Option(nfs.BINARY) == "" && !cli.SystemFindGo(m), func(p string) { m.Option(nfs.BINARY, S(name)) })
-	kit.If(m.Option(nfs.BINARY), func(p string) { _dream_binary(m, p) })
-	kit.If(m.Option(nfs.TEMPLATE), func(p string) { _dream_template(m, p) })
+	if !nfs.Exists(m, p) {
+		kit.If(m.Option(nfs.BINARY) == "" && !cli.SystemFindGo(m), func(p string) { m.Option(nfs.BINARY, S(name)) })
+		kit.If(m.Option(nfs.BINARY), func(p string) { _dream_binary(m, p) })
+		kit.If(m.Option(nfs.TEMPLATE), func(p string) { _dream_template(m, p) })
+	}
 	bin := kit.Select(kit.Path(os.Args[0]), cli.SystemFind(m, ice.ICE_BIN, nfs.PWD+path.Join(p, ice.BIN), nfs.PWD+ice.BIN))
 	if cli.IsSuccess(m.Cmd(cli.DAEMON, bin, SPACE, tcp.DIAL, ice.DEV, ice.OPS, mdb.TYPE, WORKER, m.OptionSimple(mdb.NAME), cli.DAEMON, ice.OPS)) {
 		gdb.WaitEvent(m, DREAM_OPEN, func(m *ice.Message, arg ...string) bool { return m.Option(mdb.NAME) == name })

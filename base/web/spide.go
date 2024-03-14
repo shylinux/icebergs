@@ -337,8 +337,7 @@ func init() {
 				}
 			}},
 			mdb.CREATE: {Name: "create name origin* type icons token", Hand: func(m *ice.Message, arg ...string) {
-				u := kit.ParseURL(m.Option(ORIGIN))
-				_spide_create(m, m.OptionDefault(mdb.NAME, u.Hostname()), m.Option(ORIGIN), m.Option(mdb.TYPE), m.OptionDefault(mdb.ICONS, nfs.USR_ICONS_VOLCANOS), m.OptionDefault(TOKEN, u.Query().Get(TOKEN)))
+				_spide_create(m, m.Option(mdb.NAME), m.Option(ORIGIN), m.Option(mdb.TYPE), m.OptionDefault(mdb.ICONS, nfs.USR_ICONS_VOLCANOS), m.Option(TOKEN))
 			}},
 			COOKIE: {Name: "cookie key* value", Help: "状态量", Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashModify(m, m.OptionSimple(CLIENT_NAME), kit.Keys(COOKIE, m.Option(mdb.KEY)), m.Option(mdb.VALUE))

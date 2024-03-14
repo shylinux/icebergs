@@ -7,7 +7,6 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
-	"syscall"
 	"time"
 
 	ice "shylinux.com/x/icebergs"
@@ -172,7 +171,7 @@ func _dream_check(m *ice.Message, name string) string {
 		if pid := m.Cmdx(nfs.CAT, p, kit.Dict(ice.MSG_USERROLE, aaa.TECH)); pid != "" && nfs.Exists(m, "/proc/"+pid) {
 			m.Info("already exists %v", pid)
 			return ""
-		} else if proc, err := os.FindProcess(kit.Int(pid)); err == nil && proc.Signal(syscall.SIGUSR1) == nil {
+		} else if gdb.SignalProcess(m, pid) {
 			m.Info("already exists %v", pid)
 			return ""
 		}

@@ -3,7 +3,6 @@ package gdb
 import (
 	"os"
 	"os/signal"
-	"runtime"
 	"syscall"
 
 	ice "shylinux.com/x/icebergs"
@@ -43,15 +42,7 @@ const SIGNAL = "signal"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		SIGNAL: {Help: "信号量", Actions: ice.MergeActions(ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				if runtime.GOOS == ice.WINDOWS {
-					return
-				}
-				_signal_listen(m, 1, mdb.NAME, START, ice.CMD, "runtime")
-				_signal_listen(m, 2, mdb.NAME, RESTART, ice.CMD, "exit 1")
-				_signal_listen(m, 3, mdb.NAME, STOP, ice.CMD, "exit 0")
-				_signal_listen(m, int(syscall.SIGUSR1), mdb.NAME, "info", ice.CMD, "runtime")
-			}},
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { _signal_init(m, arg...) }},
 			LISTEN: {Name: "listen signal name cmd", Help: "监听", Hand: func(m *ice.Message, arg ...string) {
 				_signal_listen(m, kit.Int(m.Option(SIGNAL)), arg...)
 			}},

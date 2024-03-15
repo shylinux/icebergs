@@ -29,6 +29,7 @@ func _dream_list(m *ice.Message, simple bool) *ice.Message {
 			return
 		}
 		if space, ok := list[value[mdb.NAME]]; ok {
+			value[mdb.ICONS] = space[mdb.ICONS]
 			m.Push("", value, kit.Slice(head, 0, -1))
 			if m.IsCliUA() || simple {
 				m.Push(mdb.TYPE, space[mdb.TYPE]).Push(cli.STATUS, cli.START)
@@ -95,15 +96,14 @@ func _dream_list_icon(m *ice.Message) {
 	})
 }
 func _dream_list_more(m *ice.Message, simple bool) *ice.Message {
-	list := m.CmdMap(SPIDE, CLIENT_NAME)
+	// list := m.CmdMap(SPIDE, CLIENT_NAME)
 	m.Cmds(SPACE).Table(func(value ice.Maps) {
-		value[mdb.ICONS] = nfs.USR_ICONS_VOLCANOS
+		// value[mdb.ICONS] = nfs.USR_ICONS_VOLCANOS
 		value[nfs.REPOS] = "https://" + value[nfs.MODULE]
 		value[aaa.ACCESS] = kit.Select("", value[aaa.USERROLE], value[aaa.USERROLE] != aaa.VOID)
 		value[mdb.STATUS] = cli.START
 		switch value[mdb.TYPE] {
 		case SERVER:
-			value[mdb.ICONS] = m.FileURI(nfs.USR_ICONS_ICEBERGS)
 			value[mdb.TEXT] = kit.JoinLine(value[nfs.MODULE], value[mdb.TEXT])
 			if simple {
 				defer m.PushButton("")
@@ -112,9 +112,6 @@ func _dream_list_more(m *ice.Message, simple bool) *ice.Message {
 				defer m.PushButton(strings.Join(msg.Appendv(ctx.ACTION), ""))
 			}
 		case ORIGIN:
-			if spide, ok := list[value[mdb.NAME]]; ok {
-				value[mdb.ICONS] = kit.Select(value[mdb.ICONS], spide[mdb.ICONS])
-			}
 			value[mdb.TEXT] = kit.JoinLine(value[nfs.MODULE], value[mdb.TEXT])
 			if simple {
 				defer m.PushButton("")
@@ -123,7 +120,6 @@ func _dream_list_more(m *ice.Message, simple bool) *ice.Message {
 				defer m.PushButton(strings.Join(msg.Appendv(ctx.ACTION), ""))
 			}
 		case aaa.LOGIN:
-			value[mdb.ICONS] = kit.Select(value[mdb.ICONS], agentIcons[value[AGENT]])
 			value[mdb.TEXT] = kit.JoinWord(value[AGENT], value[cli.SYSTEM], value[aaa.IP])
 			defer m.PushButton(GRANT)
 		default:
@@ -422,7 +418,11 @@ func init() {
 				if m.Option(mdb.TYPE) == ORIGIN && m.IsLocalhost() {
 					m.ProcessOpen(SpideOrigin(m, m.Option(mdb.NAME)))
 				} else {
-					m.ProcessOpen(S(m.Option(mdb.NAME)))
+					if p := ProxyDomain(m, m.Option(mdb.NAME)); p != "" {
+						m.ProcessOpen(p)
+					} else {
+						m.ProcessOpen(S(m.Option(mdb.NAME)))
+					}
 				}
 			}},
 			GRANT: {Hand: func(m *ice.Message, arg ...string) {

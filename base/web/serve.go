@@ -297,7 +297,7 @@ func ParseUA(m *ice.Message) (res []string) {
 	res = append(res, cli.DAEMON, m.Option(ice.MSG_DAEMON))
 	for _, p := range html.AgentList {
 		if strings.Contains(m.Option(ice.MSG_USERUA), p) {
-			res = append(res, mdb.ICONS, agentIcons[p], AGENT, p)
+			res = append(res, mdb.ICONS, kit.Select(agentIcons[p], m.Option(mdb.ICONS)), AGENT, p)
 			break
 		}
 	}
@@ -314,6 +314,9 @@ func ProxyDomain(m *ice.Message, name string) string {
 	m.Cmd(nfs.CAT, path.Join(PROXY_PATH, "conf/portal", name, "server.conf"), func(ls []string) {
 		kit.If(ls[0] == "server_name", func() { domain = ls[1] })
 	})
+	if domain == "" {
+		return ""
+	}
 	return "https://" + domain
 }
 func Script(m *ice.Message, str string, arg ...ice.Any) string {

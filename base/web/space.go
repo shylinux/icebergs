@@ -29,7 +29,7 @@ func _space_qrcode(m *ice.Message, dev string) {
 }
 func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 	origin := m.Cmdv(SPIDE, dev, CLIENT_ORIGIN)
-	u := kit.ParseURL(kit.MergeURL2(strings.Replace(origin, HTTP, "ws", 1), PP(SPACE), mdb.TYPE, ice.Info.NodeType, mdb.NAME, name, mdb.NAME, "",
+	u := kit.ParseURL(kit.MergeURL2(strings.Replace(origin, HTTP, "ws", 1), PP(SPACE), mdb.TYPE, ice.Info.NodeType, mdb.NAME, name, mdb.NAME, "", mdb.ICONS, mdb.Config(m, mdb.ICONS),
 		mdb.TIME, ice.Info.Make.Time, nfs.MODULE, ice.Info.Make.Module, nfs.VERSION, ice.Info.Make.Versions(), cli.GOOS, runtime.GOOS, cli.GOARCH, runtime.GOARCH, arg))
 	args := kit.SimpleKV("type,name,host,port", u.Scheme, dev, u.Hostname(), kit.Select(kit.Select(tcp.PORT_443, tcp.PORT_80, u.Scheme == "ws"), u.Port()))
 	gdb.Go(m, func() {
@@ -74,10 +74,14 @@ func _space_fork(m *ice.Message) {
 		if msg := m.Cmd(TOKEN, m.Option(TOKEN)); msg.Append(mdb.TIME) > m.Time() && kit.IsIn(msg.Append(mdb.TYPE), SERVER, SPIDE) {
 			aaa.SessAuth(m, kit.Dict(m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME, msg.Append(mdb.NAME))).AppendSimple()))
 			name = SpaceName(kit.Select(name, msg.Append(mdb.TEXT)))
+			kit.If(ProxyDomain(m, name), func(p string) { text = p })
 			safe = aaa.IsTechOrRoot(m)
 		}
 	}
-	args := kit.Simple(mdb.TYPE, m.Option(mdb.TYPE), mdb.NAME, name, mdb.TEXT, text, m.OptionSimple(mdb.TIME, nfs.MODULE, nfs.VERSION, cli.DAEMON))
+	if m.Option(mdb.ICONS) != "" && !kit.HasPrefix(m.Option(mdb.ICONS), nfs.PS, HTTP) {
+		m.Option(mdb.ICONS, kit.MergeURL("/require/"+m.Option(mdb.ICONS), ice.POD, name))
+	}
+	args := kit.Simple(mdb.TYPE, m.Option(mdb.TYPE), mdb.NAME, name, mdb.TEXT, text, m.OptionSimple(mdb.ICONS, mdb.TIME, nfs.MODULE, nfs.VERSION, cli.DAEMON))
 	args = append(args, aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERROLE, m.Option(ice.MSG_USERROLE))
 	args = append(args, ParseUA(m)...)
 	if c, e := websocket.Upgrade(m.W, m.R); !m.WarnNotValid(e) {
@@ -99,7 +103,7 @@ func _space_fork(m *ice.Message) {
 			case SERVER:
 				defer gdb.EventDeferEvent(m, SPACE_OPEN, args)(SPACE_CLOSE, args)
 				m.Go(func() {
-					m.Cmd(SPACE, name, cli.PWD, name, kit.Dict(
+					m.Cmd(SPACE, name, cli.PWD, name, kit.Dict(mdb.ICONS, mdb.Config(m, mdb.ICONS),
 						mdb.TIME, ice.Info.Make.Time, nfs.MODULE, ice.Info.Make.Module, nfs.VERSION, ice.Info.Make.Versions(),
 						AGENT, "Go-http-client", cli.SYSTEM, runtime.GOOS))
 					m.Cmd(SPACE).Table(func(value ice.Maps) {
@@ -180,7 +184,7 @@ func _space_exec(m *ice.Message, name string, source, target []string, c *websoc
 		m.Warn(true, ice.ErrNotValid)
 		return
 	case cli.PWD:
-		mdb.HashModify(m, mdb.HASH, name, ParseUA(m), m.OptionSimple(mdb.TIME, nfs.MODULE, nfs.VERSION, AGENT, cli.SYSTEM))
+		mdb.HashModify(m, mdb.HASH, name, ParseUA(m), m.OptionSimple(mdb.ICONS, mdb.TIME, nfs.MODULE, nfs.VERSION, AGENT, cli.SYSTEM))
 		m.Push(mdb.LINK, m.MergePod(kit.Select("", source, -1)))
 	default:
 		if m.IsErr() {
@@ -332,8 +336,9 @@ func init() {
 			}},
 			nfs.PS: {Hand: func(m *ice.Message, arg ...string) { _space_fork(m) }},
 		}, gdb.EventsAction(SPACE_LOGIN), mdb.HashAction(
+			mdb.ICONS, "src/main.ico",
 			mdb.LIMIT, 1000, mdb.LEAST, 500,
-			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,type,name,text,module,version,agent,system,ip,usernick,username,userrole",
+			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,type,name,text,icons,module,version,agent,system,ip,usernick,username,userrole",
 			ctx.ACTION, OPEN, REDIAL, kit.Dict("a", 1000, "b", 100, "c", 1000),
 		), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 {

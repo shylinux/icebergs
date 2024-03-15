@@ -296,12 +296,17 @@ func (m *Message) FileURI(dir string) string {
 	if dir == "" || kit.HasPrefix(dir, HTTP) {
 		return dir
 	}
+	p := kit.Path("") + PS
+	pp := strings.Split(kit.Path(""), "usr/local/work")[0]
+	pod := m.Option(MSG_USERPOD)
 	if strings.Contains(dir, "/pkg/mod/") {
 		dir = strings.Split(dir, "/pkg/mod/")[1]
 	} else if Info.Make.Path != "" && strings.HasPrefix(dir, Info.Make.Path) {
 		dir = strings.TrimPrefix(dir, Info.Make.Path)
-	} else if strings.HasPrefix(dir, kit.Path("")+PS) {
-		dir = strings.TrimPrefix(dir, kit.Path("")+PS)
+	} else if strings.HasPrefix(dir, p) {
+		dir = strings.TrimPrefix(dir, p)
+	} else if strings.HasPrefix(dir, pp) {
+		dir = strings.TrimPrefix(dir, pp)
 	} else if strings.HasPrefix(dir, ISH_PLUGED) {
 		dir = strings.TrimPrefix(dir, ISH_PLUGED)
 	}
@@ -310,7 +315,7 @@ func (m *Message) FileURI(dir string) string {
 	} else if strings.HasPrefix(dir, USR_VOLCANOS) {
 		dir = strings.TrimPrefix(dir, USR)
 	} else {
-		dir = kit.MergeURL(path.Join(PS, REQUIRE, dir), POD, m.Option(MSG_USERPOD))
+		dir = kit.MergeURL(path.Join(PS, REQUIRE, dir), POD, pod)
 	}
 	if m.Option(MSG_USERWEB0) != "" {
 		dir = kit.MergeURL2(m.Option(MSG_USERWEB), dir)

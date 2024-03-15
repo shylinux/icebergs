@@ -258,7 +258,7 @@ func (m *Message) Resource(file string) string { return m.resource(file) }
 func (m *Message) resource(file string) string {
 	p := kit.FileLines(3)
 	kit.If(file == "", func() { p = kit.ExtChange(p, JS) }, func() {
-		if strings.HasPrefix(file, PS) {
+		if kit.HasPrefix(file, PS, HTTP) {
 			p = file
 		} else {
 			p = path.Join(path.Dir(p), file)

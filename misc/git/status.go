@@ -49,6 +49,7 @@ func init() {
 				m.Cmd(nfs.DEFS, kit.HomePath(_GITCONFIG), kit.Format(nfs.Template(m, "gitconfig"), m.Option(aaa.USERNAME), m.Option(aaa.EMAIL)))
 				mdb.Config(m, aaa.USERNAME, m.Option(aaa.USERNAME))
 				mdb.Config(m, aaa.EMAIL, m.Option(aaa.EMAIL))
+				m.ProcessRefresh()
 			}},
 			STASH: {Help: "清空", Icon: "bi bi-trash", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(cli.SYSTEM, GIT, STASH)

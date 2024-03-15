@@ -256,13 +256,13 @@ func (m *Message) Display(file string, arg ...Any) *Message {
 }
 func (m *Message) Resource(file string) string { return m.resource(file) }
 func (m *Message) resource(file string) string {
-	if strings.HasPrefix(file, PS) || strings.HasPrefix(file, HTTP) {
-		return file
-	}
-	p := strings.TrimPrefix(kit.FileLines(3), Info.Make.Path)
-	if p = strings.TrimPrefix(p, kit.Path("")+PS); strings.Contains(p, "/pkg/mod/") {
-		p = strings.Split(p, "/pkg/mod/")[1]
-	}
-	kit.If(file == "", func() { p = kit.ExtChange(p, JS) }, func() { p = path.Join(path.Dir(p), file) })
-	return kit.MergeURL("/require/"+p, POD, m.Option(MSG_USERPOD))
+	p := kit.FileLines(3)
+	kit.If(file == "", func() { p = kit.ExtChange(p, JS) }, func() {
+		if strings.HasPrefix(file, PS) {
+			p = file
+		} else {
+			p = path.Join(path.Dir(p), file)
+		}
+	})
+	return m.FileURI(p)
 }

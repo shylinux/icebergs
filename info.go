@@ -305,7 +305,7 @@ func (m *Message) FileURI(dir string) string {
 		dir = strings.TrimPrefix(dir, Info.Make.Path)
 	} else if strings.HasPrefix(dir, p) {
 		dir = strings.TrimPrefix(dir, p)
-	} else if strings.HasPrefix(dir, pp) {
+	} else if strings.Contains(p, "usr/local/work") && strings.HasPrefix(dir, pp) {
 		dir = strings.TrimPrefix(dir, pp)
 	} else if strings.HasPrefix(dir, ISH_PLUGED) {
 		dir = strings.TrimPrefix(dir, ISH_PLUGED)

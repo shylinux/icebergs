@@ -184,6 +184,9 @@ func _space_exec(m *ice.Message, name string, source, target []string, c *websoc
 		m.Warn(true, ice.ErrNotValid)
 		return
 	case cli.PWD:
+		if m.Option(mdb.ICONS) != "" && !kit.HasPrefix(m.Option(mdb.ICONS), nfs.PS, HTTP) {
+			m.Option(mdb.ICONS, kit.MergeURL2(SpideOrigin(m, name), "/require/"+m.Option(mdb.ICONS)))
+		}
 		mdb.HashModify(m, mdb.HASH, name, ParseUA(m), m.OptionSimple(mdb.ICONS, mdb.TIME, nfs.MODULE, nfs.VERSION, AGENT, cli.SYSTEM))
 		m.Push(mdb.LINK, m.MergePod(kit.Select("", source, -1)))
 	default:

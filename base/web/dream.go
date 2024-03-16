@@ -161,21 +161,20 @@ func _dream_start(m *ice.Message, name string) {
 }
 func _dream_check(m *ice.Message, name string) string {
 	p := path.Join(ice.USR_LOCAL_WORK, name)
-	if p := path.Join(p, ice.VAR_LOG_ICE_PID); nfs.Exists(m, p) {
-		if pid := m.Cmdx(nfs.CAT, p, kit.Dict(ice.MSG_USERROLE, aaa.TECH)); pid != "" && nfs.Exists(m, "/proc/"+pid) {
-			m.Info("already exists %v", pid)
-			return ""
-		} else if gdb.SignalProcess(m, pid) {
-			m.Info("already exists %v", pid)
-			return ""
-		}
+	if pp := path.Join(p, ice.VAR_LOG_ICE_PID); nfs.Exists(m, pp) {
 		for i := 0; i < 5; i++ {
-			if m.Cmd(SPACE, name).Length() > 0 {
+			if pid := m.Cmdx(nfs.CAT, pp, kit.Dict(ice.MSG_USERROLE, aaa.TECH)); pid != "" && nfs.Exists(m, "/proc/"+pid) {
+				m.Info("already exists %v", pid)
+			} else if gdb.SignalProcess(m, pid) {
+				m.Info("already exists %v", pid)
+			} else if m.Cmd(SPACE, name).Length() > 0 {
 				m.Info("already exists %v", name)
-				return ""
+			} else {
+				return p
 			}
 			m.Sleep300ms()
 		}
+		return ""
 	}
 	return p
 }

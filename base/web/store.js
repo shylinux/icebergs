@@ -8,8 +8,12 @@ Volcanos(chat.ONIMPORT, {
 		}), select && select.click(), can.onmotion.orderShow(can, can.ui.project)
 		can.onappend.style(can, "output card", can.ui.content), can.onmotion.delay(can, function() { can.onimport.layout(can) })
 	}, __content: function(can, msg, dev, target) { var list = []
-		can.onimport.card(can, msg, null, function(value) { if (value.type == web.SERVER) { list.push(value); return true } })
-		can.onimport.itemlist(can, list, function(event, value) { can.onimport.dream(event, can, value, event.currentTarget) }, null, target)
+		can.onimport.card(can, msg, null, function(value) {
+			value.icons = can.misc.Resource(can, value.icons, "", value.origin)
+			if (value.type == web.SERVER) {
+			list.push(value); return true } })
+		can.onimport.itemlist(can, list, function(event, value) {
+			can.onimport.dream(event, can, value, event.currentTarget) }, null, target)
 	},
 	dream: function(event, can, value, target) { can.isCmdMode()? can.misc.SearchHash(can, value.name): can.sup.db._zone = value.name
 		can.page.Select(can, can.ui.project, html.DIV_ITEM, function(_target) {

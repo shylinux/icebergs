@@ -1,4 +1,5 @@
-fieldset.web.store>div.output>div.project { width:160px; flex:0 0 160px; }
+/* fieldset.web.store>div.output>div.project { width:160px; flex:0 0 160px; } */
+fieldset.web.store>div.output>div.project div.list { margin-left:25px; border-left:var(--notice-bg-color) solid 3px; }
 fieldset.web.store>div.output>div.layout>div.layout>div.content>div.item div.title div.label { font-size:var(--status-font-size); font-weight:normal; margin-top:var(--input-margin); }
 fieldset.web.store>div.output>div.layout>div.layout>div.content>div.item div.title div.label span { padding:var(--input-padding); padding-right:var(--input-margin); }
 fieldset.web.store>div.output>div.layout>div.layout>div.content>div.item div.content { height:70px; }

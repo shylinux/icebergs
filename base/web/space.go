@@ -134,7 +134,7 @@ func _space_handle(m *ice.Message, safe bool, name string, c *websocket.Conn) {
 			kit.If(msg.Option(ice.MSG_USERROLE), func() { msg.Option(ice.MSG_USERROLE, aaa.VOID) })
 		}
 		source, target := kit.Simple(msg.Optionv(ice.MSG_SOURCE), name), kit.Simple(msg.Optionv(ice.MSG_TARGET))
-		msg.Log(tcp.RECV, "%v->%v %v %v", source, target, msg.Detailv(), msg.FormatsMeta(nil))
+		msg.Log(tcp.RECV, "%v->%v %v %v", source, target, msg.Detailv(), msg.FormatMeta())
 		if next := msg.Option(ice.MSG_TARGET); next == "" || len(target) == 0 {
 			msg.Go(func() {
 				if k := kit.Keys(msg.Option(ice.MSG_USERPOD), "_token"); msg.Option(k) != "" {
@@ -214,7 +214,7 @@ func _space_echo(m *ice.Message, source, target []string, c *websocket.Conn) {
 	defer func() { m.WarnNotValid(recover()) }()
 	if m.Options(ice.MSG_SOURCE, source, ice.MSG_TARGET, target[1:]); !m.WarnNotValid(c.WriteMessage(1, []byte(m.FormatMeta()))) {
 		if source != nil {
-			m.Log(kit.Select(tcp.SEND, tcp.ECHO, m.Option(ice.MSG_HANDLE) == ice.TRUE), "%v->%v %v %v", source, target, kit.ReplaceAll(kit.Format("%v", m.Detailv()), "\r\n", "\\r\\n", "\t", "\\t", "\n", "\\n"), m.FormatsMeta(nil))
+			m.Log(kit.Select(tcp.SEND, tcp.ECHO, m.Option(ice.MSG_HANDLE) == ice.TRUE), "%v->%v %v %v", source, target, kit.ReplaceAll(kit.Format("%v", m.Detailv()), "\r\n", "\\r\\n", "\t", "\\t", "\n", "\\n"), m.FormatMeta())
 		}
 	}
 }

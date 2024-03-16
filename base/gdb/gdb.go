@@ -19,13 +19,11 @@ func (f *Frame) Begin(m *ice.Message, arg ...string) {
 	f.s = make(chan os.Signal, 10)
 }
 func (f *Frame) Start(m *ice.Message, arg ...string) {
-	kit.If(ice.Info.PidPath, func(p string) {
-		if f, p, e := logs.CreateFile(p); e == nil {
-			defer f.Close()
-			m.Logs("save", "file", p, PID, os.Getpid())
-			fmt.Fprint(f, os.Getpid())
-		}
-	})
+	if f, p, e := logs.CreateFile(ice.VAR_LOG_ICE_PID); e == nil {
+		m.Logs("save", "file", p, PID, os.Getpid())
+		fmt.Fprint(f, os.Getpid())
+		f.Close()
+	}
 	t := time.NewTicker(kit.Duration(mdb.Conf(m, TIMER, kit.Keym(TICK))))
 	for {
 		select {
@@ -41,7 +39,6 @@ func (f *Frame) Start(m *ice.Message, arg ...string) {
 }
 func (f *Frame) Close(m *ice.Message, arg ...string) {
 	close(f.s)
-	kit.If(ice.Info.PidPath, func(p string) { os.Remove(p) })
 }
 func (f *Frame) listen(m *ice.Message, s int, arg ...string) {
 	signal.Notify(f.s, syscall.Signal(s))

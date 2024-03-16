@@ -29,11 +29,7 @@ func _runtime_init(m *ice.Message) {
 	m.Conf(RUNTIME, kit.Keys(HOST, HOME), kit.HomePath(""))
 	m.Conf(RUNTIME, kit.Keys(HOST, MAXPROCS), runtime.GOMAXPROCS(0))
 	ice.Info.System = m.Conf(RUNTIME, kit.Keys(HOST, OSID))
-	ice.Info.PidPath = ice.VAR_LOG_ICE_PID
-	kit.For(ENV_LIST, func(k string) {
-		m.Conf(RUNTIME, kit.Keys(CONF, k), kit.Env(k))
-		kit.If(k == CTX_PID, func() { ice.Info.PidPath = kit.Env(k) })
-	})
+	kit.For(ENV_LIST, func(k string) { m.Conf(RUNTIME, kit.Keys(CONF, k), kit.Env(k)) })
 	ice.Info.Lang = m.Conf(RUNTIME, kit.Keys(CONF, LANG))
 	m.Conf(RUNTIME, kit.Keys(BOOT, USERNAME), kit.UserName())
 	m.Conf(RUNTIME, kit.Keys(BOOT, HOSTNAME), kit.Env("HOSTNAME"))

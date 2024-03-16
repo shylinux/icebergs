@@ -194,6 +194,7 @@ func _space_exec(m *ice.Message, name string, source, target []string, c *websoc
 			return
 		}
 		m.OptionDefault(ice.MSG_COUNT, "0")
+		m.Option(ice.MSG_ARGS, "")
 		kit.If(m.Option(ice.MSG_DAEMON), func(p string) {
 			m.Option(ice.MSG_DAEMON0, m.Option(ice.MSG_DAEMON))
 			m.Option(ice.MSG_DAEMON, kit.Keys(kit.Slice(kit.Reverse(kit.Simple(source)), 0, -1), p))

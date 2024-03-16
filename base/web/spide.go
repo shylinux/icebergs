@@ -290,14 +290,6 @@ func init() {
 				m.Cmd("", mdb.CREATE, ice.OPS, kit.Select("http://localhost:9020", conf[cli.CTX_OPS]), nfs.REPOS, nfs.USR_ICONS_CONTEXTS)
 				m.Cmd("", mdb.CREATE, ice.DEMO, kit.Select("http://localhost:20000", conf[cli.CTX_DEMO]), "", nfs.USR_ICONS_VOLCANOS)
 				m.Cmd("", mdb.CREATE, ice.MAIL, kit.Select("https://mail.shylinux.com", conf[cli.CTX_MAIL]), "", "usr/icons/Mail.png")
-				if m.Cmd(tcp.HOST).Length() == 0 {
-					return
-				}
-				mdb.HashSelects(m.Spawn()).Table(func(value ice.Maps) {
-					kit.If(value[TOKEN], func() {
-						m.Cmd(SPACE, tcp.DIAL, ice.DEV, value[CLIENT_NAME], TOKEN, value[TOKEN], mdb.TYPE, SERVER)
-					})
-				})
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if mdb.IsSearchPreview(m, arg) {

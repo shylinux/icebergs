@@ -68,7 +68,6 @@ type info struct {
 	Lang      string
 	System    string
 	Domain    string
-	PidPath   string
 	CtxRoot   string
 	Traceid   string
 	Localhost bool

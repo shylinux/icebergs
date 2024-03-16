@@ -252,6 +252,14 @@ func init() {
 						m.Cmd(cli.SYSTEM, "sudo", PROXY_CMDS, "-s", "reload", kit.Dict(cli.CMD_DIR, dir))
 					}
 				}
+				if m.Cmd(tcp.HOST).Length() == 0 {
+					return
+				}
+				m.Cmds(SPIDE).Table(func(value ice.Maps) {
+					kit.If(value[TOKEN], func() {
+						m.Cmd(SPACE, tcp.DIAL, ice.DEV, value[CLIENT_NAME], TOKEN, value[TOKEN], mdb.TYPE, SERVER)
+					})
+				})
 			}},
 			PROXY_CONF: {Name: "proxyConf name* port host path", Hand: func(m *ice.Message, arg ...string) {
 				if dir := m.OptionDefault(nfs.PATH, PROXY_PATH, tcp.HOST, "127.0.0.1", tcp.PORT, "9020"); nfs.Exists(m, dir) {

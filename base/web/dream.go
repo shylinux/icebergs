@@ -230,7 +230,7 @@ const DREAM = "dream"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		DREAM: {Name: "dream refresh", Help: "梦想家", Icon: "Launchpad.png", Role: aaa.VOID, Meta: kit.Dict(
-			ice.CTX_TRANS, kit.Dict(html.INPUT, kit.Dict(WORKER, "空间", SERVER, "机器", ORIGIN, "主机")),
+			ice.CTX_TRANS, kit.Dict(html.INPUT, kit.Dict(WORKER, "空间", SERVER, "门户", ORIGIN, "主机")),
 		), Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m = m.Spawn()
@@ -487,6 +487,16 @@ func init() {
 				}
 				if !m.IsCliUA() && aaa.IsTechOrRoot(m) {
 					_dream_list_more(m, simple)
+				} else {
+					msg := m.Spawn(kit.Dict(ice.MSG_USERROLE, aaa.TECH))
+					m.Cmds(SPACE).Table(func(value ice.Maps) {
+						if value[mdb.TYPE] == SERVER {
+							if p := ProxyDomain(msg, value[mdb.NAME]); p != "" {
+								value[mdb.TEXT] = p
+								m.PushRecord(value, mdb.TIME, mdb.TYPE, mdb.NAME, mdb.ICONS, nfs.MODULE, nfs.VERSION, mdb.TEXT)
+							}
+						}
+					})
 				}
 				if ice.Info.NodeType == WORKER || !aaa.IsTechOrRoot(m) || m.IsCliUA() {
 					m.Action()
@@ -503,7 +513,7 @@ func init() {
 				}
 				if !aaa.IsTechOrRoot(m) {
 					m.Options(ice.MSG_TOOLKIT, "")
-					m.Option(ice.MSG_ONLINE, ice.FALSE)
+					m.Options(ice.MSG_ONLINE, ice.FALSE)
 				}
 			} else if arg[0] == ctx.ACTION {
 				gdb.Event(m, DREAM_ACTION, arg)

@@ -2,6 +2,7 @@ package chat
 
 import (
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
@@ -16,7 +17,9 @@ func init() {
 				web.RenderMain(m)
 			default:
 				if m.IsCliUA() {
-					m.Cmdy(arg, m.Optionv(ice.ARG)).RenderResult()
+					if aaa.Right(m, arg) {
+						m.Cmdy(arg, m.Optionv(ice.ARG)).RenderResult()
+					}
 				} else {
 					web.RenderCmd(m, cmd, kit.Slice(arg, 1))
 				}

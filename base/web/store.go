@@ -53,8 +53,12 @@ func init() {
 				return
 			}
 			if m.Display(""); len(arg) == 0 {
+				list := []string{}
 				m.Cmd(SPIDE, arg, kit.Dict(ice.MSG_FIELDS, "time,icons,client.type,client.name,client.origin")).Table(func(value ice.Maps) {
-					kit.If(value[CLIENT_TYPE] == nfs.REPOS, func() { m.Push(mdb.NAME, value[CLIENT_NAME]).Push(mdb.ICONS, value[mdb.ICONS]) })
+					kit.If(value[CLIENT_TYPE] == nfs.REPOS, func() {
+						list = append(list, value[CLIENT_NAME])
+						m.Push(mdb.NAME, value[CLIENT_NAME]).Push(mdb.ICONS, value[mdb.ICONS]).Push(ORIGIN, value[CLIENT_ORIGIN])
+					})
 				})
 				if ice.Info.NodeType == WORKER || !aaa.IsTechOrRoot(m) {
 					m.Action()
@@ -67,20 +71,24 @@ func init() {
 					m.Cmdy(DREAM)
 					return
 				}
+				dream := C(DREAM)
 				origin := SpideOrigin(m, arg[0])
-				kit.If(kit.IsIn(arg[0], ice.OPS, ice.DEV), func() {
-					if kit.IsIn(kit.ParseURL(origin).Hostname(), m.Cmds(tcp.HOST).Appendv(aaa.IP)...) {
-						origin = m.Option(ice.MSG_USERHOST)
-					} else {
-						origin = tcp.PublishLocalhost(m, origin)
-					}
-				})
+				kit.If(origin == "", func() { arg[0], origin, dream = ice.DEV, arg[0], arg[0]+dream })
+				if kit.IsIn(kit.ParseURL(origin).Hostname(), append(m.Cmds(tcp.HOST).Appendv(aaa.IP), tcp.LOCALHOST)...) {
+					origin = m.Option(ice.MSG_USERHOST)
+				} else {
+					origin = tcp.PublishLocalhost(m, origin)
+				}
 				list := m.Spawn(ice.Maps{ice.MSG_FIELDS: ""}).CmdMap(DREAM, mdb.NAME)
-				m.SetAppend().Spawn().SplitIndex(m.Cmdx(SPIDE, arg[0], C(DREAM), kit.Dict(mdb.ConfigSimple(m, CLIENT_TIMEOUT)))).Table(func(value ice.Maps) {
-					if value[mdb.TYPE] != WORKER {
+				stat := map[string]int{}
+				m.SetAppend().Spawn().SplitIndex(m.Cmdx(SPIDE, arg[0], dream, kit.Dict(mdb.ConfigSimple(m, CLIENT_TIMEOUT)))).Table(func(value ice.Maps) {
+					stat[value[mdb.TYPE]]++
+					m.Push("", value, kit.Split("time,type,name,icons,repos,binary,module,version"))
+					if value[mdb.TYPE] == SERVER {
+						m.Push(mdb.TEXT, value[mdb.TEXT]).Push(ORIGIN, value[mdb.TEXT])
+						m.PushButton()
 						return
 					}
-					m.Push("", value, kit.Split("time,name,icons,repos,binary,module,version"))
 					m.Push(mdb.TEXT, value[nfs.REPOS]).Push(ORIGIN, origin)
 					if _, ok := list[value[mdb.NAME]]; ok || arg[0] == ice.OPS {
 						m.PushButton(PORTAL, DESKTOP, ADMIN, OPEN)
@@ -90,7 +98,7 @@ func init() {
 						m.PushButton(PORTAL, INSTALL)
 					}
 				})
-				m.StatusTimeCount(ORIGIN, origin)
+				m.StatusTimeCount(ORIGIN, origin, stat)
 			}
 		}},
 	})

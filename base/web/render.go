@@ -56,9 +56,12 @@ func Render(m *ice.Message, cmd string, args ...ice.Any) bool {
 	case COOKIE: // value [name [path [expire]]]
 		RenderCookie(m, arg[0], arg[1:]...)
 	case STATUS, ice.RENDER_STATUS: // [code [text]]
-		// RenderStatus(m.W, kit.Int(kit.Select("200", arg, 0)), kit.Select(m.Result(), strings.Join(kit.Slice(arg, 1), " ")))
-		m.W.WriteHeader(kit.Int(kit.Select("200", arg, 0)))
-		renderMsg(m)
+		if m.IsCliUA() {
+			RenderStatus(m.W, kit.Int(kit.Select("200", arg, 0)), kit.Select(m.Result(), strings.Join(kit.Slice(arg, 1), " ")))
+		} else {
+			m.W.WriteHeader(kit.Int(kit.Select("200", arg, 0)))
+			renderMsg(m)
+		}
 	case ice.RENDER_REDIRECT: // url [arg...]
 		http.Redirect(m.W, m.R, m.MergeLink(arg[0], arg[1:]), http.StatusTemporaryRedirect)
 	case ice.RENDER_DOWNLOAD: // file [type [name]]

@@ -96,7 +96,7 @@ func _autogen_git(m *ice.Message, arg ...string) ice.Map {
 	return kit.Dict(arg, aaa.USERNAME, m.Option(ice.MSG_USERNAME), tcp.HOSTNAME, ice.Info.Hostname, nfs.PATH, kit.Path("")+nfs.PS, mdb.TIME, m.Time(),
 		GIT, GitVersion(m), GO, GoVersion(m), nfs.MODULE, _autogen_mod(m, ice.GO_MOD),
 		msg.AppendSimple("remote,branch,version,forword,author,email,hash,when,message"),
-		web.DOMAIN, m.Spawn(kit.Dict(ice.MSG_USERWEB, m.Option(ice.MSG_USERHOST), ice.MSG_USERPOD, m.Option(ice.MSG_USERPOD))).MergePod(""),
+		web.DOMAIN, m.Spawn(kit.Dict(ice.MSG_USERWEB, web.UserHost(m), ice.MSG_USERPOD, m.Option(ice.MSG_USERPOD))).MergePod(""),
 		cli.SYSTEM, ice.Info.System,
 	)
 }

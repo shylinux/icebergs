@@ -17,9 +17,21 @@ const TOKEN = "token"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		TOKEN: {Help: "令牌桶", Actions: mdb.HashAction(mdb.SHORT, mdb.UNIQ, mdb.EXPIRE, mdb.MONTH, html.CHECKBOX, ice.TRUE), Hand: func(m *ice.Message, arg ...string) {
-			mdb.HashSelect(m, arg...)
-			if len(arg) > 0 {
+		TOKEN: {Help: "令牌桶", Actions: ice.MergeActions(ice.Actions{
+			mdb.PRUNES: {Hand: func(m *ice.Message, arg ...string) {
+				list := map[string]bool{}
+				m.Cmds("").Table(func(value ice.Maps) {
+					key := kit.Fields(value[mdb.TYPE], value[mdb.NAME], value[mdb.TEXT])
+					if _, ok := list[key]; ok {
+						m.Cmd("", mdb.REMOVE, value)
+					} else {
+						list[key] = true
+					}
+				})
+
+			}},
+		}, mdb.HashAction(mdb.SHORT, mdb.UNIQ, mdb.EXPIRE, mdb.MONTH, html.CHECKBOX, ice.TRUE)), Hand: func(m *ice.Message, arg ...string) {
+			if mdb.HashSelect(m, arg...); len(arg) > 0 {
 				m.EchoScript(kit.MergeURL2(m.Option(ice.MSG_USERWEB), nfs.PS, TOKEN, arg[0]))
 			}
 		}},

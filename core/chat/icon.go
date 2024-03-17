@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
@@ -17,13 +18,11 @@ const ICON = "icon"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		ICON: {Help: "图标", Actions: ice.MergeActions(ice.Actions{
-			ice.CTX_OPEN: {Hand: func(m *ice.Message, arg ...string) {
-				kit.For([]string{
-					"bootstrap-icons/font/fonts/bootstrap-icons.woff2",
-					"bootstrap-icons/font/bootstrap-icons.css",
-				}, func(p string) {
-					// m.Cmd(WEBPACK, mdb.INSERT, p)
-					m.Cmd(web.BINPACK, mdb.INSERT, nfs.USR_MODULES+p)
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				m.GoSleep(cli.TIME_30ms, func() {
+					kit.For([]string{"bootstrap-icons/font/bootstrap-icons.css", "bootstrap-icons/font/fonts/bootstrap-icons.woff2"}, func(p string) {
+						m.Cmd(web.BINPACK, mdb.INSERT, nfs.USR_MODULES+p)
+					})
 				})
 			}},
 		}, ctx.ConfAction(nfs.PATH, "bootstrap-icons/font/bootstrap-icons.css")), Hand: func(m *ice.Message, arg ...string) {

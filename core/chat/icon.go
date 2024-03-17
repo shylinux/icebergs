@@ -17,7 +17,7 @@ const ICON = "icon"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		ICON: {Help: "图标", Actions: ice.MergeActions(ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+			ice.CTX_OPEN: {Hand: func(m *ice.Message, arg ...string) {
 				kit.For([]string{
 					"bootstrap-icons/font/fonts/bootstrap-icons.woff2",
 					"bootstrap-icons/font/bootstrap-icons.css",

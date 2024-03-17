@@ -103,11 +103,8 @@ const BINPACK = "binpack"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		BINPACK: {Name: "binpack path auto create insert", Help: "打包", Actions: ice.MergeActions(ice.Actions{
-			mdb.CREATE: {Name: "create path", Hand: func(m *ice.Message, arg ...string) {
-				_binpack_usr(m.Spawn())
-				_binpack_src(m)
-			}},
-			mdb.INSERT: {Name: "insert path*", Hand: func(m *ice.Message, arg ...string) { mdb.HashCreate(m) }},
+			mdb.CREATE: {Name: "create path", Hand: func(m *ice.Message, arg ...string) { _binpack_usr(m.Spawn()); _binpack_src(m) }},
+			mdb.INSERT: {Name: "insert path*", Hand: func(m *ice.Message, arg ...string) { mdb.HashCreate(m, m.OptionSimple(nfs.PATH)) }},
 		}, mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path", lex.EXTREG, "sh,shy,py,js,css,html,png,jpg"))},
 	})
 }

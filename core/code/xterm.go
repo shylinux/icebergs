@@ -3,6 +3,7 @@ package code
 import (
 	"encoding/base64"
 	"path"
+	"runtime"
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
@@ -178,7 +179,13 @@ func init() {
 				}
 			} else {
 				kit.If(m.Length() == 0, func() {
-					kit.If(arg[0] == cli.SH, func() { arg[0] = cli.Shell(m) })
+					kit.If(arg[0] == cli.SH, func() {
+						if runtime.GOOS == cli.WINDOWS {
+							arg[0] = "ish"
+						} else {
+							arg[0] = cli.Shell(m)
+						}
+					})
 					arg[0] = m.Cmdx("", mdb.CREATE, arg)
 					mdb.HashSelect(m, arg[0])
 				})

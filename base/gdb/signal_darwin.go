@@ -1,5 +1,3 @@
-//go:build !windows
-
 package gdb
 
 import (
@@ -23,3 +21,4 @@ func SignalProcess(m *ice.Message, pid string) bool {
 	}
 	return false
 }
+

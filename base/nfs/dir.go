@@ -97,7 +97,11 @@ func _dir_list(m *ice.Message, root string, dir string, level int, deep bool, di
 					if isDir {
 						m.Push(mdb.LINK, "")
 					} else {
-						m.PushDownload(mdb.LINK, p)
+						if strings.Contains(p, "ice.windows") {
+							m.PushDownload(mdb.LINK, "ice.exe", p)
+						} else {
+							m.PushDownload(mdb.LINK, p)
+						}
 					}
 				case mdb.SHOW:
 					switch p := m.MergeLink(SHARE_LOCAL+p, ice.POD, m.Option(ice.MSG_USERPOD)); kit.Ext(s.Name()) {

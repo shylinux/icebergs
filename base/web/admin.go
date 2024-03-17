@@ -3,7 +3,6 @@ package web
 import (
 	"net/http"
 	"os"
-	"path"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
@@ -11,6 +10,7 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
+	"shylinux.com/x/icebergs/base/web/html"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -25,12 +25,12 @@ func init() {
 				RenderMain(m)
 			} else {
 				kit.If(len(arg) == 0, func() { arg = append(arg, SPACE, DOMAIN) })
-				m.Cmd(SPIDE, mdb.CREATE, ice.OPS, HostPort(m, tcp.LOCALHOST, kit.GetValid(
+				m.Cmd(SPIDE, mdb.CREATE, HostPort(m, tcp.LOCALHOST, kit.GetValid(
 					func() string { return m.Cmdx(nfs.CAT, ice.VAR_LOG_ICE_PORT) },
 					func() string { return m.Cmdx(nfs.CAT, kit.Path(os.Args[0], "../", ice.VAR_LOG_ICE_PORT)) },
 					func() string { return m.Cmdx(nfs.CAT, kit.Path(os.Args[0], "../../", ice.VAR_LOG_ICE_PORT)) },
 					func() string { return tcp.PORT_9020 },
-				)))
+				)), ice.OPS)
 				args := []string{}
 				for i := range arg {
 					if arg[i] == "--" {
@@ -38,7 +38,8 @@ func init() {
 						break
 					}
 				}
-				m.Cmdy(SPIDE, ice.OPS, SPIDE_RAW, http.MethodPost, C(path.Join(arg...)), cli.PWD, kit.Path(""), args)
+				kit.If(os.Getenv(cli.CTX_OPS), func(p string) { m.Optionv(SPIDE_HEADER, html.XHost, p) })
+				m.Cmdy(SPIDE, ice.OPS, SPIDE_RAW, http.MethodPost, C(arg...), cli.PWD, kit.Path(""), args)
 			}
 		}},
 	})

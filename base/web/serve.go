@@ -235,7 +235,7 @@ func init() {
 				_serve_start(m)
 			}},
 			SERVE_START: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(SPIDE, mdb.CREATE, ice.OPS, kit.Format("http://localhost:%s", m.Option(tcp.PORT)), nfs.REPOS, nfs.USR_ICONS_CONTEXTS)
+				m.Cmd(SPIDE, mdb.CREATE, kit.Format("http://localhost:%s", m.Option(tcp.PORT)), ice.OPS, nfs.USR_ICONS_CONTEXTS, nfs.REPOS)
 				Count(m, m.ActionKey(), m.Option(tcp.PORT))
 				kit.If(m.Option(ice.DEMO) == ice.TRUE, func() { m.Cmd(CHAT_HEADER, ice.DEMO) })
 				switch cb := m.Optionv(SERVE_START).(type) {

@@ -364,6 +364,7 @@ func (s relay) foreachScript(m *ice.Message, script string, arg ...string) {
 			if msg.Option(cli.GO) == "" {
 				return
 			}
+			msg.Option(web.LINK, web.HostPort(m.Message, msg.Option(tcp.HOST), msg.Option(web.PORTAL)))
 			ssh.PushShell(msg.Message, strings.Split(msg.Template(script), lex.NL), func(res string) {
 				web.PushNoticeGrow(m.Options(ctx.DISPLAY, html.PLUGIN_XTERM, ice.MSG_COUNT, "0", ice.MSG_DEBUG, ice.FALSE, ice.LOG_DISABLE, ice.TRUE).Message, res)
 			})

@@ -310,7 +310,7 @@ func init() {
 			cli.START: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy("", tcp.DIAL, arg) }},
 			tcp.DIAL: {Name: "dial dev=ops name", Hand: func(m *ice.Message, arg ...string) {
 				if strings.HasPrefix(m.Option(ice.DEV), HTTP) {
-					m.Cmd(SPIDE, mdb.CREATE, m.OptionSimple(ice.DEV))
+					m.Cmd(SPIDE, mdb.CREATE, m.Option(ice.DEV), ice.DEV)
 					m.Option(ice.DEV, ice.DEV)
 				}
 				_space_dial(m, m.Option(ice.DEV), kit.Select(ice.Info.NodeName, m.Option(mdb.NAME)), arg...)

@@ -70,7 +70,7 @@ func init() {
 			DREAM: {Hand: func(m *ice.Message, arg ...string) { broadOpen(m) }},
 			VIMER: {Hand: func(m *ice.Message, arg ...string) { broadOpen(m) }},
 			SPIDE: {Name: "spide name type=repos", Icon: "bi bi-house-add", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(SPIDE, mdb.CREATE, m.OptionSimple(mdb.NAME), ORIGIN, HostPort(m, m.Option(tcp.HOST), m.Option(tcp.PORT)))
+				m.Cmd(SPIDE, mdb.CREATE, HostPort(m, m.Option(tcp.HOST), m.Option(tcp.PORT)), m.Option(mdb.NAME))
 			}},
 			OPEN: {Hand: func(m *ice.Message, arg ...string) {
 				m.ProcessOpen(HostPort(m, m.Option(mdb.NAME), m.Option(tcp.PORT)))

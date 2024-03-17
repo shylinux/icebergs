@@ -99,15 +99,8 @@ func init() {
 		), Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(SPIDE, mdb.INPUTS, arg) }},
 			mdb.CREATE: {Name: "create origin* name icons", Hand: func(m *ice.Message, arg ...string) {
-				if u := kit.ParseURL(m.Option(ORIGIN)); m.Warn(u.Query().Get(TOKEN) == "", ice.ErrNotValid, TOKEN) {
-					return
-				} else {
-					m.Option(TOKEN, u.Query().Get(TOKEN))
-					m.Option(ORIGIN, kit.Format("%s://%s", u.Scheme, u.Host))
-					m.OptionDefault(mdb.NAME, kit.Split(u.Hostname(), ".")[0])
-					m.Cmd(SPIDE, mdb.CREATE, m.OptionSimple("name,origin,icons,token"), mdb.TYPE, nfs.REPOS)
-					m.Cmd(SPIDE, DEV_CREATE_TOKEN, ice.Maps{CLIENT_NAME: m.Option(mdb.NAME)})
-				}
+				m.Cmd(SPIDE, mdb.CREATE, m.OptionSimple("origin,name,icons,token"), mdb.TYPE, nfs.REPOS)
+				m.Cmd(SPIDE, DEV_CREATE_TOKEN, ice.Maps{CLIENT_NAME: m.Option(mdb.NAME)})
 			}},
 			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) { _matrix_dream(m, nfs.TRASH); _matrix_dream(m, "") }},
 			cli.START:  {Hand: func(m *ice.Message, arg ...string) { _matrix_dream(m, "") }},

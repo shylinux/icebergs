@@ -22,7 +22,9 @@ const APP = "app"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		APP: {Name: "app appid auto token login", Help: "应用", Actions: ice.MergeActions(ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { m.Cmd(web.SPIDE, mdb.CREATE, LARK, mdb.Config(m, tcp.SERVER)) }},
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(web.SPIDE, mdb.CREATE, mdb.Config(m, tcp.SERVER), LARK)
+			}},
 			LOGIN: {Name: "login appid* appmm* duty", Help: "登录", Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashCreate(m, m.OptionSimple(APPID, APPMM, DUTY))
 			}},

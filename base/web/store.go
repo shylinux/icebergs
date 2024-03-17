@@ -21,7 +21,7 @@ func init() {
 		STORE: {Name: "store refresh", Help: "商店", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(SPIDE, mdb.INPUTS, arg) }},
 			mdb.CREATE: {Name: "create origin* name icons", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(SPIDE, mdb.CREATE, m.OptionSimple("name,origin,icons"), mdb.TYPE, nfs.REPOS)
+				m.Cmd(SPIDE, mdb.CREATE, m.OptionSimple("origin,name,icons"), mdb.TYPE, nfs.REPOS)
 			}},
 			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(SPIDE, mdb.REMOVE, CLIENT_NAME, m.Option(mdb.NAME))

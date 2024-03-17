@@ -42,7 +42,7 @@ func init() {
 		}},
 		BOT: {Name: "bot name chat text:textarea auto create", Help: "机器人", Actions: ice.MergeActions(ice.Actions{
 			mdb.CREATE: {Name: "create name token ekey hook", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(web.SPIDE, mdb.CREATE, m.Option("name"), m.Option("hook"))
+				m.Cmd(web.SPIDE, mdb.CREATE, m.Option("hook"), m.Option("name"))
 				m.Cmdy(mdb.INSERT, m.PrefixKey(), "", mdb.HASH, arg)
 			}},
 		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,token,ekey,hook")), Hand: func(m *ice.Message, arg ...string) {

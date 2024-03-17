@@ -24,7 +24,7 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _spide_create(m *ice.Message, name, link, types, icons, token string) {
+func _spide_create(m *ice.Message, link, types, name, icons, token string) {
 	if u, e := url.Parse(link); !m.WarnNotValid(e != nil || link == "", link) {
 		dir, file := path.Split(u.EscapedPath())
 		m.Logs(mdb.INSERT, SPIDE, name, LINK, link)
@@ -284,12 +284,12 @@ func init() {
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				conf := mdb.Confm(m, cli.RUNTIME, cli.CONF)
 				dev := kit.Select("https://2021.shylinux.com", ice.Info.Make.Domain, conf[cli.CTX_DEV])
-				m.Cmd("", mdb.CREATE, ice.SHY, kit.Select("https://shylinux.com", conf[cli.CTX_SHY]), nfs.REPOS)
-				m.Cmd("", mdb.CREATE, ice.DEV, dev, nfs.REPOS, ice.SRC_MAIN_ICO)
-				m.Cmd("", mdb.CREATE, ice.DEV_IP, kit.Select(dev, os.Getenv("ctx_dev_ip")))
-				m.Cmd("", mdb.CREATE, ice.OPS, kit.Select("http://localhost:9020", conf[cli.CTX_OPS]), nfs.REPOS, nfs.USR_ICONS_CONTEXTS)
-				m.Cmd("", mdb.CREATE, ice.DEMO, kit.Select("http://localhost:20000", conf[cli.CTX_DEMO]), "", nfs.USR_ICONS_VOLCANOS)
-				m.Cmd("", mdb.CREATE, ice.MAIL, kit.Select("https://mail.shylinux.com", conf[cli.CTX_MAIL]), "", "usr/icons/Mail.png")
+				m.Cmd("", mdb.CREATE, kit.Select("https://shylinux.com", conf[cli.CTX_SHY]), ice.SHY, "", nfs.REPOS)
+				m.Cmd("", mdb.CREATE, dev, ice.DEV, ice.SRC_MAIN_ICO, nfs.REPOS)
+				m.Cmd("", mdb.CREATE, kit.Select(dev, os.Getenv("ctx_dev_ip")), ice.DEV_IP)
+				m.Cmd("", mdb.CREATE, kit.Select("http://localhost:9020", conf[cli.CTX_OPS]), ice.OPS, nfs.USR_ICONS_CONTEXTS, nfs.REPOS)
+				m.Cmd("", mdb.CREATE, kit.Select("http://localhost:20000", conf[cli.CTX_DEMO]), ice.DEMO, nfs.USR_ICONS_VOLCANOS)
+				m.Cmd("", mdb.CREATE, kit.Select("https://mail.shylinux.com", conf[cli.CTX_MAIL]), ice.MAIL, "usr/icons/Mail.png")
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if mdb.IsSearchPreview(m, arg) {
@@ -318,7 +318,8 @@ func init() {
 					m.Sort(arg[0])
 				default:
 					switch arg[0] {
-					case mdb.ICON, mdb.ICONS:
+					case mdb.NAME, mdb.ICONS:
+						m.SplitIndex(m.Cmdx(SPIDE, ice.DEV, kit.MergeURL2(m.Option(ORIGIN), C(SPACE, "info")))).Cut(arg[0])
 						mdb.HashInputs(m, arg)
 					default:
 						mdb.HashSelectValue(m.Spawn(), func(value ice.Map) {
@@ -328,8 +329,20 @@ func init() {
 					}
 				}
 			}},
-			mdb.CREATE: {Name: "create name origin* type icons token", Hand: func(m *ice.Message, arg ...string) {
-				_spide_create(m, m.Option(mdb.NAME), m.Option(ORIGIN), m.Option(mdb.TYPE), m.OptionDefault(mdb.ICONS, nfs.USR_ICONS_VOLCANOS), m.Option(TOKEN))
+			mdb.CREATE: {Name: "create origin* name icons type token", Hand: func(m *ice.Message, arg ...string) {
+				if m.Option(mdb.NAME) == "" && m.Option(mdb.ICONS) == "" {
+					msg := m.Spawn().SplitIndex(m.Cmdx(SPIDE, ice.DEV, kit.MergeURL2(m.Option(ORIGIN), C(SPACE, "info"))))
+					m.Option(mdb.ICONS, m.Resource(msg.Append(mdb.ICONS), msg.Append(ORIGIN)))
+					m.Option(mdb.NAME, msg.Append(mdb.NAME))
+					m.OptionDefault(mdb.TYPE, nfs.REPOS)
+				}
+				if u, e := url.Parse(m.Option(ORIGIN)); m.Warn(e != nil || u.Host == "", ice.ErrNotValid, m.Option(ORIGIN)) {
+					return
+				} else {
+					m.OptionDefault(mdb.NAME, kit.Split(u.Host, ".:")[0])
+					kit.If(u.Query().Get(TOKEN), func(p string) { m.OptionDefault(TOKEN, p) })
+				}
+				_spide_create(m, m.Option(ORIGIN), m.Option(mdb.TYPE), m.Option(mdb.NAME), m.OptionDefault(mdb.ICONS, nfs.USR_ICONS_VOLCANOS), m.Option(TOKEN))
 			}},
 			COOKIE: {Name: "cookie key* value", Help: "状态量", Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashModify(m, m.OptionSimple(CLIENT_NAME), kit.Keys(COOKIE, m.Option(mdb.KEY)), m.Option(mdb.VALUE))

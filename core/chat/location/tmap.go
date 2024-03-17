@@ -32,7 +32,7 @@ func init() {
 	chat.Index.MergeCommands(ice.Commands{
 		TMAP: {Help: "腾讯地图", Actions: ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(web.SPIDE, mdb.CREATE, TMAP, "https://apis.map.qq.com/ws/", "", "usr/icons/Maps.png")
+				m.Cmd(web.SPIDE, mdb.CREATE, "https://apis.map.qq.com/ws/", TMAP, "usr/icons/Maps.png")
 			}},
 			DISTRICT: {Help: "地区", Hand: func(m *ice.Message, arg ...string) {
 				m.Echo(get(m, "district/v1/getchildren", m.OptionSimple(mdb.ID)))

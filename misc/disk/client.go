@@ -35,7 +35,7 @@ func init() {
 	}
 }
 func (s Client) Init(m *ice.Message, arg ...string) {
-	m.Cmd(web.SPIDE, mdb.CREATE, BAIDU, AUTH_URL, "", "usr/icons/netdisk.png")
+	m.Cmd(web.SPIDE, mdb.CREATE, AUTH_URL, BAIDU, "usr/icons/netdisk.png")
 	s.Hash.Init(m, arg...)
 }
 func (s Client) Login(m *ice.Message, arg ...string) {

@@ -154,7 +154,7 @@ func init() {
 		m.WarnNotValid(_service_repos(m, arg...))
 	}}})
 	Index.MergeCommands(ice.Commands{
-		SERVICE: {Name: "service repos branch commit file auto", Help: "代码源", Actions: ice.MergeActions(ice.Actions{
+		SERVICE: {Name: "service repos branch commit file auto", Help: "代码源", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.DIR, ice.USR_LOCAL_REPOS, func(value ice.Maps) { _repos_insert(m, value[nfs.PATH]) })
 			}},
@@ -184,6 +184,10 @@ func init() {
 				})
 			}},
 		}, web.DreamAction(), mdb.HashAction(mdb.SHORT, REPOS, mdb.FIELD, "time,repos,branch,version,message", ice.CMD, GIT), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
+			if !aaa.IsTechOrRoot(m) {
+				mdb.HashSelect(m)
+				return
+			}
 			if len(arg) == 0 {
 				mdb.HashSelect(m, arg...).Table(func(value ice.Maps) {
 					m.Push(nfs.SIZE, kit.Split(m.Cmdx(cli.SYSTEM, "du", "-sh", path.Join(ice.USR_LOCAL_REPOS, value[REPOS])))[0])

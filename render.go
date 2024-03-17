@@ -254,7 +254,18 @@ func (m *Message) Display(file string, arg ...Any) *Message {
 	m.Option(MSG_DISPLAY, kit.MergeURL(kit.ExtChange(m.resource(file), JS), arg...))
 	return m
 }
-func (m *Message) Resource(file string) string { return m.resource(file) }
+func (m *Message) Resource(file string, arg ...string) string {
+	if len(arg) > 0 && arg[0] != "" {
+		if strings.HasPrefix(file, HTTP) {
+			return file
+		} else if strings.HasPrefix(file, PS) {
+			return arg[0] + file
+		} else if kit.HasPrefix(file, "src", "usr") {
+			return arg[0] + "/require/" + file
+		}
+	}
+	return m.resource(file)
+}
 func (m *Message) resource(file string) string {
 	p := kit.FileLines(3)
 	kit.If(file == "", func() { p = kit.ExtChange(p, JS) }, func() {

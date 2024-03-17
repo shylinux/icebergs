@@ -21,7 +21,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		GEOAREA: {Name: "geoarea path auto", Help: "地区", Actions: ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(web.SPIDE, mdb.CREATE, GEOAREA, "https://geo.datav.aliyun.com/areas_v3/bound/")
+				m.Cmd(web.SPIDE, mdb.CREATE, "https://geo.datav.aliyun.com/areas_v3/bound/", GEOAREA)
 			}},
 			nfs.PS: {Hand: func(m *ice.Message, arg ...string) {
 				p := path.Join(ice.USR_GEOAREA, path.Join(arg...))

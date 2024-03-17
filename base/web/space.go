@@ -338,6 +338,14 @@ func init() {
 					ProcessIframe(m, m.Option(mdb.NAME), m.MergePod(m.Option(mdb.NAME)), arg...)
 				}
 			}},
+			"info": {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
+				m.Push(mdb.TIME, ice.Info.Make.Time)
+				m.Push(mdb.NAME, ice.Info.NodeName)
+				m.Push(mdb.ICONS, kit.Select(mdb.Config(m, mdb.ICONS)))
+				m.Push(nfs.MODULE, ice.Info.Make.Module)
+				m.Push(nfs.VERSION, ice.Info.Make.Versions())
+				m.Push(ORIGIN, m.Option(ice.MSG_USERHOST))
+			}},
 			nfs.PS: {Hand: func(m *ice.Message, arg ...string) { _space_fork(m) }},
 		}, gdb.EventsAction(SPACE_LOGIN), mdb.HashAction(
 			mdb.ICONS, "src/main.ico",

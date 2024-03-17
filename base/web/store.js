@@ -9,7 +9,8 @@ Volcanos(chat.ONIMPORT, {
 		can.onappend.style(can, "output card", can.ui.content), can.onmotion.delay(can, function() { can.onimport.layout(can) })
 	},
 	_content: function(can, msg, dev, target) { var list = []
-		can.onimport.card(can, msg, null, function(value) { value.icons = can.misc.Resource(can, value.icons, "", value.origin); if (value.type == web.SERVER) { list.push(value); return true } })
+		can.onimport.card(can, msg, null, function(value) {
+			value.icons = can.misc.Resource(can, value.icons||"usr/icons/icebergs.png", "", value.origin); if (value.type == web.SERVER) { list.push(value); return true } })
 		can.onimport.itemlist(can, list, function(event, value) {
 			value.key = can.core.Keys(dev, value.name)
 			can.onimport.dream(event, can, value, event.currentTarget)

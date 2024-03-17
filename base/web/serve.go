@@ -235,31 +235,25 @@ func init() {
 				_serve_start(m)
 			}},
 			SERVE_START: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(SPIDE, mdb.CREATE, kit.Format("http://localhost:%s", m.Option(tcp.PORT)), ice.OPS, nfs.USR_ICONS_CONTEXTS, nfs.REPOS)
 				Count(m, m.ActionKey(), m.Option(tcp.PORT))
+				m.Cmd(SPIDE, mdb.CREATE, kit.Format("http://localhost:%s", m.Option(tcp.PORT)), ice.OPS, nfs.USR_ICONS_CONTEXTS, nfs.REPOS, "")
+				m.Cmds(SPIDE).Table(func(value ice.Maps) {
+					kit.If(value[CLIENT_NAME] != ice.OPS && value[TOKEN] != "", func() {
+						m.Cmd(SPACE, tcp.DIAL, ice.DEV, value[CLIENT_NAME], TOKEN, value[TOKEN], mdb.TYPE, SERVER)
+					})
+				})
 				kit.If(m.Option(ice.DEMO) == ice.TRUE, func() { m.Cmd(CHAT_HEADER, ice.DEMO) })
 				switch cb := m.Optionv(SERVE_START).(type) {
 				case func():
 					cb()
 				}
 				m.Go(func() {
-					ssh.PrintQRCode(m, tcp.PublishLocalhost(m, _serve_address(m)))
 					cli.Opens(m, mdb.Config(m, cli.OPEN))
+					ssh.PrintQRCode(m, tcp.PublishLocalhost(m, _serve_address(m)))
 				})
 				if runtime.GOOS == cli.LINUX {
 					m.Cmd("", PROXY_CONF, ice.Info.NodeName)
-					if dir := m.OptionDefault(nfs.PATH, PROXY_PATH); nfs.Exists(m, dir) {
-						m.Cmd(cli.SYSTEM, "sudo", PROXY_CMDS, "-s", "reload", kit.Dict(cli.CMD_DIR, dir))
-					}
 				}
-				if m.Cmd(tcp.HOST).Length() == 0 {
-					return
-				}
-				m.Cmds(SPIDE).Table(func(value ice.Maps) {
-					kit.If(value[TOKEN], func() {
-						m.Cmd(SPACE, tcp.DIAL, ice.DEV, value[CLIENT_NAME], TOKEN, value[TOKEN], mdb.TYPE, SERVER)
-					})
-				})
 			}},
 			PROXY_CONF: {Name: "proxyConf name* port host path", Hand: func(m *ice.Message, arg ...string) {
 				if dir := m.OptionDefault(nfs.PATH, PROXY_PATH, tcp.HOST, "127.0.0.1", tcp.PORT, "9020"); nfs.Exists(m, dir) {

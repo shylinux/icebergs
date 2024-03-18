@@ -45,11 +45,12 @@ func _publish_file(m *ice.Message, file string, arg ...string) string {
 	return m.Cmdx(nfs.LINK, path.Join(ice.USR_PUBLISH, kit.Select(path.Base(file), arg, 0)), file)
 }
 func _publish_contexts(m *ice.Message, arg ...string) {
-	// m.Options(nfs.DIR_ROOT, "")
 	m.OptionDefault(web.DOMAIN, tcp.PublishLocalhost(m, web.UserHost(m)))
 	m.OptionDefault(cli.CTX_CLI, "temp=$(mktemp); if curl -h &>/dev/null; then curl -o $temp -fsSL $ctx_dev; else wget -O $temp -q $ctx_dev; fi; source $temp")
 	m.OptionDefault(cli.CTX_ARG, kit.JoinCmdArgs(aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.LANGUAGE, m.Option(ice.MSG_LANGUAGE)))
-	for _, k := range kit.Default(arg, ice.MISC) {
+	m.Option(web.DOMAIN, strings.Split(m.Option(web.DOMAIN), "?")[0])
+	msg := web.AdminCmd(m, web.SPACE, "info")
+	for _, k := range kit.Default(arg, ice.APP) {
 		env := []string{}
 		switch k {
 		case nfs.SOURCE, ice.DEV:
@@ -63,13 +64,12 @@ func _publish_contexts(m *ice.Message, arg ...string) {
 			env = append(env, cli.CTX_REPOS, m.Option(nfs.SOURCE))
 			fallthrough
 		case nfs.BINARY, ice.APP:
-			if host := web.HostPort(m, web.AdminCmd(m, tcp.HOST).Append(aaa.IP), web.AdminCmd(m, web.SERVE).Append(tcp.PORT)); m.Option(web.DOMAIN) != host {
-				env = append(env, cli.CTX_DEV_IP, host)
+			if host := msg.Append("hostport"); m.Option(web.DOMAIN) != host {
+				env = append(env, cli.CTX_DEV_IP, strings.Split(host, "?")[0])
 			}
-			// if ice.Info.NodeType == web.WORKER && m.Option(ice.MSG_USERPOD) != "" {
 			if m.Option(ice.MSG_USERPOD) != "" {
 				env = append(env, cli.CTX_POD, m.Option(ice.MSG_USERPOD))
-			} else if name := web.AdminCmd(m, cli.RUNTIME, "boot.pathname").Result(); !kit.IsIn(name, path.Base(m.Option(nfs.SOURCE)), ice.CONTEXTS) {
+			} else if name := msg.Append("pathname"); !kit.IsIn(name, path.Base(m.Option(nfs.SOURCE)), ice.CONTEXTS) {
 				env = append(env, "ctx_name", name)
 			}
 		case cli.CURL, cli.WGET:

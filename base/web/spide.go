@@ -446,6 +446,7 @@ func HostPort(m *ice.Message, host, port string, arg ...string) string {
 		kit.If(kit.Select("", arg, 0), func(pod string) { p += S(pod) })
 		kit.If(kit.Select("", arg, 1), func(cmd string) { p += C(cmd) })
 	}
+	kit.If(m.Option(ice.LOG_DEBUG) == ice.TRUE, func() { p += "?debug=true" })
 	kit.If(host == "", func() { host = kit.ParseURL(UserHost(m)).Hostname() })
 	if port == tcp.PORT_443 {
 		return kit.Format("https://%s", host) + p

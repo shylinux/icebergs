@@ -143,10 +143,12 @@ const (
 	CMD_OUT = "cmd_out"
 
 	SH    = "sh"
+	RM    = "rm"
 	GO    = "go"
 	GIT   = "git"
 	WGET  = "wget"
 	CURL  = "curl"
+	TAIL  = "tail"
 	MAN   = "man"
 	RUN   = "run"
 	KILL  = "kill"

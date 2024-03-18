@@ -345,6 +345,8 @@ func init() {
 				m.Push(nfs.MODULE, ice.Info.Make.Module)
 				m.Push(nfs.VERSION, ice.Info.Make.Versions())
 				m.Push(ORIGIN, m.Option(ice.MSG_USERHOST))
+				m.Push("hostport", UserHost(m))
+				m.Push("pathname", ice.Info.Pathname)
 			}},
 			nfs.PS: {Hand: func(m *ice.Message, arg ...string) { _space_fork(m) }},
 		}, gdb.EventsAction(SPACE_LOGIN), mdb.HashAction(

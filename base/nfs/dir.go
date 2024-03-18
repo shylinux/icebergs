@@ -157,6 +157,7 @@ const (
 	USR_MODULES         = "usr/node_modules/"
 	USR_PACKAGE         = "usr/package.json"
 
+	VAR_LOG_BENCH_LOG  = "var/log/bench.log"
 	USR_ICONS_AVATAR   = "usr/icons/avatar.jpg"
 	USR_ICONS_CONTEXTS = "usr/icons/contexts.jpg"
 	USR_ICONS_ICEBERGS = "usr/icons/icebergs.png"

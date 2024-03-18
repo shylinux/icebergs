@@ -124,7 +124,6 @@ const ( // DIR
 	USR_RELEASE  = "usr/release/"
 	USR_PROGRAM  = "usr/program/"
 	USR_GEOAREA  = "usr/geoarea/"
-	USR_PORTAL   = "usr/portal/"
 	USR_ICONS    = "usr/icons/"
 	USR_LOCAL    = "usr/local/"
 
@@ -149,6 +148,7 @@ const ( // DIR
 	VAR_FILE           = "var/file/"
 	VAR_PROXY          = "var/proxy/"
 	VAR_TRASH          = "var/trash/"
+	VAR_PORTAL         = "var/portal/"
 	BIN_ICE_BIN        = "bin/ice.bin"
 	ETC_INIT_SHY       = "etc/init.shy"
 	ETC_LOCAL_SHY      = "etc/local.shy"

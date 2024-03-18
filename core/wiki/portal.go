@@ -72,7 +72,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		PORTAL: {Name: "portal path auto", Help: "官网", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
 			ctx.RUN: {Hand: func(m *ice.Message, arg ...string) {
-				if p := path.Join(ice.USR_PORTAL, path.Join(arg...)); (m.Option(ice.DEBUG) == ice.TRUE || !nfs.ExistsFile(m, p)) && aaa.Right(m.Spawn(), arg) {
+				if p := path.Join(ice.VAR_PORTAL, path.Join(arg...)); (m.Option(ice.DEBUG) == ice.TRUE || !nfs.ExistsFile(m, p)) && aaa.Right(m.Spawn(), arg) {
 					ctx.Run(m, arg...)
 					m.Cmd(nfs.SAVE, p, ice.Maps{nfs.CONTENT: m.FormatsMeta(nil), nfs.DIR_ROOT: ""})
 				} else {

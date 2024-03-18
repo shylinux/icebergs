@@ -149,7 +149,6 @@ const (
 	SRC_TEMPLATE        = ice.SRC_TEMPLATE
 	USR_ICEBERGS        = ice.USR_ICEBERGS
 	USR_PUBLISH         = ice.USR_PUBLISH
-	USR_PORTAL          = ice.USR_PORTAL
 	USR_LOCAL           = ice.USR_LOCAL
 	USR_LOCAL_WORK      = ice.USR_LOCAL_WORK
 	USR_LOCAL_IMAGE     = "usr/local/image/"

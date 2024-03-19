@@ -219,9 +219,6 @@ func _repos_tag(m *ice.Message, tags string) string {
 	}
 }
 func _repos_status(m *ice.Message, p string, repos *git.Repository) error {
-	if kit.IsIn(p, "go-git") {
-		return nil
-	}
 	work, err := repos.Worktree()
 	if err != nil {
 		return err
@@ -230,7 +227,7 @@ func _repos_status(m *ice.Message, p string, repos *git.Repository) error {
 	if err != nil {
 		return err
 	}
-	ignore := kit.Split(m.Cmdx(nfs.CAT, ".gitignore"), lex.NL)
+	ignore := kit.Split(m.Cmdx(nfs.CAT, path.Join(_repos_path(m, p), ".gitignore")), lex.NL)
 	for k, v := range status {
 		if kit.HasPrefix(k, nfs.PT) || (kit.HasPrefix(k, ignore...) && !strings.HasPrefix(k, ice.USR_LOCAL_EXPORT)) {
 			continue

@@ -93,7 +93,7 @@ func Run(cb func(*WebView) ice.Any) {
 	}
 	kit.If(!view.Menu(), func() { view.navigate(ice.Pulse.Cmdv(web.SPIDE, ice.OPS, web.CLIENT_ORIGIN)) })
 }
-func RunServe() {
+func RunClient() {
 	kit.Setenv(cli.PATH, "/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin")
 	kit.Chdir(kit.HomePath(ice.CONTEXTS))
 	wait := make(chan bool, 1)

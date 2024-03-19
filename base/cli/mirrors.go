@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"os"
 	"runtime"
 	"strings"
 
@@ -77,7 +76,7 @@ func init() {
 			case strings.Contains(_release, ALPINE):
 				m.Cmdy(nfs.CAT, ETC_APK_REPOS)
 			}
-			m.EchoScript(kit.Format("cd %s; %s", kit.Path(""), kit.JoinCmds(kit.Simple(kit.Path(os.Args[0]), os.Args[1:])...)))
+			// m.EchoScript(kit.Format("cd %s; %s", kit.Path(""), kit.JoinCmds(kit.Simple(kit.Path(os.Args[0]), os.Args[1:])...)))
 		}},
 	})
 }

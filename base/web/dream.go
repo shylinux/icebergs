@@ -507,13 +507,8 @@ func init() {
 				m.Sort("type,status,name", []string{aaa.LOGIN, WORKER, SERVER, ORIGIN}, []string{cli.START, cli.STOP, cli.BEGIN}, ice.STR_R)
 				m.StatusTimeCountStats(mdb.TYPE, mdb.STATUS)
 				ctx.DisplayTableCard(m)
-				if !m.IsDebug() {
-					m.Options(ice.MSG_TOOLKIT, "")
-				}
-				if !aaa.IsTechOrRoot(m) {
-					m.Options(ice.MSG_TOOLKIT, "")
-					m.Options(ice.MSG_ONLINE, ice.FALSE)
-				}
+				kit.If(!aaa.IsTechOrRoot(m), func() { m.Options(ice.MSG_TOOLKIT, "", ice.MSG_ONLINE, ice.FALSE) })
+				kit.If(!m.IsDebug(), func() { m.Options(ice.MSG_TOOLKIT, "") })
 			} else if arg[0] == ctx.ACTION {
 				gdb.Event(m, DREAM_ACTION, arg)
 			} else {

@@ -15,6 +15,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -197,12 +198,14 @@ func init() {
 		}, mdb.StatusHashAction(
 			mdb.SHORT, tcp.PORT, mdb.FIELD, "time,port,status,private,authkey,count", mdb.FIELDS, "time,id,type,name,text",
 			WELCOME, "welcome to contexts world\r\n", GOODBYE, "goodbye of contexts world\r\n",
+			ctx.TOOLS, "auth",
 		)), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.ZoneSelect(m, arg...); len(arg) == 0 {
 				m.PushAction(aaa.INVITE, mdb.REMOVE).Action(mdb.CREATE)
 			} else {
 				m.Action(mdb.INSERT, nfs.LOAD, nfs.SAVE)
 			}
+			ctx.Toolkit(m)
 		}},
 	})
 }

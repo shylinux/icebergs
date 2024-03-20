@@ -152,7 +152,7 @@ func init() {
 					}
 				})
 			}},
-			tcp.LISTEN: {Name: "listen port=9022 private=.ssh/id_rsa authkey=.ssh/authorized_keys", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+			mdb.CREATE: {Name: "create port=9022 private=.ssh/id_rsa authkey=.ssh/authorized_keys", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
 				if mdb.HashSelect(m, m.Option(tcp.PORT)).Length() > 0 {
 					mdb.HashModify(m, m.Option(tcp.PORT), mdb.STATUS, tcp.OPEN)
 				} else {
@@ -171,15 +171,15 @@ func init() {
 					})
 				})
 			}},
-			mdb.INSERT: {Name: "insert pubkey:textarea", Hand: func(m *ice.Message, arg ...string) {
-				if ls := kit.Split(m.Option("pubkey")); len(ls) > 2 {
+			mdb.INSERT: {Name: "insert authkey*:textarea", Hand: func(m *ice.Message, arg ...string) {
+				if ls := kit.Split(m.Option(AUTHKEY)); len(ls) > 2 {
 					mdb.ZoneInsert(m, m.OptionSimple(tcp.PORT), mdb.TYPE, ls[0], mdb.NAME, ls[len(ls)-1], mdb.TEXT, strings.Join(ls[1:len(ls)-1], "+"))
 				}
 			}},
-			nfs.LOAD: {Name: "load authkey=.ssh/authorized_keys", Hand: func(m *ice.Message, arg ...string) {
+			nfs.LOAD: {Name: "load authkey*=.ssh/authorized_keys", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.CAT, kit.HomePath(m.Option(AUTHKEY)), func(pub string) { m.Cmd(SERVICE, mdb.INSERT, pub) })
 			}},
-			nfs.SAVE: {Name: "save authkey=.ssh/authorized_keys", Hand: func(m *ice.Message, arg ...string) {
+			nfs.SAVE: {Name: "save authkey*=.ssh/authorized_keys", Hand: func(m *ice.Message, arg ...string) {
 				list := []string{}
 				mdb.ZoneSelectCB(m, m.Option(tcp.PORT), func(value ice.Maps) {
 					list = append(list, fmt.Sprintf("%s %s %s", value[mdb.TYPE], value[mdb.TEXT], value[mdb.NAME]))
@@ -188,7 +188,7 @@ func init() {
 					m.Cmdy(nfs.SAVE, kit.HomePath(m.Option(AUTHKEY)), strings.Join(list, lex.NL)+lex.NL)
 				}
 			}},
-			aaa.INVITE: {Help: "邀请", Hand: func(m *ice.Message, arg ...string) {
+			aaa.INVITE: {Help: "邀请", Icon: "bi bi-terminal-plus", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(cli.HOSTNAME, tcp.PublishLocalhost(m, web.UserWeb(m).Hostname()))
 				m.EchoScript(kit.Renders(`ssh -p {{.Option "port"}} {{.Option "user.name"}}@{{.Option "hostname"}}`, m))
 				m.EchoScript(kit.Renders(`ssh-copy-id -p {{.Option "port"}} {{.Option "user.name"}}@{{.Option "hostname"}}`, m))
@@ -198,8 +198,10 @@ func init() {
 			mdb.SHORT, tcp.PORT, mdb.FIELD, "time,port,status,private,authkey,count", mdb.FIELDS, "time,id,type,name,text",
 			WELCOME, "welcome to contexts world\r\n", GOODBYE, "goodbye of contexts world\r\n",
 		)), Hand: func(m *ice.Message, arg ...string) {
-			if mdb.ZoneSelect(m, arg...).PushAction(aaa.INVITE, mdb.INSERT, nfs.LOAD, nfs.SAVE, mdb.REMOVE); len(arg) == 0 {
-				m.Action(tcp.LISTEN)
+			if mdb.ZoneSelect(m, arg...); len(arg) == 0 {
+				m.PushAction(aaa.INVITE, mdb.REMOVE).Action(mdb.CREATE)
+			} else {
+				m.Action(mdb.INSERT, nfs.LOAD, nfs.SAVE)
 			}
 		}},
 	})

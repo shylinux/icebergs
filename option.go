@@ -99,7 +99,11 @@ func (m *Message) StatusTimeCountStats(field ...string) *Message {
 	return m.StatusTimeCount(m.TableStats(field...))
 }
 func (m *Message) StatusTimeCountTotal(arg ...Any) *Message {
-	return m.StatusTimeCount(append([]Any{kit.MDB_TOTAL}, arg...))
+	if len(arg) > 0 && arg[0] != nil {
+		return m.StatusTimeCount(append([]Any{kit.MDB_TOTAL}, arg...))
+	} else {
+		return m
+	}
 }
 func (m *Message) Process(cmd string, arg ...Any) *Message {
 	if len(arg) == 0 {

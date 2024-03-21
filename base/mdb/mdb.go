@@ -35,6 +35,7 @@ func _mdb_select(m *ice.Message, cb Any, key string, value Map, fields []string,
 		cb(kit.ToMaps(value))
 	case string, []string, []Any, nil:
 		if m.FieldsIsDetail() {
+			// m.Push(ice.FIELDS_DETAIL, value, nil, kit.Dict(HASH, key))
 			m.Push(ice.FIELDS_DETAIL, value)
 		} else {
 			m.Push(key, value, fields, val)
@@ -125,6 +126,7 @@ const (
 	OFFEND = "offend"
 	OFFSET = "offset"
 	RANDOM = "random"
+	WEIGHT = "weight"
 	SUBKEY = "mdb.sub"
 
 	ACTION = "action"

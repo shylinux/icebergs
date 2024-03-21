@@ -274,7 +274,7 @@ func HashSelect(m *ice.Message, arg ...string) *ice.Message {
 		m.Options(ice.TABLE_CHECKBOX, Config(m, html.CHECKBOX))
 		return m.Action(CREATE, PRUNES)
 	}
-	return sortByField(m, HashField(m))
+	return sortByField(m, HashField(m), arg...)
 }
 func HashPrunes(m *ice.Message, cb func(Map) bool) *ice.Message {
 	expire := kit.Select(m.Time("-"+kit.Select(DAYS, Config(m, EXPIRE))), m.Option("before"))
@@ -386,12 +386,16 @@ func Rich(m *ice.Message, prefix string, chain Any, data Any) string {
 	kit.If(cache == nil, func() { cache = kit.Data(); m.Confv(prefix, chain, cache) })
 	return miss.Rich(path.Join(prefix, kit.Keys(chain)), cache, data)
 }
-func sortByField(m *ice.Message, fields string) *ice.Message {
+func sortByField(m *ice.Message, fields string, arg ...string) *ice.Message {
 	return m.Table(func(value ice.Maps) {
 		m.SetAppend().OptionFields(ice.FIELDS_DETAIL)
 		kit.For(kit.Split(fields), func(key string) {
 			key = strings.TrimSuffix(key, "*")
-			m.Push(key, value[key])
+			if key == HASH {
+				m.Push(key, kit.Select(value[key], arg, 0))
+			} else {
+				m.Push(key, value[key])
+			}
 			delete(value, key)
 		})
 		kit.For(kit.SortedKey(value), func(k string) { m.Push(k, value[k]) })

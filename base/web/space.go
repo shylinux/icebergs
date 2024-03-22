@@ -29,8 +29,6 @@ func _space_qrcode(m *ice.Message, dev string) {
 }
 func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 	origin := m.Cmdv(SPIDE, dev, CLIENT_ORIGIN)
-	m.Info("what %v", origin)
-	m.Info("what %v", m.Cmd(SPIDE, dev).FormatMeta())
 	u := kit.ParseURL(kit.MergeURL2(strings.Replace(origin, HTTP, "ws", 1), PP(SPACE), mdb.TYPE, ice.Info.NodeType, mdb.NAME, name, mdb.NAME, "", mdb.ICONS, mdb.Config(m, mdb.ICONS),
 		mdb.TIME, ice.Info.Make.Time, nfs.MODULE, ice.Info.Make.Module, nfs.VERSION, ice.Info.Make.Versions(), cli.GOOS, runtime.GOOS, cli.GOARCH, runtime.GOARCH, arg))
 	args := kit.SimpleKV("type,name,host,port", u.Scheme, dev, u.Hostname(), kit.Select(kit.Select(tcp.PORT_443, tcp.PORT_80, u.Scheme == "ws"), u.Port()))

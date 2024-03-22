@@ -79,7 +79,11 @@ func (m *Message) SetAppend(arg ...string) *Message {
 }
 func (m *Message) SetResult(arg ...string) *Message { return m.Set(MSG_RESULT, arg...) }
 func (m *Message) PushRecord(value Any, arg ...string) *Message {
-	return m.Push("", value, kit.Split(kit.Join(arg)))
+	if m.FieldsIsDetail() {
+		return m.PushDetail(value, arg...)
+	} else {
+		return m.Push("", value, kit.Split(kit.Join(arg)))
+	}
 }
 func (m *Message) PushDetail(value Any, arg ...string) *Message {
 	switch v := value.(type) {

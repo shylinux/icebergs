@@ -280,14 +280,6 @@ func (m *Message) TableEchoWithStatus() *Message {
 	kit.If(len(list) > 0, func() { m.Echo(strings.Join(list, SP)).Echo(NL) })
 	return m
 }
-
-const (
-	STR   = "str"
-	STR_R = "str_r"
-	INT_R = "int_r"
-	INT   = "int"
-)
-
 func (m *Message) Sort(key string, arg ...Any) *Message {
 	if m.FieldsIsDetail() {
 		return m

@@ -159,6 +159,7 @@ const (
 	EXIT  = "exit"
 	ECHO  = "echo"
 	REST  = "rest"
+	RELAY = "relay"
 	OPENS = "opens"
 	PARAM = "param"
 )

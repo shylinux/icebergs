@@ -135,6 +135,7 @@ const (
 	REPEAT = "repeat"
 	REVERT = "revert"
 	RENAME = "rename"
+	VENDOR = "vendor"
 	PRUNE  = "prune"
 
 	PAGE = "page"

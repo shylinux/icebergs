@@ -52,6 +52,11 @@ const (
 	RUN = "run"
 	RES = "res"
 	ERR = "err"
+
+	STR   = "str"
+	STR_R = "str_r"
+	INT_R = "int_r"
+	INT   = "int"
 )
 const ( // REPOS
 	CONTEXTS = "contexts"

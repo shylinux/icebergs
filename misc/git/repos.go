@@ -240,7 +240,7 @@ func _repos_status(m *ice.Message, p string, repos *git.Repository) error {
 			m.PushButton(COMMIT)
 		}
 	}
-	if p == path.Base(kit.Path("")) {
+	if !kit.IsIn(ice.USR_LOCAL_EXPORT, ignore...) && p == path.Base(kit.Path("")) {
 		var tree *object.Tree
 		if refer, err := repos.Head(); err == nil {
 			if commit, err := repos.CommitObject(refer.Hash()); err == nil {

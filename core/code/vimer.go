@@ -158,7 +158,7 @@ func init() {
 				gdb.Event(m, VIMER_SAVE)
 			}},
 			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) { nfs.Trash(m, arg[0]) }},
-			nfs.MODULE: {Name: "create name*=hi help=示例 type*=Hash,Zone,Data,Code main*=main.go zone=hi top=web.chat", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
+			nfs.MODULE: {Name: "module name*=hi help=示例 type*=Hash,Zone,Data,Code main*=main.go zone=hi top=web.chat", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(AUTOGEN, nfs.MODULE, arg)
 			}},
 			nfs.SCRIPT: {Name: "script file*", Help: "脚本", Hand: func(m *ice.Message, arg ...string) {

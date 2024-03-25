@@ -72,6 +72,7 @@ type relay struct {
 	list        string `name:"list machine auto" help:"机器" icon:"relay.png"`
 	install     string `name:"install dream param='forever start' dev portal nodename" help:"安装"`
 	pushbin     string `name:"pushbin dream param='forever start' dev portal nodename" help:"部署" icon:"bi bi-box-arrow-in-up"`
+	pushkey     string `name:"pushkey" help:"授权" icon:"bi bi-person-fill-up"`
 	adminCmd    string `name:"adminCmd cmd" help:"命令" icon:"bi bi-terminal-plus"`
 	proxy       string `name:"proxy" help:"代理"`
 	trash       string `name:"trash" help:"清理"`
@@ -102,6 +103,7 @@ func (s relay) Inputs(m *ice.Message, arg ...string) {
 		m.Push(arg[0], `forever start`)
 	case ice.DEV:
 		s.Hash.List(m).CutTo(web.LINK, arg[0]).Push(arg[0], "http://localhost:9020")
+		m.Push(arg[0], m.Option(ice.MSG_USERHOST))
 	case web.PORTAL:
 		kit.If(m.Option(tcp.LISTEN), func(p string) { m.Push(arg[0], kit.Split(p)) })
 		m.Push(arg[0], tcp.PORT_443, tcp.PORT_80, tcp.PORT_9020, "9030", "9040", "9050")
@@ -223,7 +225,7 @@ func (s relay) List(m *ice.Message, arg ...string) *ice.Message {
 			return
 		}
 		m.Push(web.LINK, web.HostPort(m.Message, value[tcp.HOST], value[web.PORTAL]))
-		m.PushButton(s.Portal, s.Desktop, s.Dream, s.Admin, s.Vimer, s.Proxy, s.Login, s.AdminCmd, s.Upgrade, s.Pushbin, s.Xterm, s.Trash, s.Remove)
+		m.PushButton(s.Portal, s.Desktop, s.Dream, s.Admin, s.Vimer, s.Proxy, s.Login, s.AdminCmd, s.Upgrade, s.Pushbin, s.Pushkey, s.Xterm, s.Trash, s.Remove)
 		kit.If(len(arg) > 0, func() { m.PushQRCode(cli.QRCODE, m.Append(web.LINK)) })
 	})
 	_stats := kit.Dict(MEM, kit.FmtSize(stats[MEM_FREE], stats[MEM_TOTAL]), DISK, kit.FmtSize(stats[DISK_USED], stats[DISK_TOTAL]))
@@ -254,6 +256,12 @@ func (s relay) Install(m *ice.Message, arg ...string) {
 }
 func (s relay) Upgrade(m *ice.Message, arg ...string) { s.foreachScript(m, UPGRADE_SH, arg...) }
 func (s relay) Version(m *ice.Message, arg ...string) { s.foreachScript(m, VERSION_SH, arg...) }
+func (s relay) Pushkey(m *ice.Message, arg ...string) {
+	list := kit.Split(m.AdminCmd(web.SPACE, m.Option(MACHINE), nfs.CAT, kit.Format("/home/%s/.ssh/authorized_keys", m.Option(aaa.USERNAME))).Result(), "\n", "\n")
+	if key := ssh.PublicKey(m.Message); !kit.IsIn(key, list...) {
+		m.AdminCmd(web.SPACE, m.Option(MACHINE), nfs.PUSH, kit.Format("/home/%s/.ssh/authorized_keys", m.Option(aaa.USERNAME)), key)
+	}
+}
 func (s relay) Pushbin(m *ice.Message, arg ...string) {
 	bin := "ice"
 	switch strings.ToLower(m.Option(KERNEL)) {

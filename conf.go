@@ -356,6 +356,8 @@ const ( // mdb
 	INPUTS = "inputs"
 	CREATE = "create"
 	SELECT = "select"
+	IMPORT = "import"
+	EXPORT = "export"
 
 	KEY   = "key"
 	VALUE = "value"

@@ -60,6 +60,7 @@ type relay struct {
 	ice.Hash
 	ice.Code
 	checkbox    string `data:"true"`
+	export      string `data:"true"`
 	short       string `data:"machine"`
 	field       string `data:"time,icons,machine,username,host,port,portal,dream,module,version,commitTime,compileTime,bootTime,go,git,package,shell,kernel,arch,vcpu,ncpu,mhz,mem,disk,network,listen,socket,proc,vendor"`
 	create      string `name:"create host* port=22 username machine icons"`

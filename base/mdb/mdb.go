@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/web/html"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -217,7 +218,31 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: ice.Commands
 			// LIST, func() { _list_prunes(m, arg[0], arg[1], arg[3:]...) },
 		)
 	}},
-	EXPORT: {Name: "export key sub type file", Hand: func(m *ice.Message, arg ...string) {
+	EXPORT: {Name: "export index auto", Help: "导出数据", Actions: ice.MergeActions(ice.Actions{
+		IMPORT: {Hand: func(m *ice.Message, arg ...string) {
+			HashSelect(m).Table(func(value ice.Maps) {
+				if value[STATUS] != DISABLE {
+					m.Cmd(IMPORT, value["index"], "", value["type"])
+				}
+			})
+		}},
+		EXPORT: {Hand: func(m *ice.Message, arg ...string) {
+			HashSelect(m).Table(func(value ice.Maps) {
+				if value[STATUS] != DISABLE {
+					m.Cmd(EXPORT, value["index"], "", value["type"])
+				}
+			})
+		}},
+		ENABLE:  {Hand: func(m *ice.Message, arg ...string) { HashModify(m, STATUS, ENABLE) }},
+		DISABLE: {Hand: func(m *ice.Message, arg ...string) { HashModify(m, STATUS, DISABLE) }},
+	}, ExportHashAction(SHORT, "index", FIELD, "time,index,type,status")), Hand: func(m *ice.Message, arg ...string) {
+		if len(arg) < 2 {
+			HashSelect(m, arg...).RewriteAppend(func(value, key string, index int) string {
+				kit.If(key == STATUS, func() { value = kit.Select(ENABLE, value) })
+				return value
+			}).PushAction().Action(html.FILTER)
+			return
+		}
 		m.OptionDefault(CACHE_LIMIT, "-1")
 		file := _mdb_export_file(m, arg...)
 		kit.Switch(arg[2],

@@ -60,6 +60,7 @@ var Index = &Context{Name: ICE, Help: "冰山模块", Commands: Commands{
 	INIT: {Hand: func(m *Message, arg ...string) {
 		m.Cmd(kit.Keys(MDB, CTX_INIT))
 		m.Cmd(CTX_INIT)
+		m.Cmd(EXPORT, IMPORT)
 		m.Cmd(SOURCE, ETC_INIT_SHY)
 		loadImportant(m)
 		m.Cmd(CTX_OPEN)
@@ -71,6 +72,7 @@ var Index = &Context{Name: ICE, Help: "冰山模块", Commands: Commands{
 		m.GoSleep300ms(func() {
 			m.root.Option(EXIT, kit.Select("0", arg, 0))
 			m.Cmd(SOURCE, ETC_EXIT_SHY)
+			m.Cmd(EXPORT, EXPORT)
 			m.Cmd(CTX_EXIT)
 			removeImportant(m)
 		})

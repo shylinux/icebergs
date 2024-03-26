@@ -62,11 +62,18 @@ func (m *Message) Push(key string, value Any, arg ...Any) *Message {
 	kit.If(len(head) == 0 && len(arg) > 0, func() { head = kit.Simple(arg[0]) })
 	kit.If(len(head) == 0, func() { head = kit.Simple(m.value(MSG_APPEND)) })
 	kit.If(len(head) == 0 && !m.FieldsIsDetail(), func() { head = kit.Split(m.OptionFields()) })
+	var val Map
+	kit.If(len(arg) > 1, func() {
+		switch v := arg[1].(type) {
+		case Map:
+			val = v
+		default:
+			val = kit.Dict(v)
+		}
+	})
 	switch value := value.(type) {
 	case Map:
-		var val Map
 		kit.If(len(head) == 0, func() { head = kit.SortedKey(kit.KeyValue(nil, "", value)) })
-		kit.If(len(arg) > 1, func() { val, _ = arg[1].(Map) })
 		kit.For(head, func(k string) {
 			k = strings.TrimSuffix(k, "*")
 			var v Any
@@ -110,7 +117,7 @@ func (m *Message) Push(key string, value Any, arg ...Any) *Message {
 		kit.If(len(head) == 0, func() { head = kit.SortedKey(value) })
 		kit.For(head, func(k string) {
 			k = strings.TrimSuffix(k, "*")
-			m.Push(k, value[k])
+			m.Push(k, kit.Select(kit.Format(val[k]), value[k]))
 		})
 	default:
 		kit.For(kit.Simple(value, arg), func(v string) {

@@ -52,7 +52,7 @@ Volcanos(chat.ONIMPORT, {
 		})
 	},
 	button: function(can, meta, target) { var item = can.base.Obj(meta.meta); target.onclick = function(event) { can.onaction.route(event, can, item.route) } },
-	layout: function(can, height, width) {
+	layout: function(can, height, width) { if (!can.ui.layout) { return }
 		can.ui.layout(height, width), can.ConfHeight(can.ui.main.offsetHeight), can.ConfWidth(can.ui.main.offsetWidth)
 		if (can.user.isMobile && can.isCmdMode()) {
 			can.page.style(can, can.ui.nav, html.HEIGHT, "", html.WIDTH, can.page.width())

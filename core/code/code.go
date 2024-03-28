@@ -16,6 +16,7 @@ func init() {
 		COMPILE, PUBLISH, UPGRADE, INSTALL,
 		XTERM, INNER, VIMER, BENCH, PPROF,
 		TEMPLATE, COMPLETE, NAVIGATE,
+		PACKAGE,
 	)
 }
 func Prefix(arg ...ice.Any) string { return web.Prefix(CODE, kit.Keys(arg...)) }

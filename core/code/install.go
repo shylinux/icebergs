@@ -3,7 +3,6 @@ package code
 import (
 	"path"
 	"strings"
-	"time"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
@@ -30,20 +29,13 @@ func _install_path(m *ice.Message, link string) string {
 func _install_download(m *ice.Message, arg ...string) {
 	link := kit.Select(m.Option(web.LINK), arg, 0)
 	name := path.Base(kit.ParseURL(link).Path)
-	// file := path.Join(kit.Select(ice.USR_INSTALL, m.Option(nfs.PATH)), name)
 	file := path.Join(kit.Select(ice.USR_INSTALL, arg, 1), name)
-	// file := path.Join(ice.USR_INSTALL, name)
 	defer m.Cmdy(nfs.DIR, file)
 	if nfs.Exists(m, file) {
 		return
 	}
-	mdb.HashCreate(m.Cmd(nfs.SAVE, file, ""), mdb.NAME, name, nfs.PATH, file, web.LINK, link)
 	web.GoToast(m, func(toast func(string, int, int)) []string {
-		begin := time.Now()
-		_toast := func(count, total, value int) {
-			toast(kit.FormatShow(cli.COST, kit.FmtDuration(time.Now().Sub(begin))), count, total)
-			mdb.HashSelectUpdate(m, name, func(value ice.Map) { value[mdb.COUNT], value[mdb.TOTAL], value[mdb.VALUE] = count, total, value })
-		}
+		_toast := func(count, total, value int) { toast(name, count, total) }
 		defer nfs.TarExport(m, file)
 		if mdb.Config(m, nfs.REPOS) != "" {
 			web.SpideSave(m, file, mdb.Config(m, nfs.REPOS)+path.Base(link), _toast)
@@ -54,15 +46,13 @@ func _install_download(m *ice.Message, arg ...string) {
 		web.SpideSave(m, file, link, _toast)
 		return nil
 	})
-	if s, e := nfs.StatFile(m, file); e == nil && s.Size() > 0 {
-		web.ToastSuccess(m)
-	} else {
-		web.ToastFailure(m)
+	if s, e := nfs.StatFile(m, file); e != nil || s.Size() == 0 {
 		nfs.Trash(m, file)
 	}
 }
 func _install_build(m *ice.Message, arg ...string) string {
 	p := m.Option(cli.CMD_DIR, _install_path(m, ""))
+	defer web.ToastProcess(m, m.ActionKey(), path.Base(p))()
 	pp := kit.Path(path.Join(p, _INSTALL))
 	switch cb := m.Optionv(PREPARE).(type) {
 	case func(string):
@@ -109,6 +99,8 @@ func _install_spawn(m *ice.Message, arg ...string) {
 	})
 }
 func _install_start(m *ice.Message, arg ...string) {
+	cmd := kit.Select(path.Join(ice.BIN, path.Base(_install_path(m, ""))), arg, 1)
+	defer web.ToastProcess(m, m.ActionKey(), cmd)()
 	args, p := []string{}, m.Option(cli.CMD_DIR, m.Cmdx(INSTALL, cli.SPAWN))
 	switch cb := m.Optionv(PREPARE).(type) {
 	case func(string) []string:
@@ -122,7 +114,8 @@ func _install_start(m *ice.Message, arg ...string) {
 		m.ErrorNotImplement(cb)
 		return
 	}
-	m.Cmdy(cli.DAEMON, kit.Select(path.Join(ice.BIN, path.Base(_install_path(m, ""))), arg, 1), kit.Slice(arg, 2), args)
+	m.Cmdy(cli.DAEMON, cmd, kit.Slice(arg, 2), args)
+	m.Push(cli.CMD, cmd).Push(cli.PID, m.Result())
 }
 func _install_stop(m *ice.Message, arg ...string) {
 	m.Cmd(cli.DAEMON, func(value ice.Maps) {
@@ -184,9 +177,7 @@ func init() {
 			cli.START: {Name: "start link* cmd", Hand: func(m *ice.Message, arg ...string) { _install_start(m, arg...) }},
 			cli.STOP:  {Hand: func(m *ice.Message, arg ...string) { _install_stop(m, arg...) }},
 			cli.CLEAR: {Hand: func(m *ice.Message, arg ...string) { _install_clear(m, arg...) }},
-			gdb.DEBUG: {Hand: func(m *ice.Message, arg ...string) {
-				ctx.ProcessField(m, XTERM, []string{mdb.TYPE, "gdb"}, arg...)
-			}},
+			gdb.DEBUG: {Hand: func(m *ice.Message, arg ...string) { ctx.ProcessField(m, XTERM, []string{mdb.TYPE, "gdb"}, arg...) }},
 			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) { _install_trash(m, arg...) }},
 			nfs.PATH:  {Hand: func(m *ice.Message, arg ...string) { m.Echo(_install_path(m, kit.Select("", arg, 0))) }},
 			nfs.SOURCE: {Name: "source link* path", Hand: func(m *ice.Message, arg ...string) {
@@ -196,10 +187,25 @@ func init() {
 				m.Cmdy(nfs.DIR, m.Option(nfs.PATH))
 			}},
 			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) { nfs.Trash(mdb.HashRemove(m), m.Option(nfs.PATH)) }},
-		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,count,total,name,path,link")), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.SHORT, "index,type", mdb.FIELD, "time,hash,index,type,name,text,icon,link")), Hand: func(m *ice.Message, arg ...string) {
 			switch len(arg) {
 			case 0:
-				mdb.HashSelect(m, arg...).PushAction(cli.BUILD, cli.ORDER, mdb.REMOVE)
+				mdb.HashSelect(m, arg...).Table(func(value ice.Maps) {
+					button := []ice.Any{}
+					switch value[mdb.TYPE] {
+					case nfs.BINARY:
+						if !nfs.Exists(m, path.Join(ice.USR_INSTALL, path.Base(value[mdb.LINK]))) {
+							button = append(button, web.INSTALL)
+						}
+					case nfs.SOURCE:
+						button = append(button, cli.START, cli.BUILD)
+						if !nfs.Exists(m, path.Join(ice.USR_INSTALL, path.Base(value[mdb.LINK]))) {
+							button = append(button, web.DOWNLOAD)
+						}
+					}
+					m.PushButton(button...)
+				})
+				// ctx.DisplayTableCard(m)
 			case 1:
 				_install_service(m, arg...)
 			default:
@@ -220,11 +226,11 @@ func InstallAction(args ...ice.Any) ice.Actions {
 		cli.ORDER: {Help: "加载", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(INSTALL, cli.ORDER, mdb.Config(m, nfs.SOURCE), path.Join(_INSTALL, ice.BIN))
 		}},
-		nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
-			nfs.Trash(m, m.Option(nfs.PATH))
-		}},
 		mdb.SELECT: {Name: "select path auto order build download", Hand: func(m *ice.Message, arg ...string) {
 			m.Options(nfs.PATH, "").Cmdy(INSTALL, mdb.ConfigSimple(m, nfs.SOURCE), arg)
+		}},
+		nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
+			nfs.Trash(m, m.Option(nfs.PATH))
 		}},
 	}
 }

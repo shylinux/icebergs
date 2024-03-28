@@ -380,6 +380,10 @@ func init() {
 				})
 				m.Sort("", kit.Simple(aaa.LOGIN, WEIXIN, PORTAL, WORKER, SERVER, ORIGIN))
 			} else {
+				if arg[0] == "" {
+					m.Cmdy(arg[1:])
+					return
+				}
 				for i := 0; i < 5; i++ {
 					if _space_send(m, arg[0], kit.Simple(kit.Split(arg[1]), arg[2:])...); !m.IsErrNotFoundSpace() {
 						break

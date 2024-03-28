@@ -106,12 +106,12 @@ func _sum_show(m *ice.Message, file string) {
 }
 
 const (
-	PACKAGE = "package"
-	IMPORT  = "import"
-	CONST   = "const"
-	TYPE    = "type"
-	FUNC    = "func"
-	VAR     = "var"
+	// PACKAGE = "package"
+	IMPORT = "import"
+	CONST  = "const"
+	TYPE   = "type"
+	FUNC   = "func"
+	VAR    = "var"
 )
 const (
 	MODULE  = "module"

@@ -51,3 +51,17 @@ func AdminCmd(m *ice.Message, cmd string, arg ...ice.Any) *ice.Message {
 		return m.Cmd(append([]ice.Any{cmd}, arg...)...)
 	}
 }
+func OpsCmd(m *ice.Message, cmd string, arg ...ice.Any) *ice.Message {
+	if ice.Info.NodeType == WORKER {
+		return m.Cmd(append([]ice.Any{SPACE, ice.OPS, cmd}, arg...)...)
+	} else {
+		return m.Cmd(append([]ice.Any{cmd}, arg...)...)
+	}
+}
+func DevCmd(m *ice.Message, cmd string, arg ...ice.Any) *ice.Message {
+	if ice.Info.NodeType == WORKER {
+		return m.Cmd(append([]ice.Any{SPACE, ice.OPS, SPACE, ice.DEV, cmd}, arg...)...)
+	} else {
+		return m.Cmd(append([]ice.Any{SPACE, ice.DEV, cmd}, arg...)...)
+	}
+}

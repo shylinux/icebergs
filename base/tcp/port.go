@@ -8,6 +8,7 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
+	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
@@ -42,6 +43,8 @@ const (
 	CURRENT = "current"
 	RANDOM  = "random"
 	END     = "end"
+	PID     = "pid"
+	SPACE   = "space"
 )
 const PORT = "port"
 
@@ -103,28 +106,37 @@ func init() {
 			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
 				m.Assert(m.Option(PORT) != "")
 				nfs.Trash(m, path.Join(ice.USR_LOCAL_DAEMON, m.Option(PORT)))
+				mdb.HashRemove(m)
 			}},
 			aaa.RIGHT: {Hand: func(m *ice.Message, arg ...string) { m.Echo(PortRight(m, arg...)) }},
 			CURRENT:   {Hand: func(m *ice.Message, arg ...string) { m.Echo(mdb.Config(m, CURRENT)) }},
-		}, mdb.HashAction(BEGIN, 10000, END, 20000)), Hand: func(m *ice.Message, arg ...string) {
+			STOP:      {Hand: func(m *ice.Message, arg ...string) { PortCmds(m, arg...); mdb.HashModify(m, PID, "") }},
+			START:     {Hand: func(m *ice.Message, arg ...string) { PortCmds(m, arg...); mdb.HashModify(m, PID, m.Append(PID)) }},
+		}, mdb.HashAction(BEGIN, 10000, END, 20000,
+			mdb.SHORT, PORT, mdb.FIELD, "time,port,pid,cmd,name,text,icon,space,index",
+		)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 {
 				m.Cmdy(nfs.DIR, arg[1:], kit.Dict(nfs.DIR_ROOT, path.Join(ice.USR_LOCAL_DAEMON, arg[0])))
 				return
 			}
 			current := kit.Int(mdb.Config(m, BEGIN))
-			m.Options(nfs.DIR_ROOT, ice.USR_LOCAL_DAEMON).Cmd(nfs.DIR, nfs.PWD, func(value ice.Maps) {
-				bin := m.Cmdv(nfs.DIR, path.Join(value[nfs.PATH], ice.BIN), nfs.PATH)
-				kit.If(bin == "", func() { bin = m.Cmdv(nfs.DIR, path.Join(value[nfs.PATH], "sbin"), nfs.PATH) })
-				port := kit.Int(path.Base(value[nfs.PATH]))
-				m.Push(mdb.TIME, value[mdb.TIME]).Push(PORT, port).Push(nfs.SIZE, value[nfs.SIZE]).Push(ice.BIN, strings.TrimPrefix(bin, value[nfs.PATH]))
-				current = kit.Max(current, port)
+			mdb.HashSelect(m, arg...).Table(func(value ice.Maps) {
+				current = kit.Max(current, kit.Int(value[PORT]))
+				if value[PID] == "" {
+					m.PushButton(START, nfs.TRASH)
+				} else {
+					m.PushButton(STOP)
+				}
 			})
-			m.PushAction(nfs.TRASH).StatusTimeCount(mdb.ConfigSimple(m, BEGIN, CURRENT, END)).SortInt(PORT)
 			mdb.Config(m, CURRENT, current)
+			m.StatusTimeCount(mdb.ConfigSimple(m, BEGIN, CURRENT, END)).SortInt(PORT)
 		}},
 	})
 }
 func PortRight(m *ice.Message, arg ...string) string {
 	current, begin, end := mdb.Config(m, CURRENT), mdb.Config(m, BEGIN), mdb.Config(m, END)
 	return _port_right(m, kit.Int(kit.Select(kit.Select(begin, current), arg, 0)), kit.Int(kit.Select(begin, arg, 1)), kit.Int(kit.Select(end, arg, 2)))
+}
+func PortCmds(m *ice.Message, arg ...string) {
+	m.Cmdy(SPACE, m.Option(SPACE), m.Option(ctx.INDEX), m.ActionKey())
 }

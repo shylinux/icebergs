@@ -222,20 +222,20 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: ice.Commands
 		IMPORT: {Hand: func(m *ice.Message, arg ...string) {
 			HashSelect(m).Table(func(value ice.Maps) {
 				if value[STATUS] != DISABLE {
-					m.Cmd(IMPORT, value["index"], "", value["type"])
+					m.Cmd(IMPORT, value[INDEX], "", value[TYPE])
 				}
 			})
 		}},
 		EXPORT: {Hand: func(m *ice.Message, arg ...string) {
 			HashSelect(m).Table(func(value ice.Maps) {
 				if value[STATUS] != DISABLE {
-					m.Cmd(EXPORT, value["index"], "", value["type"])
+					m.Cmd(EXPORT, value[INDEX], "", value[TYPE])
 				}
 			})
 		}},
 		ENABLE:  {Hand: func(m *ice.Message, arg ...string) { HashModify(m, STATUS, ENABLE) }},
 		DISABLE: {Hand: func(m *ice.Message, arg ...string) { HashModify(m, STATUS, DISABLE) }},
-	}, ExportHashAction(SHORT, "index", FIELD, "time,index,type,status")), Hand: func(m *ice.Message, arg ...string) {
+	}, ExportHashAction(SHORT, INDEX, FIELD, "time,index,type,status")), Hand: func(m *ice.Message, arg ...string) {
 		if len(arg) < 2 {
 			HashSelect(m, arg...).RewriteAppend(func(value, key string, index int) string {
 				kit.If(key == STATUS, func() { value = kit.Select(ENABLE, value) })

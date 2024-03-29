@@ -120,7 +120,7 @@ func init() {
 			}},
 			STOP: {Hand: func(m *ice.Message, arg ...string) {
 				h, pid := m.Option(mdb.HASH), m.Option(PID)
-				mdb.HashSelects(m, h).Table(func(value ice.Maps) {
+				mdb.HashSelects(m.Spawn(), h).Table(func(value ice.Maps) {
 					if h == "" && value[PID] != pid {
 						return
 					}
@@ -130,7 +130,7 @@ func init() {
 			}},
 			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) {
 				h, pid := m.Option(mdb.HASH), m.Option(PID)
-				mdb.HashSelects(m, h).Table(func(value ice.Maps) {
+				mdb.HashSelects(m.Spawn(), h).Table(func(value ice.Maps) {
 					if h == "" && value[PID] != pid {
 						return
 					}

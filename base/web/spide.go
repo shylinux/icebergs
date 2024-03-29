@@ -39,7 +39,7 @@ func _spide_create(m *ice.Message, link, types, name, icons, token string) {
 }
 func _spide_show(m *ice.Message, name string, arg ...string) {
 	file := ""
-	action, arg := _spide_args(m, arg, SPIDE_RAW, SPIDE_MSG, SPIDE_SAVE, SPIDE_CACHE)
+	action, arg := _spide_args(m, arg, SPIDE_RAW, SPIDE_DETAIL, SPIDE_MSG, SPIDE_SAVE, SPIDE_CACHE)
 	kit.If(action == SPIDE_SAVE, func() { file, arg = arg[0], arg[1:] })
 	msg := mdb.HashSelects(m.Spawn(), name)
 	method, arg := _spide_args(m, arg, http.MethodGet, http.MethodPut, http.MethodPost, http.MethodDelete)
@@ -67,7 +67,7 @@ func _spide_show(m *ice.Message, name string, arg ...string) {
 	}
 	defer res.Body.Close()
 	m.Cost(cli.STATUS, res.Status, nfs.SIZE, kit.FmtSize(kit.Int64(res.Header.Get(html.ContentLength))), mdb.TYPE, res.Header.Get(html.ContentType))
-	if action != SPIDE_RAW {
+	if action == SPIDE_DETAIL {
 		m.Push(mdb.TYPE, STATUS).Push(mdb.NAME, res.StatusCode).Push(mdb.VALUE, res.Status)
 	}
 	m.Options(STATUS, res.Status)
@@ -75,7 +75,7 @@ func _spide_show(m *ice.Message, name string, arg ...string) {
 		if m.Option(log.DEBUG) == ice.TRUE {
 			m.Logs(RESPONSE, k, v)
 		}
-		if m.Options(k, v); action != SPIDE_RAW {
+		if m.Options(k, v); action == SPIDE_DETAIL {
 			m.Push(mdb.TYPE, SPIDE_HEADER).Push(mdb.NAME, k).Push(mdb.VALUE, v[0])
 		}
 	})
@@ -85,7 +85,7 @@ func _spide_show(m *ice.Message, name string, arg ...string) {
 			if m.Option(log.DEBUG) == ice.TRUE {
 				m.Logs(RESPONSE, v.Name, v.Value)
 			}
-			if action != SPIDE_RAW {
+			if action == SPIDE_DETAIL {
 				m.Push(mdb.TYPE, COOKIE).Push(mdb.NAME, v.Name).Push(mdb.VALUE, v.Value)
 			}
 		})
@@ -187,13 +187,9 @@ func _spide_send(m *ice.Message, name string, req *http.Request, timeout string)
 	return client.Do(req)
 }
 func _spide_save(m *ice.Message, action, file, uri string, res *http.Response) {
-	if action == SPIDE_RAW {
-		m.SetResult()
-	} else {
-		m.SetResult().SetAppend()
-	}
+	m.SetResult()
 	switch action {
-	case SPIDE_RAW:
+	case SPIDE_RAW, SPIDE_DETAIL:
 		b, _ := ioutil.ReadAll(res.Body)
 		m.Echo(string(b))
 	case SPIDE_MSG:
@@ -219,10 +215,11 @@ func _spide_save(m *ice.Message, action, file, uri string, res *http.Response) {
 }
 
 const (
-	SPIDE_RAW   = "raw"
-	SPIDE_MSG   = "msg"
-	SPIDE_SAVE  = "save"
-	SPIDE_CACHE = "cache"
+	SPIDE_RAW    = "raw"
+	SPIDE_DETAIL = "detail"
+	SPIDE_MSG    = "msg"
+	SPIDE_SAVE   = "save"
+	SPIDE_CACHE  = "cache"
 
 	SPIDE_BODY = "body"
 	SPIDE_FORM = "form"

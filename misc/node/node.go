@@ -24,6 +24,6 @@ func (s node) List(m *ice.Message, arg ...string) {
 	s.Code.Source(m, "", arg...)
 }
 func (s node) Xterm(m *ice.Message, arg ...string) {
-	s.Code.Xterm(m, []string{mdb.TYPE, NODE}, arg...)
+	s.Code.Xterm(m, "", []string{mdb.TYPE, NODE}, arg...)
 }
 func init() { ice.CodeCtxCmd(node{}) }

@@ -207,3 +207,12 @@ func ShortCmd(key string) string {
 	}
 	return key
 }
+func ResourceFile(m *ice.Message, file string, arg ...string) string {
+	if kit.HasPrefix(file, nfs.PS, ice.HTTP) {
+		return file
+	} else if nfs.Exists(m, file) {
+		return file
+	} else {
+		return path.Join(path.Dir(GetCmdFile(m, m.PrefixKey())), file)
+	}
+}

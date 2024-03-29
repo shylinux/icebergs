@@ -138,7 +138,7 @@ func _install_trash(m *ice.Message, arg ...string) {
 }
 func _install_service(m *ice.Message, arg ...string) {
 	name := kit.Split(path.Base(arg[0]), "_-.")[0]
-	m.Fields(len(kit.Slice(arg, 1)), "time,port,status,pid,cmd,dir")
+	m.Fields(len(kit.Slice(arg, 1)), "time,status,port,pid,cmd,dir")
 	m.Cmd(mdb.SELECT, cli.DAEMON, "", mdb.HASH, func(value ice.Maps) {
 		if strings.Contains(value[ice.CMD], path.Join(ice.BIN, name)) {
 			switch m.Push("", value, kit.Split(m.OptionFields())); value[mdb.STATUS] {

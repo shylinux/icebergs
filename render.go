@@ -120,6 +120,9 @@ func (m *Message) RenderVoid(arg ...Any) *Message {
 func (m *Message) IsDebug() bool {
 	return m.Option(MSG_DEBUG) == TRUE
 }
+func (m *Message) IsWorker() bool {
+	return Info.NodeType == "worker"
+}
 func (m *Message) IsCliUA() bool {
 	return m.Option(MSG_USERUA) == "" || !strings.HasPrefix(m.Option(MSG_USERUA), html.Mozilla)
 }

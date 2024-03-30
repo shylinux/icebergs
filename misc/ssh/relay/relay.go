@@ -284,7 +284,13 @@ func (s relay) Pushbin(m *ice.Message, arg ...string) {
 		m.Options(nfs.FROM, ice.USR_PUBLISH+bin, nfs.PATH, path.Base(kit.Path("")), nfs.FILE, ice.BIN_ICE_BIN)
 	})
 	m.Cmd(SSH_TRANS, tcp.SEND)
-	s.shell(m, m.Template(PUSHBIN_SH)+lex.SP+kit.JoinCmds(ice.DEV, m.Option(ice.DEV), tcp.PORT, m.Option(web.PORTAL), tcp.NODENAME, m.OptionDefault(tcp.NODENAME, m.Option(MACHINE))), arg...)
+	if m.Option(web.PORTAL) == tcp.PORT_443 {
+		m.Cmd(SSH_TRANS, tcp.SEND, nfs.FROM, nfs.ETC_CERT_KEY, nfs.PATH, m.Option(web.DREAM), nfs.FILE, nfs.ETC_CERT_KEY)
+		m.Cmd(SSH_TRANS, tcp.SEND, nfs.FROM, nfs.ETC_CERT_PEM, nfs.PATH, m.Option(web.DREAM), nfs.FILE, nfs.ETC_CERT_PEM)
+	}
+	cmd := m.Template(PUSHBIN_SH) + lex.SP + kit.JoinCmds(ice.DEV, m.Option(ice.DEV), tcp.PORT, m.Option(web.PORTAL), tcp.NODENAME, m.OptionDefault(tcp.NODENAME, m.Option(MACHINE)))
+	s.shell(m, cmd, arg...)
+	m.OptionDefault(web.PORTAL, tcp.PORT_9020)
 	s.Modify(m, kit.Simple(m.OptionSimple(MACHINE, web.DREAM, web.PORTAL))...)
 }
 
@@ -292,7 +298,10 @@ func (s relay) AdminCmd(m *ice.Message, arg ...string) {
 	s.shell(m, "cd "+kit.Select(ice.CONTEXTS, m.Option(web.DREAM))+"; "+s.admin(m, m.Option(ice.CMD)), arg...)
 }
 func (s relay) Xterm(m *ice.Message, arg ...string) {
-	m.ProcessXterm("", kit.JoinWord(m.Option(MACHINE), ice.INIT, kit.Format("%q", "cd "+kit.Select(ice.CONTEXTS, m.Option(web.DREAM)))), arg...)
+	// m.ProcessXterm("", kit.JoinWord(m.Option(MACHINE), ice.INIT, kit.Format("%q", "cd "+kit.Select(ice.CONTEXTS, m.Option(web.DREAM)))), arg...)
+	init := kit.Format("%q", "cd "+kit.Select(ice.CONTEXTS, m.Option(web.DREAM)))
+	kit.If(m.Option(web.PORTAL) == "", func() { init = "" })
+	m.ProcessXterm(kit.Keys(m.Option(MACHINE), "xterm"), kit.JoinWord("relay", tcp.HOST, m.Option(tcp.HOST), aaa.USERNAME, m.Option(aaa.USERNAME), ice.INIT, init), arg...)
 }
 func (s relay) Login(m *ice.Message, arg ...string) {
 	if m.Options(s.Hash.List(m.Spawn(), m.Option(MACHINE)).AppendSimple()); m.Option(ice.BACK) == "" {
@@ -300,7 +309,7 @@ func (s relay) Login(m *ice.Message, arg ...string) {
 		ssh.CombinedOutput(m.Message, s.admins(m, kit.JoinCmds(web.HEADER, mdb.CREATE,
 			"--", mdb.TYPE, "oauth", mdb.NAME, m.CommandKey(), mdb.ICONS, html.ICONS_SSH, mdb.ORDER, "100",
 			web.LINK, m.MergePodCmd("", "", ctx.ACTION, m.ActionKey(), MACHINE, m.Option(MACHINE)),
-		)), func(res string) { m.ProcessHold() })
+		)), func(res string) { m.Echo(res) })
 		m.ProcessOpen(kit.MergeURL2(m.Option(mdb.LINK), web.C(web.HEADER)))
 	} else if m.Option(ice.MSG_METHOD) == http.MethodGet {
 		m.EchoInfoButton("")
@@ -364,7 +373,9 @@ func (s relay) iframe(m *ice.Message, cmd string, arg ...string) {
 	}
 }
 func (s relay) shell(m *ice.Message, init string, arg ...string) {
-	m.ProcessXterm("", kit.JoinWord(m.Option(MACHINE), ice.INIT, kit.Format("%q", strings.ReplaceAll(init, lex.NL, "; "))), arg...)
+	m.ProcessXterm(kit.Keys(m.Option(MACHINE), m.ActionKey()), kit.JoinWord(
+		"relay", tcp.HOST, m.Option(tcp.HOST), aaa.USERNAME, m.Option(aaa.USERNAME),
+		ice.INIT, kit.Format("%q", strings.ReplaceAll(init, lex.NL, "; "))), arg...)
 }
 func (s relay) foreachScript(m *ice.Message, script string, arg ...string) {
 	m.Option(ice.MSG_TITLE, kit.Keys(m.Option(ice.MSG_USERPOD), m.CommandKey(), m.ActionKey()))

@@ -145,6 +145,8 @@ const (
 	USR = "usr/"
 
 	ETC_LOCAL_SH        = "etc/local.sh"
+	ETC_CERT_KEY        = "etc/cert/cert.key"
+	ETC_CERT_PEM        = "etc/cert/cert.pem"
 	SRC_DOCUMENT        = "src/document/"
 	SRC_TEMPLATE        = ice.SRC_TEMPLATE
 	USR_ICEBERGS        = ice.USR_ICEBERGS

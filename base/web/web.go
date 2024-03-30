@@ -63,7 +63,11 @@ func (f *Frame) Start(m *ice.Message, arg ...string) {
 		m.Cmd(tcp.SERVER, tcp.LISTEN, mdb.TYPE, HTTP, mdb.NAME, logs.FileLine(1), m.OptionSimple(tcp.HOST, tcp.PORT), func(l net.Listener) {
 			defer mdb.HashCreateDeferRemove(m, m.OptionSimple(mdb.NAME, tcp.PROTO), arg, cli.STATUS, tcp.START)()
 			gdb.Event(m.Spawn(), SERVE_START, arg)
-			m.WarnNotValid(f.Server.Serve(l))
+			if m.Option(tcp.PORT) == tcp.PORT_443 {
+				m.WarnNotValid(f.Server.ServeTLS(l, nfs.ETC_CERT_PEM, nfs.ETC_CERT_KEY))
+			} else {
+				m.WarnNotValid(f.Server.Serve(l))
+			}
 		})
 		kit.If(m.IsErr(), func() { fmt.Println(); fmt.Println(m.Result()); m.Cmd(ice.QUIT) })
 	}

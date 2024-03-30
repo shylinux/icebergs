@@ -143,6 +143,8 @@ const (
 	CMD_OUT = "cmd_out"
 
 	SH    = "sh"
+	LN    = "ln"
+	MV    = "mv"
 	RM    = "rm"
 	GO    = "go"
 	GIT   = "git"

@@ -22,7 +22,7 @@ const (
 )
 
 type trans struct {
-	send string `name:"send from"`
+	send string `name:"send from path file"`
 	list string `name:"list machine path auto" help:"文件"`
 }
 

@@ -62,6 +62,7 @@ type relay struct {
 	checkbox    string `data:"true"`
 	export      string `data:"true"`
 	short       string `data:"machine"`
+	tools       string `data:"ssh.auth,aaa.cert"`
 	field       string `data:"time,icons,machine,username,host,port,portal,dream,module,version,commitTime,compileTime,bootTime,go,git,package,shell,kernel,arch,vcpu,ncpu,mhz,mem,disk,network,listen,socket,proc,vendor"`
 	create      string `name:"create host* port=22 username machine icons"`
 	stats       string `name:"stats machine" help:"采集" icon:"bi bi-card-list"`

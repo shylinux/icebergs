@@ -30,6 +30,7 @@ const (
 	LOCATION  = "location"
 	LONGITUDE = "longitude"
 	LATITUDE  = "latitude"
+	COMPANY   = "company"
 	PROVINCE  = "province"
 	COUNTRY   = "country"
 	CITY      = "city"

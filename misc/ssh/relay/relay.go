@@ -285,8 +285,9 @@ func (s relay) Pushbin(m *ice.Message, arg ...string) {
 	})
 	m.Cmd(SSH_TRANS, tcp.SEND)
 	if m.Option(web.PORTAL) == tcp.PORT_443 {
-		m.Cmd(SSH_TRANS, tcp.SEND, nfs.FROM, nfs.ETC_CERT_KEY, nfs.PATH, m.Option(web.DREAM), nfs.FILE, nfs.ETC_CERT_KEY)
-		m.Cmd(SSH_TRANS, tcp.SEND, nfs.FROM, nfs.ETC_CERT_PEM, nfs.PATH, m.Option(web.DREAM), nfs.FILE, nfs.ETC_CERT_PEM)
+		msg := m.Cmd(ssh.CERT, mdb.CREATE, m.Option(tcp.HOST))
+		m.Cmd(SSH_TRANS, tcp.SEND, nfs.FROM, msg.Append(ssh.KEY), nfs.PATH, m.Option(web.DREAM), nfs.FILE, nfs.ETC_CERT_KEY)
+		m.Cmd(SSH_TRANS, tcp.SEND, nfs.FROM, msg.Append(ssh.PEM), nfs.PATH, m.Option(web.DREAM), nfs.FILE, nfs.ETC_CERT_PEM)
 	}
 	cmd := m.Template(PUSHBIN_SH) + lex.SP + kit.JoinCmds(ice.DEV, m.Option(ice.DEV), tcp.PORT, m.Option(web.PORTAL), tcp.NODENAME, m.OptionDefault(tcp.NODENAME, m.Option(MACHINE)))
 	s.shell(m, cmd, arg...)

@@ -2,6 +2,7 @@ package web
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"io"
 	"io/ioutil"
@@ -183,7 +184,12 @@ func _spide_head(m *ice.Message, req *http.Request, head ice.Maps, value ice.Map
 	})
 }
 func _spide_send(m *ice.Message, name string, req *http.Request, timeout string) (*http.Response, error) {
-	client := mdb.HashSelectTarget(m, name, func() ice.Any { return &http.Client{Timeout: kit.Duration(timeout)} }).(*http.Client)
+	client := mdb.HashSelectTarget(m, name, func() ice.Any {
+		if name == ice.OPS {
+			return &http.Client{Timeout: kit.Duration(timeout), Transport: &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}}
+		}
+		return &http.Client{Timeout: kit.Duration(timeout)}
+	}).(*http.Client)
 	return client.Do(req)
 }
 func _spide_save(m *ice.Message, action, file, uri string, res *http.Response) {

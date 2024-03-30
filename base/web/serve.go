@@ -236,7 +236,7 @@ func init() {
 			}},
 			SERVE_START: {Hand: func(m *ice.Message, arg ...string) {
 				Count(m, m.ActionKey(), m.Option(tcp.PORT))
-				m.Cmd(SPIDE, mdb.CREATE, kit.Format("http://localhost:%s", m.Option(tcp.PORT)), ice.OPS, nfs.USR_ICONS_CONTEXTS, nfs.REPOS, "")
+				m.Cmd(SPIDE, mdb.CREATE, HostPort(m, "localhost", m.Option(tcp.PORT)), ice.OPS, nfs.USR_ICONS_CONTEXTS, nfs.REPOS, "")
 				m.Cmds(SPIDE).Table(func(value ice.Maps) {
 					kit.If(value[CLIENT_NAME] != ice.OPS && value[TOKEN] != "", func() {
 						m.Cmd(SPACE, tcp.DIAL, ice.DEV, value[CLIENT_NAME], TOKEN, value[TOKEN], mdb.TYPE, SERVER)

@@ -23,6 +23,7 @@ const (
 	AVATAR     = "avatar"
 	GENDER     = "gender"
 	MOBILE     = "mobile"
+	PHONE      = "phone"
 	SECRET     = "secret"
 	THEME      = "theme"
 

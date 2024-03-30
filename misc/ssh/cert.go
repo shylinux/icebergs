@@ -39,9 +39,9 @@ func init() {
 	aaa.Index.MergeCommands(ice.Commands{
 		CERT: {Name: "cert path auto", Help: "证书", Actions: ice.MergeActions(ice.Actions{
 			mdb.CREATE: {Name: "create name* country province city street postal company year month=1 day", Hand: func(m *ice.Message, arg ...string) {
-				if nfs.Exists(m, filepath(m, m.Option(mdb.NAME)+nfs.PT+PEM)) {
-					m.Push(PEM, filepath(m, m.Option(mdb.NAME)+nfs.PT+PEM))
-					m.Push(KEY, filepath(m, m.Option(mdb.NAME)+nfs.PT+KEY))
+				if nfs.Exists(m, CertPath(m, m.Option(mdb.NAME)), func(p string) {
+					m.Push(PEM, p).Push(KEY, kit.ExtChange(p, KEY))
+				}) {
 					return
 				}
 				cert := &x509.Certificate{
@@ -123,8 +123,8 @@ func init() {
 		}},
 	})
 }
-func filepath(m *ice.Message, file string) string {
-	return path.Join(ETC_CERT + file)
+func CertPath(m *ice.Message, domain string) string {
+	return path.Join(ETC_CERT+domain) + nfs.PT + PEM
 }
 func loadBlock(m *ice.Message, p string) []byte {
 	block, _ := pem.Decode([]byte(m.Cmdx(nfs.CAT, p)))

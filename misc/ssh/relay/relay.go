@@ -265,6 +265,10 @@ func (s relay) Pushkey(m *ice.Message, arg ...string) {
 	}
 }
 func (s relay) Pushbin(m *ice.Message, arg ...string) {
+	if kit.HasPrefixList(arg, ctx.RUN) {
+		m.ProcessXterm("", nil, arg...)
+		return
+	}
 	bin := "ice"
 	switch strings.ToLower(m.Option(KERNEL)) {
 	case cli.LINUX:
@@ -285,14 +289,19 @@ func (s relay) Pushbin(m *ice.Message, arg ...string) {
 		m.Options(nfs.FROM, ice.USR_PUBLISH+bin, nfs.PATH, path.Base(kit.Path("")), nfs.FILE, ice.BIN_ICE_BIN)
 	})
 	m.Cmd(SSH_TRANS, tcp.SEND)
-	if m.Option(web.PORTAL) == tcp.PORT_443 {
+	if m.OptionDefault(web.PORTAL, tcp.PORT_9020) == tcp.PORT_443 {
+		for i := 0; i < 30; i++ {
+			if m.Exists(ssh.CertPath(m.Message, m.Option(tcp.HOST))) {
+				break
+			}
+			m.Sleep("5s")
+		}
 		msg := m.Cmd(ssh.CERT, mdb.CREATE, m.Option(tcp.HOST))
 		m.Cmd(SSH_TRANS, tcp.SEND, nfs.FROM, msg.Append(ssh.KEY), nfs.PATH, m.Option(web.DREAM), nfs.FILE, nfs.ETC_CERT_KEY)
 		m.Cmd(SSH_TRANS, tcp.SEND, nfs.FROM, msg.Append(ssh.PEM), nfs.PATH, m.Option(web.DREAM), nfs.FILE, nfs.ETC_CERT_PEM)
 	}
-	cmd := m.Template(PUSHBIN_SH) + lex.SP + kit.JoinCmds(ice.DEV, m.Option(ice.DEV), tcp.PORT, m.Option(web.PORTAL), tcp.NODENAME, m.OptionDefault(tcp.NODENAME, m.Option(MACHINE)))
+	cmd := "export ctx_dev=" + m.SpideOrigin(ice.DEV) + "; " + m.Template(PUSHBIN_SH) + lex.SP + kit.JoinCmds(ice.DEV, m.Option(ice.DEV), tcp.PORT, m.Option(web.PORTAL), tcp.NODENAME, m.OptionDefault(tcp.NODENAME, m.Option(MACHINE)))
 	s.shell(m, cmd, arg...)
-	m.OptionDefault(web.PORTAL, tcp.PORT_9020)
 	s.Modify(m, kit.Simple(m.OptionSimple(MACHINE, web.DREAM, web.PORTAL))...)
 }
 

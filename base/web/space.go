@@ -103,9 +103,11 @@ func _space_fork(m *ice.Message) {
 			case SERVER:
 				defer gdb.EventDeferEvent(m, SPACE_OPEN, args)(SPACE_CLOSE, args)
 				m.Go(func() {
-					m.Cmd(SPACE, name, cli.PWD, name, kit.Dict(mdb.ICONS, mdb.Config(m, mdb.ICONS),
+					m.Cmd(SPACE, name, cli.PWD, name, kit.Dict(
+						mdb.ICONS, mdb.Config(m, mdb.ICONS),
 						mdb.TIME, ice.Info.Make.Time, nfs.MODULE, ice.Info.Make.Module, nfs.VERSION, ice.Info.Make.Versions(),
-						AGENT, "Go-http-client", cli.SYSTEM, runtime.GOOS))
+						AGENT, "Go-http-client", cli.SYSTEM, runtime.GOOS,
+					))
 					m.Cmd(SPACE).Table(func(value ice.Maps) {
 						if kit.IsIn(value[mdb.TYPE], WORKER) && value[mdb.NAME] != name {
 							m.Cmd(SPACE, value[mdb.NAME], gdb.EVENT, gdb.HAPPEN, gdb.EVENT, OPS_SERVER_OPEN, args, kit.Dict(ice.MSG_USERROLE, aaa.TECH))
@@ -295,6 +297,14 @@ func init() {
 				kit.If(mdb.Config(m, ice.MAIN), func(cmd string) { RenderPodCmd(m, "", cmd) }, func() { RenderMain(m) })
 				m.Optionv(ice.MSG_ARGS, kit.Simple(m.Optionv(ice.MSG_ARGS)))
 			}},
+			ice.INFO: {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
+				m.Push(mdb.TIME, ice.Info.Make.Time)
+				m.Push(mdb.NAME, ice.Info.NodeName)
+				m.Push(mdb.ICONS, kit.Select(mdb.Config(m, mdb.ICONS)))
+				m.Push(nfs.MODULE, ice.Info.Make.Module)
+				m.Push(nfs.VERSION, ice.Info.Make.Versions())
+				m.Push(ORIGIN, m.Option(ice.MSG_USERHOST))
+			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if mdb.IsSearchPreview(m, arg) {
 					m.Cmds("", func(value ice.Maps) {
@@ -338,22 +348,10 @@ func init() {
 					ProcessIframe(m, m.Option(mdb.NAME), m.MergePod(m.Option(mdb.NAME)), arg...)
 				}
 			}},
-			"info": {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
-				m.Push(mdb.TIME, ice.Info.Make.Time)
-				m.Push(mdb.NAME, ice.Info.NodeName)
-				m.Push(mdb.ICONS, kit.Select(mdb.Config(m, mdb.ICONS)))
-				m.Push(nfs.MODULE, ice.Info.Make.Module)
-				m.Push(nfs.VERSION, ice.Info.Make.Versions())
-				m.Push(ORIGIN, m.Option(ice.MSG_USERHOST))
-				m.Push("hostport", UserHost(m))
-				m.Push("pathname", ice.Info.Pathname)
-			}},
 			nfs.PS: {Hand: func(m *ice.Message, arg ...string) { _space_fork(m) }},
-		}, gdb.EventsAction(SPACE_LOGIN), mdb.HashAction(
-			mdb.ICONS, "src/main.ico",
-			mdb.LIMIT, 1000, mdb.LEAST, 500,
+		}, gdb.EventsAction(SPACE_LOGIN), mdb.HashAction(mdb.LIMIT, 1000, mdb.LEAST, 500,
 			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,type,name,text,icons,module,version,agent,system,ip,usernick,username,userrole",
-			ctx.ACTION, OPEN, REDIAL, kit.Dict("a", 1000, "b", 100, "c", 1000),
+			ctx.ACTION, OPEN, REDIAL, kit.Dict("a", 1000, "b", 100, "c", 1000), mdb.ICONS, ice.SRC_MAIN_ICO,
 		), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 {
 				if len(arg) == 1 && strings.Contains(arg[0], nfs.PT) {

@@ -1,6 +1,7 @@
 package websocket
 
 import (
+	"crypto/tls"
 	"net"
 	"net/http"
 	"net/url"
@@ -26,6 +27,7 @@ func Upgrade(w http.ResponseWriter, r *http.Request) (*Conn, error) {
 	return &Conn{Conn: conn}, e
 }
 func NewClient(c net.Conn, u *url.URL) (*Conn, error) {
+	websocket.DefaultDialer.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	conn, _, e := websocket.NewClient(c, u, nil, bufs, bufs)
 	return &Conn{Conn: conn}, e
 }

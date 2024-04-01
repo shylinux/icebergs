@@ -282,27 +282,15 @@ func (s relay) Pushbin(m *ice.Message, arg ...string) {
 	default:
 		bin = kit.Keys(bin, cli.AMD64)
 	}
-	kit.If(m.Option(web.DREAM), func() {
-		m.Options(nfs.FROM, path.Join(kit.Select(ice.USR_LOCAL_WORK, "..", ice.Info.NodeType == web.WORKER), m.Option(web.DREAM), ice.USR_PUBLISH+bin))
-		m.Options(nfs.PATH, m.Option(web.DREAM), nfs.FILE, ice.BIN_ICE_BIN)
-	}, func() {
-		m.Options(nfs.FROM, ice.USR_PUBLISH+bin, nfs.PATH, path.Base(kit.Path("")), nfs.FILE, ice.BIN_ICE_BIN)
-	})
-	m.Cmd(SSH_TRANS, tcp.SEND)
-	if m.OptionDefault(web.PORTAL, tcp.PORT_9020) == tcp.PORT_443 {
-		for i := 0; i < 30; i++ {
-			if m.Exists(ssh.CertPath(m.Message, m.Option(tcp.HOST))) {
-				break
-			}
-			m.Sleep("5s")
-		}
+	dream := m.DreamPath(m.Option(web.DREAM))
+	m.Options(nfs.FROM, path.Join(dream, ice.USR_PUBLISH+bin), nfs.PATH, path.Base(dream), nfs.FILE, ice.BIN_ICE_BIN)
+	if m.Cmd(SSH_TRANS, tcp.SEND); m.OptionDefault(web.PORTAL, tcp.PORT_9020) == tcp.PORT_443 {
 		msg := m.Cmd(ssh.CERT, mdb.CREATE, m.Option(tcp.HOST))
-		m.Cmd(SSH_TRANS, tcp.SEND, nfs.FROM, msg.Append(ssh.KEY), nfs.PATH, m.Option(web.DREAM), nfs.FILE, nfs.ETC_CERT_KEY)
-		m.Cmd(SSH_TRANS, tcp.SEND, nfs.FROM, msg.Append(ssh.PEM), nfs.PATH, m.Option(web.DREAM), nfs.FILE, nfs.ETC_CERT_PEM)
+		m.Cmd(SSH_TRANS, tcp.SEND, nfs.FROM, msg.Append(ssh.PEM), nfs.FILE, nfs.ETC_CERT_PEM)
+		m.Cmd(SSH_TRANS, tcp.SEND, nfs.FROM, msg.Append(ssh.KEY), nfs.FILE, nfs.ETC_CERT_KEY)
 	}
-	cmd := "export ctx_dev=" + m.SpideOrigin(ice.DEV) + "; " + m.Template(PUSHBIN_SH) + lex.SP + kit.JoinCmds(ice.DEV, m.Option(ice.DEV), tcp.PORT, m.Option(web.PORTAL), tcp.NODENAME, m.OptionDefault(tcp.NODENAME, m.Option(MACHINE)))
-	s.shell(m, cmd, arg...)
 	s.Modify(m, kit.Simple(m.OptionSimple(MACHINE, web.DREAM, web.PORTAL))...)
+	s.shell(m, "export ctx_dev="+m.SpideOrigin(ice.DEV)+"; "+m.Template(PUSHBIN_SH)+lex.SP+kit.JoinCmds(ice.DEV, m.Option(ice.DEV), tcp.PORT, m.Option(web.PORTAL), tcp.NODENAME, m.OptionDefault(tcp.NODENAME, m.Option(MACHINE))), arg...)
 }
 
 func (s relay) AdminCmd(m *ice.Message, arg ...string) {

@@ -133,12 +133,12 @@ func _install_trash(m *ice.Message, arg ...string) {
 		nfs.Trash(m, m.Option(nfs.PATH))
 	} else {
 		m.Cmd(cli.DAEMON, mdb.REMOVE)
-		nfs.Trash(m, kit.Path(ice.USR_LOCAL_DAEMON, m.Option(tcp.PORT), m.Option(nfs.PATH)))
+		nfs.Trash(m, kit.Path(ice.USR_LOCAL_DAEMON, m.Option(tcp.PORT), kit.Select("", m.Option(nfs.PATH), m.Option(cli.PID) == "")))
 	}
 }
 func _install_service(m *ice.Message, arg ...string) {
 	name := kit.Split(path.Base(arg[0]), "_-.")[0]
-	m.Fields(len(kit.Slice(arg, 1)), "time,status,port,pid,cmd,dir")
+	m.Fields(len(kit.Slice(arg, 1)), "time,port,pid,status,cmd,dir")
 	m.Cmd(mdb.SELECT, cli.DAEMON, "", mdb.HASH, func(value ice.Maps) {
 		if strings.Contains(value[ice.CMD], path.Join(ice.BIN, name)) {
 			switch m.Push("", value, kit.Split(m.OptionFields())); value[mdb.STATUS] {

@@ -65,6 +65,7 @@ type relay struct {
 	tools    string `data:"ssh.trans,ssh.auth,aaa.cert"`
 	field    string `data:"time,icons,machine,username,host,port,portal,dream,module,version,commitTime,compileTime,bootTime,go,git,package,shell,kernel,arch,vcpu,ncpu,mhz,mem,disk,network,listen,socket,proc,vendor"`
 	create   string `name:"create host* port=22 username machine icons"`
+	upgrade  string `name:"upgrade machine"`
 	stats    string `name:"stats machine" help:"采集" icon:"bi bi-card-list"`
 	publish  string `name:"publish" help:"发布" icon:"bi bi-send-check"`
 	forEach  string `name:"forEach machine cmd*:textarea=pwd"`
@@ -343,14 +344,16 @@ func (s relay) shell(m *ice.Message, init string, arg ...string) {
 	), mdb.TEXT, strings.ReplaceAll(init, lex.NL, "; ")}, arg...)
 }
 func (s relay) foreachScript(m *ice.Message, script string, arg ...string) {
-	m.Options(web.DREAM, path.Base(m.DreamPath(m.Option(web.DREAM))))
 	m.Option(ice.MSG_TITLE, kit.Keys(m.Option(ice.MSG_USERPOD), m.CommandKey(), m.ActionKey()))
-	if len(arg) == 0 && (m.Option(MACHINE) == "" || strings.Contains(m.Option(MACHINE), ",")) {
+	if !kit.HasPrefixList(arg, ctx.RUN) && (m.Option(MACHINE) == "" || strings.Contains(m.Option(MACHINE), ",")) {
 		s.foreach(m, func(msg *ice.Message, cmd []string) {
 			if msg.Option(cli.GO) == "" {
 				return
 			}
-			msg.Option(web.LINK, web.HostPort(m.Message, msg.Option(tcp.HOST), msg.Option(web.PORTAL)))
+			m.Debug("what %v", msg.Option(web.DREAM))
+			msg.Option(web.DREAM, path.Base(m.DreamPath(msg.Option(web.DREAM))))
+			m.Debug("what %v", msg.Option(web.DREAM))
+			msg.Option(web.LINK, m.HostPort(msg.Option(tcp.HOST), msg.Option(web.PORTAL)))
 			ssh.PushShell(msg.Message, strings.Split(msg.Template(script), lex.NL), func(res string) {
 				web.PushNoticeGrow(m.Options(ctx.DISPLAY, html.PLUGIN_XTERM, ice.MSG_COUNT, "0", ice.MSG_DEBUG, ice.FALSE, ice.LOG_DISABLE, ice.TRUE).Message, res)
 			})

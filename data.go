@@ -52,7 +52,7 @@ func (m *Message) Conf(arg ...Any) string { return kit.Format(m.Confv(arg...)) }
 var _important = task.Lock{}
 
 func SaveImportant(m *Message, arg ...string) {
-	if Info.Important != true {
+	if Info.Important != true || len(arg) == 0 {
 		return
 	}
 	kit.For(arg, func(i int, v string) { kit.If(v == "" || strings.Contains(v, SP), func() { arg[i] = "\"" + v + "\"" }) })
@@ -64,6 +64,8 @@ func loadImportant(m *Message) {
 		defer f.Close()
 		kit.For(f, func(s string) { kit.If(s != "" && !strings.HasPrefix(s, "# "), func() { m.Cmd(kit.Split(s)) }) })
 	}
-	Info.Important = true
+	if _, e := os.Stat(VAR); e == nil {
+		Info.Important = true
+	}
 }
 func removeImportant(m *Message) { os.Remove(VAR_DATA_IMPORTANT) }

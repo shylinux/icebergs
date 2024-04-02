@@ -345,6 +345,11 @@ func init() {
 				})
 				kit.If(m.Option(mdb.NAME) == "", func() { m.Sleep("5s").Cmdy(ROUTE, cli.BUILD).ProcessInner() })
 			}},
+			"gowork": {Name: "gowork name", Help: "工作区", Hand: func(m *ice.Message, arg ...string) {
+				DreamEach(m, m.Option(mdb.NAME), "", func(name string) {
+					m.Cmd(cli.SYSTEM, cli.GO, "work", "use", path.Join(ice.USR_LOCAL_WORK, name))
+				})
+			}},
 			PUBLISH: {Name: "publish name", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(ice.MSG_TITLE, kit.Keys(m.Option(ice.MSG_USERPOD0), m.Option(ice.MSG_USERPOD), m.CommandKey(), m.ActionKey()))
 				list := []string{cli.LINUX, cli.DARWIN, cli.WINDOWS}

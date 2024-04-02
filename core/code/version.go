@@ -29,10 +29,12 @@ func init() {
 			}},
 			"sync": {Help: "同步", Hand: func(m *ice.Message, arg ...string) {
 				repos := map[string]string{}
+				m.Cmds("web.code.git.repos").Table(func(value ice.Maps) { repos[strings.Split(value[web.ORIGIN], "://")[1]] = value[nfs.VERSION] })
 				m.Cmd("web.code.mod", mdb.RENDER, MOD, ice.GO_MOD, nfs.PWD).Table(func(value ice.Maps) { repos[value[REQUIRE]] = value[VERSION] })
 				res := m.Cmdx(nfs.CAT, path.Join(nfs.USR_LOCAL_WORK, m.Option(SPACE), ice.GO_MOD), func(ls []string, text string) string {
-					if len(ls) == 2 {
+					if len(ls) > 1 {
 						if v, ok := repos[ls[0]]; ok {
+							m.Debug("what %v %v => %v", ls[0], ls[1], repos[ls[0]])
 							text = lex.TB + ls[0] + lex.SP + v
 						}
 					}
@@ -41,15 +43,22 @@ func init() {
 				m.Cmd(nfs.SAVE, path.Join(nfs.USR_LOCAL_WORK, m.Option(SPACE), ice.GO_MOD), res)
 				m.Cmd(SPACE, m.Option(SPACE), cli.SYSTEM, GO, MOD, "tidy")
 			}},
-			"add": {Name: "add version", Hand: func(m *ice.Message, arg ...string) {
+			"tag": {Name: "tag version", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(SPACE, m.Option(SPACE), cli.SYSTEM, GIT, TAG, m.Option(VERSION))
 				m.Cmd(SPACE, m.Option(SPACE), VIMER, COMPILE)
 				m.Sleep3s()
+			}},
+			"xterm": {Hand: func(m *ice.Message, arg ...string) {
+				web.ProcessPodCmd(m, m.Option(web.SPACE), m.ActionKey(), cli.SH, arg...)
+			}},
+			"status": {Hand: func(m *ice.Message, arg ...string) {
+				web.ProcessPodCmd(m, m.Option(web.SPACE), m.ActionKey(), nil, arg...)
 			}},
 		}), Hand: func(m *ice.Message, arg ...string) {
 			repos := map[string]string{}
 			list := map[string]map[string]string{}
 			list[ice.Info.Pathname] = map[string]string{}
+			m.Cmds("web.code.git.repos").Table(func(value ice.Maps) { repos[strings.Split(value[web.ORIGIN], "://")[1]] = value[nfs.VERSION] })
 			m.Cmd("web.code.mod", mdb.RENDER, MOD, ice.GO_MOD, nfs.PWD).Table(func(value ice.Maps) {
 				list[ice.Info.Pathname][value[REQUIRE]] = value[VERSION]
 				if value[REPLACE] == nfs.PWD {
@@ -74,24 +83,46 @@ func init() {
 			for space, v := range list {
 				diff := false
 				m.Push(web.SPACE, space)
-				m.Push(MODULE, list[space][MODULE])
-				m.Push(VERSION, list[space][VERSION])
+				m.Push(MODULE, v[MODULE])
+				m.Push(VERSION, v[VERSION])
 				kit.For(repos, func(k, _v string) {
-					m.Push(k, v[k])
-					kit.If(v[k] != "" && v[k] != _v, func() { diff = true })
-				})
-				m.Push("diff", list[space]["diff"])
-				if diff {
-					m.Push(mdb.STATUS, html.DANGER).PushButton("sync", "add")
-				} else {
-					if strings.Contains(list[space][VERSION], "-") {
-						m.Push(mdb.STATUS, "").PushButton("add")
-					} else {
-						m.Push(mdb.STATUS, "").PushButton("")
+					if kit.IsIn(k,
+						"shylinux.com/x/go-qrcode",
+						"shylinux.com/x/websocket",
+					) {
+						return
 					}
+					if k == v[MODULE] || v[k] == "" {
+						m.Push(k, "")
+					} else if v[k] == _v {
+						m.Push(k, v[k])
+					} else {
+						m.Push(k, v[k]+" => "+_v)
+						diff = true
+					}
+				})
+				button, status := []ice.Any{}, ""
+				if diff {
+					button, status = append(button, "sync"), html.DANGER
+				}
+				if list[space]["diff"] != "" {
+					button = append(button, "status")
+				}
+				if strings.Contains(list[space][VERSION], "-") {
+					button = append(button, "tag")
+				}
+				if len(button) > 0 {
+					button = append(button, "xterm")
+				}
+				m.Push("diff", list[space]["diff"]).Push(mdb.STATUS, status).PushButton(button...)
+			}
+			fields := []string{}
+			for _, k := range m.Appendv(ice.MSG_APPEND) {
+				if len(kit.TrimArg(m.Appendv(k)...)) > 0 {
+					fields = append(fields, k)
 				}
 			}
-			m.Sort(web.SPACE, ice.STR_R)
+			m.Cut(fields...).Sort(web.SPACE, ice.STR_R)
 		}},
 	})
 

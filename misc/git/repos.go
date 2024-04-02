@@ -613,6 +613,10 @@ func init() {
 				}
 			}},
 			TAG: {Name: "tag version", Hand: func(m *ice.Message, arg ...string) {
+				m.Option(cli.CMD_DIR, _repos_path(m, m.Option(nfs.REPOS)))
+				_git_cmd(m, "tag", m.Option(VERSION))
+				_repos_insert(m.Spawn(), m.Option(cli.CMD_DIR))
+				return
 				repos := _repos_open(m, m.Option(REPOS))
 				if refer, err := repos.Head(); !m.Warn(err) {
 					kit.If(m.Option(VERSION) == "", func() { m.Option(VERSION, _repos_tag(m, m.Option(TAGS))) })

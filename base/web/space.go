@@ -378,7 +378,7 @@ func init() {
 				})
 				m.Sort("", kit.Simple(aaa.LOGIN, WEIXIN, PORTAL, WORKER, SERVER, ORIGIN))
 			} else {
-				if arg[0] == "" {
+				if kit.IsIn(arg[0], "", ice.CONTEXTS) {
 					m.Cmdy(arg[1:])
 					return
 				}

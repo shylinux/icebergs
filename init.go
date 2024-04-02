@@ -26,6 +26,7 @@ func (s *Frame) Begin(m *Message, arg ...string) {
 func (s *Frame) Start(m *Message, arg ...string) {
 	m.Cmd(INIT, arg)
 	kit.For([]string{LOG, GDB, SSH}, func(k string) { m.Sleep30ms().Start(k) })
+	Info.Important = true
 	m.Sleep30ms().Cmd(arg)
 }
 func (s *Frame) Close(m *Message, arg ...string) {

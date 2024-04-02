@@ -81,7 +81,6 @@ type relay struct {
 
 func (s relay) Init(m *ice.Message, arg ...string) {
 	s.Hash.Init(m, arg...)
-	return
 	xterm.AddCommand(RELAY, func(m *icebergs.Message, arg ...string) (xterm.XTerm, error) {
 		m.Cmd("ssh.connect", tcp.DIAL, mdb.NAME, m.Option(mdb.NAME, arg[1]), arg)
 		return ssh.NewSession(m, arg[1])
@@ -335,13 +334,13 @@ func (s relay) iframe(m *ice.Message, cmd string, arg ...string) {
 	}
 }
 func (s relay) shell(m *ice.Message, init string, arg ...string) {
-	m.ProcessXterm(kit.Keys(m.Option(MACHINE), m.ActionKey()), []string{kit.JoinWord(kit.Simple(
-		strings.TrimPrefix(os.Args[0], kit.Path("")+nfs.PS), "ssh.connect", tcp.OPEN, ssh.AUTHFILE, "", m.OptionSimple(aaa.USERNAME, tcp.HOST, tcp.PORT),
-	)...), mdb.TEXT, strings.ReplaceAll(init, lex.NL, "; ")}, arg...)
-	return
 	m.ProcessXterm(kit.Keys(m.Option(MACHINE), m.ActionKey()), []string{kit.JoinWord(
 		RELAY, tcp.HOST, m.Option(tcp.HOST), aaa.USERNAME, m.Option(aaa.USERNAME),
 	), mdb.TEXT, strings.ReplaceAll(init, lex.NL, "; ")}, arg...)
+	return
+	m.ProcessXterm(kit.Keys(m.Option(MACHINE), m.ActionKey()), []string{kit.JoinWord(kit.Simple(
+		strings.TrimPrefix(os.Args[0], kit.Path("")+nfs.PS), "ssh.connect", tcp.OPEN, ssh.AUTHFILE, "", m.OptionSimple(aaa.USERNAME, tcp.HOST, tcp.PORT),
+	)...), mdb.TEXT, strings.ReplaceAll(init, lex.NL, "; ")}, arg...)
 }
 func (s relay) foreachScript(m *ice.Message, script string, arg ...string) {
 	m.Option(ice.MSG_TITLE, kit.Keys(m.Option(ice.MSG_USERPOD), m.CommandKey(), m.ActionKey()))
@@ -350,9 +349,7 @@ func (s relay) foreachScript(m *ice.Message, script string, arg ...string) {
 			if msg.Option(cli.GO) == "" {
 				return
 			}
-			m.Debug("what %v", msg.Option(web.DREAM))
 			msg.Option(web.DREAM, path.Base(m.DreamPath(msg.Option(web.DREAM))))
-			m.Debug("what %v", msg.Option(web.DREAM))
 			msg.Option(web.LINK, m.HostPort(msg.Option(tcp.HOST), msg.Option(web.PORTAL)))
 			ssh.PushShell(msg.Message, strings.Split(msg.Template(script), lex.NL), func(res string) {
 				web.PushNoticeGrow(m.Options(ctx.DISPLAY, html.PLUGIN_XTERM, ice.MSG_COUNT, "0", ice.MSG_DEBUG, ice.FALSE, ice.LOG_DISABLE, ice.TRUE).Message, res)

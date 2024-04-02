@@ -146,8 +146,9 @@ const GO = "go"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		GO: {Actions: ice.MergeActions(ice.Actions{
-			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _go_show(m, arg...) }},
-			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _go_show(m, arg...) }},
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { cli.IsRedhat(m, GO, GO); cli.IsAlpine(m, GO, GO) }},
+			mdb.RENDER:   {Hand: func(m *ice.Message, arg ...string) { _go_show(m, arg...) }},
+			mdb.ENGINE:   {Hand: func(m *ice.Message, arg ...string) { _go_show(m, arg...) }},
 			TEMPLATE: {Hand: func(m *ice.Message, arg ...string) {
 				m.Option(mdb.NAME, kit.TrimExt(path.Base(arg[1]), GO))
 				m.Option(mdb.ZONE, path.Base(path.Dir(path.Join(arg[2], arg[1]))))

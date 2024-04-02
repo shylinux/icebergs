@@ -47,6 +47,7 @@ func AddCommand(key string, cb handler) { list[key] = cb }
 
 func Command(m *ice.Message, dir string, cli string, arg ...string) (XTerm, error) {
 	if cb, ok := list[path.Base(cli)]; ok {
+		m.Debug("find shell %s %s", cli, kit.FileLines(cb))
 		return cb(m.Spawn(), arg...)
 	}
 	cmd := exec.Command(cli, arg...)

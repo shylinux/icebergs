@@ -59,69 +59,66 @@ const (
 type relay struct {
 	ice.Hash
 	ice.Code
-	checkbox    string `data:"true"`
-	export      string `data:"true"`
-	short       string `data:"machine"`
-	tools       string `data:"ssh.auth,aaa.cert"`
-	field       string `data:"time,icons,machine,username,host,port,portal,dream,module,version,commitTime,compileTime,bootTime,go,git,package,shell,kernel,arch,vcpu,ncpu,mhz,mem,disk,network,listen,socket,proc,vendor"`
-	create      string `name:"create host* port=22 username machine icons"`
-	stats       string `name:"stats machine" help:"采集" icon:"bi bi-card-list"`
-	publish     string `name:"publish" help:"发布" icon:"bi bi-send-check"`
-	pubkey      string `name:"pubkey" help:"公钥" icon:"bi bi-person-vcard"`
-	forEach     string `name:"forEach machine cmd*:textarea=pwd"`
-	forFlow     string `name:"forFlow machine cmd*:textarea=pwd"`
-	statsTables string `name:"statsTables" event:"stats.tables"`
-	list        string `name:"list machine auto" help:"机器" icon:"relay.png"`
-	install     string `name:"install dream param='forever start' dev portal nodename" help:"安装"`
-	pushbin     string `name:"pushbin dream param='forever start' dev portal nodename" help:"部署" icon:"bi bi-box-arrow-in-up"`
-	pushkey     string `name:"pushkey" help:"授权" icon:"bi bi-person-fill-up"`
-	adminCmd    string `name:"adminCmd cmd" help:"命令" icon:"bi bi-terminal-plus"`
-	proxy       string `name:"proxy" help:"代理"`
-	trash       string `name:"trash" help:"清理"`
+	checkbox string `data:"true"`
+	export   string `data:"true"`
+	short    string `data:"machine"`
+	tools    string `data:"ssh.trans,ssh.auth,aaa.cert"`
+	field    string `data:"time,icons,machine,username,host,port,portal,dream,module,version,commitTime,compileTime,bootTime,go,git,package,shell,kernel,arch,vcpu,ncpu,mhz,mem,disk,network,listen,socket,proc,vendor"`
+	create   string `name:"create host* port=22 username machine icons"`
+	stats    string `name:"stats machine" help:"采集" icon:"bi bi-card-list"`
+	publish  string `name:"publish" help:"发布" icon:"bi bi-send-check"`
+	forEach  string `name:"forEach machine cmd*:textarea=pwd"`
+	forFlow  string `name:"forFlow machine cmd*:textarea=pwd"`
+	list     string `name:"list machine auto" help:"机器" icon:"relay.png"`
+	install  string `name:"install dream param='forever start' dev portal nodename" help:"安装"`
+	pushbin  string `name:"pushbin dream param='forever start' dev portal nodename" help:"部署" icon:"bi bi-box-arrow-in-up"`
+	adminCmd string `name:"adminCmd cmd" help:"命令" icon:"bi bi-terminal-plus"`
+	pushkey  string `name:"pushkey" help:"授权" icon:"bi bi-person-fill-up"`
+	status   string `name:"status" help:"源码"`
+	spide    string `name:"spide" help:"连接"`
 }
 
 func (s relay) Init(m *ice.Message, arg ...string) {
-	s.Hash.Init(m).TransInput(MACHINE, "机器",
-		PACKAGE, "软件包", SHELL, "命令行", KERNEL, "内核", ARCH, "架构", VCPU, "虚拟核", NCPU, "处理器", MHZ, "频率",
-		MEM, "内存", DISK, "磁盘", NETWORK, "流量", LISTEN, "服务", SOCKET, "连接", PROC, "进程",
-		ice.DEV, "上位机", tcp.NODENAME, "节点名",
-	)
-	msg := m.Spawn()
-	m.GoSleep3s(func() { s.Hash.List(msg).Table(func(value ice.Maps) { s.xterm(msg.Spawn(value)) }) })
+	s.Hash.Init(m, arg...)
+	return
+	xterm.AddCommand(RELAY, func(m *icebergs.Message, arg ...string) (xterm.XTerm, error) {
+		m.Cmd("ssh.connect", tcp.DIAL, mdb.NAME, m.Option(mdb.NAME, arg[1]), arg)
+		return ssh.NewSession(m, arg[1])
+	})
 }
 func (s relay) Inputs(m *ice.Message, arg ...string) {
 	switch s.Hash.Inputs(m, arg...); arg[0] {
 	case MACHINE:
 		if m.Option(ctx.ACTION) == mdb.CREATE {
-			m.Message.Copy(m.Cmd(web.SPIDE).CutTo(web.CLIENT_NAME, arg[0]))
+			m.CmdInputs(web.SPIDE, web.CLIENT_NAME, arg[0])
 		}
 	case aaa.USERNAME:
-		m.Message.Copy(m.Cmd(aaa.USER).Cut(aaa.USERNAME).Push(arg[0], aaa.ROOT).Push(arg[0], ice.SHY))
+		m.CmdInputs(aaa.USER, aaa.USERNAME, arg[0]).Push(arg[0], aaa.ROOT).Push(arg[0], ice.SHY)
 	case tcp.HOST:
-		m.Message.Copy(m.Options(ice.MSG_FIELDS, web.CLIENT_HOSTNAME).Cmd(web.SPIDE).CutTo(web.CLIENT_HOSTNAME, arg[0]))
+		m.CmdInputs(web.SPIDE, web.CLIENT_HOSTNAME, arg[0])
 	case tcp.PORT:
 		m.Push(arg[0], tcp.PORT_22, tcp.PORT_9022)
 	case cli.PARAM:
 		m.Push(arg[0], `forever start`)
 	case ice.DEV:
-		s.Hash.List(m).CutTo(web.LINK, arg[0]).Push(arg[0], "http://localhost:9020")
-		m.Push(arg[0], m.Option(ice.MSG_USERHOST))
+		m.Cmdy("").CutTo(web.LINK, arg[0])
+		m.CmdInputs(web.SPIDE, web.CLIENT_ORIGIN, arg[0])
+		m.Push(arg[0], m.UserHost())
 	case web.PORTAL:
 		kit.If(m.Option(tcp.LISTEN), func(p string) { m.Push(arg[0], kit.Split(p)) })
 		m.Push(arg[0], tcp.PORT_443, tcp.PORT_80, tcp.PORT_9020, "9030", "9040", "9050")
+	case tcp.NODENAME:
+		m.Cmdy("").CutTo(MACHINE, arg[0])
 	}
 }
 func (s relay) Create(m *ice.Message, arg ...string) {
-	s.Hash.Create(m, kit.Simple(arg,
-		tcp.PORT, m.OptionDefault(tcp.PORT, tcp.PORT_22),
-		aaa.USERNAME, m.OptionDefault(aaa.USERNAME, m.Option(ice.MSG_USERNAME)),
+	s.Hash.Create(m, kit.Simple(arg, tcp.PORT, m.OptionDefault(tcp.PORT, tcp.PORT_22),
 		tcp.MACHINE, m.OptionDefault(tcp.MACHINE, kit.Split(m.Option(tcp.HOST), nfs.PT)[0]),
 		mdb.ICONS, m.OptionDefault(mdb.ICONS, html.ICONS_SSH),
 	)...)
 }
 func (s relay) Stats(m *ice.Message) {
-	cmds := []string{
-		cli.GO, `go version`, cli.GIT, `git version`,
+	cmds := []string{cli.GO, `go version`, cli.GIT, `git version`,
 		PACKAGE, `if yum -h &>/dev/null; then echo yum; elif apk version &>/dev/null; then echo apk; elif opkg -v &>/dev/null; then echo opkg; elif apt -h &>/dev/null; then echo apt; fi`,
 		SHELL, `echo $SHELL`, KERNEL, `uname -s`, ARCH, `uname -m`,
 		VCPU, `cat /proc/cpuinfo | grep "processor" | sort | uniq | wc -l`,
@@ -164,18 +161,15 @@ func (s relay) Stats(m *ice.Message) {
 func (s relay) Publish(m *ice.Message, arg ...string) {
 	if m.Option(MACHINE) == "" {
 		s.Hash.ForEach(m, "", func(msg *ice.Message) { s.Publish(msg) })
-		m.Cmdy(nfs.DIR, ice.USR_PUBLISH).Set(ctx.ACTION)
+		m.Cmdy(nfs.DIR, ice.USR_PUBLISH).PushAction()
 		return
 	}
-	kit.If(!nfs.Exists(m.Message, path.Join(ice.USR_PUBLISH, RELAY)), func() { s.Compile(m) })
-	os.Symlink(RELAY, ice.USR_PUBLISH+m.Option(MACHINE))
 	m.Cmd(nfs.SAVE, kit.HomePath(".ssh/"+m.Option(MACHINE)+".json"), kit.Formats(kit.Dict(m.OptionSimple("username,host,port")))+ice.NL)
+	kit.If(!m.Exists(path.Join(ice.USR_PUBLISH, RELAY)), func() { s.Compile(m) })
+	os.Symlink(RELAY, ice.USR_PUBLISH+m.Option(MACHINE))
 }
 func (s relay) Compile(m *ice.Message) {
 	m.Cmdy(code.COMPILE, SRC_RELAY_GO, path.Join(ice.USR_PUBLISH, RELAY)).ProcessInner()
-}
-func (s relay) Pubkey(m *ice.Message, arg ...string) {
-	m.EchoScript(m.Cmdx(nfs.CAT, kit.HomePath(ssh.ID_RSA_PUB))).ProcessInner()
 }
 func (s relay) ForEach(m *ice.Message, arg ...string) *ice.Message {
 	s.foreach(m, func(msg *ice.Message, cmd []string) {
@@ -198,15 +192,12 @@ func (s relay) ForFlow(m *ice.Message) {
 		})
 	})
 }
-func (s relay) StatsTables(m *ice.Message, arg ...string) {
-	web.PushStats(m.Message, "", mdb.HashSelects(m.Spawn().Message).Length(), "", "服务器数量")
-}
 func (s relay) List(m *ice.Message, arg ...string) *ice.Message {
 	if s.Hash.List(m, arg...); len(arg) == 0 {
 		if m.Length() == 0 {
 			m.Action(s.Create)
 		} else {
-			m.Action(s.Create, s.Upgrade, s.Version, s.Stats, s.Publish)
+			m.Action(s.Create, s.Upgrade, s.Version, s.Stats)
 		}
 	}
 	stats := map[string]int{}
@@ -223,15 +214,13 @@ func (s relay) List(m *ice.Message, arg ...string) *ice.Message {
 			stats[DISK_TOTAL] += kit.Int(ls[1])
 		}
 		if value[web.PORTAL] == "" {
-			m.Push(web.LINK, "").PushButton(s.Install, s.Pushbin, s.Xterm, s.Remove)
-			return
+			m.Push(web.LINK, "").PushButton(s.Xterm, s.Pushbin, s.Install, s.Remove)
+		} else {
+			m.Push(web.LINK, m.HostPort(value[tcp.HOST], value[web.PORTAL]))
+			m.PushButton(s.Portal, s.Desktop, s.Dream, s.Admin, s.Open, s.Status, s.Vimer, s.Login, s.Pushkey, s.Spide, s.AdminCmd, s.Xterm, s.Pushbin, s.Upgrade, s.Remove)
+			kit.If(len(arg) > 0, func() { m.PushQRCode(cli.QRCODE, m.Append(web.LINK)) })
 		}
-		m.Push(web.LINK, web.HostPort(m.Message, value[tcp.HOST], value[web.PORTAL]))
-		m.PushButton(s.Portal, s.Desktop, s.Dream, s.Admin, s.Vimer, s.Proxy, s.Login, s.AdminCmd, s.Upgrade, s.Pushbin, s.Pushkey, s.Xterm, s.Trash, s.Remove)
-		kit.If(len(arg) > 0, func() { m.PushQRCode(cli.QRCODE, m.Append(web.LINK)) })
 	})
-	_stats := kit.Dict(MEM, kit.FmtSize(stats[MEM_FREE], stats[MEM_TOTAL]), DISK, kit.FmtSize(stats[DISK_USED], stats[DISK_TOTAL]))
-	m.StatusTimeCount(m.Spawn().Options(stats, _stats).OptionSimple(VCPU, MEM, DISK, SOCKET, PROC))
 	m.RewriteAppend(func(value, key string, index int) string {
 		switch key {
 		case MEM:
@@ -245,25 +234,17 @@ func (s relay) List(m *ice.Message, arg ...string) *ice.Message {
 		}
 		return value
 	})
+	_stats := kit.Dict(MEM, kit.FmtSize(stats[MEM_FREE], stats[MEM_TOTAL]), DISK, kit.FmtSize(stats[DISK_USED], stats[DISK_TOTAL]))
+	m.StatusTimeCount(m.Spawn().Options(stats, _stats).OptionSimple(VCPU, MEM, DISK, SOCKET, PROC))
 	return m
 }
 func (s relay) Install(m *ice.Message, arg ...string) {
-	m.Options(web.DOMAIN, m.SpideOrigin(ice.SHY), ice.MSG_USERPOD, m.Option(web.DREAM))
-	m.Options(nfs.SOURCE, kit.Value(kit.UnMarshal(m.AdminCmd(cli.RUNTIME).Result()), "make.remote"))
-	m.Spawn().DreamList().Table(func(value ice.Maps) {
-		kit.If(value[mdb.NAME] == m.Option(web.DREAM), func() { m.Option(nfs.SOURCE, value[nfs.REPOS]) })
-	})
-	s.shell(m, m.PublishScript(nfs.SOURCE)+lex.SP+kit.JoinCmds(ice.DEV, m.Option(ice.DEV), tcp.PORT, m.Option(web.PORTAL), tcp.NODENAME, m.OptionDefault(tcp.NODENAME, m.Option(MACHINE))), arg...)
-	s.Modify(m, kit.Simple(m.OptionSimple(MACHINE, web.DREAM, web.PORTAL))...)
+	m.Options(web.DOMAIN, m.SpideOrigin(ice.DEV), ice.MSG_USERPOD, m.Option(web.DREAM), nfs.SOURCE, m.DreamRepos(m.Option(web.DREAM)))
+	s.Modify(m, m.OptionSimple(MACHINE, web.DREAM, web.PORTAL)...)
+	s.shell(m, m.PublishScript(nfs.SOURCE)+lex.SP+s.param(m), arg...)
 }
 func (s relay) Upgrade(m *ice.Message, arg ...string) { s.foreachScript(m, UPGRADE_SH, arg...) }
 func (s relay) Version(m *ice.Message, arg ...string) { s.foreachScript(m, VERSION_SH, arg...) }
-func (s relay) Pushkey(m *ice.Message, arg ...string) {
-	list := kit.Split(m.AdminCmd(web.SPACE, m.Option(MACHINE), nfs.CAT, kit.Format("/home/%s/.ssh/authorized_keys", m.Option(aaa.USERNAME))).Result(), "\n", "\n")
-	if key := ssh.PublicKey(m.Message); !kit.IsIn(key, list...) {
-		m.AdminCmd(web.SPACE, m.Option(MACHINE), nfs.PUSH, kit.Format("/home/%s/.ssh/authorized_keys", m.Option(aaa.USERNAME)), key)
-	}
-}
 func (s relay) Pushbin(m *ice.Message, arg ...string) {
 	if kit.HasPrefixList(arg, ctx.RUN) {
 		m.ProcessXterm("", nil, arg...)
@@ -290,26 +271,41 @@ func (s relay) Pushbin(m *ice.Message, arg ...string) {
 		m.Cmd(SSH_TRANS, tcp.SEND, nfs.FROM, msg.Append(ssh.KEY), nfs.FILE, nfs.ETC_CERT_KEY)
 	}
 	s.Modify(m, kit.Simple(m.OptionSimple(MACHINE, web.DREAM, web.PORTAL))...)
-	s.shell(m, "export ctx_dev="+m.SpideOrigin(ice.DEV)+"; "+m.Template(PUSHBIN_SH)+lex.SP+kit.JoinCmds(ice.DEV, m.Option(ice.DEV), tcp.PORT, m.Option(web.PORTAL), tcp.NODENAME, m.OptionDefault(tcp.NODENAME, m.Option(MACHINE))), arg...)
-}
-
-func (s relay) AdminCmd(m *ice.Message, arg ...string) {
-	s.shell(m, "cd "+kit.Select(ice.CONTEXTS, m.Option(web.DREAM))+"; "+s.admin(m, m.Option(ice.CMD)), arg...)
+	s.shell(m, "export ctx_dev="+m.SpideOrigin(ice.DEV)+"; "+m.Template(PUSHBIN_SH)+lex.SP+s.param(m), arg...)
 }
 func (s relay) Xterm(m *ice.Message, arg ...string) {
-	// m.ProcessXterm("", kit.JoinWord(m.Option(MACHINE), ice.INIT, kit.Format("%q", "cd "+kit.Select(ice.CONTEXTS, m.Option(web.DREAM)))), arg...)
-	init := kit.Format("%q", "cd "+kit.Select(ice.CONTEXTS, m.Option(web.DREAM)))
-	kit.If(m.Option(web.PORTAL) == "", func() { init = "" })
-	m.ProcessXterm(kit.Keys(m.Option(MACHINE), "xterm"), kit.JoinWord("relay", tcp.HOST, m.Option(tcp.HOST), aaa.USERNAME, m.Option(aaa.USERNAME), ice.INIT, init), arg...)
+	init := ""
+	kit.If(m.Option(web.PORTAL), func() { init = "cd " + path.Base(m.DreamPath(m.Option(web.DREAM))) })
+	s.shell(m, init, arg...)
+}
+func (s relay) AdminCmd(m *ice.Message, arg ...string) {
+	s.shell(m, s.admins(m, m.Option(ice.CMD)), arg...)
+}
+func (s relay) Spide(m *ice.Message, arg ...string) {
+	ssh.CombinedOutput(m.Message, s.admins(m, kit.JoinCmds(web.TOKEN, mdb.CREATE, "--", mdb.TYPE, web.SERVER, mdb.NAME, m.Option(aaa.USERNAME), mdb.TEXT, m.Option(MACHINE))), func(res string) {
+		m.AdminCmd(web.SPIDE, mdb.CREATE, m.Option(web.LINK), m.Option(MACHINE), "", nfs.REPOS, strings.TrimSpace(res))
+		m.AdminCmd(web.SPACE, tcp.DIAL, m.Option(MACHINE))
+	})
+}
+func (s relay) Pushkey(m *ice.Message, arg ...string) {
+	p := kit.Format("/home/%s/.ssh/authorized_keys", m.Option(aaa.USERNAME))
+	kit.If(m.Option(aaa.USERNAME) == aaa.ROOT, func() { p = kit.Format("/root/.ssh/authorized_keys") })
+	list := kit.Split(m.AdminCmdx(web.SPACE, m.Option(MACHINE), nfs.CAT, p), lex.NL, lex.NL)
+	if key := ssh.PublicKey(m.Message); !kit.IsIn(key, list...) {
+		m.AdminCmd(web.SPACE, m.Option(MACHINE), nfs.PUSH, p, key)
+		m.Echo(m.AdminCmdx(web.SPACE, m.Option(MACHINE), nfs.CAT, p)).ProcessInner()
+	} else {
+		m.Echo(strings.Join(list, lex.NL)).ProcessInner()
+	}
 }
 func (s relay) Login(m *ice.Message, arg ...string) {
-	if m.Options(s.Hash.List(m.Spawn(), m.Option(MACHINE)).AppendSimple()); m.Option(ice.BACK) == "" {
+	if m.Options(m.Cmd("", m.Option(MACHINE)).AppendSimple()); m.Option(ice.BACK) == "" {
 		defer m.ToastProcess()()
-		ssh.CombinedOutput(m.Message, s.admins(m, kit.JoinCmds(web.HEADER, mdb.CREATE,
-			"--", mdb.TYPE, "oauth", mdb.NAME, m.CommandKey(), mdb.ICONS, html.ICONS_SSH, mdb.ORDER, "100",
+		ssh.CombinedOutput(m.Message, s.admins(m, kit.JoinCmds(web.HEADER, mdb.CREATE, "--",
+			mdb.TYPE, "oauth", mdb.NAME, m.CommandKey(), mdb.ICONS, html.ICONS_SSH, mdb.ORDER, "100",
 			web.LINK, m.MergePodCmd("", "", ctx.ACTION, m.ActionKey(), MACHINE, m.Option(MACHINE)),
 		)), func(res string) { m.Echo(res) })
-		m.ProcessOpen(kit.MergeURL2(m.Option(mdb.LINK), web.C(web.HEADER)))
+		m.ProcessOpen(m.Option(mdb.LINK))
 	} else if m.Option(ice.MSG_METHOD) == http.MethodGet {
 		m.EchoInfoButton("")
 	} else {
@@ -319,43 +315,9 @@ func (s relay) Login(m *ice.Message, arg ...string) {
 		})
 	}
 }
-func (s relay) cmds(m *ice.Message, cmd string, arg ...ice.Any) {
-	ssh.CombinedOutput(m.Message, kit.Format(cmd, arg...), func(res string) {})
-}
-func (s relay) cmdsPath(m *ice.Message) (string, string) {
-	p := kit.Format("/home/%s/%s", m.Option(aaa.USERNAME), kit.Select(CONTEXTS, m.Option(web.DREAM)))
-	if m.Option(aaa.USERNAME) == aaa.ROOT {
-		p = kit.Format("/%s/%s", m.Option(aaa.USERNAME), kit.Select(CONTEXTS, m.Option(web.DREAM)))
-	}
-	pp := kit.Format("%s/%s", p, web.PROXY_PATH)
-	return p, pp
-}
-func (s relay) cmdsAdmin(m *ice.Message, p string, arg ...string) {
-	s.cmds(m, "%s/%s %s "+kit.JoinWord(arg...), p, ice.BIN_ICE_BIN, web.ADMIN)
-}
-func (s relay) cmdsReload(m *ice.Message, pp string) {
-	s.cmds(m, "sudo %s/sbin/nginx -s reload -p %s", pp, pp)
-}
-func (s relay) cmdsRemove(m *ice.Message, p string) {
-	s.cmds(m, "mv %s /tmp/%s", p, path.Base(p)+"-"+kit.ReplaceAll(m.Time(), " ", "-"))
-}
-func (s relay) Proxy(m *ice.Message, arg ...string) {
-	_, pp := s.cmdsPath(m)
-	s.cmdsReload(m, pp)
-	s.Modify(m, m.Options(web.PORTAL, tcp.PORT_443).OptionSimple(MACHINE, web.PORTAL)...)
-	m.Options(m.Cmd("", m.Option(MACHINE)).AppendSimple()).Cmdy("", s.Login)
-	m.ProcessOpenAndRefresh(kit.MergeURL2(m.Option(mdb.LINK), web.C(web.ADMIN)))
-}
-func (s relay) Trash(m *ice.Message, arg ...string) {
-	p, pp := s.cmdsPath(m)
-	s.cmdsRemove(m, kit.Format("%s/conf/portal/%s", pp, m.Option(MACHINE)))
-	s.cmdsReload(m, pp)
-	s.cmdsAdmin(m, p, ice.QUIT)
-	s.cmdsRemove(m, p)
-	s.Modify(m, MACHINE, m.Option(MACHINE), web.PORTAL, "", web.DREAM, "")
-}
-func (s relay) Repos(m *ice.Message, arg ...string)   { s.iframe(m, web.CODE_GIT_STATUS, arg...) }
 func (s relay) Vimer(m *ice.Message, arg ...string)   { s.iframe(m, "", arg...) }
+func (s relay) Status(m *ice.Message, arg ...string)  { s.iframe(m, "", arg...) }
+func (s relay) Open(m *ice.Message, arg ...string)    { m.ProcessOpen(m.Option(web.LINK)) }
 func (s relay) Admin(m *ice.Message, arg ...string)   { s.iframe(m, "", arg...) }
 func (s relay) Dream(m *ice.Message, arg ...string)   { s.iframe(m, "", arg...) }
 func (s relay) Desktop(m *ice.Message, arg ...string) { s.iframe(m, "", arg...) }
@@ -365,18 +327,23 @@ func init() { ice.Cmd(SSH_RELAY, relay{}) }
 
 func (s relay) iframe(m *ice.Message, cmd string, arg ...string) {
 	p := kit.MergeURL2(m.Option(web.LINK), web.C(kit.Select(m.ActionKey(), cmd)))
-	if strings.HasPrefix(m.Option(ice.MSG_USERWEB), ice.HTTPS) {
-		m.ProcessIframe(m.Option(MACHINE), p, arg...)
-	} else {
+	if m.IsChromeUA() && m.UserWeb().Scheme == ice.HTTP && strings.HasPrefix(p, ice.HTTPS) {
 		m.ProcessOpen(p)
+	} else {
+		m.ProcessIframe(m.Option(MACHINE), p, arg...)
 	}
 }
 func (s relay) shell(m *ice.Message, init string, arg ...string) {
-	m.ProcessXterm(kit.Keys(m.Option(MACHINE), m.ActionKey()), kit.JoinWord(
-		"relay", tcp.HOST, m.Option(tcp.HOST), aaa.USERNAME, m.Option(aaa.USERNAME),
-		ice.INIT, kit.Format("%q", strings.ReplaceAll(init, lex.NL, "; "))), arg...)
+	m.ProcessXterm(kit.Keys(m.Option(MACHINE), m.ActionKey()), []string{kit.JoinWord(kit.Simple(
+		strings.TrimPrefix(os.Args[0], kit.Path("")+nfs.PS), "ssh.connect", tcp.OPEN, ssh.AUTHFILE, "", m.OptionSimple(aaa.USERNAME, tcp.HOST, tcp.PORT),
+	)...), mdb.TEXT, strings.ReplaceAll(init, lex.NL, "; ")}, arg...)
+	return
+	m.ProcessXterm(kit.Keys(m.Option(MACHINE), m.ActionKey()), []string{kit.JoinWord(
+		RELAY, tcp.HOST, m.Option(tcp.HOST), aaa.USERNAME, m.Option(aaa.USERNAME),
+	), mdb.TEXT, strings.ReplaceAll(init, lex.NL, "; ")}, arg...)
 }
 func (s relay) foreachScript(m *ice.Message, script string, arg ...string) {
+	m.Options(web.DREAM, path.Base(m.DreamPath(m.Option(web.DREAM))))
 	m.Option(ice.MSG_TITLE, kit.Keys(m.Option(ice.MSG_USERPOD), m.CommandKey(), m.ActionKey()))
 	if len(arg) == 0 && (m.Option(MACHINE) == "" || strings.Contains(m.Option(MACHINE), ",")) {
 		s.foreach(m, func(msg *ice.Message, cmd []string) {
@@ -405,25 +372,29 @@ func (s relay) foreach(m *ice.Message, cb func(*ice.Message, []string)) {
 	s.Hash.ForEach(m, MACHINE, func(msg *ice.Message) { cb(msg, cmd) })
 }
 func (s relay) admins(m *ice.Message, arg ...string) string {
-	return kit.Select(ice.CONTEXTS, m.Option(web.DREAM)) + nfs.PS + s.admin(m, arg...)
+	return path.Base(m.DreamPath(m.Option(web.DREAM))) + nfs.PS + s.admin(m, arg...)
 }
 func (s relay) admin(m *ice.Message, arg ...string) string {
 	return kit.JoinWord(kit.Simple(ice.BIN_ICE_BIN, web.ADMIN, arg)...)
 }
-func (s relay) xterm(m *ice.Message) {
-	xterm.AddCommand(m.Option(MACHINE), func(msg *icebergs.Message, arg ...string) (x xterm.XTerm, e error) {
-		m.GoWait(func(done func()) {
-			e = ssh.Shell(m.Message, func(_x xterm.XTerm) {
-				defer done()
-				kit.If(len(arg) > 1 && arg[0] == ice.INIT, func() { m.Sleep300ms(); _x.Write([]byte(strings.TrimSpace(arg[1]) + lex.NL)) })
-				x = _x
-			})
-			if e != nil {
-				defer done()
-				x, e = xterm.Command(m.Message, "", m.OptionDefault(SHELL, code.SH))
-				m.GoSleep300ms(func() { x.Write([]byte(kit.Format("ssh-copy-id %s@%s\n", m.Option(aaa.USERNAME), m.Option(tcp.HOST)))) })
-			}
-		})
-		return
-	})
+func (s relay) param(m *ice.Message, arg ...string) string {
+	return kit.JoinCmdArgs(ice.DEV, m.Option(ice.DEV), tcp.PORT, m.Option(web.PORTAL), tcp.NODENAME, m.OptionDefault(tcp.NODENAME, m.Option(MACHINE)), ice.TCP_DOMAIN, m.Option(tcp.HOST))
 }
+
+type Relay struct {
+	relay
+	pushbin string `name:"pushbin dream param='forever start' dev portal nodename" help:"部署" icon:"bi bi-box-arrow-in-up"`
+}
+
+func (s Relay) Cmds(m *ice.Message, host string, cmds string) *ice.Message {
+	return m.Cmd("ssh.connect", tcp.OPEN, ssh.AUTHFILE, "", aaa.USERNAME, aaa.ROOT, tcp.HOST, host, ctx.CMDS, cmds)
+}
+func (s Relay) CmdsWait(m *ice.Message, host string, cmds string, res string) bool {
+	for i := 0; i < 10; i++ {
+		if strings.TrimSpace(s.Cmds(m.Sleep("3s"), host, cmds).Result()) == res {
+			return true
+		}
+	}
+	return false
+}
+func init() { ice.Cmd(SSH_RELAY, Relay{}) }

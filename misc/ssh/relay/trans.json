@@ -1,0 +1,20 @@
+{
+	"input": {
+		"machine": "机器",
+		"package": "软件包",
+		"shell": "命令行",
+		"kernel": "内核",
+		"arch": "架构",
+		"vcpu": "虚拟核",
+		"ncpu": "处理器",
+		"mhz": "频率",
+		"mem": "内存",
+		"disk": "磁盘",
+		"network": "流量",
+		"listen": "服务",
+		"socket": "连接",
+		"proc": "进程",
+		"dev": "主机",
+		"nodename": "节点"
+	}
+}

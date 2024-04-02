@@ -78,7 +78,10 @@ func _ssh_dial(m *ice.Message, cb func(net.Conn), arg ...string) {
 							defer c.Close()
 							s.Stdin, s.Stdout, s.Stderr = c, c, c
 							s.RequestPty(kit.Env(cli.TERM), h, w, ssh.TerminalModes{ssh.ECHO: 1, ssh.TTY_OP_ISPEED: 14400, ssh.TTY_OP_OSPEED: 14400})
-							gdb.SignalNotify(m, 28, func() { w, h, _ := terminal.GetSize(int(os.Stdin.Fd())); s.WindowChange(h, w) })
+							gdb.SignalNotify(m, 28, func() {
+								w, h, _ := terminal.GetSize(int(os.Stdin.Fd()))
+								s.WindowChange(h, w)
+							})
 							defer s.Wait()
 							s.Shell()
 						})
@@ -116,7 +119,7 @@ func _ssh_conn(m *ice.Message, cb func(*ssh.Client), arg ...string) (err error) 
 		}
 		return
 	}))
-	m.Cmd(tcp.CLIENT, tcp.DIAL, mdb.TYPE, SSH, mdb.NAME, m.Option(tcp.HOST), m.OptionSimple(tcp.HOST, tcp.PORT), arg, func(c net.Conn) {
+	m.Cmd(tcp.CLIENT, tcp.DIAL, mdb.TYPE, SSH, mdb.NAME, m.Option(tcp.HOST), m.OptionSimple(tcp.HOST, tcp.PORT, aaa.USERNAME), arg, func(c net.Conn) {
 		conn, chans, reqs, _err := ssh.NewClientConn(c, m.Option(tcp.HOST)+nfs.DF+m.Option(tcp.PORT), &ssh.ClientConfig{
 			User: m.Option(aaa.USERNAME), Auth: methods, BannerCallback: func(message string) error { return nil },
 			HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error { return nil },
@@ -147,7 +150,8 @@ func _ssh_target(m *ice.Message, name string) *ssh.Client {
 
 const SSH = "ssh"
 const (
-	DIRECT = "direct"
+	DIRECT   = "direct"
+	AUTHFILE = "authfile"
 
 	ID_RSA_KEY = ".ssh/id_rsa"
 	ID_RSA_PUB = ".ssh/id_rsa.pub"
@@ -157,15 +161,15 @@ const CONNECT = "connect"
 func init() {
 	psh.Index.MergeCommands(ice.Commands{
 		CONNECT: {Help: "连接", Actions: ice.MergeActions(ice.Actions{
-			tcp.OPEN: {Name: "open authfile username=shy password verfiy host=shylinux.com port=22 private=.ssh/id_rsa cmds", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
-				if m.Option("cmds") == "" {
-					defer nfs.OptionLoad(m, m.Option("authfile")).Echo("exit %s@%s:%s\n", m.Option(aaa.USERNAME), m.Option(tcp.HOST), m.Option(tcp.PORT))
-					_ssh_open(m, arg...)
+			tcp.OPEN: {Name: "open authfile username=shy host=shylinux.com port=22 cmds private=.ssh/id_rsa password verfiy", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
+				if m.Option(ctx.CMDS) == "" {
+					defer nfs.OptionLoad(m, m.Option(AUTHFILE)).Echo("exit %s@%s:%s\n", m.Option(aaa.USERNAME), m.Option(tcp.HOST), m.Option(tcp.PORT))
+					_ssh_open(m.SetResult(), arg...)
 				} else {
 					_ssh_conn(m, func(c *ssh.Client) {
 						s, _ := c.NewSession()
 						defer s.Close()
-						if b, e := s.CombinedOutput(m.Option("cmds")); !m.WarnNotValid(e) {
+						if b, e := s.CombinedOutput(m.Option(ctx.CMDS)); !m.WarnNotValid(e) {
 							m.Echo(string(b))
 						}
 					})
@@ -180,7 +184,9 @@ func init() {
 					}, arg...)
 				}).Sleep3s()
 			}},
-			SESSION: {Help: "会话", Hand: func(m *ice.Message, arg ...string) { _ssh_hold(m, _ssh_target(m, m.Option(mdb.NAME))) }},
+			SESSION: {Help: "会话", Hand: func(m *ice.Message, arg ...string) {
+				_ssh_hold(m, _ssh_target(m, m.Option(mdb.NAME)))
+			}},
 			DIRECT: {Name: "direct cmd=pwd", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(mdb.NAME) == "" {
 					web.GoToastTable(m.Cmds(""), mdb.NAME, func(value ice.Maps) {
@@ -225,7 +231,9 @@ func NewSession(m *ice.Message, arg ...string) (xterm.XTerm, error) {
 			pty, tty, _ := xterm.Open()
 			sess.sess, sess.pty = s, pty
 			s.Stdin, s.Stdout, s.Stderr = tty, tty, tty
-			s.RequestPty(kit.Env(cli.TERM), 24, 80, ssh.TerminalModes{ssh.ECHO: 0, ssh.TTY_OP_ISPEED: 14400, ssh.TTY_OP_OSPEED: 14400})
+			s.RequestPty(kit.Env(cli.TERM), 24, 80, ssh.TerminalModes{
+				ssh.ECHO: 0, ssh.TTY_OP_ISPEED: 14400, ssh.TTY_OP_OSPEED: 14400,
+			})
 		})
 	})
 	return sess, nil
@@ -311,5 +319,5 @@ func PushShell(m *ice.Message, cmds []string, cb func(string)) {
 func RunConnect(arg ...string) string {
 	defer func() { recover() }()
 	kit.If(len(arg) == 0, func() { arg = append(arg, os.Args...) })
-	return ice.Run(kit.Simple("ssh.connect", "open", "authfile", kit.HomePath(".ssh/", path.Base(arg[0])+".json"), arg[1:])...)
+	return ice.Run(kit.Simple("ssh.connect", "open", AUTHFILE, kit.HomePath(".ssh/", path.Base(arg[0])+".json"), arg[1:])...)
 }

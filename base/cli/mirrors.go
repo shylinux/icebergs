@@ -20,6 +20,7 @@ const (
 	ALPINE  = "alpine"
 	BUSYBOX = "busybox"
 	RELEASE = "release"
+	RHEL    = "rhel"
 
 	ETC_OS_RELEASE = "/etc/os-release"
 	ETC_APK_REPOS  = "/etc/apk/repositories"
@@ -112,7 +113,7 @@ func IsAlpine(m *ice.Message, arg ...string) bool {
 	return insert(m, ALPINE, "system apk add", arg...)
 }
 func IsRedhat(m *ice.Message, arg ...string) bool {
-	return insert(m, "rhel", "system yum install -y", arg...)
+	return insert(m, RHEL, "system yum install -y", arg...)
 }
 func IsSystem(m *ice.Message, arg ...string) bool {
 	return IsAlpine(m, arg...) || IsRedhat(m, arg...)

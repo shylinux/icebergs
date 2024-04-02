@@ -4,10 +4,8 @@ import (
 	"io"
 	"os"
 	"path"
-	"strings"
 
 	"shylinux.com/x/ice"
-	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
@@ -22,8 +20,9 @@ const (
 )
 
 type trans struct {
+	relay
 	send string `name:"send from path file"`
-	list string `name:"list machine path auto" help:"文件"`
+	list string `name:"list machine path auto" help:"远程文件"`
 }
 
 func (s trans) Inputs(m *ice.Message, arg ...string) {
@@ -32,13 +31,8 @@ func (s trans) Inputs(m *ice.Message, arg ...string) {
 		m.Cmdy(nfs.DIR, ice.USR_PUBLISH, nfs.PATH, nfs.SIZE, mdb.TIME)
 	}
 }
-func (s trans) Upload(m *ice.Message, arg ...string) {
-	ls := web.Upload(m.Message)
-	m.Options(nfs.FROM, m.Cmd(web.CACHE, ls[0]).Append(nfs.FILE), nfs.FILE, ls[1])
-	s.Send(m)
-}
 func (s trans) Send(m *ice.Message, arg ...string) {
-	defer web.ToastProcess(m.Message)()
+	defer m.ToastProcess()()
 	nfs.Open(m.Message, m.Option(nfs.FROM), func(r io.Reader, info os.FileInfo) {
 		s.open(m, func(fs *ssh.FileSystem) {
 			nfs.Create(m.Message, path.Join(m.Option(nfs.PATH), m.OptionDefault(nfs.FILE, path.Base(m.Option(nfs.FROM)))), func(w io.Writer, p string) {
@@ -56,30 +50,30 @@ func (s trans) Send(m *ice.Message, arg ...string) {
 		})
 	})
 }
+func (s trans) Upload(m *ice.Message, arg ...string) {
+	ls := web.Upload(m.Message)
+	s.Send(m.Options(nfs.FROM, m.Cmd(web.CACHE, ls[0]).Append(nfs.FILE), nfs.FILE, ls[1]))
+}
 func (s trans) List(m *ice.Message, arg ...string) {
 	if len(arg) == 0 {
-		m.OptionFields("time,machine,text,username,host,port")
-		m.Cmdy(SSH_RELAY).Set(ctx.ACTION).Option(ice.MSG_ACTION, "")
+		m.Cmdy(s.relay).Cut("time,machine,username,host,port").PushAction().Action()
 	} else {
-		m.Action(s.Send, s.Upload)
 		s.open(m, func(fs *ssh.FileSystem) {
-			if len(arg) == 1 || strings.HasSuffix(arg[1], nfs.PS) {
-				m.Cmdy(nfs.DIR, arg[1:]).PushAction(s.Trash)
-			} else {
-				m.Cmdy(nfs.CAT, arg[1])
-			}
-		}, arg...)
+			m.Cmdy(nfs.CAT, arg[1:]).PushAction(s.Trash)
+		}, arg...).Action(s.Send, s.Upload)
 	}
 }
 func (s trans) Trash(m *ice.Message, arg ...string) {
-	s.open(m, func(fs *ssh.FileSystem) { fs.Remove(m.Option(nfs.PATH)) })
+	defer m.ToastProcess()()
+	s.open(m, func(fs *ssh.FileSystem) { fs.RemoveAll(m.Option(nfs.PATH)) })
 }
 
 func init() { ice.Cmd(SSH_TRANS, trans{}) }
 
-func (s trans) open(m *ice.Message, cb func(*ssh.FileSystem), arg ...string) {
-	ssh.Open(m.Options(m.Cmd(SSH_RELAY, kit.Select(m.Option(MACHINE), arg, 0)).AppendSimple()).Message, func(fs *ssh.FileSystem) {
+func (s trans) open(m *ice.Message, cb func(*ssh.FileSystem), arg ...string) *ice.Message {
+	ssh.Open(m.Options(m.Cmd(s.relay, kit.Select(m.Option(MACHINE), arg, 0)).AppendSimple()).Message, func(fs *ssh.FileSystem) {
 		defer m.Options(ice.MSG_FILES, fs).Options(ice.MSG_FILES, nil)
 		cb(fs)
 	})
+	return m
 }

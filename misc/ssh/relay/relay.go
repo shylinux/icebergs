@@ -164,7 +164,11 @@ func (s relay) Publish(m *ice.Message, arg ...string) {
 		m.Cmdy(nfs.DIR, ice.USR_PUBLISH).PushAction()
 		return
 	}
-	m.Cmd(nfs.SAVE, kit.HomePath(".ssh/"+m.Option(MACHINE)+".json"), kit.Formats(kit.Dict(m.OptionSimple("username,host,port")))+ice.NL)
+	if m.Option(ice.INIT, ""); m.Option(web.PORTAL) != "" {
+		m.Option(ice.INIT, kit.Format("cd %s", path.Base(m.DreamPath(m.Option(web.DREAM)))))
+	}
+	m.Debug("what %v", m.Option(web.PORTAL))
+	m.Cmd(nfs.SAVE, kit.HomePath(".ssh/"+m.Option(MACHINE)+".json"), kit.Formats(kit.Dict(m.OptionSimple("username,host,port,init")))+ice.NL)
 	kit.If(!m.Exists(path.Join(ice.USR_PUBLISH, RELAY)), func() { s.Compile(m) })
 	os.Symlink(RELAY, ice.USR_PUBLISH+m.Option(MACHINE))
 }

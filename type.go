@@ -342,7 +342,11 @@ func (m *Message) Search(key string, cb Any) *Message {
 		}
 		key = ls[len(ls)-1]
 	} else if ctx, ok := Info.Index[key].(*Context); ok {
-		p = ctx
+		if _, ok := m.target.Commands[key]; ok {
+			p = m.target
+		} else {
+			p = ctx
+		}
 	} else {
 		p = m.target
 	}

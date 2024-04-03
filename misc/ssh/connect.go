@@ -161,7 +161,7 @@ const CONNECT = "connect"
 func init() {
 	psh.Index.MergeCommands(ice.Commands{
 		CONNECT: {Help: "连接", Actions: ice.MergeActions(ice.Actions{
-			tcp.OPEN: {Name: "open authfile username=shy host=shylinux.com port=22 cmds private=.ssh/id_rsa password verfiy", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
+			tcp.OPEN: {Name: "open authfile username=shy host=shylinux.com port=22 cmds init private=.ssh/id_rsa password verfiy", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(ctx.CMDS) == "" {
 					defer nfs.OptionLoad(m, m.Option(AUTHFILE)).Echo("exit %s@%s:%s\n", m.Option(aaa.USERNAME), m.Option(tcp.HOST), m.Option(tcp.PORT))
 					_ssh_open(m.SetResult(), arg...)

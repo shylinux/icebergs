@@ -346,6 +346,8 @@ func init() {
 				kit.If(m.Option(mdb.NAME) == "", func() { m.Sleep("5s").Cmdy(ROUTE, cli.BUILD).ProcessInner() })
 			}},
 			"gowork": {Name: "gowork name", Help: "工作区", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(cli.SYSTEM, cli.GO, "work", "init")
+				m.Cmd(cli.SYSTEM, cli.GO, "work", "use", ".")
 				DreamEach(m, m.Option(mdb.NAME), "", func(name string) {
 					m.Cmd(cli.SYSTEM, cli.GO, "work", "use", path.Join(ice.USR_LOCAL_WORK, name))
 				})

@@ -110,7 +110,7 @@ func init() {
 						return
 					}
 					for i, v := range arg[1:] {
-						kit.Value(cmd.List, kit.Keys(i, "value"), v)
+						kit.Value(cmd.List, kit.Keys(i, mdb.VALUE), v)
 					}
 				})
 			}},

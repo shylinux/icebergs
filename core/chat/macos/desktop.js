@@ -125,6 +125,7 @@ Volcanos(chat.ONIMPORT, {
 	},
 	layout: function(can) { can.page.style(can, can._output, html.HEIGHT, can.ConfHeight(), html.WIDTH, can.ConfWidth())
 		can.ui.dock && can.page.style(can, can.ui.dock._target, html.LEFT, can.base.Min((can.ConfWidth()-(can.ui.dock._target.offsetWidth||502))/2, 0))
+		can.ui.menu && can.ui.menu.onimport.size(can.ui.menu, 25, can.ConfWidth(), false)
 	},
 }, [""])
 Volcanos(chat.ONACTION, {

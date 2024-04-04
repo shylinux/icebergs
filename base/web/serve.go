@@ -30,7 +30,7 @@ func _serve_start(m *ice.Message) {
 		aaa.UserRoot(m, "", m.Option(aaa.USERNAME), m.Option(aaa.USERNICK), m.Option(aaa.LANGUAGE))
 	})
 	kit.If(m.Option(tcp.PORT) == tcp.RANDOM, func() { m.Option(tcp.PORT, m.Cmdx(tcp.PORT, aaa.RIGHT)) })
-	cli.NodeInfo(m, kit.Select(kit.Split(ice.Info.Hostname, nfs.PT)[0], m.Option(tcp.NODENAME)), SERVER)
+	cli.NodeInfo(m, kit.Select(kit.Split(ice.Info.Hostname, nfs.PT)[0], m.Option(tcp.NODENAME)), SERVER, mdb.Config(m, mdb.ICONS))
 	m.Go(func() {
 		m.Cmd(SPIDE, ice.OPS, _serve_address(m)+"/exit", ice.Maps{CLIENT_TIMEOUT: cli.TIME_30ms, ice.LOG_DISABLE: ice.TRUE})
 	}).Sleep(cli.TIME_1s)
@@ -218,7 +218,6 @@ const SERVE = "serve"
 func init() {
 	Index.MergeCommands(ice.Commands{P(ice.EXIT): {Hand: func(m *ice.Message, arg ...string) { m.Cmd(ice.EXIT) }},
 		SERVE: {Name: "serve name auto main host system", Help: "服务器", Actions: ice.MergeActions(ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { cli.NodeInfo(m, ice.Info.Pathname, WORKER) }},
 			ice.MAIN: {Name: "main index", Help: "首页", Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(ctx.INDEX) == "" {
 					mdb.Config(m, ice.MAIN, "")
@@ -262,7 +261,9 @@ func init() {
 					}
 				}
 			}},
-		}, gdb.EventsAction(SERVE_START), mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,status,name,proto,host,port"), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, gdb.EventsAction(SERVE_START), mdb.HashAction(
+			mdb.ICONS, ice.SRC_MAIN_ICO,
+			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,status,name,proto,host,port"), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, arg...).Action().StatusTimeCount(kit.Dict(ice.MAIN, mdb.Config(m, ice.MAIN)))
 		}},
 	})

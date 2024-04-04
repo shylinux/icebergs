@@ -123,6 +123,7 @@ const (
 
 	DETAIL = "detail"
 	FIELDS = "fields"
+	SHORTS = "shorts"
 	PARAMS = "params"
 	OFFEND = "offend"
 	OFFSET = "offset"

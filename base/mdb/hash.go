@@ -233,19 +233,36 @@ func HashShort(m *ice.Message) string {
 	if m.Option(SHORT) != "" {
 		return m.Option(SHORT)
 	}
-	return kit.Select(HASH, Config(m, SHORT), Config(m, SHORT) != UNIQ)
+	short := ""
+	if m.Option(SUBKEY) != "" {
+		if short = Conf(m, m.PrefixKey(), kit.Keys(m.Option(SUBKEY), META, SHORT)); short == "" {
+			short = Config(m, SHORTS)
+		}
+	} else {
+		short = Config(m, SHORT)
+	}
+	return kit.Select(HASH, short, short != UNIQ)
 }
 func HashField(m *ice.Message) string {
 	if m.Option(FIELD) != "" {
 		return m.Option(FIELD)
 	}
-	return kit.Select(HASH_FIELD, Config(m, FIELD))
+	field := ""
+	if m.Option(SUBKEY) != "" {
+		if field = Conf(m, m.PrefixKey(), kit.Keys(m.Option(SUBKEY), META, FIELDS)); field == "" {
+			field = Config(m, FIELDS)
+		}
+	} else {
+		field = Config(m, FIELD)
+	}
+	return kit.Select(HASH_FIELD, field)
 }
 func HashInputs(m *ice.Message, arg ...Any) *ice.Message {
 	return m.Cmdy(INPUTS, m.PrefixKey(), m.Option(SUBKEY), HASH, arg)
 }
 func HashCreate(m *ice.Message, arg ...Any) string {
 	kit.If(len(arg) == 0 || len(kit.Simple(arg...)) == 0, func() { arg = append(arg, m.OptionSimple(strings.Replace(HashField(m), "hash,", "", 1))) })
+	kit.If(m.Option(SUBKEY) == "", func() { kit.If(Config(m, SHORTS), func(p string) { arg = append([]ice.Any{SHORT, p}, arg) }) })
 	return m.Echo(m.Cmdx(append(kit.List(INSERT, m.PrefixKey(), m.Option(SUBKEY), HASH, logs.FileLineMeta(-1)), arg...)...)).Result()
 }
 func HashRemove(m *ice.Message, arg ...Any) *ice.Message {

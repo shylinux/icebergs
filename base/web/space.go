@@ -29,7 +29,7 @@ func _space_qrcode(m *ice.Message, dev string) {
 }
 func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 	origin := m.Cmdv(SPIDE, dev, CLIENT_ORIGIN)
-	u := kit.ParseURL(kit.MergeURL2(strings.Replace(origin, HTTP, "ws", 1), PP(SPACE), mdb.TYPE, ice.Info.NodeType, mdb.NAME, name, mdb.NAME, "", mdb.ICONS, mdb.Config(m, mdb.ICONS),
+	u := kit.ParseURL(kit.MergeURL2(strings.Replace(origin, HTTP, "ws", 1), PP(SPACE), mdb.TYPE, ice.Info.NodeType, mdb.NAME, name, mdb.NAME, "", mdb.ICONS, ice.Info.NodeIcon,
 		mdb.TIME, ice.Info.Make.Time, nfs.MODULE, ice.Info.Make.Module, nfs.VERSION, ice.Info.Make.Versions(), cli.GOOS, runtime.GOOS, cli.GOARCH, runtime.GOARCH, arg))
 	args := kit.SimpleKV("type,name,host,port", u.Scheme, dev, u.Hostname(), kit.Select(kit.Select(tcp.PORT_443, tcp.PORT_80, u.Scheme == "ws"), u.Port()))
 	gdb.Go(m, func() {
@@ -289,6 +289,7 @@ func init() {
 		"c": {Help: "命令", Actions: ApiWhiteAction(), Hand: func(m *ice.Message, arg ...string) { m.Cmdy(CHAT_CMD, arg) }},
 		SPACE: {Name: "space name cmds auto", Help: "空间站", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { aaa.White(m, SPACE, ice.MAIN) }},
+			mdb.ICONS:    {Hand: func(m *ice.Message, arg ...string) { cli.NodeInfo(m, ice.Info.Pathname, WORKER, arg[0]) }},
 			ice.MAIN: {Name: "main index", Help: "首页", Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) > 0 {
 					mdb.Config(m, ice.MAIN, m.Option(ctx.INDEX))
@@ -300,7 +301,7 @@ func init() {
 			ice.INFO: {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
 				m.Push(mdb.TIME, ice.Info.Make.Time)
 				m.Push(mdb.NAME, ice.Info.NodeName)
-				m.Push(mdb.ICONS, kit.Select(mdb.Config(m, mdb.ICONS)))
+				m.Push(mdb.ICONS, ice.Info.NodeIcon)
 				m.Push(nfs.MODULE, ice.Info.Make.Module)
 				m.Push(nfs.VERSION, ice.Info.Make.Versions())
 				m.Push(ORIGIN, m.Option(ice.MSG_USERHOST))

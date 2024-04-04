@@ -338,13 +338,11 @@ func (s relay) iframe(m *ice.Message, cmd string, arg ...string) {
 	}
 }
 func (s relay) shell(m *ice.Message, init string, arg ...string) {
+	m.ProcessXterm(kit.Keys(m.Option(MACHINE), m.ActionKey()), s.CmdArgs(m, init), arg...)
+	return
 	m.ProcessXterm(kit.Keys(m.Option(MACHINE), m.ActionKey()), []string{kit.JoinWord(
 		RELAY, tcp.HOST, m.Option(tcp.HOST), aaa.USERNAME, m.Option(aaa.USERNAME),
 	), mdb.TEXT, strings.ReplaceAll(init, lex.NL, "; ")}, arg...)
-	return
-	m.ProcessXterm(kit.Keys(m.Option(MACHINE), m.ActionKey()), []string{kit.JoinWord(kit.Simple(
-		strings.TrimPrefix(os.Args[0], kit.Path("")+nfs.PS), "ssh.connect", tcp.OPEN, ssh.AUTHFILE, "", m.OptionSimple(aaa.USERNAME, tcp.HOST, tcp.PORT),
-	)...), mdb.TEXT, strings.ReplaceAll(init, lex.NL, "; ")}, arg...)
 }
 func (s relay) foreachScript(m *ice.Message, script string, arg ...string) {
 	m.Option(ice.MSG_TITLE, kit.Keys(m.Option(ice.MSG_USERPOD), m.CommandKey(), m.ActionKey()))
@@ -383,6 +381,12 @@ func (s relay) admin(m *ice.Message, arg ...string) string {
 }
 func (s relay) param(m *ice.Message, arg ...string) string {
 	return kit.JoinCmdArgs(ice.DEV, m.Option(ice.DEV), tcp.PORT, m.Option(web.PORTAL), tcp.NODENAME, m.OptionDefault(tcp.NODENAME, m.Option(MACHINE)), ice.TCP_DOMAIN, m.Option(tcp.HOST))
+}
+func (s relay) CmdArgs(m *ice.Message, init string, arg ...string) string {
+	kit.If(m.Option(web.PORTAL), func() { init = kit.Format("%q", "cd "+path.Base(m.DreamPath(m.Option(web.DREAM)))) })
+	return kit.JoinWord(kit.Simple(strings.TrimPrefix(os.Args[0], kit.Path("")+nfs.PS), "ssh.connect", tcp.OPEN,
+		ssh.AUTHFILE, "", m.OptionSimple(aaa.USERNAME, tcp.HOST, tcp.PORT), ice.INIT, init,
+	)...)
 }
 
 type Relay struct {

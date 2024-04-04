@@ -63,6 +63,7 @@ type info struct {
 	Pathname string
 	NodeName string
 	NodeType string
+	NodeIcon string
 
 	Pwd       string
 	Lang      string

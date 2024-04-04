@@ -17,6 +17,9 @@ const (
 	REMOTE_URL = "remoteURL"
 	INIT       = "init"
 	ADD        = "add"
+	STATUS     = "status"
+	DIFF       = "diff"
+	SYNC       = "sync"
 )
 const REPOS = nfs.REPOS
 

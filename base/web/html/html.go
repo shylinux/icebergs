@@ -68,6 +68,7 @@ const (
 	BLACK  = "black"
 	SILVER = "silver"
 	DANGER = "danger"
+	NOTICE = "notice"
 
 	PROJECT = "project"
 	CONTENT = "content"

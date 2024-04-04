@@ -105,10 +105,7 @@ func init() {
 			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) { _matrix_dream(m, nfs.TRASH); _matrix_dream(m, "") }},
 			cli.START:  {Hand: func(m *ice.Message, arg ...string) { _matrix_dream(m, "") }},
 			cli.STOP:   {Hand: func(m *ice.Message, arg ...string) { _matrix_dream(m, "") }},
-			UPGRADE: {Hand: func(m *ice.Message, arg ...string) {
-				_matrix_cmd(m, "").Sleep3s()
-				m.ProcessRefresh()
-			}},
+			UPGRADE:    {Hand: func(m *ice.Message, arg ...string) { _matrix_cmd(m, "").Sleep3s(); m.ProcessRefresh() }},
 			INSTALL: {Hand: func(m *ice.Message, arg ...string) {
 				if kit.IsIn(m.Cmdv(Space(m, m.Option(DOMAIN)), SPIDE, ice.DEV_IP, CLIENT_HOSTNAME), m.Cmd(tcp.HOST).Appendv(aaa.IP)...) {
 					m.Option(nfs.BINARY, S(m.Option(mdb.NAME)))
@@ -116,15 +113,14 @@ func init() {
 					m.OptionDefault(nfs.BINARY, UserHost(m)+S(m.Option(mdb.NAME)))
 				}
 				_matrix_dream(m, mdb.CREATE, kit.Simple(m.OptionSimple(mdb.ICONS, nfs.REPOS, nfs.BINARY))...)
-				m.Cmd(SPACE, kit.Keys(m.Option(DOMAIN), m.Option(mdb.NAME)), MESSAGE, mdb.CREATE,
-					mdb.TYPE, aaa.TECH, mdb.ICONS, nfs.USR_ICONS_VOLCANOS, TARGET, kit.Keys(nfs.FROM, m.Option(mdb.NAME)))
-				m.Cmd(SPACE, m.Option(mdb.NAME), MESSAGE, mdb.CREATE,
-					mdb.TYPE, aaa.TECH, mdb.ICONS, nfs.USR_ICONS_ICEBERGS, TARGET, kit.Keys(ice.OPS, m.Option(DOMAIN), m.Option(mdb.NAME)))
+				m.Cmd(SPACE, kit.Keys(m.Option(DOMAIN), m.Option(mdb.NAME)), MESSAGE, mdb.CREATE, mdb.TYPE, aaa.TECH, mdb.ICONS, nfs.USR_ICONS_VOLCANOS, TARGET, kit.Keys(nfs.FROM, m.Option(mdb.NAME)))
+				m.Cmd(SPACE, m.Option(mdb.NAME), MESSAGE, mdb.CREATE, mdb.TYPE, aaa.TECH, mdb.ICONS, nfs.USR_ICONS_ICEBERGS, TARGET, kit.Keys(ice.OPS, m.Option(DOMAIN), m.Option(mdb.NAME)))
 				StreamPushRefreshConfirm(m, m.Trans("refresh for new space ", "刷新列表查看新空间 ")+kit.Keys(m.Option(DOMAIN), m.Option(mdb.NAME)))
 			}},
 		}, ctx.ConfAction(
 			mdb.FIELD, "time,domain,status,type,name,text,icons,repos,binary,module,version,access",
 			ctx.TOOLS, kit.Simple(SPIDE, VERSION, STATUS), ONLINE, ice.TRUE,
+			cli.TIMEOUT, "10s",
 		)), Hand: func(m *ice.Message, arg ...string) {
 			if kit.HasPrefixList(arg, ctx.ACTION) {
 				_matrix_action(m, arg[1], arg[2:]...)
@@ -133,7 +129,7 @@ func init() {
 			GoToast(m, func(toast func(name string, count, total int)) []string {
 				field := kit.Split(mdb.Config(m, mdb.FIELD))
 				space := m.CmdMap(SPACE, mdb.NAME)
-				m.Options("space.timeout", cli.TIME_3s, "dream.simple", ice.TRUE)
+				m.Options("space.timeout", mdb.Config(m, cli.TIMEOUT), "dream.simple", ice.TRUE)
 				list, icons, types := _matrix_list(m, "", MYSELF, ice.Maps{
 					mdb.TIME:    ice.Info.Make.Time,
 					mdb.ICONS:   ice.SRC_MAIN_ICO,

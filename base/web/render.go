@@ -188,6 +188,7 @@ const (
 	CODE_VIMER        = "web.code.vimer"
 	CODE_INNER        = "web.code.inner"
 	CODE_XTERM        = "web.code.xterm"
+	CODE_MOD          = "web.code.mod"
 	WIKI_FEEL         = "web.wiki.feel"
 	WIKI_DRAW         = "web.wiki.draw"
 	WIKI_WORD         = "web.wiki.word"

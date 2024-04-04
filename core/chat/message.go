@@ -54,6 +54,9 @@ func init() {
 					MessageInsertPlug(m, web.DREAM, "", "", web.DREAM, m.Option(mdb.NAME))
 				}
 			}},
+			web.OPS_DREAM_CREATE: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd("", mdb.CREATE, mdb.TYPE, aaa.TECH, web.TARGET, kit.Keys(kit.Select("", ice.OPS, m.IsWorker()), m.Option(mdb.NAME)))
+			}},
 			web.DREAM_REMOVE: {Hand: func(m *ice.Message, arg ...string) {
 				MessageInsertPlug(m, web.DREAM, "", "", web.DREAM, m.Option(mdb.NAME))
 			}},

@@ -163,7 +163,7 @@ func (m *Message) _command(arg ...Any) *Message {
 			}
 		}
 	}
-	if count := kit.Int(m.Option(MSG_COUNT, kit.Format(kit.Int(m.Option(MSG_COUNT))+1))); m.Warn(count > 3000, ErrTooDeepCount) {
+	if count := kit.Int(m.Option(MSG_COUNT, kit.Format(kit.Int(m.Option(MSG_COUNT))+1))); m.Warn(count > 300, ErrTooDeepCount) {
 		panic(count)
 	}
 	list := kit.Simple(args...)

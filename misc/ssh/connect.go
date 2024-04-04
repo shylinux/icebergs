@@ -119,7 +119,8 @@ func _ssh_conn(m *ice.Message, cb func(*ssh.Client), arg ...string) (err error) 
 		}
 		return
 	}))
-	m.Cmd(tcp.CLIENT, tcp.DIAL, mdb.TYPE, SSH, mdb.NAME, m.Option(tcp.HOST), m.OptionSimple(tcp.HOST, tcp.PORT, aaa.USERNAME), arg, func(c net.Conn) {
+	m.OptionDefault(tcp.PORT, tcp.PORT_22, aaa.USERNAME, aaa.ROOT)
+	m.Cmd("tcp.client", tcp.DIAL, mdb.TYPE, SSH, mdb.NAME, m.Option(tcp.HOST), m.OptionSimple(tcp.HOST, tcp.PORT, aaa.USERNAME), arg, func(c net.Conn) {
 		conn, chans, reqs, _err := ssh.NewClientConn(c, m.Option(tcp.HOST)+nfs.DF+m.Option(tcp.PORT), &ssh.ClientConfig{
 			User: m.Option(aaa.USERNAME), Auth: methods, BannerCallback: func(message string) error { return nil },
 			HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error { return nil },
@@ -161,7 +162,7 @@ const CONNECT = "connect"
 func init() {
 	psh.Index.MergeCommands(ice.Commands{
 		CONNECT: {Help: "连接", Actions: ice.MergeActions(ice.Actions{
-			tcp.OPEN: {Name: "open authfile username=shy host=shylinux.com port=22 cmds init private=.ssh/id_rsa password verfiy", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
+			tcp.OPEN: {Name: "open authfile username host=shylinux.com port=22 cmds init private=.ssh/id_rsa password verfiy", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(ctx.CMDS) == "" {
 					defer nfs.OptionLoad(m, m.Option(AUTHFILE)).Echo("exit %s@%s:%s\n", m.Option(aaa.USERNAME), m.Option(tcp.HOST), m.Option(tcp.PORT))
 					_ssh_open(m.SetResult(), arg...)

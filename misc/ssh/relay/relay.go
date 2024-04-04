@@ -64,7 +64,7 @@ type relay struct {
 	short    string `data:"machine"`
 	tools    string `data:"ssh.trans,ssh.auth,aaa.cert"`
 	field    string `data:"time,icons,machine,username,host,port,portal,dream,module,version,commitTime,compileTime,bootTime,go,git,package,shell,kernel,arch,vcpu,ncpu,mhz,mem,disk,network,listen,socket,proc,vendor"`
-	create   string `name:"create host* port=22 username machine icons"`
+	create   string `name:"create host* port=22 username=root machine icons"`
 	upgrade  string `name:"upgrade machine"`
 	stats    string `name:"stats machine" help:"采集" icon:"bi bi-card-list"`
 	publish  string `name:"publish" help:"发布" icon:"bi bi-send-check"`
@@ -167,7 +167,6 @@ func (s relay) Publish(m *ice.Message, arg ...string) {
 	if m.Option(ice.INIT, ""); m.Option(web.PORTAL) != "" {
 		m.Option(ice.INIT, kit.Format("cd %s", path.Base(m.DreamPath(m.Option(web.DREAM)))))
 	}
-	m.Debug("what %v", m.Option(web.PORTAL))
 	m.Cmd(nfs.SAVE, kit.HomePath(".ssh/"+m.Option(MACHINE)+".json"), kit.Formats(kit.Dict(m.OptionSimple("username,host,port,init")))+ice.NL)
 	kit.If(!m.Exists(path.Join(ice.USR_PUBLISH, RELAY)), func() { s.Compile(m) })
 	os.Symlink(RELAY, ice.USR_PUBLISH+m.Option(MACHINE))
@@ -339,10 +338,6 @@ func (s relay) iframe(m *ice.Message, cmd string, arg ...string) {
 }
 func (s relay) shell(m *ice.Message, init string, arg ...string) {
 	m.ProcessXterm(kit.Keys(m.Option(MACHINE), m.ActionKey()), s.CmdArgs(m, init), arg...)
-	return
-	m.ProcessXterm(kit.Keys(m.Option(MACHINE), m.ActionKey()), []string{kit.JoinWord(
-		RELAY, tcp.HOST, m.Option(tcp.HOST), aaa.USERNAME, m.Option(aaa.USERNAME),
-	), mdb.TEXT, strings.ReplaceAll(init, lex.NL, "; ")}, arg...)
 }
 func (s relay) foreachScript(m *ice.Message, script string, arg ...string) {
 	m.Option(ice.MSG_TITLE, kit.Keys(m.Option(ice.MSG_USERPOD), m.CommandKey(), m.ActionKey()))
@@ -384,8 +379,9 @@ func (s relay) param(m *ice.Message, arg ...string) string {
 }
 func (s relay) CmdArgs(m *ice.Message, init string, arg ...string) string {
 	kit.If(m.Option(web.PORTAL), func() { init = kit.Format("%q", "cd "+path.Base(m.DreamPath(m.Option(web.DREAM)))) })
-	return kit.JoinWord(kit.Simple(strings.TrimPrefix(os.Args[0], kit.Path("")+nfs.PS), "ssh.connect", tcp.OPEN,
-		ssh.AUTHFILE, "", m.OptionSimple(aaa.USERNAME, tcp.HOST, tcp.PORT), ice.INIT, init,
+	return kit.JoinWord(kit.Simple(
+		strings.TrimPrefix(os.Args[0], kit.Path("")+nfs.PS),
+		"ssh.connect", tcp.OPEN, ssh.AUTHFILE, "", m.OptionSimple(aaa.USERNAME, tcp.HOST, tcp.PORT), ice.INIT, init,
 	)...)
 }
 
@@ -395,7 +391,7 @@ type Relay struct {
 }
 
 func (s Relay) Cmds(m *ice.Message, host string, cmds string) *ice.Message {
-	return m.Cmd("ssh.connect", tcp.OPEN, ssh.AUTHFILE, "", aaa.USERNAME, aaa.ROOT, tcp.HOST, host, ctx.CMDS, cmds)
+	return m.Cmd(cli.SYSTEM, os.Args[0], "ssh.connect", tcp.OPEN, ssh.AUTHFILE, "", aaa.USERNAME, aaa.ROOT, tcp.HOST, host, tcp.PORT, tcp.PORT_22, ctx.CMDS, cmds)
 }
 func (s Relay) CmdsWait(m *ice.Message, host string, cmds string, res string) bool {
 	for i := 0; i < 10; i++ {

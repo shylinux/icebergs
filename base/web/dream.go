@@ -96,9 +96,7 @@ func _dream_list_icon(m *ice.Message) {
 	})
 }
 func _dream_list_more(m *ice.Message, simple bool) *ice.Message {
-	// list := m.CmdMap(SPIDE, CLIENT_NAME)
 	m.Cmds(SPACE).Table(func(value ice.Maps) {
-		// value[mdb.ICONS] = nfs.USR_ICONS_VOLCANOS
 		value[nfs.REPOS] = "https://" + value[nfs.MODULE]
 		value[aaa.ACCESS] = kit.Select("", value[aaa.USERROLE], value[aaa.USERROLE] != aaa.VOID)
 		value[mdb.STATUS] = cli.START
@@ -223,6 +221,9 @@ const (
 
 	DREAM_TABLES = "dream.tables"
 	DREAM_ACTION = "dream.action"
+
+	OPS_DREAM_CREATE = "ops.dream.create"
+	OPS_DREAM_REMOVE = "ops.dream.remove"
 )
 const DREAM = "dream"
 
@@ -307,6 +308,7 @@ func init() {
 				if mdb.HashCreate(m); ice.Info.Important == true {
 					_dream_start(m, m.Option(mdb.NAME))
 					StreamPushRefreshConfirm(m, m.Trans("refresh for new space ", "刷新列表查看新空间 ")+m.Option(mdb.NAME))
+					SpaceEvent(m, OPS_DREAM_CREATE, m.Option(mdb.NAME), m.OptionSimple(mdb.NAME, nfs.REPOS, nfs.BINARY)...)
 				}
 			}},
 			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) {
@@ -534,7 +536,10 @@ func DreamTablesAction(arg ...string) ice.Actions {
 	}
 }
 func DreamAction() ice.Actions {
-	return gdb.EventsAction(DREAM_INPUTS, DREAM_CREATE, DREAM_REMOVE, DREAM_TRASH, DREAM_OPEN, DREAM_CLOSE, SPACE_LOGIN, SERVE_START)
+	return gdb.EventsAction(
+		DREAM_INPUTS, DREAM_CREATE, DREAM_REMOVE, DREAM_TRASH, DREAM_OPEN, DREAM_CLOSE, SPACE_LOGIN, SERVE_START,
+		OPS_DREAM_CREATE, OPS_DREAM_REMOVE,
+	)
 }
 func DreamWhiteHandle(m *ice.Message, arg ...string) {
 	aaa.White(m, kit.Keys(DREAM, ctx.ACTION, m.ShortKey()))

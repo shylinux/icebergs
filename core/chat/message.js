@@ -145,7 +145,7 @@ Volcanos(chat.ONFIGURE, {
 				sub.Conf("_plugin_action", [{view: "item.button.localCreate.icons.state", _init: function(target) {
 					can.page.Append(can, target, [{icon: icon.localCreate, title: "localCreate", onclick: function(event) {
 						can.core.Next(sub._msg.IsDetail()? [sub._msg.TableDetail()]: sub._msg.Table(), function(value, next, index, list) { can.user.toastProcess(can, "create "+index+"/"+list.length, sub.ConfIndex())
-							can.runAction(can.request(event, sub.Option(), value), ctx.RUN, ["", sub.ConfIndex(), mdb.CREATE], function() { next() })
+							can.runAction(can.request({}, sub.Option(), value), ctx.RUN, ["", sub.ConfIndex(), mdb.CREATE], function() { next() })
 						}, function() {
 							can.user.toastSuccess(can, mdb.CREATE)
 							can.onappend._float(can, sub.ConfIndex(), [])

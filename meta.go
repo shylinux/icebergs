@@ -408,6 +408,9 @@ func (m *Message) Append(key string, arg ...Any) string {
 }
 func (m *Message) Appendv(key string, arg ...Any) []string {
 	if m.FieldsIsDetail() {
+		if key == KEY {
+			return m.value(key)
+		}
 		for i, k := range m.value(KEY) {
 			if k == key || k == kit.Keys(EXTRA, key) {
 				kit.If(len(arg) > 0, func() { m.index(VALUE, i, kit.Format(arg[0])) })

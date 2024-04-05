@@ -15,6 +15,7 @@ import (
 )
 
 const (
+	DOMAIN        = "domain"
 	CLIENT_ID     = "client_id"
 	CLIENT_SECRET = "client_secret"
 
@@ -182,4 +183,8 @@ func (s Client) request(m *ice.Message, hash, api string, arg ...string) []strin
 	})
 	kit.If(api == "", func() { api = path.Join(msg.Append(API_PREFIX), m.ActionKey()) })
 	return kit.Simple(kit.MergeURL2(msg.Append(web.DOMAIN), api), arg)
+}
+
+func ClientCreate(m *ice.Message, domain, client_id, client_secret string, arg ...string) {
+	m.AdminCmd("web.chat.oauth.client", mdb.CREATE, DOMAIN, domain, CLIENT_ID, client_id, CLIENT_SECRET, client_secret, arg)
 }

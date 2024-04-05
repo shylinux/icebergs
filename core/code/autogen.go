@@ -131,8 +131,15 @@ func init() {
 				switch arg[0] {
 				case cli.MAIN:
 					m.Cmdy(nfs.DIR, nfs.PWD, nfs.PATH, kit.Dict(nfs.DIR_ROOT, ice.SRC, nfs.DIR_REG, kit.ExtReg(GO)))
-				case mdb.ZONE, mdb.NAME:
+				case mdb.NAME:
 					m.Cmdy(nfs.DIR, nfs.PWD, mdb.NAME, kit.Dict(nfs.DIR_ROOT, ice.SRC, nfs.DIR_TYPE, nfs.DIR))
+				case mdb.ZONE:
+					m.Push(arg[0], path.Dir(m.Option(nfs.FILE)))
+					m.Cmd(nfs.DIR, nfs.PWD, nfs.PATH, kit.Dict(nfs.DIR_ROOT, ice.SRC, nfs.DIR_TYPE, nfs.DIR, nfs.DIR_DEEP, ice.TRUE)).Table(func(value ice.Maps) {
+						if !kit.HasPrefix(value[nfs.PATH], "template/", "document/") {
+							m.Push(arg[0], path.Join(value[nfs.PATH]))
+						}
+					})
 				case mdb.KEY:
 					kit.For([]string{"code", "wiki", "chat", "team", "mall"}, func(p string) {
 						m.Push(arg[0], kit.Keys("web", p, m.Option(mdb.ZONE), m.Option(mdb.NAME)))

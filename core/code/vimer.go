@@ -94,9 +94,10 @@ func init() {
 					if strings.HasSuffix(m.Option(nfs.FILE), nfs.PS) {
 						m.Option(nfs.FILE, path.Join(m.Option(nfs.FILE), path.Base(strings.TrimSuffix(m.Option(nfs.FILE), nfs.PS)+".go")))
 					}
-					kit.For([]string{SH, SHY, PY, JS, CSS, HTML}, func(ext string) {
+					kit.For([]string{JS, CSS, SHY}, func(ext string) {
 						m.Push(nfs.PATH, kit.ExtChange(m.Option(nfs.FILE), ext))
 					})
+					m.Push(nfs.PATH, path.Join(path.Dir(m.Option(nfs.FILE)), "trans.json"))
 					m.Option(nfs.DIR_REG, kit.ExtReg(SH, SHY, PY, JS, CSS, HTML))
 					nfs.DirDeepAll(m, nfs.SRC, nfs.PWD, nil, nfs.PATH)
 				case web.DREAM, XTERM, AUTOGEN:

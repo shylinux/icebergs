@@ -43,7 +43,11 @@ func ProcessField(m *ice.Message, cmd string, args ice.Any, arg ...string) *ice.
 	if m.Push(ARGS, args); m.IsMetaKey() {
 		m.Push(STYLE, html.FLOAT)
 	}
-	m.ProcessField(ACTION, m.ActionKey(), RUN)
+	if m.ActionKey() == "" {
+		m.ProcessField(ACTION, RUN, cmd)
+	} else {
+		m.ProcessField(ACTION, m.ActionKey(), RUN)
+	}
 	return m
 }
 func ProcessFloat(m *ice.Message, cmd string, args ice.Any, arg ...string) *ice.Message {

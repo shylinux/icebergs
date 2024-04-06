@@ -29,8 +29,9 @@ func init() {
 			}},
 			SYNC: {Help: "同步", Hand: func(m *ice.Message, arg ...string) {
 				repos := map[string]string{}
-				m.Cmds(web.CODE_GIT_STATUS).Table(func(value ice.Maps) { repos[strings.Split(value[web.ORIGIN], "://")[1]] = value[nfs.VERSION] })
+				m.Cmds(web.CODE_GIT_REPOS).Table(func(value ice.Maps) { repos[strings.Split(value[web.ORIGIN], "://")[1]] = value[nfs.VERSION] })
 				m.Cmd(web.CODE_MOD, mdb.RENDER, MOD, ice.GO_MOD, nfs.PWD).Table(func(value ice.Maps) { repos[value[REQUIRE]] = value[VERSION] })
+				m.Debug("what %v", kit.Formats(repos))
 				res := m.Cmdx(nfs.CAT, path.Join(nfs.USR_LOCAL_WORK, m.Option(SPACE), ice.GO_MOD), func(ls []string, text string) string {
 					if len(ls) > 1 {
 						if v, ok := repos[ls[0]]; ok && !strings.Contains(v, "-") {

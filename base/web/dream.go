@@ -406,7 +406,7 @@ func init() {
 				gdb.Event(m, DREAM_TRASH, arg)
 				nfs.Trash(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME)))
 			}},
-			"copy": {Name: "copy to*", Hand: func(m *ice.Message, arg ...string) {
+			nfs.COPY: {Name: "copy to*", Help: "复制", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy("", mdb.CREATE, mdb.NAME, m.Option("to"), nfs.BINARY, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME), ice.BIN_ICE_BIN))
 			}},
 			OPEN: {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {

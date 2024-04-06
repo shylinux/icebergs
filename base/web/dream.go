@@ -34,16 +34,10 @@ func _dream_list(m *ice.Message, simple bool) *ice.Message {
 			if m.IsCliUA() || simple {
 				m.Push(mdb.TYPE, space[mdb.TYPE]).Push(cli.STATUS, cli.START)
 				m.Push(nfs.MODULE, space[nfs.MODULE]).Push(nfs.VERSION, space[nfs.VERSION]).Push(mdb.TEXT, DreamStat(m, value[mdb.NAME]))
-				if aaa.IsTechOrRoot(m) {
-					m.PushButton(cli.STOP)
-				} else {
-					m.PushButton()
-				}
+				kit.If(aaa.IsTechOrRoot(m), func() { m.PushButton(cli.STOP) }, func() { m.PushButton() })
 			} else {
 				msg := gdb.Event(m.Spawn(value, space), DREAM_TABLES)
-				if aaa.IsTechOrRoot(m) {
-					msg.Copy(m.Spawn().PushButton(cli.STOP))
-				}
+				kit.If(aaa.IsTechOrRoot(m), func() { msg.Copy(m.Spawn().PushButton(cli.STOP)) })
 				m.Push(mdb.TYPE, space[mdb.TYPE]).Push(cli.STATUS, cli.START)
 				m.Push(nfs.MODULE, space[nfs.MODULE]).Push(nfs.VERSION, space[nfs.VERSION]).Push(mdb.TEXT, msg.Append(mdb.TEXT))
 				m.PushButton(strings.Join(msg.Appendv(ctx.ACTION), ""))
@@ -51,21 +45,11 @@ func _dream_list(m *ice.Message, simple bool) *ice.Message {
 		} else if aaa.IsTechOrRoot(m) {
 			m.Push("", value, kit.Slice(head, 0, -1))
 			if m.Push(mdb.TYPE, WORKER); nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, value[mdb.NAME])) {
-				m.Push(cli.STATUS, cli.STOP)
-				m.Push(nfs.MODULE, "").Push(nfs.VERSION, "").Push(mdb.TEXT, "")
-				if aaa.IsTechOrRoot(m) {
-					m.PushButton(cli.START, nfs.TRASH)
-				} else {
-					m.PushButton()
-				}
+				m.Push(cli.STATUS, cli.STOP).Push(nfs.MODULE, "").Push(nfs.VERSION, "").Push(mdb.TEXT, "")
+				kit.If(aaa.IsTechOrRoot(m), func() { m.PushButton(cli.START, nfs.TRASH) }, func() { m.PushButton() })
 			} else {
-				m.Push(cli.STATUS, cli.BEGIN)
-				m.Push(nfs.MODULE, "").Push(nfs.VERSION, "").Push(mdb.TEXT, "")
-				if aaa.IsTechOrRoot(m) {
-					m.PushButton(cli.START, mdb.REMOVE)
-				} else {
-					m.PushButton()
-				}
+				m.Push(cli.STATUS, cli.BEGIN).Push(nfs.MODULE, "").Push(nfs.VERSION, "").Push(mdb.TEXT, "")
+				kit.If(aaa.IsTechOrRoot(m), func() { m.PushButton(cli.START, mdb.REMOVE) }, func() { m.PushButton() })
 			}
 		}
 	})
@@ -422,6 +406,9 @@ func init() {
 				gdb.Event(m, DREAM_TRASH, arg)
 				nfs.Trash(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME)))
 			}},
+			"copy": {Name: "copy to*", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy("", mdb.CREATE, mdb.NAME, m.Option("to"), nfs.BINARY, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME), ice.BIN_ICE_BIN))
+			}},
 			OPEN: {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(mdb.TYPE) == ORIGIN && m.IsLocalhost() {
 					m.ProcessOpen(SpideOrigin(m, m.Option(mdb.NAME)))
@@ -456,12 +443,13 @@ func init() {
 				kit.If(m.IsDebug(), func() { list = append(list, cli.RUNTIME) })
 				switch m.Option(mdb.TYPE) {
 				case WORKER:
-					list = append(list, "settings", tcp.SEND, OPEN)
+					list = append(list, "settings", "copy", tcp.SEND)
 				case SERVER:
-					list = append(list, DREAM, OPEN)
+					list = append(list, DREAM)
 				default:
-					list = append(list, TOKEN, DREAM, OPEN)
+					list = append(list, TOKEN, DREAM)
 				}
+				list = append(list, OPEN)
 				m.PushButton(list...)
 			}},
 			"settings": {Name: "settings restart=manual,always access=public,private", Help: "设置", Hand: func(m *ice.Message, arg ...string) {

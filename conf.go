@@ -117,6 +117,7 @@ const ( // DIR
 	PLUGIN_LOCAL    = "/plugin/local/"
 	PLUGIN_STORY    = "/plugin/story/"
 	PLUGIN_TABLE_JS = "/plugin/table.js"
+	PKG_MOD         = "/pkd/mod/"
 
 	ISH_PLUGED   = ".ish/pluged/"
 	USR_INSTALL  = "usr/install/"

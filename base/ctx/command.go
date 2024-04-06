@@ -141,11 +141,12 @@ func FileCmd(dir string) string {
 	return ice.Pulse.FileURI(kit.ExtChange(strings.Split(dir, nfs.DF)[0], nfs.GO))
 }
 func AddFileCmd(dir, key string) {
-	ice.Info.File[FileCmd(dir)] = key
 	if ls := strings.SplitN(path.Join(kit.Slice(kit.Split(FileCmd(dir), nfs.PS), 1, 4)...), mdb.AT, 2); len(ls) > 1 {
 		_ls := strings.Split(FileCmd(dir), mdb.AT+ls[1]+nfs.PS)
 		ice.Info.File[path.Join(nfs.REQUIRE_USR, path.Base(_ls[0]), _ls[1])] = key
 		ice.Info.Gomod[ls[0]] = ls[1]
+	} else {
+		ice.Info.File[FileCmd(dir)] = key
 	}
 }
 func GetFileCmd(dir string) string {

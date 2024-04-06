@@ -149,7 +149,9 @@ const (
 	ETC_CERT_PEM        = "etc/cert/cert.pem"
 	SRC_DOCUMENT        = "src/document/"
 	SRC_TEMPLATE        = ice.SRC_TEMPLATE
+	USR_TOOLKITS        = ice.USR_TOOLKITS
 	USR_ICEBERGS        = ice.USR_ICEBERGS
+	USR_RELEASE         = ice.USR_RELEASE
 	USR_PUBLISH         = ice.USR_PUBLISH
 	USR_LOCAL           = ice.USR_LOCAL
 	USR_LOCAL_WORK      = ice.USR_LOCAL_WORK
@@ -165,12 +167,14 @@ const (
 	USR_ICONS_VOLCANOS = "usr/icons/volcanos.png"
 	USR_ICONS          = "usr/icons/"
 
+	INTSHELL        = "/intshell/"
+	VOLCANOS        = "/volcanos/"
+	VOLCANOS_PLUGIN = "/volcanos/plugin/"
 	REQUIRE_MODULES = "/require/modules/"
 	REQUIRE_USR     = "/require/usr/"
 	REQUIRE_SRC     = "/require/src/"
 	REQUIRE         = "/require/"
-	VOLCANOS        = "/volcanos/"
-	INTSHELL        = "/intshell/"
+	PLUGIN          = "/plugin/"
 	SHARE_LOCAL     = "/share/local/"
 	PATHNAME        = "pathname"
 	FILENAME        = "filename"

@@ -269,7 +269,7 @@ func (s relay) Pushbin(m *ice.Message, arg ...string) {
 	dream := m.DreamPath(m.Option(web.DREAM))
 	m.Options(nfs.FROM, path.Join(dream, ice.USR_PUBLISH+bin), nfs.PATH, path.Base(dream), nfs.FILE, ice.BIN_ICE_BIN)
 	if m.Cmd(SSH_TRANS, tcp.SEND); m.OptionDefault(web.PORTAL, tcp.PORT_9020) == tcp.PORT_443 {
-		msg := m.Cmd(ssh.CERT, mdb.CREATE, m.Option(tcp.HOST))
+		msg := m.Cmd("aaa.cert", mdb.CREATE, m.Option(tcp.HOST))
 		m.Cmd(SSH_TRANS, tcp.SEND, nfs.FROM, msg.Append(ssh.PEM), nfs.FILE, nfs.ETC_CERT_PEM)
 		m.Cmd(SSH_TRANS, tcp.SEND, nfs.FROM, msg.Append(ssh.KEY), nfs.FILE, nfs.ETC_CERT_KEY)
 	}

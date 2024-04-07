@@ -10,10 +10,10 @@ Volcanos(chat.ONIMPORT, {
 			{icon: "bi bi-plus-lg", onclick: function(event) { can.Update(event, [ctx.ACTION, mdb.CREATE]) }},
 		]}], can.ui.project.firstChild, can.ui.project)
 		msg.Table(function(value) {
-			var _target = can.page.Append(can, can.ui.project, [{view: html.ITEM, list: [
+			var _target = can.page.Append(can, can.ui.project, [{view: [[html.ITEM, value.type]], list: [
 				{img: can.misc.Resource(can, value.icons||"usr/icons/Messages.png")}, {view: html.CONTAINER, list: [
-					{view: wiki.TITLE, list: [{text: value.title||can.base.trimPrefix(value.zone, "ops.")||"[未命名]"}, {text: [can.base.TimeTrim(value.time), "", mdb.TIME]}]},
-					{view: wiki.CONTENT, list: [{text: value.target||"[未知消息]"}]},
+					{view: wiki.TITLE, list: [{text: can.base.trimPrefix(value.title||value.zone, "ops.")||"[未命名]"}]},
+					{view: wiki.CONTENT, list: [{text: can.base.trimPrefix(value.target, "ops.")||"[未知消息]"}, {text: [can.base.TimeTrim(value.time), "", mdb.TIME]}]},
 				]},
 			], onclick: function(event) { can.isCmdMode() && can.misc.SearchHash(can, value.zone), can.onimport._switch(can, false)
 				can.sup.db.current = value.zone
@@ -38,7 +38,7 @@ Volcanos(chat.ONIMPORT, {
 	_content: function(can, msg) {
 		can.ui.title = can.page.Appends(can, can.ui.content, [{view: wiki.TITLE, list: [
 			{icon: "bi bi-chevron-left", onclick: function() { can.onimport._switch(can, true) }},
-			{text: can.db.zone.title||can.base.trimPrefix(can.db.zone.zone, "ops.")},
+			{text: can.base.trimPrefix(can.db.zone.title||can.db.zone.zone, "ops.")},
 			{icon: "bi bi-three-dots", onclick: function() { can.onmotion.toggle(can, can.ui.profile), can.onimport.layout(can) }},
 		]}])._target
 		can.ui.message = can.page.Append(can, can.ui.content, [{view: html.LIST}])._target, can.onimport._message(can, msg)

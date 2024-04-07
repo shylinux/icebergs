@@ -113,8 +113,10 @@ func init() {
 					m.OptionDefault(nfs.BINARY, UserHost(m)+S(m.Option(mdb.NAME)))
 				}
 				_matrix_dream(m, mdb.CREATE, kit.Simple(m.OptionSimple(mdb.ICONS, nfs.REPOS, nfs.BINARY))...)
-				m.Cmd(SPACE, kit.Keys(m.Option(DOMAIN), m.Option(mdb.NAME)), MESSAGE, mdb.CREATE, mdb.TYPE, aaa.TECH, mdb.ICONS, nfs.USR_ICONS_VOLCANOS, TARGET, kit.Keys(nfs.FROM, m.Option(mdb.NAME)))
-				m.Cmd(SPACE, m.Option(mdb.NAME), MESSAGE, mdb.CREATE, mdb.TYPE, aaa.TECH, mdb.ICONS, nfs.USR_ICONS_ICEBERGS, TARGET, kit.Keys(ice.OPS, m.Option(DOMAIN), m.Option(mdb.NAME)))
+				m.Cmd(SPACE, kit.Keys(m.Option(DOMAIN), m.Option(mdb.NAME)), MESSAGE, mdb.CREATE,
+					mdb.TYPE, ORIGIN, mdb.ICONS, m.Option(mdb.ICONS), TARGET, kit.Keys(nfs.FROM, m.Option(mdb.NAME)))
+				m.Cmd(SPACE, m.Option(mdb.NAME), MESSAGE, mdb.CREATE,
+					mdb.TYPE, SERVER, mdb.ICONS, m.Option(mdb.ICONS), TARGET, kit.Keys(ice.OPS, m.Option(DOMAIN), m.Option(mdb.NAME)))
 				StreamPushRefreshConfirm(m, m.Trans("refresh for new space ", "刷新列表查看新空间 ")+kit.Keys(m.Option(DOMAIN), m.Option(mdb.NAME)))
 			}},
 		}, ctx.ConfAction(

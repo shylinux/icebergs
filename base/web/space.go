@@ -185,6 +185,7 @@ func _space_exec(m *ice.Message, name string, source, target []string, c *websoc
 		}
 		mdb.HashModify(m, mdb.HASH, name, ParseUA(m), m.OptionSimple(mdb.ICONS, mdb.TIME, nfs.MODULE, nfs.VERSION, AGENT, cli.SYSTEM))
 		m.Push(mdb.LINK, m.MergePod(kit.Select("", source, -1)))
+		SpaceEvent(m, OPS_ORIGIN_OPEN, name, kit.Simple(mdb.NAME, name, m.OptionSimple(mdb.ICONS, mdb.TIME, nfs.MODULE, nfs.VERSION, AGENT, cli.SYSTEM))...)
 	default:
 		if m.IsErr() {
 			return
@@ -267,6 +268,9 @@ const (
 	AGENT  = "agent"
 )
 const (
+	OPS_ORIGIN_OPEN = "ops.origin.open"
+	OPS_SERVER_OPEN = "ops.server.open"
+
 	SPACE_LOGIN       = "space.login"
 	SPACE_LOGIN_CLOSE = "space.login.close"
 	SPACE_GRANT       = "space.grant"

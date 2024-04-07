@@ -32,7 +32,7 @@ func init() {
 				if m.OptionDefault(mdb.ZONE, m.Option(web.TARGET)) == "" {
 					m.Option(mdb.ZONE, kit.Hashs(mdb.UNIQ))
 				}
-				mdb.ZoneCreate(m, kit.Simple(arg, web.TARGET, m.Option(web.TARGET), mdb.ZONE, m.Option(mdb.ZONE)))
+				mdb.ZoneCreate(m, kit.Simple(m.OptionSimple(mdb.ICONS), arg, m.OptionSimple(web.TARGET, mdb.ZONE)))
 			}},
 			mdb.INSERT: {Hand: func(m *ice.Message, arg ...string) {
 				mdb.ZoneInsert(m, kit.Simple(arg[0], tcp.DIRECT, tcp.SEND, arg[1:], aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.AVATAR, m.Option(ice.MSG_AVATAR)))
@@ -47,15 +47,13 @@ func init() {
 				m.Cmd("", mdb.INSERT, m.Option(ice.FROM_SPACE), arg, tcp.DIRECT, tcp.RECV)
 				mdb.HashSelectUpdate(m, m.Option(ice.FROM_SPACE), func(value ice.Map) { kit.Value(value, web.TARGET, m.Option(ice.FROM_SPACE)) })
 			}},
-			cli.CLEAR: {Hand: func(m *ice.Message, arg ...string) {}},
-			web.OPEN:  {Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen(m.MergePod(m.Option(web.TARGET))) }},
+			cli.CLEAR:            {Hand: func(m *ice.Message, arg ...string) {}},
+			web.OPEN:             {Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen(m.MergePod(m.Option(web.TARGET))) }},
+			web.OPS_ORIGIN_OPEN:  {Hand: func(m *ice.Message, arg ...string) { messageCreateSpace(m, web.ORIGIN, "") }},
+			web.OPS_SERVER_OPEN:  {Hand: func(m *ice.Message, arg ...string) { messageCreateSpace(m, web.SERVER, "") }},
+			web.OPS_DREAM_CREATE: {Hand: func(m *ice.Message, arg ...string) { messageCreateSpace(m, web.WORKER, "") }},
 			web.DREAM_CREATE: {Hand: func(m *ice.Message, arg ...string) {
-				if !m.IsCliUA() {
-					MessageInsertPlug(m, web.DREAM, "", "", web.DREAM, m.Option(mdb.NAME))
-				}
-			}},
-			web.OPS_DREAM_CREATE: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd("", mdb.CREATE, mdb.TYPE, aaa.TECH, web.TARGET, kit.Keys(kit.Select("", ice.OPS, m.IsWorker()), m.Option(mdb.NAME)))
+				MessageInsertPlug(m, web.DREAM, "", "", web.DREAM, m.Option(mdb.NAME))
 			}},
 			web.DREAM_REMOVE: {Hand: func(m *ice.Message, arg ...string) {
 				MessageInsertPlug(m, web.DREAM, "", "", web.DREAM, m.Option(mdb.NAME))
@@ -113,6 +111,9 @@ func init() {
 			}
 		}},
 	})
+}
+func messageCreateSpace(m *ice.Message, kind, name string) {
+	m.Cmd("", mdb.CREATE, mdb.TYPE, kind, web.TARGET, kit.Keys(kit.Select("", ice.OPS, m.IsWorker()), kit.Select(m.Option(mdb.NAME), name)))
 }
 func MessageCreate(m *ice.Message, zone, icons string) {
 	if _, ok := m.CmdMap(MESSAGE, mdb.ZONE)[zone]; !ok {

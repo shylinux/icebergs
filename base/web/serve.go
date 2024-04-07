@@ -207,11 +207,10 @@ const (
 	BODY   = "body"
 	HOME   = "home"
 
-	OPS_SERVER_OPEN = "ops.server.open"
-	SERVE_START     = "serve.start"
-	PROXY_CONF      = "proxyConf"
-	PROXY_PATH      = "usr/local/daemon/10000/"
-	PROXY_CMDS      = "./sbin/nginx"
+	SERVE_START = "serve.start"
+	PROXY_CONF  = "proxyConf"
+	PROXY_PATH  = "usr/local/daemon/10000/"
+	PROXY_CMDS  = "./sbin/nginx"
 )
 const SERVE = "serve"
 
@@ -225,7 +224,7 @@ func init() {
 					mdb.Config(m, ice.MAIN, C(m.Option(ctx.INDEX)))
 				}
 			}},
-			mdb.ICONS:    {Hand: func(m *ice.Message, arg ...string) {
+			mdb.ICONS: {Hand: func(m *ice.Message, arg ...string) {
 				mdb.Config(m, mdb.ICONS, arg[0])
 			}},
 			tcp.HOST:   {Help: "公网", Hand: func(m *ice.Message, arg ...string) { m.Echo(kit.Formats(PublicIP(m))) }},

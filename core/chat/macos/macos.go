@@ -8,6 +8,7 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
+	"shylinux.com/x/icebergs/base/web/html"
 	"shylinux.com/x/icebergs/core/chat"
 	kit "shylinux.com/x/toolkits"
 )
@@ -75,6 +76,7 @@ func CmdHashAction(arg ...string) ice.Actions {
 			}
 		}},
 		mdb.SELECT: {Hand: func(m *ice.Message, arg ...string) {
+			m.Option(html.FAVICON, m.Cmd(web.SPACE, ice.INFO).Append(mdb.ICONS))
 			disableApp(mdb.HashSelect(m, arg...).Sort(mdb.NAME).Display(m.FileURI(file)))
 		}},
 	}, mdb.HashAction(mdb.SHORT, kit.Select("", arg, 0), mdb.FIELD, kit.Select("time,hash,icon,name,text,space,index,args", arg, 1), kit.Slice(arg, 2)))

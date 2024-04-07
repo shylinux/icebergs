@@ -128,7 +128,7 @@ func init() {
 			kit.If(m.Option(ice.MSG_USERPOD), func(p string) {
 				m.Option(ice.MSG_NODETYPE, m.Cmdx(web.SPACE, p, cli.RUNTIME, ice.MSG_NODETYPE))
 			})
-			m.Option("favicon", "/require/"+m.Cmd(web.SPACE, m.Option(ice.MSG_USERPOD), web.SPACE, ice.INFO).Append(mdb.ICONS))
+			m.Option("favicon", m.Cmd(web.SPACE, m.Option(ice.MSG_USERPOD), web.SPACE, ice.INFO).Append(mdb.ICONS))
 			m.Option(aaa.LANGUAGE, strings.ReplaceAll(strings.ToLower(kit.Select("", kit.Split(kit.GetValid(
 				func() string { return kit.Select("", "zh-cn", strings.Contains(m.Option(ice.MSG_USERUA), "zh_CN")) },
 				func() string { return kit.Select("", kit.Split(m.R.Header.Get(html.AcceptLanguage), ",;"), 0) },

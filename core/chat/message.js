@@ -88,7 +88,8 @@ Volcanos(chat.ONIMPORT, {
 		can.onmotion.toggle(can, can.ui.display, !project)
 		can.onimport.layout(can)
 	},
-	layout: function(can) { can.ui.layout(can.ConfHeight(), can.ConfWidth())
+	layout: function(can) { if (!can.ui.layout) { return }
+		can.ui.layout(can.ConfHeight(), can.ConfWidth())
 		can.ui.title && can.page.style(can, can.ui.message, html.HEIGHT, can.ui.content.offsetHeight-can.ui.title.offsetHeight)
 		can.page.style(can, can._output, html.HEIGHT, can.ConfHeight())
 	},

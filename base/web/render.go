@@ -133,6 +133,7 @@ func RenderMain(m *ice.Message) *ice.Message {
 	if m.IsCliUA() {
 		return m.RenderDownload(path.Join(ice.USR_INTSHELL, ice.INDEX_SH))
 	}
+	m.Options(TITLE, kit.Select("localhost:9020", UserWeb(m).Host, m.Option(ice.MSG_USERPOD)))
 	m.Options(nfs.SCRIPT, ice.SRC_MAIN_JS, nfs.VERSION, RenderVersion(m))
 	m.OptionDefault(mdb.ICONS, "/require/"+ice.Info.NodeIcon)
 	return m.RenderResult(kit.Renders(m.Cmdx(nfs.CAT, ice.SRC_MAIN_HTML), m))

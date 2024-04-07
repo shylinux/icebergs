@@ -7,6 +7,7 @@ import (
 )
 
 const (
+	FAVICON        = "favicon"
 	Mozilla        = "Mozilla"
 	Firefox        = "Firefox"
 	Safari         = "Safari"

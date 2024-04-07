@@ -19,10 +19,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		POD: {Help: "空间", Actions: web.ApiWhiteAction(), Hand: func(m *ice.Message, arg ...string) {
 			if m.IsCliUA() {
-				if len(arg) > 1 {
-					m.Option(ice.MSG_USERPOD, arg[0])
-					m.Cmdy(web.SPACE, arg[0], arg[2], arg[3:])
-				} else if len(arg) == 0 || arg[0] == "" {
+				if len(arg) == 0 || arg[0] == "" {
 					m.Option(ice.MSG_USERROLE, aaa.TECH)
 					m.Cmd(web.SPACE, func(value ice.Maps) {
 						msg := m.Cmd(nfs.DIR, path.Join(ice.USR_LOCAL_WORK, value[mdb.NAME], ice.USR_PUBLISH, kit.Keys(ice.ICE, m.OptionDefault(cli.GOOS, cli.LINUX), m.OptionDefault(cli.GOARCH, cli.AMD64))))
@@ -30,6 +27,9 @@ func init() {
 					})
 					m.Cut("name,size,time")
 					m.RenderResult()
+				} else if len(arg) > 1 {
+					m.Option(ice.MSG_USERPOD, arg[0])
+					m.Cmdy(web.SPACE, arg[0], arg[2], arg[3:])
 				} else if strings.HasPrefix(m.Option(ice.MSG_USERUA), "git/") {
 					m.RenderRedirect(kit.MergeURL2(m.Cmdv(web.SPACE, arg[0], web.CODE_GIT_REPOS, nfs.REMOTE, nfs.REMOTE), "/info/refs", m.OptionSimple("service")))
 				} else if m.Option(cli.GOOS) != "" && m.Option(cli.GOARCH) != "" {
@@ -49,6 +49,7 @@ func init() {
 					if kit.IsIn(arg[2], web.ADMIN) {
 						m.Cmdy(web.SPACE, arg[0], arg[2], arg[3:])
 					} else {
+						m.Options(m.Cmd(web.SPACE, arg[0]).AppendSimple())
 						web.RenderPodCmd(m, arg[0], arg[2], arg[3:])
 					}
 				}

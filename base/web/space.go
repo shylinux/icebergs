@@ -283,7 +283,11 @@ func init() {
 		"c": {Help: "命令", Actions: ApiWhiteAction(), Hand: func(m *ice.Message, arg ...string) { m.Cmdy(CHAT_CMD, arg) }},
 		SPACE: {Name: "space name cmds auto", Help: "空间站", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { aaa.White(m, SPACE, ice.MAIN) }},
-			mdb.ICONS:    {Hand: func(m *ice.Message, arg ...string) { cli.NodeInfo(m, ice.Info.Pathname, WORKER, arg[0]) }},
+			mdb.ICONS: {Hand: func(m *ice.Message, arg ...string) {
+				cli.NodeInfo(m, ice.Info.Pathname, WORKER, arg[0])
+				mdb.Config(m, mdb.ICONS, arg[0])
+				m.Cmd(SERVE, m.ActionKey(), arg)
+			}},
 			ice.MAIN: {Name: "main index", Help: "首页", Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) > 0 {
 					mdb.Config(m, ice.MAIN, m.Option(ctx.INDEX))

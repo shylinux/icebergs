@@ -225,6 +225,9 @@ func init() {
 					mdb.Config(m, ice.MAIN, C(m.Option(ctx.INDEX)))
 				}
 			}},
+			mdb.ICONS:    {Hand: func(m *ice.Message, arg ...string) {
+				mdb.Config(m, mdb.ICONS, arg[0])
+			}},
 			tcp.HOST:   {Help: "公网", Hand: func(m *ice.Message, arg ...string) { m.Echo(kit.Formats(PublicIP(m))) }},
 			cli.SYSTEM: {Help: "系统", Hand: func(m *ice.Message, arg ...string) { cli.Opens(m, "System Settings.app") }},
 			cli.START: {Name: "start dev proto host port=9020 nodename username usernick", Hand: func(m *ice.Message, arg ...string) {

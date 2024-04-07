@@ -59,7 +59,7 @@ func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
 		}
 	}
 	kit.For(env, func(k, v string) { cmd.Env = append(cmd.Env, kit.Format("%s=%s", k, v)) })
-	kit.If(len(cmd.Env) > 0, func() { m.Logs(EXEC, CMD_ENV, kit.Format(cmd.Env)) })
+	kit.If(len(cmd.Env) > 0 && m.IsDebug(), func() { m.Logs(EXEC, CMD_ENV, kit.Format(cmd.Env)) })
 	return cmd
 }
 func _system_out(m *ice.Message, out string) io.Writer {

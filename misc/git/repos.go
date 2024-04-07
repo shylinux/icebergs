@@ -498,6 +498,7 @@ func init() {
 				default:
 					switch arg[0] {
 					case MESSAGE:
+						m.SetAppend()
 						ls := kit.Split(m.Option(nfs.FILE), " /")
 						m.Push(arg[0], kit.Select("", ls, -2))
 						m.Push(arg[0], kit.Join(kit.Slice(ls, -1), nfs.PS))

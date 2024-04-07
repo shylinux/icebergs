@@ -1,4 +1,9 @@
 {
+	"stats": "采集",
+	"spide": "连接",
+	"adminCmd": "命令",
+	"pushbin": "部署",
+	"pushkey": "授权",
 	"input": {
 		"machine": "机器",
 		"package": "软件包",

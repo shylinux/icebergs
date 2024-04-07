@@ -13,7 +13,6 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
-	"shylinux.com/x/icebergs/base/web/html"
 	"shylinux.com/x/icebergs/core/code"
 	kit "shylinux.com/x/toolkits"
 )
@@ -32,7 +31,8 @@ const STATUS = "status"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		STATUS: {Name: "status repos:text auto", Help: "源代码", Icon: "git.png", Role: aaa.VOID, Meta: kit.Dict(
-			ice.CTX_TRANS, kit.Dict(html.INPUT, kit.Dict("actions", "操作", "message", "信息", "remote", "远程库")),
+			ctx.ICONS, kit.Dict("message", "bi bi-info-square"),
+			ctx.TRANS, kit.Dict(ctx.INPUT, kit.Dict("actions", "操作", "message", "信息", "remote", "远程库")),
 		), Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: web.DreamWhiteHandle},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {

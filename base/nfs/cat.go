@@ -75,6 +75,7 @@ const (
 	TARGET = "target"
 	BINARY = "binary"
 	SCRIPT = "script"
+	FORMAT = "format"
 
 	CLONE   = "clone"
 	REPOS   = "repos"

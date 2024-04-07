@@ -25,10 +25,11 @@ import (
 )
 
 const (
-	RELAY        = "relay"
-	SSH_RELAY    = "ssh.relay"
-	SRC_RELAY_GO = "src/relay.go"
-	CONTEXTS     = "contexts/"
+	RELAY          = "relay"
+	SSH_RELAY      = "ssh.relay"
+	SRC_RELAY_GO   = "src/relay.go"
+	SSH_CONNECT    = "ssh.connect"
+	SSH_AUTHORIZED = ".ssh/authorized_keys"
 
 	INSTALL_SH = "install.sh"
 	UPGRADE_SH = "upgrade.sh"
@@ -66,23 +67,21 @@ type relay struct {
 	field    string `data:"time,icons,machine,username,host,port,portal,dream,module,version,commitTime,compileTime,bootTime,go,git,package,shell,kernel,arch,vcpu,ncpu,mhz,mem,disk,network,listen,socket,proc,vendor"`
 	create   string `name:"create host* port=22 username=root machine icons"`
 	upgrade  string `name:"upgrade machine"`
-	stats    string `name:"stats machine" help:"采集" icon:"bi bi-card-list"`
-	publish  string `name:"publish" help:"发布" icon:"bi bi-send-check"`
+	stats    string `name:"stats machine" icon:"bi bi-card-list"`
+	publish  string `name:"publish" icon:"bi bi-send-check"`
 	forEach  string `name:"forEach machine cmd*:textarea=pwd"`
 	forFlow  string `name:"forFlow machine cmd*:textarea=pwd"`
 	list     string `name:"list machine auto" help:"机器" icon:"relay.png"`
-	install  string `name:"install dream portal nodename dev" help:"安装"`
-	pushbin  string `name:"pushbin dream portal nodename dev" help:"部署" icon:"bi bi-box-arrow-in-up"`
-	adminCmd string `name:"adminCmd cmd" help:"命令" icon:"bi bi-terminal-plus"`
-	pushkey  string `name:"pushkey" help:"授权" icon:"bi bi-person-fill-up"`
-	status   string `name:"status" help:"源码"`
-	spide    string `name:"spide" help:"连接"`
+	install  string `name:"install dream portal nodename dev"`
+	pushbin  string `name:"pushbin dream portal nodename dev" icon:"bi bi-box-arrow-in-up"`
+	adminCmd string `name:"adminCmd cmd" icon:"bi bi-terminal-plus"`
+	pushkey  string `name:"pushkey" icon:"bi bi-person-fill-up"`
 }
 
 func (s relay) Init(m *ice.Message, arg ...string) {
 	s.Hash.Init(m, arg...)
 	xterm.AddCommand(RELAY, func(m *icebergs.Message, arg ...string) (xterm.XTerm, error) {
-		m.Cmd("ssh.connect", tcp.DIAL, mdb.NAME, m.Option(mdb.NAME, arg[1]), arg)
+		m.Cmd(SSH_CONNECT, tcp.DIAL, mdb.NAME, m.Option(mdb.NAME, arg[1]), arg)
 		return ssh.NewSession(m, arg[1])
 	})
 }
@@ -269,7 +268,7 @@ func (s relay) Pushbin(m *ice.Message, arg ...string) {
 	dream := m.DreamPath(m.Option(web.DREAM))
 	m.Options(nfs.FROM, path.Join(dream, ice.USR_PUBLISH+bin), nfs.PATH, path.Base(dream), nfs.FILE, ice.BIN_ICE_BIN)
 	if m.Cmd(SSH_TRANS, tcp.SEND); m.OptionDefault(web.PORTAL, tcp.PORT_9020) == tcp.PORT_443 {
-		msg := m.Cmd("aaa.cert", mdb.CREATE, m.Option(tcp.HOST))
+		msg := m.Cmd(aaa.CERT, mdb.CREATE, m.Option(tcp.HOST))
 		m.Cmd(SSH_TRANS, tcp.SEND, nfs.FROM, msg.Append(ssh.PEM), nfs.FILE, nfs.ETC_CERT_PEM)
 		m.Cmd(SSH_TRANS, tcp.SEND, nfs.FROM, msg.Append(ssh.KEY), nfs.FILE, nfs.ETC_CERT_KEY)
 	}
@@ -291,8 +290,8 @@ func (s relay) Spide(m *ice.Message, arg ...string) {
 	})
 }
 func (s relay) Pushkey(m *ice.Message, arg ...string) {
-	p := kit.Format("/home/%s/.ssh/authorized_keys", m.Option(aaa.USERNAME))
-	kit.If(m.Option(aaa.USERNAME) == aaa.ROOT, func() { p = kit.Format("/root/.ssh/authorized_keys") })
+	p := kit.Format("/home/%s/"+SSH_AUTHORIZED, m.Option(aaa.USERNAME))
+	kit.If(m.Option(aaa.USERNAME) == aaa.ROOT, func() { p = kit.Format("/root/" + SSH_AUTHORIZED) })
 	list := kit.Split(m.AdminCmdx(web.SPACE, m.Option(MACHINE), nfs.CAT, p), lex.NL, lex.NL)
 	if key := ssh.PublicKey(m.Message); !kit.IsIn(key, list...) {
 		m.AdminCmd(web.SPACE, m.Option(MACHINE), nfs.PUSH, p, key)
@@ -380,20 +379,20 @@ func (s relay) param(m *ice.Message, arg ...string) string {
 func (s relay) CmdArgs(m *ice.Message, init string, arg ...string) string {
 	kit.If(m.Option(web.PORTAL) != "" && init == "", func() { init = kit.Format("%q", "cd "+path.Base(m.DreamPath(m.Option(web.DREAM)))) })
 	return strings.TrimPrefix(os.Args[0], kit.Path("")+nfs.PS) + " " + kit.JoinCmds(kit.Simple(
-		"ssh.connect", tcp.OPEN, ssh.AUTHFILE, "", m.OptionSimple(aaa.USERNAME, tcp.HOST, tcp.PORT), ice.INIT, init)...)
+		SSH_CONNECT, tcp.OPEN, ssh.AUTHFILE, "", m.OptionSimple(aaa.USERNAME, tcp.HOST, tcp.PORT), ice.INIT, init)...)
 }
 
 type Relay struct {
 	relay
-	pushbin string `name:"pushbin dream param='forever start' dev portal nodename" help:"部署" icon:"bi bi-box-arrow-in-up"`
+	pushbin string `name:"pushbin dream param='forever start' dev portal nodename" icon:"bi bi-box-arrow-in-up"`
 }
 
 func (s Relay) Cmds(m *ice.Message, host string, cmds string) *ice.Message {
-	return m.Cmd(cli.SYSTEM, os.Args[0], "ssh.connect", tcp.OPEN, ssh.AUTHFILE, "", aaa.USERNAME, aaa.ROOT, tcp.HOST, host, tcp.PORT, tcp.PORT_22, ctx.CMDS, cmds)
+	return m.Cmd(cli.SYSTEM, os.Args[0], SSH_CONNECT, tcp.OPEN, ssh.AUTHFILE, "", aaa.USERNAME, aaa.ROOT, tcp.HOST, host, tcp.PORT, tcp.PORT_22, ctx.CMDS, cmds)
 }
 func (s Relay) CmdsWait(m *ice.Message, host string, cmds string, res string) bool {
 	for i := 0; i < 10; i++ {
-		if strings.TrimSpace(s.Cmds(m.Sleep("3s"), host, cmds).Result()) == res {
+		if strings.TrimSpace(s.Cmds(m.Sleep(cli.TIME_3s), host, cmds).Result()) == res {
 			return true
 		}
 	}

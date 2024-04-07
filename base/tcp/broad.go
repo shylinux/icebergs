@@ -45,6 +45,7 @@ const (
 	SEND   = "send"
 	RECV   = "recv"
 	ECHO   = "echo"
+	DONE   = "done"
 	DIRECT = "direct"
 )
 

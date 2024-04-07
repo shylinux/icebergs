@@ -224,7 +224,7 @@ func (m *Message) FormatsMeta(w io.Writer, arg ...string) (res string) {
 		defer func() { res = buf.String() }()
 		w = buf
 	}
-	kit.For(m.value(MSG_OPTION), func(i int, k string) {
+	kit.For(m.value(MSG_OPTION), func(k string, i int) {
 		ls := m.value(k)
 		kit.If(len(ls) == 0 || len(ls) == 1 && ls[0] == "", func() { m.index(MSG_OPTION, i, "") })
 	})

@@ -79,6 +79,8 @@ const (
 	VIEW    = "view"
 	VALUE   = "value"
 	INPUT   = "input"
+	ICON    = "icon"
+	ICONS   = "icons"
 	OUTPUT  = "output"
 	LAYOUT  = "layout"
 	RESIZE  = "resize"

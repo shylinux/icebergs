@@ -224,9 +224,7 @@ func init() {
 					mdb.Config(m, ice.MAIN, C(m.Option(ctx.INDEX)))
 				}
 			}},
-			mdb.ICONS: {Hand: func(m *ice.Message, arg ...string) {
-				mdb.Config(m, mdb.ICONS, arg[0])
-			}},
+			mdb.ICONS:  {Hand: func(m *ice.Message, arg ...string) { mdb.Config(m, mdb.ICONS, arg[0]) }},
 			tcp.HOST:   {Help: "公网", Hand: func(m *ice.Message, arg ...string) { m.Echo(kit.Formats(PublicIP(m))) }},
 			cli.SYSTEM: {Help: "系统", Hand: func(m *ice.Message, arg ...string) { cli.Opens(m, "System Settings.app") }},
 			cli.START: {Name: "start dev proto host port=9020 nodename username usernick", Hand: func(m *ice.Message, arg ...string) {
@@ -264,7 +262,6 @@ func init() {
 				}
 			}},
 		}, gdb.EventsAction(SERVE_START), mdb.HashAction(
-			mdb.ICONS, ice.SRC_MAIN_ICO,
 			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,status,name,proto,host,port"), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, arg...).Action().StatusTimeCount(kit.Dict(ice.MAIN, mdb.Config(m, ice.MAIN)))
 		}},

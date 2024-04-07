@@ -49,7 +49,7 @@ func _publish_contexts(m *ice.Message, arg ...string) {
 	m.OptionDefault(cli.CTX_CLI, "temp=$(mktemp); if curl -h &>/dev/null; then curl -o $temp -fsSL $ctx_dev; else wget -O $temp -q $ctx_dev; fi; source $temp")
 	m.OptionDefault(cli.CTX_ARG, kit.JoinCmdArgs(aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.LANGUAGE, m.Option(ice.MSG_LANGUAGE)))
 	m.Option(web.DOMAIN, strings.Split(m.Option(web.DOMAIN), "?")[0])
-	msg := web.AdminCmd(m, web.SPACE, "info")
+	msg := web.AdminCmd(m, web.SPACE, ice.INFO)
 	for _, k := range kit.Default(arg, ice.APP) {
 		env := []string{}
 		switch k {
@@ -64,18 +64,18 @@ func _publish_contexts(m *ice.Message, arg ...string) {
 			env = append(env, cli.CTX_REPOS, m.Option(nfs.SOURCE))
 			fallthrough
 		case nfs.BINARY, ice.APP:
-			if host := msg.Append("hostport"); m.Option(web.DOMAIN) != host {
+			if host := msg.Append(web.ORIGIN); m.Option(web.DOMAIN) != host {
 				env = append(env, cli.CTX_DEV_IP, strings.Split(host, "?")[0])
 			}
 			if m.Option(ice.MSG_USERPOD) != "" {
 				env = append(env, cli.CTX_POD, m.Option(ice.MSG_USERPOD))
-			} else if name := msg.Append("pathname"); !kit.IsIn(name, path.Base(m.Option(nfs.SOURCE)), ice.CONTEXTS) {
-				env = append(env, "ctx_name", name)
+			} else if name := msg.Append(nfs.PATHNAME); !kit.IsIn(name, path.Base(m.Option(nfs.SOURCE)), ice.CONTEXTS) {
+				env = append(env, cli.CTX_NAME, name)
 			}
 		case cli.CURL, cli.WGET:
 		}
 		kit.If(len(env) > 0, func() { m.Options(cli.CTX_ENV, lex.SP+kit.JoinKV(mdb.EQ, lex.SP, env...)) })
-		if template := strings.TrimSpace(nfs.Template(m, kit.Keys(k, SH))); m.Option("format") == "raw" {
+		if template := strings.TrimSpace(nfs.Template(m, kit.Keys(k, SH))); m.Option(nfs.FORMAT) == "raw" {
 			m.Echo(template)
 		} else {
 			m.EchoScript(template)

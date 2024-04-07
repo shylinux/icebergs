@@ -9,6 +9,7 @@ import (
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/web/html"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -60,6 +61,7 @@ const (
 	ICONS = ice.CTX_ICONS
 	TRANS = ice.CTX_TRANS
 	TITLE = ice.CTX_TITLE
+	INPUT = html.INPUT
 )
 const COMMAND = "command"
 

@@ -83,6 +83,7 @@ func _space_fork(m *ice.Message) {
 	}
 	args := kit.Simple(mdb.TYPE, m.Option(mdb.TYPE), mdb.NAME, name, mdb.TEXT, text, m.OptionSimple(mdb.ICONS, mdb.TIME, nfs.MODULE, nfs.VERSION, cli.DAEMON))
 	args = append(args, aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERROLE, m.Option(ice.MSG_USERROLE))
+	args = append(args, cli.SYSTEM, m.Option(cli.GOOS))
 	args = append(args, ParseUA(m)...)
 	if c, e := websocket.Upgrade(m.W, m.R); !m.WarnNotValid(e) {
 		gdb.Go(m, func() {
@@ -100,13 +101,14 @@ func _space_fork(m *ice.Message) {
 			case WORKER:
 				defer gdb.EventDeferEvent(m, DREAM_OPEN, args)(DREAM_CLOSE, args)
 				safe = true
+				m.Go(func() {
+					SpacePwd(m, name, kit.Path(""))
+					SpaceEvent(m, OPS_SERVER_OPEN, name, args...)
+				})
 			case SERVER:
 				defer gdb.EventDeferEvent(m, SPACE_OPEN, args)(SPACE_CLOSE, args)
 				m.Go(func() {
-					m.Cmd(SPACE, name, cli.PWD, name, kit.Dict(
-						mdb.ICONS, ice.Info.NodeIcon, mdb.TIME, ice.Info.Make.Time, nfs.MODULE, ice.Info.Make.Module, nfs.VERSION, ice.Info.Make.Versions(),
-						AGENT, "Go-http-client", cli.SYSTEM, runtime.GOOS,
-					))
+					SpacePwd(m, name, "")
 					SpaceEvent(m, OPS_SERVER_OPEN, name, args...)
 				})
 			}
@@ -130,7 +132,7 @@ func _space_handle(m *ice.Message, safe bool, name string, c *websocket.Conn) {
 			kit.If(msg.Option(ice.MSG_USERROLE), func() { msg.Option(ice.MSG_USERROLE, aaa.VOID) })
 		}
 		source, target := kit.Simple(msg.Optionv(ice.MSG_SOURCE), name), kit.Simple(msg.Optionv(ice.MSG_TARGET))
-		msg.Log(tcp.RECV, "%v->%v %v %v", source, target, msg.Detailv(), msg.FormatMeta())
+		msg.Log(kit.Select(tcp.RECV, tcp.ECHO, msg.Option(ice.MSG_HANDLE) == ice.TRUE), "%v->%v %v %v", source, target, msg.Detailv(), msg.FormatMeta())
 		if next := msg.Option(ice.MSG_TARGET); next == "" || len(target) == 0 {
 			msg.Go(func() {
 				if k := kit.Keys(msg.Option(ice.MSG_USERPOD), "_token"); msg.Option(k) != "" {
@@ -175,23 +177,27 @@ func _space_domain(m *ice.Message) (link string) {
 	)
 }
 func _space_exec(m *ice.Message, name string, source, target []string, c *websocket.Conn) {
+	m.Option(ice.MSG_HANDLE, ice.TRUE)
 	switch kit.Select("", m.Detailv(), 0) {
 	case "":
 		m.Warn(true, ice.ErrNotValid)
 		return
 	case cli.PWD:
-		if m.Option(mdb.ICONS) != "" && !kit.HasPrefix(m.Option(mdb.ICONS), nfs.PS, HTTP) {
-			m.Option(mdb.ICONS, kit.MergeURL2(SpideOrigin(m, name), "/require/"+m.Option(mdb.ICONS)))
-		}
-		mdb.HashModify(m, mdb.HASH, name, ParseUA(m), m.OptionSimple(mdb.ICONS, mdb.TIME, nfs.MODULE, nfs.VERSION, AGENT, cli.SYSTEM))
 		m.Push(mdb.LINK, m.MergePod(kit.Select("", source, -1)))
-		SpaceEvent(m, OPS_ORIGIN_OPEN, name, kit.Simple(mdb.NAME, name, m.OptionSimple(mdb.ICONS, mdb.TIME, nfs.MODULE, nfs.VERSION, AGENT, cli.SYSTEM))...)
+		if m.Option(cli.SYSTEM) == "" {
+			m.Optionv(ice.MSG_OPTION, []string{})
+			break
+		}
+		m.Option(mdb.ICONS, m.Resource(m.Option(mdb.ICONS), SpideOrigin(m, name)))
+		args := m.OptionSimple(mdb.ICONS, mdb.TIME, nfs.MODULE, nfs.VERSION, AGENT, cli.SYSTEM)
+		kit.If(name == ice.OPS, func() { args = append(args, m.OptionSimple(mdb.TEXT)...) })
+		mdb.HashModify(m, mdb.HASH, name, ParseUA(m), args)
+		SpaceEvent(m, OPS_ORIGIN_OPEN, name, kit.Simple(mdb.NAME, name, args)...)
 	default:
 		if m.IsErr() {
 			return
 		}
-		m.OptionDefault(ice.MSG_COUNT, "0")
-		m.Option(ice.MSG_ARGS, "")
+		m.Options(ice.MSG_ARGS, "", ice.MSG_COUNT, "0")
 		kit.If(m.Option(ice.MSG_DAEMON), func(p string) {
 			m.Option(ice.MSG_DAEMON0, m.Option(ice.MSG_DAEMON))
 			m.Option(ice.MSG_DAEMON, kit.Keys(kit.Slice(kit.Reverse(kit.Simple(source)), 0, -1), p))
@@ -200,19 +206,18 @@ func _space_exec(m *ice.Message, name string, source, target []string, c *websoc
 		kit.If(aaa.Right(m, m.Detailv()), func() { m.TryCatch(true, func(_ *ice.Message) { m = m.Cmd() }) })
 		kit.If(m.Optionv(ice.MSG_ARGS) != nil, func() { m.Options(ice.MSG_ARGS, kit.Simple(m.Optionv(ice.MSG_ARGS))) })
 	}
-	m.Option(ice.MSG_HANDLE, ice.TRUE)
+	defer m.Cost(kit.Format("%v->%v %v %v", source, target, m.Detailv(), m.FormatSize()))
 	if m.Option(ice.SPACE_NOECHO) == ice.TRUE {
 		return
 	}
-	defer m.Cost(kit.Format("%v->%v %v %v", source, target, m.Detailv(), m.FormatSize()))
 	m.Options(ice.MSG_USERWEB, m.Optionv(ice.MSG_USERWEB), ice.MSG_USERPOD, m.Optionv(ice.MSG_USERPOD))
 	_space_echo(m.Set(ice.MSG_OPTS).Options(m.OptionSimple(ice.MSG_HANDLE, ice.LOG_DEBUG, ice.LOG_DISABLE, ice.LOG_TRACEID)), []string{}, kit.Reverse(kit.Simple(source)), c)
 }
 func _space_echo(m *ice.Message, source, target []string, c *websocket.Conn) {
 	defer func() { m.WarnNotValid(recover()) }()
-	if m.Options(ice.MSG_SOURCE, source, ice.MSG_TARGET, target[1:]); !m.WarnNotValid(c.WriteMessage(1, []byte(m.FormatMeta()))) {
+	if m.Options(ice.MSG_SOURCE, source, ice.MSG_TARGET, target[1:]); !m.WarnNotValid(c.WriteMessage(1, []byte(m.FormatsMeta(nil)))) {
 		if source != nil {
-			m.Log(kit.Select(tcp.SEND, tcp.ECHO, m.Option(ice.MSG_HANDLE) == ice.TRUE), "%v->%v %v %v", source, target, kit.ReplaceAll(kit.Format("%v", m.Detailv()), "\r\n", "\\r\\n", "\t", "\\t", "\n", "\\n"), m.FormatMeta())
+			m.Log(kit.Select(tcp.SEND, tcp.DONE, m.Option(ice.MSG_HANDLE) == ice.TRUE), "%v->%v %v %v", source, target, kit.ReplaceAll(kit.Format("%v", m.Detailv()), "\r\n", "\\r\\n", "\t", "\\t", "\n", "\\n"), m.FormatMeta())
 		}
 	}
 }
@@ -306,6 +311,7 @@ func init() {
 				m.Push(mdb.ICONS, ice.Info.NodeIcon)
 				m.Push(nfs.MODULE, ice.Info.Make.Module)
 				m.Push(nfs.VERSION, ice.Info.Make.Versions())
+				m.Push(nfs.PATHNAME, ice.Info.Pathname)
 				m.Push(ORIGIN, m.Option(ice.MSG_USERHOST))
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
@@ -354,7 +360,7 @@ func init() {
 			nfs.PS: {Hand: func(m *ice.Message, arg ...string) { _space_fork(m) }},
 		}, gdb.EventsAction(SPACE_LOGIN), mdb.HashAction(mdb.LIMIT, 1000, mdb.LEAST, 500,
 			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,type,name,text,icons,module,version,agent,system,ip,usernick,username,userrole",
-			ctx.ACTION, OPEN, REDIAL, kit.Dict("a", 1000, "b", 100, "c", 1000), mdb.ICONS, ice.SRC_MAIN_ICO,
+			ctx.ACTION, OPEN, REDIAL, kit.Dict("a", 1000, "b", 100, "c", 1000),
 		), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 {
 				if len(arg) == 1 && strings.Contains(arg[0], nfs.PT) {
@@ -379,7 +385,7 @@ func init() {
 					}
 					m.PushButton(kit.Select(OPEN, LOGIN, value[mdb.TYPE] == LOGIN), mdb.REMOVE)
 				})
-				m.Sort("", kit.Simple(aaa.LOGIN, WEIXIN, PORTAL, WORKER, SERVER, ORIGIN))
+				m.Action(html.FILTER).Sort("", kit.Simple(aaa.LOGIN, WEIXIN, PORTAL, WORKER, SERVER, ORIGIN))
 			} else {
 				if kit.IsIn(arg[0], "", ice.CONTEXTS) {
 					m.Cmdy(arg[1:])
@@ -484,10 +490,21 @@ func PodCmd(m *ice.Message, key string, arg ...string) bool {
 func SpaceName(name string) string {
 	return kit.ReplaceAll(name, nfs.DF, "_", nfs.PS, "_", nfs.PT, "_", "[", "_", "]", "_")
 }
+func SpacePwd(m *ice.Message, name, text string) {
+	m.Optionv(ice.MSG_OPTS, m.OptionSimple(ice.MSG_USERROLE, ice.MSG_USERNAME))
+	m.Cmd(SPACE, name, cli.PWD, name, kit.Dict(
+		ice.SPACE_NOECHO, ice.TRUE,
+		mdb.ICONS, ice.Info.NodeIcon, mdb.TEXT, text, AGENT, "Go-http-client", cli.SYSTEM, runtime.GOOS,
+		mdb.TIME, ice.Info.Make.Time, nfs.MODULE, ice.Info.Make.Module, nfs.VERSION, ice.Info.Make.Versions(),
+	))
+}
 func SpaceEvent(m *ice.Message, event, skip string, arg ...string) {
+	m.Optionv(ice.MSG_OPTS, m.OptionSimple(ice.MSG_USERROLE, ice.MSG_USERNAME))
 	m.Cmds(SPACE).Table(func(value ice.Maps) {
 		if kit.IsIn(value[mdb.TYPE], WORKER) && value[mdb.NAME] != skip {
-			m.Cmd(SPACE, value[mdb.NAME], gdb.EVENT, gdb.HAPPEN, gdb.EVENT, event, arg, kit.Dict(ice.MSG_USERROLE, aaa.TECH))
+			m.Cmd(SPACE, value[mdb.NAME], gdb.EVENT, gdb.HAPPEN, gdb.EVENT, event, arg, kit.Dict(
+				ice.MSG_USERROLE, aaa.TECH, ice.SPACE_NOECHO, ice.TRUE,
+			))
 		}
 	})
 	m.Cmd(gdb.EVENT, gdb.HAPPEN, gdb.EVENT, event, arg, kit.Dict(ice.MSG_USERROLE, aaa.TECH))

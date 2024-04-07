@@ -71,8 +71,8 @@ type relay struct {
 	forEach  string `name:"forEach machine cmd*:textarea=pwd"`
 	forFlow  string `name:"forFlow machine cmd*:textarea=pwd"`
 	list     string `name:"list machine auto" help:"机器" icon:"relay.png"`
-	install  string `name:"install dream param='forever start' dev portal nodename" help:"安装"`
-	pushbin  string `name:"pushbin dream param='forever start' dev portal nodename" help:"部署" icon:"bi bi-box-arrow-in-up"`
+	install  string `name:"install dream portal nodename dev" help:"安装"`
+	pushbin  string `name:"pushbin dream portal nodename dev" help:"部署" icon:"bi bi-box-arrow-in-up"`
 	adminCmd string `name:"adminCmd cmd" help:"命令" icon:"bi bi-terminal-plus"`
 	pushkey  string `name:"pushkey" help:"授权" icon:"bi bi-person-fill-up"`
 	status   string `name:"status" help:"源码"`
@@ -378,11 +378,9 @@ func (s relay) param(m *ice.Message, arg ...string) string {
 	return kit.JoinCmdArgs(ice.DEV, m.Option(ice.DEV), tcp.PORT, m.Option(web.PORTAL), tcp.NODENAME, m.OptionDefault(tcp.NODENAME, m.Option(MACHINE)), ice.TCP_DOMAIN, m.Option(tcp.HOST))
 }
 func (s relay) CmdArgs(m *ice.Message, init string, arg ...string) string {
-	kit.If(m.Option(web.PORTAL), func() { init = kit.Format("%q", "cd "+path.Base(m.DreamPath(m.Option(web.DREAM)))) })
-	return kit.JoinWord(kit.Simple(
-		strings.TrimPrefix(os.Args[0], kit.Path("")+nfs.PS),
-		"ssh.connect", tcp.OPEN, ssh.AUTHFILE, "", m.OptionSimple(aaa.USERNAME, tcp.HOST, tcp.PORT), ice.INIT, init,
-	)...)
+	kit.If(m.Option(web.PORTAL) != "" && init == "", func() { init = kit.Format("%q", "cd "+path.Base(m.DreamPath(m.Option(web.DREAM)))) })
+	return strings.TrimPrefix(os.Args[0], kit.Path("")+nfs.PS) + " " + kit.JoinCmds(kit.Simple(
+		"ssh.connect", tcp.OPEN, ssh.AUTHFILE, "", m.OptionSimple(aaa.USERNAME, tcp.HOST, tcp.PORT), ice.INIT, init)...)
 }
 
 type Relay struct {

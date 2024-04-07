@@ -34,7 +34,7 @@ func _xterm_get(m *ice.Message, h string) xterm.XTerm {
 			return nil
 		}
 		m.Go(func() {
-			m.Log(cli.START, strings.Join(ls, lex.SP))
+			m.Log(cli.START, kit.JoinCmdArgs(ls...))
 			defer mdb.HashRemove(m, mdb.HASH, h)
 			buf := make([]byte, ice.MOD_BUFS)
 			for {

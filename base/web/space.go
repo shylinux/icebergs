@@ -233,7 +233,7 @@ func _space_send(m *ice.Message, name string, arg ...string) (h string) {
 	}
 	if target := kit.Split(name, nfs.PT, nfs.PT); !mdb.HashSelectDetail(m, target[0], func(value ice.Map) {
 		if c, ok := value[mdb.TARGET].(*websocket.Conn); !m.WarnNotValid(!ok, mdb.TARGET) {
-			kit.If(kit.Format(value[mdb.TYPE]) == ORIGIN, func() {
+			kit.If(kit.Format(value[mdb.TYPE]) == ORIGIN && target[0] != ice.OPS, func() {
 				m.Optionv(ice.MSG_USERWEB, kit.Simple(value[mdb.TEXT], m.Optionv(ice.MSG_USERWEB)))
 				m.Optionv(ice.MSG_USERPOD, kit.Simple(kit.Keys(target[1:]), m.Optionv(ice.MSG_USERPOD)))
 				m.Options(ice.MSG_USERHOST, "", ice.MSG_USERWEB0, m.Option(ice.MSG_USERWEB), ice.MSG_USERPOD0, name)

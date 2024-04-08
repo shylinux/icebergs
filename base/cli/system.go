@@ -52,7 +52,12 @@ func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
 			m.Logs(FIND, "mirrors cmd", bin)
 		}
 	}
-	cmd := exec.Command(kit.Select(arg[0], bin), arg[1:]...)
+	arg[0] = kit.Select(arg[0], bin)
+	if m.Cmd(SUDO, arg[0]).Length() > 0 {
+		m.Logs(FIND, "sudo cmd", arg[0])
+		arg = kit.Simple(SUDO, arg)
+	}
+	cmd := exec.Command(arg[0], arg[1:]...)
 	if cmd.Dir = kit.TrimPath(m.Option(CMD_DIR)); len(cmd.Dir) > 0 {
 		if m.Logs(EXEC, CMD_DIR, cmd.Dir); !nfs.Exists(m, cmd.Dir) {
 			file.MkdirAll(cmd.Dir, ice.MOD_DIR)

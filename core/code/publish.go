@@ -54,9 +54,7 @@ func _publish_contexts(m *ice.Message, arg ...string) {
 		env := []string{}
 		switch k {
 		case nfs.SOURCE, ice.DEV:
-			if ice.Info.NodeType == web.SERVER {
-				m.OptionDefault(nfs.SOURCE, ice.Info.Make.Remote)
-			} else if m.Option(ice.MSG_USERPOD) == "" {
+			if m.Option(ice.MSG_USERPOD) == "" {
 				m.OptionDefault(nfs.SOURCE, web.AdminCmd(m, cli.RUNTIME, "make.remote").Result())
 			} else {
 				m.OptionDefault(nfs.SOURCE, web.AdminCmd(m, web.SPACE, kit.KeyBase(m.Option(ice.MSG_USERPOD)), cli.RUNTIME, "make.remote").Result())
@@ -64,7 +62,7 @@ func _publish_contexts(m *ice.Message, arg ...string) {
 			env = append(env, cli.CTX_REPOS, m.Option(nfs.SOURCE))
 			fallthrough
 		case nfs.BINARY, ice.APP:
-			if host := msg.Append(web.ORIGIN); m.Option(web.DOMAIN) != host {
+			if host := msg.Append(tcp.HOSTPORT); m.Option(web.DOMAIN) != host {
 				env = append(env, cli.CTX_DEV_IP, strings.Split(host, "?")[0])
 			}
 			if m.Option(ice.MSG_USERPOD) != "" {

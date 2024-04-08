@@ -316,6 +316,7 @@ func init() {
 				m.Push(nfs.VERSION, ice.Info.Make.Versions())
 				m.Push(nfs.PATHNAME, ice.Info.Pathname)
 				m.Push(ORIGIN, m.Option(ice.MSG_USERHOST))
+				m.Push(tcp.HOSTPORT, HostPort(m, m.Cmd(tcp.HOST).Append(aaa.IP), m.Cmd(SERVER).Append(tcp.PORT)))
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if mdb.IsSearchPreview(m, arg) {

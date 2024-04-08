@@ -279,7 +279,7 @@ const SPIDE = "spide"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		// SPIDE: {Name: "spide client.name action=raw,msg,save,cache method=GET,PUT,POST,DELETE url format=form,part,json,data,file arg run create", Help: "蜘蛛侠", Actions: ice.MergeActions(ice.Actions{
-		SPIDE: {Help: "蜘蛛侠", Meta: kit.Dict(ice.CTX_TRANS, kit.Dict(html.INPUT, kit.Dict(
+		SPIDE: {Help: "蜘蛛侠", Icon: "Find My.png", Meta: kit.Dict(ice.CTX_TRANS, kit.Dict(html.INPUT, kit.Dict(
 			CLIENT_TYPE, "类型", CLIENT_NAME, "名称", CLIENT_URL, "地址",
 			CLIENT_METHOD, "方法", CLIENT_ORIGIN, "服务", CLIENT_TIMEOUT, "超时",
 			CLIENT_PROTOCOL, "协议", CLIENT_HOST, "主机", CLIENT_HOSTNAME, "机器",

@@ -17,7 +17,7 @@ const TOKEN = "token"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		TOKEN: {Help: "令牌桶", Actions: ice.MergeActions(ice.Actions{
+		TOKEN: {Help: "令牌桶", Icon: "Keychain.png", Actions: ice.MergeActions(ice.Actions{
 			mdb.PRUNES: {Hand: func(m *ice.Message, arg ...string) {
 				list := map[string]bool{}
 				m.Cmds("").Table(func(value ice.Maps) {

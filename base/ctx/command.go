@@ -19,6 +19,7 @@ func _command_list(m *ice.Message, name string) *ice.Message {
 	}
 	m.Spawn(m.Source()).Search(name, func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
 		m.Push(mdb.INDEX, kit.Keys(s.Prefix(), key))
+		m.Push(mdb.ICONS, kit.Format(cmd.Icon))
 		m.Push(mdb.NAME, kit.Format(cmd.Name))
 		m.Push(mdb.HELP, kit.Format(cmd.Help))
 		m.Push(mdb.LIST, kit.Format(cmd.List))

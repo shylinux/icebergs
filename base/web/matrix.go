@@ -81,6 +81,7 @@ func _matrix_action(m *ice.Message, action string, arg ...string) {
 func _matrix_dream(m *ice.Message, action string, arg ...string) {
 	m.Cmd(Space(m, m.Option(DOMAIN)), DREAM, kit.Select(m.ActionKey(), action), m.OptionSimple(mdb.NAME), arg)
 }
+
 func _matrix_cmd(m *ice.Message, cmd string, arg ...string) *ice.Message {
 	return m.Cmdy(Space(m, kit.Keys(m.Option(DOMAIN), m.Option(mdb.NAME))), kit.Select(m.ActionKey(), cmd), arg)
 }
@@ -113,11 +114,10 @@ func init() {
 					m.OptionDefault(nfs.BINARY, UserHost(m)+S(m.Option(mdb.NAME)))
 				}
 				_matrix_dream(m, mdb.CREATE, kit.Simple(m.OptionSimple(mdb.ICONS, nfs.REPOS, nfs.BINARY))...)
-				m.Cmd(SPACE, kit.Keys(m.Option(DOMAIN), m.Option(mdb.NAME)), MESSAGE, mdb.CREATE,
-					mdb.TYPE, ORIGIN, mdb.ICONS, m.Option(mdb.ICONS), TARGET, kit.Keys(nfs.FROM, m.Option(mdb.NAME)))
-				m.Cmd(SPACE, m.Option(mdb.NAME), MESSAGE, mdb.CREATE,
-					mdb.TYPE, SERVER, mdb.ICONS, m.Option(mdb.ICONS), TARGET, kit.Keys(ice.OPS, m.Option(DOMAIN), m.Option(mdb.NAME)))
+				m.Cmd(SPACE, kit.Keys(m.Option(DOMAIN), m.Option(mdb.NAME)), MESSAGE, mdb.CREATE, mdb.TYPE, ORIGIN, mdb.ICONS, m.Option(mdb.ICONS), TARGET, kit.Keys(nfs.FROM, m.Option(mdb.NAME)))
+				m.Cmd(SPACE, m.Option(mdb.NAME), MESSAGE, mdb.CREATE, mdb.TYPE, SERVER, mdb.ICONS, m.Option(mdb.ICONS), TARGET, kit.Keys(ice.OPS, m.Option(DOMAIN), m.Option(mdb.NAME)))
 				StreamPushRefreshConfirm(m, m.Trans("refresh for new space ", "刷新列表查看新空间 ")+kit.Keys(m.Option(DOMAIN), m.Option(mdb.NAME)))
+				SpaceEvent(m, OPS_DREAM_SPAWN, "", m.OptionSimple(mdb.NAME, DOMAIN)...)
 			}},
 		}, ctx.ConfAction(
 			mdb.FIELD, "time,domain,status,type,name,text,icons,repos,binary,module,version,access",

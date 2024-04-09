@@ -21,6 +21,8 @@ import (
 const (
 	PRIVATE = "private"
 	PUBLIC  = "public"
+	AUTHS   = "auths"
+	PUSHS   = "pushs"
 )
 const RSA = "rsa"
 
@@ -33,13 +35,16 @@ func init() {
 	)
 	aaa.Index.MergeCommands(ice.Commands{
 		RSA: {Name: "rsa hash auto", Help: "密钥", Actions: ice.MergeActions(ice.Actions{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case TITLE:
 					m.Push(arg[0], kit.Format("%s@%s", m.Option(ice.MSG_USERNAME), ice.Info.Hostname))
 				}
 			}},
-			mdb.CREATE: {Name: "create bits=2048,4096 title=some", Hand: func(m *ice.Message, arg ...string) {
+			mdb.CREATE: {Name: "create bits=2048,4096 title", Hand: func(m *ice.Message, arg ...string) {
+				m.OptionDefault(TITLE, kit.Format("%s@%s", m.Option(ice.MSG_USERNAME), ice.Info.Hostname))
 				if key, err := rsa.GenerateKey(rand.Reader, kit.Int(m.Option(BITS))); !m.WarnNotValid(err) {
 					if pub, err := ssh.NewPublicKey(key.Public()); !m.WarnNotValid(err) {
 						mdb.HashCreate(m, m.OptionSimple(TITLE),
@@ -50,10 +55,8 @@ func init() {
 				}
 			}},
 			mdb.EXPORT: {Name: "export key=.ssh/id_rsa pub=.ssh/id_rsa.pub", Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashSelect(m, m.Option(mdb.HASH)).Table(func(value ice.Maps) {
-					m.Cmd(nfs.SAVE, kit.HomePath(m.Option(KEY)), value[PRIVATE])
-					m.Cmd(nfs.SAVE, kit.HomePath(m.Option(PUB)), value[PUBLIC])
-				})
+				m.Cmd(nfs.SAVE, kit.HomePath(m.Option(KEY)), m.Option(PRIVATE))
+				m.Cmd(nfs.SAVE, kit.HomePath(m.Option(PUB)), m.Option(PUBLIC))
 			}},
 			mdb.IMPORT: {Name: "import key=.ssh/id_rsa pub=.ssh/id_rsa.pub", Hand: func(m *ice.Message, arg ...string) {
 				mdb.Conf(m, "", kit.Keys(mdb.HASH, path.Base(m.Option(KEY))), kit.Data(mdb.TIME, m.Time(),
@@ -62,6 +65,25 @@ func init() {
 					PUBLIC, m.Cmdx(nfs.CAT, kit.HomePath(m.Option(PUB))),
 				))
 			}},
+			AUTHS: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(nfs.CAT, kit.HomePath(".ssh/authorized_keys"))
+				kit.For(strings.Split(strings.TrimSpace(m.Results()), lex.NL), func(text string) {
+					if ls := kit.Split(text, " ", " "); len(ls) > 2 {
+						m.Push(mdb.TYPE, ls[0])
+						m.Push(mdb.NAME, ls[2])
+						m.Push(mdb.TEXT, ls[1])
+					}
+				})
+			}},
+			PUSHS: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(nfs.PUSH, kit.HomePath(".ssh/authorized_keys"), arg[0])
+			}},
+			PUBLIC: {Hand: func(m *ice.Message, arg ...string) {
+				if !nfs.Exists(m, kit.HomePath(".ssh/id_rsa.pub")) {
+					m.Cmd("", mdb.CREATE).Options(m.Cmd("").AppendSimple()).Cmd("", mdb.EXPORT)
+				}
+				m.Cmdy(nfs.CAT, kit.HomePath(".ssh/id_rsa.pub"))
+			}},
 		}, mdb.HashAction(mdb.SHORT, PRIVATE, mdb.FIELD, "time,hash,title,public,private")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...).PushAction(mdb.EXPORT, mdb.REMOVE); len(arg) == 0 {
 				m.Action(mdb.CREATE, mdb.IMPORT)
@@ -69,6 +91,9 @@ func init() {
 		}},
 	})
 }
-func PublicKey(m *ice.Message) string {
-	return m.Cmdx(nfs.CAT, kit.HomePath(".ssh/id_rsa.pub"))
+func PublicKey(m *ice.Message, server string) string {
+	if m.IsWorker() {
+		server = kit.Keys(ice.OPS, server)
+	}
+	return m.Cmdx("space", server, RSA, PUBLIC)
 }

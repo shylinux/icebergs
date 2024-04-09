@@ -37,10 +37,12 @@ func _ssh_open(m *ice.Message, arg ...string) {
 		}
 		w, h, _ := terminal.GetSize(fd)
 		c.Write([]byte(fmt.Sprintf("#height:%d,width:%d"+lex.NL, h, w)))
-		kit.For(kit.Simple(m.Optionv(ice.INIT)), func(cmd string) {
-			defer c.Write([]byte(cmd + lex.NL))
-			m.Sleep300ms()
-		})
+		if m.Option(ice.INIT) != "" {
+			kit.For(kit.Simple(m.Optionv(ice.INIT)), func(cmd string) {
+				defer c.Write([]byte(cmd + lex.NL))
+				m.Sleep300ms()
+			})
+		}
 		m.Go(func() { io.Copy(c, os.Stdin) })
 		io.Copy(os.Stdout, c)
 	}, arg...)

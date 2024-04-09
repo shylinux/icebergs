@@ -63,7 +63,7 @@ type relay struct {
 	checkbox string `data:"true"`
 	export   string `data:"true"`
 	short    string `data:"machine"`
-	tools    string `data:"ssh.trans,ssh.auth,aaa.cert"`
+	tools    string `data:"ssh.trans,ssh.auths,aaa.rsa"`
 	field    string `data:"time,icons,machine,username,host,port,portal,dream,module,version,commitTime,compileTime,bootTime,go,git,package,shell,kernel,arch,vcpu,ncpu,mhz,mem,disk,network,listen,socket,proc,vendor"`
 	create   string `name:"create host* port=22 username=root machine icons"`
 	upgrade  string `name:"upgrade machine"`
@@ -75,7 +75,7 @@ type relay struct {
 	install  string `name:"install dream portal nodename dev"`
 	pushbin  string `name:"pushbin dream portal nodename dev" icon:"bi bi-box-arrow-in-up"`
 	adminCmd string `name:"adminCmd cmd" icon:"bi bi-terminal-plus"`
-	pushkey  string `name:"pushkey" icon:"bi bi-person-fill-up"`
+	pushkey  string `name:"pushkey server" icon:"bi bi-person-fill-up"`
 }
 
 func (s relay) Init(m *ice.Message, arg ...string) {
@@ -108,6 +108,9 @@ func (s relay) Inputs(m *ice.Message, arg ...string) {
 		m.Push(arg[0], tcp.PORT_443, tcp.PORT_80, tcp.PORT_9020, "9030", "9040", "9050")
 	case tcp.NODENAME:
 		m.Cmdy("").CutTo(MACHINE, arg[0])
+	case web.SERVER:
+		m.Copy(m.AdminCmd(web.DREAM, web.SERVER))
+		ctx.DisplayInputKey(m.Message, "style", "_nameicon")
 	}
 }
 func (s relay) Create(m *ice.Message, arg ...string) {
@@ -293,12 +296,13 @@ func (s relay) Pushkey(m *ice.Message, arg ...string) {
 	p := kit.Format("/home/%s/"+SSH_AUTHORIZED, m.Option(aaa.USERNAME))
 	kit.If(m.Option(aaa.USERNAME) == aaa.ROOT, func() { p = kit.Format("/root/" + SSH_AUTHORIZED) })
 	list := kit.Split(m.AdminCmdx(web.SPACE, m.Option(MACHINE), nfs.CAT, p), lex.NL, lex.NL)
-	if key := ssh.PublicKey(m.Message); !kit.IsIn(key, list...) {
-		m.AdminCmd(web.SPACE, m.Option(MACHINE), nfs.PUSH, p, key)
+	if key := ssh.PublicKey(m.Message, m.Option(web.SERVER)); !kit.IsIn(key, list...) {
+		m.AdminCmd(web.SPACE, m.Option(MACHINE), nfs.PUSH, p, key+lex.NL)
 		m.Echo(m.AdminCmdx(web.SPACE, m.Option(MACHINE), nfs.CAT, p)).ProcessInner()
 	} else {
 		m.Echo(strings.Join(list, lex.NL)).ProcessInner()
 	}
+	m.ProcessInner()
 }
 func (s relay) Login(m *ice.Message, arg ...string) {
 	if m.Options(m.Cmd("", m.Option(MACHINE)).AppendSimple()); m.Option(ice.BACK) == "" {

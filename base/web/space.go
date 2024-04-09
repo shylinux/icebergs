@@ -79,7 +79,7 @@ func _space_fork(m *ice.Message) {
 		}
 	}
 	if m.Option(mdb.ICONS) != "" && !kit.HasPrefix(m.Option(mdb.ICONS), nfs.PS, HTTP) {
-		m.Option(mdb.ICONS, kit.MergeURL("/require/"+m.Option(mdb.ICONS), ice.POD, name))
+		m.Option(mdb.ICONS, kit.MergeURL(nfs.REQUIRE+m.Option(mdb.ICONS), ice.POD, name))
 	}
 	args := kit.Simple(mdb.TYPE, m.Option(mdb.TYPE), mdb.NAME, name, mdb.TEXT, text, m.OptionSimple(mdb.ICONS, mdb.TIME, nfs.MODULE, nfs.VERSION, cli.DAEMON))
 	args = append(args, aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERROLE, m.Option(ice.MSG_USERROLE))
@@ -275,6 +275,7 @@ const (
 const (
 	OPS_ORIGIN_OPEN = "ops.origin.open"
 	OPS_SERVER_OPEN = "ops.server.open"
+	OPS_DREAM_SPAWN = "ops.dream.spawn"
 
 	SPACE_LOGIN       = "space.login"
 	SPACE_LOGIN_CLOSE = "space.login.close"

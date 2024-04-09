@@ -26,6 +26,11 @@ func DisplayStory(m *ice.Message, file string, arg ...ice.Any) *ice.Message {
 	kit.If(isLocalFile(file), func() { file = path.Join(ice.PLUGIN_STORY, file) })
 	return DisplayBase(m, file, arg...)
 }
+func DisplayInput(m *ice.Message, file string, arg ...ice.Any) *ice.Message {
+	kit.If(file == "", func() { file = kit.Keys(m.CommandKey(), nfs.JS) })
+	kit.If(isLocalFile(file), func() { file = path.Join(ice.PLUGIN_INPUT, file) })
+	return DisplayBase(m, file, arg...)
+}
 func DisplayStoryForm(m *ice.Message, arg ...ice.Any) *ice.Message {
 	args := kit.List()
 	for i := range arg {
@@ -42,6 +47,9 @@ func DisplayStoryForm(m *ice.Message, arg ...ice.Any) *ice.Message {
 	}
 	kit.For(args, func(v ice.Map) { m.Push("", v, kit.Split("type,name,value,values,need,action")) })
 	return DisplayStory(m, "form")
+}
+func DisplayInputKey(m *ice.Message, arg ...ice.Any) *ice.Message {
+	return DisplayInput(m, "key", arg...)
 }
 func DisplayStoryJSON(m *ice.Message, arg ...ice.Any) *ice.Message {
 	return DisplayStory(m, "json", arg...)

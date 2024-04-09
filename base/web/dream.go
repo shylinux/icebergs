@@ -116,7 +116,7 @@ func _dream_start(m *ice.Message, name string) {
 		return
 	}
 	if !m.IsCliUA() {
-		defer m.ProcessOpenAndRefresh(m.MergePod(name))
+		// defer m.ProcessOpenAndRefresh(m.MergePod(name))
 		defer ToastProcess(m, mdb.CREATE, name)()
 	}
 	defer mdb.Lock(m, m.PrefixKey(), cli.START, name)()
@@ -434,6 +434,18 @@ func init() {
 			}},
 			TOKEN: {Hand: func(m *ice.Message, arg ...string) {
 				m.Options(m.Cmd(SPIDE, m.Option(mdb.NAME)).AppendSimple()).Cmdy(SPIDE, mdb.DEV_REQUEST)
+			}},
+			SERVER: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(SPACE).Table(func(value ice.Maps, index int, head []string) {
+					kit.If(value[mdb.TYPE] == m.ActionKey(), func() { m.PushRecord(value, head...) })
+				})
+				m.Sort(mdb.TIME, ice.STR_R)
+			}},
+			ORIGIN: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(SPACE).Table(func(value ice.Maps, index int, head []string) {
+					kit.If(value[mdb.TYPE] == m.ActionKey(), func() { m.PushRecord(value, head...) })
+				})
+				m.Sort(mdb.TIME, ice.STR_R)
 			}},
 			DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				if !aaa.IsTechOrRoot(m) {

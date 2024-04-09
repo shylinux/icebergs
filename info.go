@@ -13,6 +13,9 @@ import (
 type MakeInfo struct {
 	Username string
 	Hostname string
+	System   string
+	Domain   string
+	Module   string
 	Path     string
 	Time     string
 	Git      string
@@ -22,15 +25,11 @@ type MakeInfo struct {
 	Branch  string
 	Version string
 	Forword string
+	Message string
 	Author  string
 	Email   string
 	Hash    string
 	When    string
-	Message string
-
-	System string
-	Domain string
-	Module string
 }
 
 func (s MakeInfo) Versions() string {

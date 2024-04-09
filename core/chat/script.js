@@ -26,11 +26,11 @@ Volcanos(chat.ONACTION, {
 	}, function(list) { can.Status(cli.STEP, list.length), can.Status(cli.COST, can.base.Duration(new Date().getTime()-begin)), can.user.toastSuccess(can) }) },
 	preview: function(event, can, msg, next, data, tr) {
 		can.onappend.plugin(can, {space: msg.Option(web.SPACE), index: msg.Option(ctx.INDEX), style: msg.Option(ctx.STYLE)}, function(sub) { var done = false
-			function action(skip) { sub.Update(sub.request({}, {_handle: ice.TRUE}), [ctx.ACTION, msg.Option(cli.PLAY)], function(msg) {
+			function action(skip) { sub.Update(sub.request({}, {"space.timeout": "300s",_handle: ice.TRUE}), [ctx.ACTION, msg.Option(cli.PLAY)], function(msg) {
 				sub.onimport._process(sub, msg) || msg.Length() == 0 && msg.Result() == "" || can.onappend._output(sub, msg), next && next(data)
 			}) }
 			if (msg.Option(ctx.STYLE) == "async") {
-				done = true, sub.Update(sub.request({}, {_handle: ice.TRUE}), [ctx.ACTION, msg.Option(cli.PLAY)]), next && next(data)
+				done = true, sub.Update(sub.request({}, {"space.timeout": "300s", _handle: ice.TRUE}), [ctx.ACTION, msg.Option(cli.PLAY)]), next && next(data)
 			} else {
 				can.onmotion.delay(can, function() { if (done || sub._auto) { return } done = true, action() }, 300)
 			}

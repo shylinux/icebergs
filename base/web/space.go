@@ -224,7 +224,7 @@ func _space_echo(m *ice.Message, source, target []string, c *websocket.Conn) {
 func _space_send(m *ice.Message, name string, arg ...string) (h string) {
 	withecho := m.Option(ice.SPACE_NOECHO) != ice.TRUE
 	kit.If(len(arg) > 0 && arg[0] == TOAST, func() { withecho = false; m.Option(ice.MSG_DEBUG, ice.FALSE) })
-	wait, done := m.Wait(kit.Select("", m.OptionDefault(ice.SPACE_TIMEOUT, "180s"), withecho), func(msg *ice.Message, arg ...string) {
+	wait, done := m.Wait(kit.Select("", m.OptionDefault(ice.SPACE_TIMEOUT, "30s"), withecho), func(msg *ice.Message, arg ...string) {
 		m.Cost(kit.Format("%v->[%v] %v %v", m.Optionv(ice.MSG_SOURCE), name, m.Detailv(), msg.FormatSize())).Copy(msg)
 	})
 	if withecho {

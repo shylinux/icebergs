@@ -59,7 +59,7 @@ func init() {
 					m.Push(arg[0], m.Option(ice.MSG_USERNAME))
 				}
 			}},
-			mdb.CREATE: {Name: "create userrole=void,tech username* usernick language userzone", Hand: func(m *ice.Message, arg ...string) {
+			mdb.CREATE: {Name: "create userrole=void,tech username* usernick language userzone email", Hand: func(m *ice.Message, arg ...string) {
 				_user_create(m, m.Option(USERNAME), m.OptionSimple(USERROLE, USERNICK, LANGUAGE, AVATAR, BACKGROUND, USERZONE, EMAIL)...)
 			}},
 			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) { _user_remove(m, m.Option(USERNAME)) }},
@@ -96,10 +96,11 @@ func UserRoot(m *ice.Message, arg ...string) *ice.Message {
 	username := kit.Select(ice.Info.Username, arg, 1)
 	usernick := kit.Select(UserNick(m, username), arg, 2)
 	language := kit.Select("", arg, 3)
-	userzone := kit.Select(ice.DEV, arg, 4)
+	userzone := kit.Select(ice.OPS, arg, 4)
+	email := kit.Select(UserEmail(m, username), arg, 5)
 	if len(arg) > 0 {
 		ice.Info.Username = username
-		m.Cmd(USER, mdb.CREATE, userrole, username, usernick, language, userzone)
+		m.Cmd(USER, mdb.CREATE, userrole, username, usernick, language, userzone, email)
 	}
 	return SessAuth(m, kit.Dict(USERROLE, userrole, USERNAME, username, USERNICK, usernick))
 }

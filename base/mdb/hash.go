@@ -261,7 +261,9 @@ func HashInputs(m *ice.Message, arg ...Any) *ice.Message {
 	return m.Cmdy(INPUTS, m.PrefixKey(), m.Option(SUBKEY), HASH, arg)
 }
 func HashCreate(m *ice.Message, arg ...Any) string {
-	kit.If(len(arg) == 0 || len(kit.Simple(arg...)) == 0, func() { arg = append(arg, m.OptionSimple(strings.Replace(HashField(m), "hash,", "", 1))) })
+	kit.If(len(arg) == 0 || len(kit.Simple(arg...)) == 0, func() {
+		arg = append(arg, m.OptionSimple(kit.Filters(kit.Split(HashField(m)), TIME, HASH)...))
+	})
 	kit.If(m.Option(SUBKEY) == "", func() { kit.If(Config(m, SHORTS), func(p string) { arg = append([]ice.Any{SHORT, p}, arg) }) })
 	return m.Echo(m.Cmdx(append(kit.List(INSERT, m.PrefixKey(), m.Option(SUBKEY), HASH, logs.FileLineMeta(-1)), arg...)...)).Result()
 }

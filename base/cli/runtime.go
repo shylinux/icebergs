@@ -43,8 +43,9 @@ func _runtime_init(m *ice.Message) {
 	kit.HashSeed = append(kit.HashSeed, ice.Info.Username)
 	kit.HashSeed = append(kit.HashSeed, ice.Info.Hostname)
 	kit.HashSeed = append(kit.HashSeed, ice.Info.Pathname)
-	aaa.UserRoot(ice.Pulse, "", ice.Info.Make.Username)
-	aaa.UserRoot(ice.Pulse, aaa.ROOT, ice.Info.Username, "", "", ice.OPS)
+	aaa.UserRoot(ice.Pulse, aaa.TECH, ice.Info.Make.Username, "", "", ice.DEV, ice.Info.Make.Email)
+	aaa.UserRoot(ice.Pulse, aaa.ROOT, ice.Info.Username)
+	aaa.UserRoot(ice.Pulse, aaa.ROOT, aaa.ROOT)
 	ice.Info.Time = m.Time()
 	m.Conf(RUNTIME, kit.Keys(BOOT, mdb.TIME), ice.Info.Time)
 	if runtime.GOARCH != MIPSLE {

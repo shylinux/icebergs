@@ -555,7 +555,9 @@ func DreamProcessIframe(m *ice.Message, arg ...string) {
 		defer m.Push(TITLE, kit.Keys(m.Option(mdb.NAME), m.ShortKey()))
 	}
 	DreamProcess(m, CHAT_IFRAME, func() string {
-		return kit.MergeURL(S(kit.Keys(m.Option(ice.MSG_USERPOD), m.Option(mdb.NAME)))+C(m.ShortKey()), ice.MSG_DEBUG, m.Option(ice.MSG_DEBUG))
+		p := S(kit.Keys(m.Option(ice.MSG_USERPOD), m.Option(mdb.NAME)))
+		kit.If(m.Option(mdb.TYPE) == ORIGIN && m.CommandKey() == PORTAL, func() { p = SpideOrigin(m, m.Option(mdb.NAME)) })
+		return kit.MergeURL(p+C(m.ShortKey()), ice.MSG_DEBUG, m.Option(ice.MSG_DEBUG))
 	}, arg...)
 }
 func DreamProcess(m *ice.Message, cmd string, args ice.Any, arg ...string) {

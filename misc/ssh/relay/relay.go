@@ -72,6 +72,7 @@ type relay struct {
 	forEach       string `name:"forEach machine cmd*:textarea=pwd"`
 	forFlow       string `name:"forFlow machine cmd*:textarea=pwd"`
 	list          string `name:"list machine auto" help:"机器" icon:"relay.png"`
+	opsOriginOpen string `name:"opsOriginOpen" event:"ops.origin.open"`
 	opsServerOpen string `name:"opsServerOpen" event:"ops.server.open"`
 	opsDreamSpawn string `name:"opsDreamSpawn" event:"ops.dream.spawn"`
 	install       string `name:"install dream portal nodename dev"`
@@ -245,11 +246,14 @@ func (s relay) List(m *ice.Message, arg ...string) *ice.Message {
 	m.StatusTimeCount(m.Spawn().Options(stats, _stats).OptionSimple(VCPU, MEM, DISK, SOCKET, PROC))
 	return m
 }
-func (s relay) OpsDreamSpawn(m *ice.Message, arg ...string) {
-	kit.If(m.Option(mdb.NAME) == ice.Info.NodeName, func() { s.sendData(m, kit.Keys(m.Option(web.DOMAIN), m.Option(mdb.NAME))) })
+func (s relay) OpsOriginOpen(m *ice.Message, arg ...string) {
+	kit.If(m.Option(nfs.MODULE) == ice.Info.Make.Module, func() { s.sendData(m, m.Option(mdb.NAME)) })
 }
 func (s relay) OpsServerOpen(m *ice.Message, arg ...string) {
 	kit.If(m.Option(nfs.MODULE) == ice.Info.Make.Module, func() { s.sendData(m, m.Option(mdb.NAME)) })
+}
+func (s relay) OpsDreamSpawn(m *ice.Message, arg ...string) {
+	kit.If(m.Option(mdb.NAME) == ice.Info.NodeName, func() { s.sendData(m, kit.Keys(m.Option(web.DOMAIN), m.Option(mdb.NAME))) })
 }
 func (s relay) sendData(m *ice.Message, space string) {
 	if m.IsTech() {
@@ -303,7 +307,7 @@ func (s relay) AdminCmd(m *ice.Message, arg ...string) {
 	s.shell(m, s.admins(m, m.Option(ice.CMD)), arg...)
 }
 func (s relay) Spide(m *ice.Message, arg ...string) {
-	ssh.CombinedOutput(m.Message, s.admins(m, kit.JoinCmds(web.TOKEN, mdb.CREATE, "--", mdb.TYPE, web.SERVER, mdb.NAME, m.Option(aaa.USERNAME), mdb.TEXT, m.Option(MACHINE))), func(res string) {
+	ssh.CombinedOutput(m.Message, s.admins(m, kit.JoinCmds(web.TOKEN, mdb.CREATE, "--", mdb.TYPE, web.SERVER, mdb.NAME, aaa.ROOT, mdb.TEXT, ice.Info.Hostname)), func(res string) {
 		m.AdminCmd(web.SPIDE, mdb.CREATE, m.Option(web.LINK), m.Option(MACHINE), "", nfs.REPOS, strings.TrimSpace(res))
 		m.AdminCmd(web.SPACE, tcp.DIAL, m.Option(MACHINE))
 	})
@@ -397,7 +401,7 @@ func (s relay) param(m *ice.Message, arg ...string) string {
 	return kit.JoinCmdArgs(ice.DEV, m.Option(ice.DEV), tcp.PORT, m.Option(web.PORTAL), tcp.NODENAME, m.OptionDefault(tcp.NODENAME, m.Option(MACHINE)), ice.TCP_DOMAIN, m.Option(tcp.HOST))
 }
 func (s relay) CmdArgs(m *ice.Message, init string, arg ...string) string {
-	kit.If(m.Option(web.PORTAL) != "" && init == "", func() { init = kit.Format("%q", "cd "+path.Base(m.DreamPath(m.Option(web.DREAM)))) })
+	kit.If(m.Option(web.PORTAL) != "" && init == "", func() { init = "cd " + path.Base(m.DreamPath(m.Option(web.DREAM))) })
 	return strings.TrimPrefix(os.Args[0], kit.Path("")+nfs.PS) + " " + kit.JoinCmds(kit.Simple(
 		SSH_CONNECT, tcp.OPEN, ssh.AUTHFILE, "", m.OptionSimple(aaa.USERNAME, tcp.HOST, tcp.PORT), ice.INIT, init, arg)...)
 }

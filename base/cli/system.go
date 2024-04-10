@@ -97,6 +97,7 @@ func _system_exec(m *ice.Message, cmd *exec.Cmd) {
 				m.Option(ice.MSG_ARGS, kit.Simple(http.StatusBadRequest, cmd.Args, err.String()))
 				m.Echo(strings.TrimRight(err.String(), lex.NL))
 				m.Info("err: %v", err.String())
+				m.Info("out: %v", out.String())
 			}
 		}()
 	}
@@ -155,10 +156,12 @@ const (
 )
 
 const (
-	SH = "sh"
-	LN = "ln"
-	MV = "mv"
-	RM = "rm"
+	SH  = "sh"
+	LN  = "ln"
+	MV  = "mv"
+	RM  = "rm"
+	CD  = "cd"
+	CAT = "cat"
 
 	FIND = "find"
 	GREP = "grep"

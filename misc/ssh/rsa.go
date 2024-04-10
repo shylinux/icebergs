@@ -35,8 +35,6 @@ func init() {
 	)
 	aaa.Index.MergeCommands(ice.Commands{
 		RSA: {Name: "rsa hash auto", Help: "密钥", Actions: ice.MergeActions(ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case TITLE:

@@ -60,22 +60,24 @@ const (
 type relay struct {
 	ice.Hash
 	ice.Code
-	checkbox string `data:"true"`
-	export   string `data:"true"`
-	short    string `data:"machine"`
-	tools    string `data:"ssh.trans,ssh.auths,aaa.rsa"`
-	field    string `data:"time,icons,machine,username,host,port,portal,dream,module,version,commitTime,compileTime,bootTime,go,git,package,shell,kernel,arch,vcpu,ncpu,mhz,mem,disk,network,listen,socket,proc,vendor"`
-	create   string `name:"create host* port=22 username=root machine icons"`
-	upgrade  string `name:"upgrade machine"`
-	stats    string `name:"stats machine" icon:"bi bi-card-list"`
-	publish  string `name:"publish" icon:"bi bi-send-check"`
-	forEach  string `name:"forEach machine cmd*:textarea=pwd"`
-	forFlow  string `name:"forFlow machine cmd*:textarea=pwd"`
-	list     string `name:"list machine auto" help:"机器" icon:"relay.png"`
-	install  string `name:"install dream portal nodename dev"`
-	pushbin  string `name:"pushbin dream portal nodename dev" icon:"bi bi-box-arrow-in-up"`
-	adminCmd string `name:"adminCmd cmd" icon:"bi bi-terminal-plus"`
-	pushkey  string `name:"pushkey server" icon:"bi bi-person-fill-up"`
+	checkbox      string `data:"true"`
+	export        string `data:"true"`
+	short         string `data:"machine"`
+	tools         string `data:"ssh.trans,ssh.auths,aaa.rsa"`
+	field         string `data:"time,icons,machine,username,host,port,portal,dream,module,version,commitTime,compileTime,bootTime,go,git,package,shell,kernel,arch,vcpu,ncpu,mhz,mem,disk,network,listen,socket,proc,vendor"`
+	create        string `name:"create host* port=22 username=root machine icons"`
+	upgrade       string `name:"upgrade machine"`
+	stats         string `name:"stats machine" icon:"bi bi-card-list"`
+	publish       string `name:"publish" icon:"bi bi-send-check"`
+	forEach       string `name:"forEach machine cmd*:textarea=pwd"`
+	forFlow       string `name:"forFlow machine cmd*:textarea=pwd"`
+	list          string `name:"list machine auto" help:"机器" icon:"relay.png"`
+	opsServerOpen string `name:"opsServerOpen" event:"ops.server.open"`
+	opsDreamSpawn string `name:"opsDreamSpawn" event:"ops.dream.spawn"`
+	install       string `name:"install dream portal nodename dev"`
+	pushbin       string `name:"pushbin dream portal nodename dev" icon:"bi bi-box-arrow-in-up"`
+	adminCmd      string `name:"adminCmd cmd" icon:"bi bi-terminal-plus"`
+	pushkey       string `name:"pushkey server" icon:"bi bi-person-fill-up"`
 }
 
 func (s relay) Init(m *ice.Message, arg ...string) {
@@ -243,6 +245,20 @@ func (s relay) List(m *ice.Message, arg ...string) *ice.Message {
 	m.StatusTimeCount(m.Spawn().Options(stats, _stats).OptionSimple(VCPU, MEM, DISK, SOCKET, PROC))
 	return m
 }
+func (s relay) OpsDreamSpawn(m *ice.Message, arg ...string) {
+	kit.If(m.Option(mdb.NAME) == ice.Info.NodeName, func() { s.sendData(m, kit.Keys(m.Option(web.DOMAIN), m.Option(mdb.NAME))) })
+}
+func (s relay) OpsServerOpen(m *ice.Message, arg ...string) {
+	kit.If(m.Option(nfs.MODULE) == ice.Info.Make.Module, func() { s.sendData(m, m.Option(mdb.NAME)) })
+}
+func (s relay) sendData(m *ice.Message, space string) {
+	if m.IsTech() {
+		m.Cmd("").Table(func(value ice.Maps) {
+			m.AdminCmd(web.SPACE, space, m.PrefixKey(), mdb.CREATE, tcp.HOST, "", kit.Simple(value))
+			m.Cmd(SSH_AUTHS, mdb.INSERT, value[MACHINE], space, kit.Dict(ice.SPACE_NOECHO, ice.FALSE))
+		})
+	}
+}
 func (s relay) Install(m *ice.Message, arg ...string) {
 	m.Options(web.DOMAIN, m.SpideOrigin(ice.DEV), ice.MSG_USERPOD, m.Option(web.DREAM), nfs.SOURCE, m.DreamRepos(m.Option(web.DREAM)))
 	s.Modify(m, m.OptionSimple(MACHINE, web.DREAM, web.PORTAL)...)
@@ -383,7 +399,7 @@ func (s relay) param(m *ice.Message, arg ...string) string {
 func (s relay) CmdArgs(m *ice.Message, init string, arg ...string) string {
 	kit.If(m.Option(web.PORTAL) != "" && init == "", func() { init = kit.Format("%q", "cd "+path.Base(m.DreamPath(m.Option(web.DREAM)))) })
 	return strings.TrimPrefix(os.Args[0], kit.Path("")+nfs.PS) + " " + kit.JoinCmds(kit.Simple(
-		SSH_CONNECT, tcp.OPEN, ssh.AUTHFILE, "", m.OptionSimple(aaa.USERNAME, tcp.HOST, tcp.PORT), ice.INIT, init)...)
+		SSH_CONNECT, tcp.OPEN, ssh.AUTHFILE, "", m.OptionSimple(aaa.USERNAME, tcp.HOST, tcp.PORT), ice.INIT, init, arg)...)
 }
 
 type Relay struct {

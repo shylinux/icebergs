@@ -1,5 +1,6 @@
 {
 	"stats": "采集",
+	"auths": "授权",
 	"spide": "连接",
 	"adminCmd": "命令",
 	"pushbin": "部署",

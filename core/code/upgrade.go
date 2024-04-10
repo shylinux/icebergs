@@ -36,7 +36,7 @@ func init() {
 				if kit.Select("", arg, 0) == COMPILE {
 					value[nfs.FILE] = kit.Keys(kit.Format(value[nfs.FILE]), runtime.GOOS+"-"+runtime.GOARCH, kit.Select("tar.gz", "zip", runtime.GOOS == cli.WINDOWS))
 				}
-				if value[nfs.FILE] == ice.ICE_BIN && os.Getenv(cli.CTX_POD) == "" {
+				if value[nfs.FILE] == ice.ICE_BIN {
 					value[nfs.FILE] = kit.Keys(ice.ICE, runtime.GOOS, runtime.GOARCH)
 					defer nfs.Rename(m, value[nfs.FILE], ice.BIN_ICE_BIN)
 					m.Option(ice.EXIT, ice.TRUE)

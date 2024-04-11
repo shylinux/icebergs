@@ -36,10 +36,10 @@ func _config_save(m *ice.Message, name string, arg ...string) {
 	data, msg := ice.Map{}, m.Spawn(m.Source())
 	for _, k := range arg {
 		if v := mdb.Confv(msg, k); _config_only(v, mdb.META) && _config_only(kit.Value(v, mdb.META),
-			mdb.IMPORTANT, mdb.EXPIRE, mdb.SHORT, mdb.FIELD, mdb.FIELDS, mdb.ACTION, mdb.SORT, mdb.TOOLS,
-			nfs.SOURCE, nfs.SCRIPT,
-			lex.REGEXP, nfs.PATH, "link",
-			"linux", "darwin", "windows",
+			mdb.IMPORTANT, mdb.EXPIRE, mdb.VENDOR, nfs.SOURCE, nfs.SCRIPT, nfs.PATH, lex.REGEXP,
+			mdb.SHORT, mdb.FIELD, mdb.SHORTS, mdb.FIELDS,
+			mdb.ACTION, mdb.SORT, mdb.TOOLS,
+			"link", "linux", "darwin", "windows",
 		) {
 			continue
 		} else {

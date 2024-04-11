@@ -60,6 +60,9 @@ func _zone_select(m *ice.Message, prefix, chain, zone string, id string) {
 }
 func _zone_export(m *ice.Message, prefix, chain, file string) {
 	defer Lock(m, prefix)()
+	if len(Confm(m, prefix, kit.Keys(chain, HASH))) == 0 {
+		return
+	}
 	f, p, e := miss.CreateFile(kit.Keys(file, CSV))
 	m.Assert(e)
 	defer f.Close()

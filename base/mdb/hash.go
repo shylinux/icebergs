@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"os"
 	"path"
 	"strings"
 
@@ -103,19 +102,14 @@ func _hash_prunes(m *ice.Message, prefix, chain string, arg ...string) {
 }
 func _hash_export(m *ice.Message, prefix, chain, file string) {
 	defer Lock(m, prefix)()
-	p := kit.Keys(file, JSON)
-	count := len(Confm(m, prefix, kit.Keys(chain, HASH)))
-	if count == 0 {
-		if s, e := os.Stat(p); e == nil && !s.IsDir() {
-			os.Remove(p)
-		}
+	if len(Confm(m, prefix, kit.Keys(chain, HASH))) == 0 {
 		return
 	}
-	f, p, e := miss.CreateFile(p)
+	f, p, e := miss.CreateFile(kit.Keys(file, JSON))
 	m.Assert(e)
 	defer f.Close()
 	defer m.Echo(p)
-	m.Logs(EXPORT, KEY, path.Join(prefix, chain), FILE, p, COUNT, count)
+	m.Logs(EXPORT, KEY, path.Join(prefix, chain), FILE, p)
 	en := json.NewEncoder(f)
 	if en.SetIndent("", "  "); !m.WarnNotValid(en.Encode(m.Confv(prefix, kit.Keys(chain, HASH))), EXPORT, prefix) {
 		m.Conf(prefix, kit.Keys(chain, HASH), "")

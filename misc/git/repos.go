@@ -432,6 +432,7 @@ func init() {
 						mdb.Config(m, INSTEADOF, strings.TrimPrefix(strings.TrimSuffix(value[mdb.NAME], _INSTEADOF), "url."))
 					}
 				})
+				m.Cmd(web.DREAM, "scan")
 			}},
 			INIT: {Name: "init remote*", Help: "初始化", Hand: func(m *ice.Message, arg ...string) {
 				m.OptionDefault(nfs.PATH, kit.Path(""))

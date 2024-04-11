@@ -117,6 +117,7 @@ func _dream_start(m *ice.Message, name string) {
 	}
 	if !m.IsCliUA() {
 		// defer m.ProcessOpenAndRefresh(m.MergePod(name))
+		defer m.ProcessRefresh()
 		defer ToastProcess(m, mdb.CREATE, name)()
 	}
 	defer mdb.Lock(m, m.PrefixKey(), cli.START, name)()
@@ -216,24 +217,9 @@ func init() {
 		DREAM: {Name: "dream refresh", Help: "梦想家", Icon: "Launchpad.png", Role: aaa.VOID, Meta: kit.Dict(
 			ice.CTX_TRANS, kit.Dict(html.INPUT, kit.Dict(WORKER, "空间", SERVER, "门户", ORIGIN, "主机")),
 		), Actions: ice.MergeActions(ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m = m.Spawn()
-				m.GoSleep(cli.TIME_1s, func() {
-					for _, cmd := range kit.Reverse(kit.Split(mdb.Config(m, html.BUTTON))) {
-						m.Cmd(gdb.EVENT, gdb.LISTEN, gdb.EVENT, DREAM_TABLES, ice.CMD, cmd)
-						m.Cmd(gdb.EVENT, gdb.LISTEN, gdb.EVENT, DREAM_ACTION, ice.CMD, cmd)
-						aaa.White(m, kit.Keys(m.ShortKey(), ctx.ACTION, cmd))
-					}
-				})
-				m.GoSleep(cli.TIME_3s, func() {
-					mdb.HashSelects(m).Table(func(value ice.Maps) {
-						if value[cli.RESTART] == ALWAYS && nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK+value[mdb.NAME])) {
-							m.Cmd(DREAM, cli.START, kit.Dict(mdb.NAME, value[mdb.NAME]))
-						}
-					})
-				})
+			html.BUTTON: {Hand: func(m *ice.Message, arg ...string) {
+				mdb.Config(m, html.BUTTON, kit.Join(arg))
 			}},
-			html.BUTTON: {Hand: func(m *ice.Message, arg ...string) { mdb.Config(m, html.BUTTON, kit.Join(arg)) }},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if mdb.IsSearchPreview(m, arg) {
 					mdb.HashSelects(m.Spawn()).Table(func(value ice.Maps) { m.PushSearch(mdb.TYPE, WORKER, mdb.TEXT, m.MergePod(value[mdb.NAME]), value) })
@@ -255,7 +241,6 @@ func init() {
 							m.Cmdy(nfs.DIR, path.Join(value[nfs.PATH], ice.BIN), "path,size,time", kit.Dict(nfs.DIR_TYPE, nfs.TYPE_BIN))
 						})
 						m.RenameAppend(nfs.PATH, arg[0])
-						// mdb.HashInputs(m, arg)
 						DreamListSpide(m, []string{ice.DEV}, ORIGIN, func(dev, origin string) {
 							m.Spawn().SplitIndex(m.Cmdx(SPIDE, dev, SPIDE_RAW, http.MethodGet, S(), cli.GOOS, runtime.GOOS, cli.GOARCH, runtime.GOARCH)).Table(func(value ice.Maps) {
 								m.Push(arg[0], origin+S(value[mdb.NAME])).Push(nfs.SIZE, value[nfs.SIZE]).Push(mdb.TIME, value[mdb.TIME])
@@ -299,15 +284,6 @@ func init() {
 				gdb.Event(m, DREAM_REMOVE, m.OptionSimple(mdb.NAME))
 				mdb.HashRemove(m)
 			}},
-			DOWNLOAD: {Name: "download path link", Hand: func(m *ice.Message, arg ...string) {
-				GoToast(m, func(toast func(string, int, int)) []string {
-					SpideSave(m, m.Option(nfs.PATH), kit.MergeURL(m.Option(mdb.LINK), cli.GOOS, runtime.GOOS, cli.GOARCH, runtime.GOARCH), func(count, total, value int) {
-						toast(m.Option(mdb.NAME), count, total)
-					})
-					return nil
-				})
-				os.Chmod(m.Option(nfs.PATH), ice.MOD_DIR)
-			}},
 			STARTALL: {Name: "startall name", Help: "启动", Icon: "bi bi-play-circle", Hand: func(m *ice.Message, arg ...string) {
 				DreamEach(m, m.Option(mdb.NAME), cli.STOP, func(name string) {
 					m.Cmd("", cli.START, ice.Maps{mdb.NAME: name, ice.MSG_DAEMON: ""})
@@ -331,14 +307,6 @@ func init() {
 				})
 				kit.If(m.Option(mdb.NAME) == "", func() { m.Sleep("5s").Cmdy(ROUTE, cli.BUILD).ProcessInner() })
 			}},
-			"gowork": {Name: "gowork name", Help: "工作区", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(cli.SYSTEM, cli.GO, "work", "init")
-				m.Cmd(cli.SYSTEM, cli.GO, "work", "use", ".")
-				m.Cmd(cli.SYSTEM, cli.GO, "work", "use", nfs.USR_RELEASE)
-				m.Cmd(cli.SYSTEM, cli.GO, "work", "use", nfs.USR_ICEBERGS)
-				m.Cmd(cli.SYSTEM, cli.GO, "work", "use", nfs.USR_TOOLKITS)
-				DreamEach(m, m.Option(mdb.NAME), "", func(name string) { m.Cmd(cli.SYSTEM, cli.GO, "work", "use", path.Join(ice.USR_LOCAL_WORK, name)) })
-			}},
 			PUBLISH: {Name: "publish name", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(ice.MSG_TITLE, kit.Keys(m.Option(ice.MSG_USERPOD0), m.Option(ice.MSG_USERPOD), m.CommandKey(), m.ActionKey()))
 				list := []string{cli.LINUX, cli.DARWIN, cli.WINDOWS}
@@ -358,7 +326,6 @@ func init() {
 				})
 				m.ProcessHold()
 			}},
-			VERSION: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy("web.code.version") }},
 			FOR_FLOW: {Name: "forFlow name cmd*='sh etc/miss.sh'", Help: "流程", Icon: "bi bi-terminal", Hand: func(m *ice.Message, arg ...string) {
 				m.Options(ctx.DISPLAY, html.PLUGIN_XTERM, cli.CMD_OUTPUT, nfs.NewWriteCloser(func(buf []byte) (int, error) {
 					PushNoticeGrow(m.Options(ice.MSG_COUNT, "0", ice.LOG_DEBUG, ice.FALSE, ice.LOG_DISABLE, ice.TRUE), strings.ReplaceAll(string(buf), lex.NL, "\r\n"))
@@ -385,6 +352,7 @@ func init() {
 					m.Push(mdb.NAME, name).Push(mdb.TEXT, m.Cmdx(SPACE, name, nfs.CAT, m.Option(nfs.FILE)))
 				}).StatusTimeCount(m.OptionSimple(nfs.FILE))
 			}},
+
 			cli.START: {Hand: func(m *ice.Message, arg ...string) {
 				_dream_start(m, m.Option(mdb.NAME))
 				gdb.Event(m, DREAM_START, arg)
@@ -398,17 +366,28 @@ func init() {
 			cli.RUNTIME: {Hand: func(m *ice.Message, arg ...string) {
 				ProcessPodCmd(m, m.Option(mdb.NAME), "", nil, arg...)
 			}},
+			"settings": {Name: "settings restart=manual,always access=public,private", Help: "设置", Hand: func(m *ice.Message, arg ...string) {
+				kit.If(m.Option(cli.RESTART) == "manual", func() { m.Option(cli.RESTART, "") })
+				kit.If(m.Option(aaa.ACCESS) == aaa.PUBLIC, func() { m.Option(aaa.ACCESS, "") })
+				mdb.HashModify(m, m.OptionSimple(mdb.NAME, cli.RESTART, aaa.ACCESS))
+			}},
 			tcp.SEND: {Name: "send space*", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(SPACE, m.Option(SPACE), DREAM, mdb.CREATE, m.OptionSimple(mdb.NAME, mdb.ICONS, nfs.REPOS, nfs.BINARY))
 				m.Cmd(SPACE, m.Option(SPACE), DREAM, cli.START, m.OptionSimple(mdb.NAME))
 				ProcessIframe(m, "", m.MergePod(kit.Keys(m.Option(SPACE), m.Option(mdb.NAME))))
 			}},
+			nfs.COPY: {Name: "copy to*", Help: "复制", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy("", mdb.CREATE, mdb.NAME, m.Option(nfs.TO), nfs.BINARY, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME), ice.BIN_ICE_BIN))
+			}},
 			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
 				gdb.Event(m, DREAM_TRASH, arg)
 				nfs.Trash(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME)))
 			}},
-			nfs.COPY: {Name: "copy to*", Help: "复制", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy("", mdb.CREATE, mdb.NAME, m.Option("to"), nfs.BINARY, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME), ice.BIN_ICE_BIN))
+			GRANT: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(CHAT_GRANT, aaa.CONFIRM, kit.Dict(SPACE, m.Option(mdb.NAME)))
+			}},
+			TOKEN: {Hand: func(m *ice.Message, arg ...string) {
+				m.Options(m.Cmd(SPIDE, m.Option(mdb.NAME)).AppendSimple()).Cmdy(SPIDE, mdb.DEV_REQUEST)
 			}},
 			OPEN: {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(mdb.TYPE) == ORIGIN && m.IsLocalhost() {
@@ -421,9 +400,6 @@ func init() {
 					}
 				}
 			}},
-			GRANT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(CHAT_GRANT, aaa.CONFIRM, kit.Dict(SPACE, m.Option(mdb.NAME)))
-			}},
 			DREAM_OPEN: {Hand: func(m *ice.Message, arg ...string) {}},
 			DREAM_CLOSE: {Hand: func(m *ice.Message, arg ...string) {
 				kit.For(arg, func(k, v string) {
@@ -431,21 +407,6 @@ func init() {
 						m.GoSleep300ms(func() { m.Cmd(DREAM, cli.START, m.OptionSimple(mdb.NAME)) })
 					}
 				})
-			}},
-			TOKEN: {Hand: func(m *ice.Message, arg ...string) {
-				m.Options(m.Cmd(SPIDE, m.Option(mdb.NAME)).AppendSimple()).Cmdy(SPIDE, mdb.DEV_REQUEST)
-			}},
-			SERVER: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(SPACE).Table(func(value ice.Maps, index int, head []string) {
-					kit.If(value[mdb.TYPE] == m.ActionKey(), func() { m.PushRecord(value, head...) })
-				})
-				m.Sort(mdb.TIME, ice.STR_R)
-			}},
-			ORIGIN: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(SPACE).Table(func(value ice.Maps, index int, head []string) {
-					kit.If(value[mdb.TYPE] == m.ActionKey(), func() { m.PushRecord(value, head...) })
-				})
-				m.Sort(mdb.TIME, ice.STR_R)
 			}},
 			DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				if !aaa.IsTechOrRoot(m) {
@@ -456,7 +417,7 @@ func init() {
 				kit.If(m.IsDebug(), func() { list = append(list, cli.RUNTIME) })
 				switch m.Option(mdb.TYPE) {
 				case WORKER:
-					list = append(list, "settings", "copy", tcp.SEND)
+					list = append(list, "settings", nfs.COPY, tcp.SEND)
 				case SERVER:
 					list = append(list, DREAM)
 				default:
@@ -464,11 +425,6 @@ func init() {
 				}
 				list = append(list, OPEN)
 				m.PushButton(list...)
-			}},
-			"settings": {Name: "settings restart=manual,always access=public,private", Help: "设置", Hand: func(m *ice.Message, arg ...string) {
-				kit.If(m.Option(cli.RESTART) == "manual", func() { m.Option(cli.RESTART, "") })
-				kit.If(m.Option(aaa.ACCESS) == aaa.PUBLIC, func() { m.Option(aaa.ACCESS, "") })
-				mdb.HashModify(m, m.OptionSimple(mdb.NAME, cli.RESTART, aaa.ACCESS))
 			}},
 			STATS_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				if msg := _dream_list(m.Spawn(), true); msg.Length() > 0 {
@@ -478,6 +434,58 @@ func init() {
 					PushStats(m, kit.Keys(m.CommandKey(), SERVER), stat[SERVER], "", "已连接机器")
 					PushStats(m, kit.Keys(m.CommandKey(), ORIGIN), stat[ORIGIN], "", "已连接主机")
 				}
+			}},
+			SERVE_START: {Hand: func(m *ice.Message, arg ...string) {
+				for _, cmd := range kit.Reverse(kit.Split(mdb.Config(m, html.BUTTON))) {
+					m.Cmd(gdb.EVENT, gdb.LISTEN, gdb.EVENT, DREAM_TABLES, ice.CMD, cmd)
+					m.Cmd(gdb.EVENT, gdb.LISTEN, gdb.EVENT, DREAM_ACTION, ice.CMD, cmd)
+					aaa.White(m, kit.Keys(m.ShortKey(), ctx.ACTION, cmd))
+				}
+				mdb.HashSelects(m).Table(func(value ice.Maps) {
+					if value[cli.RESTART] == ALWAYS && nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK+value[mdb.NAME])) {
+						m.Cmd(DREAM, cli.START, kit.Dict(mdb.NAME, value[mdb.NAME]))
+					}
+				})
+			}},
+			ORIGIN: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(SPACE).Table(func(value ice.Maps, index int, head []string) {
+					kit.If(value[mdb.TYPE] == m.ActionKey(), func() { m.PushRecord(value, head...) })
+				})
+				m.Sort(mdb.TIME, ice.STR_R)
+			}},
+			SERVER: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(SPACE).Table(func(value ice.Maps, index int, head []string) {
+					kit.If(value[mdb.TYPE] == m.ActionKey(), func() { m.PushRecord(value, head...) })
+				})
+				m.Sort(mdb.TIME, ice.STR_R)
+			}},
+			DOWNLOAD: {Name: "download path link", Hand: func(m *ice.Message, arg ...string) {
+				GoToast(m, func(toast func(string, int, int)) []string {
+					SpideSave(m, m.Option(nfs.PATH), kit.MergeURL(m.Option(mdb.LINK), cli.GOOS, runtime.GOOS, cli.GOARCH, runtime.GOARCH), func(count, total, value int) {
+						toast(m.Option(mdb.NAME), count, total)
+					})
+					return nil
+				})
+				os.Chmod(m.Option(nfs.PATH), ice.MOD_DIR)
+			}},
+			VERSION: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy("web.code.version")
+			}},
+			"gowork": {Name: "gowork name", Help: "工作区", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(cli.SYSTEM, cli.GO, "work", "init")
+				m.Cmd(cli.SYSTEM, cli.GO, "work", "use", ".")
+				m.Cmd(cli.SYSTEM, cli.GO, "work", "use", nfs.USR_RELEASE)
+				m.Cmd(cli.SYSTEM, cli.GO, "work", "use", nfs.USR_ICEBERGS)
+				m.Cmd(cli.SYSTEM, cli.GO, "work", "use", nfs.USR_TOOLKITS)
+				DreamEach(m, m.Option(mdb.NAME), "", func(name string) { m.Cmd(cli.SYSTEM, cli.GO, "work", "use", path.Join(ice.USR_LOCAL_WORK, name)) })
+			}},
+			"scan": {Hand: func(m *ice.Message, arg ...string) {
+				list := m.CmdMap(CODE_GIT_REPOS, nfs.REPOS)
+				GoToastTable(m.Cmd(nfs.DIR, nfs.USR_LOCAL_WORK, mdb.NAME), mdb.NAME, func(value ice.Maps) {
+					if repos, ok := list[value[mdb.NAME]]; ok {
+						m.Cmd("", mdb.CREATE, value[mdb.NAME], repos[ORIGIN])
+					}
+				})
 			}},
 		}, StatsAction(), DreamAction(), DreamTablesAction(), mdb.ImportantHashAction(
 			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icons,repos,binary,template,restart,access",
@@ -490,7 +498,7 @@ func init() {
 					_dream_list(m, simple)
 					_dream_list_icon(m)
 					if m.Length() == 0 {
-						m.EchoInfoButton(m.Trans("please create new dream", "请创建新空间"), mdb.CREATE).Action(mdb.CREATE)
+						m.EchoInfoButton(m.Trans("please scan or create new dream", "请扫描或创建新空间"), mdb.CREATE, "scan")
 						return
 					}
 				}

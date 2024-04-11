@@ -85,6 +85,9 @@ func UserRole(m *ice.Message, username ice.Any) (role string) {
 func UserNick(m *ice.Message, username ice.Any) (nick string) {
 	return UserInfo(m, username, USERNICK, ice.MSG_USERNICK)
 }
+func UserLang(m *ice.Message, username ice.Any) (nick string) {
+	return UserInfo(m, username, LANGUAGE, ice.MSG_LANGUAGE)
+}
 func UserZone(m *ice.Message, username ice.Any) (zone string) {
 	return UserInfo(m, username, USERZONE, ice.MSG_USERZONE)
 }
@@ -95,7 +98,7 @@ func UserRoot(m *ice.Message, arg ...string) *ice.Message {
 	userrole := kit.Select(TECH, arg, 0)
 	username := kit.Select(ice.Info.Username, arg, 1)
 	usernick := kit.Select(UserNick(m, username), arg, 2)
-	language := kit.Select("", arg, 3)
+	language := kit.Select(UserLang(m, username), arg, 3)
 	userzone := kit.Select(ice.OPS, arg, 4)
 	email := kit.Select(UserEmail(m, username), arg, 5)
 	if len(arg) > 0 {

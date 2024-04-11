@@ -91,7 +91,7 @@ func init() {
 		}},
 	})
 	Index.MergeCommands(ice.Commands{
-		PUBLISH: {Name: "publish path auto create volcanos icebergs intshell", Help: "发布", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
+		PUBLISH: {Name: "publish path auto create volcanos icebergs intshell", Help: "发布", Icon: "QuickTime Player.png", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
 			ice.VOLCANOS: {Help: "火山架", Hand: func(m *ice.Message, arg ...string) { _publish_list(m, kit.ExtReg(HTML, CSS, JS)) }},
 			ice.ICEBERGS: {Help: "冰山架", Hand: func(m *ice.Message, arg ...string) { _publish_bin_list(m).Cmdy("", ice.CONTEXTS) }},
 			ice.INTSHELL: {Help: "神农架", Hand: func(m *ice.Message, arg ...string) { _publish_list(m, kit.ExtReg(SH, VIM, CONF)) }},

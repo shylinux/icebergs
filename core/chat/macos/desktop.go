@@ -1,9 +1,6 @@
 package macos
 
 import (
-	"path"
-	"strings"
-
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
@@ -18,14 +15,11 @@ const DESKTOP = "desktop"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-			m.Cmd(web.BINPACK, mdb.INSERT, nfs.USR_ICONS)
-		}},
+		ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { m.Cmd(web.BINPACK, mdb.INSERT, nfs.USR_ICONS) }},
 		ice.CTX_OPEN: {Hand: func(m *ice.Message, arg ...string) {
 			if m.Cmd(DESKTOP).Length() == 0 {
 				DeskAppend(m, "Books.png", web.WIKI_WORD)
 				DeskAppend(m, "Photos.png", web.WIKI_FEEL)
-				DeskAppend(m, "Grapher.png", web.WIKI_DRAW)
 				DeskAppend(m, "Calendar.png", web.TEAM_PLAN)
 				DeskAppend(m, "Messages.png", web.CHAT_MESSAGE)
 			}
@@ -37,14 +31,8 @@ func init() {
 				DockAppend(m, "git.png", web.CODE_GIT_STATUS)
 				DockAppend(m, "vimer.png", web.CODE_VIMER)
 			}
-			AppInstall(m, "App Store.png", web.STORE)
 			m.Travel(func(p *ice.Context, c *ice.Context, key string, cmd *ice.Command) {
-				kit.If(cmd.Icon, func() {
-					if !kit.HasPrefix(cmd.Icon, nfs.PS, web.HTTP) {
-						nfs.Exists(m, path.Join(path.Dir(strings.TrimPrefix(ctx.GetCmdFile(m, m.PrefixKey()), kit.Path(""))), cmd.Icon), func(p string) { cmd.Icon = p })
-					}
-					AppInstall(m, cmd.Icon, m.PrefixKey())
-				})
+				kit.If(cmd.Icon, func() { cmd.Icon = AppInstall(m, cmd.Icon, m.PrefixKey()) })
 			})
 			Notify(m, "usr/icons/Infomation.png", cli.RUNTIME, "系统启动成功", ctx.INDEX, cli.RUNTIME)
 		}},

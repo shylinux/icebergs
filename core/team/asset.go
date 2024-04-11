@@ -56,7 +56,7 @@ const ASSET = "asset"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		ASSET: {Name: "asset account id auto", Help: "资产", Meta: kit.Dict(
+		ASSET: {Name: "asset account id auto", Help: "资产", Icon: "Stocks.png", Meta: kit.Dict(
 			ice.CTX_TRANS, kit.Dict(
 				html.INPUT, kit.Dict(
 					ACCOUNT, "账户", AMOUNT, "金额", FROM, "转出", TO, "转入", mdb.NAME, "商家", mdb.TEXT, "备注",

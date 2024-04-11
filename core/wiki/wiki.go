@@ -41,8 +41,11 @@ func _wiki_list(m *ice.Message, arg ...string) bool {
 		m.Copy(m.Cmd(nfs.DIR, kit.Slice(arg, 0, 1), kit.Dict(nfs.DIR_TYPE, nfs.CAT, nfs.DIR_REG, mdb.Config(m, lex.REGEXP))).SortStr(nfs.PATH))
 		return true
 	} else {
-		m.Display(m.FileURI(nfs.Relative(m, ctx.GetCmdFile(m, m.ShortKey()))))
-		// ctx.DisplayLocal(m, path.Join(kit.PathName(2), kit.Keys(kit.FileName(2), nfs.JS)))
+		m.Debug("what %v", ctx.GetCmdFile(m, m.ShortKey()))
+		m.Debug("what %v", nfs.Relative(m, ctx.GetCmdFile(m, m.ShortKey())))
+		m.Debug("what %v", m.FileURI(nfs.Relative(m, ctx.GetCmdFile(m, m.ShortKey()))))
+		// m.Display(m.FileURI(nfs.Relative(m, ctx.GetCmdFile(m, m.ShortKey()))))
+		ctx.DisplayLocal(m, path.Join(kit.PathName(-1), kit.Keys(kit.FileName(-1), nfs.JS)))
 		return false
 	}
 }

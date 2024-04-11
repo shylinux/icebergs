@@ -19,7 +19,7 @@ func init() {
 		BUILD = "build"
 	)
 	Index.MergeCommands(ice.Commands{
-		HOUSE: {Help: "房子", Meta: kit.Dict(ice.CTX_TRANS, kit.Dict(html.INPUT, kit.Dict(
+		HOUSE: {Help: "房子", Icon: "Home.png", Meta: kit.Dict(ice.CTX_TRANS, kit.Dict(html.INPUT, kit.Dict(
 			mdb.ZONE, "区域", mdb.NAME, "小区", AREA, "面积", ROOM, "户型", PRICE, "总价", BUILD, "建成时间",
 		))), Actions: ice.MergeActions(ice.Actions{
 			mdb.CREATE: {Name: "create zone* type* price* area* room* name* build text link image=9@img"},

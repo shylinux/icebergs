@@ -7,6 +7,7 @@ import (
 	"path"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
@@ -45,21 +46,25 @@ var list = map[string]handler{}
 
 func AddCommand(key string, cb handler) { list[key] = cb }
 
-func Command(m *ice.Message, dir string, cli string, arg ...string) (XTerm, error) {
-	if cb, ok := list[path.Base(cli)]; ok {
-		m.Debug("find shell %s %s", cli, kit.FileLines(cb))
+func Command(m *ice.Message, dir string, cmd string, arg ...string) (XTerm, error) {
+	if cb, ok := list[path.Base(cmd)]; ok {
+		m.Debug("find shell %s %s", cmd, kit.FileLines(cb))
 		return cb(m.Spawn(), arg...)
 	}
-	cmd := exec.Command(cli, arg...)
-	cmd.Dir = nfs.MkdirAll(m, kit.Path(dir))
-	cmd.Env = append(cmd.Env, os.Environ()...)
-	cmd.Env = append(cmd.Env, "TERM=xterm")
+	if m.Cmd(cli.SUDO, cmd).Length() > 0 {
+		m.Debug("find sudo %s", cmd)
+		cmd, arg = cli.SUDO, kit.Simple(cmd, arg)
+	}
+	p := exec.Command(cmd, arg...)
+	p.Dir = nfs.MkdirAll(m, kit.Path(dir))
+	p.Env = append(p.Env, os.Environ()...)
+	p.Env = append(p.Env, "TERM=xterm")
 	if pty, tty, err := Open(); err != nil {
 		return nil, err
 	} else {
-		Setsid(cmd)
-		cmd.Stdin, cmd.Stdout, cmd.Stderr = tty, tty, tty
-		return &xterm{cmd, pty}, cmd.Start()
+		Setsid(p)
+		p.Stdin, p.Stdout, p.Stderr = tty, tty, tty
+		return &xterm{p, pty}, p.Start()
 	}
 }
 func PushShell(m *ice.Message, xterm XTerm, cmds []string, cb func(string)) {

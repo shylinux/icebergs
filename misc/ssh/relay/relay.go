@@ -316,7 +316,7 @@ func (s relay) Pushkey(m *ice.Message, arg ...string) {
 	p := kit.Format("/home/%s/"+SSH_AUTHORIZED, m.Option(aaa.USERNAME))
 	kit.If(m.Option(aaa.USERNAME) == aaa.ROOT, func() { p = kit.Format("/root/" + SSH_AUTHORIZED) })
 	list := kit.Split(m.AdminCmdx(web.SPACE, m.Option(MACHINE), nfs.CAT, p), lex.NL, lex.NL)
-	if key := ssh.PublicKey(m.Message, m.Option(web.SERVER)); !kit.IsIn(key, list...) {
+	if key := m.PublicKey(m.Option(web.SERVER)); !kit.IsIn(key, list...) {
 		m.AdminCmd(web.SPACE, m.Option(MACHINE), nfs.PUSH, p, key+lex.NL)
 		m.Echo(m.AdminCmdx(web.SPACE, m.Option(MACHINE), nfs.CAT, p)).ProcessInner()
 	} else {

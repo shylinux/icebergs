@@ -490,3 +490,14 @@ func SpideCache(m *ice.Message, link string) *ice.Message {
 }
 func SpideOrigin(m *ice.Message, name string) string { return m.Cmdv(SPIDE, name, CLIENT_ORIGIN) }
 func SpideURL(m *ice.Message, name string) string    { return m.Cmdv(SPIDE, name, CLIENT_URL) }
+func SpideList(m *ice.Message) *ice.Message          { return m.Copy(AdminCmd(m, SPIDE)) }
+func SpideReposList(m *ice.Message) *ice.Message {
+	AdminCmd(m, SPIDE).Table(func(value ice.Maps) {
+		if value[CLIENT_TYPE] == nfs.REPOS {
+			m.Push(mdb.NAME, value[CLIENT_NAME])
+			m.Push(mdb.ICONS, value[mdb.ICONS])
+		}
+	})
+	ctx.DisplayInputKey(m, "style", "_nameicon")
+	return m
+}

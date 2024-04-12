@@ -128,8 +128,12 @@ func Toast(m *ice.Message, text string, arg ...ice.Any) *ice.Message { // [title
 	return m
 }
 func PushNoticeGrowXterm(m *ice.Message, title string, cmd ...ice.Any) {
+	PushCmdStream(m, title).Cmd(cli.SYSTEM, cmd)
+}
+func PushCmdStream(m *ice.Message, title string) *ice.Message {
 	m.Options(ctx.DISPLAY, html.PLUGIN_XTERM, cli.CMD_OUTPUT, nfs.NewWriteCloser(func(buf []byte) (int, error) {
 		PushNoticeGrow(m.Options(ice.MSG_TITLE, title, ice.MSG_COUNT, "0", ice.LOG_DEBUG, ice.FALSE, ice.LOG_DISABLE, ice.TRUE), strings.ReplaceAll(string(buf), lex.NL, "\r\n"))
 		return len(buf), nil
-	}, nil)).Cmd(cli.SYSTEM, cmd)
+	}, nil))
+	return m
 }

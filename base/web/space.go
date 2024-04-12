@@ -310,6 +310,7 @@ func init() {
 			ice.MAIN: {Name: "main index", Help: "首页", Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) > 0 {
 					mdb.Config(m, ice.MAIN, m.Option(ctx.INDEX))
+					m.Cmd(SERVE, m.ActionKey(), arg)
 					return
 				}
 				kit.If(mdb.Config(m, ice.MAIN), func(cmd string) { RenderPodCmd(m, "", cmd) }, func() { RenderMain(m) })

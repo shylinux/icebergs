@@ -87,6 +87,9 @@ const (
 	REBOOT   = "reboot"
 	RESTART  = "restart"
 	INTERVAL = "interval"
+	OPTS     = "opts"
+	ARGS     = "args"
+	LOGS     = "logs"
 
 	BEGIN = "begin"
 	END   = "end"

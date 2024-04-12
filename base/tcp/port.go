@@ -134,7 +134,7 @@ func init() {
 	})
 }
 func PortRight(m *ice.Message, arg ...string) string {
-	current, begin, end := mdb.Config(m, CURRENT), mdb.Config(m, BEGIN), mdb.Config(m, END)
+	current, begin, end := kit.Select("20000", mdb.Config(m, CURRENT)), kit.Select("20000", mdb.Config(m, BEGIN)), kit.Select("30000", mdb.Config(m, END))
 	return _port_right(m, kit.Int(kit.Select(kit.Select(begin, current), arg, 0)), kit.Int(kit.Select(begin, arg, 1)), kit.Int(kit.Select(end, arg, 2)))
 }
 func PortCmds(m *ice.Message, arg ...string) {

@@ -345,12 +345,12 @@ func init() {
 			ctx.CMDS: {Name: "cmds name cmds*", Help: "命令", Icon: "bi bi-terminal", Hand: func(m *ice.Message, arg ...string) {
 				DreamEach(m, m.Option(mdb.NAME), "", func(name string) {
 					m.Push(mdb.NAME, name).Push(mdb.TEXT, m.Cmdx(SPACE, name, kit.Split(m.Option(ctx.CMDS))))
-				}).StatusTimeCount(m.OptionSimple(ctx.CMDS))
+				}).StatusTimeCount(m.OptionSimple(ctx.CMDS)).ProcessInner()
 			}},
 			nfs.FILE: {Name: "file name file*", Help: "文件", Icon: "bi bi-file-earmark-code", Hand: func(m *ice.Message, arg ...string) {
 				DreamEach(m, m.Option(mdb.NAME), "", func(name string) {
 					m.Push(mdb.NAME, name).Push(mdb.TEXT, m.Cmdx(SPACE, name, nfs.CAT, m.Option(nfs.FILE)))
-				}).StatusTimeCount(m.OptionSimple(nfs.FILE))
+				}).StatusTimeCount(m.OptionSimple(nfs.FILE)).ProcessInner()
 			}},
 
 			cli.START: {Hand: func(m *ice.Message, arg ...string) {

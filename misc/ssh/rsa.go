@@ -28,6 +28,9 @@ const RSA = "rsa"
 
 func init() {
 	const (
+		SSH_AUTH_KEYS = ".ssh/authorized_keys"
+		SSH_RSA_PUB   = ".ssh/id_rsa.pub"
+
 		TITLE = "title"
 		BITS  = "bits"
 		KEY   = "key"
@@ -35,6 +38,7 @@ func init() {
 	)
 	aaa.Index.MergeCommands(ice.Commands{
 		RSA: {Name: "rsa hash auto", Help: "密钥", Actions: ice.MergeActions(ice.Actions{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { m.Cmd("", PUBLIC) }},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case TITLE:
@@ -64,7 +68,7 @@ func init() {
 				))
 			}},
 			AUTHS: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(nfs.CAT, kit.HomePath(".ssh/authorized_keys"))
+				m.Cmdy(nfs.CAT, kit.HomePath(SSH_AUTH_KEYS))
 				kit.For(strings.Split(strings.TrimSpace(m.Results()), lex.NL), func(text string) {
 					if ls := kit.Split(text, " ", " "); len(ls) > 2 {
 						m.Push(mdb.TYPE, ls[0])
@@ -74,13 +78,13 @@ func init() {
 				})
 			}},
 			PUSHS: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(nfs.PUSH, kit.HomePath(".ssh/authorized_keys"), arg[0])
+				m.Cmd(nfs.PUSH, kit.HomePath(SSH_AUTH_KEYS), arg[0])
 			}},
 			PUBLIC: {Hand: func(m *ice.Message, arg ...string) {
-				if !nfs.Exists(m, kit.HomePath(".ssh/id_rsa.pub")) {
+				if !nfs.Exists(m, kit.HomePath(SSH_RSA_PUB)) {
 					m.Cmd("", mdb.CREATE).Options(m.Cmd("").AppendSimple()).Cmd("", mdb.EXPORT)
 				}
-				m.Cmdy(nfs.CAT, kit.HomePath(".ssh/id_rsa.pub"))
+				m.Cmdy(nfs.CAT, kit.HomePath(SSH_RSA_PUB))
 			}},
 		}, mdb.HashAction(mdb.SHORT, PRIVATE, mdb.FIELD, "time,hash,title,public,private")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...).PushAction(mdb.EXPORT, mdb.REMOVE); len(arg) == 0 {
@@ -88,10 +92,4 @@ func init() {
 			}
 		}},
 	})
-}
-func PublicKey(m *ice.Message, server string) string {
-	if m.IsWorker() {
-		server = kit.Keys(ice.OPS, server)
-	}
-	return m.Cmdx("space", server, RSA, PUBLIC)
 }

@@ -17,6 +17,8 @@ const (
 	ADD     = "add"
 	OSID    = "osid"
 	REPOS   = "repos"
+	UBUNTU  = "ubuntu"
+	CENTOS  = "centos"
 	ALPINE  = "alpine"
 	BUSYBOX = "busybox"
 	RELEASE = "release"

@@ -19,9 +19,16 @@ func (m *Message) OptionFields(arg ...string) string {
 	kit.If(len(arg) > 0, func() { m.Option(MSG_FIELDS, kit.Join(arg)) })
 	return kit.Join(kit.Simple(m.Optionv(MSG_FIELDS)))
 }
-func (m *Message) OptionDefault(arg ...string) string {
-	kit.For(arg, func(k, v string) { kit.If(m.Option(k) == "" && v != "", func() { m.Option(k, v) }) })
-	return m.Option(arg[0])
+func (m *Message) OptionDefault(arg ...Any) string {
+	kit.For(arg, func(k string, v Any) {
+		switch v := v.(type) {
+		case string:
+			kit.If(m.Option(k) == "" && v != "", func() { m.Option(k, v) })
+		case func() string:
+			kit.If(m.Option(k) == "", func() { m.Option(k, v()) })
+		}
+	})
+	return m.Option(kit.Format(arg[0]))
 }
 func (m *Message) OptionSimple(key ...string) (res []string) {
 	kit.If(len(key) == 0, func() {

@@ -98,6 +98,7 @@ func init() {
 				case mdb.HASH:
 					fallthrough
 				case mdb.TYPE:
+					m.Push(arg[0], cli.Shell(m))
 					m.Cmd(mdb.SEARCH, SHELL, "", "", func(value ice.Maps) {
 						kit.If(value[mdb.TYPE] == SHELL, func() { m.Push(arg[0], value[mdb.TEXT]) })
 					})

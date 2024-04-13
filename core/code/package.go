@@ -56,6 +56,11 @@ func init() {
 				button := []ice.Any{}
 				switch value[mdb.TYPE] {
 				case nfs.BINARY:
+					if value[cli.PID] == "" {
+						button = append(button, cli.START)
+					} else {
+						button = append(button, cli.STOP)
+					}
 					kit.If(!nfs.Exists(m, _install_path(m, value[mdb.LINK])), func() {
 						button = append(button, web.INSTALL)
 					}, func() {

@@ -37,6 +37,7 @@ fieldset.macos.desktop>div.output>div.desktop>fieldset>legend { padding:0 var(--
 body.mobile fieldset.macos.desktop>div.output>div.desktop>fieldset>legend { float:none; }
 body:not(.mobile) fieldset.macos.desktop>div.output>div.desktop>fieldset>legend:not(:hover) { background-color:transparent; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset div.item.button.window span { position:absolute; left:8px; top:2px; }
+body.windows fieldset.macos.desktop>div.output>div.desktop>fieldset div.item.button.window span { top:-2px; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>*:not(.textarea) { margin:var(--button-margin) var(--input-margin); }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>div.icon { margin:var(--button-margin) 0; box-shadow:none; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>div.icon.delete { display:none; }

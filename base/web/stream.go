@@ -9,6 +9,7 @@ import (
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web/html"
 	kit "shylinux.com/x/toolkits"
 )
@@ -67,9 +68,9 @@ func StreamPush(m *ice.Message, arg ...string) {
 	AdminCmd(m, STREAM, PUSH, m.Option(ice.MSG_USERPOD), m.ShortKey(), arg)
 }
 func StreamPushRefresh(m *ice.Message, arg ...string) {
-	StreamPush(m.Spawn(ice.Maps{"space.noecho": ice.TRUE}), kit.Simple(html.REFRESH, arg)...)
-	if strings.Contains(m.Option(ice.MSG_USERPOD), ".") {
-		AdminCmd(m.Spawn(ice.Maps{"space.noecho": ice.TRUE}), SPACE, ice.DEV, STREAM, PUSH, m.Option(ice.MSG_USERPOD), m.ShortKey(), kit.Simple(html.REFRESH, arg))
+	StreamPush(m.Spawn(ice.Maps{ice.SPACE_NOECHO: ice.TRUE}), kit.Simple(html.REFRESH, arg)...)
+	if strings.Contains(m.Option(ice.MSG_USERPOD), nfs.PT) {
+		AdminCmd(m.Spawn(ice.Maps{ice.SPACE_NOECHO: ice.TRUE}), SPACE, ice.DEV, STREAM, PUSH, m.Option(ice.MSG_USERPOD), m.ShortKey(), kit.Simple(html.REFRESH, arg))
 	}
 }
 func StreamPushRefreshConfirm(m *ice.Message, arg ...string) {

@@ -471,15 +471,12 @@ func init() {
 			VERSION: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy("web.code.version")
 			}},
-			"gowork": {Name: "gowork name", Help: "工作区", Hand: func(m *ice.Message, arg ...string) {
+			nfs.GOWORK: {Name: "gowork name", Help: "工作区", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(cli.SYSTEM, cli.GO, "work", "init")
-				m.Cmd(cli.SYSTEM, cli.GO, "work", "use", ".")
-				m.Cmd(cli.SYSTEM, cli.GO, "work", "use", nfs.USR_RELEASE)
-				m.Cmd(cli.SYSTEM, cli.GO, "work", "use", nfs.USR_ICEBERGS)
-				m.Cmd(cli.SYSTEM, cli.GO, "work", "use", nfs.USR_TOOLKITS)
+				kit.For([]string{".", nfs.USR_RELEASE, nfs.USR_ICEBERGS, nfs.USR_TOOLKITS}, func(p string) { m.Cmd(cli.SYSTEM, cli.GO, "work", "use", p) })
 				DreamEach(m, m.Option(mdb.NAME), "", func(name string) { m.Cmd(cli.SYSTEM, cli.GO, "work", "use", path.Join(ice.USR_LOCAL_WORK, name)) })
 			}},
-			"scan": {Hand: func(m *ice.Message, arg ...string) {
+			nfs.SCAN: {Hand: func(m *ice.Message, arg ...string) {
 				list := m.CmdMap(CODE_GIT_REPOS, nfs.REPOS)
 				GoToastTable(m.Cmd(nfs.DIR, nfs.USR_LOCAL_WORK, mdb.NAME), mdb.NAME, func(value ice.Maps) {
 					if repos, ok := list[value[mdb.NAME]]; ok {

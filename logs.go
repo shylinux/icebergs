@@ -133,31 +133,37 @@ func (m *Message) Warn(err Any, arg ...Any) bool {
 	return true
 }
 func (m *Message) WarnNotLogin(err Any, arg ...Any) bool {
-	return m.Warn(err, ErrNotLogin, kit.Simple(arg...), logs.FileLineMeta(2))
+	return m.warnInfo(err, ErrNotLogin, arg...)
 }
 func (m *Message) WarnNotRight(err Any, arg ...Any) bool {
-	return m.Warn(err, ErrNotRight, kit.Simple(arg...), logs.FileLineMeta(2))
+	return m.warnInfo(err, ErrNotRight, arg...)
 }
 func (m *Message) WarnNotAllow(err Any, arg ...Any) bool {
-	return m.Warn(err, ErrNotAllow, kit.Simple(arg...), logs.FileLineMeta(2))
+	return m.warnInfo(err, ErrNotAllow, arg...)
 }
 func (m *Message) WarnNotFound(err Any, arg ...Any) bool {
-	return m.Warn(err, ErrNotFound, kit.Simple(arg...), logs.FileLineMeta(2))
-}
-func (m *Message) WarnNotFoundSpace(err Any, arg ...Any) bool {
-	return m.Warn(err, ErrNotFoundSpace, kit.Simple(arg...), logs.FileLineMeta(2))
+	return m.warnInfo(err, ErrNotFound, arg...)
 }
 func (m *Message) WarnNotFoundIndex(err Any, arg ...Any) bool {
-	return m.Warn(err, ErrNotFoundIndex, kit.Simple(arg...), logs.FileLineMeta(2))
+	return m.warnInfo(err, ErrNotFoundIndex, arg...)
+}
+func (m *Message) WarnNotFoundSpide(err Any, arg ...Any) bool {
+	return m.warnInfo(err, ErrNotFoundSpide, arg...)
+}
+func (m *Message) WarnNotFoundSpace(err Any, arg ...Any) bool {
+	return m.warnInfo(err, ErrNotFoundSpace, arg...)
 }
 func (m *Message) WarnNotValid(err Any, arg ...Any) bool {
-	return m.Warn(err, ErrNotValid, kit.Simple(arg...), logs.FileLineMeta(2))
+	return m.warnInfo(err, ErrNotValid, arg...)
 }
 func (m *Message) WarnNotValidTime(time Any, arg ...Any) bool {
-	return m.Warn(kit.Format(time) < m.Time(), ErrNotValid, kit.Simple(arg...), time, m.Time(), logs.FileLineMeta(2))
+	return m.warnInfo(kit.Format(time) < m.Time(), ErrNotValid, append(arg, time, m.Time())...)
 }
 func (m *Message) WarnAlreadyExists(err Any, arg ...Any) bool {
-	return m.Warn(err, ErrAlreadyExists, kit.Simple(arg...), logs.FileLineMeta(2))
+	return m.warnInfo(err, ErrAlreadyExists, arg...)
+}
+func (m *Message) warnInfo(err Any, info string, arg ...Any) bool {
+	return m.Warn(err, info, kit.Simple(arg...), logs.Meta{logs.FILELINE, kit.FileLine(-1, 3)})
 }
 func (m *Message) ErrorNotImplement(arg ...Any) *Message {
 	m.Error(true, append(kit.List(ErrNotImplement), append(arg, logs.FileLineMeta(2)))...)

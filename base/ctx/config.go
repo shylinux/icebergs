@@ -33,6 +33,9 @@ func _config_only(v ice.Any, arg ...string) bool {
 	return false
 }
 func _config_save(m *ice.Message, name string, arg ...string) {
+	if !ice.HasVar() {
+		return
+	}
 	data, msg := ice.Map{}, m.Spawn(m.Source())
 	for _, k := range arg {
 		if v := mdb.Confv(msg, k); _config_only(v, mdb.META) && _config_only(kit.Value(v, mdb.META),
@@ -58,6 +61,9 @@ func _config_save(m *ice.Message, name string, arg ...string) {
 	}
 }
 func _config_load(m *ice.Message, name string, arg ...string) {
+	if !ice.HasVar() {
+		return
+	}
 	if f, e := miss.OpenFile(path.Join(ice.VAR_CONF, name)); e == nil {
 		defer f.Close()
 		data, msg := ice.Map{}, m.Spawn(m.Source())

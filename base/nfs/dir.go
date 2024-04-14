@@ -144,6 +144,9 @@ const (
 	VAR = "var/"
 	USR = "usr/"
 
+	SCAN   = "scan"
+	GOWORK = "gowork"
+
 	ETC_LOCAL_SH        = "etc/local.sh"
 	ETC_CERT_KEY        = "etc/cert/cert.key"
 	ETC_CERT_PEM        = "etc/cert/cert.pem"

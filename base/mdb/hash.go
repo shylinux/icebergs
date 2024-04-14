@@ -101,6 +101,9 @@ func _hash_prunes(m *ice.Message, prefix, chain string, arg ...string) {
 	})
 }
 func _hash_export(m *ice.Message, prefix, chain, file string) {
+	if !ice.HasUsr() {
+		return
+	}
 	defer Lock(m, prefix)()
 	if len(Confm(m, prefix, kit.Keys(chain, HASH))) == 0 {
 		return
@@ -116,6 +119,9 @@ func _hash_export(m *ice.Message, prefix, chain, file string) {
 	}
 }
 func _hash_import(m *ice.Message, prefix, chain, file string) {
+	if !ice.HasUsr() {
+		return
+	}
 	defer Lock(m, prefix)()
 	f, e := miss.OpenFile(kit.Keys(file, JSON))
 	if e != nil && !ice.Info.Important {

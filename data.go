@@ -52,6 +52,9 @@ func (m *Message) Conf(arg ...Any) string { return kit.Format(m.Confv(arg...)) }
 var _important = task.Lock{}
 
 func SaveImportant(m *Message, arg ...string) {
+	if !HasVar() {
+		return
+	}
 	if Info.Important != true || len(arg) == 0 {
 		return
 	}
@@ -60,12 +63,13 @@ func SaveImportant(m *Message, arg ...string) {
 	m.Cmd("nfs.push", VAR_DATA_IMPORTANT, kit.Join(arg, SP), NL)
 }
 func loadImportant(m *Message) {
+	if !HasVar() {
+		return
+	}
 	if f, e := os.Open(VAR_DATA_IMPORTANT); e == nil {
 		defer f.Close()
 		kit.For(f, func(s string) { kit.If(s != "" && !strings.HasPrefix(s, "# "), func() { m.Cmd(kit.Split(s)) }) })
 	}
-	if _, e := os.Stat(VAR); e == nil {
-		Info.Important = true
-	}
+	Info.Important = HasVar()
 }
 func removeImportant(m *Message) { os.Remove(VAR_DATA_IMPORTANT) }

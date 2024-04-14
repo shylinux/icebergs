@@ -59,6 +59,9 @@ func _zone_select(m *ice.Message, prefix, chain, zone string, id string) {
 	})
 }
 func _zone_export(m *ice.Message, prefix, chain, file string) {
+	if !ice.HasUsr() {
+		return
+	}
 	defer Lock(m, prefix)()
 	if len(Confm(m, prefix, kit.Keys(chain, HASH))) == 0 {
 		return
@@ -91,6 +94,9 @@ func _zone_export(m *ice.Message, prefix, chain, file string) {
 	m.Logs(EXPORT, KEY, path.Join(prefix, chain), FILE, p, COUNT, count)
 }
 func _zone_import(m *ice.Message, prefix, chain, file string) {
+	if !ice.HasUsr() {
+		return
+	}
 	defer Lock(m, prefix)()
 	f, e := miss.OpenFile(kit.Keys(file, CSV))
 	if e != nil && !ice.Info.Important {

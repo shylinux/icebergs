@@ -26,7 +26,7 @@ func (s *Frame) Begin(m *Message, arg ...string) {
 func (s *Frame) Start(m *Message, arg ...string) {
 	m.Cmd(INIT, arg)
 	kit.For([]string{LOG, GDB, SSH}, func(k string) { m.Sleep30ms().Start(k) })
-	Info.Important = true
+	Info.Important = HasVar()
 	m.Sleep30ms().Cmd(arg)
 }
 func (s *Frame) Close(m *Message, arg ...string) {
@@ -73,7 +73,9 @@ var Index = &Context{Name: ICE, Help: "冰山模块", Commands: Commands{
 		m.GoSleep300ms(func() {
 			m.root.Option(EXIT, kit.Select("0", arg, 0))
 			m.Cmd(SOURCE, ETC_EXIT_SHY)
-			m.Cmd(EXPORT, EXPORT)
+			if HasUsr() {
+				m.Cmd(EXPORT, EXPORT)
+			}
 			m.Cmd(CTX_EXIT)
 			removeImportant(m)
 		})
@@ -110,15 +112,36 @@ func Run(arg ...string) string {
 	kit.If(Pulse._cmd == nil, func() { Pulse._cmd = &Command{RawHand: logs.FileLines(3)} })
 	switch Index.Merge(Index).Begin(Pulse, arg...); kit.Select("", arg, 0) {
 	case SERVE, SPACE:
+		_forever = true
 		logs.Disable(false)
 		Pulse.Go(func() { Index.Start(Pulse, arg...) })
 		conf.Wait()
 		os.Exit(kit.Int(Pulse.Option(EXIT)))
 	default:
 		Pulse.Cmdy(INIT).Cmdy(arg)
-		kit.If(Pulse.IsErrNotFound(), func() { Pulse.SetAppend().SetResult().Cmdy(SYSTEM, arg) })
 		kit.If(strings.TrimSpace(Pulse.Result()) == "" && Pulse.Length() > 0, func() { Pulse.TableEcho() })
 		kit.If(Pulse.Result() != "" && !strings.HasSuffix(Pulse.Result(), NL), func() { Pulse.Echo(NL) })
 	}
 	return Pulse.Result()
+}
+
+var _forever bool
+
+func HasVar() bool {
+	if !_forever {
+		return false
+	}
+	if _, e := os.Stat(VAR); e == nil {
+		return true
+	}
+	return false
+}
+func HasUsr() bool {
+	if !_forever {
+		return false
+	}
+	if _, e := os.Stat(USR); e == nil {
+		return true
+	}
+	return false
 }

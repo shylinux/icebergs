@@ -28,6 +28,9 @@ func (f *Frame) Begin(m *ice.Message, arg ...string) {
 	}
 }
 func (f *Frame) Start(m *ice.Message, arg ...string) {
+	if !ice.HasVar() {
+		return
+	}
 	mdb.Confm(m, FILE, nil, func(k string, v ice.Map) {
 		if mdb.Conf(m, k, kit.Keym(mdb.DISABLE)) == ice.TRUE {
 			return

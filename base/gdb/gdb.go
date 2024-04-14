@@ -19,10 +19,12 @@ func (f *Frame) Begin(m *ice.Message, arg ...string) {
 	f.s = make(chan os.Signal, 10)
 }
 func (f *Frame) Start(m *ice.Message, arg ...string) {
-	if f, p, e := logs.CreateFile(ice.VAR_LOG_ICE_PID); e == nil {
-		m.Logs("save", "file", p, PID, os.Getpid())
-		fmt.Fprint(f, os.Getpid())
-		f.Close()
+	if ice.HasVar() {
+		if f, p, e := logs.CreateFile(ice.VAR_LOG_ICE_PID); e == nil {
+			m.Logs("save", "file", p, PID, os.Getpid())
+			fmt.Fprint(f, os.Getpid())
+			f.Close()
+		}
 	}
 	t := time.NewTicker(kit.Duration(mdb.Conf(m, TIMER, kit.Keym(TICK))))
 	for {

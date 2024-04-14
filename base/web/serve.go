@@ -35,7 +35,9 @@ func _serve_start(m *ice.Message) {
 		m.Cmd(SPIDE, ice.OPS, _serve_address(m)+"/exit", ice.Maps{CLIENT_TIMEOUT: cli.TIME_30ms, ice.LOG_DISABLE: ice.TRUE})
 	}).Sleep(cli.TIME_1s)
 	m.Spawn(ice.Maps{TOKEN: ""}).Start("", m.OptionSimple(tcp.HOST, tcp.PORT)...)
-	m.Cmd(nfs.SAVE, ice.VAR_LOG_ICE_PORT, m.Option(tcp.PORT))
+	if ice.HasVar() {
+		m.Cmd(nfs.SAVE, ice.VAR_LOG_ICE_PORT, m.Option(tcp.PORT))
+	}
 	if m.Cmd(tcp.HOST).Length() == 0 {
 		return
 	}

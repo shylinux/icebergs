@@ -341,8 +341,9 @@ const ( // Err
 	ErrNotValid = "not valid: "
 	ErrNotStart = "not start: "
 
-	ErrNotFoundSpace = "not found space: "
 	ErrNotFoundIndex = "not found index: "
+	ErrNotFoundSpide = "not found spide: "
+	ErrNotFoundSpace = "not found space: "
 	ErrAlreadyExists = "already exists: "
 	ErrNotImplement  = "not implement: "
 	ErrTooDeepCount  = "too deep count: "

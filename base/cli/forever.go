@@ -29,7 +29,7 @@ func init() {
 					}
 				})
 				m.Options(CMD_ENV, env, CMD_INPUT, os.Stdin, CMD_OUTPUT, os.Stdout, CMD_ERRPUT, os.Stderr)
-				kit.If(kit.Env(CTX_LOG), func(p string) { m.Optionv(CMD_ERRPUT, p) })
+				kit.If(kit.Select("/dev/null", kit.Env(CTX_LOG)), func(p string) { m.Optionv(CMD_ERRPUT, p) })
 				m.Cmd(FOREVER, STOP)
 				if bin := kit.Select(os.Args[0], ice.BIN_ICE_BIN, nfs.Exists(m, ice.BIN_ICE_BIN)); len(arg) > 0 && arg[0] == ice.SPACE {
 					m.Cmdy(FOREVER, bin, ice.SPACE, START, ice.DEV, ice.OPS, arg[1:])

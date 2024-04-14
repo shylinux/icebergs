@@ -118,6 +118,7 @@ func Run(arg ...string) string {
 		conf.Wait()
 		os.Exit(kit.Int(Pulse.Option(EXIT)))
 	default:
+		_forever = true
 		Pulse.Cmdy(INIT).Cmdy(arg)
 		kit.If(strings.TrimSpace(Pulse.Result()) == "" && Pulse.Length() > 0, func() { Pulse.TableEcho() })
 		kit.If(Pulse.Result() != "" && !strings.HasSuffix(Pulse.Result(), NL), func() { Pulse.Echo(NL) })
@@ -131,6 +132,7 @@ func HasVar() bool {
 	if !_forever {
 		return false
 	}
+	return true
 	if _, e := os.Stat(VAR); e == nil {
 		return true
 	}
@@ -140,6 +142,7 @@ func HasUsr() bool {
 	if !_forever {
 		return false
 	}
+	return true
 	if _, e := os.Stat(USR); e == nil {
 		return true
 	}

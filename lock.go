@@ -63,8 +63,8 @@ func (m *Message) setDetail(key string, arg ...string) *Message {
 				m._meta[KEY][i] = m._meta[KEY][i+1]
 				m._meta[VALUE][i] = m._meta[VALUE][i+1]
 			}
-			m._meta[KEY] = m._meta[KEY][0:len(m._meta[KEY])]
-			m._meta[VALUE] = m._meta[VALUE][0:len(m._meta[VALUE])]
+			m._meta[KEY] = m._meta[KEY][0:len(m._meta[KEY])-1]
+			m._meta[VALUE] = m._meta[VALUE][0:len(m._meta[VALUE])-1]
 			return m
 		}
 	}

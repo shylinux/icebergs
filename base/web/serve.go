@@ -232,28 +232,22 @@ func init() {
 			cli.START: {Name: "start dev proto host port=9020 nodename username usernick", Hand: func(m *ice.Message, arg ...string) {
 				if runtime.GOOS == cli.LINUX {
 					m.Cmd(nfs.SAVE, nfs.ETC_LOCAL_SH, m.Spawn(ice.Maps{cli.PWD: kit.Path(""), aaa.USER: kit.UserName(), ctx.ARGS: kit.JoinCmds(arg...)}).Template("local.sh")+lex.NL)
+					m.Cmd("", PROXY_CONF, ice.Info.NodeName)
 				}
 				_serve_start(m)
 			}},
 			SERVE_START: {Hand: func(m *ice.Message, arg ...string) {
-				Count(m, m.ActionKey(), m.Option(tcp.PORT))
-				m.Cmd(SPIDE, mdb.CREATE, HostPort(m, "localhost", m.Option(tcp.PORT)), ice.OPS, nfs.USR_ICONS_CONTEXTS, nfs.REPOS, "")
+				kit.If(m.Option(ice.DEMO) == ice.TRUE, func() { m.Cmd(CHAT_HEADER, ice.DEMO) })
+				m.Go(func() { ssh.PrintQRCode(m, tcp.PublishLocalhost(m, _serve_address(m))) })
+				m.Cmd(SPIDE, mdb.CREATE, HostPort(m, tcp.LOCALHOST, m.Option(tcp.PORT)), ice.OPS, nfs.USR_ICONS_CONTEXTS, nfs.REPOS, "")
 				m.Cmds(SPIDE).Table(func(value ice.Maps) {
 					kit.If(value[CLIENT_NAME] != ice.OPS && value[TOKEN] != "", func() {
 						m.Cmd(SPACE, tcp.DIAL, ice.DEV, value[CLIENT_NAME], TOKEN, value[TOKEN], mdb.TYPE, SERVER)
 					})
 				})
-				kit.If(m.Option(ice.DEMO) == ice.TRUE, func() { m.Cmd(CHAT_HEADER, ice.DEMO) })
-				switch cb := m.Optionv(SERVE_START).(type) {
-				case func():
+				Count(m, m.ActionKey(), m.Option(tcp.PORT))
+				if cb, ok := m.Optionv(SERVE_START).(func()); ok {
 					cb()
-				}
-				m.Go(func() {
-					cli.Opens(m, mdb.Config(m, cli.OPEN))
-					ssh.PrintQRCode(m, tcp.PublishLocalhost(m, _serve_address(m)))
-				})
-				if runtime.GOOS == cli.LINUX {
-					m.Cmd("", PROXY_CONF, ice.Info.NodeName)
 				}
 			}},
 			PROXY_CONF: {Name: "proxyConf name* port host path", Hand: func(m *ice.Message, arg ...string) {

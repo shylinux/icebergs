@@ -289,6 +289,16 @@ func (m *Message) TableEchoWithStatus() *Message {
 }
 func (m *Message) Sort(key string, arg ...Any) *Message {
 	if m.FieldsIsDetail() {
+		key := m.value(KEY)
+		value := m.value(VALUE)
+		for i := 0; i < len(key)-1; i++ {
+			for j := i+1; j < len(key); j++ {
+				if key[i] > key[j] {
+					key[i], key[j] = key[j], key[i]
+					value[i], value[j] = value[j], value[i]
+				}
+			}
+		}
 		return m
 	}
 	order := map[string]map[string]int{}

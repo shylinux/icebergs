@@ -183,7 +183,7 @@ const RUNTIME = "runtime"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		RUNTIME: {Name: "runtime info=bootinfo,ifconfig,diskinfo,hostinfo,userinfo,bootinfo,role,api,cli,cmd,mod,env,path,chain auto upgrade reboot lock", Icon: "Infomation.png", Help: "运行环境", Actions: ice.MergeActions(ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { _runtime_init(m); aaa.White(m, ice.LICENSE) }},
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { _runtime_init(m); }},
 			IFCONFIG:     {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(tcp.HOST) }},
 			DISKINFO:     {Hand: func(m *ice.Message, arg ...string) { _runtime_diskinfo(m) }},
 			HOSTINFO:     {Hand: func(m *ice.Message, arg ...string) { _runtime_hostinfo(m) }},

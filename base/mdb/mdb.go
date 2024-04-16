@@ -98,9 +98,11 @@ const (
 	ICONS   = "icons"
 	UNITS   = "units"
 	ORDER   = "order"
+	SCORE   = "score"
 	GROUP   = "group"
 	VALID   = "valid"
 	ENABLE  = "enable"
+	MEMBER  = "member"
 	DISABLE = "disable"
 	EXPIRED = "expired"
 

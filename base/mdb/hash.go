@@ -131,7 +131,7 @@ func _hash_import(m *ice.Message, prefix, chain, file string) {
 	}
 	defer f.Close()
 	data := Map{}
-	m.Assert(json.NewDecoder(f).Decode(&data))
+	m.Warn(json.NewDecoder(f).Decode(&data))
 	m.Logs(IMPORT, KEY, path.Join(prefix, chain), FILE, kit.Keys(file, JSON), COUNT, len(data))
 	kit.If(m.Confv(prefix, kit.Keys(chain, HASH)) == nil, func() { m.Confv(prefix, kit.Keys(chain, HASH), ice.Map{}) })
 	kit.For(data, func(k string, v Any) { m.Confv(prefix, kit.Keys(chain, HASH, k), v) })
@@ -407,7 +407,7 @@ func Rich(m *ice.Message, prefix string, chain Any, data Any) string {
 }
 func sortByField(m *ice.Message, fields string, arg ...string) *ice.Message {
 	return m.Table(func(value ice.Maps) {
-		m.SetAppend().OptionFields(ice.FIELDS_DETAIL)
+		m.SetAppend().FieldsSetDetail()
 		kit.For(kit.Split(fields), func(key string) {
 			key = strings.TrimSuffix(key, "*")
 			if key == HASH {

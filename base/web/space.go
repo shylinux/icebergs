@@ -458,20 +458,11 @@ func init() {
 			} else {
 				m.Cmdy(ctx.COMMAND, mdb.INPUTS, m.Option(ctx.INDEX))
 			}
-		case aaa.TO:
-			if m.Option(ctx.ACTION) != aaa.EMAIL {
-				break
-			}
-			fallthrough
-		case aaa.EMAIL:
-			m.Push(arg[0], "shy@shylinux.com", "shylinux@163.com")
-		case aaa.PASSWORD:
-			m.SetAppend()
 		case tcp.WIFI:
 			m.Cmdy(tcp.WIFI).CutTo(tcp.SSID, arg[0])
 		case MESSAGE:
 			m.Cmdy(MESSAGE).Cut(mdb.HASH, mdb.ZONE, mdb.ICONS)
-		case "target":
+		case TARGET:
 			m.AdminCmd(MATRIX).Table(func(value ice.Maps) {
 				m.Push(arg[0], kit.Keys(kit.Select("", ice.OPS, ice.Info.NodeType == WORKER), value[DOMAIN], value[mdb.NAME]))
 				m.Push(mdb.TYPE, value[mdb.TYPE])

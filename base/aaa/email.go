@@ -54,6 +54,19 @@ func init() {
 			}
 		}},
 	})
+	ice.Info.Inputs = append(ice.Info.Inputs, func(m *ice.Message, arg ...string) {
+		switch kit.TrimPrefix(arg[0], "extra.") {
+		case TO:
+			if m.Option(ice.ACTION) != EMAIL {
+				break
+			}
+			fallthrough
+		case EMAIL:
+			m.Push(arg[0], "shy@shylinux.com", "shylinux@163.com")
+		case PASSWORD:
+			m.SetAppend()
+		}
+	})
 }
 func SendEmail(m *ice.Message, from, to, cc string, arg ...string) {
 	m.Option(ice.MSG_USERHOST, strings.Split(m.Option(ice.MSG_USERHOST), "://")[1])

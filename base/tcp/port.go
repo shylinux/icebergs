@@ -3,6 +3,7 @@ package tcp
 import (
 	"net"
 	"path"
+	"runtime"
 	"strconv"
 	"strings"
 
@@ -61,6 +62,15 @@ func init() {
 						}
 					})
 				case PORT:
+					if runtime.GOOS == "darwin" {
+						ls := kit.SplitLine(m.Cmd("system", "sh", "-c", `lsof -nP -i4TCP | grep LISTEN | awk '{print $1 " " $9 }'`).Result())
+						kit.For(ls, func(p string) {
+							ls := kit.SplitWord(p)
+							m.Push(arg[0], kit.Split(ls[1], ":")[1]).Push(SERVER, ls[0])
+						})
+						m.Sort(arg[0], ice.INT)
+						return
+					}
 					m.Cmd(PORT, SOCKET, func(value ice.Maps) {
 						switch value[mdb.STATUS] {
 						case "LISTEN":
@@ -131,6 +141,12 @@ func init() {
 			mdb.Config(m, CURRENT, current)
 			m.StatusTimeCount(mdb.ConfigSimple(m, BEGIN, CURRENT, END)).SortInt(PORT)
 		}},
+	})
+	ice.Info.Inputs = append(ice.Info.Inputs, func(m *ice.Message, arg ...string) {
+		switch arg[0] {
+		case PORT:
+			m.SetAppend().Cmdy(PORT, mdb.INPUTS, arg)
+		}
 	})
 }
 func PortRight(m *ice.Message, arg ...string) string {

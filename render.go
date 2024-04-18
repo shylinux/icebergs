@@ -270,7 +270,7 @@ func (m *Message) Resource(file string, arg ...string) string {
 	return m.resource(file)
 }
 func (m *Message) resource(file string) string {
-	p := kit.FileLines(3)
+	p := kit.FileLines(-1)
 	kit.If(file == "", func() { p = kit.ExtChange(p, JS) }, func() {
 		if kit.HasPrefix(file, PS, HTTP) {
 			p = file

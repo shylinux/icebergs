@@ -15,7 +15,11 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _binpack_file(m *ice.Message, w io.Writer, arg ...string) {
+func _binpack_file(m *ice.Message, files map[string]bool, w io.Writer, arg ...string) {
+	if files[kit.Select(arg[0], arg, 1)] {
+		return
+	}
+	files[kit.Select(arg[0], arg, 1)] = true
 	if kit.IsIn(kit.Ext(arg[0]), "zip", "gz") {
 		return
 	} else if kit.Contains(arg[0], "/bin/", "/log/") {
@@ -38,9 +42,9 @@ func _binpack_file(m *ice.Message, w io.Writer, arg ...string) {
 		}
 	}
 }
-func _binpack_dir(m *ice.Message, w io.Writer, dir string) {
+func _binpack_dir(m *ice.Message, files map[string]bool, w io.Writer, dir string) {
 	if nfs.Exists(m, dir) {
-		nfs.DirDeepAll(m, dir, nfs.PWD, func(value ice.Maps) { _binpack_file(m, w, path.Join(dir, value[nfs.PATH])) })
+		nfs.DirDeepAll(m, dir, nfs.PWD, func(value ice.Maps) { _binpack_file(m, files, w, path.Join(dir, value[nfs.PATH])) })
 	}
 }
 func _binpack_usr(m *ice.Message) {
@@ -52,8 +56,9 @@ func _binpack_usr(m *ice.Message) {
 	defer fmt.Fprintln(w, nfs.Template(m, "binpack_end.go"))
 	defer fmt.Fprint(w, lex.TB)
 	nfs.OptionFiles(m, nfs.DiskFile)
+	files := map[string]bool{}
 	kit.For([]string{ice.USR_VOLCANOS, nfs.USR_LEARNING_PORTAL, ice.USR_INTSHELL}, func(p string) {
-		_binpack_dir(m, w, p)
+		_binpack_dir(m, files, w, p)
 	})
 	list, cache := map[string]string{}, GoCache(m)
 	for k := range ice.Info.File {
@@ -69,17 +74,17 @@ func _binpack_usr(m *ice.Message) {
 	for _, k := range kit.SortedKey(list) {
 		v := kit.Select(k, list[k])
 		m.Cmd(nfs.DIR, nfs.PWD, nfs.PATH, kit.Dict(nfs.DIR_ROOT, v, nfs.DIR_REG, kit.ExtReg(kit.Split(mdb.Config(m, lex.EXTREG))...))).Table(func(value ice.Maps) {
-			_binpack_file(m, w, kit.Path(v, value[nfs.PATH]), path.Join(k, value[nfs.PATH]))
+			_binpack_file(m, files, w, kit.Path(v, value[nfs.PATH]), path.Join(k, value[nfs.PATH]))
 		})
 	}
 	mdb.HashSelects(m).Sort(nfs.PATH).Table(func(value ice.Maps) {
 		if strings.HasSuffix(value[nfs.PATH], nfs.PS) {
-			_binpack_dir(m, w, value[nfs.PATH])
+			_binpack_dir(m, files, w, value[nfs.PATH])
 		} else {
-			_binpack_file(m, w, value[nfs.PATH])
+			_binpack_file(m, files, w, value[nfs.PATH])
 		}
 	})
-	_binpack_dir(m.Options(nfs.DIR_REG, kit.ExtReg(nfs.SHY)), w, ice.USR_RELEASE)
+	_binpack_dir(m.Options(nfs.DIR_REG, kit.ExtReg(nfs.SHY)), files, w, ice.USR_RELEASE)
 }
 
 func _binpack_src(m *ice.Message) {
@@ -91,11 +96,12 @@ func _binpack_src(m *ice.Message) {
 	defer fmt.Fprintln(w, nfs.Template(m, "binpack_end.go"))
 	defer fmt.Fprint(w, lex.TB)
 	nfs.OptionFiles(m, nfs.DiskFile)
-	kit.For([]string{ice.SRC}, func(p string) { _binpack_dir(m, w, p) })
+	files := map[string]bool{}
+	kit.For([]string{ice.SRC}, func(p string) { _binpack_dir(m, files, w, p) })
 	kit.For([]string{
 		ice.ETC_MISS_SH, ice.ETC_INIT_SHY, ice.ETC_LOCAL_SHY, ice.ETC_EXIT_SHY, ice.ETC_PATH,
 		ice.README_MD, ice.MAKEFILE, ice.LICENSE, ice.GO_MOD, ice.GO_SUM,
-	}, func(p string) { _binpack_file(m, w, p) })
+	}, func(p string) { _binpack_file(m, files, w, p) })
 }
 
 const BINPACK = "binpack"

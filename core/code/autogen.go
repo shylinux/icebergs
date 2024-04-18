@@ -144,6 +144,14 @@ func init() {
 					kit.For([]string{"code", "wiki", "chat", "team", "mall"}, func(p string) {
 						m.Push(arg[0], kit.Keys("web", p, m.Option(mdb.ZONE), m.Option(mdb.NAME)))
 					})
+				case "top":
+					list := map[string]bool{}
+					m.Travel(func(p *ice.Context, c *ice.Context, key string, cmd *ice.Command) {
+						if !list[c.Prefix()] {
+							m.Push(arg[0], c.Prefix())
+							list[c.Prefix()] = true
+						}
+					})
 				}
 			}},
 			nfs.SCRIPT: {Help: "脚本", Hand: func(m *ice.Message, arg ...string) {

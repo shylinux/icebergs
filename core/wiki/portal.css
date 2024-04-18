@@ -1,6 +1,6 @@
 fieldset.web.wiki.portal {
 	--portal-max-width:1200px; --portal-header-height:64px; --portal-main-padding:40px; --plugin-radius:10px;
-	--code-font-size:14px; --code-line-height:20px;
+	/* --code-font-size:14px; --code-line-height:20px; */
 }
 fieldset.web.wiki.portal.home { --portal-max-width:1500px; }
 fieldset.web.wiki.portal>div.header { display:none; }
@@ -32,7 +32,7 @@ fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column h1 { fo
 fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column h2 { margin:0 !important; }
 fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column b { font-size:22px; }
 fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column input[type=button] { background-color:var(--notice-bg-color); color:var(--notice-fg-color); }
-fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column input[type=button]:hover { background-color:var(--hover-bg-color); box-shadow:var(--notice-box-shadow); }
+fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column input[type=button]:hover { box-shadow:var(--notice-box-shadow); }
 fieldset.web.wiki.portal>div.output>div.layout>div.main fieldset.inner.output div.content {
 	background-color:var(--code-bg-color); color:var(--code-fg-color); padding:var(--input-padding) 0;
 	--code-comment:silver; --code-keyword:orange;

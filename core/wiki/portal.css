@@ -1,7 +1,4 @@
-fieldset.web.wiki.portal {
-	--portal-max-width:1200px; --portal-header-height:64px; --portal-main-padding:40px; --plugin-radius:10px;
-	/* --code-font-size:14px; --code-line-height:20px; */
-}
+fieldset.web.wiki.portal { --portal-max-width:1200px; --portal-header-height:64px; --portal-main-padding:40px; --plugin-radius:10px; }
 fieldset.web.wiki.portal.home { --portal-max-width:1500px; }
 fieldset.web.wiki.portal>div.header { display:none; }
 fieldset.web.wiki.portal>div.output { padding:0; }
@@ -11,9 +8,7 @@ fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] { --
 fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] { display:flex; justify-content:center; }
 fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.item { text-align:center; padding:var(--legend-padding); height:var(--portal-header-height); }
 fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.item { display:flex; align-items:center; }
-fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.item:first-child {
-	line-height:calc(var(--portal-header-height) - 2 * var(--legend-padding));
-	font-size:24px; font-weight:bold; font-style:italic; }
+fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.item:first-child { line-height:calc(var(--portal-header-height) - 2 * var(--legend-padding)); font-size:24px; font-weight:bold; font-style:italic; }
 fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.item.select { background-color:var(--output-bg-color); }
 fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.item:hover { background-color:var(--output-bg-color); }
 fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.item.space { padding:0px; margin:0 var(--portal-main-padding); }
@@ -40,11 +35,8 @@ fieldset.web.wiki.portal>div.output>div.layout>div.main fieldset.inner.output di
 	--code-object:silver; --code-datatype:silver; --code-package:silver;
 }
 fieldset.web.wiki.portal>div.output>div.layout>div.main div.story[data-type=spark][data-name=shell] {
-	background-color:var(--code-bg-color); color:var(--code-fg-color); box-shadow:var(--box-shadow);
+	background-color:var(--code-bg-color); color:var(--code-fg-color);
 	padding:var(--button-padding) var(--input-padding); margin-top:10px;
-}
-fieldset.web.wiki.portal>div.output>div.layout>div.main div.story[data-type=spark][data-name=shell]:hover {
-	box-shadow:var(--notice-box-shadow);
 }
 fieldset.web.wiki.portal>div.output>div.layout>div.main table.content div.story[data-type=spark][data-name=shell] { margin-top:unset; }
 fieldset.web.wiki.portal.home>div.output>div.layout>div.main p { white-space:pre-wrap; text-align:center; }
@@ -55,8 +47,6 @@ body.dark fieldset.web.wiki.portal>div.output>div.header div.story[data-name=nav
 body.white fieldset.web.wiki.portal>div.output>div.header { color:silver; }
 body.light fieldset.web.wiki.portal>div.output>div.header { color:white; }
 body.light fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] { --hover-fg-color:black; }
-body.web.wiki.portal.cmd { background-color:rgb(22 31 49); }
-body.web.wiki.portal fieldset.Action.home>div.toast { display:none; }
 body.mobile fieldset.web.wiki.portal { --portal-main-padding:5px; --legend-padding:10px; }
 body.mobile fieldset.web.wiki.portal>div.output>div.layout { display:block; }
 body.mobile fieldset.web.wiki.portal>div.output>div.layout>div.nav { height:400px; }
@@ -69,3 +59,5 @@ body.mobile fieldset.web.wiki.portal.home>div.output>div.layout>div.main p { whi
 body.mobile fieldset.web.wiki.portal.home>div.output>div.layout>div.main h2 { margin-top:40px; margin-bottom:0; }
 body.mobile fieldset.web.wiki.portal>div.output>div.layout>div.main p { padding:var(--input-padding); margin:0; }
 body.width2 fieldset.web.wiki.portal>div.output>div.layout>div.main>div.flex { flex-direction:column; }
+body.web.wiki.portal fieldset.Action.home>div.toast { display:none; }
+body.web.wiki.portal.cmd { background-color:rgb(22 31 49); }

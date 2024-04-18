@@ -28,11 +28,18 @@ fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column h2 { ma
 fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column b { font-size:22px; }
 fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column input[type=button] { background-color:var(--notice-bg-color); color:var(--notice-fg-color); }
 fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column input[type=button]:hover { box-shadow:var(--notice-box-shadow); }
+fieldset.web.wiki.portal>div.output>div.layout>div.main fieldset.inner.output {
+	box-shadow:none;
+}
 fieldset.web.wiki.portal>div.output>div.layout>div.main fieldset.inner.output div.content {
 	background-color:var(--code-bg-color); color:var(--code-fg-color); padding:var(--input-padding) 0;
 	--code-comment:silver; --code-keyword:orange;
 	--code-function:cyan; --code-constant:silver; --code-string:silver;
 	--code-object:silver; --code-datatype:silver; --code-package:silver;
+}
+fieldset.web.wiki.portal>div.output>div.layout>div.main div.story[data-type=spark][data-name=shell] {
+	border:var(--plugin-border);
+	border-left:var(--box-notice3);
 }
 fieldset.web.wiki.portal>div.output>div.layout>div.main div.story[data-type=spark][data-name=shell] {
 	background-color:var(--code-bg-color); color:var(--code-fg-color);

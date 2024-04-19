@@ -100,4 +100,5 @@ body:not(.mobile) fieldset.macos.desktop>div.output>div.desktop>fieldset>legend:
 body.mobile fieldset.macos.desktop>div.output>div.desktop>fieldset>legend { float:none; }
 body.windows fieldset.macos.desktop>div.output>div.desktop>fieldset div.item.button.window span { top:-2px; }
 body:not(.mobile) fieldset.macos.desktop>div.output>div.desktop>fieldset>div.action:not(.hide) { display:contents; }
+body.white fieldset.macos.desktop>div.output>div.desktop>div.item>div.name { color:white; }
 

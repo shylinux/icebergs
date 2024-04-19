@@ -5,14 +5,14 @@ fieldset.web.chat.message>div.output>div.project>div.title { background-color:va
 fieldset.web.chat.message>div.output>div.project>div.title i:hover { background-color:var(--hover-bg-color); cursor:pointer; }
 fieldset.web.chat.message>div.output>div.project>div.title span:hover { background-color:var(--hover-bg-color); cursor:pointer; }
 fieldset.web.chat.message>div.output>div.project>div.title span { padding:0 var(--input-padding); }
+fieldset.web.chat.message>div.output>div.project>div.item { border-left:var(--box-border3); cursor:pointer; }
+fieldset.web.chat.message>div.output>div.project>div.item.select { border-right:var(--box-border3); }
+fieldset.web.chat.message>div.output>div.project>div.item.server { border-left:var(--box-notice3); }
+fieldset.web.chat.message>div.output>div.project>div.item.origin { border-left:var(--box-danger3); }
+fieldset.web.chat.message>div.output>div.project>div.item.server.select { border-right:var(--box-notice3); }
+fieldset.web.chat.message>div.output>div.project>div.item.origin.select { border-right:var(--box-danger3); }
 fieldset.web.chat.message>div.output>div.project>div.item:not(.filter) { height:58px; padding:var(--input-padding); }
 fieldset.web.chat.message>div.output>div.project>div.item.text.filter>i { left:var(--input-padding); }
-fieldset.web.chat.message>div.output>div.project>div.item.origin { border-left:var(--box-danger3); }
-fieldset.web.chat.message>div.output>div.project>div.item.server { border-left:var(--box-notice3); }
-fieldset.web.chat.message>div.output>div.project>div.item.origin.select { border-right:var(--box-danger3); }
-fieldset.web.chat.message>div.output>div.project>div.item.server.select { border-right:var(--box-notice3); }
-fieldset.web.chat.message>div.output>div.project>div.item.select { border-right:var(--box-border3); }
-fieldset.web.chat.message>div.output>div.project>div.item { border-left:var(--box-border3); cursor:pointer; }
 fieldset.web.chat.message>div.output>div.project>div.item img { height:var(--header-height); width:var(--header-height); display:block; float:left; }
 fieldset.web.chat.message>div.output>div.project>div.item span.time { color:var(--disable-fg-color); font-size:var(--status-font-size); }
 fieldset.web.chat.message>div.output>div.project>div.item div.container { width:calc(100% - var(--header-height)); float:left; }
@@ -41,7 +41,7 @@ fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.plug>div.container>div.content fieldset.story>div.action>div.item.chat.icons { display:none; }
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.plug>div.container>div.content { box-shadow:var(--box-shadow); }
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.plug>div.container>div.content:hover { box-shadow:var(--notice-box-shadow); }
-fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item>div.container>div.content { display:flex; align-items:center; border-radius:var(--plugin-radius); min-height:var(--header-height); width:fit-content; }
+fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item>div.container>div.content { border-radius:var(--plugin-radius); min-height:var(--header-height); width:fit-content; display:flex; align-items:center; }
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.plug { height:fit-content; }
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.plug div.content { padding:0; }
 fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item.send { flex-direction:row-reverse; }
@@ -50,4 +50,4 @@ fieldset.web.chat.message>div.output>div.layout>div.display div.toolkit { backgr
 fieldset.web.chat.message>div.output>div.layout>div.display div.toolkit i { padding:var(--input-padding); }
 fieldset.web.chat.message>div.output>div.layout>div.display div.toolkit i:hover { background-color:var(--hover-bg-color); }
 fieldset.web.chat.message>div.output>div.layout>div.display textarea { height:calc(100% - var(--action-height)); }
-body.mobile fieldset.web.chat.message>div.output>div.project { border-right:none; }
+body.mobile fieldset.web.chat.message>div.output>div.project { border-right:0; }

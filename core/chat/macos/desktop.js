@@ -79,9 +79,8 @@ Volcanos(chat.ONIMPORT, {
 		if (can.user.isMobile) { item.height = can.ConfHeight()-125, item.top = 25, item.width = can.ConfWidth(), item.left = 0 }
 		item.height = can.base.Max(html.DESKTOP_HEIGHT, item.height), item.width = can.base.Max(html.DESKTOP_WIDTH, item.width)
 		if (can.base.isIn(item.index, web.CODE_VIMER)) { item.width = can.base.Max(1600, can.ConfWidth()), item.left = (can.ConfWidth()-item.width)/2 }
-		item.style = {left: item.left, top: item.top, height: item.height, width: item.width}
-		item.type = html.PLUGIN
-		can.onappend.plugin(can, item, function(sub) { can.ondetail.select(can, sub._target)
+		item.type = html.PLUGIN, item.style = {left: item.left, top: item.top, height: item.height, width: item.width}
+		can.onappend.plugin(can, item, function(sub) { can.onappend.style(can, html.FLOAT, sub._target), can.ondetail.select(can, sub._target)
 			can.page.style(can, sub._target, html.HEIGHT, item.height, html.WIDTH, item.width)
 			var index = 0; can.core.Item({
 				close: {color: "#f95f57", inner: "x", onclick: function(event) { sub.onaction._close(event, sub) }},

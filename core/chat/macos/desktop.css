@@ -1,7 +1,7 @@
 fieldset.macos.desktop { --desktop-menu-height:25px; }
 fieldset.macos.desktop { background-size:cover; background-position:center; }
 fieldset.macos.desktop>div.output { border-radius:var(--plugin-radius); background-color:transparent; overflow:hidden; }
-fieldset.macos.desktop>div.output>fieldset.macos { background-color:var(--plugin-bg-color); }
+fieldset.macos.desktop>div.output>fieldset.macos { border:0; background-color:var(--plugin-bg-color); }
 fieldset.macos.desktop>div.output>fieldset.macos>div.output { background-color:transparent; }
 fieldset.macos.desktop>div.output>fieldset.macos.menu { border:0; border-radius:0; line-height:var(--desktop-menu-height); height:var(--desktop-menu-height); width:100%; position:sticky; top:0; overflow:hidden; z-index:10; }
 fieldset.macos.desktop>div.output>fieldset.macos.menu div.menu:hover { background-color:var(--hover-bg-color); }

@@ -25,7 +25,11 @@ const FEEL = "feel"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		FEEL: {Name: "feel path=usr/icons/ file=background.jpg auto upload record1 record2 actions", Icon: "Photos.png", Help: "影音媒体", Actions: ice.MergeActions(ice.Actions{
+		FEEL: {Name: "feel path=usr/icons/@key file=background.jpg auto upload record1 record2 actions", Icon: "Photos.png", Help: "影音媒体", Actions: ice.MergeActions(ice.Actions{
+			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
+				m.Push(arg[0], "usr/icons/")
+				m.Push(arg[0], "usr/local/image/")
+			}},
 			web.UPLOAD: {Hand: func(m *ice.Message, arg ...string) {
 				up := kit.Simple(m.Optionv(ice.MSG_UPLOAD))
 				m.Cmdy(web.CACHE, web.WATCH, m.Option(mdb.HASH), path.Join(m.Option(nfs.PATH, _feel_path(m, m.Option(nfs.PATH))), up[1]))

@@ -34,20 +34,18 @@ fieldset.macos.desktop>div.output>div.desktop>fieldset>legend { box-shadow:none;
 fieldset.macos.desktop>div.output>div.desktop>fieldset>div.item.button { box-shadow:var(--box-shadow); border-radius:var(--plugin-radius); padding:8px; height:23px; width:23px; scale:0.7; position:absolute; top:15px; right:var(--plugin-padding); cursor:pointer; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>div.item.button:not(:hover)>span { display:none; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset div.item.button.window span { position:absolute; left:8px; top:2px; }
-
 fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>*:not(.textarea) { box-shadow:none; margin:var(--button-margin) var(--input-margin); }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>div.icon { box-shadow:none; margin:var(--button-margin) 0; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>div.icon.delete { display:none; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>div.list.icons { margin:var(--button-margin) 0; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>div.back.icons { margin:var(--button-margin) 0; }
-fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>div.text input { border-top:var(--input-border); }
-fieldset.macos.desktop>div.output>div.desktop>fieldset>div.action>div.text input { border-top:var(--input-border); }
+fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>div input { border-top:var(--input-border); }
+fieldset.macos.desktop>div.output>div.desktop>fieldset>div.action>div input { border-top:var(--input-border); }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>div.text input:hover { border-top:var(--box-notice); }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>div.action>div.text input:hover { border-top:var(--box-notice); }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>div.action>* { box-shadow:none; margin:var(--button-margin) var(--input-margin); }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>div.action>div.item:last-child { margin-right:100px; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>div.action>div.tabs { display:none; }
-
 fieldset.macos.desktop>div.output>div.desktop>fieldset>div.output { min-height:240px; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>div.output>table.content { width:100%; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>div.output>table.content th { padding:var(--table-padding); }

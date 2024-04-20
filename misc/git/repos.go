@@ -639,7 +639,7 @@ func init() {
 					m.Cmd(web.DREAM).Table(func(value ice.Maps) {
 						if value[cli.RESTART] == "always" {
 							value[nfs.BINARY] = web.UserHost(m) + web.S(value[mdb.NAME])
-							value[mdb.ICON] = strings.TrimPrefix(kit.Split(value[mdb.ICON], "?")[0], "/require/")
+							value[mdb.ICON] = kit.TrimPrefix(kit.Split(value[mdb.ICON], "?")[0], nfs.P, nfs.REQUIRE)
 							value[nfs.REPOS] = _repos_remote(m, _repos_origin(m, _repos_open(m, path.Join(ice.USR_LOCAL_WORK, value[mdb.NAME]))))
 							m.Cmd(web.SPACE, m.Option(mdb.NAME), web.DREAM, mdb.CREATE, mdb.NAME, value[mdb.NAME], value)
 						}

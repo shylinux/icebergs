@@ -58,7 +58,7 @@ func _ide_autogen_pages(m *ice.Message) {
 	head_wxml, foot_wxml, wxml := nfs.TemplateText(m, "pages_head.wxml"), nfs.TemplateText(m, "pages_foot.wxml"), nfs.TemplateText(m, "pages.wxml")
 	m.Travel(func(_ *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
 		if h, ok := cmd.Actions[PAGES]; ok {
-			file := path.Join(path.Dir(strings.TrimPrefix(m.Resource(m.FileURI(cmd.FileLine())), nfs.REQUIRE)), kit.Select(key+".js", h.Name))
+			file := path.Join(path.Dir(kit.TrimPrefix(m.Resource(m.FileURI(cmd.FileLine())), nfs.P, nfs.REQUIRE)), kit.Select(key+".js", h.Name))
 			if !nfs.Exists(m, file) {
 				return
 			}

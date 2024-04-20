@@ -104,24 +104,9 @@ func init() {
 			}},
 		}), Hand: func(m *ice.Message, arg ...string) {
 			if kit.HasPrefix(arg[0], nfs.VOLCANOS, nfs.REQUIRE, nfs.P, ice.HTTP) {
-				if kit.HasPrefix(arg[0], ice.HTTP) && strings.Contains(arg[0], nfs.PLUGIN) && !strings.Contains(arg[0], nfs.VOLCANOS_PLUGIN) {
-					arg[0] = strings.Replace(arg[0], nfs.PLUGIN, nfs.VOLCANOS_PLUGIN, 1)
-				} else if kit.HasPrefix(arg[0], nfs.REQUIRE_SRC) {
-					m.Options(nfs.PATH, nfs.SRC, nfs.FILE, strings.Split(strings.TrimPrefix(arg[0], nfs.REQUIRE_SRC), "?")[0])
-				} else if kit.HasPrefix(arg[0], nfs.REQUIRE_USR) {
-					ls := kit.Split(arg[0], nfs.PS)
-					m.Options(nfs.PATH, nfs.USR+ls[2]+nfs.PS, nfs.FILE, strings.Split(strings.TrimPrefix(arg[0], nfs.REQUIRE_USR+ls[2]+nfs.PS), "?")[0])
-				} else if kit.HasPrefix(arg[0], nfs.REQUIRE) {
-					ls := strings.Split(strings.Split(strings.TrimPrefix(arg[0], nfs.REQUIRE), "?")[0], nfs.SRC)
-					m.Options(nfs.PATH, kit.Join(kit.Slice(ls, 0, -1), nfs.PS)+nfs.SRC, nfs.FILE, kit.Select("", ls, -1))
-				} else if kit.HasPrefix(arg[0], nfs.P) {
-					ls := kit.Split(arg[0], nfs.PS)
-					m.Debug("what %v", ls)
-					if ls[1] == ice.SRC {
-						m.Options(nfs.PATH, nfs.SRC, nfs.FILE, kit.Join(kit.Slice(ls, 2, -1), nfs.PS))
-					} else {
-						m.Options(nfs.PATH, kit.Join(kit.Slice(ls, 1, 3), nfs.PS)+nfs.PS, nfs.FILE, kit.Join(kit.Slice(ls, 3, -1), nfs.PS))
-					}
+				if !kit.HasPrefix(arg[0], ice.HTTP) {
+					ls := nfs.SplitPath(m, arg[0])
+					m.Options(nfs.PATH, ls[0], nfs.FILE, ls[1])
 				}
 				m.Echo(m.Cmdx(web.SPIDE, ice.OPS, web.SPIDE_RAW, http.MethodGet, arg[0]))
 				m.Options("mode", "simple", lex.PARSE, kit.Ext(kit.ParseURL(arg[0]).Path))

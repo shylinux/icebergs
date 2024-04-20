@@ -405,7 +405,7 @@ func init() {
 		}},
 	})
 	nfs.TemplateText = func(m *ice.Message, p string) string {
-		if p := kit.Select(nfs.TemplatePath(m, path.Base(p)), m.Option("_template")); kit.HasPrefix(p, "/require/", ice.HTTP) {
+		if p := kit.Select(nfs.TemplatePath(m, path.Base(p)), m.Option("_template")); kit.HasPrefix(p, nfs.P, nfs.REQUIRE, ice.HTTP) {
 			return m.Cmdx(SPIDE, ice.OPS, SPIDE_RAW, http.MethodGet, p)
 		} else if p == "" {
 			return ""
@@ -418,7 +418,7 @@ func init() {
 			return p + kit.Select("", nfs.PS, len(arg) == 0)
 		} else {
 			p := m.FileURI(ctx.GetCmdFile(m, m.PrefixKey()))
-			if p := strings.TrimPrefix(path.Join(path.Dir(p), path.Join(arg...)), "/require/"); nfs.Exists(m, p) {
+			if p := kit.TrimPrefix(path.Join(path.Dir(p), path.Join(arg...)), nfs.P, nfs.REQUIRE); nfs.Exists(m, p) {
 				return p
 			}
 			if ice.Info.Important {
@@ -435,7 +435,7 @@ func init() {
 		}
 	}
 	nfs.DocumentText = func(m *ice.Message, p string) string {
-		if p := nfs.DocumentPath(m, path.Base(p)); kit.HasPrefix(p, "/require/", ice.HTTP) {
+		if p := nfs.DocumentPath(m, path.Base(p)); kit.HasPrefix(p, nfs.P, nfs.REQUIRE, ice.HTTP) {
 			return m.Cmdx(SPIDE, ice.DEV, SPIDE_RAW, http.MethodGet, p)
 		} else {
 			return m.Cmdx(nfs.CAT, p)

@@ -608,7 +608,7 @@ func StackHandler(m *ice.Message, arg ...string) {
 	if len(script) > 0 {
 		p := ice.USR_SCRIPT + m.PrefixKey() + nfs.PS + "list.js"
 		m.Cmd(nfs.SAVE, p, kit.Dict(nfs.CONTENT, strings.Join(script, lex.NL)))
-		s.value(m, "_script", "/require/"+p)
+		s.value(m, "_script", nfs.P+p)
 	}
 	cmd := m.Commands("")
 	kit.For(s.peekf().value, func(k string, v Any) {

@@ -145,7 +145,7 @@ func FileCmd(dir string) string {
 func AddFileCmd(dir, key string) {
 	if ls := strings.SplitN(path.Join(kit.Slice(kit.Split(FileCmd(dir), nfs.PS), 1, 4)...), mdb.AT, 2); len(ls) > 1 {
 		_ls := strings.Split(FileCmd(dir), mdb.AT+ls[1]+nfs.PS)
-		ice.Info.File[path.Join(nfs.REQUIRE_USR, path.Base(_ls[0]), _ls[1])] = key
+		ice.Info.File[path.Join(nfs.P, nfs.USR, path.Base(_ls[0]), _ls[1])] = key
 		ice.Info.Gomod[ls[0]] = ls[1]
 	} else {
 		ice.Info.File[FileCmd(dir)] = key
@@ -155,9 +155,9 @@ func GetFileCmd(dir string) string {
 	if strings.HasPrefix(dir, ice.REQUIRE+nfs.PS) {
 		dir = nfs.PS + dir
 	} else if strings.HasPrefix(dir, ice.ISH_PLUGED) {
-		dir = path.Join(nfs.PS, ice.REQUIRE, strings.TrimPrefix(dir, ice.ISH_PLUGED))
+		dir = path.Join(nfs.P, strings.TrimPrefix(dir, ice.ISH_PLUGED))
 	}
-	for _, dir := range []string{dir, path.Join(nfs.PS, ice.REQUIRE, ice.Info.Make.Module, dir), path.Join(nfs.PS, ice.REQUIRE, ice.Info.Make.Module, ice.SRC, dir)} {
+	for _, dir := range []string{dir, path.Join(nfs.P, ice.Info.Make.Module, dir), path.Join(nfs.P, ice.Info.Make.Module, ice.SRC, dir)} {
 		if cmd, ok := ice.Info.File[FileCmd(dir)]; ok {
 			return cmd
 		}
@@ -169,7 +169,7 @@ func GetFileCmd(dir string) string {
 	return ""
 }
 func GetCmdHelp(m *ice.Message, cmds string) (file string) {
-	file = strings.TrimPrefix(m.FileURI(kit.ExtChange(GetCmdFile(m, cmds), nfs.SHY)), nfs.REQUIRE)
+	file = kit.TrimPrefix(m.FileURI(kit.ExtChange(GetCmdFile(m, cmds), nfs.SHY)), nfs.P, nfs.REQUIRE)
 	if !nfs.Exists(m, path.Join(nfs.USR_LEARNING_PORTAL, "commands", strings.TrimPrefix(file, nfs.USR_ICEBERGS)), func(p string) { file = p }) {
 		kit.If(!nfs.Exists(m, file), func() { file = "" })
 	}
@@ -177,8 +177,8 @@ func GetCmdHelp(m *ice.Message, cmds string) (file string) {
 }
 func GetCmdFile(m *ice.Message, cmds string) (file string) {
 	m.Search(kit.Select(m.PrefixKey(), cmds), func(key string, cmd *ice.Command) {
-		if file = strings.TrimPrefix(m.FileURI(kit.Split(cmd.FileLine(), nfs.DF)[0]), nfs.REQUIRE); !nfs.Exists(m, file) {
-			file = path.Join(nfs.REQUIRE, file)
+		if file = kit.TrimPrefix(m.FileURI(kit.Split(cmd.FileLine(), nfs.DF)[0]), nfs.P); !nfs.Exists(m, file) {
+			file = path.Join(nfs.P, file)
 		}
 	})
 	return

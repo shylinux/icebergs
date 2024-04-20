@@ -60,8 +60,6 @@ func init() {
 	web.Index.MergeCommands(ice.Commands{ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { aaa.White(m, nfs.REQUIRE) }},
 		nfs.REQUIRE_SRC: {Hand: func(m *ice.Message, arg ...string) { web.ShareLocalFile(m, ice.SRC, path.Join(arg...)) }},
 		nfs.REQUIRE_USR: {Hand: func(m *ice.Message, arg ...string) { web.ShareLocalFile(m, ice.USR, path.Join(arg...)) }},
-		"m":             {Actions: web.ApiWhiteAction(), Hand: func(m *ice.Message, arg ...string) { m.Cmdy(nfs.REQUIRE_MODULES, arg) }},
-		"/p/modules/":   {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(nfs.REQUIRE_MODULES, arg) }},
 		nfs.REQUIRE_MODULES: {Hand: func(m *ice.Message, arg ...string) {
 			p := path.Join(nfs.USR_MODULES, path.Join(arg...))
 			kit.If(!nfs.Exists(m, p), func() {

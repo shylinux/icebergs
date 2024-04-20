@@ -269,8 +269,8 @@ func SplitPath(m *ice.Message, p string) []string {
 		p = strings.TrimPrefix(p, P)
 	}
 	line := kit.Select("1", strings.Split(p, DF), 1)
-	p = strings.TrimPrefix(p, kit.Path("")+PS)
 	p = strings.Split(p, DF)[0]
+	p = strings.Split(p, "?")[0]
 	if ls := kit.Split(kit.Select(ice.SRC_MAIN_GO, p), PS); len(ls) == 1 {
 		return []string{PWD, ls[0], line}
 	} else if ls[0] == ice.USR {

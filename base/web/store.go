@@ -28,8 +28,8 @@ func init() {
 			}},
 			INSTALL: {Hand: func(m *ice.Message, arg ...string) {
 				if !kit.HasPrefixList(arg, ctx.RUN) {
-					if strings.HasPrefix(m.Option(mdb.ICON), nfs.REQUIRE) {
-						m.Option(mdb.ICON, strings.TrimSuffix(strings.TrimPrefix(m.Option(mdb.ICON), nfs.REQUIRE), "?pod="+m.Option(mdb.NAME)))
+					if kit.HasPrefix(m.Option(mdb.ICON), nfs.P, nfs.REQUIRE) {
+						m.Option(mdb.ICON, strings.TrimSuffix(kit.TrimPrefix(m.Option(mdb.ICON), nfs.P, nfs.REQUIRE), "?pod="+m.Option(mdb.NAME)))
 					}
 					m.OptionDefault(nfs.BINARY, m.Option(ORIGIN)+S(m.Option(mdb.NAME)))
 					m.Cmdy(DREAM, mdb.CREATE, m.OptionSimple(mdb.NAME, mdb.ICON, nfs.REPOS, nfs.BINARY))

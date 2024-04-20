@@ -1,8 +1,6 @@
 package web
 
 import (
-	"strings"
-
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
@@ -150,7 +148,7 @@ func init() {
 					}, field...)
 				})
 				m.RewriteAppend(func(value, key string, index int) string {
-					if key == mdb.ICONS && strings.HasPrefix(value, nfs.REQUIRE) {
+					if key == mdb.ICONS && kit.HasPrefix(value, nfs.P, nfs.REQUIRE) {
 						if domain := m.Appendv(DOMAIN)[index]; domain != "" {
 							value = kit.MergeURL2(space[domain][mdb.TEXT], value, ice.POD, m.Appendv(mdb.NAME)[index])
 						}

@@ -85,7 +85,7 @@ func _space_fork(m *ice.Message) {
 		}
 	}
 	if m.Option(mdb.ICONS) != "" && !kit.HasPrefix(m.Option(mdb.ICONS), nfs.PS, HTTP) {
-		m.Option(mdb.ICONS, kit.MergeURL(nfs.REQUIRE+m.Option(mdb.ICONS), ice.POD, name))
+		m.Option(mdb.ICONS, kit.MergeURL(nfs.P+m.Option(mdb.ICONS), ice.POD, name))
 	}
 	args := kit.Simple(mdb.TYPE, m.Option(mdb.TYPE), mdb.NAME, name, mdb.TEXT, text, m.OptionSimple(mdb.ICONS, mdb.TIME, nfs.MODULE, nfs.VERSION, cli.DAEMON))
 	args = append(args, aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERROLE, m.Option(ice.MSG_USERROLE))
@@ -295,6 +295,7 @@ const SPACE = "space"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
+		"m": {Help: "模块", Actions: ApiWhiteAction(), Hand: func(m *ice.Message, arg ...string) { m.Cmdy(nfs.REQUIRE_MODULES, arg) }},
 		"p": {Help: "资源", Actions: ApiWhiteAction(), Hand: func(m *ice.Message, arg ...string) { ShareLocalFile(m, arg...) }},
 		"s": {Help: "空间", Actions: ApiWhiteAction(), Hand: func(m *ice.Message, arg ...string) { m.Cmdy(CHAT_POD, arg) }},
 		"c": {Help: "命令", Actions: ApiWhiteAction(), Hand: func(m *ice.Message, arg ...string) { m.Cmdy(CHAT_CMD, arg) }},

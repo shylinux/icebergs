@@ -150,7 +150,7 @@ func IsNotValidFieldShare(m *ice.Message, msg *ice.Message) bool {
 func SharePath(m *ice.Message, p string) string {
 	kit.If(!kit.HasPrefix(p, nfs.PS, ice.HTTP), func() {
 		if kit.HasPrefix(p, nfs.SRC, nfs.USR) && !kit.HasPrefix(p, nfs.USR_LOCAL) {
-			p = m.MergeLink(path.Join(nfs.REQUIRE, p), ice.POD, m.Option(ice.MSG_USERPOD))
+			p = m.MergeLink(path.Join(nfs.P, p), ice.POD, m.Option(ice.MSG_USERPOD))
 		} else {
 			p = m.MergeLink(path.Join(SHARE_LOCAL, p), ice.POD, m.Option(ice.MSG_USERPOD))
 		}

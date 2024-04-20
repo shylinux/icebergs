@@ -296,7 +296,13 @@ const SPACE = "space"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		"m": {Help: "模块", Actions: ApiWhiteAction(), Hand: func(m *ice.Message, arg ...string) { m.Cmdy(nfs.REQUIRE_MODULES, arg) }},
-		"p": {Help: "资源", Actions: ApiWhiteAction(), Hand: func(m *ice.Message, arg ...string) { ShareLocalFile(m, arg...) }},
+		"p": {Help: "资源", Actions: ApiWhiteAction(), Hand: func(m *ice.Message, arg ...string) {
+			if kit.IsIn(arg[0], ice.SRC, ice.USR) {
+				ShareLocalFile(m, arg...)
+			} else {
+				m.Cmdy(PP(ice.REQUIRE), arg)
+			}
+		}},
 		"s": {Help: "空间", Actions: ApiWhiteAction(), Hand: func(m *ice.Message, arg ...string) { m.Cmdy(CHAT_POD, arg) }},
 		"c": {Help: "命令", Actions: ApiWhiteAction(), Hand: func(m *ice.Message, arg ...string) { m.Cmdy(CHAT_CMD, arg) }},
 		SPACE: {Name: "space name cmds auto", Help: "空间站", Actions: ice.MergeActions(ice.Actions{

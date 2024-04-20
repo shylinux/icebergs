@@ -424,15 +424,19 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		REPOS: {Name: "repos repos branch:text commit:text file:text auto", Help: "代码库", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				_repos_insert(m, kit.Path(""))
-				m.Cmd(nfs.DIR, nfs.USR, func(value ice.Maps) { _repos_insert(m, value[nfs.PATH]) })
-				m.Cmd(nfs.DIR, nfs.USR_LOCAL_WORK, func(value ice.Maps) { _repos_insert(m, value[nfs.PATH]) })
 				m.Cmd(CONFIGS, func(value ice.Maps) {
 					if strings.HasSuffix(value[mdb.NAME], _INSTEADOF) && strings.HasPrefix(ice.Info.Make.Remote, value[mdb.VALUE]) {
 						mdb.Config(m, INSTEADOF, strings.TrimPrefix(strings.TrimSuffix(value[mdb.NAME], _INSTEADOF), "url."))
 					}
 				})
+				m.Cmd("", nfs.SCAN)
 				m.Go(func() { m.Cmd(web.DREAM, nfs.SCAN) })
+			}},
+			nfs.SCAN: {Hand: func(m *ice.Message, arg ...string) {
+				_repos_insert(m, kit.Path(""))
+				m.Cmd(nfs.DIR, nfs.USR, func(value ice.Maps) { _repos_insert(m, value[nfs.PATH]) })
+				m.Cmd(nfs.DIR, nfs.USR_LOCAL_WORK, func(value ice.Maps) { _repos_insert(m, value[nfs.PATH]) })
+				m.ProcessRefresh().ToastSuccess()
 			}},
 			INIT: {Name: "init remote*", Help: "初始化", Hand: func(m *ice.Message, arg ...string) {
 				m.OptionDefault(nfs.PATH, kit.Path(""))
@@ -661,7 +665,7 @@ func init() {
 					} else {
 						m.PushButton(STATUS, mdb.REMOVE)
 					}
-				}).Action(CLONE, PULL, PUSH, STATUS).Sort(REPOS)
+				}).Action(CLONE, PULL, PUSH, STATUS, nfs.SCAN).Sort(REPOS)
 			} else if repos := _repos_open(m, arg[0]); len(arg) == 1 {
 				_repos_branch(m, repos)
 			} else if len(arg) == 2 {

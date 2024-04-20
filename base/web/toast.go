@@ -12,7 +12,6 @@ import (
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web/html"
 	kit "shylinux.com/x/toolkits"
-	"shylinux.com/x/toolkits/logs"
 )
 
 const (
@@ -122,7 +121,7 @@ func Toast(m *ice.Message, text string, arg ...ice.Any) *ice.Message { // [title
 	kit.If(len(arg) == 0, func() { arg = append(arg, "") })
 	kit.If(len(arg) > 0 && arg[0] == "", func() { arg[0] = toastTitle(m) })
 	if m.IsDebug() {
-		arg[0] = kit.Format(arg[0]) + "\t" + logs.FileLine(-1, "2")
+		arg[0] = kit.Format(arg[0]) + "\t" + kit.FileLine(-1, 3)
 	}
 	PushNoticeToast(m, text, arg)
 	return m

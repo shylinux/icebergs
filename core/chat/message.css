@@ -1,5 +1,5 @@
 body.light fieldset.web.chat.message>div.output { background-color:white; }
-body.light fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list { background-color:#e3e3e2; }
+body.light fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list { background-color:#e3e3e2; overflow-x:hidden; }
 body.light fieldset.web.chat.message>div.output>div.layout>div.layout>div.content>div.list>div.item:not(.plug).send div.content { background-color:#94ec69; }
 fieldset.web.chat.message>div.output>div.project>div.title { background-color:var(--plugin-bg-color); padding:var(--button-padding); display:flex; justify-content:space-between; position:sticky; top:0; z-index:2; }
 fieldset.web.chat.message>div.output>div.project>div.title i:hover { background-color:var(--hover-bg-color); cursor:pointer; }

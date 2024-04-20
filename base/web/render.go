@@ -135,7 +135,7 @@ func RenderMain(m *ice.Message) *ice.Message {
 	}
 	m.Options(TITLE, kit.Select("localhost:9020", UserWeb(m).Host, m.Option(ice.MSG_USERPOD)))
 	m.Options(nfs.SCRIPT, ice.SRC_MAIN_JS, nfs.VERSION, RenderVersion(m))
-	m.OptionDefault(mdb.ICONS, "/require/"+ice.Info.NodeIcon)
+	m.OptionDefault(mdb.ICONS, nfs.P+ice.Info.NodeIcon+m.Option(nfs.VERSION))
 	return m.RenderResult(kit.Renders(m.Cmdx(nfs.CAT, ice.SRC_MAIN_HTML), m))
 }
 func RenderCmds(m *ice.Message, cmds ...ice.Any) {

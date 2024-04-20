@@ -38,6 +38,7 @@ fieldset.web.wiki.portal>div.output>div.layout>div.main fieldset.inner.output di
 }
 body.dark fieldset.web.wiki.portal>div.output>div.layout>div.main div.story[data-type=spark][data-name=shell] { border:var(--box-border); border-left:var(--box-notice3); }
 fieldset.web.wiki.portal>div.output>div.layout>div.main div.story[data-type=spark][data-name=shell] { box-shadow:var(--th-box-shadow); border:0; border-left:var(--box-notice3); }
+fieldset.web.wiki.portal>div.output>div.layout>div.main div.story[data-type=spark][data-name=shell]:hover { box-shadow:var(--notice-box-shadow); }
 fieldset.web.wiki.portal>div.output>div.layout>div.main div.story[data-type=spark][data-name=shell] { background-color:var(--code-bg-color); color:var(--code-fg-color); padding:var(--button-padding); margin-top:var(--button-margin); }
 fieldset.web.wiki.portal>div.output>div.layout>div.main table.content div.story[data-type=spark][data-name=shell] { margin-top:unset; }
 fieldset.web.wiki.portal.home>div.output>div.layout>div.main p { white-space:pre-wrap; text-align:center; }

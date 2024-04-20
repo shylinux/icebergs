@@ -295,6 +295,7 @@ const SPACE = "space"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
+		"p": {Help: "资源", Actions: ApiWhiteAction(), Hand: func(m *ice.Message, arg ...string) { ShareLocalFile(m, arg...) }},
 		"s": {Help: "空间", Actions: ApiWhiteAction(), Hand: func(m *ice.Message, arg ...string) { m.Cmdy(CHAT_POD, arg) }},
 		"c": {Help: "命令", Actions: ApiWhiteAction(), Hand: func(m *ice.Message, arg ...string) { m.Cmdy(CHAT_CMD, arg) }},
 		SPACE: {Name: "space name cmds auto", Help: "空间站", Actions: ice.MergeActions(ice.Actions{

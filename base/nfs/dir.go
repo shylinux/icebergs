@@ -170,6 +170,12 @@ const (
 	USR_ICONS_VOLCANOS = "usr/icons/volcanos.png"
 	USR_ICONS          = "usr/icons/"
 
+	V               = "/v/"
+	M               = "/m/"
+	P               = "/p/"
+	X               = "/x/"
+	S               = "/s/"
+	C               = "/c/"
 	INTSHELL        = "/intshell/"
 	VOLCANOS        = "/volcanos/"
 	VOLCANOS_PLUGIN = "/volcanos/plugin/"
@@ -259,6 +265,8 @@ func SplitPath(m *ice.Message, p string) []string {
 	} else if kit.HasPrefix(p, REQUIRE) {
 		ls := kit.Split(p, PS)
 		return []string{ice.USR_REQUIRE + path.Join(ls[1:4]...) + PS, path.Join(ls[4:]...)}
+	} else if kit.HasPrefix(p, P) {
+		p = strings.TrimPrefix(p, P)
 	}
 	line := kit.Select("1", strings.Split(p, DF), 1)
 	p = strings.TrimPrefix(p, kit.Path("")+PS)

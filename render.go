@@ -264,7 +264,7 @@ func (m *Message) Resource(file string, arg ...string) string {
 		} else if strings.HasPrefix(file, PS) {
 			return arg[0] + file
 		} else if kit.HasPrefix(file, "src", "usr") {
-			return arg[0] + "/require/" + file
+			return arg[0] + "/p/" + file
 		}
 	}
 	return m.resource(file)

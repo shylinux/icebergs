@@ -20,13 +20,13 @@ func _volcanos(m *ice.Message, p ...string) string { return ice.USR_VOLCANOS + p
 func _publish(m *ice.Message, p ...string) string  { return ice.USR_PUBLISH + path.Join(p...) }
 func _require(m *ice.Message, p string) string {
 	if kit.HasPrefix(p, nfs.USR_MODULES) {
-		return path.Join("/require/modules/", strings.TrimPrefix(p, nfs.USR_MODULES))
+		return path.Join(nfs.M, strings.TrimPrefix(p, nfs.USR_MODULES))
 	} else if kit.HasPrefix(p, ice.USR_VOLCANOS) {
-		return path.Join("/volcanos/", strings.TrimPrefix(p, ice.USR_VOLCANOS))
+		return path.Join(nfs.V, strings.TrimPrefix(p, ice.USR_VOLCANOS))
 	} else if kit.HasPrefix(p, nfs.SRC, nfs.USR) {
-		return path.Join("/require/", p)
+		return path.Join(nfs.P, p)
 	} else {
-		return path.Join("/volcanos/", p)
+		return path.Join(nfs.V, p)
 	}
 }
 func _webpack_css(m *ice.Message, css, js io.Writer, p string) {

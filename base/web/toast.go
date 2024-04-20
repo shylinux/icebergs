@@ -61,7 +61,7 @@ func toastContent(m *ice.Message, state string, arg ...ice.Any) string {
 	}
 }
 func ToastSuccess(m *ice.Message, arg ...ice.Any) {
-	Toast(m, toastContent(m, ice.SUCCESS, arg...), "", cli.TIME_3s)
+	Toast(m, toastContent(m, ice.SUCCESS, arg...), "", cli.TIME_1s)
 }
 func ToastFailure(m *ice.Message, arg ...ice.Any) {
 	Toast(m, toastContent(m, ice.FAILURE, arg...), "", m.Option(ice.TOAST_DURATION, "-1")).Sleep(cli.TIME_3s)
@@ -104,7 +104,7 @@ func GoToast(m *ice.Message, cb func(toast func(name string, count, total int)) 
 		m.Sleep(m.Option(ice.TOAST_DURATION))
 	} else {
 		icon = Icons[ice.SUCCESS]
-		m.Option(ice.TOAST_DURATION, cli.TIME_3s)
+		m.Option(ice.TOAST_DURATION, cli.TIME_1s)
 		toast(ice.SUCCESS, _total, _total)
 	}
 	Count(m, kit.FuncName(1), toastTitle(m), kit.FmtDuration(time.Now().Sub(begin)))

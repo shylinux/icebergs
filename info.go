@@ -317,7 +317,7 @@ func (m *Message) FileURI(dir string) string {
 	} else if strings.HasPrefix(dir, USR_VOLCANOS) {
 		dir = strings.TrimPrefix(dir, USR)
 	} else {
-		dir = kit.MergeURL(path.Join(PS, REQUIRE, dir), POD, m.Option(MSG_USERPOD))
+		dir = kit.MergeURL(path.Join(PS, "p", dir), POD, m.Option(MSG_USERPOD))
 	}
 	if m.Option(MSG_USERWEB0) != "" {
 		dir = kit.MergeURL2(m.Option(MSG_USERWEB), dir)

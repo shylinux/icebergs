@@ -3,6 +3,7 @@ package web
 import (
 	"net/http"
 	"net/url"
+	"os"
 	"path"
 	"regexp"
 	"runtime"
@@ -232,6 +233,8 @@ func init() {
 			tcp.HOST:   {Help: "公网", Hand: func(m *ice.Message, arg ...string) { m.Echo(kit.Formats(PublicIP(m))) }},
 			cli.SYSTEM: {Help: "系统", Hand: func(m *ice.Message, arg ...string) { cli.Opens(m, "System Settings.app") }},
 			cli.START: {Name: "start dev proto host port=9020 nodename username usernick", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(cli.SYSTEM, "echo", "-ne", kit.Format("\033]0;%s %s serve start %s\007",
+					path.Base(kit.Path("")), strings.TrimPrefix(kit.Path(os.Args[0]), kit.Path("")+nfs.PS), kit.JoinCmdArgs(arg...)))
 				if runtime.GOOS == cli.LINUX {
 					m.Cmd(nfs.SAVE, nfs.ETC_LOCAL_SH, m.Spawn(ice.Maps{cli.PWD: kit.Path(""), aaa.USER: kit.UserName(), ctx.ARGS: kit.JoinCmds(arg...)}).Template("local.sh")+lex.NL)
 					m.Cmd("", PROXY_CONF, ice.Info.NodeName)
@@ -240,7 +243,7 @@ func init() {
 			}},
 			SERVE_START: {Hand: func(m *ice.Message, arg ...string) {
 				kit.If(m.Option(ice.DEMO) == ice.TRUE, func() { m.Cmd(CHAT_HEADER, ice.DEMO) })
-				m.Go(func() { ssh.PrintQRCode(m, tcp.PublishLocalhost(m, _serve_address(m))) })
+				kit.If(os.Getenv(cli.TERM), func() { m.Go(func() { ssh.PrintQRCode(m, tcp.PublishLocalhost(m, _serve_address(m))) }) })
 				m.Cmd(SPIDE, mdb.CREATE, HostPort(m, tcp.LOCALHOST, m.Option(tcp.PORT)), ice.OPS, nfs.USR_ICONS_CONTEXTS, nfs.REPOS, "")
 				m.Cmds(SPIDE).Table(func(value ice.Maps) {
 					kit.If(value[CLIENT_NAME] != ice.OPS && value[TOKEN] != "", func() {

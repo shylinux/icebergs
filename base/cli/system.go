@@ -7,7 +7,9 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"runtime"
 	"strings"
+	"syscall"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
@@ -65,6 +67,9 @@ func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
 	}
 	kit.For(env, func(k, v string) { cmd.Env = append(cmd.Env, kit.Format("%s=%s", k, v)) })
 	kit.If(len(cmd.Env) > 0 && m.IsDebug(), func() { m.Logs(EXEC, CMD_ENV, kit.Format(cmd.Env)) })
+	if runtime.GOOS == "windows" {
+		cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
+	}
 	return cmd
 }
 func _system_out(m *ice.Message, out string) io.Writer {

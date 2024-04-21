@@ -99,6 +99,10 @@ func init() {
 	Index.root, Pulse.root, Pulse.time = Index, Pulse, time.Now()
 }
 
+func Runs(cb func(), arg ...string) string {
+	Pulse.Optionv("main.routine", cb)
+	return Run(arg...)
+}
 func Run(arg ...string) string {
 	kit.If(len(arg) == 0 && len(os.Args) > 1, func() { arg = os.Args[1:] })
 	kit.If(len(arg) == 0, func() { arg = append(arg, FOREVER, START) })
@@ -115,6 +119,10 @@ func Run(arg ...string) string {
 		_forever = true
 		logs.Disable(false)
 		Pulse.Go(func() { Index.Start(Pulse, arg...) })
+		switch cb := Pulse.Optionv("main.routine").(type) {
+		case func():
+			cb()
+		}
 		conf.Wait()
 		os.Exit(kit.Int(Pulse.Option(EXIT)))
 	default:

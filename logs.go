@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"runtime"
 	"strings"
 	"time"
@@ -65,6 +66,9 @@ func (m *Message) log(level string, str string, arg ...Any) *Message {
 	}
 	_source := logs.FileLineMeta(3)
 	kit.If(Info.Log != nil, func() { Info.Log(m, m.FormatPrefix(traceid), level, logs.Format(str, append(args, _source)...)) })
+	if os.Getenv("TERM") == "" {
+		return m
+	}
 	prefix, suffix := "", ""
 	if Info.Colors {
 		switch level {

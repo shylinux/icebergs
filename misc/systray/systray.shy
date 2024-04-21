@@ -1,0 +1,11 @@
+chapter "systray"
+refer `
+源码 https://github.com/getlantern/systray
+文档 https://pkg.go.dev/github.com/getlantern/systray#section-readme
+`
+field web.chat.systray.systray
+field web.code.git.source args `
+https://github.com/getlantern/systray
+usr/local/systray/
+go.mod
+`

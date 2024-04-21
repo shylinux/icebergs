@@ -61,12 +61,13 @@ func _daemon_exec(m *ice.Message, cmd *exec.Cmd) {
 }
 
 const (
-	DIR = "dir"
-	ENV = "env"
-	API = "api"
-	MOD = "mod"
-	PID = "pid"
-	PWD = "pwd"
+	DIR  = "dir"
+	ENV  = "env"
+	API  = "api"
+	MOD  = "mod"
+	PWD  = "pwd"
+	PID  = "pid"
+	PPID = "ppid"
 )
 const (
 	BUILD = "build"
@@ -160,9 +161,9 @@ func init() {
 
 func Opens(m *ice.Message, arg ...string) {
 	if !tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) {
-		return
+		// return
 	} else if len(arg) == 0 || arg[0] == "" {
-		return
+		// return
 	}
 	switch runtime.GOOS {
 	case DARWIN:

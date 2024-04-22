@@ -127,12 +127,12 @@ func init() { ice.Info.Save = Save; ice.Info.Load = Load }
 func Save(m *ice.Message, arg ...string) *ice.Message {
 	kit.If(len(arg) == 0, func() { arg = kit.SortedKey(m.Target().Configs) })
 	kit.For(arg, func(i int, k string) { arg[i] = strings.Replace(m.Prefix(k), nfs.PS, "", 1) })
-	return m.Cmd(CONFIG, nfs.SAVE, m.Prefix(nfs.JSON), arg)
+	return m.Cmd(prefix(CONFIG), nfs.SAVE, m.Prefix(nfs.JSON), arg)
 }
 func Load(m *ice.Message, arg ...string) *ice.Message {
 	kit.If(len(arg) == 0, func() { arg = kit.SortedKey(m.Target().Configs) })
 	kit.For(arg, func(i int, k string) { arg[i] = strings.Replace(m.Prefix(k), nfs.PS, "", 1) })
-	return m.Cmd(CONFIG, nfs.LOAD, m.Prefix(nfs.JSON), arg)
+	return m.Cmd(prefix(CONFIG), nfs.LOAD, m.Prefix(nfs.JSON), arg)
 }
 func ConfAction(arg ...ice.Any) ice.Actions {
 	return ice.Actions{ice.CTX_INIT: mdb.AutoConfig(arg...)}

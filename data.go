@@ -58,7 +58,7 @@ func SaveImportant(m *Message, arg ...string) {
 	if Info.Important != true || len(arg) == 0 {
 		return
 	}
-	kit.For(arg, func(i int, v string) { kit.If(v == "" || strings.Contains(v, SP), func() { arg[i] = "\"" + v + "\"" }) })
+	kit.For(arg, func(v string, i int) { arg[i] = kit.Format("%q", v) })
 	defer _important.Lock()()
 	m.Cmd("nfs.push", VAR_DATA_IMPORTANT, kit.Join(arg, SP), NL)
 }

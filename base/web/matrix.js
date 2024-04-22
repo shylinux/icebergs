@@ -37,6 +37,11 @@ Volcanos(chat.ONIMPORT, {
 		], _init: function(target) { item._target = target }}
 	},
 	style: function(can, item, list) { var name = item.name, domain = item.domain, worker = list[name][""]
+		if (worker && worker.module != item.module) { return
+			can.core.Item(list, function(key, value) { value = value[""]
+				if (value.module == item.module) { worker = value }
+			})
+		}
 		return !worker? html.NOTICE: (worker.status != cli.STOP && item.status != cli.STOP && (item.version != worker.version || item.time < worker.time))? html.DANGER: ""
 	},
 }, [""])

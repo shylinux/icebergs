@@ -27,18 +27,14 @@ import (
 
 func _serve_address(m *ice.Message) string { return HostPort(m, tcp.LOCALHOST, m.Option(tcp.PORT)) }
 func _serve_start(m *ice.Message) {
-	kit.If(m.Option(aaa.USERNAME), func() {
-		aaa.UserRoot(m, "", m.Option(aaa.USERNAME), m.Option(aaa.USERNICK), m.Option(aaa.LANGUAGE))
-	})
+	kit.If(m.Option(aaa.USERNAME), func() { aaa.UserRoot(m, "", m.Option(aaa.USERNAME), m.Option(aaa.USERNICK), m.Option(aaa.LANGUAGE)) })
 	kit.If(m.Option(tcp.PORT) == tcp.RANDOM, func() { m.Option(tcp.PORT, m.Cmdx(tcp.PORT, aaa.RIGHT)) })
-	cli.NodeInfo(m, kit.Select(kit.Split(ice.Info.Hostname, nfs.PT)[0], m.Option(tcp.NODENAME)), SERVER, mdb.Config(m, mdb.ICONS))
 	m.Go(func() {
-		m.Cmd(SPIDE, ice.OPS, _serve_address(m)+"/exit", ice.Maps{CLIENT_TIMEOUT: cli.TIME_30ms, ice.LOG_DISABLE: ice.TRUE})
+		m.Cmd(SPIDE, ice.OPS, _serve_address(m)+nfs.PS+ice.EXIT, ice.Maps{CLIENT_TIMEOUT: cli.TIME_30ms, ice.LOG_DISABLE: ice.TRUE})
 	}).Sleep(cli.TIME_1s)
+	cli.NodeInfo(m, kit.Select(kit.Split(ice.Info.Hostname, nfs.PT)[0], m.Option(tcp.NODENAME)), SERVER, mdb.Config(m, mdb.ICONS))
+	kit.If(ice.HasVar(), func() { m.Cmd(nfs.SAVE, ice.VAR_LOG_ICE_PORT, m.Option(tcp.PORT)) })
 	m.Spawn(ice.Maps{TOKEN: ""}).Start("", m.OptionSimple(tcp.HOST, tcp.PORT)...)
-	if ice.HasVar() {
-		m.Cmd(nfs.SAVE, ice.VAR_LOG_ICE_PORT, m.Option(tcp.PORT))
-	}
 	if m.Cmd(tcp.HOST).Length() == 0 {
 		return
 	}
@@ -221,7 +217,7 @@ const SERVE = "serve"
 
 func init() {
 	Index.MergeCommands(ice.Commands{P(ice.EXIT): {Hand: func(m *ice.Message, arg ...string) { m.Cmd(ice.EXIT) }},
-		SERVE: {Name: "serve name auto main host system", Help: "服务器", Actions: ice.MergeActions(ice.Actions{
+		SERVE: {Name: "serve port auto main host system", Help: "服务器", Actions: ice.MergeActions(ice.Actions{
 			ice.MAIN: {Name: "main index", Help: "首页", Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(ctx.INDEX) == "" {
 					mdb.Config(m, ice.MAIN, "")
@@ -233,11 +229,12 @@ func init() {
 			tcp.HOST:   {Help: "公网", Hand: func(m *ice.Message, arg ...string) { m.Echo(kit.Formats(PublicIP(m))) }},
 			cli.SYSTEM: {Help: "系统", Hand: func(m *ice.Message, arg ...string) { cli.Opens(m, "System Settings.app") }},
 			cli.START: {Name: "start dev proto host port=9020 nodename username usernick", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(cli.SYSTEM, "echo", "-ne", kit.Format("\033]0;%s %s serve start %s\007",
-					path.Base(kit.Path("")), strings.TrimPrefix(kit.Path(os.Args[0]), kit.Path("")+nfs.PS), kit.JoinCmdArgs(arg...)))
 				if runtime.GOOS == cli.LINUX {
 					m.Cmd(nfs.SAVE, nfs.ETC_LOCAL_SH, m.Spawn(ice.Maps{cli.PWD: kit.Path(""), aaa.USER: kit.UserName(), ctx.ARGS: kit.JoinCmds(arg...)}).Template("local.sh")+lex.NL)
 					m.Cmd("", PROXY_CONF, ice.Info.NodeName)
+				} else if runtime.GOOS == cli.WINDOWS {
+					m.Cmd(cli.SYSTEM, cli.ECHO, "-ne", kit.Format("\033]0;%s %s serve start %s\007",
+						path.Base(kit.Path("")), strings.TrimPrefix(kit.Path(os.Args[0]), kit.Path("")+nfs.PS), kit.JoinCmdArgs(arg...)))
 				}
 				_serve_start(m)
 			}},
@@ -256,14 +253,14 @@ func init() {
 				}
 			}},
 			PROXY_CONF: {Name: "proxyConf name* port host path", Hand: func(m *ice.Message, arg ...string) {
-				if dir := m.OptionDefault(nfs.PATH, PROXY_PATH, tcp.HOST, "127.0.0.1", tcp.PORT, "9020"); nfs.Exists(m, dir) {
+				if dir := m.OptionDefault(nfs.PATH, PROXY_PATH, tcp.HOST, "127.0.0.1", tcp.PORT, tcp.PORT_9020); nfs.Exists(m, dir) {
 					for _, p := range []string{"server.conf", "location.conf", "upstream.conf"} {
 						m.Cmd(nfs.SAVE, kit.Format("%s/conf/portal/%s/%s", dir, m.Option(mdb.NAME), p), m.Template(p)+lex.NL)
 					}
 				}
 			}},
 		}, gdb.EventsAction(SERVE_START), mdb.HashAction(
-			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,status,name,proto,host,port"), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
+			mdb.SHORT, tcp.PORT, mdb.FIELD, "time,status,port,host,proto"), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, arg...).Action().StatusTimeCount(kit.Dict(ice.MAIN, mdb.Config(m, ice.MAIN)))
 		}},
 	})

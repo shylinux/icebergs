@@ -1,6 +1,5 @@
 Volcanos(chat.ONIMPORT, {
-	_init: function(can, msg, cb) {
-		can.require(["/plugin/local/wiki/word.js"]), can.isCmdMode() && can.onappend.style(can, html.OUTPUT)
+	_init: function(can, msg, cb) { can.require(["/plugin/local/wiki/word.js"])
 		var p = "/cmd/"+web.PORTAL; can.db.prefix = location.pathname.indexOf(p) > -1? location.pathname.split(p)[0]+p: nfs.WIKI_PORTAL
 		var p = "/c/"+web.PORTAL; can.db.prefix = location.pathname.indexOf(p) > -1? location.pathname.split(p)[0]+p: nfs.WIKI_PORTAL
 		can.db.current = can.isCmdMode()? can.base.trimPrefix(location.pathname, can.db.prefix+nfs.PS, can.db.prefix): can.Option(nfs.PATH)
@@ -54,13 +53,12 @@ Volcanos(chat.ONIMPORT, {
 	title: function(can, meta, target) { can.isCmdMode() && can.page.tagis(target, html.H1) && can.onexport && can.onexport.title(can, meta.text) },
 	button: function(can, meta, target) { var item = can.base.Obj(meta.meta); target.onclick = function(event) { can.onaction.route(event, can, item.route) } },
 	layout: function(can, height, width) { if (!can.ui.layout || !can.ui.main) { return }
-		can.ui.layout(height, width), can.ConfHeight(can.ui.main.offsetHeight), can.ConfWidth(can.ui.main.offsetWidth)
+		can.ui.layout(height, width), can.ConfWidth(can.ui.main.offsetWidth), padding = can.Conf(html.PADDING)
 		if (can.user.isMobile && can.isCmdMode()) {
 			can.page.style(can, can.ui.nav, html.HEIGHT, "", html.WIDTH, can.page.width())
 			can.page.style(can, can.ui.main, html.HEIGHT, "", html.WIDTH, can.page.width())
 		}
-		padding = can.Conf(html.PADDING)
-		can.core.List(can._plugins, function(sub) { sub.onimport.size(sub, can.base.Min(can.ConfHeight()/2, 300, 600), sub.Conf("_width")||(can.ConfWidth()-2*padding), true) })
+		can.core.List(can._plugins, function(sub) { sub.onimport.size(sub, can.base.Min(html.FLOAT_HEIGHT, can.ConfHeight()/2, can.ConfHeight()), sub.Conf("_width")||(can.ConfWidth()-2*padding), true) })
 	},
 }, [""])
 Volcanos(chat.ONACTION, {

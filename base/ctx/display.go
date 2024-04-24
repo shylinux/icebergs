@@ -51,6 +51,9 @@ func DisplayStoryForm(m *ice.Message, arg ...ice.Any) *ice.Message {
 func DisplayInputKey(m *ice.Message, arg ...ice.Any) *ice.Message {
 	return DisplayInput(m, "key", arg...)
 }
+func DisplayStoryPie(m *ice.Message, arg ...ice.Any) *ice.Message {
+	return DisplayStory(m, "pie", arg...)
+}
 func DisplayStoryJSON(m *ice.Message, arg ...ice.Any) *ice.Message {
 	return DisplayStory(m, "json", arg...)
 }

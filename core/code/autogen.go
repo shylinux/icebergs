@@ -178,8 +178,15 @@ func init() {
 					_autogen_script(m, p)
 				}
 			}},
-			DEVPACK: {Help: "开发", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(WEBPACK, mdb.REMOVE) }},
-			WEBPACK: {Help: "打包", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(WEBPACK, mdb.CREATE) }},
+			DEVPACK: {Help: "开发", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(WEBPACK, mdb.REMOVE)
+				m.Cmd(web.DREAM, nfs.GOWORK)
+			}},
+			WEBPACK: {Help: "打包", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(WEBPACK, mdb.CREATE)
+				nfs.Trash(m, ice.GO_WORK_SUM)
+				nfs.Trash(m, ice.GO_WORK)
+			}},
 			BINPACK: {Help: "打包", Hand: func(m *ice.Message, arg ...string) {
 				const (
 					USR_RELEASE_CONF_GO    = "usr/release/conf.go"

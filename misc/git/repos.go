@@ -227,7 +227,7 @@ func _repos_status(m *ice.Message, p string, repos *git.Repository) error {
 	if err != nil {
 		return err
 	}
-	ignore := []string{}
+	ignore := []string{ice.GO_WORK, ice.GO_WORK_SUM}
 	nfs.Exists(m, path.Join(_repos_path(m, p), ".gitignore"), func(p string) { ignore = kit.Split(m.Cmdx(nfs.CAT, p), lex.NL) })
 	for k, v := range status {
 		if kit.HasPrefix(k, nfs.PT) || (kit.HasPrefix(k, ignore...) && !strings.HasPrefix(k, ice.USR_LOCAL_EXPORT)) {

@@ -181,6 +181,8 @@ const ( // DIR
 	LICENSE            = "LICENSE"
 	GO_MOD             = "go.mod"
 	GO_SUM             = "go.sum"
+	GO_WORK            = "go.work"
+	GO_WORK_SUM        = "go.work.sum"
 	ICE_BIN            = "ice.bin"
 	CAN_PLUGIN         = "can._plugin"
 )

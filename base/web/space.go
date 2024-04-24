@@ -312,17 +312,15 @@ func init() {
 			}},
 			mdb.ICONS: {Hand: func(m *ice.Message, arg ...string) {
 				cli.NodeInfo(m, ice.Info.Pathname, WORKER, arg[0])
-				mdb.Config(m, mdb.ICONS, arg[0])
 				m.Cmd(SERVE, m.ActionKey(), arg)
 			}},
-			ice.MAIN: {Name: "main index", Help: "首页", Hand: func(m *ice.Message, arg ...string) {
+			ice.MAIN: {Name: "main index", Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) > 0 {
-					mdb.Config(m, ice.MAIN, m.Option(ctx.INDEX))
+					ice.Info.NodeMain = m.Option(ctx.INDEX)
 					m.Cmd(SERVE, m.ActionKey(), arg)
 					return
 				}
-				kit.If(mdb.Config(m, ice.MAIN), func(cmd string) { RenderPodCmd(m, "", cmd) }, func() { RenderMain(m) })
-				m.Optionv(ice.MSG_ARGS, kit.Simple(m.Optionv(ice.MSG_ARGS)))
+				kit.If(ice.Info.NodeMain, func(cmd string) { RenderPodCmd(m, "", cmd) }, func() { RenderMain(m) })
 			}},
 			ice.INFO: {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
 				m.Push(mdb.TIME, ice.Info.Make.Time)

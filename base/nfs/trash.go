@@ -14,10 +14,10 @@ func _trash_create(m *ice.Message, from string) {
 		return
 	}
 	s, e := StatFile(m, from)
-	defer Remove(m, from)
 	if m.WarnNotFound(e, from) {
 		return
 	}
+	defer Remove(m, from)
 	p := path.Join(ice.VAR_TRASH, path.Base(from))
 	kit.If(!s.IsDir(), func() { Open(m, from, func(r io.Reader) { p = path.Join(ice.VAR_TRASH, kit.HashsPath(r)) }) })
 	RemoveAll(m, p)

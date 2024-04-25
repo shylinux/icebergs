@@ -44,8 +44,8 @@ fieldset.macos.desktop>div.output>div.desktop>fieldset>div.action>div input { bo
 fieldset.macos.desktop>div.output>div.desktop>fieldset>form.option>div.text input:hover { border-top:var(--box-notice); }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>div.action>div.text input:hover { border-top:var(--box-notice); }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>div.action>* { box-shadow:none; margin:var(--button-margin) var(--input-margin); }
-fieldset.macos.desktop>div.output>div.desktop>fieldset>div.action>div.item:last-child { margin-right:100px; }
-fieldset.macos.desktop>div.output>div.desktop>fieldset>div.action>div.tabs { display:none; }
+fieldset.macos.desktop>div.output>div.desktop>fieldset>div.action>div:last-child { margin-right:100px; }
+/* fieldset.macos.desktop>div.output>div.desktop>fieldset>div.action>div.tabs { display:none; } */
 fieldset.macos.desktop>div.output>div.desktop>fieldset>div.output { min-height:240px; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>div.output>table.content { width:100%; }
 fieldset.macos.desktop>div.output>div.desktop>fieldset>div.output>table.content th { padding:var(--table-padding); }

@@ -135,12 +135,12 @@ const (
 )
 const (
 	ENV = "env"
-	DOC = "doc"
 	GET = "get"
 	TAG = "tag"
 )
 const SUM = "sum"
 const MOD = "mod"
+const DOC = "doc"
 const GO = "go"
 
 func init() {
@@ -166,6 +166,12 @@ func init() {
 				}
 			}},
 		}, gdb.EventsAction(VIMER_SAVE), PlugAction())},
+		DOC: {Name: "doc path name auto", Hand: func(m *ice.Message, arg ...string) {
+			if strings.Contains(arg[0], nfs.PS) {
+				arg[0] = kit.Path(arg[0])
+			}
+			m.Cmdy(cli.SYSTEM, cli.GO, DOC, arg)
+		}},
 		MOD: {Actions: ice.MergeActions(ice.Actions{
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _mod_show(m, path.Join(arg[2], arg[1])) }},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _mod_show(m, path.Join(arg[2], arg[1])) }},

@@ -70,7 +70,7 @@ const SHARE = "share"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		SHARE: {Name: "share hash auto login", Help: "共享链", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
+		SHARE: {Name: "share hash auto login", Help: "共享链", Icon: "Freeform.png", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
 			mdb.CREATE: {Name: "create type name text space", Hand: func(m *ice.Message, arg ...string) {
 				kit.If(m.Option(mdb.TYPE) == LOGIN && m.Option(mdb.TEXT) == "", func() { arg = append(arg, mdb.TEXT, tcp.PublishLocalhost(m, m.Option(ice.MSG_USERWEB))) })
 				mdb.HashCreate(m, m.OptionSimple("type,name,text,space"), arg, aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERROLE, m.Option(ice.MSG_USERROLE))

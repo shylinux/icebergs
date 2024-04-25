@@ -176,10 +176,11 @@ const (
 	ECHO = "echo"
 	KILL = "kill"
 
-	GO  = "go"
-	GIT = "git"
-	MAN = "man"
-	YUM = "yum"
+	GO     = "go"
+	GOTAGS = "gotags"
+	GIT    = "git"
+	MAN    = "man"
+	YUM    = "yum"
 )
 
 const SYSTEM = "system"

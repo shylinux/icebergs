@@ -123,6 +123,7 @@ func init() {
 			} else {
 				arg[1] = strings.Split(arg[1], mdb.FS)[0]
 				_inner_list(m, kit.Ext(arg[1]), arg[1], arg[0])
+				m.Options(nfs.PATH, arg[0], nfs.FILE, arg[1], nfs.LINE, kit.Select("", arg, 2))
 				if ctx.DisplayLocal(m, ""); !strings.HasPrefix(arg[0], ice.USR_INSTALL) {
 					m.Option(REPOS, kit.Join(m.Cmd(REPOS, ice.OptionFields(nfs.PATH)).Sort(nfs.PATH).Appendv(nfs.PATH)))
 				}

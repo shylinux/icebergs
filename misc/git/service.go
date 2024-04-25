@@ -154,7 +154,7 @@ func init() {
 		m.WarnNotValid(_service_repos(m, arg...))
 	}}})
 	Index.MergeCommands(ice.Commands{
-		SERVICE: {Name: "service repos branch commit file auto", Help: "代码源", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
+		SERVICE: {Name: "service repos branch commit file auto", Help: "代码源", Icon: "Siri.png", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.DIR, ice.USR_LOCAL_REPOS, func(value ice.Maps) { _repos_insert(m, value[nfs.PATH]) })
 			}},

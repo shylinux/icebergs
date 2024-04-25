@@ -16,7 +16,7 @@ import (
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		VERSION: {Name: "version refresh", Help: "版本", Actions: ice.MergeActions(ice.Actions{
+		VERSION: {Name: "version refresh", Icon: "Stickies.png", Help: "版本", Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				ls := kit.Split(kit.Split(strings.TrimPrefix(m.Option(VERSION), "v"), "-")[0], ".")
 				if len(ls) > 2 {

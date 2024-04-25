@@ -422,7 +422,7 @@ func init() {
 		}},
 	})
 	Index.MergeCommands(ice.Commands{
-		REPOS: {Name: "repos repos branch:text commit:text file:text auto", Help: "代码库", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
+		REPOS: {Name: "repos repos branch:text commit:text file:text auto", Help: "代码库", Icon: "Time Machine.png", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(CONFIGS, func(value ice.Maps) {
 					if strings.HasSuffix(value[mdb.NAME], _INSTEADOF) && strings.HasPrefix(ice.Info.Make.Remote, value[mdb.VALUE]) {

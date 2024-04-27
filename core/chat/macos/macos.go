@@ -51,7 +51,7 @@ func disableApp(m *ice.Message) *ice.Message {
 	return m
 }
 func PodCmdAction(arg ...string) ice.Actions {
-	file := kit.FileLine(2, 100)
+	file := kit.FileLine(-1, 100)
 	return ice.Actions{
 		mdb.SELECT: {Name: "list hash auto create", Hand: func(m *ice.Message, arg ...string) {
 			defer m.Display(m.FileURI(file))
@@ -65,7 +65,7 @@ func PodCmdAction(arg ...string) ice.Actions {
 	}
 }
 func CmdHashAction(arg ...string) ice.Actions {
-	file := kit.FileLine(2, 100)
+	file := kit.FileLine(-1, 100)
 	return ice.MergeActions(ice.Actions{
 		mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 			switch mdb.HashInputs(m, arg); arg[0] {

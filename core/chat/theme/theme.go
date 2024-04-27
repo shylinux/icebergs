@@ -15,8 +15,8 @@ func init() {
 	const THEME = "theme"
 	chat.Index.MergeCommands(ice.Commands{
 		THEME: {Actions: ice.MergeActions(ice.Actions{
-			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy("web.chat.color").Cut(mdb.NAME, mdb.TEXT, mdb.TYPE) }},
-			mdb.CREATE: {Name: "create name* plugin-bg-color@color plugin-fg-color@color output-bg-color@color hover-bg-color@color"},
+			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy("web.chat.color").Cut(mdb.NAME, mdb.TEXT, mdb.HELP) }},
+			mdb.CREATE: {Name: "create name* plugin-bg-color@color output-bg-color@color hover-bg-color@color"},
 			mdb.SHOW: {Hand: func(m *ice.Message, arg ...string) {
 				ctx.ProcessFloat(m, "web.chat.iframe", []string{"/?theme=" + m.Option(mdb.NAME)}, arg...)
 			}},
@@ -29,11 +29,9 @@ func init() {
 				}
 			}},
 		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, kit.Fields("time,name",
-			"plugin-bg-color", "plugin-fg-color",
-			"output-bg-color", "output-fg-color",
-			"hover-bg-color", "hover-fg-color",
-			"shadow-color", "border-color",
-			"notice-color", "danger-color",
+			"plugin-bg-color", "output-bg-color", "hover-bg-color",
+			"plugin-fg-color", "output-fg-color", "hover-fg-color",
+			"shadow-color", "border-color", "notice-color", "danger-color",
 		))), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...).PushAction(mdb.SHOW, mdb.REMOVE).Display(""); len(arg) > 0 {
 				defer m.Echo("body.%s {"+lex.NL, kit.TrimExt(arg[0], nfs.CSS)).Echo("}" + lex.NL)

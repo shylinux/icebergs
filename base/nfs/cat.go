@@ -77,6 +77,7 @@ const (
 	BINARY = "binary"
 	SCRIPT = "script"
 	FORMAT = "format"
+	TRANS  = "trans"
 
 	CLONE   = "clone"
 	REPOS   = "repos"

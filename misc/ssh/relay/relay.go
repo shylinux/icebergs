@@ -60,21 +60,21 @@ const (
 type relay struct {
 	ice.Hash
 	ice.Code
-	checkbox      string `data:"true"`
-	export        string `data:"true"`
-	short         string `data:"machine"`
-	tools         string `data:"ssh.trans,ssh.auths,aaa.rsa"`
-	field         string `data:"time,icons,machine,username,host,port,portal,dream,module,version,commitTime,compileTime,bootTime,go,git,package,shell,kernel,arch,vcpu,ncpu,mhz,mem,disk,network,listen,socket,proc,vendor"`
-	create        string `name:"create host* port=22 username=root machine icons"`
-	upgrade       string `name:"upgrade machine"`
-	stats         string `name:"stats machine" icon:"bi bi-card-list"`
-	publish       string `name:"publish" icon:"bi bi-send-check"`
-	forEach       string `name:"forEach machine cmd*:textarea=pwd"`
-	forFlow       string `name:"forFlow machine cmd*:textarea=pwd"`
-	list          string `name:"list machine auto" help:"机器" icon:"relay.png"`
-	opsOriginOpen string `name:"opsOriginOpen" event:"ops.origin.open"`
-	opsServerOpen string `name:"opsServerOpen" event:"ops.server.open"`
-	opsDreamSpawn string `name:"opsDreamSpawn" event:"ops.dream.spawn"`
+	checkbox string `data:"true"`
+	export   string `data:"true"`
+	short    string `data:"machine"`
+	tools    string `data:"ssh.trans,ssh.auths,aaa.rsa"`
+	field    string `data:"time,icons,machine,username,host,port,portal,dream,module,version,commitTime,compileTime,bootTime,go,git,package,shell,kernel,arch,vcpu,ncpu,mhz,mem,disk,network,listen,socket,proc,vendor"`
+	create   string `name:"create host* port=22 username=root machine icons"`
+	upgrade  string `name:"upgrade machine"`
+	stats    string `name:"stats machine" icon:"bi bi-card-list"`
+	publish  string `name:"publish" icon:"bi bi-send-check"`
+	forEach  string `name:"forEach machine cmd*:textarea=pwd"`
+	forFlow  string `name:"forFlow machine cmd*:textarea=pwd"`
+	list     string `name:"list machine auto" help:"机器" icon:"relay.png"`
+	// opsOriginOpen string `name:"opsOriginOpen" event:"ops.origin.open"`
+	// opsServerOpen string `name:"opsServerOpen" event:"ops.server.open"`
+	// opsDreamSpawn string `name:"opsDreamSpawn" event:"ops.dream.spawn"`
 	install       string `name:"install dream portal nodename dev"`
 	pushbin       string `name:"pushbin dream portal nodename dev" icon:"bi bi-box-arrow-in-up"`
 	adminCmd      string `name:"adminCmd cmd" icon:"bi bi-terminal-plus"`

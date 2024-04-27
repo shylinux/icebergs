@@ -2,6 +2,7 @@ package nfs
 
 import (
 	"bytes"
+	"encoding/csv"
 	"encoding/json"
 	"io"
 	"io/ioutil"
@@ -207,4 +208,27 @@ func ReadFile(m *ice.Message, p string) (b []byte, e error) {
 }
 func Rewrite(m *ice.Message, p string, cb func(string) string) {
 	m.Cmd(SAVE, p, m.Cmdx(CAT, p, func(s string, i int) string { return cb(s) }))
+}
+func ScanCSV(m *ice.Message, file string, cb func([]string), arg ...string) {
+	f, e := OpenFile(m, file)
+	if m.Warn(e) {
+		return
+	}
+	r := csv.NewReader(f)
+	head, err := r.Read()
+	if err != nil {
+		return
+	}
+	index := []int{}
+	kit.If(len(arg) == 0, func() { arg = append(arg, head...) })
+	kit.For(arg, func(h string) { index = append(index, kit.IndexOf(head, h)) })
+	for {
+		data, err := r.Read()
+		if err != nil {
+			break
+		}
+		res := []string{}
+		kit.For(index, func(i int) { res = append(res, data[i]) })
+		cb(res)
+	}
 }

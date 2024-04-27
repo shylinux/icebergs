@@ -34,8 +34,20 @@ func init() {
 			}
 			if len(arg) > 1 {
 				m.Cmdy("web.code.doc", arg)
+				kit.For(kit.SplitLine(m.Result()), func(text string) {
+					ls := kit.Split(text, " (*)")
+					if strings.HasPrefix(text, "func (") {
+						m.Push(mdb.NAME, ls[3])
+						m.Push(mdb.TEXT, text)
+					} else if strings.HasPrefix(text, "func") {
+						m.Push(mdb.NAME, ls[1])
+						m.Push(mdb.TEXT, text)
+					}
+				})
+				m.Action(html.FILTER)
 				return
 			}
+			m.Cmdy("web.code.doc", arg)
 			list := map[string]bool{}
 			mdb.HashSelect(m.Spawn()).Table(func(value ice.Maps) { list[kit.Fields(value[nfs.PATH], value[nfs.FILE], value[nfs.LINE])] = true })
 			kit.For(kit.SplitLine(m.Cmdx(cli.SYSTEM, cli.GOTAGS, "-f", "-", "-R", kit.Path(arg[0]))), func(text string) {

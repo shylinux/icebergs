@@ -71,6 +71,18 @@ func Render(m *ice.Message, cmd string, args ...ice.Any) bool {
 		}
 		RenderType(m.W, arg[0], kit.Select("", arg, 1))
 		RenderHeader(m.W, "Content-Disposition", fmt.Sprintf("filename=%s", kit.Select(path.Base(kit.Select(arg[0], m.Option("filename"))), arg, 2)))
+		if m.Option("render") == "replace" {
+			res := m.Cmdx(nfs.CAT, arg[0])
+			fieldset := "fieldset." + m.Option(ctx.INDEX)
+			m.W.Write([]byte(kit.ReplaceAll(res,
+				"$project", fieldset+">div.output>div.project",
+				"$display", fieldset+">div.output>div.layout>div.display",
+				"$profile", fieldset+">div.output>div.layout>div.layout>div.profile",
+				"$content", fieldset+">div.output>div.layout>div.layout>div.content",
+				"$fieldset", fieldset, "$index", m.Option(ctx.INDEX),
+			)))
+			break
+		}
 		if _, e := nfs.DiskFile.StatFile(arg[0]); e == nil {
 			http.ServeFile(m.W, m.R, kit.Path(arg[0]))
 		} else if f, e := nfs.PackFile.OpenFile(arg[0]); e == nil {

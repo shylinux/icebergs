@@ -212,9 +212,10 @@ const ( // MSG
 	MSG_OUTPUT = "_output"
 	MSG_ARGS   = "_args"
 
-	MSG_PROCESS = "_process"
-	MSG_DISPLAY = "_display"
-	MSG_TOOLKIT = "_toolkit"
+	MSG_PROCESS     = "_process"
+	MSG_DISPLAY     = "_display"
+	MSG_DISPLAY_CSS = "_display_css"
+	MSG_TOOLKIT     = "_toolkit"
 
 	MSG_USERIP   = "user.ip"
 	MSG_USERUA   = "user.ua"

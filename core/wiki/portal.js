@@ -12,6 +12,11 @@ Volcanos(chat.ONIMPORT, {
 		}
 		can.ui = can.onappend.layout(can, [html.HEADER, [html.NAV, html.MAIN, html.ASIDE]], html.FLOW), can.onimport._scroll(can)
 		can.ui.header.innerHTML = msg.Append(html.HEADER), can.ui.nav.innerHTML = msg.Append(html.NAV)
+		can.onmotion.delay(can, function() {
+			can.page.Select(can, can.ui.header, "div.item:first-child>span", function(target, index) {
+				index == 0 && can.page.insertBefore(can, [{img: can.misc.ResourceFavicon(can, can.user.info.favicon), style: {height: 42}}], target)
+			})
+		}, 300)
 		if (msg.Append(html.NAV) == "") {
 			can.onmotion.hidden(can, can.ui.nav), can.onmotion.hidden(can, can.ui.aside)
 		} else {

@@ -180,12 +180,16 @@ func init() {
 			}},
 			DEVPACK: {Help: "开发", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(WEBPACK, mdb.REMOVE)
-				m.Cmd(web.DREAM, nfs.GOWORK)
+				if ice.Info.NodeType == web.SERVER {
+					m.Cmd(web.DREAM, nfs.GOWORK)
+				}
 			}},
 			WEBPACK: {Help: "打包", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(WEBPACK, mdb.CREATE)
-				nfs.Trash(m, ice.GO_WORK_SUM)
-				nfs.Trash(m, ice.GO_WORK)
+				if ice.Info.NodeType == web.SERVER {
+					nfs.Trash(m, ice.GO_WORK_SUM)
+					nfs.Trash(m, ice.GO_WORK)
+				}
 			}},
 			BINPACK: {Help: "打包", Hand: func(m *ice.Message, arg ...string) {
 				const (

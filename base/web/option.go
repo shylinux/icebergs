@@ -91,7 +91,8 @@ func PushNoticeRich(m *ice.Message, arg ...ice.Any) {
 	PushNotice(m.StatusTimeCount(), kit.Simple("rich", arg))
 }
 func PushStream(m *ice.Message) *ice.Message {
-	m.Options(cli.CMD_OUTPUT, file.NewWriteCloser(func(buf []byte) { PushNoticeGrow(m, string(buf)) }, nil)).ProcessHold(toastContent(m, ice.SUCCESS))
+	msg := m.SpawnSilent()
+	m.Options(cli.CMD_OUTPUT, file.NewWriteCloser(func(buf []byte) { PushNoticeGrow(msg, string(buf)) }, nil)).ProcessHold(toastContent(m, ice.SUCCESS))
 	return m
 }
 func init() { ice.Info.PushNotice = PushNotice }

@@ -95,7 +95,8 @@ func _install_spawn(m *ice.Message, arg ...string) {
 	defer m.Echo(target)
 	kit.If(m.Option(INSTALL) == "" && nfs.Exists(m, kit.Path(source, _INSTALL)), func() { m.Option(INSTALL, _INSTALL) })
 	nfs.DirDeepAll(m.Spawn(), path.Join(source, m.Option(INSTALL)), "", func(value ice.Maps) {
-		m.Cmd(nfs.LINK, path.Join(target, value[nfs.PATH]), path.Join(source, m.Option(INSTALL), value[nfs.PATH]), kit.Dict(ice.LOG_DISABLE, ice.TRUE))
+		m.Option(ice.MSG_COUNT, "1")
+		m.Cmd(nfs.LINK, path.Join(target, value[nfs.PATH]), path.Join(source, m.Option(INSTALL), value[nfs.PATH]), kit.Dict(ice.MSG_COUNT, "1", ice.LOG_DISABLE, ice.TRUE))
 	})
 }
 func _install_start(m *ice.Message, arg ...string) {

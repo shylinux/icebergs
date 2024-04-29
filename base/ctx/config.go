@@ -112,12 +112,26 @@ func init() {
 				nfs.Trash(m, m.Cmdx(arg[0], mdb.EXPORT))
 				mdb.Config(m, arg[0], nil, nil)
 			}},
+			mdb.CREATE: {Name: "create name value", Hand: func(m *ice.Message, arg ...string) {
+				m.Confv(m.Option(mdb.KEY), kit.Keys(mdb.META, m.Option(mdb.NAME)), m.Option(mdb.VALUE))
+			}},
+			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) {
+				m.Confv(m.Option(mdb.KEY), kit.Keys(mdb.META, m.Option(mdb.NAME)), "")
+			}},
+			mdb.MODIFY: {Hand: func(m *ice.Message, arg ...string) {
+				if arg[0] == mdb.VALUE {
+					m.Confv(m.Option(mdb.KEY), kit.Keys(mdb.META, m.Option(mdb.NAME)), arg[1])
+				}
+			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				_config_list(m)
 			} else {
 				_config_make(m, arg[0], arg[1:]...)
-				m.Action(mdb.EXPORT, mdb.IMPORT, nfs.TRASH)
+				m.Action(mdb.CREATE, mdb.IMPORT, mdb.EXPORT, nfs.TRASH)
+				kit.For(mdb.Confv(m, arg[0], mdb.META), func(k, v string) {
+					m.Push(mdb.NAME, k).Push(mdb.VALUE, v).PushButton(mdb.REMOVE)
+				})
 				DisplayStoryJSON(m)
 			}
 		}},

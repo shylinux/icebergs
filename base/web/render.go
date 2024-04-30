@@ -75,6 +75,9 @@ func Render(m *ice.Message, cmd string, args ...ice.Any) bool {
 			res := m.Cmdx(nfs.CAT, arg[0])
 			fieldset := "fieldset." + m.Option(ctx.INDEX)
 			m.W.Write([]byte(kit.ReplaceAll(res,
+				"$option", fieldset+">form.option",
+				"$action", fieldset+">div.action",
+				"$output", fieldset+">div.output",
 				"$project", fieldset+">div.output>div.project",
 				"$display", fieldset+">div.output>div.layout>div.display",
 				"$profile", fieldset+">div.output>div.layout>div.layout>div.profile",

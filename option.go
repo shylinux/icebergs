@@ -74,7 +74,9 @@ func (m *Message) MergeLink(url string, arg ...Any) string {
 	kit.If(m.Option(DEBUG) == TRUE, func() { arg = append([]Any{DEBUG, TRUE}, arg...) })
 	return kit.MergeURL2(strings.Split(kit.Select(Info.Domain, m.Option(MSG_USERWEB)), QS)[0], url, arg...)
 }
-func (m *Message) FieldsSetDetail() { m.OptionFields(FIELDS_DETAIL) }
+func (m *Message) FieldsSetDetail() {
+	m.OptionFields(FIELDS_DETAIL)
+}
 func (m *Message) FieldsIsDetail() bool {
 	ls := m.value(MSG_APPEND)
 	return len(ls) == 2 && ls[0] == KEY && ls[1] == VALUE || m.OptionFields() == FIELDS_DETAIL

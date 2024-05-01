@@ -47,6 +47,9 @@ func ParseLink(m *ice.Message, url string) ice.Maps {
 	return list
 }
 func PushPodCmd(m *ice.Message, cmd string, arg ...string) *ice.Message {
+	if m.IsWorker() {
+		return m
+	}
 	msg := m.Spawn()
 	m.Cmds(SPACE, func(value ice.Maps) {
 		kit.If(kit.IsIn(value[mdb.TYPE], WORKER), func() { msg.Push(SPACE, value[mdb.NAME]) })

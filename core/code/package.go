@@ -19,6 +19,11 @@ const PACKAGE = "package"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		PACKAGE: {Name: "package index auto", Help: "软件包", Actions: ice.MergeActions(ice.Actions{
+			web.INSTALL: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(m.Option(ctx.INDEX), m.ActionKey(), arg)
+				m.Cmdy(nfs.DIR, path.Join(ice.USR_INSTALL, path.Base(m.Option(web.LINK))))
+				mdb.HashModify(m, m.AppendSimple(mdb.TIME), mdb.TEXT, m.Append(nfs.PATH))
+			}},
 			web.DOWNLOAD: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(m.Option(ctx.INDEX), m.ActionKey(), arg)
 				m.Cmdy(nfs.DIR, path.Join(ice.USR_INSTALL, path.Base(m.Option(web.LINK))))
@@ -26,7 +31,7 @@ func init() {
 			}},
 			cli.BUILD: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(m.Option(ctx.INDEX), m.ActionKey(), arg)
-				m.Cmdy(nfs.DIR, path.Join(_install_path(m, m.Option(web.LINK)), "_install/bin/nginx"))
+				m.Cmdy(nfs.DIR, path.Join(_install_path(m, m.Option(web.LINK)), "_install/bin/"))
 				mdb.HashModify(m, m.AppendSimple(mdb.TIME), cli.CMD, m.Append(nfs.PATH))
 			}},
 			cli.START: {Name: "start port*=10000", Hand: func(m *ice.Message, arg ...string) {
@@ -47,7 +52,7 @@ func init() {
 				nfs.Trash(m, _install_path(m, m.Option(web.LINK)))
 				mdb.HashModify(m, mdb.TEXT, "", cli.CMD, "")
 			}},
-		}, mdb.HashAction(mdb.SHORT, "index", mdb.FIELD, "time,index,type,name,text,icon,cmd,pid,port,link")), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.SHORT, ctx.INDEX, mdb.FIELD, "time,index,icon,type,name,text,cmd,pid,port,link")), Hand: func(m *ice.Message, arg ...string) {
 			if kit.HasPrefixList(arg, ctx.ACTION) {
 				m.Cmdy(m.Option(ctx.INDEX), arg)
 				return
@@ -91,7 +96,7 @@ func PackageCreate(m *ice.Message, kind, name, text, icon, link string) {
 		return
 	}
 	m.Cmd(PACKAGE, mdb.CREATE, ctx.INDEX, m.PrefixKey(),
-		mdb.TYPE, kind, mdb.NAME, name, mdb.TEXT, "",
-		mdb.ICON, ctx.ResourceFile(m, kit.Select(name+".png", icon)), web.LINK, link,
+		mdb.ICON, ctx.ResourceFile(m, kit.Select(name+".png", icon)),
+		mdb.TYPE, kind, mdb.NAME, name, mdb.TEXT, "", web.LINK, link,
 	)
 }

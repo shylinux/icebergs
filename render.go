@@ -271,12 +271,10 @@ func (m *Message) Resource(file string, arg ...string) string {
 }
 func (m *Message) resource(file string) string {
 	p := kit.FileLines(-1)
-	kit.If(file == "", func() { p = kit.ExtChange(p, JS) }, func() {
-		if kit.HasPrefix(file, PS, HTTP) {
-			p = file
-		} else {
-			p = path.Join(path.Dir(p), file)
-		}
-	})
-	return m.FileURI(p)
+	if file == "" {
+		file = kit.ExtChange(p, JS)
+	} else if !kit.HasPrefix(file, SRC, USR, PS, HTTP) {
+		file = path.Join(path.Dir(p), file)
+	}
+	return m.FileURI(file)
 }

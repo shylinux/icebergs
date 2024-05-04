@@ -5,7 +5,6 @@ import (
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/web"
-	"shylinux.com/x/icebergs/base/web/html"
 	"shylinux.com/x/icebergs/core/chat"
 	kit "shylinux.com/x/toolkits"
 )
@@ -24,12 +23,7 @@ const LOCATION = "location"
 
 func init() {
 	chat.Index.MergeCommands(ice.Commands{
-		LOCATION: {Help: "地图", Icon: "Maps.png", Meta: kit.Dict(
-			ice.CTX_TRANS, kit.Dict(EXPLORE, "周边", DIRECTION, "导航", DISTRICT, "地区", html.INPUT, kit.Dict(
-				LONGITUDE, "经度", LATITUDE, "纬度", PROVINCE, "省份", CITY, "城市", DISTRICT, "区域", STREET, "街路",
-			)),
-		), Actions: ice.MergeActions(ice.Actions{
-			"current": {Icon: "bi bi-pin-map"},
+		LOCATION: {Help: "地图", Icon: "Maps.png", Actions: ice.MergeActions(ice.Actions{
 			chat.FAVOR_INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				kit.If(arg[0] == mdb.TYPE, func() { m.Push(arg[0], LOCATION) })
 			}},

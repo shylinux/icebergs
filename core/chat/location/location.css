@@ -1,0 +1,6 @@
+fieldset.web.chat.location div.output {
+}
+fieldset.web.chat.location div.action>div.item.text.zoom input { width:60px; }
+fieldset.web.chat.location div.action>div.item.text.pitch input { width:60px; }
+fieldset.web.chat.location div.action>div.item.text.rotation input { width:60px; }
+div.amap-marker-label { background-color:var(--output-bg-color); }

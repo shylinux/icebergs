@@ -77,7 +77,9 @@ func (m *Message) SetAppend(arg ...string) *Message {
 	kit.If(len(arg) == 0, func() { m.OptionFields("") })
 	return m.Set(MSG_APPEND, arg...)
 }
-func (m *Message) SetResult(arg ...string) *Message { return m.Set(MSG_RESULT, arg...) }
+func (m *Message) SetResult(arg ...string) *Message {
+	return m.Set(MSG_RESULT, arg...)
+}
 func (m *Message) PushRecord(value Any, arg ...string) *Message {
 	if m.FieldsIsDetail() {
 		return m.PushDetail(value, arg...)

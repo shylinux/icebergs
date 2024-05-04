@@ -41,6 +41,7 @@ const (
 	TEXT_PLAIN       = "text/plain"
 )
 const (
+	LABEL    = "label"
 	TABLE    = "table"
 	TR       = "tr"
 	TH       = "th"

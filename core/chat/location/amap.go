@@ -17,7 +17,9 @@ const AMAP = "amap"
 func init() {
 	web.Index.MergeCommands(ice.Commands{
 		"/_AMapService/": {Hand: func(m *ice.Message, arg ...string) {
-			m.Cmdy(web.SPIDE, ice.DEV, web.SPIDE_RAW, m.R.Method, "https://restapi.amap.com/"+path.Join(arg...)+"?"+m.R.URL.RawQuery+"&jscode="+mdb.Conf(m, chat.Prefix(AMAP), kit.Keym(aaa.SECRET))).RenderResult()
+			m.Cmdy(web.SPIDE, ice.DEV, web.SPIDE_RAW, m.R.Method, kit.MergeURL("https://restapi.amap.com/"+path.Join(arg...)+"?"+m.R.URL.RawQuery,
+				"jscode", mdb.Conf(m, chat.Prefix(AMAP), kit.Keym(aaa.SECRET))),
+			).RenderResult()
 		}},
 	})
 	chat.Index.MergeCommands(ice.Commands{

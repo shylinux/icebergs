@@ -10,6 +10,7 @@ fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.
 fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.item { display:flex; align-items:center; }
 fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.item:first-child { padding:var(--input-padding); }
 fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.item:first-child { line-height:calc(var(--portal-header-height) - 2 * var(--legend-padding)); font-size:24px; font-weight:bold; font-style:italic; }
+fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.item:first-child img { margin-right:var(--button-margin); }
 fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.item.select { background-color:var(--output-bg-color); }
 fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.item:hover { background-color:var(--output-bg-color); }
 fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.item.space { padding:0px; margin:0 var(--portal-main-padding); }
@@ -31,9 +32,6 @@ fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column ul { ma
 fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column b { font-size:22px; }
 fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column input[type=button] { box-shadow:var(--th-box-shadow); border:0; background-color:var(--notice-bg-color); color:var(--notice-fg-color); }
 fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column input[type=button]:hover { box-shadow:var(--notice-box-shadow); }
-/* fieldset.web.wiki.portal>div.output>div.layout>div.main fieldset.inner.output { box-shadow:none; } */
-// body.light fieldset.web.wiki.portal>div.output>div.layout>div.main fieldset.inner.output { border:0; }
-// fieldset.web.wiki.portal>div.output>div.layout>div.main fieldset.inner.output>div.output { border-radius:var(--plugin-radius); }
 fieldset.web.wiki.portal>div.output>div.layout>div.main fieldset.inner.output div.content { background-color:var(--code-bg-color); color:var(--code-fg-color); padding:var(--input-padding) 0;
    	--code-keyword:orange; --code-comment:silver;
 	--code-function:cyan; --code-constant:silver; --code-string:silver;
@@ -59,6 +57,7 @@ body.mobile fieldset.web.wiki.portal>div.output>div.layout>div.main { height:uns
 body.mobile fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column { padding:10px 0 !important; }
 body.mobile fieldset.web.wiki.portal>div.output>div.layout>div.main fieldset { width:fit-content; }
 body.dark fieldset.web.wiki.portal>div.output>div.layout>div.main fieldset { border:var(--plugin-border); }
+body.dark fieldset.web.wiki.portal>div.output>div.layout>div.main fieldset>div.output { border-radius:var(--plugin-radius); }
 body.mobile fieldset.web.wiki.portal>div.output>div.layout>div.main fieldset>div.action { display:none; }
 body.mobile fieldset.web.wiki.portal.cmd>div.output>div.header div.story[data-name=navmenu] div.item { line-height:calc(var(--portal-header-height) - 2 * var(--legend-padding)); }
 body.mobile fieldset.web.wiki.portal.home>div.output>div.layout>div.main p { white-space:normal; text-align:center; padding:var(--button-padding); }

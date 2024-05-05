@@ -181,10 +181,10 @@ func (m *Message) _command(arg ...Any) *Message {
 	}
 	if list[0] == "" {
 		run(m.Spawn(), m.target, m._cmd, m._key, list[1:]...)
-	} else if cmd, ok := m.target.Commands[strings.TrimPrefix(list[0], m.target.Prefix()+PT)]; ok {
-		run(m.Spawn(), m.target, cmd, list[0], list[1:]...)
-	} else if cmd, ok := m.source.Commands[strings.TrimPrefix(list[0], m.source.Prefix()+PT)]; ok {
-		run(m.Spawn(m.source), m.source, cmd, list[0], list[1:]...)
+		// } else if cmd, ok := m.target.Commands[strings.TrimPrefix(list[0], m.target.Prefix()+PT)]; ok {
+		// 	run(m.Spawn(), m.target, cmd, list[0], list[1:]...)
+		// } else if cmd, ok := m.source.Commands[strings.TrimPrefix(list[0], m.source.Prefix()+PT)]; ok {
+		// run(m.Spawn(m.source), m.source, cmd, list[0], list[1:]...)
 	} else {
 		_target, _key := m.target, m._key
 		m.Search(list[0], func(p *Context, s *Context, key string, cmd *Command) {

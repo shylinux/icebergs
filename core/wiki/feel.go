@@ -64,7 +64,7 @@ func init() {
 					m.ProcessInner()
 				}
 			}},
-		}, chat.FavorAction(), WikiAction("", "png|PNG|jpg|JPG|jpeg|mp4|m4v|mov|MOV|webm")), Hand: func(m *ice.Message, arg ...string) {
+		}, chat.FavorAction(), WikiAction("", "ico|png|PNG|jpg|JPG|jpeg|mp4|m4v|mov|MOV|webm")), Hand: func(m *ice.Message, arg ...string) {
 			_wiki_list(m.Options(nfs.DIR_ROOT, _feel_path(m, "")), kit.Slice(arg, 0, 1)...)
 			ctx.DisplayLocal(m, "")
 		}},

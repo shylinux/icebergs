@@ -84,12 +84,24 @@ func init() {
 				parse := func(str string) int64 { port, _ := strconv.ParseInt(str, 16, 32); return port }
 				trans := func(str string) string {
 					switch str {
-					case "0A":
-						return "LISTEN"
 					case "01":
 						return "ESTABLISHED"
+					case "02":
+						return "TCP_SYNC_SEND"
+					case "03":
+						return "TCP_SYNC_RECV"
+					case "04":
+						return "TCP_FIN_WAIT1"
+					case "05":
+						return "TCP_FIN_WAIT2"
 					case "06":
 						return "TIME_WAIT"
+					case "07":
+						return "TCP_CLOSE"
+					case "08":
+						return "TCP_CLOSE_WAIT"
+					case "0A":
+						return "LISTEN"
 					default:
 						return str
 					}
@@ -111,7 +123,7 @@ func init() {
 					ls = kit.Split(value["remote_address"], ":")
 					m.Push("remote", kit.Format("%d.%d.%d.%d:%d", parse(ls[0][30:32]), parse(ls[0][28:30]), parse(ls[0][26:28]), parse(ls[0][24:26]), parse(ls[1])))
 				})
-				m.Sort("status,local").StatusTimeCount(stats)
+				m.Sort("status,local", []string{"LISTEN", "ESTABLISHED", "TIME_WAIT"}).StatusTimeCount(stats)
 			}},
 			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
 				m.Assert(m.Option(PORT) != "")

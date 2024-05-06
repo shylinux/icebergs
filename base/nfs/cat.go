@@ -99,6 +99,7 @@ const (
 	SHY  = ice.SHY
 	CSV  = ice.CSV
 	JSON = ice.JSON
+	MOD  = "mod"
 
 	PROTO = "proto"
 	YAML  = "yaml"

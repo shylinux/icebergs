@@ -41,11 +41,11 @@ Volcanos(chat.ONIMPORT, {
 		can.onimport.list(can, can.base.Obj(meta.data), function(event, item) {
 			can.page.Select(can, target, html.DIV_ITEM, function(target) { target != event.target && can.page.ClassList.del(can, target, html.SELECT) })
 			item.list && item.list.length > 0 || can.onaction.route(event, can, item.meta.link)
-		}, target, can.page.ClassList.has(can, target.parentNode, html.HEADER)? function(target, item) {
+		}, can.page.ClassList.has(can, target.parentNode, html.HEADER)? function(target, item) {
 			item.meta.link == nfs.USR_LEARNING_PORTAL+can.db.current && can.onappend.style(can, html.SELECT, target)
 		}: function(target, item) { can.db.nav[can.base.trimPrefix(item.meta.link, nfs.USR_LEARNING_PORTAL, nfs.SRC_DOCUMENT)] = target
 			location.hash || item.list && item.list.length > 0 || link || (link = can.onaction.route({}, can, item.meta.link, true))
-		})
+		}, target)
 	},
 	content: function(can, file) {
 		can.runActionCommand(event, web.WIKI_WORD, [(can.base.beginWith(file, nfs.USR, nfs.SRC)? "": nfs.USR_LEARNING_PORTAL+can.db.current)+file], function(msg) { can.ui.main.innerHTML = msg.Result(), can.onmotion.clear(can, can.ui.aside)

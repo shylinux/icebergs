@@ -90,7 +90,7 @@ func init() {
 				switch m.Option(ctx.ACTION) {
 				case nfs.MODULE:
 					m.Cmdy(AUTOGEN, mdb.INPUTS, arg)
-				case nfs.SCRIPT, mdb.CREATE:
+				case nfs.SCRIPT, mdb.CREATE, mdb.RENAME:
 					if strings.HasSuffix(m.Option(nfs.FILE), nfs.PS) {
 						m.Option(nfs.FILE, path.Join(m.Option(nfs.FILE), path.Base(strings.TrimSuffix(m.Option(nfs.FILE), nfs.PS)+".go")))
 					}
@@ -166,6 +166,11 @@ func init() {
 				m.Cmdy(nfs.DEFS, path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)), m.Cmdx("", TEMPLATE))
 			}},
 			cli.OPENS: {Hand: func(m *ice.Message, arg ...string) { cli.Opens(m, arg...) }},
+			web.UPLOAD: {Hand: func(m *ice.Message, arg ...string) {
+			}},
+			mdb.RENAME: {Name: "rename to*", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(nfs.MOVE, path.Join(m.Option(nfs.PATH), m.Option(nfs.TO)), path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)))
+			}},
 			cli.MAKE: {Hand: func(m *ice.Message, arg ...string) {
 				defer web.ToastProcess(m)()
 				web.PushStream(m)
@@ -225,6 +230,9 @@ func init() {
 			}},
 		}, chat.FavorAction(), web.DreamTablesAction("编程"), ctx.ConfAction(ctx.TOOLS, "xterm,compile,runtime", web.ONLINE, ice.TRUE)), Hand: func(m *ice.Message, arg ...string) {
 			if m.Cmdy(INNER, arg); arg[0] != ctx.ACTION {
+				if len(arg) == 1 {
+					m.PushAction(nfs.SCRIPT, mdb.RENAME, web.UPLOAD, nfs.TRASH)
+				}
 				if web.IsLocalHost(m) {
 					m.Action(nfs.SAVE, COMPILE, mdb.SHOW, ice.APP)
 				} else if m.IsMobileUA() {

@@ -152,7 +152,7 @@ Volcanos(chat.ONEXPORT, {
 	tabs: function(can) {
 		var list = can.page.Select(can, can.ui.menu._output, html.DIV_TABS, function(target) { return {
 			select: can.page.ClassList.has(can, target, html.SELECT),
-			name: can.page.SelectOne(can, target, html.SPAN_NAME).innerHTML,
+			name: can.page.SelectOne(can, target, html.SPAN).innerHTML,
 			list: can.page.SelectChild(can, target._desktop, html.FIELDSET, function(target) { return target._meta })
 		} }); can.misc.sessionStorage(can, [can.ConfIndex(), html.TABS], JSON.stringify(list))
 	},

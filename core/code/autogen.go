@@ -162,7 +162,7 @@ func init() {
 				if m.WarnNotFound(!nfs.Exists(m, kit.Path(".git")), "未初始化代码库") {
 					return
 				}
-				m.OptionDefault(mdb.ZONE, m.Option(mdb.NAME), mdb.HELP, m.Option(mdb.NAME))
+				m.OptionDefault(mdb.ZONE, m.Option(mdb.NAME), mdb.HELP, m.Option(mdb.NAME), "top", "web.chat")
 				m.OptionDefault(mdb.KEY, kit.Keys(m.Option("top"), strings.ReplaceAll(m.Option(mdb.ZONE), "/", "."), m.Option(mdb.NAME)))
 				m.Option(nfs.FILE, path.Join(m.Option(mdb.ZONE), kit.Keys(m.Option(mdb.NAME), GO)))
 				m.Option(mdb.TEXT, kit.Format("`name:\"list %s\" help:\"%s\"`", _autogen_list(m), m.Option(mdb.HELP)))

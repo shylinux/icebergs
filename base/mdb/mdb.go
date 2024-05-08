@@ -244,6 +244,9 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: ice.Commands
 				kit.If(key == STATUS, func() { value = kit.Select(ENABLE, value) })
 				return value
 			}).PushAction().Action(html.FILTER)
+			if len(arg) == 1 {
+				m.Cmdy("nfs.cat", "usr/local/export/"+arg[0]+"/hash.json")
+			}
 			return
 		}
 		m.OptionDefault(CACHE_LIMIT, "-1")

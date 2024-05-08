@@ -120,7 +120,9 @@ func (m *Message) Push(key string, value Any, arg ...Any) *Message {
 			m.Push(k, kit.Select(kit.Format(val[k]), value[k]))
 		})
 	default:
-		kit.For(kit.Simple(value, arg), func(v string) {
+		keys := strings.Split(key, ",")
+		kit.For(kit.Simple(value, arg), func(v string, i int) {
+			key = kit.Select(keys[0], keys, i)
 			key = strings.TrimSuffix(key, "*")
 			if m.FieldsIsDetail() {
 				m.Add(MSG_APPEND, KEY, key).Add(MSG_APPEND, VALUE, kit.Format(value))
@@ -292,7 +294,7 @@ func (m *Message) Sort(key string, arg ...Any) *Message {
 		key := m.value(KEY)
 		value := m.value(VALUE)
 		for i := 0; i < len(key)-1; i++ {
-			for j := i+1; j < len(key); j++ {
+			for j := i + 1; j < len(key); j++ {
 				if key[i] > key[j] {
 					key[i], key[j] = key[j], key[i]
 					value[i], value[j] = value[j], value[i]

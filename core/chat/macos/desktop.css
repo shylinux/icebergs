@@ -1,5 +1,6 @@
 fieldset.desktop { background-size:cover; background-position:center; }
-fieldset.desktop>div.output { border-radius:var(--plugin-radius); background-color:transparent; overflow:hidden; }
+fieldset.desktop.output>div.output { border-radius:var(--plugin-radius); }
+fieldset.desktop>div.output { background-color:transparent; overflow:hidden; }
 fieldset.desktop>div.output>fieldset.macos { border:0; background-color:var(--plugin-bg-color); }
 fieldset.desktop>div.output>fieldset.macos>div.output { background-color:transparent; }
 fieldset.desktop>div.output>fieldset.macos.menu { border:0; border-radius:0; line-height:var(--desktop-menu-height); height:var(--desktop-menu-height); width:100%; position:sticky; top:0; overflow:hidden; z-index:10; }

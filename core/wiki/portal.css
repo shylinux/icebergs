@@ -56,8 +56,8 @@ body.mobile fieldset.web.wiki.portal>div.output>div.layout>div.nav { height:400p
 body.mobile fieldset.web.wiki.portal>div.output>div.layout>div.main { height:unset; }
 body.mobile fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column { padding:10px 0 !important; }
 body.mobile fieldset.web.wiki.portal>div.output>div.layout>div.main fieldset { width:fit-content; }
-body.dark fieldset.web.wiki.portal>div.output>div.layout>div.main fieldset { border:var(--plugin-border); }
-body.dark fieldset.web.wiki.portal>div.output>div.layout>div.main fieldset>div.output { border-radius:var(--plugin-radius); }
+body.dark fieldset.web.wiki.portal>div.output>div.layout>div.main fieldset:not(.macos) { border:var(--plugin-border); }
+body.dark fieldset.web.wiki.portal>div.output>div.layout>div.main fieldset.output>div.output { border-radius:var(--plugin-radius); }
 body.mobile fieldset.web.wiki.portal>div.output>div.layout>div.main fieldset>div.action { display:none; }
 body.mobile fieldset.web.wiki.portal.cmd>div.output>div.header div.story[data-name=navmenu] div.item { line-height:calc(var(--portal-header-height) - 2 * var(--legend-padding)); }
 body.mobile fieldset.web.wiki.portal.home>div.output>div.layout>div.main p { white-space:normal; text-align:center; padding:var(--button-padding); }

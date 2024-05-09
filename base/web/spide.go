@@ -461,8 +461,11 @@ func HostPort(m *ice.Message, host, port string, arg ...string) string {
 		return kit.Format("http://%s:%s", host, port) + p
 	}
 }
-func PublicIP(m *ice.Message) ice.Any {
-	return SpideGet(m, "http://ip-api.com/json")
+func PublicIP(m *ice.Message, arg ...string) ice.Any {
+	if len(arg) == 0 {
+		return SpideGet(m, "http://ip-api.com/json")
+	}
+	return kit.Format(kit.Value(SpideGet(m, "http://opendata.baidu.com/api.php?co=&resource_id=6006&oe=utf8", "query", arg[0]), "data.0.location"))
 }
 func SpideGet(m *ice.Message, arg ...ice.Any) ice.Any {
 	return kit.UnMarshal(m.Cmdx(http.MethodGet, arg))

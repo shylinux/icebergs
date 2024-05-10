@@ -24,7 +24,7 @@ fieldset.web.wiki.portal>div.output>div.layout>div.aside div.item { padding:var(
 fieldset.web.wiki.portal>div.output>div.layout>div.aside div.item.section { padding-left:var(--legend-padding); }
 fieldset.web.wiki.portal>div.output>div.layout>div.main { padding:var(--portal-main-padding); height:600px; min-width:390px; max-width:var(--portal-max-width); overflow:auto; overflow-x:hidden; }
 fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column { display:flex; flex-direction:column; justify-content:center; }
-fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column fieldset.inner>div.output>div.layout>div.layout div.content div.tips { top:10px; right:10px; }
+fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column fieldset.inner>div.output>div.layout>div.layout div.content div.tips { top:5px; right:10px; }
 fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column h1 { font-size:48px; font-style:italic; margin-top:0; }
 fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column h2 { margin:0 !important; }
 fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column li { margin:10px 0; }

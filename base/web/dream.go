@@ -515,9 +515,9 @@ func init() {
 				if ice.Info.NodeType == WORKER || !aaa.IsTechOrRoot(m) || m.IsCliUA() {
 					m.Action()
 				} else if m.IsDebug() && cli.SystemFindGo(m) {
-					m.Action(html.FILTER, mdb.CREATE, STARTALL, STOPALL, cli.BUILD, PUBLISH)
+					m.Action(mdb.CREATE, STARTALL, STOPALL, cli.BUILD, PUBLISH)
 				} else {
-					m.Action(html.FILTER, mdb.CREATE, STARTALL, STOPALL)
+					m.Action(mdb.CREATE, STARTALL, STOPALL)
 				}
 				m.Sort("type,status,name", []string{aaa.LOGIN, WORKER, SERVER, ORIGIN}, []string{cli.START, cli.STOP, cli.BEGIN}, ice.STR_R)
 				m.StatusTimeCountStats(mdb.TYPE, mdb.STATUS)

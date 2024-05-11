@@ -32,7 +32,11 @@ func init() {
 				DockAppend(m, "vimer.png", web.CODE_VIMER)
 			}
 			m.Travel(func(p *ice.Context, c *ice.Context, key string, cmd *ice.Command) {
-				kit.If(cmd.Icon, func() { cmd.Icon = AppInstall(m, cmd.Icon, m.PrefixKey()) })
+				kit.If(cmd.Icon, func() {
+					if kit.Contains(cmd.Icon, ".ico", ".png", ".jpg") {
+						cmd.Icon = AppInstall(m, cmd.Icon, m.PrefixKey())
+					}
+				})
 			})
 			Notify(m, "usr/icons/Infomation.png", cli.RUNTIME, "系统启动成功", ctx.INDEX, cli.RUNTIME)
 		}},

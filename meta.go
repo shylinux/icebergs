@@ -363,6 +363,11 @@ func (m *Message) Sort(key string, arg ...Any) *Message {
 						return cmp == STR_R
 					}
 				case INT, INT_R:
+					if a == "" && b != "" {
+						return cmp == INT
+					} else if a != "" && b == "" {
+						return cmp == INT_R
+					}
 					if kit.Int(a) > kit.Int(b) {
 						return cmp == INT
 					} else if kit.Int(a) < kit.Int(b) {

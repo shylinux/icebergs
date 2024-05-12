@@ -27,7 +27,6 @@ func init() {
 				DockAppend(m, "Finder.png", Prefix(FINDER))
 				DockAppend(m, "Safari.png", web.CHAT_IFRAME)
 				DockAppend(m, "Terminal.png", web.CODE_XTERM)
-				DockAppend(m, "go.png", web.CODE_COMPILE)
 				DockAppend(m, "git.png", web.CODE_GIT_STATUS)
 				DockAppend(m, "vimer.png", web.CODE_VIMER)
 			}

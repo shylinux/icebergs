@@ -41,6 +41,7 @@ fieldset.desktop>div.output>div.desktop>fieldset>form.option>div.list.icons { ma
 fieldset.desktop>div.output>div.desktop>fieldset>form.option>div.back.icons { margin:var(--button-margin) 0; }
 fieldset.desktop>div.output>div.desktop>fieldset>form.option>div input { border-top:var(--input-border); }
 fieldset.desktop>div.output>div.desktop>fieldset>div.action>div input { border-top:var(--input-border); }
+fieldset.desktop>div.output>div.desktop>fieldset>div.action div.tabs:not(.select)  { display:none; }
 fieldset.desktop>div.output>div.desktop>fieldset>form.option>div.text input:hover { border-top:var(--box-notice); }
 fieldset.desktop>div.output>div.desktop>fieldset>div.action>div.text input:hover { border-top:var(--box-notice); }
 fieldset.desktop>div.output>div.desktop>fieldset>div.action>* { box-shadow:none; margin:var(--button-margin) var(--input-margin); }

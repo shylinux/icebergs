@@ -73,7 +73,7 @@ func init() {
 				m.Cmd(SPIDE, mdb.CREATE, HostPort(m, m.Option(tcp.HOST), m.Option(tcp.PORT)), m.Option(mdb.NAME))
 			}},
 			OPEN: {Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessOpen(HostPort(m, m.Option(mdb.NAME), m.Option(tcp.PORT)))
+				m.ProcessOpen(HostPort(m, m.Option(tcp.HOST), m.Option(tcp.PORT)))
 			}},
 			tcp.SEND: {Hand: func(m *ice.Message, arg ...string) { _broad_send(m, "", "", "", "", arg...) }},
 		}, gdb.EventsAction(SERVE_START), mdb.HashAction(mdb.SHORT, "host,port",

@@ -75,7 +75,7 @@ func init() {
 				origin := SpideOrigin(m, arg[0])
 				kit.If(origin == "", func() { arg[0], origin, dream = ice.DEV, arg[0], arg[0]+dream })
 				if kit.IsIn(kit.ParseURL(origin).Hostname(), append(m.Cmds(tcp.HOST).Appendv(aaa.IP), tcp.LOCALHOST)...) {
-					origin = m.Option(ice.MSG_USERHOST)
+					// origin = m.Option(ice.MSG_USERHOST)
 				} else {
 					origin = tcp.PublishLocalhost(m, origin)
 				}

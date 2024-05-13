@@ -72,12 +72,8 @@ Volcanos(chat.ONIMPORT, {
 		}); can.page.style(can, carte._target, html.TOP, event.y) },
 	}) }) },
 	_window: function(can, item, cb) { if (!item.index) { return }
-		item.height = can.ConfHeight()-125, item.width = can.ConfWidth()-200, item.left = (can.ConfWidth()-item.width)/2, item.top = 25
-		if (can.ConfWidth() > 1400) { item.width = can.base.Min(can.ConfWidth()-600, 640, 1400), item.left = (can.ConfWidth()-item.width)/2 }
-		if (can.ConfWidth() < 1000) { item.width = can.ConfWidth(), item.left = 0 }
-		if (can.ConfHeight() > 800) { item.height = can.base.Min(can.ConfHeight()-200, 320, 800), item.top = 50 }
-		if (can.user.isMobile) { item.height = can.ConfHeight()-125, item.top = 25, item.width = can.ConfWidth(), item.left = 0 }
-		item.height = can.base.Max(html.DESKTOP_HEIGHT, item.height), item.width = can.base.Max(html.DESKTOP_WIDTH, item.width)
+		item.height = can.base.Max(html.DESKTOP_HEIGHT, can.ConfHeight()-125), item.width = can.base.Max(html.DESKTOP_WIDTH, can.ConfWidth())
+		item.left = (can.ConfWidth()-item.width)/2, item.top = (can.ConfHeight()-item.height-125)/4+25
 		item.type = html.PLUGIN, item.style = {left: item.left, top: item.top, height: item.height, width: item.width}
 		can.onappend.plugin(can, item, function(sub) { can.onappend.style(can, html.FLOAT, sub._target), can.ondetail.select(can, sub._target)
 			can.page.style(can, sub._target, html.HEIGHT, item.height, html.WIDTH, item.width)

@@ -40,48 +40,27 @@ Volcanos(chat.ONACTION, {
 			can.user.toastSuccess(can, "play done")
 		})
 	},
-	show: function(can, type, text, delay) {
+	show: function(can, type, text, delay) { var ls = text.split(",")
 		switch (type) {
-			case "theme":
-				can._root.Header.onimport.theme(can._root.Header, text, {})
-				break
-			case "storm": var ls = text.split(",")
-				can._root.River.onaction.action({}, can._root.River, ls[0], ls[1])
-				break
-			case "index":
-				can.page.Select(can, document.body, "fieldset.panel.Header>div.output>div.Action>div._tabs>div.tabs."+text, function(target) {
-					target.click()
-				})
-				break
+			case "theme": can._root.Header.onimport.theme(can._root.Header, text, {}); break
+			case "storm": can._root.River.onaction.action({}, can._root.River, ls[0], ls[1]); break
+			case "index": can.page.Select(can, document.body, "fieldset.panel.Header>div.output>div.Action>div._tabs>div.tabs."+text, function(target) { target.click() }); break
 			case "click":
+			case "legend":
+			case "option":
+			case "action":
+			case "button":
+			case "status":
 				can.page.Select(can, document.body, text, function(target) { var count = 5
 					can.core.Next(can.core.List(count), function(value, next, index) { can.page.ClassList.add(can, target, "picker")
 						can.onmotion.delay(can, function() { can.page.ClassList.del(can, target, "picker"), can.onmotion.delay(can, function() { next() }, delay/5/4) }, delay/5/4)
-					}, function() {
-						target.click()
-					})
+					}, function() { target.click() })
 				})
 				break
-			case "focus": var ls = text.split(",")
-				can.page.Select(can, document.body, ls[0], function(target) {
-					target.focus()
-				})
-				break
-			case "blur": var ls = text.split(",")
-				can.page.Select(can, document.body, ls[0], function(target) { target.value = ls[1]
-					can.onmotion.delay(can, function() { target.blur() }, 300)
-				})
-				break
-			case "item": var ls = text.split(",")
-				can.page.Select(can, document.body, ls[0], function(target) {
-					can.onmotion.delay(can, function() { target._can.sub.ui[ls[1]].click() })
-				})
-				break
-			case "remove":
-				can.page.Select(can, document.body, text, function(target) {
-					can.page.Remove(can, target)
-				})
-				break
+			case "focus": can.page.Select(can, document.body, ls[0], function(target) { target.focus() }); break
+			case "blur": can.page.Select(can, document.body, ls[0], function(target) { target.value = ls[1], can.onmotion.delay(can, function() { target.blur() }, 300) }); break
+			case "item": can.page.Select(can, document.body, ls[0], function(target) { can.onmotion.delay(can, function() { target._can.sub.ui[ls[1]].click() }) }); break
+			case "remove": can.page.Select(can, document.body, text, function(target) { can.page.Remove(can, target) }); break
 		}
 	},
 	view: function(can, type, text, delay) {

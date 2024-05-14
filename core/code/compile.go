@@ -1,6 +1,7 @@
 package code
 
 import (
+	"os"
 	"path"
 	"runtime"
 	"strings"
@@ -118,7 +119,11 @@ func init() {
 			m.Options(cli.CMD_ENV, env).Cmd(AUTOGEN, VERSION)
 			_compile_get(m, main)
 			defer m.StatusTime(VERSION, strings.TrimPrefix(GoVersion(m), "go version"))
-			if msg := GoBuild(m.Spawn(), file, main, ice.SRC_VERSION_GO, ice.SRC_BINPACK_GO, ice.SRC_BINPACK_USR_GO); !cli.IsSuccess(msg) {
+			args := []string{main, ice.SRC_VERSION_GO, ice.SRC_BINPACK_GO, ice.SRC_BINPACK_USR_GO}
+			if _, e := os.Stat("src/option.go"); e == nil {
+				args = append(args, "src/option.go")
+			}
+			if msg := GoBuild(m.Spawn(), file, args...); !cli.IsSuccess(msg) {
 				m.Copy(msg)
 			} else {
 				m.Logs(nfs.SAVE, nfs.TARGET, file, nfs.SOURCE, main)

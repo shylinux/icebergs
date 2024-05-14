@@ -1,0 +1,6 @@
+$output>table.content tr.legend td:nth-child(2) { color:var(--notice-bg-color); }
+$output>table.content tr.option td:nth-child(2) { color:var(--notice-bg-color); }
+$output>table.content tr.action td:nth-child(2) { color:var(--notice-bg-color); }
+$output>table.content tr.button td:nth-child(2) { color:var(--notice-bg-color); }
+$output>table.content tr.status td:nth-child(2) { color:var(--notice-bg-color); }
+$output>table.content tr.remove td:nth-child(2) { color:var(--danger-bg-color); }

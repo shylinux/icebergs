@@ -257,6 +257,11 @@ func (m *Message) Display(file string, arg ...Any) *Message {
 	m.Option(MSG_DISPLAY, kit.MergeURL(kit.ExtChange(m.resource(file), JS), arg...))
 	return m
 }
+func (m *Message) DisplayCSS(file string, arg ...Any) *Message {
+	m.Option(MSG_DISPLAY_CSS, kit.MergeURL(path.Join(path.Dir(m.Option(MSG_DISPLAY)), kit.Select(m.CommandKey()+".css", file)),
+		"render", "replace", INDEX, m.PrefixKey(), POD, m.Option(MSG_USERPOD)))
+	return m
+}
 func (m *Message) Resource(file string, arg ...string) string {
 	if len(arg) > 0 && arg[0] != "" {
 		if strings.HasPrefix(file, HTTP) {

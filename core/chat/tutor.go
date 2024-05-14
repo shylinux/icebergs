@@ -27,7 +27,7 @@ func init() {
 					m.PushAction(web.SHOW, "view", "data").Action(web.PLAY)
 				}
 			}
-			m.Display("")
+			m.Display("").DisplayCSS("")
 		}},
 	})
 }

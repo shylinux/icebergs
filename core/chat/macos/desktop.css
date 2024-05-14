@@ -46,17 +46,18 @@ fieldset.desktop>div.output>div.desktop>fieldset>form.option>div.text input:hove
 fieldset.desktop>div.output>div.desktop>fieldset>div.action>div.text input:hover { border-top:var(--box-notice); }
 fieldset.desktop>div.output>div.desktop>fieldset>div.action>* { box-shadow:none; margin:var(--button-margin) var(--input-margin); }
 fieldset.desktop>div.output>div.desktop>fieldset>div.action>div:last-child { margin-right:100px; }
-/* fieldset.desktop>div.output>div.desktop>fieldset>div.action>div.tabs { display:none; } */
 fieldset.desktop>div.output>div.desktop>fieldset>div.output { min-height:240px; }
 fieldset.desktop>div.output>div.desktop>fieldset>div.output>table.content { width:100%; }
 fieldset.desktop>div.output>div.desktop>fieldset>div.output>table.content th { padding:var(--table-padding); }
 fieldset.desktop>div.output>div.desktop>fieldset>div.output>table.content td { padding:var(--table-padding); }
 fieldset.desktop>div.output>div.desktop>fieldset>div.output>table.content td>input { margin:var(--button-margin); }
-fieldset.desktop>div.output>div.desktop>fieldset.web.wiki.feel>div.status { display:none; }
-fieldset.desktop>div.output>div.desktop>fieldset.web.code.xterm>div.status { display:none; }
-fieldset.desktop>div.output>div.desktop>fieldset.web.chat.iframe>div.status { display:none; }
+fieldset.desktop>div.output>div.desktop>fieldset.iframe>div.status { display:none; }
 fieldset.desktop>div.output>div.desktop>fieldset.iframe>form.option>div.item.hash input { width:var(--form-width); }
+fieldset.desktop>div.output>div.desktop>fieldset.xterm>div.status { display:none; }
 fieldset.desktop>div.output>div.desktop>fieldset.xterm>form.option>div.item.hash input { width:var(--form-width); }
+fieldset.desktop>div.output>div.desktop>fieldset.vimer>form.option>div.item.path input { width:var(--input-width); }
+fieldset.desktop>div.output>div.desktop>fieldset.vimer>div.action div.tabs { display:none; }
+fieldset.desktop>div.output>div.desktop>fieldset.web.wiki.feel>div.status { display:none; }
 fieldset.desktop>div.output>div.desktop>fieldset.web.chat.location>form.option>div.item:last-child { margin-right:unset; }
 fieldset.desktop>div.output>div.desktop>fieldset.web.chat.location>div.action>div.item.text { display:none; }
 fieldset.desktop>div.output>div.desktop>fieldset.web.chat.location>div.action>div.item.style select { width:80px; }
@@ -82,9 +83,9 @@ fieldset.macos.finder>div.output div.content>div.item { text-align:center; float
 fieldset.macos.finder>div.output div.content>div.item img { object-fit:contain; width:var(--desktop-icon-size); }
 fieldset.macos.finder>div.output div.content>div.item img { object-fit:contain; width:var(--desktop-icon-size); height:var(--desktop-icon-size); }
 fieldset.macos.finder>div.output div.content>div.item div.name { font-size:var(--code-font-size); white-space:pre; text-align:center; overflow:hidden; }
-body.dark fieldset.desktop>div.output>fieldset.macos { background-color:#08234ad1; }
 fieldset.desktop>div.output>div.desktop fieldset table.content tbody tr:nth-child(odd):not(:hover) { background-color:var(--output-bg-color); }
 fieldset.desktop>div.output>div.desktop fieldset table.content tbody tr:nth-child(even):not(:hover) { background-color:var(--plugin-bg-color); }
+body.dark fieldset.desktop>div.output>fieldset.macos { background-color:#08234ad1; }
 body.light fieldset.desktop>div.output>fieldset.macos { background-color:#daefff99; }
 body:not(.mobile) fieldset.macos.dock>div.output { overflow:visible; }
 body:not(.mobile) fieldset.macos.dock>div.output>div.item:hover { background-color:unset; margin-top:-80px; transition:margin-top 0.3s; }

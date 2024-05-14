@@ -177,6 +177,9 @@ func RenderVersion(m *ice.Message) string {
 }
 
 const (
+	PLAY = "play"
+	SHOW = "show"
+
 	CHAT    = "chat"
 	WORD    = "word"
 	VIMER   = "vimer"

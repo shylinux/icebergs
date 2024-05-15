@@ -7,6 +7,7 @@ Volcanos(chat.ONIMPORT, {
 			}, null, can.ui.project); select = (value.name == current? _target: select)||_target
 		}), select && select.click(), can.onmotion.orderShow(can, can.ui.project)
 		can.onappend.style(can, "output card", can.ui.content), can.onmotion.delay(can, function() { can.onimport.layout(can) })
+		can.onmotion.delay(can, function() { can.onappend._filter(can) })
 	},
 	_content: function(can, msg, dev, target) { var list = []
 		can.onimport.card(can, msg, null, function(value) {

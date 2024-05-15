@@ -155,7 +155,7 @@ func init() {
 					}
 					return value
 				})
-				m.Action(html.FILTER, mdb.CREATE, UPGRADE).StatusTimeCountStats(mdb.TYPE, mdb.STATUS).Display("")
+				m.Action(mdb.CREATE, UPGRADE).StatusTimeCountStats(mdb.TYPE, mdb.STATUS).Display("")
 				m.Sort("type,status,name,domain", []string{MYSELF, SERVER, ORIGIN, WORKER, ""}, []string{cli.START, cli.STOP, ""}, ice.STR_R, ice.STR_R)
 				ctx.Toolkit(m)
 				return nil

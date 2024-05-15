@@ -10,7 +10,6 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
-	"shylinux.com/x/icebergs/base/web/html"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -63,7 +62,7 @@ func init() {
 				if ice.Info.NodeType == WORKER || !aaa.IsTechOrRoot(m) {
 					m.Action()
 				} else {
-					m.PushAction(mdb.REMOVE).Action(html.FILTER, mdb.CREATE)
+					m.PushAction(mdb.REMOVE).Action(mdb.CREATE)
 				}
 			} else {
 				defer ToastProcess(m, ice.LIST, arg[0])()

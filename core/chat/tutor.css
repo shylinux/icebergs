@@ -1,6 +1,12 @@
+$output>table.content tr.item td:nth-child(2) { color:var(--notice-bg-color); }
+$output>table.content tr.index td:nth-child(2) { color:var(--notice-bg-color); }
+$output>table.content tr.storm td:nth-child(2) { color:var(--notice-bg-color); }
 $output>table.content tr.legend td:nth-child(2) { color:var(--notice-bg-color); }
 $output>table.content tr.option td:nth-child(2) { color:var(--notice-bg-color); }
 $output>table.content tr.action td:nth-child(2) { color:var(--notice-bg-color); }
 $output>table.content tr.button td:nth-child(2) { color:var(--notice-bg-color); }
 $output>table.content tr.status td:nth-child(2) { color:var(--notice-bg-color); }
+$output>table.content tr.submit td:nth-child(2) { color:var(--notice-bg-color); }
+$output>table.content tr.cancel td:nth-child(2) { color:var(--danger-bg-color); }
+$output>table.content tr.close td:nth-child(2) { color:var(--danger-bg-color); }
 $output>table.content tr.remove td:nth-child(2) { color:var(--danger-bg-color); }

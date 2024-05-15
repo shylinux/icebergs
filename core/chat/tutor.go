@@ -14,18 +14,14 @@ func init() {
 		TUTOR: {Name: "tutor zone id auto", Help: "向导", Actions: ice.MergeActions(ice.Actions{
 			nfs.SAVE: {Name: "save zone*", Hand: func(m *ice.Message, arg ...string) {}},
 		}, mdb.ZoneAction(
-			mdb.SHORT, "zone", mdb.FIELD, "time,zone,count", mdb.FIELDS, "time,id,type,name,text",
+			mdb.SHORT, "zone", mdb.FIELD, "time,zone,count", mdb.FIELDS, "time,id,type,text",
 		)), Hand: func(m *ice.Message, arg ...string) {
-			m.Option("cache.limit", "-1")
-			if mdb.ZoneSelect(m, arg...); len(arg) == 0 {
+			if mdb.ZoneSelectAll(m, arg...); len(arg) == 0 {
 				m.Push(mdb.TIME, m.Time()).Push(mdb.ZONE, "_current")
+			} else if m.SortInt(mdb.ID); arg[0] == "_current" {
+				m.Action(web.PLAY, nfs.SAVE)
 			} else {
-				m.SortInt(mdb.ID)
-				if arg[0] == "_current" {
-					m.Action(web.PLAY, nfs.SAVE)
-				} else {
-					m.PushAction(web.SHOW, "view", "data").Action(web.PLAY)
-				}
+				m.PushAction(web.SHOW, mdb.VIEW, mdb.DATA).Action(web.PLAY)
 			}
 			m.Display("").DisplayCSS("")
 		}},

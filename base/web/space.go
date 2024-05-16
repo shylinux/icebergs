@@ -295,7 +295,6 @@ const SPACE = "space"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		"m": {Help: "模块", Actions: ApiWhiteAction(), Hand: func(m *ice.Message, arg ...string) { m.Cmdy(nfs.REQUIRE_MODULES, arg) }},
 		"p": {Help: "资源", Actions: ApiWhiteAction(), Hand: func(m *ice.Message, arg ...string) {
 			if kit.IsIn(arg[0], ice.SRC, ice.USR) {
 				ShareLocalFile(m, arg...)
@@ -303,8 +302,20 @@ func init() {
 				m.Cmdy(PP(ice.REQUIRE), arg)
 			}
 		}},
-		"s": {Help: "空间", Actions: ApiWhiteAction(), Hand: func(m *ice.Message, arg ...string) { m.Cmdy(CHAT_POD, arg) }},
+		"m": {Help: "模块", Actions: ApiWhiteAction(), Hand: func(m *ice.Message, arg ...string) {
+			p := path.Join(nfs.USR_MODULES, path.Join(arg...))
+			kit.If(!nfs.Exists(m, p), func() {
+				if kit.IsIn(m.Option(ice.MSG_USERROLE), aaa.TECH, aaa.ROOT) {
+					kit.If(!nfs.Exists(m, nfs.USR_PACKAGE), func() {
+						m.Cmd(nfs.SAVE, nfs.USR_PACKAGE, kit.Formats(kit.Dict(mdb.NAME, "usr", nfs.VERSION, "0.0.1")))
+					})
+					m.Cmd(cli.SYSTEM, "npm", "install", arg[0], kit.Dict(cli.CMD_DIR, ice.USR))
+				}
+			})
+			m.RenderDownload(p)
+		}},
 		"c": {Help: "命令", Actions: ApiWhiteAction(), Hand: func(m *ice.Message, arg ...string) { m.Cmdy(CHAT_CMD, arg) }},
+		"s": {Help: "空间", Actions: ApiWhiteAction(), Hand: func(m *ice.Message, arg ...string) { m.Cmdy(CHAT_POD, arg) }},
 		SPACE: {Name: "space name cmds auto", Help: "空间站", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				cli.NodeInfo(m, ice.Info.Pathname, WORKER)

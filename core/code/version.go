@@ -31,8 +31,7 @@ func init() {
 				repos := map[string]string{}
 				m.Cmds(web.CODE_GIT_REPOS).Table(func(value ice.Maps) { repos[strings.Split(value[web.ORIGIN], "://")[1]] = value[nfs.VERSION] })
 				m.Cmd(web.CODE_MOD, mdb.RENDER, MOD, ice.GO_MOD, nfs.PWD).Table(func(value ice.Maps) { repos[value[REQUIRE]] = value[VERSION] })
-				m.Debug("what %v", kit.Formats(repos))
-				res := m.Cmdx(nfs.CAT, path.Join(nfs.USR_LOCAL_WORK, m.Option(SPACE), ice.GO_MOD), func(ls []string, text string) string {
+				res := m.Cmdx(nfs.CAT, path.Join(nfs.USR_LOCAL_WORK, m.Option(web.SPACE), ice.GO_MOD), func(ls []string, text string) string {
 					if len(ls) > 1 {
 						if v, ok := repos[ls[0]]; ok && !strings.Contains(v, "-") {
 							m.Debug("what %v %v => %v", ls[0], ls[1], v)
@@ -41,12 +40,12 @@ func init() {
 					}
 					return text
 				})
-				m.Cmd(nfs.SAVE, path.Join(nfs.USR_LOCAL_WORK, m.Option(SPACE), ice.GO_MOD), res)
-				m.Cmd(SPACE, m.Option(SPACE), cli.SYSTEM, GO, MOD, "tidy")
+				m.Cmd(nfs.SAVE, path.Join(nfs.USR_LOCAL_WORK, m.Option(web.SPACE), ice.GO_MOD), res)
+				m.Cmd(web.SPACE, m.Option(web.SPACE), cli.SYSTEM, GO, MOD, "tidy")
 			}},
 			TAG: {Name: "tag version", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(SPACE, m.Option(SPACE), cli.SYSTEM, GIT, TAG, m.Option(VERSION))
-				m.Cmd(SPACE, m.Option(SPACE), VIMER, COMPILE)
+				m.Cmd(web.SPACE, m.Option(web.SPACE), cli.SYSTEM, GIT, TAG, m.Option(VERSION))
+				m.Cmd(web.SPACE, m.Option(web.SPACE), VIMER, COMPILE)
 				m.Sleep3s()
 			}},
 			XTERM: {Hand: func(m *ice.Message, arg ...string) {

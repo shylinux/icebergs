@@ -1,4 +1,4 @@
-Volcanos(chat.ONIMPORT, {_init: function(can, msg) {
+Volcanos(chat.ONIMPORT, {_init: function(can, msg, cb) {
 	can.page.Appends(can, can._output, msg.Table(function(item) { return {view: [[html.ITEM, item.status]], _init: function(target) {
 		var ui = can.onappend.layout(can, [html.ICON, [[wiki.TITLE, mdb.TIME], wiki.CONTENT]], "", target)
 		can.page.Append(can, ui.icon, [{img: can.misc.PathJoin(item.icon||can.page.drawText(can, item.name||item.index, 60))}])

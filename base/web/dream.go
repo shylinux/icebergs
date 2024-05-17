@@ -97,6 +97,8 @@ func _dream_list_more(m *ice.Message, simple bool) *ice.Message {
 			value[mdb.TEXT] = kit.JoinLine(value[nfs.MODULE], value[mdb.TEXT])
 			if simple {
 				defer m.PushButton("")
+			} else if value[aaa.ACCESS] == "" {
+				defer m.PushButton(PORTAL)
 			} else {
 				msg := gdb.Event(m.Spawn(value), DREAM_TABLES)
 				defer m.PushButton(strings.Join(msg.Appendv(ctx.ACTION), ""))

@@ -330,7 +330,7 @@ func RequireFile(m *ice.Message, file string) string {
 	if strings.HasPrefix(file, nfs.PS) || strings.HasPrefix(file, ice.HTTP) {
 		return file
 	} else if file != "" {
-		return nfs.REQUIRE + file
+		return nfs.P + file
 	}
 	return ""
 }

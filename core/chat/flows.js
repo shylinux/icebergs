@@ -129,7 +129,6 @@ Volcanos(chat.ONACTION, {
 		can.onmotion.toggle(can, can.ui.project), can.onimport.layout(can)
 	},
 	plugin: function(event, can, msg) { can.ondetail._select(event, can, can.db.list[msg.Option(mdb.HASH)]) },
-	onkeydown: function(event, can) { can.db._key_list = can.onkeymap._parse(event, can, mdb.PLUGIN, can.db._key_list, can.ui.content) },
 })
 Volcanos(chat.ONDETAIL, {
 	_select: function(event, can, item) { if (!item) { return can.onmotion.hidden(can, can.ui.profile) }

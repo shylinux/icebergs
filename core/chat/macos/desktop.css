@@ -95,6 +95,7 @@ body:not(.mobile) fieldset.desktop>div.output>div.desktop>div.item { margin:var(
 body.mobile fieldset.desktop>div.output>div.desktop>fieldset>form.option>div.item.text>input { width:60px; }
 body.mobile fieldset.macos.dock>div.output { overflow-y:hidden; }
 body:not(.mobile) fieldset.desktop>div.output>fieldset.macos.searchs>form.option>div.item.keyword input { background-color:transparent; width:var(--river-width); }
+body:not(.mobile) fieldset.desktop>div.output>fieldset.macos.searchs>div.action input { background-color:transparent; }
 body.windows fieldset.desktop>div.output>fieldset.macos.notifications>div.action>div.item.refresh>span { font-size:24px; margin-top:0; }
 body:not(.mobile) fieldset.desktop>div.output>div.desktop>fieldset>legend:not(:hover) { background-color:transparent; }
 body.mobile fieldset.desktop>div.output>div.desktop>fieldset>legend { float:none; }

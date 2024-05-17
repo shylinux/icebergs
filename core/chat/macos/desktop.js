@@ -1,7 +1,7 @@
 (function() {
 Volcanos(chat.ONIMPORT, {
 	_init: function(can, msg) { can.isCmdMode() && can.onappend.style(can, html.OUTPUT)
-		can.onlayout.background(can, can.user.info.background||"/require/usr/icons/background.jpg", can._fields)
+		can.onlayout.background(can, can.user.info.background||"/p/usr/icons/background.jpg", can._fields)
 		can.onimport._menu(can), can.onimport._notifications(can), can.onimport._searchs(can), can.onimport._dock(can)
 		can.sup.onexport.link = function() { return can.misc.MergeURL(can, {pod: can.ConfSpace()||can.misc.Search(can, ice.POD), cmd: web.DESKTOP}) }
 	},
@@ -62,7 +62,7 @@ Volcanos(chat.ONIMPORT, {
 		can.onimport.__item(can, msg, target)
 		return target._tabs
 	},
-	_item: function(can, item) { can.runAction(can.request(event, item), mdb.CREATE, [], function() { can.run(event, [], function(msg) {
+	_item: function(can, item) { can.runAction(can.request(event, item), mdb.CREATE, [], function() { can.run({}, [], function(msg) {
 		can.page.SelectChild(can, can.ui.desktop, html.DIV_ITEM, function(target) { can.page.Remove(can, target) }), can.onimport.__item(can, msg, can.ui.desktop)
 	}) }) },
 	__item: function(can, msg, target) { var index = 0; can.onimport.icon(can, msg = msg||can._msg, target, function(target, item) { can.page.Modify(can, target, {

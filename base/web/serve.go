@@ -86,14 +86,20 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	return true
 }
 func _serve_static(msg *ice.Message, w http.ResponseWriter, r *http.Request) bool {
-	if strings.HasPrefix(r.URL.Path, nfs.V) {
+	ispod := kit.Contains(r.URL.String(), S(), "pod=") || kit.Contains(r.Header.Get(html.Referer), S(), "pod=")
+	if strings.HasPrefix(r.URL.Path, "/v/") {
 		return Render(msg, ice.RENDER_DOWNLOAD, path.Join(ice.USR_VOLCANOS, strings.TrimPrefix(r.URL.Path, nfs.V)))
+	} else if kit.HasPrefix(r.URL.Path, "/p/") {
+		p := strings.TrimPrefix(r.URL.Path, "/p/")
+		return (!ispod && kit.HasPrefix(p, nfs.SRC) || kit.HasPrefix(p, ice.USR_ICEBERGS, ice.USR_ICONS)) && nfs.Exists(msg, p) && Render(msg, ice.RENDER_DOWNLOAD, p)
+	} else if kit.HasPrefix(r.URL.Path, "/m/") {
+		p := nfs.USR_MODULES + strings.TrimPrefix(r.URL.Path, "/m/")
+		return nfs.Exists(msg, p) && Render(msg, ice.RENDER_DOWNLOAD, p)
 	} else if p := path.Join(kit.Select(ice.USR_VOLCANOS, ice.USR_INTSHELL, msg.IsCliUA()), r.URL.Path); nfs.Exists(msg, p) {
 		return Render(msg, ice.RENDER_DOWNLOAD, p)
 	} else if p = path.Join(nfs.USR, r.URL.Path); kit.HasPrefix(r.URL.Path, nfs.VOLCANOS, nfs.INTSHELL) && nfs.Exists(msg, p) {
 		return Render(msg, ice.RENDER_DOWNLOAD, p)
 	} else if p = strings.TrimPrefix(r.URL.Path, nfs.REQUIRE); kit.HasPrefix(r.URL.Path, nfs.REQUIRE_SRC, nfs.REQUIRE+ice.USR_ICONS, nfs.REQUIRE+ice.USR_ICEBERGS) && nfs.Exists(msg, p) {
-		ispod := kit.Contains(r.URL.String(), S(), "pod=") || kit.Contains(r.Header.Get(html.Referer), S(), "pod=")
 		return !ispod && Render(msg, ice.RENDER_DOWNLOAD, p)
 	} else if p = path.Join(nfs.USR_MODULES, strings.TrimPrefix(r.URL.Path, nfs.REQUIRE_MODULES)); kit.HasPrefix(r.URL.Path, nfs.REQUIRE_MODULES) && nfs.Exists(msg, p) {
 		return Render(msg, ice.RENDER_DOWNLOAD, p)

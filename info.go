@@ -74,6 +74,7 @@ type info struct {
 	Localhost bool
 	Important bool
 	Colors    bool
+	Host      string
 
 	File  Maps
 	Gomod Maps

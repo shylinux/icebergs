@@ -87,9 +87,6 @@ func init() {
 			NAVIGATE: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(NAVIGATE, kit.Ext(m.Option(mdb.FILE)), m.Option(nfs.FILE), m.Option(nfs.PATH))
 			}},
-			REPOS: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(REPOS, ice.OptionFields(nfs.PATH)).Sort(nfs.PATH)
-			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			if kit.HasPrefix(arg[0], nfs.P) {
 				ls := nfs.SplitPath(m, arg[0])

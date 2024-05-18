@@ -21,6 +21,9 @@ func UserHost(m *ice.Message) string {
 	if p := m.Option(ice.MSG_USERHOST); p != "" {
 		return p
 	} else if u := UserWeb(m); u.Hostname() == tcp.LOCALHOST {
+		if ice.Info.Host != "" {
+			return m.Option(ice.MSG_USERHOST, strings.ReplaceAll(u.Scheme+"://"+u.Host, tcp.LOCALHOST, ice.Info.Host))
+		}
 		return m.Option(ice.MSG_USERHOST, tcp.PublishLocalhost(m, u.Scheme+"://"+u.Host))
 	} else {
 		return m.Option(ice.MSG_USERHOST, u.Scheme+"://"+u.Host)

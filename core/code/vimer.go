@@ -114,7 +114,7 @@ func init() {
 					}
 				}
 			}},
-			nfs.MODULE: {Name: "module name*=hi help type*=Hash,Zone,Code main*=main.go zone top", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
+			nfs.MODULE: {Name: "module name*=hi help type*=Hash,Zone,Code main*=main.go zone top", Help: "创建模块", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(AUTOGEN, nfs.MODULE, arg)
 			}},
 			nfs.SCRIPT: {Name: "script file*", Help: "脚本", Hand: func(m *ice.Message, arg ...string) {
@@ -135,7 +135,6 @@ func init() {
 				m.Cmdy(TEMPLATE, kit.Ext(m.Option(mdb.FILE)), m.Option(nfs.FILE), m.Option(nfs.PATH))
 			}},
 			COMPLETE: {Hand: func(m *ice.Message, arg ...string) {
-				return
 				m.Cmdy(COMPLETE, kit.Ext(m.Option(mdb.FILE)), m.Option(nfs.FILE), m.Option(nfs.PATH))
 			}},
 			COMPILE: {Hand: func(m *ice.Message, arg ...string) {
@@ -145,14 +144,18 @@ func init() {
 					_vimer_make(m, nfs.PWD, msg)
 				}
 			}},
-			ice.APP: {Hand: func(m *ice.Message, arg ...string) {
+			REPOS: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(REPOS, ice.OptionFields(nfs.PATH)).Sort(nfs.PATH)
+			}},
+			ice.APP: {Help: "本机", Hand: func(m *ice.Message, arg ...string) {
+				kit.If(len(arg) == 0, func() { arg = append(arg, m.Option(nfs.PATH), m.Option(nfs.FILE), m.Option(nfs.LINE)) })
 				cli.OpenCmds(m, "cd "+kit.Path(""), "vim "+path.Join(arg[0], arg[1])+" +"+arg[2]).ProcessHold()
 			}},
 		}, web.DreamTablesAction("编程"), ctx.ConfAction(ctx.TOOLS, "xterm,compile,runtime", web.ONLINE, ice.TRUE)), Hand: func(m *ice.Message, arg ...string) {
 			if m.Cmdy(INNER, arg); arg[0] == ctx.ACTION {
 				return
 			} else if len(arg) == 1 {
-				m.PushAction(mdb.CREATE, mdb.RENAME, nfs.TRASH)
+				m.PushAction(mdb.CREATE, mdb.RENAME, nfs.TRASH).Action(nfs.MODULE)
 				return
 			}
 			if m.IsMobileUA() {

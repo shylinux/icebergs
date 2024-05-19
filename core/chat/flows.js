@@ -3,7 +3,7 @@ Volcanos(chat.ONIMPORT, {
 		if (can.Option(mdb.ZONE)) {
 			can.onimport._content(can, msg, can.db.value = {zone: can.Option(mdb.ZONE)})
 		} else {
-			can.ui = can.onappend.layout(can), can.onimport._project(can, msg)
+			can.ui = can.onappend.layout(can), can.ui.toggle = can.onappend.toggle(can), can.onimport._project(can, msg)
 		}
 	},
 	_project: function(can, msg) { msg.Table(function(value) { value._select = value.zone == can.db.hash[0]
@@ -20,27 +20,20 @@ Volcanos(chat.ONIMPORT, {
 			try { if (item.prev) { list[item.prev].next = item } if (item.from) { list[item.from].to = item } } catch(e) { console.log(e) }
 		}), value._root = root, can.core.Item(list, function(key, item) { if (item.prev) { item.prev = list[item.prev] } if (item.from) { item.from = list[item.from] } })
 		var _list = can.onexport.travel(can, root, true), _msg = can.request(); can.core.List(_list, function(item) {
-			_msg.Push(mdb.TIME, item.time)
-			_msg.Push(mdb.HASH, item.hash)
-			_msg.Push(ctx.INDEX, item.index||"")
-			_msg.Push(ctx.ARGS, item.args||"")
-			_msg.Push(ctx.ACTION, item.action||"")
+			_msg.Push(mdb.TIME, item.time), _msg.Push(mdb.HASH, item.hash), _msg.Push(ctx.INDEX, item.index||""), _msg.Push(ctx.ARGS, item.args||""), _msg.Push(ctx.ACTION, item.action||"")
 		})
 		var table = can.onappend.table(can, _msg, null, can.ui.display); can.page.Select(can, table, "tbody>tr", function(target, index) { _list[index]._tr = target })
-		can.onappend._status(can, can.base.Obj(msg.Option(ice.MSG_STATUS)))
+		// can.onappend._status(can, can.base.Obj(msg.Option(ice.MSG_STATUS)))
 		can.onappend.plugin(can, {index: web.WIKI_DRAW, style: html.OUTPUT, display: "/plugin/local/wiki/draw.js", height: can.ui.content.offsetHeight, width: can.ui.content.offsetWidth}, function(sub) {
 			sub.run = function(event, cmds, cb) { cb(can.request(event)) }
 			sub.onexport.output = function(_sub, _msg) {
 				sub.Action(svg.GO, "manual"), sub.Action(ice.MODE, html.RESIZE), can.onmotion.hidden(can, sub._action)
 				value._content_plugin = sub, can.onimport.layout(can), can.onimport._flows(can, _sub, value)
 			}
-			can.ui.toggle = can.onappend.toggle(can, can.ui.content)
 		}, can.ui.content||can._output)
 	},
-	_profile: function(can, item) {
-		can.onexport.hash(can, can.db.value.zone, item.hash)
-		if (!item.index) { return can.onmotion.hidden(can, can.ui.profile), can.onimport.layout(can) }
-		can.onmotion.toggle(can, can.ui.profile, true), can.onimport.layout(can)
+	_profile: function(can, item) { can.onexport.hash(can, can.db.value.zone, item.hash)
+		if (!item.index) { return can.onmotion.hidden(can, can.ui.profile), can.onimport.layout(can) } can.onmotion.toggle(can, can.ui.profile, true), can.onimport.layout(can)
 		if (can.onmotion.cache(can, function() { return can.core.Keys(can.db.value.zone, item.hash) }, can.ui.profile)) { return }
 		can.onappend.plugin(can, {space: item.space, index: item.index, args: item.args, width: (can.ConfWidth()-can.ui.project.offsetWidth)/2-1}, function(sub) { can.db.value._profile_plugin = sub
 			sub.run = function(event, cmds, cb) { can.runActionCommand(can.request(event, {pod: item.space}), item.index, cmds, cb) }
@@ -56,19 +49,13 @@ Volcanos(chat.ONIMPORT, {
 			while (matrix[can.core.Keys(item.x, item.y)]) {
 				if (horizon && main || !horizon && !main) { item.y++
 					for(var _item = item[prev]; _item; _item = _item[prev]) { _item.y++
-						if (!horizon && _item[prev]) {
-							_item._line.Val("y1", _item._line.Val("y1")+height)
-						} _item._line.Val("y2", _item._line.Val("y2")+height)
-						_item._rect.Val("y", _item._rect.Val("y")+height)
-						_item._text.Val("y", _item._text.Val("y")+height)
+						if (!horizon && _item[prev]) { _item._line.Val("y1", _item._line.Val("y1")+height) } _item._line.Val("y2", _item._line.Val("y2")+height)
+						_item._rect.Val("y", _item._rect.Val("y")+height), _item._text.Val("y", _item._text.Val("y")+height)
 					}
 				} else { item.x++
 					for(var _item = item[from]; _item; _item = _item[from]) { _item.x++
-						if (horizon && _item[from]) {
-							_item._line.Val("x1", _item._line.Val("x1")+width)
-						} _item._line.Val("x2", _item._line.Val("x2")+width)
-						_item._rect.Val("x", _item._rect.Val("x")+width)
-						_item._text.Val("x", _item._text.Val("x")+width)
+						if (horizon && _item[from]) { _item._line.Val("x1", _item._line.Val("x1")+width) } _item._line.Val("x2", _item._line.Val("x2")+width)
+						_item._rect.Val("x", _item._rect.Val("x")+width), _item._text.Val("x", _item._text.Val("x")+width)
 					}
 				}
 			} matrix[can.core.Keys(item.x, item.y)] = item
@@ -92,7 +79,7 @@ Volcanos(chat.ONIMPORT, {
 		var text = sub.onimport.draw(sub, {shape: svg.TEXT, points: [{x: x+width/2, y: y+height/2}], style: {inner: item.name||item.index.split(nfs.PT).pop()}})
 		item._rect = rect, item._text = text, can.core.ItemCB(can.ondetail, function(key, cb) { text[key] = rect[key] = function(event) { cb(event, can, sub, item) } })
 		if (item.status) { item._line && item._line.Value(html.CLASS, item.status), rect.Value(html.CLASS, item.status), text.Value(html.CLASS, item.status) }
-		if (can.db.value.zone == can.db.hash[0] && item.hash == can.db.hash[1]) { can.onmotion.delay(can, function() { can.onimport._profile(can, item) }) }
+		if (can.db.value.zone == can.db.hash[0] && item.hash == can.db.hash[1] && can.onexport.session(can, "profile.show") != ice.FALSE) { can.onmotion.delay(can, function() { can.onimport._profile(can, item) }) }
 	},
 }, [""])
 Volcanos(chat.ONACTION, {
@@ -143,7 +130,10 @@ Volcanos(chat.ONDETAIL, {
 				if (_class.indexOf(html.SELECT) > -1) { target.Value(html.CLASS, _class.filter(function(c) { return c != html.SELECT }).join(lex.SP).trim()) }
 			}
 		})
-		// can.page.Select(can, item._tr.parentNode, "", function(target) { can.page.ClassList.set(can, target, html.SELECT, target == item._tr) })
+		can.page.Select(can, item._tr.parentNode, "", function(target) {
+			can.page.ClassList.set(can, target, html.SELECT, target == item._tr)
+			can.onmotion.scrollIntoView(can, item._tr, 45, can.ui.display)
+		})
 	},
 	onclick: function(event, can, sub, item) { switch (sub.ui.svg.style.cursor) {
 		case "e-resize":

@@ -4,8 +4,8 @@ Volcanos(chat.ONIMPORT, {
 		can.core.Item(can.Action(), function(key) { can.onaction[key] = can.onaction[key]||can.onaction.refresh, can.Action(key, can.misc.localStorage(can, ACTION_STORE+key)) })
 		if (can.Option(mdb.ZONE)) { can.onmotion.hidden(can, can.ui.project), can.onimport._content(can, msg, can.Option(mdb.ZONE)) } else { can.onimport._project(can, msg) }
 	},
-	_project: function(can, msg) { var target; msg.Table(function(value) {
-		var item = can.onimport.item(can, value, function(event) { can.Option(mdb.ZONE, value.zone)
+	_project: function(can, msg) { msg.Table(function(value) { value._select = value.zone == can.Option(mdb.ZONE)
+		can.onimport.item(can, value, function(event, item) { can.Option(mdb.ZONE, value.zone)
 			if (can.onmotion.cache(can, function(save, load) {
 				save({db: can.db, toggle: can.ui.toggle, _display_class: can.ui.display.className, _profile_class: can.ui.profile.className})
 				return load(value.zone, function(bak) { can.db = bak.db, can.ui.toggle = bak.toggle
@@ -14,8 +14,8 @@ Volcanos(chat.ONIMPORT, {
 				})
 			}, can.ui.content, can.ui.display, can._status)) { return can.page.isDisplay(can.ui.profile) && can.onimport._profile(can, can.db.current), can.onimport.layout(can) }
 			can.run(event, [value.zone], function(msg) { can.onimport._content(can, msg, can.Option(mdb.ZONE)) })
-		}, null, can.ui.project); target = value.zone == can.Option(mdb.ZONE)? item: target||item
-	}), target && target.click() },
+		})
+	}) },
 	_content: function(can, msg, zone) { if (msg.Length() == 0) { return can.Update(can.request({target: can._legend}, {title: mdb.INSERT, zone: zone}), [ctx.ACTION, mdb.INSERT]) }
 		can.db.list = {}; msg.Table(function(value) { can.db.list[value.hash] = value })
 		var root; can.core.Item(can.db.list, function(key, item) { if (!item.prev && !item.from) { return root = item }

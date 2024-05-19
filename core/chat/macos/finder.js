@@ -1,6 +1,6 @@
 Volcanos(chat.ONIMPORT, {
-	_init: function(can, msg) { can.ui = can.onappend.layout(can), msg.Table(function(value, index) {
-		var item = can.onimport.item(can, value, function(event) { if (can.onmotion.cache(can, function() { return value.name }, can.ui.content)) { return }
+	_init: function(can, msg) { can.ui = can.onappend.layout(can), msg.Table(function(value, index) { value._select == index == 0
+		can.onimport.item(can, value, function(event, item) { if (can.onmotion.cache(can, function() { return value.name }, can.ui.content)) { return }
 			can.runActionCommand(event, value.index, [], function(msg) {
 				switch (value.name) {
 					case ".":
@@ -8,7 +8,7 @@ Volcanos(chat.ONIMPORT, {
 					default: can.onappend.table(can, msg, null, can.ui.content)
 				} can.onimport.layout(can)
 			})
-		}); index == 0 && item.click()
+		})
 	}), can.onmotion.hidden(can, can.ui.project) },
 	icons: function(can, msg, target) { can.onimport.icon(can, msg = msg||can._msg, target, function(target, item) { can.page.Modify(can, target, {
 		onclick: function(event) { can.sup.onexport.record(can.sup, item.name, mdb.NAME, item) },

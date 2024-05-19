@@ -1,11 +1,11 @@
 Volcanos(chat.ONIMPORT, {
 	_init: function(can, msg) { can.ui = can.onappend.layout(can), can.onimport._project(can, msg) },
 	_project: function(can, msg) { var select, current = can.sup.db._zone||can.db.hash[0]||(can.user.info.nodetype == web.WORKER? ice.OPS: ice.DEV)
-		msg.Table(function(value) {
-			var _target = can.onimport.item(can, value, function(event, value) {
-				can.onimport.dream(event, can, value, _target)
-			}, null, can.ui.project); select = (value.name == current? _target: select)||_target
-		}), select && select.click(), can.onmotion.orderShow(can, can.ui.project)
+		msg.Table(function(value) { value._select = value.name == current
+			can.onimport.item(can, value, function(event, item, target) {
+				can.onimport.dream(event, can, item, target)
+			})
+		})
 		can.onappend.style(can, "output card", can.ui.content), can.onmotion.delay(can, function() { can.onimport.layout(can) })
 		can.onmotion.delay(can, function() { can.onappend._filter(can) })
 	},

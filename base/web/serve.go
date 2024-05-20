@@ -90,6 +90,9 @@ func _serve_static(msg *ice.Message, w http.ResponseWriter, r *http.Request) boo
 	if strings.HasPrefix(r.URL.Path, "/v/") {
 		return Render(msg, ice.RENDER_DOWNLOAD, path.Join(ice.USR_VOLCANOS, strings.TrimPrefix(r.URL.Path, nfs.V)))
 	} else if kit.HasPrefix(r.URL.Path, "/p/") {
+		if kit.Contains(r.URL.String(), "render=replace") {
+			return false
+		}
 		p := strings.TrimPrefix(r.URL.Path, "/p/")
 		return (!ispod && kit.HasPrefix(p, nfs.SRC) || kit.HasPrefix(p, ice.USR_ICEBERGS, ice.USR_ICONS)) && nfs.Exists(msg, p) && Render(msg, ice.RENDER_DOWNLOAD, p)
 	} else if kit.HasPrefix(r.URL.Path, "/m/") {

@@ -29,6 +29,7 @@ func init() {
 				m.PushAction(mdb.PLUGIN, mdb.DELETE)
 			}
 			m.Display("")
+			m.DisplayCSS("")
 		}},
 	})
 }

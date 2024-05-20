@@ -26,10 +26,16 @@ Volcanos(chat.ONIMPORT, {
 		// can.onappend._status(can, can.base.Obj(msg.Option(ice.MSG_STATUS)))
 		can.onappend.plugin(can, {index: web.WIKI_DRAW, style: html.OUTPUT, display: "/plugin/local/wiki/draw.js", height: can.ui.content.offsetHeight, width: can.ui.content.offsetWidth}, function(sub) {
 			sub.run = function(event, cmds, cb) { cb(can.request(event)) }
-			sub.onexport.output = function(_sub, _msg) {
-				sub.Action(svg.GO, "manual"), sub.Action(ice.MODE, html.RESIZE), can.onmotion.hidden(can, sub._action)
-				value._content_plugin = sub, can.onimport.layout(can), can.onimport._flows(can, _sub, value)
-			}
+			sub.onexport.output = function(_sub, _msg) { value._content_plugin = sub, can.onimport._toolkit(can, value) }
+		}, can.ui.content||can._output)
+	},
+	_toolkit: function(can, value) {
+		can.onappend.plugin(can, {index: "can._action", width: can.ui.content.offsetWidth/2}, function(sub) {
+			sub.Conf("space", can.ConfSpace()), sub.Conf("index", can.ConfIndex()+":"+value.zone)
+			sub.run = function(event, cmds, cb) { cb(can.request(event)) }
+			sub.onexport.output = function(_sub) {
+				_sub.onaction._select = function(event, _sub) { can.onimport._flows(can, value) }
+				sub.onappend._action(_sub, can.onaction._toolkit), value._toolkit_plugin = sub, can.onimport._flows(can, value) }
 		}, can.ui.content||can._output)
 	},
 	_profile: function(can, item) { can.onexport.hash(can, can.db.value.zone, item.hash)
@@ -41,10 +47,13 @@ Volcanos(chat.ONIMPORT, {
 			sub.onaction._close = function() { can.onmotion.hidden(can, can.ui.profile), can.onimport.layout(can)  }
 		}, can.ui.profile)
 	},
-	_flows: async function(can, sub, value) {
-		var margin = can.onexport.margin(can), height = can.onexport.height(can), width = can.onexport.width(can)
-		var matrix = {}, horizon = can.Action("direct") == "horizon"; can.onmotion.clear(can, sub.ui.svg)
-		async function sleep() { return new Promise(resolve => { setTimeout(resolve, can.Action("delay")) }) }
+	_flows: async function(can, value) {
+		can.onimport.layout(can)
+		var sub = value._content_plugin.sub
+		var _sub = value._toolkit_plugin.sub
+		var margin = can.onexport.margin(_sub), height = can.onexport.height(_sub), width = can.onexport.width(_sub)
+		var matrix = {}, horizon = value._toolkit_plugin.Action("direct") == "horizon"; can.onmotion.clear(can, sub.ui.svg)
+		async function sleep() { return new Promise(resolve => { setTimeout(resolve, _sub.Action("delay")) }) }
 		async function show(item, main) { var prev = "from", from = "prev"; if (horizon) { var prev = "prev", from = "from" }
 			while (matrix[can.core.Keys(item.x, item.y)]) {
 				if (horizon && main || !horizon && !main) { item.y++
@@ -62,7 +71,7 @@ Volcanos(chat.ONIMPORT, {
 			if (item.from || item.prev) { item._line = sub.onimport.draw(sub, {shape: svg.LINE, points:
 				horizon && item.from || !horizon && !item.from? [{x: item.x*width+width/2, y: item.y*height-margin}, {x: item.x*width+width/2, y: item.y*height+margin}]:
 				[{x: item.x*width-margin, y: item.y*height+height/2}, {x: item.x*width+margin, y: item.y*height+height/2}]
-			}) } can.onimport._block(can, sub, item, item.x*width, item.y*height), await sleep()
+			}) } can.onimport._block(can, value, item, item.x*width, item.y*height), await sleep()
 			var next = 0, to = 1; if (horizon) { var next = 1, to = 0 }
 			if (main) {
 				var _item = item.to; if (_item) { _item.x = item.x+to, _item.y = item.y+next, await show(_item) }
@@ -73,26 +82,33 @@ Volcanos(chat.ONIMPORT, {
 			}
 		} value._root.x = 0, value._root.y = 0, await show(value._root, true)
 	},
-	_block: function(can, sub, item, x, y) {
-		var margin = can.onexport.margin(can), height = can.onexport.height(can), width = can.onexport.width(can)
+	_block: function(can, value, item, x, y) {
+		var sub = value._content_plugin.sub
+		var _sub = value._toolkit_plugin.sub
+		var margin = can.onexport.margin(_sub), height = can.onexport.height(_sub), width = can.onexport.width(_sub)
 		var rect = sub.onimport.draw(sub, {shape: svg.RECT, points: [{x: x+margin, y: y+margin}, {x: x+width-margin, y: y+height-margin}]})
 		var text = sub.onimport.draw(sub, {shape: svg.TEXT, points: [{x: x+width/2, y: y+height/2}], style: {inner: item.name||item.index.split(nfs.PT).pop()}})
 		item._rect = rect, item._text = text, can.core.ItemCB(can.ondetail, function(key, cb) { text[key] = rect[key] = function(event) { cb(event, can, sub, item) } })
 		if (item.status) { item._line && item._line.Value(html.CLASS, item.status), rect.Value(html.CLASS, item.status), text.Value(html.CLASS, item.status) }
 		if (can.db.value.zone == can.db.hash[0] && item.hash == can.db.hash[1] && can.onexport.session(can, "profile.show") != ice.FALSE) { can.onmotion.delay(can, function() { can.onimport._profile(can, item) }) }
 	},
-}, [""])
+	layout: function(can) {
+		can.ui.layout(can.ConfHeight(), can.ConfWidth(), 0, function(height, width) {
+			var sub = can.db.value && can.db.value._toolkit_plugin
+			if (sub) { sub.onimport.size(sub, html.ACTION_HEIGHT, width/2, false), can.page.style(can, sub._target, html.LEFT, width/4) }
+		})
+	},
+})
 Volcanos(chat.ONACTION, {
-	/*
-	list: ["create", "play", "prev", "next",
+	_toolkit: [
+		"prev", "next",
 		["travel", "deep", "wide"],
 		["direct", "vertical", "horizon"],
 		[html.MARGIN, 10, 20, 40, 60],
-		[html.HEIGHT, 80, 100, 120, 140, 200],
+		[html.HEIGHT, 60, 80, 100, 120, 140, 200],
 		[html.WIDTH, 200, 240, 280, 400],
-		["delay", 100, 200, 500, 1000],
+		["delay", 30, 100, 200, 500, 1000],
 	], _trans: {play: "播放", prev: "上一步", next: "下一步"},
-	*/
 	travel: function() {}, delay: function() {},
 	play: function(event, can) { var list = can.onexport.travel(can, can.db.value._root, true)
 		can.core.List(list, function(item) { item._line && item._line.Value(html.CLASS, ""), item._rect.Value(html.CLASS, ""), item._text.Value(html.CLASS, "") })
@@ -110,13 +126,6 @@ Volcanos(chat.ONACTION, {
 		if (!can.db.current) { can.db.current = can.db.root } else { var next, list = can.onexport.travel(can, can.db.root, true)
 			can.core.List(list, function(item, index) { if (item == can.db.current) { next = list[index+1] } }), can.db.current = next
 		} can.ondetail._select(event, can, can.db.current)
-	},
-	show: function(event, can) { can.onmotion.toggle(can, can.ui.profile), can.onimport.layout(can) },
-	exec: function(event, can) { can.onmotion.toggle(can, can.ui.display), can.onimport.layout(can) },
-	clear: function(event, can) { if (can.onmotion.clearFloat(can)) { return }
-		if (can.page.isDisplay(can.ui.profile)) { return can.onmotion.hidden(can, can.ui.profile), can.onimport.layout(can) }
-		if (can.page.isDisplay(can.ui.display)) { return can.onmotion.hidden(can, can.ui.display), can.onimport.layout(can) }
-		can.onmotion.toggle(can, can.ui.project), can.onimport.layout(can)
 	},
 	plugin: function(event, can, msg) { can.ondetail._select(event, can, can.db.list[msg.Option(mdb.HASH)]) },
 })

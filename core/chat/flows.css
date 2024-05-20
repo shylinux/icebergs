@@ -11,5 +11,7 @@ $content svg text.done { stroke:var(--web-flows-done); fill:var(--web-flows-done
 $content svg text.select { stroke:var(--notice-bg-color); fill:var(--notice-bg-color); }
 $content fieldset.can._action { position:absolute; bottom:var(--action-height); }
 $content fieldset.can._action>legend { display:none; }
-$content fieldset.can._action>div.status { display:none; }
 $content fieldset.can._action>div.action { display:contents; }
+$content fieldset.can._action>div.action br { clear:both; }
+$content fieldset.can._action>div.action div.state { display:none; }
+$content fieldset.can._action>div.status { display:none; }

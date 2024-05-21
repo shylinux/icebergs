@@ -101,7 +101,10 @@ Volcanos(chat.ONIMPORT, {
 	},
 	layout: function(can) { can.ui.layout(can.ConfHeight(), can.ConfWidth(), 0, function(height, width) {
 		var sub = can.db.value && can.db.value._toolkit_plugin
-		if (sub) { sub.onimport.size(sub, html.ACTION_HEIGHT, width/2, true), can.page.style(can, sub._target, html.LEFT, width/4) }
+		if (sub) {
+			can.page.style(can, sub._target, html.LEFT, 0), sub.onimport.size(sub, html.ACTION_HEIGHT, width, true)
+			can.page.style(can, sub._target, html.LEFT, (can.ui.content.offsetWidth-sub._target.offsetWidth)/2)
+		}
 	}) },
 })
 Volcanos(chat.ONACTION, {

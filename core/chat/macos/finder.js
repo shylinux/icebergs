@@ -1,5 +1,5 @@
 Volcanos(chat.ONIMPORT, {
-	_init: function(can, msg) { can.ui = can.onappend.layout(can), msg.Table(function(value, index) { value._select == index == 0
+	_init: function(can, msg) { can.ui = can.onappend.layout(can), msg.Table(function(value, index) { value._select = index == 0
 		can.onimport.item(can, value, function(event, item) { if (can.onmotion.cache(can, function() { return value.name }, can.ui.content)) { return }
 			can.runActionCommand(event, value.index, [], function(msg) {
 				switch (value.name) {

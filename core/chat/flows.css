@@ -13,5 +13,9 @@ $content fieldset.can._action { position:absolute; bottom:var(--action-height); 
 $content fieldset.can._action>legend { display:none; }
 $content fieldset.can._action>div.action { display:contents; }
 $content fieldset.can._action>div.action br { clear:both; }
-$content fieldset.can._action>div.action div.state { display:none; }
+$content fieldset.can._action>div.action div.item.state { display:none; }
 $content fieldset.can._action>div.status { display:none; }
+$content fieldset.can._action:not(:hover) { background-color:transparent; }
+$content fieldset.can._action:not(:hover)>form.option input { background-color:transparent; }
+$content fieldset.can._action:not(:hover)>div.action input { background-color:transparent; }
+$output>div.layout>div.layout:not(:hover) fieldset.can._action { visibility:hidden; }

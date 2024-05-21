@@ -151,6 +151,11 @@ func init() {
 				kit.If(len(arg) == 0, func() { arg = append(arg, m.Option(nfs.PATH), m.Option(nfs.FILE), m.Option(nfs.LINE)) })
 				cli.OpenCmds(m, "cd "+kit.Path(""), "vim "+path.Join(arg[0], arg[1])+" +"+arg[2]).ProcessHold()
 			}},
+			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
+				kit.If(m.IsDebug() && aaa.IsTechOrRoot(m), func() {
+					m.PushButton(kit.Dict(m.CommandKey(), "编程"))
+				})
+			}},
 		}, web.DreamTablesAction("编程"), ctx.ConfAction(ctx.TOOLS, "xterm,compile,runtime", web.ONLINE, ice.TRUE)), Hand: func(m *ice.Message, arg ...string) {
 			if m.Cmdy(INNER, arg); arg[0] == ctx.ACTION {
 				return

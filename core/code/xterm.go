@@ -117,7 +117,11 @@ func init() {
 				m.ProcessHold()
 			}},
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
-				kit.If(m.IsDebug() && aaa.IsTechOrRoot(m), func() { m.PushButton(kit.Dict(m.CommandKey(), m.Commands("").Help)) })
+				kit.If(m.IsDebug() && aaa.IsTechOrRoot(m), func() {
+					// m.PushButton(cli.RUNTIME)
+					m.PushButton(cli.RUNTIME, kit.Dict(m.CommandKey(), m.Commands("").Help))
+				})
+				// kit.If(m.IsDebug(), func() { list = append(list, cli.RUNTIME) })
 			}},
 			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { web.DreamProcess(m, "", cli.SH, arg...) }},
 		}, web.DreamTablesAction(), mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,path")), Hand: func(m *ice.Message, arg ...string) {

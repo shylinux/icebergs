@@ -373,10 +373,10 @@ func init() {
 				kit.If(m.Option(aaa.ACCESS) == aaa.PUBLIC, func() { m.Option(aaa.ACCESS, "") })
 				mdb.HashModify(m, m.OptionSimple(mdb.NAME, cli.RESTART, aaa.ACCESS))
 			}},
-			tcp.SEND: {Name: "send space*", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(SPACE, m.Option(SPACE), DREAM, mdb.CREATE, m.OptionSimple(mdb.NAME, mdb.ICONS, nfs.REPOS, nfs.BINARY))
-				m.Cmd(SPACE, m.Option(SPACE), DREAM, cli.START, m.OptionSimple(mdb.NAME))
-				ProcessIframe(m, "", m.MergePod(kit.Keys(m.Option(SPACE), m.Option(mdb.NAME))))
+			tcp.SEND: {Name: "send to*", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(SPACE, m.Option(nfs.TO), DREAM, mdb.CREATE, m.OptionSimple(mdb.NAME, mdb.ICONS, nfs.REPOS, nfs.BINARY))
+				m.Cmd(SPACE, m.Option(nfs.TO), DREAM, cli.START, m.OptionSimple(mdb.NAME))
+				ProcessIframe(m, "", m.MergePod(kit.Keys(m.Option(nfs.TO), m.Option(mdb.NAME))))
 			}},
 			nfs.COPY: {Name: "copy to*", Help: "复制", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy("", mdb.CREATE, mdb.NAME, m.Option(nfs.TO), nfs.BINARY, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME), ice.BIN_ICE_BIN))
@@ -416,7 +416,7 @@ func init() {
 					return
 				}
 				list := []ice.Any{}
-				kit.If(m.IsDebug(), func() { list = append(list, cli.RUNTIME) })
+				// kit.If(m.IsDebug(), func() { list = append(list, cli.RUNTIME) })
 				switch m.Option(mdb.TYPE) {
 				case WORKER:
 					list = append(list, "settings", nfs.COPY, tcp.SEND)
@@ -488,7 +488,7 @@ func init() {
 			}},
 		}, StatsAction(), DreamAction(), DreamTablesAction(), mdb.ImportantHashAction(
 			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icons,repos,binary,template,restart,access",
-			html.BUTTON, kit.JoinWord(PORTAL, DESKTOP, MESSAGE, ADMIN, WORD, STATUS, VIMER, COMPILE, XTERM, DREAM),
+			html.BUTTON, kit.JoinWord(PORTAL, DESKTOP, ADMIN, WORD, STATUS, VIMER, COMPILE, XTERM, DREAM),
 			ctx.TOOLS, kit.Simple(SPIDE, ROUTE, STATUS), ONLINE, ice.TRUE,
 		)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {

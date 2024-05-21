@@ -11,7 +11,11 @@ const FLOWS = "flows"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		FLOWS: {Name: "flows refresh", Help: "工作流", Icon: "Automator.png", Actions: ice.MergeActions(ice.Actions{
-			mdb.INSERT: {Name: "insert name space index* args", Hand: func(m *ice.Message, arg ...string) {
+			mdb.CREATE: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(mdb.INSERT, m.ShortKey(), "", mdb.HASH, m.OptionSimple(mdb.ZONE))
+				m.Cmd(FLOWS, mdb.INSERT, mdb.NAME, m.Option(mdb.ZONE))
+			}},
+			mdb.INSERT: {Name: "insert name space index args", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(mdb.INSERT, m.ShortKey(), kit.KeyHash(m.Option(mdb.ZONE)), mdb.HASH, m.OptionSimple(mdb.Config(m, mdb.FIELDS)))
 			}},
 			mdb.DELETE: {Hand: func(m *ice.Message, arg ...string) {
@@ -26,10 +30,9 @@ func init() {
 			} else {
 				m.Fields(len(arg)-1, mdb.Config(m, mdb.FIELDS), mdb.DETAIL)
 				m.Cmdy(mdb.SELECT, m.ShortKey(), kit.KeyHash(arg[0]), mdb.HASH, arg[1:])
-				m.PushAction(mdb.PLUGIN, mdb.DELETE)
+				m.PushAction("addnext", "addto", mdb.RENAME, mdb.PLUGIN, mdb.DELETE)
 			}
-			m.Display("")
-			m.DisplayCSS("")
+			m.Display("").DisplayCSS("")
 		}},
 	})
 }

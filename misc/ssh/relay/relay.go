@@ -75,10 +75,10 @@ type relay struct {
 	// opsOriginOpen string `name:"opsOriginOpen" event:"ops.origin.open"`
 	// opsServerOpen string `name:"opsServerOpen" event:"ops.server.open"`
 	// opsDreamSpawn string `name:"opsDreamSpawn" event:"ops.dream.spawn"`
-	install       string `name:"install dream portal nodename dev"`
-	pushbin       string `name:"pushbin dream portal nodename dev" icon:"bi bi-box-arrow-in-up"`
-	adminCmd      string `name:"adminCmd cmd" icon:"bi bi-terminal-plus"`
-	pushkey       string `name:"pushkey server" icon:"bi bi-person-fill-up"`
+	install  string `name:"install dream portal nodename dev"`
+	pushbin  string `name:"pushbin dream portal nodename dev" icon:"bi bi-box-arrow-in-up"`
+	adminCmd string `name:"adminCmd cmd" icon:"bi bi-terminal-plus"`
+	pushkey  string `name:"pushkey server" icon:"bi bi-person-fill-up"`
 }
 
 func (s relay) Init(m *ice.Message, arg ...string) {
@@ -225,7 +225,7 @@ func (s relay) List(m *ice.Message, arg ...string) *ice.Message {
 			m.Push(web.LINK, "").PushButton(s.Xterm, s.Pushbin, s.Install, s.Remove)
 		} else {
 			m.Push(web.LINK, m.HostPort(value[tcp.HOST], value[web.PORTAL]))
-			m.PushButton(s.Portal, s.Desktop, s.Dream, s.Admin, s.Open, s.Status, s.Vimer, s.Login, s.Pushkey, s.Spide, s.AdminCmd, s.Xterm, s.Pushbin, s.Upgrade, s.Remove)
+			m.PushButton(s.Portal, s.Desktop, s.Admin, s.Open, s.Status, s.Vimer, s.Login, s.Pushkey, s.Spide, s.AdminCmd, s.Xterm, s.Pushbin, s.Upgrade, s.Remove)
 			kit.If(len(arg) > 0, func() { m.PushQRCode(cli.QRCODE, m.Append(web.LINK)) })
 		}
 	})

@@ -14,6 +14,7 @@ Volcanos(chat.ONIMPORT, {
 		})
 	}) },
 	_content: function(can, msg, value) {
+		can.onmotion.clear(can, can.ui.content)
 		can.onappend.plugin(can, {index: web.WIKI_DRAW, style: html.OUTPUT, display: "/plugin/local/wiki/draw.js", height: can.ui.content.offsetHeight, width: can.ui.content.offsetWidth}, function(sub) {
 			sub.run = function(event, cmds, cb) { cb(can.request(event)) }
 			sub.onexport.output = function() { value._content_plugin = sub, can.onimport._toolkit(can, msg, value) }
@@ -31,7 +32,6 @@ Volcanos(chat.ONIMPORT, {
 		}, can.ui.content||can._output)
 	},
 	_display: function(can, msg, value) {
-		if (msg.Length() == 0) { return can.Update(can.request({target: can._legend}, {title: mdb.INSERT, zone: value.zone}), [ctx.ACTION, mdb.INSERT]) }
 		var list = {}; msg.Table(function(value) { list[value.hash] = value })
 		var root; can.core.Item(list, function(key, item) { if (!item.prev && !item.from) { return root = item }
 			try { if (item.prev) { list[item.prev].next = item } if (item.from) { list[item.from].to = item } } catch(e) { console.log(e) }
@@ -137,7 +137,25 @@ Volcanos(chat.ONACTION, {
 			can.core.List(list, function(item, index) { if (item == can.db.current) { next = list[index+1] } }), can.db.current = next
 		} can.ondetail._select(event, can, can.db.current)
 	},
-	plugin: function(event, can, msg) { can.ondetail._select(event, can, can.db.list[msg.Option(mdb.HASH)]) },
+
+	addnext: function(event, can) { can.onaction._insert(event, can, "prev") },
+	addto: function(event, can) { can.onaction._insert(event, can, "from") },
+	rename: function(event, can) { can.onaction._modify(event, can, [mdb.NAME]) },
+	plugin: function(event, can) { can.onaction._modify(event, can, [ctx.INDEX, ctx.ARGS]) },
+	_insert: function(event, can, from) { var value = can.db.value, msg = can.request(event)
+		can.user.input(event, can, can.Conf("feature.insert"), function(data) {
+			can.run(can.request({}, data, kit.Dict(mdb.ZONE, value.zone, from, msg.Option(mdb.HASH))), [ctx.ACTION, mdb.INSERT], function() {
+				can.run(event, [value.zone], function(msg) { can.onimport._content(can, msg, value) })
+			})
+		})
+	},
+	_modify: function(event, can, list) { var value = can.db.value, msg = can.request(event)
+		can.user.input(event, can, list, function(args) {
+			can.run(can.request({}, {zone: value.zone, hash: msg.Option(mdb.HASH)}), [ctx.ACTION, mdb.MODIFY].concat(args), function() {
+				can.run(event, [value.zone], function(msg) { can.onimport._content(can, msg, value) })
+			})
+		})
+	},
 })
 Volcanos(chat.ONDETAIL, {
 	_select: function(event, can, item) { if (!item) { return can.onmotion.hidden(can, can.ui.profile) }

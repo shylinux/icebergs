@@ -46,6 +46,7 @@ Volcanos(chat.ONIMPORT, {
 			item._profile_plugin = sub, value._profile_plugin = item._profile_plugin
 			sub.run = function(event, cmds, cb) { can.runActionCommand(can.request(event, {pod: item.space}), item.index, cmds, cb) }
 			sub.onaction._close = function() { can.onmotion.hidden(can, can.ui.profile), can.onimport.layout(can)  }
+			sub.onexport.output = function() { can.onimport.layout(can) }
 		}, can.ui.profile)
 	},
 	_flows: async function(can, value) {

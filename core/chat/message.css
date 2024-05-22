@@ -50,4 +50,5 @@ fieldset.web.chat.message>div.output>div.layout>div.display div.toolkit { backgr
 fieldset.web.chat.message>div.output>div.layout>div.display div.toolkit i { padding:var(--input-padding); }
 fieldset.web.chat.message>div.output>div.layout>div.display div.toolkit i:hover { background-color:var(--hover-bg-color); }
 fieldset.web.chat.message>div.output>div.layout>div.display textarea { height:calc(100% - var(--action-height)); }
+fieldset.web.chat.message>div.output>div.layout>div.display textarea:not(:hover) { border-left:0; }
 body.mobile fieldset.web.chat.message>div.output>div.project { border-right:0; }

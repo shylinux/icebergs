@@ -6,6 +6,7 @@ fieldset.desktop>div.output>fieldset.macos>div.output { background-color:transpa
 fieldset.desktop>div.output>fieldset.macos.menu { border:0; border-radius:0; line-height:var(--desktop-menu-height); height:var(--desktop-menu-height); width:100%; position:sticky; top:0; overflow:hidden; z-index:10; }
 fieldset.desktop>div.output>fieldset.macos.menu div.menu:hover { background-color:var(--hover-bg-color); }
 fieldset.desktop>div.output>fieldset.macos.menu div.menu.icon { font-size:24px; line-height:22px; height:var(--desktop-menu-height); }
+fieldset.desktop>div.output>fieldset.macos.menu div.menu.refresh { font-size:20px; }
 fieldset.desktop>div.output>fieldset.macos.menu div.menu img { height:var(--desktop-menu-height); margin-right:var(--input-padding); }
 fieldset.desktop>div.output>fieldset.macos.menu div.menu { display:flex; align-items:flex-start; }
 fieldset.desktop>div.output>fieldset.macos.menu div.menu.title { font-style:italic; }

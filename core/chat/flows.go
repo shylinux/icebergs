@@ -25,7 +25,7 @@ func init() {
 				m.Cmdy(mdb.MODIFY, m.ShortKey(), kit.KeyHash(m.Option(mdb.ZONE)), mdb.HASH, m.OptionSimple(mdb.HASH), arg)
 			}},
 		}, mdb.ExportHashAction(mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,zone", mdb.FIELDS, "time,hash,name,space,index,args,prev,from,status")), Hand: func(m *ice.Message, arg ...string) {
-			if arg = kit.Slice(arg, 0, 2); len(arg) == 0 || arg[0] == "" {
+			if len(arg) == 0 {
 				mdb.HashSelect(m).Action(mdb.CREATE)
 			} else {
 				m.Fields(len(arg)-1, mdb.Config(m, mdb.FIELDS), mdb.DETAIL)

@@ -2,39 +2,28 @@ Volcanos(chat.ONIMPORT, {
 	_init: function(can, msg) {
 		if (can.Option(mdb.ZONE)) {
 			can.onimport._content(can, msg, can.db.value = {zone: can.Option(mdb.ZONE)})
-		} else {
-			msg.Push(mdb.ZONE, "command")
+		} else { msg.Push(mdb.ZONE, ctx.COMMAND)
 			can.ui = can.onappend.layout(can), can.ui.toggle = can.onappend.toggle(can), can.onimport._project(can, msg)
 		}
 	},
 	_project: function(can, msg) { msg.Table(function(value) { value._select = value.zone == can.db.hash[0]
 		can.onimport.item(can, value, function(event, item, show, target) {
 			can.onimport.tabsCache(can, can.request(), item.zone, item, target, function() {
-				if (value.zone == "command") {
-					can.run(event, [ctx.RUN, ctx.COMMAND], function(msg) {
-						var res = can.request()
-						var cmds = {ice: []}
-						res.Push("hash", "ice").Push("name", "ice").Push("index", "").Push("prev", "").Push("from", "")
-						msg.Table(function(value) {
-							can.core.List(value.index.split("."), function(cmd, index, list) {
-								if (list[0] == "ice") { return }
-								var _mod = list.slice(0, index).join(".")||"ice"
-								var _cmd = list.slice(0, index+1).join(".")
-								var last = (cmds[_mod][cmds[_mod].length-1])||_mod
-								_cmd != last && cmds[_mod].push(_cmd)
-								var prev = "", from = ""
-								if (index % 2 == 0) { prev = last } else { from = last }
-								if (!cmds[_cmd]) {
-									res.Push("hash", _cmd).Push("name", cmd).Push("index", index < list.length-1? "": _cmd).Push("prev", prev).Push("from", from)
-									if (index < list.length-1) { cmds[_cmd] = [] }
-								}
-							})
-						})
-						can.onimport._content(can, res, value)
+				if (value.zone == ctx.COMMAND) {
+					can.run(event, [ctx.RUN, ctx.COMMAND], function(msg) { var res = can.request(), cmds = {ice: []}
+						res.Push(mdb.HASH, "ice").Push(mdb.NAME, "ice").Push(ctx.INDEX, "").Push("prev", "").Push("from", "")
+						msg.Table(function(value) { can.core.List(value.index.split("."), function(cmd, index, list) { if (list[0] == "ice") { return }
+							var _mod = list.slice(0, index).join(".")||"ice", _cmd = list.slice(0, index+1).join(".")
+							var last = (cmds[_mod][cmds[_mod].length-1])||_mod; _cmd != last && cmds[_mod].push(_cmd)
+							var prev = "", from = ""; if (index % 2 == 0) { prev = last } else { from = last }
+							if (!cmds[_cmd]) { if (index < list.length-1) { cmds[_cmd] = [] }
+								res.Push(mdb.HASH, _cmd).Push(mdb.NAME, cmd).Push(ctx.INDEX, index < list.length-1? "": _cmd).Push("prev", prev).Push("from", from)
+							}
+						}) }), can.onimport._content(can, res, value)
 					})
-					return
+				} else {
+					can.run(event, [value.zone], function(msg) { can.onimport._content(can, msg, value) })
 				}
-				can.run(event, [value.zone], function(msg) { can.onimport._content(can, msg, value) })
 			})
 		})
 	}) },
@@ -47,7 +36,7 @@ Volcanos(chat.ONIMPORT, {
 	_toolkit: function(can, msg, value) { var target = can.ui.content||can._output
 		can.onappend.plugin(can, {index: "can._action"}, function(sub) { sub.ConfSpace(can.ConfSpace()), sub.ConfIndex([can.ConfIndex(), value.zone].join(":"))
 			sub.run = function(event, cmds, cb) { cmds[0] == ctx.ACTION? can.core.CallFunc(can.onaction[cmds[1]], [event, can, value]): cb && cb(can.request(event)) }
-			sub.onexport.output = function() { sub.onappend._action(sub, can.onaction._toolkit), value._toolkit_plugin = sub, sub.onaction._select(), can.onimport.layout(can) }
+			sub.onexport.output = function() { sub.onappend._action(sub, can.onaction._toolkit, null, null, false, 100), value._toolkit_plugin = sub, sub.onaction._select(), can.onimport.layout(can) }
 			sub.onaction._select = function() { can.onimport._display(can, msg, value), can.onimport._flows(can, value) }
 		}, target)
 	},
@@ -63,9 +52,8 @@ Volcanos(chat.ONIMPORT, {
 		}); var table = can.onappend.table(can, _msg, null, can.ui.display); can.page.Select(can, table, "tbody>tr", function(target, index) { _list[index]._tr = target })
 		// can.onappend._status(can, can.base.Obj(msg.Option(ice.MSG_STATUS)))
 	},
-	_profile: function(can, item, value) { if (!can.ui.profile) { return }
+	_profile: function(can, item, value) { if (!can.ui.profile) { return } can.onmotion.toggle(can, can.ui.profile, true), can.onimport.layout(can)
 		value._profile_plugin = item._profile_plugin, value._current = item, can.onexport.hash(can, value.zone, item.hash)
-		can.onmotion.toggle(can, can.ui.profile, true), can.onimport.layout(can)
 		if (can.onmotion.cache(can, function() { return can.core.Keys(value.zone, item.hash) }, can.ui.profile)) { return }
 		item.index && can.onappend.plugin(can, {pod: item.space, index: item.index, args: item.args, width: can.ui.profileWidth-1}, function(sub) { value._profile_plugin = item._profile_plugin = sub
 			sub.onaction._close = function() { can.onmotion.hidden(can, can.ui.profile), can.onimport.layout(can)  }
@@ -74,70 +62,49 @@ Volcanos(chat.ONIMPORT, {
 	},
 	_flows: function(can, value) { var sub = value._toolkit_plugin.sub, _sub = value._content_plugin.sub
 		var margin = can.onexport.margin(sub), height = can.onexport.height(sub), width = can.onexport.width(sub)
-		var matrix = {}, horizon = sub.Action("direct") == "horizon"; can.onmotion.clear(can, _sub.ui.svg)
-		var lines = [], rects = []
+		var matrix = {}, lines = [], rects = [], horizon = sub.Action("direct") == "horizon"; can.onmotion.clear(can, _sub.ui.svg)
 		function show(item, main, deep) { var prev = "from", from = "prev"; if (horizon) { var prev = "prev", from = "from" }
 			while (matrix[can.core.Keys(item.x, item.y)]) {
-				if (horizon && main || !horizon && !main) { item.y++
-					for(var _head = item[prev]; _head; _head = _head[prev]) { if (!_head[prev]) {
-						can.core.List(can.onexport.travel(can, value, _head, main), function(_item) { if (!_item._rect) { return }
-							delete(matrix[can.core.Keys(_item.x, _item.y)]), _item.y++, matrix[can.core.Keys(_item.x, _item.y)] = _item
-							if ( _item._line) {
-								if (_item != _head) {
-									_item._line.Val("y1", _item._line.Val("y1")+height)
-								} _item._line.Val("y2", _item._line.Val("y2")+height)
-							}
+				if (horizon && main || !horizon && !main) {
+					for(var _head = item[prev]; _head; _head = _head[prev]) { if (!_head[prev]) { var list = can.onexport.travel(can, value, _head, main)
+						can.core.List(list, function(_item) { if (!_item._rect) { return _item.y++ } delete(matrix[can.core.Keys(_item.x, _item.y)]), _item.y++
+							if ( _item._line) { _item != _head && _item._line.Val("y1", _item._line.Val("y1")+height), _item._line.Val("y2", _item._line.Val("y2")+height) }
 							_item._rect.Val("y", _item._rect.Val("y")+height), _item._text.Val("y", _item._text.Val("y")+height)
-						})
-						can.core.List(can.onexport.travel(can, value, _head, main), function(_item) { if (!_item._rect) { return }
-							matrix[can.core.Keys(_item.x, _item.y)] = _item
-						})
-					} }
-				} else { item.x++
-					for(var _head = item[from]; _head; _head = _head[from]) { if (!_head[from]) {
-						can.core.List(can.onexport.travel(can, value, _head, main), function(_item) { if (!_item._rect) { return }
-							delete(matrix[can.core.Keys(_item.x, _item.y)]), _item.x++
-							if ( _item._line) {
-								if (_item != _head) {
-									_item._line.Val("x1", _item._line.Val("x1")+width)
-								}
-								_item._line.Val("x2", _item._line.Val("x2")+width)
-							}
+						}), can.core.List(list, function(_item) { if (!_item._rect) { return } matrix[can.core.Keys(_item.x, _item.y)] = _item })
+					} } 
+				} else {
+					for(var _head = item[from]; _head; _head = _head[from]) { if (!_head[from]) { var list = can.onexport.travel(can, value, _head, main)
+						can.core.List(list, function(_item) { if (!_item._rect) { return _item.x++ } delete(matrix[can.core.Keys(_item.x, _item.y)]), _item.x++
+							if ( _item._line) { _item != _head && _item._line.Val("x1", _item._line.Val("x1")+width), _item._line.Val("x2", _item._line.Val("x2")+width) }
 							_item._rect.Val("x", _item._rect.Val("x")+width), _item._text.Val("x", _item._text.Val("x")+width)
-						})
-						can.core.List(can.onexport.travel(can, value, _head, main), function(_item) { if (!_item._rect) { return }
-							matrix[can.core.Keys(_item.x, _item.y)] = _item
-						})
+						}), can.core.List(list, function(_item) { if (!_item._rect) { return } matrix[can.core.Keys(_item.x, _item.y)] = _item })
 					} }
 				}
 			} matrix[can.core.Keys(item.x, item.y)] = item
-			if (item.from || item.prev) { lines.length <= deep && lines.push(_sub.onimport.group(_sub, "line"+deep))
+			if (item.prev || item.from) { lines.length <= deep && lines.push(_sub.onimport.group(_sub, "line"+deep))
 				item._line = _sub.onimport.draw(_sub, {shape: svg.LINE, points:
 					horizon && item.from || !horizon && !item.from? [{x: item.x*width+width/2, y: item.y*height-margin}, {x: item.x*width+width/2, y: item.y*height+margin}]:
 						[{x: item.x*width-margin, y: item.y*height+height/2}, {x: item.x*width+margin, y: item.y*height+height/2}]
 				}, lines[deep])
-			} rects.length <= deep && rects.push(_sub.onimport.group(_sub, "rect"+deep))
-			can.onimport._block(can, value, item, item.x*width, item.y*height, rects[deep])
-			var next = 0, to = 1; if (horizon) { var next = 1, to = 0 }
-			if (item._close) { return }
-			if (main) {
-				var _item = item.to; if (_item) { _item.x = item.x+to, _item.y = item.y+next, show(_item, false, deep+1) }
-				var _item = item.next; if (_item) { _item.x = item.x+next, _item.y = item.y+to, show(_item, true, deep) }
-			} else {
-				var _item = item.next; if (_item) { _item.x = item.x+next, _item.y = item.y+to, show(_item, true, deep+1) }
-				var _item = item.to; if (_item) { _item.x = item.x+to, _item.y = item.y+next, show(_item, false, deep) }
-			}
-		} value._root.x = 0, value._root.y = 0, show(value._root, true, 0)
-		var max_x = 0, max_y = 0
-		can.core.List(can.onexport.travel(can, value, value._root), function(item) { item.x > max_x && (max_x = item.x), item.y > max_y && (max_y = item.y) })
-		_sub.ui.svg.Value(html.HEIGHT, max_y*height), _sub.ui.svg.Value(html.WIDTH, max_x*width)
+			} rects.length <= deep && rects.push(_sub.onimport.group(_sub, "rect"+deep)), can.onimport._block(can, value, item, item.x*width, item.y*height, rects[deep])
+		} value._root.x = 0, value._root.y = 0
+		var list = can.onexport.travel(can, value, value._root, true, 0)
+		can.core.Next(list, function(item, next, index) { show(item, item._main, item._deep)
+			// can.isCmdMode() && item._rect.scrollIntoViewIfNeeded()
+			item._rect.scrollIntoViewIfNeeded()
+			can.onmotion.delay(can, function() { next() }, 30)
+			can.user.toastProcess(can, index+" / "+list.length)
+		}, function() {
+			can.user.toastSuccess(can)
+		})
+		var max_x = 0, max_y = 0; can.core.List(list, function(item) { item.x > max_x && (max_x = item.x), item.y > max_y && (max_y = item.y) })
+		_sub.ui.svg.Value(html.HEIGHT, max_y*height), _sub.ui.svg.Value(html.WIDTH, max_x*width), _sub.ui.svg.Value("font-size", sub.Action("font-size")+"px")
 	},
 	_block: function(can, value, item, x, y, group) { var sub = value._toolkit_plugin.sub, _sub = value._content_plugin.sub
 		var margin = can.onexport.margin(sub), height = can.onexport.height(sub), width = can.onexport.width(sub)
 		var rect = _sub.onimport.draw(_sub, {shape: svg.RECT, points: [{x: x+margin, y: y+margin}, {x: x+width-margin, y: y+height-margin}]}, group)
 		var text = _sub.onimport.draw(_sub, {shape: svg.TEXT, points: [{x: x+width/2, y: y+height/2}], style: {inner: item.name||item.index.split(nfs.PT).pop()}}, group)
 		var line = item._line||{}; item._rect = rect, item._text = text
-		_sub.ui.svg.Value(html.HEIGHT, y+height), _sub.ui.svg.Value(html.WIDTH, x+width)
 		can.core.ItemCB(can.ondetail, function(key, cb) { line[key] = rect[key] = text[key] = function(event) { can.request(event, item, value), cb(event, can, item, value) } })
 		if (item.status) { item._line && line.Value(html.CLASS, item.status), rect.Value(html.CLASS, item.status), text.Value(html.CLASS, item.status) }
 		if (value.zone == can.db.hash[0] && item.hash == can.db.hash[1] && can.onexport.session(can, "profile.show") != ice.FALSE) { can.onmotion.delay(can, function() { rect.onclick({target: rect}) }) }
@@ -156,8 +123,9 @@ Volcanos(chat.ONACTION, {
 		["delay", 1000, 3000, 5000],
 		"",
 		["direct", "vertical", "horizon"],
-		[html.MARGIN, 10, 20, 40, 60],
-		[html.HEIGHT, 60, 80, 100, 120, 140, 200],
+		["font-size", 18, 14, 16, 18, 20, 22],
+		[html.MARGIN, 10, 5, 10, 20, 40, 60],
+		[html.HEIGHT, 60, 40, 60, 80, 100, 120, 140, 200],
 		[html.WIDTH, 180, 200, 240, 280, 400],
 	],
 	play: function(event, can, value) { var list = can.onexport.travel(can, value, value._root); var sub = value._toolkit_plugin.sub
@@ -208,7 +176,8 @@ Volcanos(chat.ONACTION, {
 	},
 })
 Volcanos(chat.ONDETAIL, {
-	_select: function(event, can, item, value) { can.onimport._profile(can, item, value), can.isCmdMode() && item._rect.scrollIntoView()
+	_select: function(event, can, item, value) { can.onimport._profile(can, item, value)
+		can.isCmdMode() && item._rect.scrollIntoViewIfNeeded()
 		var sub = value._toolkit_plugin.sub, _sub = value._content_plugin.sub
 		can.page.Select(can, _sub.ui.svg, "rect", function(target) { var _class = (target.Value(html.CLASS)||"").split(lex.SP)
 			if (can.base.isIn(target, item._line, item._rect, item._text)) {
@@ -240,17 +209,18 @@ Volcanos(chat.ONEXPORT, {
 	margin: function(can) { var margin = can.Action(html.MARGIN); return parseFloat(margin)||10 },
 	height: function(can) { var height = can.Action(html.HEIGHT); return parseFloat(height)||60 },
 	width: function(can) { var width = can.Action(html.WIDTH); return parseFloat(width)||200 },
-	travel: function(can, value, root, main) { if (!root) { return [] } main == undefined && (main = true)
-		var sub = value._toolkit_plugin.sub
-		var list = [root]
-		if (root._close) { return list }
-		if (sub.Action("travel") == "deep") {
+	travel: function(can, value, root, main, deep) { if (!root) { return [] }
+		root._deep = deep||0
+		var list = [root]; if (root._close) { return list } var sub = value._toolkit_plugin.sub
+		if (sub.Action("travel") == "deep") { main == undefined && (main = true), root._main = main
+			var horizon = sub.Action("direct") == "horizon"
+			var next = 0, to = 1; if (horizon) { var next = 1, to = 0 }
 			if (main) {
-				if (root.to) { list = list.concat(can.onexport.travel(can, value, root.to, false)) }
-				if (root.next) { list = list.concat(can.onexport.travel(can, value, root.next, true)) }
+				var _item = root.to; if (_item) { _item.x = root.x+to, _item.y = root.y+next, list = list.concat(can.onexport.travel(can, value, _item, false, deep+1)) }
+				var _item = root.next; if (_item) { _item.x = root.x+next, _item.y = root.y+to, list = list.concat(can.onexport.travel(can, value, _item, true, deep)) }
 			} else {
-				if (root.next) { list = list.concat(can.onexport.travel(can, value, root.next, true)) }
-				if (root.to) { list = list.concat(can.onexport.travel(can, value, root.to, false)) }
+				var _item = root.next; if (_item) { _item.x = root.x+next, _item.y = root.y+to, list = list.concat(can.onexport.travel(can, value, _item, true, deep+1)) }
+				var _item = root.to; if (_item) { _item.x = root.x+to, _item.y = root.y+next, list = list.concat(can.onexport.travel(can, value, _item, false, deep)) }
 			}
 		} else { var i = 0
 			while (i < list.length)  { var count = list.length

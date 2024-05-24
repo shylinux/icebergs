@@ -15,6 +15,7 @@ func init() {
 		HEADER, FOOTER,
 		IFRAME, FAVOR,
 		MESSAGE, TUTOR,
+		FLOWS,
 	)
 }
 

@@ -368,7 +368,7 @@ func init() {
 			cli.RUNTIME: {Hand: func(m *ice.Message, arg ...string) {
 				ProcessPodCmd(m, m.Option(mdb.NAME), "", nil, arg...)
 			}},
-			"settings": {Name: "settings restart=manual,always access=public,private", Help: "设置", Hand: func(m *ice.Message, arg ...string) {
+			"settings": {Name: "settings restart=manual,always access=public,private", Help: "设置", Icon: "bi bi-gear", Hand: func(m *ice.Message, arg ...string) {
 				kit.If(m.Option(cli.RESTART) == "manual", func() { m.Option(cli.RESTART, "") })
 				kit.If(m.Option(aaa.ACCESS) == aaa.PUBLIC, func() { m.Option(aaa.ACCESS, "") })
 				mdb.HashModify(m, m.OptionSimple(mdb.NAME, cli.RESTART, aaa.ACCESS))

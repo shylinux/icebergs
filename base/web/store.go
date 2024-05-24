@@ -51,7 +51,7 @@ func init() {
 				m.Cmdy(DREAM, arg)
 				return
 			}
-			if m.Display(""); len(arg) == 0 {
+			if m.Display("").DisplayCSS(""); len(arg) == 0 {
 				list := []string{}
 				m.Cmd(SPIDE, arg, kit.Dict(ice.MSG_FIELDS, "time,icons,client.type,client.name,client.origin")).Table(func(value ice.Maps) {
 					kit.If(value[CLIENT_TYPE] == nfs.REPOS && value[CLIENT_NAME] != ice.SHY, func() {

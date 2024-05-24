@@ -31,7 +31,7 @@ Volcanos(chat.ONIMPORT, {
 		can.onappend.plugin(can, {index: web.WIKI_DRAW, style: html.OUTPUT, display: "/plugin/local/wiki/draw.js", height: target.offsetHeight, width: target.offsetWidth}, function(sub) {
 			sub.onexport.output = function() { value._content_plugin = sub, can.onimport._toolkit(can, msg, value) }
 			sub.run = function(event, cmds, cb) { cb && cb(can.request(event)) }
-		}, target)
+		}, target), can.onappend._status(can, msg)
 	},
 	_toolkit: function(can, msg, value) { var target = can.ui.content||can._output
 		can.onappend.plugin(can, {index: "can._action"}, function(sub) { sub.ConfSpace(can.ConfSpace()), sub.ConfIndex([can.ConfIndex(), value.zone].join(":"))
@@ -71,7 +71,7 @@ Volcanos(chat.ONIMPORT, {
 							if ( _item._line) { _item != _head && _item._line.Val("y1", _item._line.Val("y1")+height), _item._line.Val("y2", _item._line.Val("y2")+height) }
 							_item._rect.Val("y", _item._rect.Val("y")+height), _item._text.Val("y", _item._text.Val("y")+height)
 						}), can.core.List(list, function(_item) { if (!_item._rect) { return } matrix[can.core.Keys(_item.x, _item.y)] = _item })
-					} } 
+					} }
 				} else {
 					for(var _head = item[from]; _head; _head = _head[from]) { if (!_head[from]) { var list = can.onexport.travel(can, value, _head, main)
 						can.core.List(list, function(_item) { if (!_item._rect) { return _item.x++ } delete(matrix[can.core.Keys(_item.x, _item.y)]), _item.x++
@@ -91,7 +91,7 @@ Volcanos(chat.ONIMPORT, {
 		var list = can.onexport.travel(can, value, value._root, true, 0)
 		can.core.Next(list, function(item, next, index) { show(item, item._main, item._deep)
 			// can.isCmdMode() && item._rect.scrollIntoViewIfNeeded()
-			item._rect.scrollIntoViewIfNeeded()
+			can.user.isChrome && item._rect.scrollIntoViewIfNeeded()
 			can.onmotion.delay(can, function() { next() }, 30)
 			can.user.toastProcess(can, index+" / "+list.length)
 		}, function() {
@@ -114,9 +114,22 @@ Volcanos(chat.ONIMPORT, {
 			can.page.style(can, sub._target, html.LEFT, 0), sub.onimport.size(sub, html.ACTION_HEIGHT, width, true)
 			can.page.style(can, sub._target, html.LEFT, (can.ui.content.offsetWidth-sub._target.offsetWidth)/2)
 		}
+		can.db.value && can.db.value.zone && can.onexport.title(can, can.db.value.zone)
 	}) },
 })
 Volcanos(chat.ONACTION, {
+	_trans: {
+		style: {
+			addnext: "notice",
+			addto: "notice",
+		},
+		icons: {
+			addnext: "bi bi-arrow-down-square",
+			addto: "bi bi-arrow-right-square",
+		},
+		addnext: "添加下一步",
+		addto: "添加下一项",
+	},
 	_toolkit: [
 		"play", "prev", "next",
 		["travel", "deep", "wide"],
@@ -177,7 +190,7 @@ Volcanos(chat.ONACTION, {
 })
 Volcanos(chat.ONDETAIL, {
 	_select: function(event, can, item, value) { can.onimport._profile(can, item, value)
-		can.isCmdMode() && item._rect.scrollIntoViewIfNeeded()
+		can.user.isChrome && can.isCmdMode() && item._rect.scrollIntoViewIfNeeded()
 		var sub = value._toolkit_plugin.sub, _sub = value._content_plugin.sub
 		can.page.Select(can, _sub.ui.svg, "rect", function(target) { var _class = (target.Value(html.CLASS)||"").split(lex.SP)
 			if (can.base.isIn(target, item._line, item._rect, item._text)) {

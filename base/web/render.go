@@ -148,9 +148,9 @@ func RenderMain(m *ice.Message) *ice.Message {
 	if m.IsCliUA() {
 		return m.RenderDownload(path.Join(ice.USR_INTSHELL, ice.INDEX_SH))
 	}
-	m.Options(TITLE, kit.Select("localhost:9020", UserWeb(m).Host, m.Option(ice.MSG_USERPOD)))
 	m.Options(nfs.SCRIPT, ice.SRC_MAIN_JS, nfs.VERSION, RenderVersion(m))
 	m.OptionDefault(mdb.ICONS, m.Resource(ice.Info.NodeIcon)+m.Option(nfs.VERSION))
+	m.OptionDefault(TITLE, kit.Select("localhost:9020", UserWeb(m).Host, m.Option(ice.MSG_USERPOD)))
 	return m.RenderResult(kit.Renders(m.Cmdx(nfs.CAT, ice.SRC_MAIN_HTML), m))
 }
 func RenderCmds(m *ice.Message, cmds ...ice.Any) {
@@ -161,6 +161,7 @@ func RenderPodCmd(m *ice.Message, pod, cmd string, arg ...ice.Any) {
 		RenderResult(m, kit.Format("not found command %s", cmd))
 	} else {
 		m.OptionDefault(mdb.ICONS, m.Resource(msg.Append(mdb.ICONS)))
+		m.OptionDefault(TITLE, kit.Select(cmd, msg.Append(mdb.HELP)+kit.Select("", " "+pod, pod != ""), !m.IsEnglish()))
 		RenderCmds(m, kit.Dict(msg.AppendSimple(), ctx.ARGS, kit.Simple(arg), ctx.DISPLAY, m.Option(ice.MSG_DISPLAY)))
 	}
 }

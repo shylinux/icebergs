@@ -5,6 +5,9 @@
 	"adminCmd": "命令",
 	"pushbin": "部署",
 	"pushkey": "授权",
+	"icons": {
+		"spide": "bi bi-telephone-forward"
+	},
 	"input": {
 		"machine": "机器",
 		"package": "软件包",

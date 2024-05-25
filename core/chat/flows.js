@@ -1,46 +1,44 @@
 Volcanos(chat.ONIMPORT, {
-	_init: function(can, msg) {
-		if (can.Option(mdb.ZONE)) {
-			can.onimport._content(can, msg, can.db.value = {zone: can.Option(mdb.ZONE)})
-		} else { msg.Push(mdb.ZONE, ctx.COMMAND)
-			can.ui = can.onappend.layout(can), can.ui.toggle = can.onappend.toggle(can), can.onimport._project(can, msg)
-		}
+	_init: function(can, msg) { msg.Push(mdb.ZONE, ctx.COMMAND)
+		can.ui = can.onappend.layout(can), can.onimport._project(can, msg), can.ui.toggle = can.onappend.toggle(can)
 	},
-	_project: function(can, msg) { msg.Table(function(value) { value._select = value.zone == can.db.hash[0]
+	_project: function(can, msg) { msg.Table(function(value) {
 		can.onimport.item(can, value, function(event, item, show, target) {
-			can.onimport.tabsCache(can, can.request(), item.zone, item, target, function() {
+			can.onimport.tabsCache(can, item, target, function() {
 				if (value.zone == ctx.COMMAND) {
-					can.run(event, [ctx.RUN, ctx.COMMAND], function(msg) { var res = can.request(), cmds = {ice: []}
-						res.Push(mdb.HASH, "ice").Push(mdb.NAME, "ice").Push(ctx.INDEX, "").Push("prev", "").Push("from", "")
-						msg.Table(function(value) { can.core.List(value.index.split("."), function(cmd, index, list) { if (list[0] == "ice") { return }
-							var _mod = list.slice(0, index).join(".")||"ice", _cmd = list.slice(0, index+1).join(".")
-							var last = (cmds[_mod][cmds[_mod].length-1])||_mod; _cmd != last && cmds[_mod].push(_cmd)
-							var prev = "", from = ""; if (index % 2 == 0) { prev = last } else { from = last }
-							if (!cmds[_cmd]) { if (index < list.length-1) { cmds[_cmd] = [] }
-								res.Push(mdb.HASH, _cmd).Push(mdb.NAME, cmd).Push(ctx.INDEX, index < list.length-1? "": _cmd).Push("prev", prev).Push("from", from)
-							}
-						}) }), can.onimport._content(can, res, value)
-					})
+					can.onimport._command(can, value)
 				} else {
 					can.run(event, [value.zone], function(msg) { can.onimport._content(can, msg, value) })
 				}
-			})
+			}), value._current && can.onimport._profile(can, value._current, value)
 		})
 	}) },
-	_content: function(can, msg, value) { var target = can.ui.content||can._output; can.onmotion.clear(can, target)
-		can.onappend.plugin(can, {index: web.WIKI_DRAW, style: html.OUTPUT, display: "/plugin/local/wiki/draw.js", height: target.offsetHeight, width: target.offsetWidth}, function(sub) {
-			sub.onexport.output = function() { value._content_plugin = sub, can.onimport._toolkit(can, msg, value) }
-			sub.run = function(event, cmds, cb) { cb && cb(can.request(event)) }
-		}, target), can.onappend._status(can, msg)
+	_command: function(can, value) {
+		can.run(event, [ctx.RUN, ctx.COMMAND], function(msg) { var res = can.request(), cmds = {ice: []}
+			res.Push(mdb.HASH, "ice").Push(mdb.NAME, "ice").Push(ctx.INDEX, "").Push("prev", "").Push("from", "")
+			msg.Table(function(value) { can.core.List(value.index.split("."), function(cmd, index, list) { if (list[0] == "ice") { return }
+				var _mod = list.slice(0, index).join(".")||"ice", _cmd = list.slice(0, index+1).join(".")
+				var last = (cmds[_mod][cmds[_mod].length-1])||_mod; _cmd != last && cmds[_mod].push(_cmd)
+				var prev = "", from = ""; if (index % 2 == 0) { prev = last } else { from = last }
+				if (!cmds[_cmd]) { if (index < list.length-1) { cmds[_cmd] = [] }
+					res.Push(mdb.HASH, _cmd).Push(mdb.NAME, cmd).Push(ctx.INDEX, index < list.length-1? "": _cmd).Push("prev", prev).Push("from", from)
+				}
+			}) }), can.onimport._content(can, res, value)
+		})
 	},
-	_toolkit: function(can, msg, value) { var target = can.ui.content||can._output
+	_content: function(can, msg, value) {
+		can.onappend.plugin(can, {display: "/plugin/local/wiki/draw.js"}, function(sub) {
+			sub.onexport.output = function() { value._content_plugin = sub, can.onimport._toolkit(can, msg, value) }
+		}), can.onappend._status(can, msg)
+	},
+	_toolkit: function(can, msg, value) {
 		can.onappend.plugin(can, {index: "can._action"}, function(sub) { sub.ConfSpace(can.ConfSpace()), sub.ConfIndex([can.ConfIndex(), value.zone].join(":"))
 			sub.run = function(event, cmds, cb) { cmds[0] == ctx.ACTION? can.core.CallFunc(can.onaction[cmds[1]], [event, can, value]): cb && cb(can.request(event)) }
-			sub.onexport.output = function() { sub.onappend._action(sub, can.onaction._toolkit, null, null, false, 100), value._toolkit_plugin = sub, sub.onaction._select(), can.onimport.layout(can) }
+			sub.onexport.output = function() { value._toolkit_plugin = sub, sub.onappend._action(sub, can.onaction._toolkit), sub.onaction._select(), can.onimport.layout(can) }
 			sub.onaction._select = function() { can.onimport._display(can, msg, value), can.onimport._flows(can, value) }
-		}, target)
+		})
 	},
-	_display: function(can, msg, value) { if (!can.ui.display) { return } can.onmotion.clear(can, can.ui.display)
+	_display: function(can, msg, value) {
 		var list = {}; msg.Table(function(value) { list[value.hash] = value })
 		can.core.Item(list, function(key, item) { if (!item.prev && !item.from) { return value._root = item }
 			if (item.prev) { list[item.prev].next = item, item.prev = list[item.prev] }
@@ -50,19 +48,20 @@ Volcanos(chat.ONIMPORT, {
 			_msg.Push(mdb.TIME, item.time), _msg.Push(mdb.HASH, item.hash), _msg.Push(mdb.NAME, item.name)
 			_msg.Push(web.SPACE, item.space), _msg.Push(ctx.INDEX, item.index||""), _msg.Push(ctx.ARGS, item.args||""), _msg.Push(ctx.ACTION, item.action||"")
 		}); var table = can.onappend.table(can, _msg, null, can.ui.display); can.page.Select(can, table, "tbody>tr", function(target, index) { _list[index]._tr = target })
-		// can.onappend._status(can, can.base.Obj(msg.Option(ice.MSG_STATUS)))
 	},
-	_profile: function(can, item, value) { if (!can.ui.profile) { return } can.onmotion.toggle(can, can.ui.profile, true), can.onimport.layout(can)
-		value._profile_plugin = item._profile_plugin, value._current = item, can.onexport.hash(can, value.zone, item.hash)
+	_profile: function(can, item, value) { value._profile_plugin = item._profile_plugin, value._current = item
+		can.onmotion.toggle(can, can.ui.profile, true), can.onimport.layout(can)
+		can.onexport.hash(can, value.zone, item.hash), can.onexport.title(can, value.zone, item.name||item.index.split(".").pop())
 		if (can.onmotion.cache(can, function() { return can.core.Keys(value.zone, item.hash) }, can.ui.profile)) { return }
-		item.index && can.onappend.plugin(can, {pod: item.space, index: item.index, args: item.args, width: can.ui.profileWidth-1}, function(sub) { value._profile_plugin = item._profile_plugin = sub
+		item.index && can.onappend.plugin(can, {pod: item.space, index: item.index, args: item.args}, function(sub) { value._profile_plugin = item._profile_plugin = sub
 			sub.onaction._close = function() { can.onmotion.hidden(can, can.ui.profile), can.onimport.layout(can)  }
 			sub.onexport.output = function() { can.onimport.layout(can) }
 		}, can.ui.profile)
 	},
 	_flows: function(can, value) { var sub = value._toolkit_plugin.sub, _sub = value._content_plugin.sub
 		var margin = can.onexport.margin(sub), height = can.onexport.height(sub), width = can.onexport.width(sub)
-		var matrix = {}, lines = [], rects = [], horizon = sub.Action("direct") == "horizon"; can.onmotion.clear(can, _sub.ui.svg)
+		var matrix = {}, lines = [], rects = [], horizon = sub.Action("direct") == "horizon"
+		can.onmotion.clear(can, _sub.ui.svg), _sub.ui.svg.Value("font-size", sub.Action("font-size")+"px")
 		function show(item, main, deep) { var prev = "from", from = "prev"; if (horizon) { var prev = "prev", from = "from" }
 			while (matrix[can.core.Keys(item.x, item.y)]) {
 				if (horizon && main || !horizon && !main) {
@@ -84,21 +83,16 @@ Volcanos(chat.ONIMPORT, {
 			if (item.prev || item.from) { lines.length <= deep && lines.push(_sub.onimport.group(_sub, "line"+deep))
 				item._line = _sub.onimport.draw(_sub, {shape: svg.LINE, points:
 					horizon && item.from || !horizon && !item.from? [{x: item.x*width+width/2, y: item.y*height-margin}, {x: item.x*width+width/2, y: item.y*height+margin}]:
-						[{x: item.x*width-margin, y: item.y*height+height/2}, {x: item.x*width+margin, y: item.y*height+height/2}]
+					[{x: item.x*width-margin, y: item.y*height+height/2}, {x: item.x*width+margin, y: item.y*height+height/2}]
 				}, lines[deep])
 			} rects.length <= deep && rects.push(_sub.onimport.group(_sub, "rect"+deep)), can.onimport._block(can, value, item, item.x*width, item.y*height, rects[deep])
-		} value._root.x = 0, value._root.y = 0
-		var list = can.onexport.travel(can, value, value._root, true, 0)
-		can.core.Next(list, function(item, next, index) { show(item, item._main, item._deep)
-			// can.isCmdMode() && item._rect.scrollIntoViewIfNeeded()
-			can.user.isChrome && item._rect.scrollIntoViewIfNeeded()
-			can.onmotion.delay(can, function() { next() }, 30)
-			can.user.toastProcess(can, index+" / "+list.length)
-		}, function() {
-			can.user.toastSuccess(can)
-		})
+		} value._root.x = 0, value._root.y = 0; var list = can.onexport.travel(can, value, value._root, true, 0)
+		can.core.Next(list, function(item, next, index) { can.user.toastProcess(can, index+" / "+list.length, "", index/list.length*100)
+			show(item, item._main, item._deep), can.onmotion.delay(can, function() { next() }, 30)
+			can.isCmdMode() && can.user.isChrome && item._rect.scrollIntoViewIfNeeded()
+		}, function() { can.user.toastSuccess(can) })
 		var max_x = 0, max_y = 0; can.core.List(list, function(item) { item.x > max_x && (max_x = item.x), item.y > max_y && (max_y = item.y) })
-		_sub.ui.svg.Value(html.HEIGHT, max_y*height), _sub.ui.svg.Value(html.WIDTH, max_x*width), _sub.ui.svg.Value("font-size", sub.Action("font-size")+"px")
+		_sub.ui.svg.Value(html.HEIGHT, max_y*height), _sub.ui.svg.Value(html.WIDTH, max_x*width)
 	},
 	_block: function(can, value, item, x, y, group) { var sub = value._toolkit_plugin.sub, _sub = value._content_plugin.sub
 		var margin = can.onexport.margin(sub), height = can.onexport.height(sub), width = can.onexport.width(sub)
@@ -114,7 +108,6 @@ Volcanos(chat.ONIMPORT, {
 			can.page.style(can, sub._target, html.LEFT, 0), sub.onimport.size(sub, html.ACTION_HEIGHT, width, true)
 			can.page.style(can, sub._target, html.LEFT, (can.ui.content.offsetWidth-sub._target.offsetWidth)/2)
 		}
-		can.db.value && can.db.value.zone && can.onexport.title(can, can.db.value.zone)
 	}) },
 })
 Volcanos(chat.ONACTION, {
@@ -155,18 +148,14 @@ Volcanos(chat.ONACTION, {
 		can.ondetail._select(event, can, sub.Action("travel") == "wide" && can.db.current.next || can.db.current.to, value)
 	},
 
-	create: function(event, can) {
-		can.user.input(event, can, can.Conf("feature.create"), function(data) {
-			can.runAction(can.request(event, data), mdb.CREATE, [], function(msg) {
-				can.db.hash = can.onexport.hash(can, data.zone)
-				msg = can.request(), msg.Push(data), can.onimport._project(can, msg)
-			})
+	create: function(event, can) { can.user.input(event, can, can.Conf("feature.create"), function(data) {
+		can.runAction(can.request(event, data), mdb.CREATE, [], function(msg) { can.db.hash = can.onexport.hash(can, data.zone)
+			msg = can.request(), msg.Push(data), can.onimport._project(can, msg)
 		})
-	},
+	}) },
 	addnext: function(event, can) { can.onaction._insert(event, can, "prev") },
 	addto: function(event, can) { can.onaction._insert(event, can, "from") },
-	toggles: function(event, can) {
-		var msg = can.request(event)
+	toggles: function(event, can) { var msg = can.request(event)
 		can.db.value._list[msg.Option(mdb.HASH)]._close = !can.db.value._list[msg.Option(mdb.HASH)]._close
 		can.onimport._flows(can, can.db.value)
 	},
@@ -190,7 +179,6 @@ Volcanos(chat.ONACTION, {
 })
 Volcanos(chat.ONDETAIL, {
 	_select: function(event, can, item, value) { can.onimport._profile(can, item, value)
-		can.user.isChrome && can.isCmdMode() && item._rect.scrollIntoViewIfNeeded()
 		var sub = value._toolkit_plugin.sub, _sub = value._content_plugin.sub
 		can.page.Select(can, _sub.ui.svg, "rect", function(target) { var _class = (target.Value(html.CLASS)||"").split(lex.SP)
 			if (can.base.isIn(target, item._line, item._rect, item._text)) {
@@ -201,20 +189,19 @@ Volcanos(chat.ONDETAIL, {
 		})
 		can.page.Select(can, item._tr.parentNode, "", function(target) { can.page.ClassList.set(can, target, html.SELECT, target == item._tr)
 			can.onmotion.scrollIntoView(can, item._tr, 45, can.ui.display)
-		})
+		}), can.isCmdMode() && can.user.isChrome && item._rect.scrollIntoViewIfNeeded()
 	},
 	onclick: function(event, can, item, value) { can.request(event, item, {zone: value.zone})
 		var sub = value._toolkit_plugin.sub, _sub = value._content_plugin.sub
 		switch (_sub.ui.svg.style.cursor) {
-		case "e-resize": if (sub.Action("direct") == "horizon") { can.onaction.addnext(event, can) } else { can.onaction.addto(event, can) } break
-		case "s-resize": if (sub.Action("direct") == "horizon") { can.onaction.addto(event, can) } else { can.onaction.addnext(event, can) } break
-		default: can.ondetail._select(event, can, item, value)
+			case "e-resize": if (sub.Action("direct") == "horizon") { can.onaction.addnext(event, can) } else { can.onaction.addto(event, can) } break
+			case "s-resize": if (sub.Action("direct") == "horizon") { can.onaction.addto(event, can) } else { can.onaction.addnext(event, can) } break
+			default: can.ondetail._select(event, can, item, value)
 		}
 	},
 	oncontextmenu: function(event, can, item, value) {
 		item.action? can.user.carteItem(event, can, can.base.CopyStr({action: item.action, zone: value.zone}, item)): can.user.carte(can.request(event, item, value), can, can.onaction, ["toggles"], function(event, button) {
-			can.request(event, item, value)
-			can.onaction[button](event, can, button)
+			can.request(event, item, value), can.onaction[button](event, can, button)
 		})
 	},
 })
@@ -222,8 +209,7 @@ Volcanos(chat.ONEXPORT, {
 	margin: function(can) { var margin = can.Action(html.MARGIN); return parseFloat(margin)||10 },
 	height: function(can) { var height = can.Action(html.HEIGHT); return parseFloat(height)||60 },
 	width: function(can) { var width = can.Action(html.WIDTH); return parseFloat(width)||200 },
-	travel: function(can, value, root, main, deep) { if (!root) { return [] }
-		root._deep = deep||0
+	travel: function(can, value, root, main, deep) { if (!root) { return [] } root._deep = deep||0
 		var list = [root]; if (root._close) { return list } var sub = value._toolkit_plugin.sub
 		if (sub.Action("travel") == "deep") { main == undefined && (main = true), root._main = main
 			var horizon = sub.Action("direct") == "horizon"

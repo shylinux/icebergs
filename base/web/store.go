@@ -49,9 +49,7 @@ func init() {
 		}, ctx.ConfAction(CLIENT_TIMEOUT, cli.TIME_3s), DREAM), Hand: func(m *ice.Message, arg ...string) {
 			if kit.HasPrefixList(arg, ctx.ACTION) {
 				m.Cmdy(DREAM, arg)
-				return
-			}
-			if m.Display("").DisplayCSS(""); len(arg) == 0 {
+			} else if m.Display("").DisplayCSS(""); len(arg) == 0 {
 				list := []string{}
 				m.Cmd(SPIDE, arg, kit.Dict(ice.MSG_FIELDS, "time,icons,client.type,client.name,client.origin")).Table(func(value ice.Maps) {
 					kit.If(value[CLIENT_TYPE] == nfs.REPOS && value[CLIENT_NAME] != ice.SHY, func() {
@@ -78,14 +76,13 @@ func init() {
 				} else {
 					origin = tcp.PublishLocalhost(m, origin)
 				}
-				list := m.Spawn(ice.Maps{ice.MSG_FIELDS: ""}).CmdMap(DREAM, mdb.NAME)
 				stat := map[string]int{}
+				list := m.Spawn(ice.Maps{ice.MSG_FIELDS: ""}).CmdMap(DREAM, mdb.NAME)
 				m.SetAppend().Spawn().SplitIndex(m.Cmdx(SPIDE, arg[0], dream, kit.Dict(mdb.ConfigSimple(m, CLIENT_TIMEOUT)))).Table(func(value ice.Maps) {
 					stat[value[mdb.TYPE]]++
 					m.Push("", value, kit.Split("time,type,name,icons,repos,binary,module,version"))
 					if value[mdb.TYPE] == SERVER {
-						m.Push(mdb.TEXT, value[mdb.TEXT]).Push(ORIGIN, value[mdb.TEXT])
-						m.PushButton()
+						m.Push(mdb.TEXT, value[mdb.TEXT]).Push(ORIGIN, value[mdb.TEXT]).PushButton()
 						return
 					}
 					m.Push(mdb.TEXT, value[nfs.REPOS]).Push(ORIGIN, origin)

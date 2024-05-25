@@ -1,6 +1,5 @@
 Volcanos(chat.ONIMPORT, {
 	_init: function(can, msg) {
-		// if (can.isCmdMode()) { can.onappend.style(can, html.OUTPUT) }
 		can.ui = can.onappend.layout(can), can.onimport._project(can, msg)
 	},
 	_project: function(can, msg) { var select, current = can.db.hash[0]||can.sup.db.current||ice.DEV
@@ -15,7 +14,9 @@ Volcanos(chat.ONIMPORT, {
 					{view: wiki.TITLE, list: [{text: can.base.trimPrefix(value.title||value.zone, "ops.")||"[未命名]"}]},
 					{view: wiki.CONTENT, list: [{text: can.base.trimPrefix(value.target, "ops.")||"[未知消息]"}, {text: [can.base.TimeTrim(value.time), "", mdb.TIME]}]},
 				]},
-			], onclick: function(event) { can.isCmdMode() && can.misc.SearchHash(can, value.zone), can.onimport._switch(can, false)
+			], onclick: function(event) {
+				can.onexport.hash(can, value.zone), can.onexport.title(can, value.zone)
+				can.onimport._switch(can, false)
 				can.sup.db.current = value.zone
 				can.db.zone = value, can.db.hash = value.hash, can.onmotion.select(can, can.ui.project, html.DIV_ITEM, _target)
 				if (can.onmotion.cache(can, function(save, load) {

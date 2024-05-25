@@ -61,9 +61,9 @@ func _portal_commands(m *ice.Message, arg ...string) {
 }
 
 const (
+	INDEX_SHY = "index.shy"
 	HEADER    = "header"
 	NAV       = "nav"
-	INDEX_SHY = "index.shy"
 )
 
 const PORTAL = "portal"
@@ -71,9 +71,7 @@ const PORTAL = "portal"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		PORTAL: {Name: "portal path auto", Help: "官网", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				aaa.White(m, ice.VAR_PORTAL)
-			}},
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { aaa.White(m, ice.VAR_PORTAL) }},
 			ctx.RUN: {Hand: func(m *ice.Message, arg ...string) {
 				if p := path.Join(ice.VAR_PORTAL, path.Join(arg...)); (m.Option(ice.DEBUG) == ice.TRUE || !nfs.ExistsFile(m, p)) && aaa.Right(m.Spawn(), arg) {
 					ctx.Run(m, arg...)

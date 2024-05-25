@@ -92,7 +92,7 @@ Volcanos(chat.ONIMPORT, {
 				sub._target._meta.args = can.base.trim(can.page.SelectArgs(can, sub._option, "", function(target) { return target.value })), can.onexport.tabs(can)
 			}, sub.onimport.size(sub, item.height, can.base.Min(sub._target.offsetWidth, item.width), false)
 			sub.onexport.record = function(sub, value, key, item) { can.onimport._window(can, item) }
-			sub.onimport._open = function(sub, msg, arg) { can.onimport._window(can, {index: web.CHAT_IFRAME, args: [arg]}) }
+			sub.onimport._open = function(sub, msg, arg) { can.onimport._window(can, {title: msg.Option(html.TITLE), index: web.CHAT_IFRAME, args: [arg]}) }
 			sub.onimport._field = function(sub, msg) { msg.Table(function(item) { can.onimport._window(can, item) }) }
 			sub.onappend.dock = function(item) { can.ui.dock.runAction(can.request(event, item), mdb.CREATE, [], function() { can.ui.dock.Update() }) }
 			sub.onaction._close = function() { can.page.Remove(can, sub._target), can.onexport.tabs(can) }

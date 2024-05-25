@@ -354,9 +354,10 @@ func init() { ice.Cmd(SSH_RELAY, relay{}) }
 func (s relay) iframe(m *ice.Message, cmd string, arg ...string) {
 	p := kit.MergeURL2(m.Option(web.LINK), web.C(kit.Select(m.ActionKey(), cmd)))
 	if m.IsChromeUA() && m.UserWeb().Scheme == ice.HTTP && strings.HasPrefix(p, ice.HTTPS) {
+		m.Option(web.TITLE, kit.Keys(m.Option(MACHINE), kit.Select(m.ActionKey(), cmd)))
 		m.ProcessOpen(p)
 	} else {
-		m.ProcessIframe(m.Option(MACHINE), p, arg...)
+		m.ProcessIframe(kit.Keys(m.Option(MACHINE), kit.Select(m.ActionKey(), cmd)), p, arg...)
 	}
 }
 func (s relay) shell(m *ice.Message, init string, arg ...string) {

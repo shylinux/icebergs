@@ -149,7 +149,7 @@ func RenderMain(m *ice.Message) *ice.Message {
 		return m.RenderDownload(path.Join(ice.USR_INTSHELL, ice.INDEX_SH))
 	}
 	m.Options(nfs.SCRIPT, ice.SRC_MAIN_JS, nfs.VERSION, RenderVersion(m))
-	m.OptionDefault(mdb.ICONS, m.Resource(ice.Info.NodeIcon)+m.Option(nfs.VERSION))
+	m.OptionDefault(mdb.ICONS, strings.Split(m.Resource(ice.Info.NodeIcon), "?")[0]+m.Option(nfs.VERSION))
 	m.OptionDefault(TITLE, kit.Select("localhost:9020", UserWeb(m).Host, m.Option(ice.MSG_USERPOD)))
 	return m.RenderResult(kit.Renders(m.Cmdx(nfs.CAT, ice.SRC_MAIN_HTML), m))
 }

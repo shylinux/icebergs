@@ -76,6 +76,7 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	if r.Method == http.MethodGet {
 		msg := m.Spawn(w, r).Options(ice.MSG_USERUA, r.UserAgent(), ice.LOG_TRACEID, r.Header.Get(ice.LOG_TRACEID), ParseLink(m, kit.Select(r.URL.String(), r.Referer())))
 		if path.Join(r.URL.Path) == nfs.PS {
+			msg.Options(ice.MSG_USERWEB, _serve_domain(msg))
 			if Render(RenderMain(msg), msg.Option(ice.MSG_OUTPUT), kit.List(msg.Optionv(ice.MSG_ARGS))...) {
 				return false
 			}

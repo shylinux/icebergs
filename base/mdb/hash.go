@@ -291,7 +291,7 @@ func HashSelect(m *ice.Message, arg ...string) *ice.Message {
 	kit.If(kit.Select(Config(m, SHORT), Config(m, SORT)), func(sort string) { kit.If(sort != UNIQ, func() { m.Sort(sort) }) })
 	if m.PushAction(Config(m, ACTION), REMOVE); !m.FieldsIsDetail() {
 		m.Options(ice.TABLE_CHECKBOX, Config(m, html.CHECKBOX))
-		return m.Action(CREATE, PRUNES)
+		return m.Action(CREATE)
 	}
 	return sortByField(m, HashField(m), arg...)
 }

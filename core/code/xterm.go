@@ -70,6 +70,10 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		XTERM: {Name: "xterm refresh", Help: "终端", Icon: "Terminal.png", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				web.AddPortalProduct(m, "命令行", `
+一款网页版的命令行，打开网页即可随时随地的敲命令，
+无论这些命令是运行在本机，还是远程，还是任何虚拟的空间，无论是内存还是磁盘。
+`, 500.0)
 				kit.For([]string{
 					"xterm/lib/xterm.js",
 					"xterm/css/xterm.css",

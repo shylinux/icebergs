@@ -75,6 +75,12 @@ const INNER = "inner"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		INNER: {Name: "inner path=src/ file=main.go line=1 auto", Help: "源代码", Role: aaa.VOID, Actions: ice.Actions{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				web.AddPortalProduct(m, "编辑器", `
+一款网页版的编辑器，打开网页即可随时随地的编程，
+无论这些代码是保存在本机，还是远程，还是任何虚拟的空间，无论是内存还是磁盘。
+`, 400.0)
+			}},
 			mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) {
 				if m.Cmdy(mdb.PLUGIN, arg); m.Result() == "" {
 					m.Cmdy(mdb.PLUGIN, m.Option(lex.PARSE, strings.ToLower(kit.Split(path.Base(arg[1]), nfs.PT)[0])), arg[1:])

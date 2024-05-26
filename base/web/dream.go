@@ -219,6 +219,13 @@ func init() {
 		DREAM: {Name: "dream refresh", Help: "梦想家", Icon: "Launchpad.png", Role: aaa.VOID, Meta: kit.Dict(
 			ice.CTX_TRANS, kit.Dict(html.INPUT, kit.Dict(WORKER, "空间", SERVER, "门户", ORIGIN, "主机")),
 		), Actions: ice.MergeActions(ice.Actions{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				AddPortalProduct(m, "空间", `
+比虚拟机和容器，更加轻量，每个空间都是一个完整的系统，拥有各种软件与独立的环境。
+空间内所有的软件、配置、数据以源码库形式保存，每个空间都可以随时启动、停止、上传、下载、分享。
+每个空间都自带软件开发工具，也可以随时编程添加新的功能。
+`, 200.0)
+			}},
 			html.BUTTON: {Hand: func(m *ice.Message, arg ...string) {
 				mdb.Config(m, html.BUTTON, kit.Join(arg))
 			}},

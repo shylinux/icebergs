@@ -138,6 +138,14 @@ open http://localhost:9020
 	m.Cmdy(STYLE, END)
 }
 func _spark_product(m *ice.Message, arg ...string) {
+	if len(arg) == 0 {
+		m.Cmd("web.product").Table(func(value ice.Maps) {
+			if value[mdb.DISABLE] != ice.FALSE {
+				_spark_product(m, value[ctx.INDEX], value[mdb.NAME], value[mdb.TEXT])
+			}
+		})
+		return
+	}
 	m.Cmdy(SPARK, TITLE, arg[1]).Cmdy(SPARK, arg[2])
 	m.Cmdy(FIELD, arg[1], arg[0], arg[3:])
 }

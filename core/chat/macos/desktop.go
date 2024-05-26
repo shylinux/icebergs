@@ -15,7 +15,9 @@ const DESKTOP = "desktop"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { m.Cmd(web.BINPACK, mdb.INSERT, nfs.USR_ICONS) }},
+		ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+			m.Cmd(web.BINPACK, mdb.INSERT, nfs.USR_ICONS)
+		}},
 		ice.CTX_OPEN: {Hand: func(m *ice.Message, arg ...string) {
 			if m.Cmd(DESKTOP).Length() == 0 {
 				DeskAppend(m, "Books.png", web.WIKI_WORD)
@@ -40,6 +42,12 @@ func init() {
 			Notify(m, "usr/icons/Infomation.png", cli.RUNTIME, "系统启动成功", ctx.INDEX, cli.RUNTIME)
 		}},
 		DESKTOP: {Help: "桌面", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				web.AddPortalProduct(m, "桌面", `
+一款网页版的电脑桌面，打开网页即可随时随地的使用各种软件，
+无论这些软件是运行在本机，还是远程，还是任何虚拟的空间，无论是内存还是磁盘。
+`, 100.0)
+			}},
 			// web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { web.DreamProcessIframe(m, arg...) }},
 			// web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { web.DreamProcess(m, "", arg, arg...) }},
 		}, web.DreamTablesAction(), PodCmdAction(), CmdHashAction(ctx.INDEX), mdb.ExportHashAction())},

@@ -294,7 +294,7 @@ func AutoConfig(arg ...Any) *ice.Action {
 			}
 			add := func(list []string) (inputs []Any) {
 				kit.For(list, func(k string) {
-					kit.If(!kit.IsIn(k, TIME, HASH, COUNT, ID), func() {
+					kit.If(!kit.IsIn(k, TIME, HASH, COUNT, ID, ENABLE, DISABLE), func() {
 						inputs = append(inputs, k+kit.Select("", FOREACH, strings.Contains(s, k)))
 					})
 				})

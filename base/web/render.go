@@ -160,7 +160,7 @@ func RenderPodCmd(m *ice.Message, pod, cmd string, arg ...ice.Any) {
 	if msg := m.Cmd(Space(m, pod), ctx.COMMAND, kit.Select(m.ShortKey(), cmd)); msg.Length() == 0 {
 		RenderResult(m, kit.Format("not found command %s", cmd))
 	} else {
-		m.OptionDefault(mdb.ICONS, m.Resource(msg.Append(mdb.ICONS)))
+		m.OptionDefault(mdb.ICONS, m.Resource(kit.Select(ice.Info.NodeIcon, msg.Append(mdb.ICONS))))
 		if !kit.IsIn(cmd, PORTAL, DESKTOP, ADMIN) {
 			m.OptionDefault(TITLE, kit.Select(cmd, msg.Append(mdb.HELP)+kit.Select("", " "+pod, pod != ""), !m.IsEnglish()))
 		}

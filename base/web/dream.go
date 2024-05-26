@@ -496,7 +496,7 @@ func init() {
 		}, StatsAction(), DreamAction(), DreamTablesAction(), mdb.ImportantHashAction(
 			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icons,repos,binary,template,restart,access",
 			html.BUTTON, kit.JoinWord(PORTAL, DESKTOP, ADMIN, WORD, STATUS, VIMER, COMPILE, XTERM, DREAM),
-			ctx.TOOLS, kit.Simple(SPIDE, ROUTE, STATUS), ONLINE, ice.TRUE,
+			ONLINE, ice.TRUE,
 		)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				simple := m.Option(ice.DREAM_SIMPLE) == ice.TRUE

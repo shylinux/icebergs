@@ -72,7 +72,7 @@ const ROLE = "role"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		ROLE: {Name: "role role key auto insert filter:text simple", Help: "角色", Actions: ice.MergeActions(ice.Actions{
+		ROLE: {Name: "role role key auto insert simple", Help: "角色", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(ROLE, mdb.CREATE, VOID, TECH)
 				has := map[string]bool{VOID: true, TECH: true}

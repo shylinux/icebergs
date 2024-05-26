@@ -22,8 +22,8 @@ fieldset.web.matrix>div.output>table.content div.item div.status div.item:hover 
 fieldset.web.matrix>div.output>table.content div.item:hover { background-color:unset; color:unset; }
 fieldset.web.matrix>div.output:not(.process)>table.content div.item.notice { background-color:var(--notice-bg-color); color:var(--notice-fg-color); }
 fieldset.web.matrix>div.output:not(.process)>table.content div.item.danger { background-color:var(--danger-bg-color); color:var(--danger-fg-color); }
-fieldset.web.matrix>div.output:not(.process)>table.content div.item.server { border:var(--box-notice3); }
-fieldset.web.matrix>div.output:not(.process)>table.content div.item.origin { border:var(--box-danger3); }
+fieldset.web.matrix>div.output:not(.process)>table.content div.item.server { border:var(--box-notice); }
+fieldset.web.matrix>div.output:not(.process)>table.content div.item.origin { border:var(--box-danger); }
 fieldset.web.matrix>div.output:not(.process)>table.content div.item.danger div.status div.item { color:var(--danger-fg-color); }
 fieldset.web.matrix>div.output:not(.process)>table.content div.item.notice div.status div.item { color:var(--notice-fg-color); }
 fieldset.web.matrix>div.output:not(.process)>table.content div.item.stop div.title>span { color:var(--disable-fg-color); }

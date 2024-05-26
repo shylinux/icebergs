@@ -47,7 +47,7 @@ const COUNT = "count"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		COUNT: &ice.Command{Name: "count hash auto group valid location filter", Help: "计数器", Meta: kit.Dict(
+		COUNT: &ice.Command{Name: "count hash auto group valid location", Help: "计数器", Meta: kit.Dict(
 			ice.CTX_TRANS, kit.Dict(html.INPUT, kit.Dict(aaa.LOCATION, "地理位置")),
 		), Actions: ice.MergeActions(ice.Actions{
 			mdb.CREATE: {Name: "create type name text", Hand: func(m *ice.Message, arg ...string) {

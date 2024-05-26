@@ -23,7 +23,7 @@ func init() {
 				m.Push(ctx.SHIP, ls[3]).Push("operate", ls[4]).Push(nfs.CONTENT, kit.Join(kit.Slice(ls, 5, -1), lex.SP))
 				stats[ls[4]]++
 			})
-			m.Action("filter:text").StatusTimeCount(stats)
+			m.StatusTimeCount(stats)
 		}},
 	})
 }

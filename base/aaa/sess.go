@@ -45,7 +45,7 @@ const SESS = "sess"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		SESS: {Name: "sess hash auto filter:text", Help: "会话", Actions: ice.MergeActions(ice.Actions{
+		SESS: {Name: "sess hash auto", Help: "会话", Actions: ice.MergeActions(ice.Actions{
 			mdb.CREATE: {Name: "create username*", Hand: func(m *ice.Message, arg ...string) {
 				_sess_create(m, m.Option(USERNAME), UA, m.Option(ice.MSG_USERUA), IP, m.Option(ice.MSG_USERIP))
 			}},

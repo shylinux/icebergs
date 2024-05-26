@@ -28,7 +28,7 @@ func init() {
 		}, mdb.ClearOnExitHashAction(), mdb.StatusHashAction(html.CHECKBOX, ice.TRUE,
 			mdb.FIELD, "time,hash,type,name,text,cost,status,index,icons,agent,system,ip,ua",
 		)), Hand: func(m *ice.Message, arg ...string) {
-			mdb.HashSelect(m, arg...).PushAction(ctx.PREVIEW, mdb.REMOVE).Action(mdb.PRUNES, html.FILTER)
+			mdb.HashSelect(m, arg...).PushAction(ctx.PREVIEW, mdb.REMOVE).Action(mdb.PRUNES)
 			m.Sort("status,cost", []string{"", TOAST_INIT, TOAST_DONE}, func(value string) int { return -int(kit.Duration(value)) })
 		}},
 	})

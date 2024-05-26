@@ -4,7 +4,6 @@ import (
 	"path"
 
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/web/html"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -20,7 +19,7 @@ func init() {
 			}},
 		}), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
-				m.Cmdy(ice.COMMAND).Action(html.FILTER).Option(ice.MSG_DISPLAY, "")
+				m.Cmdy(ice.COMMAND).Option(ice.MSG_DISPLAY, "")
 				return
 			}
 			m.Search(arg[0], func(p *ice.Context, c *ice.Context, key string, cmd *ice.Command) {

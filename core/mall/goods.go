@@ -38,7 +38,7 @@ func init() {
 			}},
 		}, web.StatsAction(), web.ExportCacheAction(nfs.IMAGE), mdb.ExportHashAction(ctx.TOOLS, kit.Fields(Prefix(CART), Prefix(ORDER)), mdb.FIELD, "time,hash,zone,name,text,price,count,units,image")), Hand: func(m *ice.Message, arg ...string) {
 			kit.If(len(arg) == 0 && m.IsMobileUA(), func() { m.OptionDefault(ice.MSG_FIELDS, "zone,name,price,count,units,text,hash,time,image") })
-			mdb.HashSelect(m, arg...).PushAction(ORDER).Action("filter:text")
+			mdb.HashSelect(m, arg...).PushAction(ORDER)
 			web.PushPodCmd(m, "", arg...).Sort("zone,name")
 			ctx.DisplayLocal(m, "")
 			_status_amount(m)

@@ -10,7 +10,6 @@ import (
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/base/web"
-	"shylinux.com/x/icebergs/base/web/html"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -87,7 +86,6 @@ func init() {
 			})
 			web.PushPodCmd(m, "", arg...)
 			kit.If(!m.IsWorker(), func() { m.RenameAppend(web.SPACE, ice.POD) })
-			m.Action(html.FILTER)
 		}},
 	})
 }

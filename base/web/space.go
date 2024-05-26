@@ -421,7 +421,7 @@ func init() {
 					}
 					m.PushButton(kit.Select(OPEN, LOGIN, value[mdb.TYPE] == LOGIN), mdb.REMOVE)
 				})
-				m.Action(html.FILTER).Sort("", kit.Simple(aaa.LOGIN, WEIXIN, PORTAL, WORKER, SERVER, ORIGIN))
+				m.Sort("", kit.Simple(aaa.LOGIN, WEIXIN, PORTAL, WORKER, SERVER, ORIGIN))
 			} else {
 				if kit.IsIn(arg[0], "", ice.CONTEXTS) {
 					m.Cmdy(arg[1:])

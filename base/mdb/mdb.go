@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/web/html"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -243,7 +242,7 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: ice.Commands
 			HashSelect(m, arg...).RewriteAppend(func(value, key string, index int) string {
 				kit.If(key == STATUS, func() { value = kit.Select(ENABLE, value) })
 				return value
-			}).PushAction().Action(html.FILTER)
+			}).PushAction()
 			if len(arg) == 1 {
 				m.Cmdy("nfs.cat", "usr/local/export/"+arg[0]+"/hash.json")
 			}

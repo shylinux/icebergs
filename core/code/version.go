@@ -54,6 +54,9 @@ func init() {
 			STATUS: {Hand: func(m *ice.Message, arg ...string) {
 				web.ProcessPodCmd(m, m.Option(web.SPACE), m.ActionKey(), nil, arg...)
 			}},
+			nfs.SCAN: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(REPOS, m.ActionKey())
+			}},
 		}), Hand: func(m *ice.Message, arg ...string) {
 			repos := map[string]string{}
 			list := map[string]map[string]string{}
@@ -84,9 +87,6 @@ func init() {
 				button, status := []ice.Any{}, ""
 				m.Push(web.SPACE, space).Push(MODULE, v[MODULE]).Push(VERSION, v[VERSION])
 				kit.For(repos, func(k, _v string) {
-					if kit.IsIn(k, "shylinux.com/x/websocket", "shylinux.com/x/go-qrcode") {
-						return
-					}
 					if k == v[MODULE] || v[k] == "" {
 						m.Push(k, "")
 					} else if v[k] == _v {
@@ -102,12 +102,13 @@ func init() {
 				})
 				kit.If(list[space][DIFF] != "", func() { button = append(button, STATUS) })
 				kit.If(strings.Contains(list[space][VERSION], "-"), func() { button = append(button, TAG) })
-				kit.If(len(button) > 0, func() { button = append(button, XTERM) })
+				button = append(button, XTERM)
 				m.Push(DIFF, list[space][DIFF]).Push(mdb.STATUS, status).PushButton(button...)
 			}
 			fields := []string{}
 			kit.For(m.Appendv(ice.MSG_APPEND), func(k string) { kit.If(len(kit.TrimArg(m.Appendv(k)...)) > 0, func() { fields = append(fields, k) }) })
 			m.Cut(fields...).Sort(web.SPACE, ice.STR_R)
+			m.Action(nfs.SCAN)
 		}},
 	})
 

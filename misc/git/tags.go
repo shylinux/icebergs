@@ -11,7 +11,6 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
-	"shylinux.com/x/icebergs/base/web/html"
 	"shylinux.com/x/icebergs/core/code"
 	kit "shylinux.com/x/toolkits"
 )
@@ -44,7 +43,6 @@ func init() {
 						m.Push(mdb.TEXT, text)
 					}
 				})
-				m.Action(html.FILTER)
 				return
 			}
 			m.Cmdy("web.code.doc", arg)
@@ -110,7 +108,7 @@ func init() {
 					m.PushButton(code.DOC, mdb.SHOW, mdb.CREATE)
 				}
 			})
-			m.Action(html.FILTER).StatusTimeCountStats(mdb.TYPE)
+			m.StatusTimeCountStats(mdb.TYPE)
 			m.Sort("status,type,name", []string{ice.TRUE, ice.FALSE}, []string{"t", "n", "f", "v", "c"}, ice.STR)
 		}},
 	})

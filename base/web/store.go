@@ -1,8 +1,6 @@
 package web
 
 import (
-	"strings"
-
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
@@ -31,13 +29,9 @@ func init() {
 			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(SPIDE, mdb.REMOVE, CLIENT_NAME, m.Option(mdb.NAME))
 			}},
-			INSTALL: {Hand: func(m *ice.Message, arg ...string) {
+			INSTALL: {Name: "install name*", Hand: func(m *ice.Message, arg ...string) {
 				if !kit.HasPrefixList(arg, ctx.RUN) {
-					if kit.HasPrefix(m.Option(mdb.ICON), nfs.P, nfs.REQUIRE) {
-						m.Option(mdb.ICON, strings.TrimSuffix(kit.TrimPrefix(m.Option(mdb.ICON), nfs.P, nfs.REQUIRE), "?pod="+m.Option(mdb.NAME)))
-					}
-					m.OptionDefault(nfs.BINARY, m.Option(ORIGIN)+S(m.Option(mdb.NAME)))
-					m.Cmdy(DREAM, mdb.CREATE, m.OptionSimple(mdb.NAME, mdb.ICON, nfs.REPOS, nfs.BINARY))
+					m.Cmdy(DREAM, mdb.CREATE, m.OptionSimple(mdb.NAME, nfs.REPOS, nfs.BINARY))
 					m.Cmdy(DREAM, cli.START, m.OptionSimple(mdb.NAME))
 				}
 				ProcessIframe(m, m.Option(mdb.NAME), S(m.Option(mdb.NAME)), arg...)
@@ -60,6 +54,9 @@ func init() {
 				m.Cmd(SPIDE, arg, kit.Dict(ice.MSG_FIELDS, "time,icons,client.type,client.name,client.origin")).Table(func(value ice.Maps) {
 					kit.If(value[CLIENT_TYPE] == nfs.REPOS && value[CLIENT_NAME] != ice.SHY, func() {
 						list = append(list, value[CLIENT_NAME])
+						if value[CLIENT_NAME] == ice.OPS {
+							value[CLIENT_ORIGIN] = UserHost(m)
+						}
 						m.Push(mdb.NAME, value[CLIENT_NAME]).Push(mdb.ICONS, value[mdb.ICONS]).Push(ORIGIN, value[CLIENT_ORIGIN])
 					})
 				})
@@ -86,6 +83,9 @@ func init() {
 				list := m.Spawn(ice.Maps{ice.MSG_FIELDS: ""}).CmdMap(DREAM, mdb.NAME)
 				m.SetAppend().Spawn().SplitIndex(m.Cmdx(SPIDE, arg[0], dream, kit.Dict(mdb.ConfigSimple(m, CLIENT_TIMEOUT)))).Table(func(value ice.Maps) {
 					stat[value[mdb.TYPE]]++
+					if value[nfs.BINARY] == "" {
+						value[nfs.BINARY] = origin + S(value[mdb.NAME])
+					}
 					m.Push("", value, kit.Split("time,type,name,icons,repos,binary,module,version"))
 					if value[mdb.TYPE] == SERVER {
 						m.Push(mdb.TEXT, value[mdb.TEXT]).Push(ORIGIN, value[mdb.TEXT]).PushButton()
@@ -93,7 +93,8 @@ func init() {
 					}
 					m.Push(mdb.TEXT, value[nfs.REPOS]).Push(ORIGIN, origin)
 					if _, ok := list[value[mdb.NAME]]; ok || arg[0] == ice.OPS {
-						m.PushButton(PORTAL, DESKTOP, ADMIN, OPEN)
+						// m.PushButton(PORTAL, DESKTOP, ADMIN, OPEN)
+						m.PushButton(PORTAL, INSTALL)
 					} else if ice.Info.NodeType == WORKER || !aaa.IsTechOrRoot(m) {
 						m.PushButton(PORTAL)
 					} else {

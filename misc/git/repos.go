@@ -491,6 +491,15 @@ func init() {
 					}
 					return
 				}
+				if arg[0] == ORIGIN {
+					remote := ice.Info.Make.Remote
+					if repos, ok := mdb.HashSelectTarget(m, path.Base(kit.Path("")), nil).(*git.Repository); ok {
+						remote = kit.Select(remote, _repos_origin(m, repos))
+					}
+					remote = _repos_remote(m, remote)
+					u := kit.ParseURL(remote)
+					m.Push(arg[0], u.Scheme+"://"+u.Host)
+				}
 				switch mdb.HashInputs(m, arg); m.Option(ctx.ACTION) {
 				case INIT:
 					m.Cmd(web.SPIDE, ice.OptionFields(web.CLIENT_ORIGIN), func(value ice.Maps) { m.Push(arg[0], value[web.CLIENT_ORIGIN]+web.X(path.Base(kit.Path("")))) })

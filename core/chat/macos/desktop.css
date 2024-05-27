@@ -70,7 +70,8 @@ fieldset.desktop>div.output>div.desktop>div.item.disable { display:none; }
 fieldset.macos.menu>div.output>div.item { padding:0 var(--input-padding); height:var(--desktop-menu-height); float:right; }
 fieldset.macos.menu>div.output>div.item.avatar>img { padding:0; height:var(--desktop-menu-height); }
 fieldset.macos.menu>div.output>div.menu { padding:0 var(--input-padding); float:left; }
-fieldset.macos.menu>div.output>div.tabs { font-style:italic; padding:0 var(--button-padding); float:left; }
+fieldset.macos.menu>div.output>div.tabs { font-style:italic; padding:0 var(--input-padding); float:left; }
+fieldset.macos.menu.cmd>div.output>div.tabs { padding:0 var(--button-padding); }
 fieldset.macos.menu>div.output>div.tabs.select { background-color:var(--panel-hover-bg-color); color:var(--panel-hover-fg-color); }
 fieldset.macos.dock>div.output { height:var(--desktop-icon-size); display:flex; overflow:auto; }
 fieldset.macos.dock>div.output>div.space { background-color:#ececec36; margin:var(--button-margin); height:calc(100% - 20px); width:2px; }
@@ -91,8 +92,8 @@ body:not(.mobile) fieldset.desktop>div.output>div.desktop>div.item { margin:var(
 body:not(.mobile) fieldset.desktop>div.output>fieldset.macos.searchs>form.option>div.item.keyword input { background-color:transparent; width:var(--river-width); }
 body:not(.mobile) fieldset.desktop>div.output>fieldset.macos.searchs>div.action input { background-color:transparent; }
 body:not(.mobile) fieldset.desktop>div.output>div.desktop>fieldset>legend:not(:hover) { background-color:transparent; }
-body.cmd fieldset.macos.menu>div.output>div.item { padding:0 var(--button-padding); }
-body.cmd fieldset.macos.menu>div.output>div.menu { padding:0 var(--button-padding); }
+fieldset.macos.menu.cmd>div.output>div.item { padding:0 var(--button-padding); }
+fieldset.macos.menu.cmd>div.output>div.menu { padding:0 var(--button-padding); }
 body.dark fieldset.desktop>div.output>fieldset.macos { background-color:#08234ad1; }
 body.light fieldset.desktop>div.output>fieldset.macos { background-color:#daefff99; }
 body.white fieldset.desktop>div.output>div.desktop>div.item>div.name { color:white; }

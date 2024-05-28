@@ -480,7 +480,7 @@ func init() {
 			VERSION: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy("web.code.version")
 			}},
-			nfs.GOWORK: {Name: "gowork name", Help: "工作区", Hand: func(m *ice.Message, arg ...string) {
+			nfs.GOWORK: {Name: "gowork name", Help: "工作区", Icon: "bi bi-exclude", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(cli.SYSTEM, cli.GO, "work", "init")
 				kit.For([]string{".", nfs.USR_RELEASE, nfs.USR_ICEBERGS, nfs.USR_TOOLKITS}, func(p string) { m.Cmd(cli.SYSTEM, cli.GO, "work", "use", p) })
 				DreamEach(m, m.Option(mdb.NAME), "", func(name string) { m.Cmd(cli.SYSTEM, cli.GO, "work", "use", path.Join(ice.USR_LOCAL_WORK, name)) })

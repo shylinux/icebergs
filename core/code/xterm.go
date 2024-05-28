@@ -128,9 +128,16 @@ func init() {
 				// kit.If(m.IsDebug(), func() { list = append(list, cli.RUNTIME) })
 			}},
 			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { web.DreamProcess(m, "", cli.SH, arg...) }},
-		}, web.DreamTablesAction(), mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,path")), Hand: func(m *ice.Message, arg ...string) {
+		}, web.DreamTablesAction(), mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,path,daemon")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) == 0 {
-				m.Action(mdb.CREATE)
+				list := m.CmdMap(web.SPACE, mdb.NAME)
+				m.Table(func(value ice.Maps) {
+					if list[value[cli.DAEMON]] == nil {
+						m.Push(mdb.STATUS, web.OFFLINE)
+					} else {
+						m.Push(mdb.STATUS, web.ONLINE)
+					}
+				})
 			} else {
 				kit.If(m.Length() == 0, func() {
 					kit.If(arg[0] == cli.SH, func() {

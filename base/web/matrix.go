@@ -14,18 +14,18 @@ import (
 
 func _matrix_list(m *ice.Message, domain, typ string, value ice.Maps, fields ...string) (server, icons, types []string) {
 	value[DOMAIN], value[mdb.TYPE] = domain, typ
-	istech, isdebug := typ == SERVER || kit.IsIn(value[aaa.ACCESS], aaa.TECH, aaa.ROOT), m.IsDebug()
+	// istech, isdebug := typ == SERVER || kit.IsIn(value[aaa.ACCESS], aaa.TECH, aaa.ROOT), m.IsDebug()
+	istech := typ == SERVER || kit.IsIn(value[aaa.ACCESS], aaa.TECH, aaa.ROOT)
 	compile := kit.Select("", kit.Select(COMPILE, UPGRADE, typ == SERVER), istech)
-	vimer := kit.Select("", VIMER, istech && isdebug)
 
-	button := []ice.Any{PORTAL, DESKTOP, DREAM, ADMIN, OPEN, compile, MESSAGE}
-	kit.If(istech, func() { button = append(button, WORD, STATUS) })
-	kit.If(istech && isdebug, func() { button = append(button, vimer, cli.RUNTIME, XTERM) })
+	button := []ice.Any{PORTAL, DESKTOP, ADMIN, WORD, OPEN, compile, DREAM}
+	kit.If(istech, func() { button = append(button, STATUS) })
+	kit.If(istech, func() { button = append(button, VIMER, cli.RUNTIME, XTERM) })
 	m.PushRecord(value, fields...).PushButton(button...)
 
-	button = []ice.Any{PORTAL, DESKTOP, MESSAGE, ADMIN, OPEN, compile}
-	kit.If(istech, func() { button = append(button, WORD, STATUS) })
-	kit.If(istech && isdebug, func() { button = append(button, vimer, cli.RUNTIME, XTERM, cli.STOP) })
+	button = []ice.Any{PORTAL, DESKTOP, ADMIN, WORD, OPEN, compile}
+	kit.If(istech, func() { button = append(button, STATUS) })
+	kit.If(istech, func() { button = append(button, VIMER, cli.RUNTIME, XTERM, cli.STOP) })
 	m.Cmd(Space(m, domain), DREAM).Table(func(value ice.Maps) {
 		switch value[mdb.TYPE] {
 		case WORKER:

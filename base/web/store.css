@@ -1,4 +1,5 @@
-$project div.list { border-left:var(--box-notice3); margin-left:25px; }
+$project div.list { margin-left:25px; }
+// $project div.list { border-left:var(--box-notice3); margin-left:25px; }
 $content>div.item { box-shadow:var(--th-box-shadow); border:var(--plugin-border); border-radius:var(--plugin-radius); }
 $content>div.item:hover { box-shadow:var(--notice-box-shadow); }
 $content>div.item div.title div.label { font-size:var(--status-font-size); font-weight:normal; margin-top:var(--input-margin); }

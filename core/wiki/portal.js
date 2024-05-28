@@ -63,7 +63,7 @@ Volcanos(chat.ONIMPORT, {
 			can.page.style(can, can.ui.nav, html.HEIGHT, "", html.WIDTH, can.page.width())
 			can.page.style(can, can.ui.main, html.HEIGHT, "", html.WIDTH, can.page.width())
 		}
-		can.core.List(can._plugins, function(sub) { sub.onimport.size(sub, can.base.Min(html.FLOAT_HEIGHT, can.ConfHeight()/2, can.ConfHeight()), sub.Conf("_width")||(can.ConfWidth()-2*padding), true) })
+		can.core.List(can._plugins, function(sub) { sub.onimport.size(sub, can.base.Min(html.FLOAT_HEIGHT, can.ConfHeight()/2, can.ConfHeight()), (can.ConfWidth()-2*padding), true) })
 	},
 }, [""])
 Volcanos(chat.ONACTION, {

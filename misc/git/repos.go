@@ -499,6 +499,7 @@ func init() {
 					remote = _repos_remote(m, remote)
 					u := kit.ParseURL(remote)
 					m.Push(arg[0], u.Scheme+"://"+u.Host)
+					m.Push(arg[0], web.UserHost(m))
 				}
 				switch mdb.HashInputs(m, arg); m.Option(ctx.ACTION) {
 				case INIT:

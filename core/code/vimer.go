@@ -120,6 +120,9 @@ func init() {
 			nfs.SCRIPT: {Name: "script file*", Help: "脚本", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(nfs.DEFS, path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)), m.Cmdx("", TEMPLATE))
 			}},
+			mdb.CREATE: {Name: "create file*", Help: "文件", Icon: "bi bi-file-earmark-text", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(nfs.DEFS, path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)), m.Cmdx("", TEMPLATE))
+			}},
 			mdb.RENAME: {Name: "rename to*", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.MOVE, path.Join(m.Option(nfs.PATH), m.Option(nfs.TO)), path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)))
 			}},

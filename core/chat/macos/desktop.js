@@ -21,9 +21,9 @@ Volcanos(chat.ONIMPORT, {
 				case cli.QRCODE: can.sup.onaction["生成链接"]({}, can.sup); break
 				case mdb.CREATE: can.onaction.create(event, can); break
 				case html.DESKTOP:
-					var carte = can.user.carte(event, can, {}, can.core.Item(can.onfigure), function(event, button, meta, carte) {
-						can.onfigure[button](event, can, carte); return true
-					}); break
+				var carte = can.user.carte(event, can, {}, can.core.Item(can.onfigure), function(event, button, meta, carte) {
+					can.onfigure[button](event, can, carte); return true
+				}); break
 				default: can.onimport._window(can, value)
 			}
 		}
@@ -120,6 +120,7 @@ Volcanos(chat.ONIMPORT, {
 		}, function() { _select && _select.click() })
 	},
 	layout: function(can) { can.page.style(can, can._output, html.HEIGHT, can.ConfHeight(), html.WIDTH, can.ConfWidth())
+		can.ui.dock && can.page.style(can, can.ui.dock._output, "position", "")
 		can.ui.dock && can.page.style(can, can.ui.dock._target, html.LEFT, can.base.Min((can.ConfWidth()-(can.ui.dock._target.offsetWidth||502))/2, 0))
 		can.ui.menu && can.ui.menu.onimport.size(can.ui.menu, html.DESKTOP_MENU_HEIHGT, can.ConfWidth(), false)
 	},

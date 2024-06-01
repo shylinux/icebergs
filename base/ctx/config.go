@@ -110,7 +110,7 @@ func init() {
 			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
 				nfs.Trash(m, path.Join(ice.VAR_DATA, arg[0]))
 				nfs.Trash(m, m.Cmdx(arg[0], mdb.EXPORT))
-				mdb.Config(m, arg[0], nil, nil)
+				mdb.Conf(m, arg[0], mdb.HASH, "")
 			}},
 			mdb.CREATE: {Name: "create name value", Hand: func(m *ice.Message, arg ...string) {
 				m.Confv(m.Option(mdb.KEY), kit.Keys(mdb.META, m.Option(mdb.NAME)), m.Option(mdb.VALUE))

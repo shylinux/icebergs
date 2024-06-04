@@ -166,7 +166,10 @@ func init() {
 				defer web.ToastProcess(m)()
 				m.Cmd(web.SPACE, m.Option(web.WEIXIN), lex.PARSE, m.Cmdx("", m.Option(mdb.HASH)))
 			}},
-		}, web.StatsAction("", "小程序场景数"), mdb.ExportHashAction(mdb.FIELD, "time,hash,name,text,pages,space,index,args,wifi", cli.DARWIN, "/Applications/wechatwebdevtools.app/Contents/MacOS/cli")), Hand: func(m *ice.Message, arg ...string) {
+		}, web.StatsAction("", "小程序场景数"), mdb.ExportHashAction(
+			mdb.FIELD, "time,hash,name,text,pages,space,index,args,wifi",
+			cli.DARWIN, "/Applications/wechatwebdevtools.app/Contents/MacOS/cli",
+		)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 && tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) && kit.Value(kit.UnMarshal(IdeCli(m.Spawn(), ISLOGIN).Append(cli.CMD_OUT)), aaa.LOGIN) != true {
 				m.EchoInfoButton("请登录: ", aaa.LOGIN)
 				return

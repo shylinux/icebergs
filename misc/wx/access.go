@@ -64,9 +64,6 @@ func init() {
 					m.Echo(ice.TRUE)
 				}
 			}},
-			AGENT: {Hand: func(m *ice.Message, arg ...string) {
-				ctx.OptionFromConfig(m, ACCESS, APPID)
-			}},
 			TOKENS: {Hand: func(m *ice.Message, arg ...string) {
 				msg := mdb.HashSelect(m.Spawn(), m.Option(ACCESS))
 				if msg.Append(TOKENS) == "" || m.Time() > msg.Append(EXPIRES) {
@@ -85,8 +82,11 @@ func init() {
 				}
 				m.Echo(msg.Append(TICKET)).Status(msg.AppendSimple(EXPIRE))
 			}},
-			web.SSO: {Name: "sso name*=微信扫码 order=11 wifi env=release,trial,develop", Help: "登录", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(web.CHAT_HEADER, mdb.CREATE, mdb.TYPE, mdb.PLUGIN, m.OptionSimple(mdb.NAME, mdb.ORDER),
+			AGENT: {Hand: func(m *ice.Message, arg ...string) {
+				ctx.OptionFromConfig(m, ACCESS, APPID)
+			}},
+			web.SSO: {Name: "sso name*=weixin help*=微信扫码 order=11 wifi env=release,trial,develop", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(web.CHAT_HEADER, mdb.CREATE, mdb.TYPE, mdb.PLUGIN, m.OptionSimple(mdb.NAME, mdb.HELP, mdb.ORDER),
 					ctx.INDEX, m.PrefixKey(), ctx.ARGS, kit.Join(kit.Simple(aaa.LOGIN, m.Option(ACCESS), m.Option(tcp.WIFI), m.Option(ENV))))
 			}},
 			aaa.LOGIN: {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {

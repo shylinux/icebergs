@@ -120,7 +120,7 @@ func init() {
 					m.Echo("login failure")
 				}
 			}},
-		}, web.ApiAction(), mdb.ImportantHashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,help,icons,type,link,order,space,index,args")), Hand: func(m *ice.Message, arg ...string) {
+		}, web.ApiAction(), mdb.ImportantHashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,type,name,help,icons,order,link,space,index,args")), Hand: func(m *ice.Message, arg ...string) {
 			if ice.Info.NodeType == web.WORKER {
 				return
 			}

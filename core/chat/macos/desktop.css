@@ -27,7 +27,7 @@ fieldset.desktop>div.output>div.desktop { display:flex; flex-direction:column; f
 fieldset.desktop>div.output>div.desktop:not(.select) { display:none; }
 fieldset.desktop>div.output>div.desktop>div.item { text-align:center; }
 fieldset.desktop>div.output>div.desktop>div.item img { object-fit:contain; height:var(--desktop-icon-size); width:var(--desktop-icon-size); }
-fieldset.desktop>div.output>div.desktop>div.item>div.name { color:white; font-size:var(--code-font-size); width:var(--desktop-icon-size); overflow:hidden; }
+fieldset.desktop>div.output>div.desktop>div.item>div.name { color:white; white-space:pre; font-size:var(--code-font-size); width:var(--desktop-icon-size); overflow:hidden; }
 fieldset.desktop>div.output>div.desktop>fieldset { border:0; position:absolute; }
 fieldset.desktop>div.output>div.desktop>fieldset>legend { box-shadow:none; padding:0 var(--input-padding); margin:var(--button-margin); }
 fieldset.desktop>div.output>div.desktop>fieldset>div.item.button { box-shadow:var(--box-shadow); border-radius:var(--plugin-radius); padding:8px; height:23px; width:23px;

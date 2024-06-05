@@ -85,18 +85,17 @@ func init() {
 			AGENT: {Hand: func(m *ice.Message, arg ...string) {
 				ctx.OptionFromConfig(m, ACCESS, APPID)
 			}},
-			web.SSO: {Name: "sso name*=weixin help*=微信扫码 order=11 wifi env=release,trial,develop", Hand: func(m *ice.Message, arg ...string) {
+			web.SSO: {Name: "sso name*=weixin help*=微信扫码 order=11 env=release,trial,develop wifi", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(web.CHAT_HEADER, mdb.CREATE, mdb.TYPE, mdb.PLUGIN, m.OptionSimple(mdb.NAME, mdb.HELP, mdb.ORDER),
-					ctx.INDEX, m.PrefixKey(), ctx.ARGS, kit.Join(kit.Simple(aaa.LOGIN, m.Option(ACCESS), m.Option(tcp.WIFI), m.Option(ENV))))
+					ctx.INDEX, m.PrefixKey(), ctx.ARGS, kit.Join(kit.Simple(aaa.LOGIN, m.Option(ACCESS), m.Option(ENV), m.Option(tcp.WIFI))))
 			}},
 			aaa.LOGIN: {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
 				if m.Cmd("", m.Option(ACCESS, arg[0])).Append(mdb.TYPE) == ice.WEB {
 					m.Cmdy(SCAN, mdb.CREATE, mdb.TYPE, QR_STR_SCENE, mdb.NAME, "请授权登录", mdb.TEXT, m.Option(web.SPACE), ctx.INDEX, web.CHAT_GRANT, ctx.ARGS, m.Option(web.SPACE))
 				} else {
-					h := m.Cmdx(IDE, mdb.CREATE, mdb.NAME, "请授权登录", mdb.TEXT, m.Option(web.SPACE), PAGES, PAGES_ACTION, tcp.WIFI, kit.Select("", arg, 1),
-						ctx.INDEX, web.CHAT_GRANT, ctx.ARGS, kit.JoinQuery(m.OptionSimple(web.SPACE, log.DEBUG)...),
-					)
-					m.Echo(m.Cmdx(SCAN, UNLIMIT, SCENE, h, ENV, kit.Select("release", arg, 2), IS_HYALINE, ice.FALSE, mdb.NAME, m.Option(web.SPACE)))
+					h := m.Cmdx(IDE, mdb.CREATE, mdb.NAME, "请授权登录", mdb.TEXT, m.Option(web.SPACE), PAGES, PAGES_ACTION, tcp.WIFI, kit.Select("", arg, 2),
+						ctx.INDEX, web.CHAT_GRANT, ctx.ARGS, kit.JoinQuery(m.OptionSimple(web.SPACE, log.DEBUG)...))
+					m.Echo(m.Cmdx(SCAN, UNLIMIT, SCENE, h, ENV, kit.Select("develop", arg, 1), IS_HYALINE, ice.FALSE, mdb.NAME, m.Option(web.SPACE)))
 				}
 			}},
 			web.SPACE_GRANT: {Hand: func(m *ice.Message, arg ...string) {

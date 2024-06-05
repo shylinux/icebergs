@@ -14,7 +14,7 @@ func _river_right(m *ice.Message, hash string) (ok bool) {
 		return true
 	}
 	ok = true
-	m.Cmd(mdb.SELECT, RIVER, "", mdb.HASH, hash).Table(func(value ice.Maps) {
+	m.Cmd(mdb.SELECT, RIVER, "", mdb.HASH, mdb.HASH, hash).Table(func(value ice.Maps) {
 		ok = kit.IsIn(m.Option(ice.MSG_USERROLE), value[mdb.TYPE], aaa.TECH, aaa.ROOT)
 	})
 	return

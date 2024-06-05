@@ -2,8 +2,7 @@ Volcanos(chat.ONIMPORT, {
 	_init: function(can, msg, cb) {
 		can.db.hash[0] = can.db.hash[0]||(can.user.info.nodetype == web.WORKER? ice.OPS: ice.DEV)
 		can.ui = can.onappend.layout(can), can.onimport._project(can, msg, [])
-		cb && cb(msg),
-			can.onappend._filter(can)
+		cb && cb(msg), can.onappend._filter(can)
 	},
 	_project: function(can, msg, dev, target) {
 		msg.Table(function(value) { if (value.type == web.WORKER) { return }

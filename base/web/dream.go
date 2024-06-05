@@ -450,7 +450,7 @@ func init() {
 					m.Cmd(gdb.EVENT, gdb.LISTEN, gdb.EVENT, DREAM_ACTION, ice.CMD, cmd)
 					aaa.White(m, kit.Keys(m.ShortKey(), ctx.ACTION, cmd))
 				}
-				mdb.HashSelects(m).Table(func(value ice.Maps) {
+				mdb.HashSelects(m.Spawn()).Table(func(value ice.Maps) {
 					if value[cli.RESTART] == ALWAYS && nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK+value[mdb.NAME])) {
 						m.Cmd(DREAM, cli.START, kit.Dict(mdb.NAME, value[mdb.NAME]))
 					}
@@ -504,7 +504,7 @@ func init() {
 					_dream_list(m, simple)
 					_dream_list_icon(m)
 					if m.Length() == 0 {
-						m.EchoInfoButton(m.Trans("please scan or create new dream", "请扫描或创建新空间"), mdb.CREATE, "scan")
+						m.EchoInfoButton(m.Trans("please scan or create new dream", "请扫描或创建新空间"), mdb.CREATE, nfs.SCAN)
 						return
 					}
 				}

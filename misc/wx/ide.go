@@ -179,7 +179,8 @@ func init() {
 			} else if mdb.HashSelect(m, arg...); tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) {
 				m.PushAction(AUTO_PREVIEW, PREVIEW, PUSH, mdb.REMOVE).Action(aaa.LOGIN, code.AUTOGEN, mdb.CREATE, web.ADMIN, DOC)
 			} else {
-				m.PushAction(PUSH, mdb.REMOVE).Action(mdb.CREATE, web.ADMIN, DOC)
+				m.PushAction(AUTO_PREVIEW, PREVIEW, PUSH, mdb.REMOVE).Action(aaa.LOGIN, code.AUTOGEN, mdb.CREATE, web.ADMIN, DOC)
+				// m.PushAction(PUSH, mdb.REMOVE).Action(mdb.CREATE, web.ADMIN, DOC)
 			}
 			if len(arg) > 0 {
 				m.Options(m.AppendSimple(web.SPACE, ctx.INDEX, ctx.ARGS, tcp.WIFI))

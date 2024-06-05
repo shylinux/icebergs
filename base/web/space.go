@@ -85,7 +85,7 @@ func _space_fork(m *ice.Message) {
 		}
 	}
 	if m.Option(mdb.ICONS) != "" && !kit.HasPrefix(m.Option(mdb.ICONS), nfs.PS, HTTP) {
-		m.Option(mdb.ICONS, kit.MergeURL(nfs.P+m.Option(mdb.ICONS), ice.POD, name))
+		// m.Option(mdb.ICONS, kit.MergeURL(nfs.P+m.Option(mdb.ICONS), ice.POD, name))
 	}
 	args := kit.Simple(mdb.TYPE, m.Option(mdb.TYPE), mdb.NAME, name, mdb.TEXT, text, m.OptionSimple(mdb.ICONS, mdb.TIME, nfs.MODULE, nfs.VERSION, cli.DAEMON))
 	args = append(args, aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERROLE, m.Option(ice.MSG_USERROLE))
@@ -194,7 +194,14 @@ func _space_exec(m *ice.Message, name string, source, target []string, c *websoc
 			m.Optionv(ice.MSG_OPTION, []string{})
 			break
 		}
-		m.Option(mdb.ICONS, m.Resource(m.Option(mdb.ICONS), SpideOrigin(m, name)))
+		icons := m.Option(mdb.ICONS)
+		if !strings.HasPrefix(icons, HTTP) {
+			if !strings.HasPrefix(icons, nfs.PS) {
+				icons = nfs.P + icons
+			}
+			icons = SpideOrigin(m, name) + icons
+		}
+		m.Option(mdb.ICONS, icons)
 		args := m.OptionSimple(mdb.ICONS, mdb.TIME, nfs.MODULE, nfs.VERSION, AGENT, cli.SYSTEM)
 		kit.If(name == ice.OPS, func() { args = append(args, m.OptionSimple(mdb.TEXT)...) })
 		mdb.HashModify(m, mdb.HASH, name, ParseUA(m), args)
@@ -420,6 +427,14 @@ func init() {
 						m.Push(mdb.LINK, "")
 					}
 					m.PushButton(kit.Select(OPEN, LOGIN, value[mdb.TYPE] == LOGIN), mdb.REMOVE)
+				})
+				m.RewriteAppend(func(value, key string, index int) string {
+					if key == mdb.ICONS {
+						if !kit.HasPrefix(value, nfs.PS, HTTP) {
+							value = kit.MergeURL(nfs.P+value, ice.POD, kit.Keys(m.Option(ice.MSG_USERPOD), m.Appendv(mdb.NAME)[index]))
+						}
+					}
+					return value
 				})
 				m.Sort("", kit.Simple(aaa.LOGIN, WEIXIN, PORTAL, WORKER, SERVER, ORIGIN))
 			} else {

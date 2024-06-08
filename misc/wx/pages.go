@@ -15,8 +15,6 @@ func init() {
 			if len(arg[0]) == 0 || arg[0] == "" || arg[0] == chat.RIVER {
 				web.RenderMain(m)
 			} else {
-				if m.IsWeixinUA() {
-				}
 				web.RenderCmd(m, kit.Select(m.Option(ctx.INDEX), m.Option(ice.CMD)))
 			}
 		}},

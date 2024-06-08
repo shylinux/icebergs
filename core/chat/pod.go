@@ -50,7 +50,6 @@ func init() {
 						m.Cmdy(web.SPACE, arg[0], arg[2], arg[3:])
 					} else {
 						m.Options(m.Cmd(web.SPACE, arg[0]).AppendSimple())
-						m.Options(mdb.ICONS, "")
 						web.RenderPodCmd(m, arg[0], arg[2], arg[3:])
 					}
 				}

@@ -10,7 +10,7 @@ const WXML = "wxml"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		WXML: {Actions: code.PlugAction(code.PLUG, kit.Dict(
+		WXML: {Actions: ice.MergeActions(code.PlugAction(code.PLUG, kit.Dict(
 			code.INCLUDE, code.HTML,
 			code.KEYWORD, kit.Dict(
 				"page", code.KEYWORD,
@@ -40,6 +40,13 @@ func init() {
 				"bindinput", code.FUNCTION,
 				"bindchange", code.FUNCTION,
 			),
-		))},
+		)), ice.Actions{
+			code.TEMPLATE: {Hand: func(m *ice.Message, arg ...string) {
+				m.Echo(`
+<import src="../../app.wxml"/>
+<view class="output"></view>
+`)
+			}},
+		})},
 	})
 }

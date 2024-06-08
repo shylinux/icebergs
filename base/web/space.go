@@ -338,6 +338,7 @@ func init() {
 					m.Cmd(SERVE, m.ActionKey(), arg)
 					return
 				}
+				m.Option(mdb.ICONS, "")
 				kit.If(ice.Info.NodeMain, func(cmd string) { RenderPodCmd(m, "", cmd) }, func() { RenderMain(m) })
 			}},
 			ice.INFO: {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {

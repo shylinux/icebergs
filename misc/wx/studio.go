@@ -11,7 +11,7 @@ const STUDIO = "studio"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		STUDIO: {Hand: func(m *ice.Message, arg ...string) {
+		STUDIO: {Icon: "wxdev.png", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(ctx.COMMAND, kit.Split(kit.Select("web.chat.wx.access,web.chat.wx.ide,web.chat.wx.scan", mdb.Config(m, ctx.CMDS))))
 			ctx.DisplayStory(m, "")
 		}},

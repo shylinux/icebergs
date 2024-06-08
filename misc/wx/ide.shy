@@ -8,4 +8,4 @@ qrcode `https://mp.weixin.qq.com/a/~HkylKD4DZShrgSm5GuXWLQ~~`
 
 field web.chat.wx.access
 field web.chat.wx.ide
-field web.chat.wx.scan
+field web.chat.wx.scan args `gh_61ea404535e4`

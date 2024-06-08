@@ -141,6 +141,10 @@ func init() {
 				m.Cmdy(COMPLETE, kit.Ext(m.Option(mdb.FILE)), m.Option(nfs.FILE), m.Option(nfs.PATH))
 			}},
 			COMPILE: {Hand: func(m *ice.Message, arg ...string) {
+				if m.Option(nfs.PATH) == ice.USR_PROGRAM {
+					m.Cmd(cli.SYSTEM, cli.MAKE, kit.Dict(cli.CMD_DIR, m.Option(nfs.PATH)))
+					return
+				}
 				if msg := m.Cmd(COMPILE, ice.SRC_MAIN_GO, ice.BIN_ICE_BIN); cli.IsSuccess(msg) {
 					m.GoSleep30ms(func() { m.Cmd(UPGRADE, cli.RESTART) })
 				} else {

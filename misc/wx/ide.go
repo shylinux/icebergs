@@ -107,11 +107,25 @@ const IDE = "ide"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		IDE: {Name: "ide hash auto", Help: "集成开发环境", Icon: "wxdev.png", Meta: Meta(), Actions: ice.MergeActions(ice.Actions{
+		IDE: {Name: "ide hash auto", Help: "集成开发环境", Meta: Meta(), Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch mdb.HashInputs(m, arg); arg[0] {
 				case PAGES:
 					m.Push(arg[0], kit.Value(kit.UnMarshal(m.Cmdx(nfs.CAT, path.Join(mdb.Config(m, PROJECT), APP_JSON))), PAGES))
+				case APPID:
+					m.Cmd(ACCESS).Table(func(value ice.Maps) {
+						if value[mdb.TYPE] == ice.APP {
+							m.Push("", value, []string{APPID, aaa.USERNICK})
+						}
+					})
+				case web.SERVE:
+					m.OptionFields(web.CLIENT_ORIGIN, web.CLIENT_TYPE)
+					m.Cmd(web.SPIDE).Table(func(value ice.Maps) {
+						if value[web.CLIENT_TYPE] == nfs.REPOS {
+							m.Push(arg[0], value[web.CLIENT_ORIGIN])
+						}
+					})
+					m.SortStr(arg[0])
 				case tcp.WIFI:
 					m.Cmdy(tcp.WIFI).Cut(tcp.SSID)
 				case web.WEIXIN:
@@ -125,12 +139,12 @@ func init() {
 					})
 				}
 			}},
-			aaa.LOGIN: {Help: "登录", Hand: func(m *ice.Message, arg ...string) {
+			aaa.LOGIN: {Hand: func(m *ice.Message, arg ...string) {
 				p := nfs.TempName(m)
 				m.GoSleep3s(func() { web.PushNoticeGrow(m, ice.Render(m, ice.RENDER_IMAGES, web.SHARE_LOCAL+p)) })
 				IdeCli(m, "", _ide_args_cli(m), _ide_args_qrcode(m, p)).ProcessRefresh()
 			}},
-			code.AUTOGEN: {Name: "autogen projectname*='终端工具链' appid*='wxf4e5104d83476ed6' serve*='https://2021.shylinux.com'", Help: "生成", Icon: "bi bi-tools", Hand: func(m *ice.Message, arg ...string) {
+			code.AUTOGEN: {Name: "autogen projectname*='终端工具链' appid* serve*", Help: "生成", Icon: "bi bi-folder-check", Hand: func(m *ice.Message, arg ...string) {
 				_ide_autogen_utils(m)
 				_ide_autogen_pages(m)
 				p := ice.USR_PROGRAM
@@ -138,51 +152,43 @@ func init() {
 				m.Cmd(nfs.DEFS, p+PROJECT_CONFIG_JSON, kit.Formats(kit.Dict(m.OptionSimple(APPID, "projectname"))))
 				IdeCli(m.Sleep3s(), cli.OPEN, "--project", kit.Path(mdb.Config(m, PROJECT, p))).ProcessInner()
 			}},
-			web.ADMIN: {Help: "后台", Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessOpen("https://mp.weixin.qq.com/")
-			}},
-			DOC: {Help: "文档", Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessOpen("https://developers.weixin.qq.com/miniprogram/dev/api/")
-			}},
-			cli.MAKE: {Help: "构建", Hand: func(m *ice.Message, arg ...string) {
+			cli.MAKE: {Help: "构建", Icon: "bi bi-tools", Hand: func(m *ice.Message, arg ...string) {
 				kit.If(m.Option(mdb.HASH), func(p string) { mdb.Config(m, CURRENT, p) })
 				m.Options(m.Cmd("", kit.Select(mdb.Config(m, CURRENT), arg, 0)).AppendSimple())
 				kit.If(m.Option(cli.PWD), func(p string) {
-					kit.If(p == kit.Path(ice.USR_VOLCANOS+PUBLISH_CLIENT_MP), func() { _ide_autogen_utils(m); _ide_autogen_pages(m) })
+					// kit.If(p == kit.Path(ice.USR_VOLCANOS+PUBLISH_CLIENT_MP), func() { _ide_autogen_utils(m); _ide_autogen_pages(m) })
 				})
 				m.Cmd("", AUTO_PREVIEW)
 			}},
-			AUTO_PREVIEW: {Help: "预览", Icon: "bi bi-wechat", Hand: func(m *ice.Message, arg ...string) {
+			web.ADMIN: {Hand: func(m *ice.Message, arg ...string) {
+				m.ProcessOpen("https://mp.weixin.qq.com/")
+			}},
+			DOC: {Hand: func(m *ice.Message, arg ...string) {
+				m.ProcessOpen("https://developers.weixin.qq.com/miniprogram/dev/api/")
+			}},
+			AUTO_PREVIEW: {Icon: "bi bi-wechat", Hand: func(m *ice.Message, arg ...string) {
 				kit.If(m.Option(mdb.HASH), func(p string) { mdb.Config(m, CURRENT, p) })
 				IdeCli(m, "", _ide_args_cli(m)).ProcessInner()
 			}},
-			PREVIEW: {Help: "体验", Icon: "bi bi-qr-code-scan", Hand: func(m *ice.Message, arg ...string) {
+			PREVIEW: {Icon: "bi bi-qr-code-scan", Hand: func(m *ice.Message, arg ...string) {
 				kit.If(m.Option(mdb.HASH), func(p string) { mdb.Config(m, CURRENT, p) })
 				p := nfs.TempName(m)
 				IdeCli(m, "", _ide_args_cli(m), _ide_args_qrcode(m, p)).EchoImages(web.SHARE_LOCAL + p).ProcessInner()
 			}},
-			PUSH: {Name: "push weixin", Help: "推送", Icon: "bi bi-arrow-up-right-square", Hand: func(m *ice.Message, arg ...string) {
+			PUSH: {Name: "push weixin", Icon: "bi bi-arrow-up-right-square", Hand: func(m *ice.Message, arg ...string) {
 				defer m.ProcessHold()
 				defer web.ToastProcess(m)()
 				m.Cmd(web.SPACE, m.Option(web.WEIXIN), lex.PARSE, m.Cmdx("", m.Option(mdb.HASH)))
 			}},
-		}, web.StatsAction("", "小程序场景数"), mdb.ExportHashAction(
-			mdb.FIELD, "time,hash,name,text,pages,space,index,args,wifi",
-			cli.DARWIN, "/Applications/wechatwebdevtools.app/Contents/MacOS/cli",
-		)), Hand: func(m *ice.Message, arg ...string) {
-			if len(arg) == 0 && tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) && kit.Value(kit.UnMarshal(IdeCli(m.Spawn(), ISLOGIN).Append(cli.CMD_OUT)), aaa.LOGIN) != true {
-				m.EchoInfoButton("请登录: ", aaa.LOGIN)
+		}, mdb.ExportHashAction(mdb.FIELD, "time,hash,name,text,pages,space,index,args,wifi", cli.DARWIN, "/Applications/wechatwebdevtools.app/Contents/MacOS/cli")), Hand: func(m *ice.Message, arg ...string) {
+			if tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) && kit.Value(kit.UnMarshal(IdeCli(m.Spawn(), ISLOGIN).Append(cli.CMD_OUT)), aaa.LOGIN) != true {
+				m.EchoInfoButton("请微信授权", aaa.LOGIN)
 				return
 			} else if !nfs.Exists(m, ice.USR_PROGRAM) {
-				m.EchoInfoButton("请生成项目: ", code.AUTOGEN)
+				m.EchoInfoButton("请生成项目", code.AUTOGEN)
 				return
-			} else if mdb.HashSelect(m, arg...); tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) {
-				m.PushAction(AUTO_PREVIEW, PREVIEW, PUSH, mdb.REMOVE).Action(aaa.LOGIN, code.AUTOGEN, mdb.CREATE, web.ADMIN, DOC)
-			} else {
-				m.PushAction(AUTO_PREVIEW, PREVIEW, PUSH, mdb.REMOVE).Action(aaa.LOGIN, code.AUTOGEN, mdb.CREATE, web.ADMIN, DOC)
-				// m.PushAction(PUSH, mdb.REMOVE).Action(mdb.CREATE, web.ADMIN, DOC)
 			}
-			if len(arg) > 0 {
+			if mdb.HashSelect(m, arg...).PushAction(AUTO_PREVIEW, PREVIEW, PUSH, mdb.REMOVE).Action(mdb.CREATE, cli.MAKE, code.AUTOGEN, aaa.LOGIN, web.ADMIN, DOC); len(arg) > 0 {
 				m.Options(m.AppendSimple(web.SPACE, ctx.INDEX, ctx.ARGS, tcp.WIFI))
 				p := kit.MergeURL2(kit.Select(web.UserHost(m), m.Option(web.SERVE)), path.Join(nfs.PS+m.Append(PAGES)), _ide_args(m))
 				m.PushQRCode(cli.QRCODE, p).Push(web.LINK, p).Echo(p)

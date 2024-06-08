@@ -49,7 +49,7 @@ func init() {
 					if info.Append(tcp.WIFI) != "" {
 						wifi := m.Cmd(tcp.WIFI, info.Append(tcp.WIFI))
 						ls := kit.Split(tcp.PublishLocalhost(m, u.Hostname()), nfs.PT)
-						meta = path.Join("w", kit.Format("%x%x", kit.Int(ls[2]), kit.Int(ls[3])), scene, wifi.Append(tcp.SSID), wifi.Append(aaa.PASSWORD))
+						meta = path.Join("w", kit.Format("%x", kit.Int(ls[3])), scene, wifi.Append(tcp.SSID), wifi.Append(aaa.PASSWORD))
 					} else {
 						meta = path.Join("h", tcp.PublishLocalhost(m, u.Host), scene)
 					}

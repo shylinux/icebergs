@@ -23,15 +23,18 @@ func init() {
 				"import", code.KEYWORD,
 
 				"class", code.FUNCTION,
-				"size", code.FUNCTION,
+				"type", code.FUNCTION,
+				"open-type", code.FUNCTION,
 				"name", code.FUNCTION,
-				"range", code.FUNCTION,
+				"size", code.FUNCTION,
 				"value", code.FUNCTION,
 				"placeholder", code.FUNCTION,
+				"range", code.FUNCTION,
 				"is", code.FUNCTION,
 				"data", code.FUNCTION,
 				"wx:if", code.FUNCTION,
 				"wx:elif", code.FUNCTION,
+				"wx:else", code.FUNCTION,
 				"wx:for", code.FUNCTION,
 				"wx:for-item", code.FUNCTION,
 				"wx:for-index", code.FUNCTION,
@@ -39,12 +42,17 @@ func init() {
 				"bindtap", code.FUNCTION,
 				"bindinput", code.FUNCTION,
 				"bindchange", code.FUNCTION,
+				"onblur", code.FUNCTION,
+				"data-name", code.FUNCTION,
+				"data-item", code.FUNCTION,
 			),
 		)), ice.Actions{
 			code.TEMPLATE: {Hand: func(m *ice.Message, arg ...string) {
 				m.Echo(`
 <import src="../../app.wxml"/>
-<view class="output"></view>
+<view class="output">
+	output
+</view>
 `)
 			}},
 		})},

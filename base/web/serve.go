@@ -337,7 +337,7 @@ func ChatCmdPath(m *ice.Message, arg ...string) string {
 	return m.MergePodCmd("", kit.Select(m.ShortKey(), path.Join(arg...)))
 }
 func RequireFile(m *ice.Message, file string) string {
-	if strings.HasPrefix(file, nfs.PS) || strings.HasPrefix(file, ice.HTTP) {
+	if strings.HasPrefix(file, nfs.PS) || strings.HasPrefix(file, ice.HTTP) || strings.Contains(file, "://") {
 		return file
 	} else if file != "" {
 		return nfs.P + file

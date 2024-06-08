@@ -83,17 +83,23 @@ func init() {
 		web.PP(LOGIN): {Actions: ice.MergeActions(ice.Actions{
 			aaa.SESS: {Name: "sess code", Help: "会话", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(ice.MSG_USERZONE, WX)
-				msg := m.Cmd(ACCESS, kit.Select(m.Option(APPID), kit.Split(kit.ParseURL(m.Option(ice.MSG_REFERER)).Path, nfs.PS), 0))
-				msg = m.Cmd(web.SPIDE, WX, http.MethodGet, AUTH_CODE, "js_code", m.Option(cli.CODE), msg.AppendSimple(APPID, SECRET))
+				appid := kit.Select(m.Option(APPID), kit.Split(kit.ParseURL(m.Option(ice.MSG_REFERER)).Path, nfs.PS), 0)
+				m.Cmd(ACCESS).Table(func(value ice.Maps) {
+					kit.If(value[APPID] == appid, func() { delete(value, aaa.USERNICK); m.Options(value) })
+				})
+				msg := m.Cmd(web.SPIDE, WX, http.MethodGet, AUTH_CODE, "js_code", m.Option(cli.CODE), m.OptionSimple(APPID, SECRET))
+				m.Warn(msg.Append(OPENID) == "", msg.Append("errmsg"))
 				m.Echo(aaa.SessCreate(msg, msg.Append(OPENID)))
+				m.Sleep("3s")
 			}},
 			aaa.USER: {Help: "用户", Hand: func(m *ice.Message, arg ...string) {
 				if m.Cmd(aaa.USER, m.Option(aaa.USERNAME, m.Option(ice.MSG_USERNAME))).Length() == 0 {
 					m.Cmd(aaa.USER, mdb.CREATE, aaa.USERROLE, aaa.VOID, m.OptionSimple(aaa.USERNAME))
 				}
-				m.Cmd(aaa.USER, mdb.MODIFY, m.OptionSimple(aaa.USERNAME), aaa.USERNICK, m.Option("nickName"), aaa.USERZONE, WX,
-					aaa.AVATAR, m.Option("avatarUrl"), aaa.GENDER, kit.Select("女", "男", m.Option(aaa.GENDER) == "1"),
-					m.OptionSimple(aaa.CITY, aaa.COUNTRY, aaa.LANGUAGE, aaa.PROVINCE),
+				m.Cmd(aaa.USER, mdb.MODIFY, m.OptionSimple(aaa.USERNAME),
+					aaa.USERNICK, m.Option(aaa.USERNICK), aaa.AVATAR, m.Option(aaa.AVATAR),
+					aaa.GENDER, kit.Select(kit.Select("", "女", m.Option(aaa.GENDER) == "2"), "男", m.Option(aaa.GENDER) == "1"),
+					m.OptionSimple(aaa.LANGUAGE, aaa.CITY, aaa.COUNTRY, aaa.PROVINCE), aaa.USERZONE, WX,
 				)
 			}},
 			SCENE: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(IDE, m.Option(SCENE)) }},

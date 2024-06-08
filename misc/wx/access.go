@@ -43,8 +43,8 @@ const (
 	TOKEN   = "token"
 	TOKENS  = "tokens"
 	EXPIRES = "expires"
-	TICKET  = "ticket"
 	EXPIRE  = "expire"
+	TICKET  = "ticket"
 )
 const ACCESS = "access"
 
@@ -91,11 +91,12 @@ func init() {
 			}},
 			aaa.LOGIN: {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
 				if m.Cmd("", m.Option(ACCESS, arg[0])).Append(mdb.TYPE) == ice.WEB {
-					m.Cmdy(SCAN, mdb.CREATE, mdb.TYPE, QR_STR_SCENE, mdb.NAME, "请授权登录", mdb.TEXT, m.Option(web.SPACE), ctx.INDEX, web.CHAT_GRANT, ctx.ARGS, m.Option(web.SPACE))
+					m.Cmdy(SCAN, mdb.CREATE, mdb.TYPE, QR_STR_SCENE, mdb.NAME, "请授权登录", mdb.TEXT, m.Option(web.SPACE),
+						ctx.INDEX, web.CHAT_GRANT, ctx.ARGS, m.Option(web.SPACE))
 				} else {
 					h := m.Cmdx(IDE, mdb.CREATE, mdb.NAME, "请授权登录", mdb.TEXT, m.Option(web.SPACE), PAGES, PAGES_ACTION, tcp.WIFI, kit.Select("", arg, 2),
 						ctx.INDEX, web.CHAT_GRANT, ctx.ARGS, kit.JoinQuery(m.OptionSimple(web.SPACE, log.DEBUG)...))
-					m.Echo(m.Cmdx(SCAN, UNLIMIT, SCENE, h, ENV, kit.Select("develop", arg, 1), IS_HYALINE, ice.FALSE, mdb.NAME, m.Option(web.SPACE)))
+					m.Echo(m.Cmdx(SCAN, UNLIMIT, ENV, kit.Select("develop", arg, 1), SCENE, h, mdb.NAME, m.Option(web.SPACE)))
 				}
 			}},
 			web.SPACE_GRANT: {Hand: func(m *ice.Message, arg ...string) {
@@ -108,7 +109,9 @@ func init() {
 				m.Cmd(mdb.PRUNES, m.Prefix(SCAN), "", mdb.HASH, m.OptionSimple(mdb.NAME))
 				m.Cmd(mdb.PRUNES, m.Prefix(IDE), "", mdb.HASH, m.OptionSimple(mdb.NAME))
 			}},
-		}, gdb.EventsAction(web.SPACE_GRANT, web.SPACE_LOGIN_CLOSE), mdb.ImportantHashAction(mdb.SHORT, ACCESS, mdb.FIELD, "time,type,access,icons,usernick,appid", tcp.SERVER, CGI_BIN)), Hand: func(m *ice.Message, arg ...string) {
+		}, gdb.EventsAction(web.SPACE_GRANT, web.SPACE_LOGIN_CLOSE), mdb.ImportantHashAction(
+			mdb.SHORT, ACCESS, mdb.FIELD, "time,type,access,icons,usernick,appid", tcp.SERVER, CGI_BIN,
+		)), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, arg...).PushAction(web.SSO, mdb.REMOVE).StatusTimeCount(mdb.ConfigSimple(m, ACCESS, APPID), web.SERVE, m.MergeLink("/chat/wx/login/"))
 			m.RewriteAppend(func(value, key string, index int) string {
 				kit.If(key == cli.QRCODE, func() { value = ice.Render(m, ice.RENDER_QRCODE, value) })
@@ -128,14 +131,16 @@ func SpideGet(m *ice.Message, api string, arg ...ice.Any) ice.Any {
 }
 func Meta() ice.Map {
 	return kit.Dict(ice.CTX_TRANS, kit.Dict(html.INPUT, kit.Dict(
-		ACCESS, "账号", APPID, "应用", SECRET, "密码",
-		TOKEN, "口令", TOKENS, "令牌", TICKET, "票据",
-		EXPIRES, "令牌有效期", EXPIRE, "票据有效期", EXPIRE_SECONDS, "有效期",
+		ACCESS, "账号", APPID, "应用", SECRET, "密码", TOKEN, "口令",
+		TOKENS, "令牌", EXPIRES, "令牌有效期",
+		TICKET, "票据", EXPIRE, "票据有效期", EXPIRE_SECONDS, "有效期",
 		SCENE, "场景", RIVER, "一级", STORM, "二级",
 		SEX, "性别", TAGS, "标签", REMARK, "备注",
 		"subscribe", "订阅", "subscribe_time", "时间",
 		"nickname", "昵称", "headimgurl", "头像",
 		"projectname", "项目",
 		ENV, "环境", PAGES, "页面",
+	), html.VALUE, kit.Dict(
+		"web", "公众号", "app", "小程序",
 	)))
 }

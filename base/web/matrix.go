@@ -33,7 +33,7 @@ func _matrix_list(m *ice.Message, domain, typ string, value ice.Maps, fields ...
 				break
 			}
 			value[DOMAIN] = domain
-			kit.If(value[mdb.STATUS] == cli.STOP, func() { value[mdb.ICONS] = nfs.USR_ICONS_ICEBERGS })
+			kit.If(value[mdb.STATUS] == cli.STOP, func() { value[mdb.ICONS] = nfs.P + nfs.USR_ICONS_ICEBERGS })
 			kit.If(value[mdb.STATUS] == cli.STOP && istech, func() { button = []ice.Any{cli.START, mdb.REMOVE} })
 			m.PushRecord(value, fields...).PushButton(button...)
 		case SERVER, ORIGIN:
@@ -132,7 +132,7 @@ func init() {
 				m.Options("space.timeout", mdb.Config(m, cli.TIMEOUT), "dream.simple", ice.TRUE)
 				list, icons, types := _matrix_list(m, "", MYSELF, ice.Maps{
 					mdb.TIME:    ice.Info.Make.Time,
-					mdb.ICONS:   ice.SRC_MAIN_ICO,
+					mdb.ICONS:   nfs.P + ice.SRC_MAIN_ICO,
 					nfs.MODULE:  ice.Info.Make.Module,
 					nfs.VERSION: ice.Info.Make.Versions(),
 					aaa.ACCESS:  m.Option(ice.MSG_USERROLE),

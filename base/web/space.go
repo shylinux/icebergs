@@ -84,9 +84,6 @@ func _space_fork(m *ice.Message) {
 			safe = aaa.IsTechOrRoot(m)
 		}
 	}
-	if m.Option(mdb.ICONS) != "" && !kit.HasPrefix(m.Option(mdb.ICONS), nfs.PS, HTTP) {
-		// m.Option(mdb.ICONS, kit.MergeURL(nfs.P+m.Option(mdb.ICONS), ice.POD, name))
-	}
 	args := kit.Simple(mdb.TYPE, m.Option(mdb.TYPE), mdb.NAME, name, mdb.TEXT, text, m.OptionSimple(mdb.ICONS, mdb.TIME, nfs.MODULE, nfs.VERSION, cli.DAEMON))
 	args = append(args, aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERROLE, m.Option(ice.MSG_USERROLE))
 	args = append(args, cli.SYSTEM, m.Option(cli.GOOS))
@@ -194,14 +191,6 @@ func _space_exec(m *ice.Message, name string, source, target []string, c *websoc
 			m.Optionv(ice.MSG_OPTION, []string{})
 			break
 		}
-		icons := m.Option(mdb.ICONS)
-		if !strings.HasPrefix(icons, HTTP) {
-			if !strings.HasPrefix(icons, nfs.PS) {
-				icons = nfs.P + icons
-			}
-			icons = SpideOrigin(m, name) + icons
-		}
-		m.Option(mdb.ICONS, icons)
 		args := m.OptionSimple(mdb.ICONS, mdb.TIME, nfs.MODULE, nfs.VERSION, AGENT, cli.SYSTEM)
 		kit.If(name == ice.OPS, func() { args = append(args, m.OptionSimple(mdb.TEXT)...) })
 		mdb.HashModify(m, mdb.HASH, name, ParseUA(m), args)
@@ -338,7 +327,7 @@ func init() {
 					m.Cmd(SERVE, m.ActionKey(), arg)
 					return
 				}
-				m.Option(mdb.ICONS, "")
+				m.Options(mdb.ICONS, "")
 				kit.If(ice.Info.NodeMain, func(cmd string) { RenderPodCmd(m, "", cmd) }, func() { RenderMain(m) })
 			}},
 			ice.INFO: {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
@@ -430,9 +419,16 @@ func init() {
 					m.PushButton(kit.Select(OPEN, LOGIN, value[mdb.TYPE] == LOGIN), mdb.REMOVE)
 				})
 				m.RewriteAppend(func(value, key string, index int) string {
-					if key == mdb.ICONS {
-						if !kit.HasPrefix(value, nfs.PS, HTTP) {
-							value = kit.MergeURL(nfs.P+value, ice.POD, kit.Keys(m.Option(ice.MSG_USERPOD), m.Appendv(mdb.NAME)[index]))
+					if key == mdb.ICONS && !kit.HasPrefix(value, HTTP) {
+						if m.Appendv(mdb.TYPE)[index] == ORIGIN {
+							if !kit.HasPrefix(value, nfs.PS) {
+								value = kit.MergeURL(nfs.P + value)
+							}
+							value = kit.MergeURL2(m.Appendv(mdb.TEXT)[index], value)
+						} else {
+							if !kit.HasPrefix(value, nfs.PS) {
+								value = kit.MergeURL(nfs.P+value, ice.POD, kit.Keys(m.Option(ice.MSG_USERPOD), m.Appendv(mdb.NAME)[index]))
+							}
 						}
 					}
 					return value

@@ -155,9 +155,8 @@ func init() {
 			cli.MAKE: {Help: "构建", Icon: "bi bi-tools", Hand: func(m *ice.Message, arg ...string) {
 				kit.If(m.Option(mdb.HASH), func(p string) { mdb.Config(m, CURRENT, p) })
 				m.Options(m.Cmd("", kit.Select(mdb.Config(m, CURRENT), arg, 0)).AppendSimple())
-				kit.If(m.Option(cli.PWD), func(p string) {
-					// kit.If(p == kit.Path(ice.USR_VOLCANOS+PUBLISH_CLIENT_MP), func() { _ide_autogen_utils(m); _ide_autogen_pages(m) })
-				})
+				// _ide_autogen_utils(m)
+				// _ide_autogen_pages(m)
 				m.Cmd("", AUTO_PREVIEW)
 			}},
 			web.ADMIN: {Hand: func(m *ice.Message, arg ...string) {

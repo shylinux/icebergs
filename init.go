@@ -126,7 +126,7 @@ func Run(arg ...string) string {
 		conf.Wait()
 		os.Exit(kit.Int(Pulse.Option(EXIT)))
 	default:
-		_forever = true
+		_forever = false
 		Pulse.Cmdy(INIT).Cmdy(arg)
 		kit.If(strings.TrimSpace(Pulse.Result()) == "" && Pulse.Length() > 0, func() { Pulse.TableEcho() })
 		kit.If(Pulse.Result() != "" && !strings.HasSuffix(Pulse.Result(), NL), func() { Pulse.Echo(NL) })

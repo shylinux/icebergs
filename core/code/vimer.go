@@ -142,7 +142,7 @@ func init() {
 			}},
 			COMPILE: {Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(nfs.PATH) == ice.USR_PROGRAM {
-					m.Cmd(cli.SYSTEM, cli.MAKE, kit.Dict(cli.CMD_DIR, m.Option(nfs.PATH)))
+					m.Cmdy("web.chat.wx.ide", "make")
 					return
 				}
 				if msg := m.Cmd(COMPILE, ice.SRC_MAIN_GO, ice.BIN_ICE_BIN); cli.IsSuccess(msg) {

@@ -157,6 +157,9 @@ func init() {
 				m.Options(m.Cmd("", kit.Select(mdb.Config(m, CURRENT), arg, 0)).AppendSimple())
 				// _ide_autogen_utils(m)
 				// _ide_autogen_pages(m)
+				if m.Option(nfs.PATH) == ice.USR_PROGRAM && strings.HasPrefix(m.Option(nfs.FILE), "pages/") {
+					m.Option(PAGES, "/"+kit.TrimSuffix(m.Option(nfs.FILE), ".wxml", ".wxss", ".json", ".js"))
+				}
 				m.Cmd("", AUTO_PREVIEW)
 			}},
 			web.ADMIN: {Hand: func(m *ice.Message, arg ...string) {
@@ -200,7 +203,7 @@ func init() {
 }
 
 func IdeCli(m *ice.Message, action string, arg ...ice.Any) *ice.Message {
-	defer web.ToastProcess(m)()
+	defer web.ToastProcess(m, m.Option(PAGES))()
 	switch runtime.GOOS {
 	case cli.DARWIN:
 		m.Cmdy(cli.SYSTEM, mdb.Config(m, runtime.GOOS), kit.Select(m.ActionKey(), action), arg)

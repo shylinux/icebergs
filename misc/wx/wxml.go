@@ -42,6 +42,7 @@ func init() {
 				"wx:key", code.FUNCTION,
 				"bindtap", code.FUNCTION,
 				"bindchange", code.FUNCTION,
+				"bindconfirm", code.FUNCTION,
 				"bindinput", code.FUNCTION,
 				"bindblur", code.FUNCTION,
 				"data-name", code.FUNCTION,

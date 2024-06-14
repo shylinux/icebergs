@@ -54,6 +54,9 @@ func init() {
 		), Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				ice.AddRender(ice.RENDER_QRCODE, func(m *ice.Message, args ...ice.Any) string {
+					if m.IsMobileUA() {
+						m.Option(SIZE, "280")
+					}
 					return m.Cmd(Prefix(QRCODE), kit.Simple(args...)).Result()
 				})
 			}},

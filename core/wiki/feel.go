@@ -2,6 +2,7 @@ package wiki
 
 import (
 	"path"
+	"strings"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/ctx"
@@ -34,8 +35,13 @@ func init() {
 				up := kit.Simple(m.Optionv(ice.MSG_UPLOAD))
 				m.Cmdy(web.CACHE, web.WATCH, m.Option(mdb.HASH), path.Join(m.Option(nfs.PATH, _feel_path(m, m.Option(nfs.PATH))), up[1]))
 			}},
+			"moveto": {Hand: func(m *ice.Message, arg ...string) {
+				kit.For(arg[1:], func(from string) { m.Cmd(nfs.MOVE, path.Join(arg[0], path.Base(from)), from) })
+			}},
 			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
-				nfs.Trash(m, kit.Select(_feel_path(m, m.Option(nfs.PATH)), arg, 0))
+				p := kit.Select(_feel_path(m, m.Option(nfs.PATH)), arg, 0)
+				kit.If(strings.HasSuffix(p, nfs.PS), func() { mdb.HashRemove(m, nfs.PATH, p) })
+				nfs.Trash(m, p)
 			}},
 			chat.FAVOR_INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
@@ -64,8 +70,16 @@ func init() {
 					m.ProcessInner()
 				}
 			}},
-		}, chat.FavorAction(), WikiAction("", "ico|png|PNG|jpg|JPG|jpeg|mp4|m4v|mov|MOV|webm")), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,name,path,cover"), chat.FavorAction(), WikiAction("", "ico|png|PNG|jpg|JPG|jpeg|mp4|m4v|mov|MOV|webm")), Hand: func(m *ice.Message, arg ...string) {
+			if len(kit.Slice(arg, 0, 2)) == 0 {
+				mdb.HashSelect(m)
+				m.Push(nfs.PATH, "usr/image/").Push(mdb.NAME, "照片库").Push("cover", "usr/icons/background.jpg")
+				m.Push(nfs.PATH, "usr/avatar/").Push(mdb.NAME, "头像库").Push("cover", "usr/icons/avatar.jpg")
+				m.Push(nfs.PATH, "usr/icons/").Push(mdb.NAME, "图标库").Push("cover", "src/main.ico")
+				return
+			}
 			_wiki_list(m.Options(nfs.DIR_ROOT, _feel_path(m, "")), kit.Slice(arg, 0, 1)...)
+			m.SortStrR(mdb.TIME)
 			ctx.DisplayLocal(m, "")
 		}},
 	})

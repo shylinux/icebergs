@@ -26,6 +26,7 @@ func init() {
 				"type", code.FUNCTION,
 				"open-type", code.FUNCTION,
 				"size", code.FUNCTION,
+				"mode", code.FUNCTION,
 				"name", code.FUNCTION,
 				"value", code.FUNCTION,
 				"range", code.FUNCTION,

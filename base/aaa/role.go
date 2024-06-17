@@ -72,7 +72,7 @@ const ROLE = "role"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		ROLE: {Name: "role role key auto insert simple", Help: "角色", Actions: ice.MergeActions(ice.Actions{
+		ROLE: {Name: "role name key auto", Help: "角色", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(ROLE, mdb.CREATE, VOID, TECH)
 				has := map[string]bool{VOID: true, TECH: true}
@@ -107,26 +107,26 @@ func init() {
 			WHITE: {Hand: func(m *ice.Message, arg ...string) { _role_white(m, arg[0], _role_keys(arg[1:]...)) }},
 			BLACK: {Hand: func(m *ice.Message, arg ...string) { _role_black(m, arg[0], _role_keys(arg[1:]...)) }},
 			RIGHT: {Hand: func(m *ice.Message, arg ...string) {
-				kit.If(_role_right(m, arg[0], kit.Split(_role_keys(arg[1:]...), ice.PT)...), func() { m.Echo(ice.OK) })
-			}},
-			"simple": {Hand: func(m *ice.Message, arg ...string) {
-				list := map[string][]string{}
-				m.Cmd("", func(value ice.Maps) {
-					if value[mdb.ZONE] == WHITE {
-						if strings.Contains(value[mdb.KEY], ".action.") {
-							ls := strings.Split(value[mdb.KEY], ".action.")
-							list[ls[0]] = append(list[ls[0]], ls[1])
-						} else {
-							list[value[mdb.KEY]] = []string{}
+				if len(arg) > 2 {
+					m.Search(arg[1], func(key string, cmd *ice.Command) {
+						if _, ok := cmd.Actions[arg[2]]; ok {
+							arg = kit.Simple(arg[0], arg[1], ice.ACTION, arg[2:])
 						}
+					})
+				}
+				for _, role := range kit.AddUniq(kit.Split(arg[0]), VOID) {
+					if _role_right(m, role, kit.Split(_role_keys(arg[1:]...), ice.PT)...) {
+						m.Echo(ice.OK)
+						break
 					}
-				})
-				kit.For(list, func(cmd string, action []string) {
-					m.Push(ice.CMD, cmd).Push("actions", kit.Join(action))
-				})
+				}
 			}},
-		}, mdb.HashAction(mdb.SHORT, mdb.NAME)), Hand: func(m *ice.Message, arg ...string) {
-			_role_list(m, kit.Select("", arg, 0), kit.Slice(arg, 1)...).PushAction(mdb.DELETE)
+		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name")), Hand: func(m *ice.Message, arg ...string) {
+			if len(arg) == 0 {
+				mdb.HashSelect(m, arg...)
+			} else {
+				_role_list(m, kit.Select("", arg, 0), kit.Slice(arg, 1)...)
+			}
 		}},
 	})
 }
@@ -134,6 +134,9 @@ func roleHandle(m *ice.Message, role string, key ...string) {
 	cmd := m.ShortKey()
 	role = kit.Select(VOID, role)
 	m.Cmd(ROLE, WHITE, role, cmd)
+	if cmd == "header" {
+		return
+	}
 	m.Cmd(ROLE, BLACK, role, cmd, ice.ACTION)
 	kit.For(key, func(key string) { m.Cmd(ROLE, WHITE, role, cmd, ice.ACTION, key) })
 }
@@ -142,6 +145,9 @@ func WhiteAction(role string, key ...string) ice.Actions {
 	return ice.Actions{ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 		cmd := m.CommandKey()
 		m.Cmd(ROLE, WHITE, role, cmd)
+		if cmd == "header" {
+			return
+		}
 		m.Cmd(ROLE, BLACK, role, cmd, ice.ACTION)
 		kit.For(key, func(key string) { m.Cmd(ROLE, WHITE, role, cmd, ice.ACTION, key) })
 	}}}

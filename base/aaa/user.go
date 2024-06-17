@@ -58,6 +58,9 @@ func init() {
 				case USERNAME:
 					m.Push(arg[0], m.Option(ice.MSG_USERNAME))
 				}
+				if arg[0] == USERROLE {
+					m.Option(ice.TABLE_CHECKBOX, ice.TRUE)
+				}
 			}},
 			mdb.CREATE: {Name: "create userrole=void,tech username* usernick language userzone email", Hand: func(m *ice.Message, arg ...string) {
 				_user_create(m, m.Option(USERNAME), m.OptionSimple(USERROLE, USERNICK, LANGUAGE, AVATAR, BACKGROUND, USERZONE, EMAIL)...)

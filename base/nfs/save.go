@@ -74,6 +74,7 @@ const COPY = "copy"
 const LINK = "link"
 const LOAD = "load"
 const MOVE = "move"
+const MOVETO = "moveto"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
@@ -99,6 +100,9 @@ func init() {
 			arg[1] = path.Join(m.Option(DIR_ROOT), arg[1])
 			arg[0] = path.Join(m.Option(DIR_ROOT), arg[0])
 			Rename(m, arg[1], arg[0])
+		}},
+		MOVETO: {Name: "moveto path from run", Help: "移动到", Hand: func(m *ice.Message, arg ...string) {
+			kit.For(arg[1:], func(from string) { m.Cmd(MOVE, path.Join(arg[0], path.Base(from)), from) })
 		}},
 	})
 }

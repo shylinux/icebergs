@@ -83,6 +83,11 @@ func init() {
 		web.PP(LOGIN): {Actions: ice.MergeActions(ice.Actions{
 			aaa.SESS: {Name: "sess code", Help: "会话", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(ice.MSG_USERZONE, WX)
+				m.Option("what", kit.Format("what %v", mdb.Conf(m, "header", "meta.demo")))
+				if mdb.Conf(m, "header", "meta.demo") == ice.TRUE {
+					m.Echo(aaa.SessCreate(m.Spawn(), ice.Info.Username))
+					return
+				}
 				appid := kit.Select(m.Option(APPID), kit.Split(kit.ParseURL(m.Option(ice.MSG_REFERER)).Path, nfs.PS), 0)
 				m.Cmd(ACCESS).Table(func(value ice.Maps) {
 					kit.If(value[APPID] == appid, func() { delete(value, aaa.USERNICK); m.Options(value) })
@@ -93,6 +98,9 @@ func init() {
 				m.Sleep("3s")
 			}},
 			aaa.USER: {Help: "用户", Hand: func(m *ice.Message, arg ...string) {
+				if m.WarnNotLogin(m.Option(ice.MSG_USERNAME) == "") {
+					return
+				}
 				if m.Cmd(aaa.USER, m.Option(aaa.USERNAME, m.Option(ice.MSG_USERNAME))).Length() == 0 {
 					m.Cmd(aaa.USER, mdb.CREATE, aaa.USERROLE, aaa.VOID, m.OptionSimple(aaa.USERNAME))
 				}

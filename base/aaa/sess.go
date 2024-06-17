@@ -9,19 +9,9 @@ import (
 
 func _sess_create(m *ice.Message, username string, arg ...string) {
 	if msg := m.Cmd(USER, username); msg.Length() > 0 {
-		mdb.HashCreate(m, msg.AppendSimple(
-			USERROLE,
-			USERNAME,
-			USERNICK,
-			AVATAR,
-		), arg)
+		mdb.HashCreate(m, msg.AppendSimple(USERROLE, USERNAME, USERNICK, AVATAR), arg)
 	} else {
-		mdb.HashCreate(m, m.OptionSimple(
-			USERROLE,
-			USERNAME,
-			USERNICK,
-			AVATAR,
-		), arg)
+		mdb.HashCreate(m, m.OptionSimple(USERROLE, USERNAME, USERNICK, AVATAR), arg)
 	}
 }
 func _sess_check(m *ice.Message, sessid string) {
@@ -50,7 +40,7 @@ func init() {
 				_sess_create(m, m.Option(USERNAME), UA, m.Option(ice.MSG_USERUA), IP, m.Option(ice.MSG_USERIP))
 			}},
 			CHECK: {Name: "check sessid*", Hand: func(m *ice.Message, arg ...string) { _sess_check(m, m.Option(ice.MSG_SESSID)) }},
-		}, mdb.ImportantHashAction(mdb.EXPIRE, mdb.MONTH, mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,userrole,username,usernick,avatar,ip,ua"))},
+		}, mdb.ImportantHashAction("checkbox", ice.TRUE, mdb.EXPIRE, mdb.MONTH, mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,userrole,username,usernick,avatar,ip,ua"))},
 	})
 }
 

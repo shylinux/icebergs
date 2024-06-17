@@ -76,6 +76,9 @@ func init() {
 				}
 				ctx.Command(m, arg...)
 			}},
+			ctx.RUN: {Hand: func(m *ice.Message, arg ...string) {
+				ctx.Run(m, arg...)
+			}},
 		}, web.ApiAction(""), aaa.WhiteAction("", web.SHARE)), Hand: func(m *ice.Message, arg ...string) {
 			if m.WarnNotLogin(m.Option(ice.MSG_USERNAME) == "", arg) {
 				return

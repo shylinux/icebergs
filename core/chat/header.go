@@ -1,7 +1,9 @@
 package chat
 
 import (
+	"path"
 	"strings"
+	"time"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
@@ -80,6 +82,14 @@ func init() {
 			aaa.USERNICK:   {Hand: _header_users},
 			aaa.AVATAR:     {Hand: _header_users},
 			aaa.BACKGROUND: {Hand: _header_users},
+			web.UPLOAD: {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
+				if m.WarnNotLogin(m.Option(ice.MSG_USERNAME) == "") {
+					return
+				}
+				up := kit.Simple(m.Optionv(ice.MSG_UPLOAD))
+				m.Cmdy(web.CACHE, web.WATCH, m.Option(mdb.HASH), path.Join("usr/avatar/", m.Option(ice.MSG_USERNAME)+"."+kit.Ext(up[1])))
+				m.Echo("?_t=%d", time.Now().Unix())
+			}},
 			aaa.THEME: {Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) > 0 && arg[0] != ice.AUTO && tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) {
 					cli.TellApp(m, "System Events", `tell appearance preferences to set dark mode to `+
@@ -100,7 +110,7 @@ func init() {
 					m.Cmdy(web.Space(m, m.Option(ice.POD)), MESSAGE, tcp.SEND, arg).ToastSuccess()
 				}
 			}},
-			aaa.LOGOUT: {Hand: aaa.SessLogout},
+			aaa.LOGOUT: {Role: aaa.VOID, Hand: aaa.SessLogout},
 			web.ONLINE: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(web.STREAM, web.ONLINE) }},
 			cli.QRCODE: {Hand: func(m *ice.Message, arg ...string) {
 				link := m.OptionDefault(mdb.LINK, tcp.PublishLocalhost(m, m.Option(ice.MSG_USERWEB)))
@@ -154,8 +164,13 @@ func init() {
 				return
 			}
 			msg := m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME))
-			kit.For([]string{aaa.EMAIL, aaa.LANGUAGE, aaa.USERNICK}, func(k string) { kit.If(msg.Append(k), func(v string) { m.Option(k, v) }) })
-			kit.For([]string{aaa.AVATAR, aaa.BACKGROUND}, func(k string) { m.Option(k, web.RequireFile(m, msg.Append(k))) })
+			if role := msg.Append(aaa.USERROLE); role != m.Option(ice.MSG_USERROLE) {
+				m.Cmd(aaa.SESS, mdb.MODIFY, mdb.HASH, m.Option(ice.MSG_SESSID), aaa.USERROLE, role)
+				m.Option(ice.MSG_USERROLE, role)
+			}
+			kit.For([]string{aaa.USERNICK, aaa.LANGUAGE, aaa.EMAIL}, func(k string) { kit.If(msg.Append(k), func(v string) { m.Option(k, v) }) })
+			// kit.For([]string{aaa.AVATAR, aaa.BACKGROUND}, func(k string) { m.Option(k, web.RequireFile(m, msg.Append(k))) })
+			kit.For([]string{aaa.AVATAR, aaa.BACKGROUND}, func(k string) { m.Option(k, msg.Append(k)) })
 		}},
 	})
 }

@@ -10,6 +10,6 @@ const NFS = "nfs"
 var Index = &ice.Context{Name: NFS, Help: "存储模块"}
 
 func init() {
-	ice.Index.Register(Index, nil, ZIP, TAR, CAT, DIR, PACK, DEFS, SAVE, PUSH, COPY, LINK, GREP, FIND, MOVE, TRASH)
+	ice.Index.Register(Index, nil, ZIP, TAR, CAT, DIR, PACK, DEFS, SAVE, PUSH, COPY, LINK, GREP, FIND, MOVE, MOVETO, TRASH)
 }
 func Prefix(arg ...string) string { return kit.Keys(NFS, arg) }

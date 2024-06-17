@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -14,32 +15,37 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _feel_path(m *ice.Message, p string) string {
-	return p
-	if nfs.Exists(m, ice.USR_LOCAL_IMAGE) {
-		return path.Join(ice.USR_LOCAL_IMAGE, p)
-	}
-	return p
-}
+const (
+	USR_LOCAL_IMAGE      = "usr/local/image/"
+	USR_IMAGE            = "usr/image/"
+	USR_AVATAR           = "usr/avatar/"
+	USR_ICONS            = "usr/icons/"
+	SRC_MAIN             = "src/main.ico"
+	USR_ICONS_AVATAR     = "usr/icons/avatar.jpg"
+	USR_ICONS_BACKGROUND = "usr/icons/background.jpg"
 
+	COVER = "cover"
+)
 const FEEL = "feel"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		FEEL: {Name: "feel path=usr/icons/@key file=background.jpg auto upload record1 record2 actions", Icon: "Photos.png", Help: "影音媒体", Actions: ice.MergeActions(ice.Actions{
+		FEEL: {Name: "feel path=usr/icons/@key file=background.jpg auto upload record1 record2 actions", Help: "影音媒体", Icon: "Photos.png", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
-				m.Push(arg[0], "usr/icons/")
-				m.Push(arg[0], "usr/local/image/")
+				m.Push(arg[0], USR_LOCAL_IMAGE)
+				m.Push(arg[0], USR_IMAGE)
+				m.Push(arg[0], USR_AVATAR)
+				m.Push(arg[0], USR_ICONS)
 			}},
 			web.UPLOAD: {Hand: func(m *ice.Message, arg ...string) {
 				up := kit.Simple(m.Optionv(ice.MSG_UPLOAD))
-				m.Cmdy(web.CACHE, web.WATCH, m.Option(mdb.HASH), path.Join(m.Option(nfs.PATH, _feel_path(m, m.Option(nfs.PATH))), up[1]))
+				m.Cmdy(web.CACHE, web.WATCH, m.Option(mdb.HASH), path.Join(m.Option(nfs.PATH), up[1]))
 			}},
-			"moveto": {Hand: func(m *ice.Message, arg ...string) {
-				kit.For(arg[1:], func(from string) { m.Cmd(nfs.MOVE, path.Join(arg[0], path.Base(from)), from) })
+			nfs.MOVETO: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(nfs.MOVETO, arg)
 			}},
 			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
-				p := kit.Select(_feel_path(m, m.Option(nfs.PATH)), arg, 0)
+				p := kit.Select(m.Option(nfs.PATH), arg, 0)
 				kit.If(strings.HasSuffix(p, nfs.PS), func() { mdb.HashRemove(m, nfs.PATH, p) })
 				nfs.Trash(m, p)
 			}},
@@ -70,16 +76,24 @@ func init() {
 					m.ProcessInner()
 				}
 			}},
-		}, mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,name,path,cover"), chat.FavorAction(), WikiAction("", "ico|png|PNG|jpg|JPG|jpeg|mp4|m4v|mov|MOV|webm")), Hand: func(m *ice.Message, arg ...string) {
-			if len(kit.Slice(arg, 0, 2)) == 0 {
+		}, chat.FavorAction(), WikiAction("", "ico|png|PNG|jpg|JPG|jpeg|mp4|m4v|mov|MOV|webm"), mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path,name,cover")), Hand: func(m *ice.Message, arg ...string) {
+			if len(kit.Slice(arg, 0, 1)) == 0 {
 				mdb.HashSelect(m)
-				m.Push(nfs.PATH, "usr/image/").Push(mdb.NAME, "照片库").Push("cover", "usr/icons/background.jpg")
-				m.Push(nfs.PATH, "usr/avatar/").Push(mdb.NAME, "头像库").Push("cover", "usr/icons/avatar.jpg")
-				m.Push(nfs.PATH, "usr/icons/").Push(mdb.NAME, "图标库").Push("cover", "src/main.ico")
-				return
+				if aaa.IsTechOrRoot(m) {
+					m.Push(nfs.PATH, USR_LOCAL_IMAGE).Push(mdb.NAME, "私有库").Push(COVER, USR_ICONS_BACKGROUND)
+				}
+				m.Push(nfs.PATH, USR_IMAGE).Push(mdb.NAME, "照片库").Push(COVER, USR_ICONS_BACKGROUND)
+				if aaa.IsTechOrRoot(m) {
+					m.Push(nfs.PATH, USR_AVATAR).Push(mdb.NAME, "头像库").Push(COVER, USR_ICONS_AVATAR)
+				}
+				m.Push(nfs.PATH, USR_ICONS).Push(mdb.NAME, "图标库").Push(COVER, SRC_MAIN)
+			} else {
+				if _wiki_list(m, kit.Slice(arg, 0, 1)...); arg[0] == USR_ICONS {
+					m.Sort(mdb.NAME)
+				} else {
+					m.SortStrR(mdb.TIME)
+				}
 			}
-			_wiki_list(m.Options(nfs.DIR_ROOT, _feel_path(m, "")), kit.Slice(arg, 0, 1)...)
-			m.SortStrR(mdb.TIME)
 			ctx.DisplayLocal(m, "")
 		}},
 	})

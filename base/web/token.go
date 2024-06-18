@@ -18,21 +18,31 @@ const TOKEN = "token"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		TOKEN: {Help: "令牌桶", Icon: "Keychain.png", Actions: ice.MergeActions(ice.Actions{
-			mdb.PRUNES: {Hand: func(m *ice.Message, arg ...string) {
-				list := map[string]bool{}
+			mdb.PRUNES: {Name: "prunes", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmds("").Table(func(value ice.Maps) {
-					key := kit.Fields(value[mdb.TYPE], value[mdb.NAME], value[mdb.TEXT])
-					if _, ok := list[key]; ok {
+					if value[mdb.STATUS] != "valid" {
 						m.Cmd("", mdb.REMOVE, value)
-					} else {
-						list[key] = true
 					}
 				})
-
 			}},
 		}, mdb.HashAction(mdb.SHORT, mdb.UNIQ, mdb.EXPIRE, mdb.MONTH, html.CHECKBOX, ice.TRUE)), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) > 0 {
 				m.EchoScript(kit.MergeURL2(m.Option(ice.MSG_USERWEB), nfs.PS, TOKEN, arg[0]))
+			} else {
+				now := m.Time()
+				list := map[string]bool{}
+				m.Table(func(value ice.Maps) {
+					key := kit.Keys(value[mdb.TYPE], value[mdb.TEXT])
+					if value[mdb.TIME] < now {
+						m.Push(mdb.STATUS, mdb.EXPIRED)
+					} else if list[key] {
+						m.Push(mdb.STATUS, mdb.INVALID)
+					} else {
+						m.Push(mdb.STATUS, mdb.VALID)
+					}
+					list[key] = true
+				})
+				m.Action(mdb.CREATE, mdb.PRUNES)
 			}
 		}},
 	})

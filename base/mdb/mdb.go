@@ -104,6 +104,7 @@ const (
 	MEMBER  = "member"
 	DISABLE = "disable"
 	EXPIRED = "expired"
+	INVALID = "invalid"
 
 	SOURCE    = "_source"
 	TARGET    = "_target"

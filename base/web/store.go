@@ -93,7 +93,6 @@ func init() {
 					}
 					m.Push(mdb.TEXT, value[nfs.REPOS]).Push(ORIGIN, origin)
 					if _, ok := list[value[mdb.NAME]]; ok || arg[0] == ice.OPS {
-						// m.PushButton(PORTAL, DESKTOP, ADMIN, OPEN)
 						m.PushButton(PORTAL, INSTALL)
 					} else if ice.Info.NodeType == WORKER || !aaa.IsTechOrRoot(m) {
 						m.PushButton(PORTAL)

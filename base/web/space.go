@@ -129,7 +129,8 @@ func _space_handle(m *ice.Message, safe bool, name string, c *websocket.Conn) {
 		}
 		msg := m.Spawn(b)
 		if safe && msg.Option(ice.MSG_UNSAFE) != ice.TRUE { // 下行权限
-			kit.If(kit.IsIn(msg.Option(ice.MSG_USERROLE), "", aaa.VOID), func() { msg.Option(ice.MSG_USERROLE, aaa.UserRole(msg, msg.Option(ice.MSG_USERNAME))) })
+			msg.Option(ice.MSG_USERROLE, kit.Select(msg.Option(ice.MSG_USERROLE), aaa.UserRole(msg, msg.Option(ice.MSG_USERNAME))))
+			// kit.If(kit.IsIn(msg.Option(ice.MSG_USERROLE), "", aaa.VOID), func() { msg.Option(ice.MSG_USERROLE, aaa.UserRole(msg, msg.Option(ice.MSG_USERNAME))) })
 		} else { // 上行权限
 			msg.Option(ice.MSG_UNSAFE, ice.TRUE)
 			kit.If(msg.Option(ice.MSG_USERROLE), func() { msg.Option(ice.MSG_USERROLE, aaa.VOID) })
@@ -321,7 +322,7 @@ func init() {
 				cli.NodeInfo(m, ice.Info.Pathname, WORKER, arg[0])
 				m.Cmd(SERVE, m.ActionKey(), arg)
 			}},
-			ice.MAIN: {Name: "main index", Hand: func(m *ice.Message, arg ...string) {
+			ice.MAIN: {Name: "main index", Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) > 0 {
 					ice.Info.NodeMain = m.Option(ctx.INDEX)
 					m.Cmd(SERVE, m.ActionKey(), arg)

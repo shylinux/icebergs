@@ -203,7 +203,7 @@ func ProxyUpload(m *ice.Message, pod string, p string) string {
 		share := m.Cmdx(SHARE, mdb.CREATE, mdb.TYPE, PROXY, mdb.NAME, p, mdb.TEXT, pod)
 		defer m.Cmd(SHARE, mdb.REMOVE, mdb.HASH, share)
 		url := tcp.PublishLocalhost(m, m.MergeLink(PP(SHARE, PROXY), SHARE, share))
-		m.Cmd(SPACE, pod, SPIDE, PROXY, URL, url, nfs.SIZE, size, CACHE, cache.Format(ice.MOD_TIME), UPLOAD, mdb.AT+p)
+		m.Cmd(SPACE, pod, SPIDE, PROXY, URL, url, nfs.SIZE, size, CACHE, cache.Format(ice.MOD_TIME), UPLOAD, mdb.AT+p, kit.Dict(ice.MSG_USERROLE, aaa.TECH))
 	}
 	return kit.Select(p, pp, file.ExistsFile(pp))
 }

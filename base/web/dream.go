@@ -517,6 +517,7 @@ func init() {
 							if p := ProxyDomain(msg, value[mdb.NAME]); p != "" {
 								value[mdb.TEXT] = p
 								m.PushRecord(value, mdb.TIME, mdb.TYPE, mdb.NAME, mdb.ICONS, nfs.MODULE, nfs.VERSION, mdb.TEXT)
+								m.PushButton(PORTAL, DESKTOP)
 							}
 						}
 					})

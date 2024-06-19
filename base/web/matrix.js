@@ -3,7 +3,19 @@ Volcanos(chat.ONIMPORT, {
 		msg.Table(function(value) { var name = value.name, _domain = value.domain
 			list[name] = list[name]||{}, list[name][_domain] = value, domain.indexOf(_domain) == -1 && domain.push(_domain)
 			value.type == web.SERVER && server.push(value.domain)
-		})
+		}), can.db.list = list, can.db.domain = domain, can.db.server = server
+		
+		can.ui = can.page.Appends(can, can._output, [{view: [wiki.CONTENT, html.TABLE], list: [
+			{type: html.THEAD, list: [{type: html.TR, list: can.core.Item(list, function(name, value) {
+				return {type: html.TH, list: [value[""]? can.onimport.item(can, value[""], list): can.onimport.void(can, name, domain, list)]}
+			}) }]},
+			{type: html.TBODY, list: can.core.List(domain, function(domain) { if (!domain) { return }
+				return {type: html.TR, list: can.core.Item(list, function(name, value) { var item = value[domain]
+					return {type: html.TD, list: [item? can.onimport.item(can, item, list): can.onimport.void(can, name, domain, list)]}
+				})}
+			})},
+		] }]), can.onmotion.delay(can, function() { can.Status(mdb.COUNT, can.core.List(domain).length+"x"+can.core.Item(list).length) })
+		return
 		can.ui = can.page.Appends(can, can._output, [{view: [wiki.CONTENT, html.TABLE], list: [
 			{type: html.THEAD, list: [{type: html.TR, list: can.core.List(domain, function(domain) {
 				return {type: html.TH, list: [can.onimport.item(can, list[""][domain], list)]}
@@ -14,8 +26,6 @@ Volcanos(chat.ONIMPORT, {
 				})}
 			})},
 		] }]), can.onmotion.delay(can, function() { can.Status(mdb.COUNT, can.core.Item(list).length+"x"+can.core.List(domain).length) })
-		can.onmotion.orderShow(can, can.page.SelectOne(can, can._output, "table>tbody"), "tr")
-		can.db.list = list, can.db.domain = domain, can.db.server = server
 	},
 	void: function(can, name, domain, list) { var worker = list[name][""], server = list[""][domain]
 		return {view: html.ACTION, _init: function(target) {

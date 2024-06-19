@@ -36,7 +36,7 @@ func (s asign) Inputs(m *ice.Message, arg ...string) {
 			m.Option(ice.TABLE_CHECKBOX, ice.TRUE)
 		})
 	} else if arg[0] == aaa.USERNAME {
-		m.Cmdy(aaa.USER).Cut(aaa.USERROLE, aaa.USERNAME, aaa.USERNICK)
+		m.Cmdy(aaa.USER).Cut(aaa.USERNAME, aaa.USERNICK, aaa.USERROLE)
 	} else {
 		s.Hash.Inputs(m, arg...)
 	}

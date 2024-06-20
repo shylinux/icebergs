@@ -398,6 +398,10 @@ func init() {
 			TOKEN: {Hand: func(m *ice.Message, arg ...string) {
 				m.Options(m.Cmd(SPIDE, m.Option(mdb.NAME)).AppendSimple()).Cmdy(SPIDE, mdb.DEV_REQUEST)
 			}},
+			"settoken": {Name: "settoken nodename* username*", Help: "令牌", Icon: "bi bi-person-fill-down", Hand: func(m *ice.Message, arg ...string) {
+				token := m.Cmdx(TOKEN, mdb.CREATE, mdb.TYPE, SERVER, mdb.NAME, m.Option(aaa.USERNAME), mdb.TEXT, m.Option(tcp.NODENAME))
+				m.Cmd(SPACE, m.Option(mdb.NAME), SPIDE, DEV_CREATE_TOKEN, ice.Maps{CLIENT_NAME: ice.DEV, TOKEN: token})
+			}},
 			OPEN: {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(mdb.TYPE) == ORIGIN && m.IsLocalhost() {
 					m.ProcessOpen(SpideOrigin(m, m.Option(mdb.NAME)))
@@ -428,7 +432,7 @@ func init() {
 				case WORKER:
 					list = append(list, "settings", nfs.COPY, tcp.SEND)
 				case SERVER:
-					list = append(list, DREAM)
+					list = append(list, "settoken", DREAM)
 				default:
 					list = append(list, TOKEN, DREAM)
 				}

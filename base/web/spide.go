@@ -365,6 +365,7 @@ func init() {
 			}},
 			DEV_REQUEST_TEXT: {Hand: func(m *ice.Message, arg ...string) { m.Echo(SpaceName(ice.Info.NodeName)) }},
 			DEV_CREATE_TOKEN: {Hand: func(m *ice.Message, arg ...string) {
+				mdb.HashModify(m, m.OptionSimple(CLIENT_NAME, TOKEN))
 				m.Cmd(SPACE, tcp.DIAL, ice.DEV, m.Option(CLIENT_NAME), m.OptionSimple(TOKEN)).Sleep300ms()
 			}},
 		}, DevTokenAction(CLIENT_NAME, CLIENT_URL), mdb.ImportantHashAction(mdb.SHORT, CLIENT_NAME, mdb.FIELD, "time,icons,client.name,client.url,client.type,token")), Hand: func(m *ice.Message, arg ...string) {

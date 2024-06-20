@@ -60,7 +60,7 @@ func _publish_contexts(m *ice.Message, arg ...string) {
 				m.OptionDefault(nfs.SOURCE, web.AdminCmd(m, web.SPACE, kit.KeyBase(m.Option(ice.MSG_USERPOD)), cli.RUNTIME, "make.remote").Result())
 			}
 			env = append(env, cli.CTX_REPOS, m.Option(nfs.SOURCE))
-			fallthrough
+			// fallthrough
 		case nfs.BINARY, ice.APP:
 			if host := msg.Append(tcp.HOSTPORT); !strings.HasPrefix(host, m.Option(web.DOMAIN)) {
 				env = append(env, cli.CTX_DEV_IP, strings.Split(host, "?")[0])

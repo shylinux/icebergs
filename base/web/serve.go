@@ -241,7 +241,7 @@ func init() {
 			cli.START: {Name: "start dev proto host port=9020 nodename username usernick", Hand: func(m *ice.Message, arg ...string) {
 				if runtime.GOOS == cli.LINUX {
 					m.Cmd(nfs.SAVE, nfs.ETC_LOCAL_SH, m.Spawn(ice.Maps{cli.PWD: kit.Path(""), aaa.USER: kit.UserName(), ctx.ARGS: kit.JoinCmds(arg...)}).Template("local.sh")+lex.NL)
-					m.Cmd("", PROXY_CONF, ice.Info.NodeName)
+					m.GoSleep("3s", func() { m.Cmd("", PROXY_CONF, ice.Info.NodeName) })
 				} else if runtime.GOOS == cli.WINDOWS {
 					m.Cmd(cli.SYSTEM, cli.ECHO, "-ne", kit.Format("\033]0;%s %s serve start %s\007",
 						path.Base(kit.Path("")), strings.TrimPrefix(kit.Path(os.Args[0]), kit.Path("")+nfs.PS), kit.JoinCmdArgs(arg...)))
@@ -263,7 +263,7 @@ func init() {
 				}
 			}},
 			PROXY_CONF: {Name: "proxyConf name* port host path", Hand: func(m *ice.Message, arg ...string) {
-				if dir := m.OptionDefault(nfs.PATH, PROXY_PATH, tcp.HOST, "127.0.0.1", tcp.PORT, tcp.PORT_9020); nfs.Exists(m, dir) {
+				if dir := m.OptionDefault(nfs.PATH, PROXY_PATH, tcp.HOST, "127.0.0.1", tcp.PORT, tcp.PORT_9020); true || nfs.Exists(m, dir) {
 					for _, p := range []string{"server.conf", "location.conf", "upstream.conf"} {
 						m.Cmd(nfs.SAVE, kit.Format("%s/conf/portal/%s/%s", dir, m.Option(mdb.NAME), p), m.Template(p)+lex.NL)
 					}

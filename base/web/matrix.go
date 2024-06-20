@@ -119,8 +119,7 @@ func init() {
 			}},
 		}, ctx.ConfAction(
 			mdb.FIELD, "time,domain,status,type,name,text,icons,repos,binary,module,version,access",
-			ctx.TOOLS, kit.Simple(SPIDE, VERSION, STATUS), ONLINE, ice.TRUE,
-			cli.TIMEOUT, "10s",
+			ctx.TOOLS, kit.Simple(SPIDE, VERSION, STATUS), ONLINE, ice.TRUE, cli.TIMEOUT, "10s",
 		)), Hand: func(m *ice.Message, arg ...string) {
 			if kit.HasPrefixList(arg, ctx.ACTION) {
 				_matrix_action(m, arg[1], arg[2:]...)
@@ -149,8 +148,12 @@ func init() {
 				})
 				m.RewriteAppend(func(value, key string, index int) string {
 					if key == mdb.ICONS && kit.HasPrefix(value, nfs.P, nfs.REQUIRE) {
-						if domain := m.Appendv(DOMAIN)[index]; domain != "" {
-							value = kit.MergeURL2(space[domain][mdb.TEXT], value, ice.POD, m.Appendv(mdb.NAME)[index])
+						if domain := m.Appendv(DOMAIN)[index]; domain != "" && space[domain][mdb.TYPE] == ORIGIN {
+							value = kit.MergeURL2(space[domain][mdb.TEXT], value, m.Appendv(mdb.NAME)[index])
+						} else if m.Appendv(mdb.TYPE)[index] == SERVER {
+							value = kit.MergeURL(value, ice.POD, m.Appendv(DOMAIN)[index])
+						} else if m.Appendv(mdb.TYPE)[index] == WORKER {
+							value = kit.MergeURL(value, ice.POD, kit.Keys(m.Appendv(DOMAIN)[index], m.Appendv(mdb.NAME)[index]))
 						}
 					}
 					return value

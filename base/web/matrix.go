@@ -20,12 +20,12 @@ func _matrix_list(m *ice.Message, domain, typ string, value ice.Maps, fields ...
 
 	button := []ice.Any{PORTAL, DESKTOP, ADMIN, WORD, OPEN, compile, DREAM}
 	kit.If(istech, func() { button = append(button, STATUS) })
-	kit.If(istech, func() { button = append(button, VIMER, cli.RUNTIME, XTERM) })
+	kit.If(istech, func() { button = append(button, VIMER, COMPILE, cli.RUNTIME, XTERM) })
 	m.PushRecord(value, fields...).PushButton(button...)
 
 	button = []ice.Any{PORTAL, DESKTOP, ADMIN, WORD, OPEN, compile}
 	kit.If(istech, func() { button = append(button, STATUS) })
-	kit.If(istech, func() { button = append(button, VIMER, cli.RUNTIME, XTERM, cli.STOP) })
+	kit.If(istech, func() { button = append(button, VIMER, COMPILE, cli.RUNTIME, XTERM, cli.STOP) })
 	m.Cmd(Space(m, domain), DREAM).Table(func(value ice.Maps) {
 		switch value[mdb.TYPE] {
 		case WORKER:

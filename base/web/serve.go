@@ -241,7 +241,7 @@ func init() {
 			cli.START: {Name: "start dev proto host port=9020 nodename username usernick", Hand: func(m *ice.Message, arg ...string) {
 				if runtime.GOOS == cli.LINUX {
 					m.Cmd(nfs.SAVE, nfs.ETC_LOCAL_SH, m.Spawn(ice.Maps{cli.PWD: kit.Path(""), aaa.USER: kit.UserName(), ctx.ARGS: kit.JoinCmds(arg...)}).Template("local.sh")+lex.NL)
-					m.GoSleep("3s", func() { m.Cmd("", PROXY_CONF, ice.Info.NodeName) })
+					m.GoSleep("3s", func() { m.Cmd("", PROXY_CONF, kit.Select(ice.Info.NodeName, m.Option("nodename"))) })
 				} else if runtime.GOOS == cli.WINDOWS {
 					m.Cmd(cli.SYSTEM, cli.ECHO, "-ne", kit.Format("\033]0;%s %s serve start %s\007",
 						path.Base(kit.Path("")), strings.TrimPrefix(kit.Path(os.Args[0]), kit.Path("")+nfs.PS), kit.JoinCmdArgs(arg...)))

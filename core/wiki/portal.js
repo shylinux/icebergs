@@ -23,7 +23,7 @@ Volcanos(chat.ONIMPORT, {
 			can.page.styleWidth(can, can.ui.nav, 230), can.page.styleWidth(can, can.ui.aside, 200)
 			if (can.ConfWidth() < 1000) { can.onmotion.hidden(can, can.ui.aside) }
 		}
-		can.onmotion.delay(can, function() { cb && cb(msg), can.Conf(html.PADDING, can.page.styleValueInt(can, "--portal-main-padding", can._output))
+		can.onmotion.delay(can, function() { cb && cb(msg), can.Conf(html.PADDING, can.page.styleValueInt(can, "--portal-main-padding", can._output)||(can.user.isMobile? 5: 40))
 			can.user.isMobile && can.Conf(html.PADDING, can.isCmdMode()? 5: 15)
 			var file = can.isCmdMode()? can.db.hash[0]: can.Option(nfs.FILE); can.base.beginWith(file, nfs.SRC, nfs.USR) || (file = can.db.current+file)
 			can.db.nav = {}, can.page.Select(can, can._output, wiki.STORY_ITEM, function(target) { var meta = target.dataset||{}

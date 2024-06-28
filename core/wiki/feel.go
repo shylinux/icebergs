@@ -30,13 +30,14 @@ const FEEL = "feel"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		FEEL: {Name: "feel path=usr/icons/@key file=background.jpg auto upload record1 record2 actions", Help: "影音媒体", Icon: "Photos.png", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
+		FEEL: {Name: "feel path=usr/icons/@key file=background.jpg auto upload record1 record2 fullscreen", Help: "影音媒体", Icon: "Photos.png", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				m.Push(arg[0], USR_LOCAL_IMAGE)
 				m.Push(arg[0], USR_IMAGE)
 				m.Push(arg[0], USR_AVATAR)
 				m.Push(arg[0], USR_ICONS)
 			}},
+			"fullscreen": {Name: "全屏", Icon: "bi bi-fullscreen"},
 			web.UPLOAD: {Hand: func(m *ice.Message, arg ...string) {
 				up := kit.Simple(m.Optionv(ice.MSG_UPLOAD))
 				m.Cmdy(web.CACHE, web.WATCH, m.Option(mdb.HASH), path.Join(m.Option(nfs.PATH), up[1]))
@@ -76,7 +77,7 @@ func init() {
 					m.ProcessInner()
 				}
 			}},
-		}, chat.FavorAction(), WikiAction("", "ico|png|PNG|jpg|JPG|jpeg|mp4|m4v|mov|MOV|webm"), mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path,name,cover")), Hand: func(m *ice.Message, arg ...string) {
+		}, chat.FavorAction(), WikiAction("", "ico|png|PNG|jpg|JPG|jpeg|mp4|m4v|mov|MOV|webm|mp3"), mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path,name,cover")), Hand: func(m *ice.Message, arg ...string) {
 			if len(kit.Slice(arg, 0, 1)) == 0 {
 				mdb.HashSelect(m)
 				if aaa.IsTechOrRoot(m) {

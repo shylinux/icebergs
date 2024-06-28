@@ -113,7 +113,7 @@ func init() {
 			aaa.LOGOUT: {Role: aaa.VOID, Hand: aaa.SessLogout},
 			web.ONLINE: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(web.STREAM, web.ONLINE) }},
 			cli.QRCODE: {Hand: func(m *ice.Message, arg ...string) {
-				link := m.OptionDefault(mdb.LINK, tcp.PublishLocalhost(m, m.Option(ice.MSG_USERWEB)))
+				link := tcp.PublishLocalhost(m, m.OptionDefault(mdb.LINK, m.Option(ice.MSG_USERWEB)))
 				m.Push(mdb.NAME, link).PushQRCode(mdb.TEXT, kit.MergeURL(link, ice.FROM_DAEMON, m.Option(ice.MSG_DAEMON)))
 			}},
 			mdb.CREATE: {Name: "create type*=plugin,qrcode,oauth name* help icons link order space index args", Hand: func(m *ice.Message, arg ...string) { mdb.HashCreate(m, m.OptionSimple()) }},

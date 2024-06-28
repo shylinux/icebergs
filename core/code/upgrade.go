@@ -17,18 +17,7 @@ import (
 const UPGRADE = "upgrade"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: ice.Configs{
-		UPGRADE: {Value: kit.Dict(
-			mdb.META, kit.Dict(mdb.FIELDS, "type,file,path"),
-			mdb.HASH, kit.Dict(
-				nfs.TARGET, kit.Dict(mdb.LIST, kit.List(mdb.TYPE, ice.BIN, nfs.FILE, ice.ICE_BIN)),
-				ctx.CONFIG, kit.Dict(mdb.LIST, kit.List(mdb.TYPE, nfs.SHY, nfs.FILE, ice.ETC_LOCAL_SHY)),
-				nfs.BINARY, kit.Dict(mdb.LIST, kit.List(mdb.TYPE, nfs.TAR, nfs.FILE, "contexts.bin.tar.gz")),
-				nfs.SOURCE, kit.Dict(mdb.LIST, kit.List(mdb.TYPE, nfs.TAR, nfs.FILE, "contexts.src.tar.gz")),
-				COMPILE, kit.Dict(mdb.LIST, kit.List(mdb.TYPE, nfs.TAR, nfs.FILE, "go1.15.5", nfs.PATH, ice.USR_LOCAL)),
-			)),
-		},
-	}, Commands: ice.Commands{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
 		UPGRADE: {Name: "upgrade item=target,config,binary,source,compile run restart", Help: "升级", Actions: ice.Actions{
 			cli.RESTART: {Hand: func(m *ice.Message, arg ...string) { m.Go(func() { m.Sleep30ms(ice.EXIT, 1) }) }},
 		}, Hand: func(m *ice.Message, arg ...string) {
@@ -64,5 +53,13 @@ func init() {
 				web.Toast(m, cli.RESTART)
 			}
 		}},
+	}, Configs: ice.Configs{
+		UPGRADE: {Value: kit.Dict(mdb.META, kit.Dict(mdb.FIELDS, "type,file,path"), mdb.HASH, kit.Dict(
+			nfs.TARGET, kit.Dict(mdb.LIST, kit.List(mdb.TYPE, ice.BIN, nfs.FILE, ice.ICE_BIN)),
+			ctx.CONFIG, kit.Dict(mdb.LIST, kit.List(mdb.TYPE, nfs.SHY, nfs.FILE, ice.ETC_LOCAL_SHY)),
+			nfs.BINARY, kit.Dict(mdb.LIST, kit.List(mdb.TYPE, nfs.TAR, nfs.FILE, "contexts.bin.tar.gz")),
+			nfs.SOURCE, kit.Dict(mdb.LIST, kit.List(mdb.TYPE, nfs.TAR, nfs.FILE, "contexts.src.tar.gz")),
+			COMPILE, kit.Dict(mdb.LIST, kit.List(mdb.TYPE, nfs.TAR, nfs.FILE, "go1.15.5", nfs.PATH, ice.USR_LOCAL)),
+		))},
 	}})
 }

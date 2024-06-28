@@ -238,12 +238,10 @@ func init() {
 				switch m.Option(ctx.ACTION) {
 				case mdb.CREATE:
 					switch arg[0] {
-					case mdb.NAME, nfs.TEMPLATE:
+					case mdb.NAME:
 						_dream_list(m, true).Cut("name,status,time")
-						return
 					case mdb.ICONS:
 						mdb.HashInputs(m, arg)
-						return
 					case nfs.BINARY:
 						m.Cmdy(nfs.DIR, ice.BIN, "path,size,time", kit.Dict(nfs.DIR_TYPE, nfs.TYPE_BIN))
 						m.Cmd(nfs.DIR, ice.USR_LOCAL_WORK, kit.Dict(nfs.DIR_TYPE, nfs.TYPE_BOTH), func(value ice.Maps) {
@@ -258,23 +256,26 @@ func init() {
 					}
 				case STARTALL:
 					DreamEach(m, "", cli.STOP, func(name string) { m.Push(arg[0], name) })
-					return
 				case tcp.SEND:
 					m.Cmd(SPACE, func(value ice.Maps) {
 						kit.If(kit.IsIn(value[mdb.TYPE], SERVER), func() { m.Push(arg[0], value[mdb.NAME]) })
 					})
-					return
-				}
-				switch arg[0] {
-				case mdb.NAME:
-					DreamEach(m, "", cli.START, func(name string) { m.Push(arg[0], name) })
-				case ctx.CMDS:
-					m.Cmdy(ctx.COMMAND)
-				case nfs.FILE:
-					m.Options(nfs.DIR_TYPE, nfs.TYPE_CAT, ice.MSG_FIELDS, nfs.PATH)
-					m.Cmdy(nfs.DIR, nfs.SRC).Cmdy(nfs.DIR, nfs.ETC).Cmdy(nfs.DIR, "")
 				default:
-					gdb.Event(m, DREAM_INPUTS, arg)
+					switch arg[0] {
+					case mdb.NAME:
+						DreamEach(m, "", cli.START, func(name string) { m.Push(arg[0], name) })
+					case ctx.CMDS:
+						m.Cmdy(ctx.COMMAND)
+					case nfs.FILE:
+						m.Options(nfs.DIR_TYPE, nfs.TYPE_CAT, ice.MSG_FIELDS, nfs.PATH)
+						m.Cmdy(nfs.DIR, nfs.SRC).Cmdy(nfs.DIR, nfs.ETC).Cmdy(nfs.DIR, "")
+					case tcp.NODENAME:
+						m.Cmdy(SPACE, m.Option(mdb.NAME), SPACE, ice.INFO).CutTo(mdb.NAME, tcp.NODENAME)
+					case aaa.USERNAME:
+						m.Push(arg[0], m.Option(ice.MSG_USERNAME))
+					default:
+						gdb.Event(m, DREAM_INPUTS, arg)
+					}
 				}
 			}},
 			mdb.CREATE: {Name: "create name*=hi repos binary", Hand: func(m *ice.Message, arg ...string) {

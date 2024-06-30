@@ -6,6 +6,7 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
+	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -36,12 +37,21 @@ func init() {
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy("").Cut(nfs.PATH)
 			}},
+			"mkdir": {Name: "mkdir name*", Help: "创建目录", Icon: "bi bi-folder-plus", Hand: func(m *ice.Message, arg ...string) {
+				nfs.MkdirAll(m, path.Join(m.Option(nfs.PATH), m.Option(mdb.NAME)))
+			}},
+			ice.APP: {Help: "本机应用", Hand: func(m *ice.Message, arg ...string) {
+				cli.Opens(m, m.Option(nfs.PATH))
+			}},
 			web.UPLOAD: {Hand: func(m *ice.Message, arg ...string) {
 				up := kit.Simple(m.Optionv(ice.MSG_UPLOAD))
 				m.Cmdy(web.CACHE, web.WATCH, m.Option(mdb.HASH), path.Join(m.Option(nfs.PATH), up[1]))
 			}},
-			nfs.MOVETO: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(nfs.MOVETO, arg)
+			mdb.RENAME: {Name: "rename name*", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(nfs.MOVE, path.Join(path.Dir(m.Option(nfs.PATH)), m.Option(mdb.NAME)), m.Option(nfs.PATH))
+			}},
+			nfs.MOVETO: {Name: "moveto to*", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(nfs.MOVETO, m.Option(nfs.TO), m.Option(nfs.PATH))
 			}},
 			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
 				p := kit.Select(m.Option(nfs.PATH), arg, 0)
@@ -81,7 +91,7 @@ func init() {
 					m.Push(nfs.PATH, USR_AVATAR).Push(mdb.NAME, "头像库").Push(COVER, USR_ICONS_AVATAR)
 					m.Push(nfs.PATH, USR_LOCAL_IMAGE).Push(mdb.NAME, "私有库").Push(COVER, USR_ICONS_BACKGROUND)
 				}
-				m.Push(nfs.PATH, USR_IMAGE).Push(mdb.NAME, "照片库").Push(COVER, USR_ICONS_BACKGROUND)
+				m.Push(nfs.PATH, USR_IMAGE).Push(mdb.NAME, "图片库").Push(COVER, USR_ICONS_BACKGROUND)
 				m.Push(nfs.PATH, USR_COVER).Push(mdb.NAME, "封面库").Push(COVER, USR_ICONS_BACKGROUND)
 				m.Push(nfs.PATH, USR_ICONS).Push(mdb.NAME, "图标库").Push(COVER, SRC_MAIN)
 			} else {
@@ -97,6 +107,7 @@ func init() {
 						m.SortIntR(nfs.SIZE)
 					}
 				}
+				m.PushAction(mdb.RENAME, nfs.MOVETO, ice.APP, nfs.TRASH)
 				list := m.Spawn().Options(nfs.DIR_DEEP, ice.TRUE).CmdMap(nfs.DIR, USR_COVER+arg[0], nfs.PATH)
 				m.Table(func(value ice.Maps) {
 					p := USR_COVER + kit.TrimSuffix(value[nfs.PATH], ".mp3", ".mp4") + ".jpg"

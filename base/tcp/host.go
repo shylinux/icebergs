@@ -104,7 +104,7 @@ func init() {
 				m.Push(aaa.IP, kit.Keys(kit.Slice(strings.Split(m.Cmdv(HOST, aaa.IP), nfs.PT), 0, 3), "1"))
 			}},
 			DOMAIN: {Name: "domain ip", Help: "主机", Icon: "bi bi-house-check", Hand: func(m *ice.Message, arg ...string) {
-				kit.If(m.Option(aaa.IP), func(p string) { mdb.Config(m, DOMAIN, p) })
+				kit.If(m.Option(aaa.IP), func(p string) { ice.Info.Host = p; mdb.Config(m, DOMAIN, p) })
 				m.Echo(mdb.Config(m, DOMAIN))
 			}},
 		}, mdb.HashAction(mdb.SHORT, mdb.TEXT)), Hand: func(m *ice.Message, arg ...string) {

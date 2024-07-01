@@ -152,7 +152,12 @@ func init() {
 			})
 			kit.If(len(arg) == 0, func() { m.Action(START, mdb.PRUNES) })
 			if len(arg) > 0 && m.Length() == 0 {
-				_daemon_exec(m, _system_cmd(m, kit.Simple(kit.Split(arg[0]), arg[1:])...))
+				if runtime.GOOS == WINDOWS {
+					_daemon_exec(m, _system_cmd(m, arg...))
+				} else {
+					_daemon_exec(m, _system_cmd(m, arg...))
+					// _daemon_exec(m, _system_cmd(m, kit.Simple(kit.Split(arg[0]), arg[1:])...))
+				}
 				kit.If(IsSuccess(m) && m.Append(CMD_ERR) == "", func() { m.SetAppend() })
 			}
 		}},

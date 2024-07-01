@@ -46,6 +46,10 @@ func init() {
 				ProcessIframe(m, kit.Keys(m.Option(mdb.NAME), m.ActionKey()), S(m.Option(mdb.NAME))+C(m.ActionKey()), arg...)
 			}},
 			OPEN: {Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen(S(m.Option(mdb.NAME))) }},
+			"connect": {Help: "连接", Hand: func(m *ice.Message, arg ...string) {
+				m.Options(m.Cmd(SPIDE, m.Option(mdb.NAME)).AppendSimple())
+				m.Cmdy(SPIDE, mdb.DEV_REQUEST)
+			}},
 		}, ctx.ConfAction(CLIENT_TIMEOUT, cli.TIME_3s), DREAM), Hand: func(m *ice.Message, arg ...string) {
 			if kit.HasPrefixList(arg, ctx.ACTION) {
 				m.Cmdy(DREAM, arg)
@@ -63,7 +67,7 @@ func init() {
 				if ice.Info.NodeType == WORKER || !aaa.IsTechOrRoot(m) {
 					m.Action()
 				} else {
-					m.PushAction(mdb.REMOVE).Action(mdb.CREATE)
+					m.PushAction("connect", mdb.REMOVE).Action(mdb.CREATE)
 				}
 			} else {
 				defer ToastProcess(m, ice.LIST, arg[0])()

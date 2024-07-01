@@ -30,7 +30,7 @@ Volcanos(chat.ONIMPORT, {
 				can.core.CallFunc([can.onimport, can.onimport[meta.name]? meta.name: meta.type||target.tagName.toLowerCase()], [can, meta, target])
 				meta.style && can.page.style(can, target, can.base.Obj(meta.style))
 			}); var nav = can.db.nav[file]; nav? nav.click(): can.onimport.content(can, "content.shy")
-		})
+		}, 300)
 	},
 	_scroll: function(can) { can.ui.main.onscroll = function(event) { var top = can.ui.main.scrollTop, select
 		can.page.SelectChild(can, can.ui.main, "h1,h2,h3", function(target) { if (!select && target.offsetTop > top) {

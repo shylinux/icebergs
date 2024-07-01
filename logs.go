@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"runtime"
 	"strings"
 	"time"
@@ -53,8 +52,11 @@ func (m *Message) join(arg ...Any) (string, []Any) {
 	return kit.Join(list, SP), meta
 }
 func (m *Message) log(level string, str string, arg ...Any) *Message {
-	if m.Option(LOG_DISABLE) == TRUE {
+	if !strings.Contains(Info.Make.Domain, "debug=true") {
 		return m
+	}
+	if m.Option(LOG_DISABLE) == TRUE {
+		// return m
 	}
 	args, traceid := []Any{}, ""
 	for _, v := range arg {
@@ -66,11 +68,6 @@ func (m *Message) log(level string, str string, arg ...Any) *Message {
 	}
 	_source := logs.FileLineMeta(3)
 	kit.If(Info.Log != nil, func() { Info.Log(m, m.FormatPrefix(traceid), level, logs.Format(str, append(args, _source)...)) })
-	if os.Getenv("TERM") == "" {
-		if !strings.Contains(Info.Make.Domain, "debug=true") {
-			return m
-		}
-	}
 	prefix, suffix := "", ""
 	if Info.Colors {
 		switch level {

@@ -67,10 +67,8 @@ func init() {
 			)),
 		), Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd("", func(value ice.Maps) {
-					ice.Info.Host = value[aaa.IP]
-					m.Cmd("", aaa.WHITE, LOCALHOST, value[aaa.IP])
-				})
+				m.Cmd("", func(value ice.Maps) { m.Cmd("", aaa.WHITE, LOCALHOST, value[aaa.IP]) })
+				ice.Info.Host = mdb.Config(m, DOMAIN)
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if mdb.IsSearchPreview(m, arg) && m.Cmd(HOST).Length() > 0 {

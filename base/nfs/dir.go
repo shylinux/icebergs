@@ -297,7 +297,7 @@ func Show(m *ice.Message, file string) bool {
 	p := SHARE_LOCAL + file
 	kit.If(m.Option(ice.MSG_USERPOD), func(pod string) { p = kit.MergeURL(p, ice.POD, pod) })
 	switch strings.ToLower(kit.Ext(file)) {
-	case PNG, JPG, JPEG:
+	case PNG, JPG, JPEG, "gif":
 		m.EchoImages(p)
 	case MP4, MOV:
 		m.EchoVideos(p)

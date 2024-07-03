@@ -6,16 +6,17 @@ import (
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
+	kit "shylinux.com/x/toolkits"
 )
 
 func init() {
 	Index.MergeCommands(ice.Commands{
 		nfs.SOURCE: {Name: "source repos path file auto", Actions: ice.Actions{
 			CLONE: {Hand: func(m *ice.Message, arg ...string) {
-				if _, err := git.PlainClone(m.Option(nfs.PATH), false, &git.CloneOptions{URL: m.Option(REPOS)}); !m.WarnNotValid(err) {
-					return
+				kit.If(!kit.HasPrefix(m.Option(REPOS), "http"), func() { m.Option(REPOS, "https://"+m.Option(REPOS)) })
+				if _, err := git.PlainClone(m.Option(nfs.PATH), false, &git.CloneOptions{URL: m.Option(REPOS)}); m.WarnNotValid(err) {
+					m.ProcessRefresh()
 				}
-				m.ProcessRefresh()
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 3 || arg[0] == ctx.ACTION {

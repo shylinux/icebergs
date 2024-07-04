@@ -106,7 +106,7 @@ func init() {
 		}},
 	})
 }
-func Create(m *ice.Message, p string, cb ice.Any) {
+func Create(m *ice.Message, p string, cb ice.Any) string {
 	if f, p, e := CreateFile(m, p); !m.WarnNotValid(e) {
 		defer f.Close()
 		switch cb := cb.(type) {
@@ -118,6 +118,7 @@ func Create(m *ice.Message, p string, cb ice.Any) {
 			m.ErrorNotImplement(cb)
 		}
 	}
+	return p
 }
 func Append(m *ice.Message, p string, cb ice.Any) {
 	if f, p, e := AppendFile(m, p); !m.WarnNotValid(e) {

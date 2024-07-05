@@ -569,7 +569,6 @@ func init() {
 			}},
 			STATUS: {Help: "状态", Icon: "bi bi-app-indicator", Hand: func(m *ice.Message, arg ...string) {
 				if repos := kit.Select(m.Option(REPOS), arg, 0); repos != "" {
-					m.Toast(kit.Format("what %v", repos))
 					_repos_status(m, repos, _repos_open(m, repos))
 				} else {
 					last := ""

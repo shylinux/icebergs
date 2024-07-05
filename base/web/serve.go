@@ -39,8 +39,16 @@ func _serve_start(m *ice.Message) {
 		return
 	}
 	kit.For(kit.Split(m.Option(ice.DEV)), func(dev string) {
-		if m.Cmds(SPIDE, dev).Append(TOKEN) == "" {
-			m.Sleep30ms(SPACE, tcp.DIAL, ice.DEV, dev, mdb.NAME, ice.Info.NodeName, m.OptionSimple(TOKEN))
+		if strings.HasPrefix(dev, HTTP) {
+			m.Cmd(SPIDE, mdb.CREATE, dev, ice.DEV, "", nfs.REPOS)
+			dev = ice.DEV
+		}
+		if msg := m.Cmds(SPIDE, dev); msg.Append(TOKEN) == "" {
+			if m.Option(TOKEN) != "" {
+				m.Sleep30ms(SPACE, tcp.DIAL, ice.DEV, dev, TOKEN, m.Option(TOKEN))
+			} else {
+				m.Sleep30ms(SPACE, tcp.DIAL, ice.DEV, dev)
+			}
 		}
 	})
 }
@@ -261,6 +269,7 @@ func init() {
 				if cb, ok := m.Optionv(SERVE_START).(func()); ok {
 					cb()
 				}
+				ice.Info.Important = ice.HasVar()
 			}},
 			PROXY_CONF: {Name: "proxyConf name* port host path", Hand: func(m *ice.Message, arg ...string) {
 				if dir := m.OptionDefault(nfs.PATH, PROXY_PATH, tcp.HOST, "127.0.0.1", tcp.PORT, tcp.PORT_9020); true || nfs.Exists(m, dir) {

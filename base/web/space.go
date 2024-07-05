@@ -112,7 +112,7 @@ func _space_fork(m *ice.Message) {
 				defer gdb.EventDeferEvent(m, SPACE_OPEN, args)(SPACE_CLOSE, args)
 				m.Go(func() {
 					SpacePwd(m, name, "")
-					SpaceEvent(m, OPS_SERVER_OPEN, name, args...)
+					SpaceEvent(m.Spawn(ice.MSG_USERROLE, aaa.TECH), OPS_SERVER_OPEN, name, args...)
 				})
 			}
 			_space_handle(m, safe, name, c)
@@ -129,7 +129,9 @@ func _space_handle(m *ice.Message, safe bool, name string, c *websocket.Conn) {
 		}
 		msg := m.Spawn(b)
 		if safe && msg.Option(ice.MSG_UNSAFE) != ice.TRUE { // 下行权限
-			msg.Option(ice.MSG_USERROLE, kit.Select(msg.Option(ice.MSG_USERROLE), aaa.UserRole(msg, msg.Option(ice.MSG_USERNAME))))
+			if !aaa.IsTechOrRoot(msg) {
+				msg.Option(ice.MSG_USERROLE, kit.Select(msg.Option(ice.MSG_USERROLE), aaa.UserRole(msg, msg.Option(ice.MSG_USERNAME))))
+			}
 			// kit.If(kit.IsIn(msg.Option(ice.MSG_USERROLE), "", aaa.VOID), func() { msg.Option(ice.MSG_USERROLE, aaa.UserRole(msg, msg.Option(ice.MSG_USERNAME))) })
 		} else { // 上行权限
 			msg.Option(ice.MSG_UNSAFE, ice.TRUE)
@@ -355,10 +357,6 @@ func init() {
 			}},
 			cli.START: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy("", tcp.DIAL, arg) }},
 			tcp.DIAL: {Name: "dial dev=ops name", Hand: func(m *ice.Message, arg ...string) {
-				if strings.HasPrefix(m.Option(ice.DEV), HTTP) {
-					m.Cmd(SPIDE, mdb.CREATE, m.Option(ice.DEV), ice.DEV)
-					m.Option(ice.DEV, ice.DEV)
-				}
 				_space_dial(m, m.Option(ice.DEV), kit.Select(ice.Info.NodeName, m.Option(mdb.NAME)), arg...)
 			}},
 			cli.CLOSE: {Hand: func(m *ice.Message, arg ...string) { mdb.HashRemove(m, m.OptionSimple(mdb.NAME)) }},

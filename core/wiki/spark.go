@@ -140,7 +140,7 @@ open http://localhost:9020
 func _spark_product(m *ice.Message, arg ...string) {
 	if len(arg) == 0 {
 		m.Cmd("web.product").Table(func(value ice.Maps) {
-			if value[mdb.DISABLE] != ice.FALSE {
+			if value[mdb.ENABLE] == ice.TRUE {
 				_spark_product(m, value[ctx.INDEX], value[mdb.NAME], value[mdb.TEXT])
 			}
 		})

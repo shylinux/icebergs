@@ -111,12 +111,11 @@ func init() {
 					kit.If(cli.SystemFindGo(m), func() { m.PushButton(kit.Dict(m.CommandKey(), m.Commands("").Help)) })
 				})
 			}},
-		}, web.DreamTablesAction(), ctx.ConfAction(cli.ENV, kit.Dict(GOPRIVATE, "shylinux.com,github.com", GOPROXY, "https://goproxy.cn,direct", CGO_ENABLED, "1"))), Hand: func(m *ice.Message, arg ...string) {
+		}, web.DreamTablesAction(), ctx.ConfAction(cli.ENV, kit.Dict(GOPRIVATE, "shylinux.com,github.com", GOPROXY, "https://goproxy.cn,direct", CGO_ENABLED, "0"))), Hand: func(m *ice.Message, arg ...string) {
 			main, file, goos, arch := _compile_target(m, arg...)
 			defer web.ToastProcess(m, file)()
 			env := kit.Simple(cli.PATH, cli.BinPath(), cli.HOME, kit.Select(kit.Path(""), kit.Env(cli.HOME)), mdb.Configv(m, cli.ENV), m.Optionv(cli.ENV), cli.GOOS, goos, cli.GOARCH, arch)
 			kit.If(runtime.GOOS == cli.WINDOWS, func() { env = append(env, GOPATH, kit.HomePath(GO), GOCACHE, kit.HomePath("go/go-build")) })
-			env = append(env, CGO_ENABLED, "1")
 			m.Options(cli.CMD_ENV, env).Cmd(AUTOGEN, VERSION)
 			_compile_get(m, main)
 			defer m.StatusTime(VERSION, strings.TrimPrefix(GoVersion(m), "go version"))

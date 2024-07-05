@@ -34,7 +34,6 @@ func init() {
 				res := m.Cmdx(nfs.CAT, path.Join(nfs.USR_LOCAL_WORK, m.Option(web.SPACE), ice.GO_MOD), func(ls []string, text string) string {
 					if len(ls) > 1 {
 						if v, ok := repos[ls[0]]; ok && !strings.Contains(v, "-") {
-							m.Debug("what %v %v => %v", ls[0], ls[1], v)
 							text = lex.TB + ls[0] + lex.SP + v
 						}
 					}

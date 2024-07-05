@@ -83,7 +83,6 @@ func init() {
 		web.PP(LOGIN): {Actions: ice.MergeActions(ice.Actions{
 			aaa.SESS: {Name: "sess code", Help: "会话", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(ice.MSG_USERZONE, WX)
-				m.Option("what", kit.Format("what %v", mdb.Conf(m, "header", "meta.demo")))
 				if mdb.Conf(m, "header", "meta.demo") == ice.TRUE {
 					m.Echo(aaa.SessCreate(m.Spawn(), ice.Info.Username))
 					return

@@ -70,6 +70,6 @@ func loadImportant(m *Message) {
 		defer f.Close()
 		kit.For(f, func(s string) { kit.If(s != "" && !strings.HasPrefix(s, "# "), func() { m.Cmd(kit.Split(s)) }) })
 	}
-	Info.Important = HasVar()
+	// Info.Important = HasVar()
 }
 func removeImportant(m *Message) { os.Remove(VAR_DATA_IMPORTANT) }

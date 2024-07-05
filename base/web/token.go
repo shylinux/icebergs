@@ -25,7 +25,7 @@ func init() {
 					}
 				})
 			}},
-		}, mdb.HashAction(mdb.SHORT, mdb.UNIQ, mdb.EXPIRE, mdb.MONTH, html.CHECKBOX, ice.TRUE)), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.ExportHashAction(mdb.SHORT, mdb.UNIQ, mdb.EXPIRE, mdb.MONTH, html.CHECKBOX, ice.TRUE)), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) > 0 {
 				m.EchoScript(kit.MergeURL2(m.Option(ice.MSG_USERWEB), nfs.PS, TOKEN, arg[0]))
 			} else {

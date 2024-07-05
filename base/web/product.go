@@ -11,7 +11,7 @@ const PRODUCT = "product"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		PRODUCT: {Name: "product refresh", Help: "产品展示", Actions: mdb.HashAction(mdb.SHORT, "index", mdb.FIELD, "time,name,text,order,disable,index,args"), Hand: func(m *ice.Message, arg ...string) {
+		PRODUCT: {Name: "product refresh", Help: "产品展示", Actions: mdb.HashAction(mdb.SHORT, "index", mdb.FIELD, "time,name,text,order,enable,index,args"), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, arg...).SortInt(mdb.ORDER)
 		}},
 	})

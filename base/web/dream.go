@@ -404,14 +404,12 @@ func init() {
 				m.Cmd(SPACE, m.Option(mdb.NAME), SPIDE, DEV_CREATE_TOKEN, ice.Maps{CLIENT_NAME: ice.DEV, TOKEN: token})
 			}},
 			OPEN: {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
-				if m.Option(mdb.TYPE) == ORIGIN && m.IsLocalhost() {
+				if m.Option(mdb.TYPE) == ORIGIN {
 					m.ProcessOpen(SpideOrigin(m, m.Option(mdb.NAME)))
+				} else if p := ProxyDomain(m, m.Option(mdb.NAME)); p != "" {
+					m.ProcessOpen(p)
 				} else {
-					if p := ProxyDomain(m, m.Option(mdb.NAME)); p != "" {
-						m.ProcessOpen(p)
-					} else {
-						m.ProcessOpen(S(m.Option(mdb.NAME)))
-					}
+					m.ProcessOpen(S(m.Option(mdb.NAME)))
 				}
 			}},
 			DREAM_OPEN: {Hand: func(m *ice.Message, arg ...string) {}},

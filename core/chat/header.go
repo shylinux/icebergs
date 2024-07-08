@@ -1,6 +1,7 @@
 package chat
 
 import (
+	"net/http"
 	"path"
 	"strings"
 	"time"
@@ -128,6 +129,14 @@ func init() {
 					m.Echo("login success")
 				} else {
 					m.Echo("login failure")
+				}
+			}},
+			ice.INFO: {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {}},
+			aaa.USER: {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
+				msg := m.Cmd(web.SPIDE, aaa.USER, "msg", http.MethodPost, "/chat/header/action/info", ice.MSG_SESSID, kit.Select(m.Option(ice.MSG_SESSID), arg, 0))
+				if msg.Option(ice.MSG_USERNAME) != "" {
+					aaa.SessCheck(m, m.Option(ice.MSG_SESSID, aaa.SessCreate(m, msg.Option(ice.MSG_USERNAME))))
+					m.Echo(m.Option(ice.MSG_SESSID))
 				}
 			}},
 		}, web.ApiAction(), mdb.ImportantHashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,type,name,help,icons,order,link,space,index,args")), Hand: func(m *ice.Message, arg ...string) {

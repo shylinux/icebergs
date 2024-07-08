@@ -210,6 +210,11 @@ func _serve_auth(m *ice.Message, key string, cmds []string, w http.ResponseWrite
 			return kit.Simple(m.Time(), m.OptionSplit(ice.MSG_USERNICK, ice.MSG_USERNAME, ice.MSG_USERROLE))
 		})); len(ls) > 0 {
 			aaa.SessAuth(m, kit.Dict(aaa.USERNICK, ls[1], aaa.USERNAME, ls[2], aaa.USERROLE, ls[3]), CACHE, ls[0])
+		} else {
+			msg := m.Cmd(SPIDE, aaa.USER, "msg", http.MethodPost, "/chat/header/action/info", ice.MSG_SESSID, m.Option(ice.MSG_SESSID))
+			if msg.Option(ice.MSG_USERNAME) != "" {
+				aaa.SessCheck(m, m.Option(ice.MSG_SESSID, aaa.SessCreate(m, msg.Option(ice.MSG_USERNAME))))
+			}
 		}
 	}
 	Count(m, aaa.IP, m.Option(ice.MSG_USERIP), m.Option(ice.MSG_USERUA))

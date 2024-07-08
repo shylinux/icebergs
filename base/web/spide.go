@@ -15,6 +15,7 @@ import (
 	"time"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/log"
@@ -201,6 +202,7 @@ func _spide_save(m *ice.Message, action, file, uri string, res *http.Response) {
 	case SPIDE_MSG:
 		var data map[string][]string
 		m.Assert(json.NewDecoder(res.Body).Decode(&data))
+		kit.For(data[ice.MSG_OPTION], func(k string) { m.Options(k, data[k]) })
 		kit.For(data[ice.MSG_APPEND], func(k string) { kit.For(data[k], func(v string) { m.Push(k, v) }) })
 		m.Resultv(data[ice.MSG_RESULT])
 	case SPIDE_SAVE:
@@ -293,6 +295,7 @@ func init() {
 				m.Cmd("", mdb.CREATE, kit.Select("http://localhost:9020", conf[cli.CTX_OPS]), ice.OPS, nfs.USR_ICONS_CONTEXTS, nfs.REPOS)
 				m.Cmd("", mdb.CREATE, kit.Select("http://localhost:20000", conf[cli.CTX_DEMO]), ice.DEMO, nfs.USR_ICONS_VOLCANOS)
 				m.Cmd("", mdb.CREATE, kit.Select("https://mail.shylinux.com", conf[cli.CTX_MAIL]), ice.MAIL, "usr/icons/Mail.png")
+				m.Cmd("", mdb.CREATE, kit.Select("https://user.shylinux.com"), aaa.USER, "usr/icons/Mail.png")
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if mdb.IsSearchPreview(m, arg) {

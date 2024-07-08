@@ -1,6 +1,8 @@
 package web
 
 import (
+	"strings"
+
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
@@ -18,5 +20,8 @@ func init() {
 }
 
 func AddPortalProduct(m *ice.Message, name, text string, order float64, arg ...string) {
-	m.Cmd("web.product", mdb.CREATE, mdb.NAME, name, mdb.TEXT, text, mdb.ORDER, order, ctx.INDEX, m.PrefixKey(), ctx.ARGS, kit.Format(arg))
+	msg := m.Spawn()
+	m.GoSleep("300ms", func() {
+		msg.Cmd("web.product", mdb.CREATE, mdb.NAME, name, mdb.TEXT, strings.TrimSpace(text), mdb.ORDER, order, ctx.INDEX, msg.PrefixKey(), ctx.ARGS, kit.Format(arg))
+	})
 }

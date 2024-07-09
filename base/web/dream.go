@@ -148,7 +148,14 @@ func _dream_check(m *ice.Message, name string) string {
 	p := path.Join(ice.USR_LOCAL_WORK, name)
 	if pp := path.Join(p, ice.VAR_LOG_ICE_PID); nfs.Exists(m, pp) {
 		for i := 0; i < 5; i++ {
-			if pid := m.Cmdx(nfs.CAT, pp, kit.Dict(ice.MSG_USERROLE, aaa.TECH)); pid != "" && nfs.Exists(m, "/proc/"+pid) {
+			pid := m.Cmdx(nfs.CAT, pp, kit.Dict(ice.MSG_USERROLE, aaa.TECH))
+			if pid == "" {
+				return p
+			}
+			if !kit.HasPrefix(m.Cmdx(nfs.CAT, "/proc/"+pid+"/cmdline"), kit.Path("bin/ice.bin"), kit.Path(p, "bin/ice.bin")) {
+				return p
+			}
+			if nfs.Exists(m, "/proc/"+pid) {
 				m.Info("already exists %v", pid)
 			} else if gdb.SignalProcess(m, pid) {
 				m.Info("already exists %v", pid)

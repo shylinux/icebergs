@@ -89,12 +89,12 @@ func init() {
 				}
 				appid := kit.Select(m.Option(APPID), kit.Split(kit.ParseURL(m.Option(ice.MSG_REFERER)).Path, nfs.PS), 0)
 				m.Cmd(ACCESS).Table(func(value ice.Maps) {
-					kit.If(value[APPID] == appid, func() { delete(value, aaa.USERNICK); m.Options(value) })
+					kit.If(value[APPID] == appid, func() {
+						msg := m.Cmd(web.SPIDE, WX, http.MethodGet, AUTH_CODE, "js_code", m.Option(cli.CODE), APPID, value[APPID], SECRET, value[SECRET])
+						m.Warn(msg.Append(OPENID) == "", msg.Append("errmsg"))
+						m.Echo(aaa.SessCreate(msg, msg.Append(OPENID)))
+					})
 				})
-				msg := m.Cmd(web.SPIDE, WX, http.MethodGet, AUTH_CODE, "js_code", m.Option(cli.CODE), m.OptionSimple(APPID, SECRET))
-				m.Warn(msg.Append(OPENID) == "", msg.Append("errmsg"))
-				m.Echo(aaa.SessCreate(msg, msg.Append(OPENID)))
-				m.Sleep("3s")
 			}},
 			aaa.USER: {Help: "用户", Hand: func(m *ice.Message, arg ...string) {
 				if m.WarnNotLogin(m.Option(ice.MSG_USERNAME) == "") {

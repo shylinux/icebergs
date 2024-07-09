@@ -21,7 +21,8 @@ func init() {
 		GRANT: {Name: "grant space auto", Help: "授权", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
 			web.SPACE_LOGIN: {Hand: func(m *ice.Message, arg ...string) {
 				m.GoSleep30ms(func() {
-					p := m.Cmdx(web.SPACE, web.DOMAIN)
+					// 	p := m.Cmdx(web.SPACE, web.DOMAIN)
+					p := m.Option(ice.MSG_USERWEB)
 					link := tcp.PublishLocalhost(m, m.Options(ice.MSG_USERWEB, p).MergePodCmd("", "", web.SPACE, kit.Keys(web.ParseLink(m, p)[ice.POD], m.Option(mdb.NAME))))
 					m.Cmd(web.SPACE, m.Option(mdb.NAME), cli.PWD, m.Option(mdb.NAME), link, m.Cmdx(cli.QRCODE, link))
 				})
@@ -61,6 +62,9 @@ func init() {
 			}
 			m.Options(tcp.HOSTNAME, ice.Info.Hostname, nfs.PATH, msg.Append(mdb.TEXT))
 			if !m.WarnNotValid(m.Option(nfs.PATH) == "", arg[0]) {
+				m.Option(aaa.IP, msg.Append(aaa.IP))
+				m.Option(ice.MSG_USERUA, msg.Append(aaa.UA))
+				m.Options(web.ParseUA(m))
 				if m.EchoInfoButton(nfs.Template(m, "auth.html"), aaa.CONFIRM); m.IsWeixinUA() {
 					m.OptionFields(mdb.DETAIL)
 					m.Push(web.SPACE, arg[0])

@@ -44,10 +44,11 @@ func (s MakeInfo) Versions() string {
 	}
 }
 func (s info) Title() string {
-	p := path.Base(kit.Select(s.Pathname, s.Make.Remote))
+	p := path.Base(kit.Select(s.Pathname, s.Make.Remote, s.Titles))
 	if strings.HasPrefix(p, "20") {
 		p = kit.Join(strings.Split(p, "-")[1:], "-")
 	}
+	return p
 	return kit.Capital(p)
 }
 
@@ -67,6 +68,7 @@ type info struct {
 
 	Pwd       string
 	Lang      string
+	Titles    string
 	System    string
 	Domain    string
 	CtxRoot   string

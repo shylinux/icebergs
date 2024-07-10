@@ -14,8 +14,8 @@ func init() {
 	web.Index.Register(Index, &web.Frame{},
 		HEADER, FOOTER,
 		IFRAME, FAVOR,
-		MESSAGE, TUTOR,
-		FLOWS,
+		TUTOR, FLOWS,
+		MESSAGE,
 	)
 }
 

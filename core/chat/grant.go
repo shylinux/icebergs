@@ -65,6 +65,7 @@ func init() {
 				m.Option(aaa.IP, msg.Append(aaa.IP))
 				m.Option(ice.MSG_USERUA, msg.Append(aaa.UA))
 				m.Options(web.ParseUA(m))
+				m.Options("location", web.PublicIP(m, m.Option(aaa.IP)))
 				if m.EchoInfoButton(nfs.Template(m, "auth.html"), aaa.CONFIRM); m.IsWeixinUA() {
 					m.OptionFields(mdb.DETAIL)
 					m.Push(web.SPACE, arg[0])

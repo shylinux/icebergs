@@ -469,7 +469,9 @@ func PublicIP(m *ice.Message, arg ...string) ice.Any {
 	if len(arg) == 0 {
 		return SpideGet(m, "http://ip-api.com/json")
 	}
-	return kit.Format(kit.Value(SpideGet(m, "http://opendata.baidu.com/api.php?co=&resource_id=6006&oe=utf8", "query", arg[0]), "data.0.location"))
+	return mdb.Cache(m, "web.spide.location."+arg[0], func() ice.Any {
+		return kit.Format(kit.Value(SpideGet(m, "http://opendata.baidu.com/api.php?co=&resource_id=6006&oe=utf8", "query", arg[0]), "data.0.location"))
+	})
 }
 func SpideGet(m *ice.Message, arg ...ice.Any) ice.Any {
 	return kit.UnMarshal(m.Cmdx(http.MethodGet, arg))

@@ -104,7 +104,7 @@ func _dream_list_more(m *ice.Message, simple bool) *ice.Message {
 				defer m.PushButton(strings.Join(msg.Appendv(ctx.ACTION), ""))
 			}
 		case aaa.LOGIN:
-			value[mdb.TEXT] = kit.JoinWord(value[AGENT], value[cli.SYSTEM], value[aaa.IP])
+			value[mdb.TEXT] = kit.JoinWord(value[AGENT], value[cli.SYSTEM], value[aaa.IP], kit.Format(PublicIP(m, value[aaa.IP])))
 			defer m.PushButton(GRANT)
 		default:
 			return

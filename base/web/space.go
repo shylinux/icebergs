@@ -462,6 +462,10 @@ func init() {
 			AdminCmd(m, SPACE).Table(func(value ice.Maps) {
 				kit.If(kit.IsIn(value[mdb.TYPE], WORKER, SERVER), func() { m.Push(arg[0], value[mdb.NAME]) })
 			})
+		case SERVER:
+			AdminCmd(m, SPACE).Table(func(value ice.Maps) {
+				kit.If(kit.IsIn(value[mdb.TYPE], SERVER), func() { m.Push(arg[0], value[mdb.NAME]) })
+			})
 		case ORIGIN:
 			m.SetAppend().Push(arg[0], SpideOrigin(m, ice.DEV))
 			m.Copy(m.Cmd(SPIDE, kit.Dict(ice.MSG_FIELDS, CLIENT_ORIGIN)).CutTo(CLIENT_ORIGIN, arg[0]).Sort(arg[0]))

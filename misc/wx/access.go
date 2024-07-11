@@ -68,6 +68,7 @@ func init() {
 				msg := mdb.HashSelect(m.Spawn(), m.Option(ACCESS))
 				if msg.Append(TOKENS) == "" || m.Time() > msg.Append(EXPIRES) {
 					res := m.Cmd(web.SPIDE, WX, http.MethodGet, TOKEN_CREDENTIAL, msg.AppendSimple(APPID, SECRET))
+					m.Debug("what %v", res.FormatMeta())
 					mdb.HashModify(m, m.OptionSimple(ACCESS), EXPIRES, m.Time(kit.Format("%vs", res.Append(oauth.EXPIRES_IN))), TOKENS, res.Append(oauth.ACCESS_TOKEN))
 					msg = mdb.HashSelect(m.Spawn(), m.Option(ACCESS))
 				}

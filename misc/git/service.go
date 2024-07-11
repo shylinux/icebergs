@@ -123,20 +123,20 @@ func init() {
 			m.RenderResult(kit.Format(`<meta name="go-import" content="%s">`, kit.Format(`%s git %s`, strings.TrimSuffix(strings.Split(p, "://")[1], nfs.PT+GIT), p)))
 			return
 		}
-		switch repos, service := _service_param(m, arg...); service {
+		repos, service := _service_param(m, arg...)
+		right := func(msg *ice.Message) bool {
+			return msg.Append(mdb.TYPE) == STATUS || (msg.Append(mdb.TYPE) == web.SERVER && msg.Append(mdb.TEXT) == path.Base(repos)) || (msg.Append(mdb.TYPE) == nfs.REPOS && msg.Append(mdb.TEXT) == path.Base(repos))
+		}
+		switch service {
 		case RECEIVE_PACK:
-			if !web.BasicCheck(m, "git server", func(msg *ice.Message) bool {
-				return msg.Append(mdb.TYPE) == STATUS || (msg.Append(mdb.TYPE) == web.SERVER && msg.Append(mdb.TEXT) == path.Base(repos))
-			}) {
+			if !web.BasicCheck(m, "git server", right) {
 				return
 			} else if !nfs.Exists(m, repos) {
 				m.Cmd(Prefix(SERVICE), mdb.CREATE, mdb.NAME, path.Base(repos))
 			}
 		case UPLOAD_PACK:
 			if mdb.Conf(m, Prefix(SERVICE), kit.Keym(aaa.AUTH)) == aaa.PRIVATE {
-				if !web.BasicCheck(m, "git server", func(msg *ice.Message) bool {
-					return msg.Append(mdb.TYPE) == STATUS || msg.Append(mdb.TYPE) == web.SERVER && msg.Append(mdb.TEXT) == path.Base(repos)
-				}) {
+				if !web.BasicCheck(m, "git server", right) {
 					return
 				}
 			}
@@ -157,6 +157,15 @@ func init() {
 		SERVICE: {Name: "service repos branch commit file auto", Help: "代码源", Icon: "Siri.png", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.DIR, ice.USR_LOCAL_REPOS, func(value ice.Maps) { _repos_insert(m, value[nfs.PATH]) })
+			}},
+			aaa.AUTH: {Name: "auth scope=private,public", Hand: func(m *ice.Message, arg ...string) {
+				mdb.Config(m, aaa.AUTH, m.Option("scope"))
+			}},
+			"settoken": {Name: "settoken server*", Hand: func(m *ice.Message, arg ...string) {
+				token := m.Cmdx(web.TOKEN, mdb.CREATE, mdb.TYPE, nfs.REPOS, mdb.NAME, m.Option(web.SERVER), mdb.TEXT, m.Option(nfs.REPOS))
+				m.Cmd(web.SPACE, m.Option(web.SERVER), web.CODE_GIT_STATUS, web.DEV_CREATE_TOKEN, kit.Dict(
+					ice.MSG_USERNAME, m.Option(web.SERVER), web.TOKEN, token, web.ORIGIN, m.Option(ice.MSG_USERHOST),
+				))
 			}},
 			CLONE: {Name: "clone name*=demo origin", Hand: func(m *ice.Message, arg ...string) {
 				git.PlainClone(_service_path(m, m.Option(mdb.NAME)), true, &git.CloneOptions{URL: m.Option(ORIGIN), Auth: _repos_auth(m, m.Option(ORIGIN))})
@@ -195,6 +204,7 @@ func init() {
 				}).Sort(REPOS)
 				kit.If(!m.IsCliUA(), func() { m.Cmdy(web.CODE_PUBLISH, ice.CONTEXTS, ice.DEV) })
 				kit.If(mdb.Config(m, aaa.AUTH) == aaa.PRIVATE, func() { m.StatusTimeCount(aaa.AUTH, aaa.PRIVATE) })
+				m.PushAction("settoken", mdb.REMOVE).Action(mdb.CREATE, aaa.AUTH)
 			} else if repos := _repos_open(m, arg[0]); len(arg) == 1 {
 				defer m.PushScript(kit.Format("git clone %s", _service_link(m, arg[0])))
 				_repos_branch(m, repos)

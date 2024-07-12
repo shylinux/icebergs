@@ -53,6 +53,7 @@ func init() {
 		ACCESS: {Help: "认证", Meta: Meta(), Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(web.SPIDE, mdb.CREATE, mdb.Config(m, tcp.SERVER), WX, "usr/icons/wechat.png")
+				m.Cmd("").Table(func(value ice.Maps) { ctx.ConfigFromOption(m.Spawn(value), ACCESS, APPID, TOKEN) })
 			}},
 			mdb.CREATE: {Name: "create type=web,app usernick access* appid* secret* token* icons qrcode", Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashCreate(m, m.OptionSimple(mdb.TYPE, aaa.USERNICK, ACCESS, APPID, SECRET, TOKEN, mdb.ICONS, cli.QRCODE))

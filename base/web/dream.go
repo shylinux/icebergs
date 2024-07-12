@@ -279,6 +279,7 @@ func init() {
 					case tcp.NODENAME:
 						m.Cmdy(SPACE, m.Option(mdb.NAME), SPACE, ice.INFO).CutTo(mdb.NAME, tcp.NODENAME)
 					case aaa.USERNAME:
+						m.Push(arg[0], m.Option(tcp.NODENAME))
 						m.Push(arg[0], m.Option(ice.MSG_USERNAME))
 					default:
 						gdb.Event(m, DREAM_INPUTS, arg)

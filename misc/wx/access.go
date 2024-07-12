@@ -68,7 +68,6 @@ func init() {
 				msg := mdb.HashSelect(m.Spawn(), m.Option(ACCESS))
 				if msg.Append(TOKENS) == "" || m.Time() > msg.Append(EXPIRES) {
 					res := m.Cmd(web.SPIDE, WX, http.MethodGet, TOKEN_CREDENTIAL, msg.AppendSimple(APPID, SECRET))
-					m.Debug("what %v", res.FormatMeta())
 					mdb.HashModify(m, m.OptionSimple(ACCESS), EXPIRES, m.Time(kit.Format("%vs", res.Append(oauth.EXPIRES_IN))), TOKENS, res.Append(oauth.ACCESS_TOKEN))
 					msg = mdb.HashSelect(m.Spawn(), m.Option(ACCESS))
 				}
@@ -110,7 +109,7 @@ func init() {
 				m.Cmd(mdb.PRUNES, m.Prefix(SCAN), "", mdb.HASH, m.OptionSimple(mdb.NAME))
 				m.Cmd(mdb.PRUNES, m.Prefix(IDE), "", mdb.HASH, m.OptionSimple(mdb.NAME))
 			}},
-		}, gdb.EventsAction(web.SPACE_GRANT, web.SPACE_LOGIN_CLOSE), mdb.ImportantHashAction(
+		}, gdb.EventsAction(web.SPACE_GRANT, web.SPACE_LOGIN_CLOSE), mdb.ExportHashAction(
 			mdb.SHORT, ACCESS, mdb.FIELD, "time,type,access,icons,usernick,appid,secret,token", tcp.SERVER, CGI_BIN,
 		)), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, arg...).PushAction(web.SSO, mdb.REMOVE).StatusTimeCount(mdb.ConfigSimple(m, ACCESS, APPID), web.SERVE, m.MergeLink("/chat/wx/login/"))

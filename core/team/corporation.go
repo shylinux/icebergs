@@ -9,8 +9,8 @@ import (
 func init() {
 	const corporation = "corporation"
 	Index.MergeCommands(ice.Commands{
-		corporation: {Name: "corporation username auto", Help: "企业法人", Actions: ice.MergeActions(ice.Actions{}, mdb.ExportHashAction(
-			mdb.SHORT, "username", mdb.FIELD, "time,username,mobile,idnumber,usci,email,portal",
+		corporation: {Name: "corporation username auto", Help: "法人", Actions: ice.MergeActions(ice.Actions{}, mdb.ExportHashAction(
+			mdb.SHORT, "username", mdb.FIELD, "time,username,mobile,idnumber,usci,account,bank,email,portal",
 		)), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, arg...)
 			web.PushPodCmd(m, "", arg...)

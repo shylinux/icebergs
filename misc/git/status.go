@@ -38,8 +38,10 @@ func init() {
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case aaa.EMAIL:
+					m.Push(arg[0], ice.Info.NodeName+"@"+kit.Keys(kit.Slice(kit.Split(web.UserWeb(m).Hostname(), nfs.PT), -2)))
 					m.Push(arg[0], _configs_get(m, USER_EMAIL), ice.Info.Make.Email)
 				case aaa.USERNAME:
+					m.Push(arg[0], ice.Info.NodeName)
 					m.Push(arg[0], kit.Select(m.Option(ice.MSG_USERNAME), _configs_get(m, USER_NAME)), ice.Info.Make.Username)
 				default:
 					m.Cmdy(REPOS, mdb.INPUTS, arg)

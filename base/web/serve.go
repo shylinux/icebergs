@@ -331,13 +331,12 @@ func ParseUA(m *ice.Message) (res []string) {
 func ProxyDomain(m *ice.Message, name string) (domain string) {
 	p := path.Join(PROXY_PATH, "conf/portal", name, "server.conf")
 	if !nfs.Exists(m, p) {
-		return ""
+		if p = path.Join(PROXY_PATH, "conf/server", kit.Keys(name, kit.Slice(kit.Split(UserWeb(m).Hostname(), "."), -2))) + ".conf"; !nfs.Exists(m, p) {
+			return ""
+		}
 	}
 	m.Cmd(nfs.CAT, p, func(ls []string) { kit.If(ls[0] == "server_name", func() { domain = ls[1] }) })
-	if domain != "" {
-		return "https://" + domain
-	}
-	return
+	return kit.Select("", "https://"+domain, domain != "")
 }
 func Script(m *ice.Message, str string, arg ...ice.Any) string {
 	return ice.Render(m, ice.RENDER_SCRIPT, kit.Format(str, arg...))

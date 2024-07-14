@@ -99,7 +99,6 @@ type info struct {
 }
 
 var Info = info{
-	NodeIcon:  SRC_MAIN_ICO,
 	Localhost: true,
 
 	File:  Maps{},

@@ -319,6 +319,11 @@ func init() {
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				cli.NodeInfo(m, ice.Info.Pathname, WORKER)
 				aaa.White(m, SPACE, ice.MAIN)
+				if kit.IsIn(ice.Info.NodeIcon, "src/main.ico", "") {
+					nfs.Exists(m, "src/main.ico", func(p string) { ice.Info.NodeIcon = p })
+					nfs.Exists(m, "src/main.png", func(p string) { ice.Info.NodeIcon = p })
+					nfs.Exists(m, "src/main.jpg", func(p string) { ice.Info.NodeIcon = p })
+				}
 			}},
 			mdb.ICONS: {Hand: func(m *ice.Message, arg ...string) {
 				cli.NodeInfo(m, ice.Info.Pathname, WORKER, arg[0])

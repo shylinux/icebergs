@@ -1,6 +1,8 @@
 package web
 
 import (
+	"net/url"
+
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
@@ -103,6 +105,10 @@ func init() {
 					} else {
 						m.PushButton(PORTAL, INSTALL)
 					}
+				})
+				m.RewriteAppend(func(value, key string, index int) string {
+					value, _ = url.QueryUnescape(value)
+					return value
 				})
 				m.StatusTimeCount(ORIGIN, origin, stat)
 			}

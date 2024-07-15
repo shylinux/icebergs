@@ -1,6 +1,7 @@
 package ice
 
 import (
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -254,8 +255,15 @@ func (m *Message) TableEcho() *Message {
 	}
 	space := kit.Select(SP, m.Option(TABLE_SPACE))
 	align := kit.Select("left", m.Option(TABLE_ALIGN))
+	encode := m.R != nil && m.IsCliUA()
+	if encode {
+		m.RewriteAppend(func(value, key string, index int) string {
+			return url.QueryEscape(value)
+		})
+	}
+	_width := func(v string) int { return kit.Width(v, len(space)) }
 	_align := func(value string, width int) string {
-		switch n := width - kit.Width(value, len(space)); align {
+		switch n := width - _width(value); align {
 		case "left":
 			return value + strings.Repeat(space, n)
 		case "right":
@@ -269,9 +277,10 @@ func (m *Message) TableEcho() *Message {
 	length, width := 0, map[string]int{}
 	for _, k := range m.value(MSG_APPEND) {
 		kit.If(len(m.value(k)) > length, func() { length = len(m.value(k)) })
-		width[k] = kit.Width(k, len(space))
+		width[k] = _width(k)
 		kit.For(m.value(k), func(v string) {
-			kit.If(kit.Width(v, len(space)) > width[k], func() { width[k] = kit.Width(v, len(space)) })
+			l := _width(v)
+			kit.If(l > width[k], func() { width[k] = l })
 		})
 	}
 	show(kit.Simple(m.value(MSG_APPEND), func(k string) string { return _align(k, width[k]) }))

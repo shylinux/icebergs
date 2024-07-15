@@ -86,6 +86,20 @@ func init() {
 			AGENT: {Hand: func(m *ice.Message, arg ...string) {
 				ctx.OptionFromConfig(m, ACCESS, APPID)
 			}},
+			"oauth": {Icon: "bi bi-shield-fill-check", Hand: func(m *ice.Message, arg ...string) {
+				oauth := m.Cmdx("web.chat.oauth.client", mdb.CREATE,
+					"domain", "https://api.weixin.qq.com",
+					"client_id", m.Option("appid"), "client_secret", m.Option("secret"),
+					"oauth_url", "https://open.weixin.qq.com/connect/oauth2/authorize?appid="+m.Option("appid"),
+					"grant_url", "/sns/oauth2/access_token",
+					"token_url", "/sns/oauth2/refresh_token",
+					"users_url", "/sns/userinfo",
+					"scope", "snsapi_userinfo",
+					"login", "login2",
+					"user_key", "openid", "nick_key", "nickname", "icon_key", "headimgurl",
+				)
+				m.Cmd("agent", "oauth", m.Cmdx("web.chat.oauth.client", "link", oauth))
+			}},
 			web.SSO: {Name: "sso name*=weixin help*=微信扫码 order=11 env=release,trial,develop wifi", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(web.CHAT_HEADER, mdb.CREATE, mdb.TYPE, mdb.PLUGIN, m.OptionSimple(mdb.NAME, mdb.HELP, mdb.ORDER),
 					ctx.INDEX, m.PrefixKey(), ctx.ARGS, kit.Join(kit.Simple(aaa.LOGIN, m.Option(ACCESS), m.Option(ENV), m.Option(tcp.WIFI))))
@@ -113,7 +127,7 @@ func init() {
 		}, gdb.EventsAction(web.SPACE_GRANT, web.SPACE_LOGIN_CLOSE), mdb.ExportHashAction(
 			mdb.SHORT, ACCESS, mdb.FIELD, "time,type,access,icons,usernick,appid,secret,token", tcp.SERVER, CGI_BIN,
 		)), Hand: func(m *ice.Message, arg ...string) {
-			mdb.HashSelect(m, arg...).PushAction(web.SSO, mdb.REMOVE).StatusTimeCount(mdb.ConfigSimple(m, ACCESS, APPID), web.SERVE, m.MergeLink("/chat/wx/login/"))
+			mdb.HashSelect(m, arg...).PushAction("oauth", web.SSO, mdb.REMOVE).StatusTimeCount(mdb.ConfigSimple(m, ACCESS, APPID), web.SERVE, m.MergeLink("/chat/wx/login/"))
 			m.RewriteAppend(func(value, key string, index int) string {
 				kit.If(key == cli.QRCODE, func() { value = ice.Render(m, ice.RENDER_QRCODE, value) })
 				return value

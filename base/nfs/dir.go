@@ -151,6 +151,7 @@ const (
 	ETC_CERT_KEY        = "etc/cert/cert.key"
 	ETC_CERT_PEM        = "etc/cert/cert.pem"
 	SRC_DOCUMENT        = "src/document/"
+	SRC_PRIVATE         = "src/private/"
 	SRC_TEMPLATE        = ice.SRC_TEMPLATE
 	USR_TOOLKITS        = ice.USR_TOOLKITS
 	USR_ICEBERGS        = ice.USR_ICEBERGS

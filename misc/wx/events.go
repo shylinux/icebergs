@@ -22,6 +22,9 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		EVENTS: {Help: "事件", Actions: ice.Actions{
 			SUBSCRIBE: {Hand: func(m *ice.Message, arg ...string) {
+				m.Option(mdb.NAME, ice.Info.Titles)
+				m.Option(mdb.TEXT, "欢迎光临")
+				m.Option(mdb.ICONS, m.MergeLink(m.Resource(ice.Info.NodeIcon)))
 				m.Cmdy(TEXT, web.LINK, m.MergeLink(nfs.PS))
 			}},
 			UNSUBSCRIBE: {Hand: func(m *ice.Message, arg ...string) {
@@ -38,6 +41,13 @@ func init() {
 			CLICK: {Hand: func(m *ice.Message, arg ...string) {
 				msg := m.Cmd(MENU, m.Option(ACCESS), arg[0])
 				m.Options(mdb.ICONS, msg.Append(mdb.ICONS), mdb.NAME, msg.Append(mdb.NAME), mdb.TEXT, kit.Select(msg.Append(ctx.INDEX), msg.Append(mdb.TEXT)))
+				if m.Option(mdb.ICONS) == "" && msg.Append(ctx.INDEX) != "" {
+					m.Search(msg.Append(ctx.INDEX), func(key string, cmd *ice.Command) {
+						if cmd.Icon != "" {
+							m.Option(mdb.ICONS, m.MergeLink(m.Resource(cmd.Icon)))
+						}
+					})
+				}
 				if msg.Append(ctx.INDEX) == "" {
 					m.Cmdy(TEXT, web.LINK, m.MergeLink(nfs.PS))
 				} else {

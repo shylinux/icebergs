@@ -42,9 +42,15 @@ func init() {
 			}},
 			"getLocation": {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(location.LOCATION, mdb.CREATE, arg) }},
 			"scanQRCode1": {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(chat.FAVOR, mdb.CREATE, arg) }},
-		}, gdb.EventsAction(chat.HEADER_AGENT), ctx.ConfAction(nfs.SCRIPT, "https://res.wx.qq.com/open/js/jweixin-1.6.0.js")), Hand: func(m *ice.Message, arg ...string) {
+			"oauth": {Hand: func(m *ice.Message, arg ...string) {
+				mdb.Config(m, "oauth", arg[0])
+			}},
+		}, gdb.EventsAction(chat.HEADER_AGENT), ctx.ConfAction(
+			"oauth", "",
+			nfs.SCRIPT, "https://res.wx.qq.com/open/js/jweixin-1.6.0.js",
+		)), Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(ACCESS, AGENT).Options(SIGNATURE, _wx_sign(m, m.Option(NONCESTR, ice.Info.Pathname), m.Option(TIMESTAMP, kit.Format(time.Now().Unix())))).Display("")
-			ctx.OptionFromConfig(m, nfs.SCRIPT)
+			ctx.OptionFromConfig(m, nfs.SCRIPT, "oauth")
 		}},
 	})
 }

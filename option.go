@@ -138,7 +138,7 @@ func (m *Message) ProcessField(arg ...Any)   { m.Process(PROCESS_FIELD).Option(F
 func (m *Message) ProcessInner() *Message    { return m.Process(PROCESS_INNER) }
 func (m *Message) ProcessAgain()             { m.Process(PROCESS_AGAIN) }
 func (m *Message) ProcessHold(text ...Any)   { m.Process(PROCESS_HOLD, text...) }
-func (m *Message) ProcessBack()              { m.Process(PROCESS_BACK) }
+func (m *Message) ProcessBack(arg ...Any)    { m.Process(PROCESS_BACK, arg...) }
 func (m *Message) ProcessRich(arg ...Any)    { m.Process(PROCESS_RICH, arg...) }
 func (m *Message) ProcessGrow(arg ...Any)    { m.Process(PROCESS_GROW, arg...) }
 func (m *Message) ProcessOpen(url string)    { m.Process(PROCESS_OPEN, url) }

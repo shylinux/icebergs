@@ -1,7 +1,6 @@
 Volcanos(chat.ONIMPORT, {
 	_init: function(can, msg) {
 		if (!can.user.info.username && can.user.info._cmd != "web.chat.oauth.client" && msg.Option("oauth")) {
-			debugger
 			can.user.jumps(msg.Option("oauth"))
 			return
 		}

@@ -25,6 +25,7 @@ func init() {
 		)))), Actions: ice.MergeActions(ice.Actions{
 			mdb.CREATE: {Name: "create scene*=main river*=1,2,3 storm*=1,2,3,4,5,6 type*=click,view,location_select,scancode_waitmsg,scancode_push,pic_photo_or_album,pic_sysphoto,pic_weixin name* text icons space index args"},
 			mdb.UPDATE: {Name: "update scene*", Hand: func(m *ice.Message, arg ...string) {
+				defer web.ToastProcess(m)()
 				list := kit.Dict()
 				m.Cmd("", m.Option(ACCESS), func(value ice.Maps) {
 					if value[SCENE] == m.Option(SCENE) {
@@ -40,6 +41,7 @@ func init() {
 					}
 				})
 				m.Echo(kit.Formats(SpidePost(m, MENU_CREATE, web.SPIDE_DATA, kit.Formats(list))))
+				m.ProcessHold()
 			}},
 		}, mdb.ExportHashAction(mdb.SHORT, "scene,river,storm", mdb.FIELD, "time,hash,scene,river,storm,type,name,text,icons,space,index,args")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {

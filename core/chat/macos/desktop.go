@@ -43,7 +43,7 @@ func init() {
 		}},
 		DESKTOP: {Help: "桌面", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				web.AddPortalProduct(m, "桌面", `
+				web.AddPortalProduct(m, "云桌面", `
 一款网页版的电脑桌面，打开网页即可随时随地的使用各种软件，
 无论这些软件是运行在本机，还是远程，还是任何虚拟的空间，无论是内存还是磁盘。
 `, 100.0)

@@ -50,6 +50,9 @@ func init() {
 			XTERM: {Hand: func(m *ice.Message, arg ...string) {
 				web.ProcessPodCmd(m, m.Option(web.SPACE), m.ActionKey(), cli.SH, arg...)
 			}},
+			VIMER: {Hand: func(m *ice.Message, arg ...string) {
+				web.ProcessPodCmd(m, m.Option(web.SPACE), m.ActionKey(), nil, arg...)
+			}},
 			STATUS: {Hand: func(m *ice.Message, arg ...string) {
 				web.ProcessPodCmd(m, m.Option(web.SPACE), m.ActionKey(), nil, arg...)
 			}},
@@ -101,7 +104,7 @@ func init() {
 				})
 				kit.If(list[space][DIFF] != "", func() { button = append(button, STATUS) })
 				kit.If(strings.Contains(list[space][VERSION], "-"), func() { button = append(button, TAG) })
-				button = append(button, XTERM)
+				button = append(button, VIMER, XTERM)
 				m.Push(DIFF, list[space][DIFF]).Push(mdb.STATUS, status).PushButton(button...)
 			}
 			fields := []string{}

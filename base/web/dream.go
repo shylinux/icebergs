@@ -39,7 +39,8 @@ func _dream_list(m *ice.Message, simple bool) *ice.Message {
 				msg := gdb.Event(m.Spawn(value, space), DREAM_TABLES)
 				kit.If(aaa.IsTechOrRoot(m), func() { msg.Copy(m.Spawn().PushButton(cli.STOP)) })
 				m.Push(mdb.TYPE, space[mdb.TYPE]).Push(cli.STATUS, cli.START)
-				m.Push(nfs.MODULE, space[nfs.MODULE]).Push(nfs.VERSION, space[nfs.VERSION]).Push(mdb.TEXT, msg.Append(mdb.TEXT))
+				m.Push(nfs.MODULE, space[nfs.MODULE]).Push(nfs.VERSION, space[nfs.VERSION])
+				m.Push(mdb.TEXT, space[nfs.MODULE]+"\n"+msg.Append(mdb.TEXT))
 				m.PushButton(strings.Join(msg.Appendv(ctx.ACTION), ""))
 			}
 		} else if aaa.IsTechOrRoot(m) {

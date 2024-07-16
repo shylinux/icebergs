@@ -1,8 +1,6 @@
 package web
 
 import (
-	"net/url"
-
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
@@ -47,7 +45,13 @@ func init() {
 			ADMIN: {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
 				ProcessIframe(m, kit.Keys(m.Option(mdb.NAME), m.ActionKey()), S(m.Option(mdb.NAME))+C(m.ActionKey()), arg...)
 			}},
-			OPEN: {Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen(S(m.Option(mdb.NAME))) }},
+			OPEN: {Hand: func(m *ice.Message, arg ...string) {
+				if m.Option(mdb.TYPE) == ORIGIN {
+					m.ProcessOpen(m.Option(ORIGIN))
+				} else {
+					m.ProcessOpen(S(m.Option(mdb.NAME)))
+				}
+			}},
 			"connect": {Help: "连接", Hand: func(m *ice.Message, arg ...string) {
 				m.Options(m.Cmd(SPIDE, m.Option(mdb.NAME)).AppendSimple())
 				m.Cmdy(SPIDE, mdb.DEV_REQUEST)
@@ -56,20 +60,23 @@ func init() {
 			if kit.HasPrefixList(arg, ctx.ACTION) {
 				m.Cmdy(DREAM, arg)
 			} else if m.Display("").DisplayCSS(""); len(arg) == 0 {
-				list := []string{}
+				list := m.Spawn(ice.Maps{ice.MSG_FIELDS: ""}).CmdMap(SPACE, mdb.NAME)
 				m.Cmd(SPIDE, arg, kit.Dict(ice.MSG_FIELDS, "time,icons,client.type,client.name,client.origin")).Table(func(value ice.Maps) {
 					kit.If(value[CLIENT_TYPE] == nfs.REPOS && value[CLIENT_NAME] != ice.SHY, func() {
-						list = append(list, value[CLIENT_NAME])
-						if value[CLIENT_NAME] == ice.OPS {
-							value[CLIENT_ORIGIN] = UserHost(m)
-						}
+						kit.If(value[CLIENT_NAME] == ice.OPS, func() { value[CLIENT_ORIGIN] = UserHost(m) })
+						m.Push(mdb.TYPE, ORIGIN)
 						m.Push(mdb.NAME, value[CLIENT_NAME]).Push(mdb.ICONS, value[mdb.ICONS]).Push(ORIGIN, value[CLIENT_ORIGIN])
+						if _, ok := list[value[CLIENT_NAME]]; ok || kit.IsIn(value[CLIENT_NAME], ice.OPS, ice.DEV) {
+							m.Push("exists", ice.TRUE)
+						} else {
+							m.Push("exists", ice.FALSE)
+						}
 					})
 				})
 				if ice.Info.NodeType == WORKER || !aaa.IsTechOrRoot(m) {
 					m.Action()
 				} else {
-					m.PushAction("connect", mdb.REMOVE).Action(mdb.CREATE)
+					m.PushAction(OPEN, "connect", mdb.REMOVE).Action(mdb.CREATE)
 				}
 			} else {
 				defer ToastProcess(m, ice.LIST, arg[0])()
@@ -86,13 +93,18 @@ func init() {
 					origin = tcp.PublishLocalhost(m, origin)
 				}
 				stat := map[string]int{}
-				list := m.Spawn(ice.Maps{ice.MSG_FIELDS: ""}).CmdMap(DREAM, mdb.NAME)
+				list := m.Spawn(ice.Maps{ice.MSG_FIELDS: ""}).CmdMap(SPACE, mdb.NAME)
 				m.SetAppend().Spawn().SplitIndex(m.Cmdx(SPIDE, arg[0], dream, kit.Dict(mdb.ConfigSimple(m, CLIENT_TIMEOUT)))).Table(func(value ice.Maps) {
 					stat[value[mdb.TYPE]]++
 					if value[nfs.BINARY] == "" {
 						value[nfs.BINARY] = origin + S(value[mdb.NAME])
 					}
 					m.Push("", value, kit.Split("time,type,name,icons,repos,binary,module,version"))
+					if _, ok := list[value[mdb.NAME]]; ok {
+						m.Push("exists", ice.TRUE)
+					} else {
+						m.Push("exists", ice.FALSE)
+					}
 					if value[mdb.TYPE] == SERVER {
 						m.Push(mdb.TEXT, value[mdb.TEXT]).Push(ORIGIN, value[mdb.TEXT]).PushButton()
 						return
@@ -105,10 +117,6 @@ func init() {
 					} else {
 						m.PushButton(PORTAL, INSTALL)
 					}
-				})
-				m.RewriteAppend(func(value, key string, index int) string {
-					value, _ = url.QueryUnescape(value)
-					return value
 				})
 				m.StatusTimeCount(ORIGIN, origin, stat)
 			}

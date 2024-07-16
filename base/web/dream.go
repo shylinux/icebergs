@@ -292,7 +292,7 @@ func init() {
 				kit.If(mdb.Config(m, nfs.BINARY), func(p string) { m.OptionDefault(nfs.BINARY, p+m.Option(mdb.NAME)) })
 				kit.If(mdb.Config(m, nfs.REPOS), func(p string) { m.OptionDefault(nfs.REPOS, p+m.Option(mdb.NAME)) })
 				m.Option(nfs.REPOS, kit.Select("", kit.Split(m.Option(nfs.REPOS)), -1))
-				m.OptionDefault(mdb.ICONS, nfs.USR_ICONS_CONTEXTS)
+				// m.OptionDefault(mdb.ICONS, nfs.USR_ICONS_CONTEXTS)
 				if mdb.HashCreate(m); ice.Info.Important == true {
 					_dream_start(m, m.Option(mdb.NAME))
 					StreamPushRefreshConfirm(m, m.Trans("refresh for new space ", "刷新列表查看新空间 ")+m.Option(mdb.NAME))

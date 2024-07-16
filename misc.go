@@ -1,6 +1,7 @@
 package ice
 
 import (
+	"net/url"
 	"strings"
 
 	kit "shylinux.com/x/toolkits"
@@ -68,7 +69,12 @@ func (m *Message) Split(str string, arg ...string) *Message {
 	return m
 }
 func (m *Message) SplitIndex(str string, arg ...string) *Message {
-	return m.Split(str, kit.Simple(INDEX, arg)...)
+	m.Split(str, kit.Simple(INDEX, arg)...)
+	m.RewriteAppend(func(value, key string, index int) string {
+		value, _ = url.QueryUnescape(value)
+		return value
+	})
+	return m
 }
 func (m *Message) SplitIndexReplace(str string, arg ...string) *Message {
 	return m.SplitIndex(kit.Replace(str, arg...))

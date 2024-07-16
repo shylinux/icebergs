@@ -6,6 +6,7 @@ Volcanos(chat.ONIMPORT, {
 	},
 	_project: function(can, msg, dev, target) {
 		msg.Table(function(value) { if (value.type == web.WORKER) { return }
+			value.nick = [{text: value.name}, value.exists == "true" && {text: ["●", "", "exists"]}]
 			value._hash = dev.concat([value.name]).join(":"), value._select = can.base.beginWith(can.db.hash.join(":"), value._hash)
 			value.icons = can.misc.Resource(can, value.icons||"usr/icons/icebergs.png", "", value.origin)
 			can.onimport.itemlist(can, [value], function(event, item, show, target) {

@@ -79,6 +79,7 @@ type relay struct {
 	pushbin  string `name:"pushbin dream portal nodename dev" icon:"bi bi-box-arrow-in-up"`
 	adminCmd string `name:"adminCmd cmd" icon:"bi bi-terminal-plus"`
 	pushkey  string `name:"pushkey server" icon:"bi bi-person-fill-up"`
+	setIcon  string `name:"setIcon icons*"`
 }
 
 func (s relay) Init(m *ice.Message, arg ...string) {
@@ -117,9 +118,14 @@ func (s relay) Inputs(m *ice.Message, arg ...string) {
 	}
 }
 func (s relay) Create(m *ice.Message, arg ...string) {
+	if m.Option(mdb.ICONS) == "" {
+		res := m.Cmdx(web.SPIDE, ice.DEV, web.SPIDE_RAW, http.MethodGet, "http://"+m.Option(tcp.HOST)+"/c/space/action/info")
+		msg := m.Spawn().SplitIndex(res)
+		m.Option(mdb.ICONS, m.Resource(msg.Append(mdb.ICONS), msg.Append(web.ORIGIN)))
+	}
 	s.Hash.Create(m, kit.Simple(arg, tcp.PORT, m.OptionDefault(tcp.PORT, tcp.PORT_22),
 		tcp.MACHINE, m.OptionDefault(tcp.MACHINE, kit.Split(m.Option(tcp.HOST), nfs.PT)[0]),
-		mdb.ICONS, m.OptionDefault(mdb.ICONS, html.ICONS_SSH),
+		mdb.ICONS, m.Option(mdb.ICONS),
 	)...)
 }
 func (s relay) Stats(m *ice.Message) {
@@ -233,6 +239,7 @@ func (s relay) List(m *ice.Message, arg ...string) *ice.Message {
 				s.Pushbin,
 				s.Pushkey,
 				s.Xterm,
+				s.SetIcon,
 				s.Remove)
 			kit.If(len(arg) > 0, func() { m.PushQRCode(cli.QRCODE, m.Append(web.LINK)) })
 		}
@@ -356,6 +363,9 @@ func (s relay) Admin(m *ice.Message, arg ...string)   { s.iframe(m, "", arg...) 
 func (s relay) Dream(m *ice.Message, arg ...string)   { s.iframe(m, "", arg...) }
 func (s relay) Desktop(m *ice.Message, arg ...string) { s.iframe(m, "", arg...) }
 func (s relay) Portal(m *ice.Message, arg ...string)  { s.iframe(m, "", arg...) }
+func (s relay) SetIcon(m *ice.Message, arg ...string) {
+	s.Hash.Modify(m, arg...)
+}
 
 func init() { ice.Cmd(SSH_RELAY, relay{}) }
 

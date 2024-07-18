@@ -165,7 +165,9 @@ func ShareLocalFile(m *ice.Message, arg ...string) {
 			return
 		}
 	default:
-		if m.Option(ice.POD) == "" && !aaa.Right(m, ls) {
+		if m.Option(ice.MSG_USERNAME) != "" && strings.HasPrefix(p, nfs.USR_LOCAL_IMAGE+m.Option(ice.MSG_USERNAME)) {
+
+		} else if m.Option(ice.POD) == "" && !aaa.Right(m, ls) {
 			return
 		}
 	}

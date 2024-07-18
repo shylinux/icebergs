@@ -12,6 +12,7 @@ import (
 	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/log"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/base/web"
 	"shylinux.com/x/icebergs/base/web/html"
@@ -23,9 +24,10 @@ const (
 	CGI_BIN                     = "https://api.weixin.qq.com/cgi-bin/"
 	TOKEN_CREDENTIAL            = "token?grant_type=client_credential"
 	TICKET_GETTICKET            = "ticket/getticket?type=jsapi"
-	QRCODE_CREATE               = "qrcode/create"
 	WXACODE_UNLIMIT             = "/wxa/getwxacodeunlimit"
+	QRCODE_CREATE               = "qrcode/create"
 	MENU_CREATE                 = "menu/create"
+	MEDIA_GET                   = "media/get"
 	USER_REMARK                 = "user/info/updateremark"
 	USER_INFO                   = "user/info"
 	USER_GET                    = "user/get"
@@ -45,6 +47,11 @@ const (
 	EXPIRES = "expires"
 	EXPIRE  = "expire"
 	TICKET  = "ticket"
+	OAUTH   = "oauth"
+	MEDIA   = "media"
+
+	STABLE_TOKEN        = "stable_token"
+	STABLE_TOKEN_EXPIRE = "stable_token_expire"
 )
 const ACCESS = "access"
 
@@ -65,40 +72,41 @@ func init() {
 					m.Echo(ice.TRUE)
 				}
 			}},
+			STABLE_TOKEN: {Hand: func(m *ice.Message, arg ...string) {
+				spideToken(m, STABLE_TOKEN, STABLE_TOKEN, STABLE_TOKEN_EXPIRE, "grant_type", "client_credential")
+			}},
 			TOKENS: {Hand: func(m *ice.Message, arg ...string) {
-				msg := mdb.HashSelect(m.Spawn(), m.Option(ACCESS))
-				if msg.Append(TOKENS) == "" || m.Time() > msg.Append(EXPIRES) {
-					res := m.Cmd(web.SPIDE, WX, http.MethodGet, TOKEN_CREDENTIAL, msg.AppendSimple(APPID, SECRET))
-					mdb.HashModify(m, m.OptionSimple(ACCESS), EXPIRES, m.Time(kit.Format("%vs", res.Append(oauth.EXPIRES_IN))), TOKENS, res.Append(oauth.ACCESS_TOKEN))
-					msg = mdb.HashSelect(m.Spawn(), m.Option(ACCESS))
-				}
-				m.Echo(msg.Append(TOKENS)).Status(msg.AppendSimple(EXPIRES))
+				spideToken(m, TOKEN_CREDENTIAL, TOKENS, EXPIRES)
 			}},
 			TICKET: {Hand: func(m *ice.Message, arg ...string) {
-				msg := mdb.HashSelect(m.Spawn(), m.Option(ACCESS))
-				if msg.Append(TICKET) == "" || m.Time() > msg.Append(EXPIRE) {
-					res := m.Cmd(web.SPIDE, WX, http.MethodGet, TICKET_GETTICKET, oauth.ACCESS_TOKEN, m.Cmdx(ACCESS, TOKENS))
-					mdb.HashModify(m, m.OptionSimple(ACCESS), EXPIRE, m.Time(kit.Format("%vs", res.Append(oauth.EXPIRES_IN))), TICKET, res.Append(TICKET))
-					msg = mdb.HashSelect(m.Spawn(), m.Option(ACCESS))
-				}
-				m.Echo(msg.Append(TICKET)).Status(msg.AppendSimple(EXPIRE))
+				spideToken(m, TICKET_GETTICKET, TICKET, EXPIRE, oauth.ACCESS_TOKEN, m.Cmdx(ACCESS, TOKENS))
 			}},
 			AGENT: {Hand: func(m *ice.Message, arg ...string) {
 				ctx.OptionFromConfig(m, ACCESS, APPID)
 			}},
-			"oauth": {Icon: "bi bi-shield-fill-check", Hand: func(m *ice.Message, arg ...string) {
+			"api": {Name: "api method=GET,POST path params", Hand: func(m *ice.Message, arg ...string) {
+				switch m.Option("method") {
+				case "POST":
+					res := SpidePost(m, m.Option(nfs.PATH), kit.Split(m.Option("params")))
+					m.Echo(kit.Formats(res))
+				case "GET":
+					res := SpideGet(m, m.Option(nfs.PATH), kit.Split(m.Option("params")))
+					m.Echo(kit.Formats(res))
+				}
+			}},
+			MEDIA: {Hand: func(m *ice.Message, arg ...string) {
+				m.OptionDefault(ACCESS, mdb.Config(m, ACCESS))
+				m.Cmdy(web.SPIDE, WX, web.SPIDE_SAVE, arg[1], http.MethodGet, MEDIA_GET, oauth.ACCESS_TOKEN, m.Cmdx(ACCESS, TOKENS), "media_id", arg[0])
+			}},
+			OAUTH: {Icon: "bi bi-shield-fill-check", Hand: func(m *ice.Message, arg ...string) {
 				oauth := m.Cmdx("web.chat.oauth.client", mdb.CREATE,
-					"domain", "https://api.weixin.qq.com",
-					"client_id", m.Option("appid"), "client_secret", m.Option("secret"),
-					"oauth_url", "https://open.weixin.qq.com/connect/oauth2/authorize?appid="+m.Option("appid"),
+					"domain", "https://api.weixin.qq.com", "client_id", m.Option(APPID), "client_secret", m.Option(SECRET),
+					"oauth_url", "https://open.weixin.qq.com/connect/oauth2/authorize?appid="+m.Option(APPID), "scope", "snsapi_userinfo", "login", "login2",
 					"grant_url", "/sns/oauth2/access_token",
 					"token_url", "/sns/oauth2/refresh_token",
-					"users_url", "/sns/userinfo",
-					"scope", "snsapi_userinfo",
-					"login", "login2",
-					"user_key", "openid", "nick_key", "nickname", "icon_key", "headimgurl",
+					"users_url", "/sns/userinfo", "user_key", "openid", "nick_key", "nickname", "icon_key", "headimgurl",
 				)
-				m.Cmd("agent", "oauth", m.Cmdx("web.chat.oauth.client", "link", oauth))
+				m.Cmd(AGENT, OAUTH, m.Cmdx("web.chat.oauth.client", web.LINK, oauth))
 			}},
 			web.SSO: {Name: "sso name*=weixin help*=微信扫码 order=11 env=release,trial,develop wifi", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(web.CHAT_HEADER, mdb.CREATE, mdb.TYPE, mdb.PLUGIN, m.OptionSimple(mdb.NAME, mdb.HELP, mdb.ORDER),
@@ -127,7 +135,7 @@ func init() {
 		}, gdb.EventsAction(web.SPACE_GRANT, web.SPACE_LOGIN_CLOSE), mdb.ExportHashAction(
 			mdb.SHORT, ACCESS, mdb.FIELD, "time,type,access,icons,usernick,appid,secret,token", tcp.SERVER, CGI_BIN,
 		)), Hand: func(m *ice.Message, arg ...string) {
-			mdb.HashSelect(m, arg...).PushAction("oauth", web.SSO, mdb.REMOVE).StatusTimeCount(mdb.ConfigSimple(m, ACCESS, APPID), web.SERVE, m.MergeLink("/chat/wx/login/"))
+			mdb.HashSelect(m, arg...).PushAction(OAUTH, web.SSO, TICKET, TOKENS, STABLE_TOKEN, "api", mdb.REMOVE).StatusTimeCount(mdb.ConfigSimple(m, ACCESS, APPID), web.SERVE, m.MergeLink("/chat/wx/login/"))
 			m.RewriteAppend(func(value, key string, index int) string {
 				kit.If(key == cli.QRCODE, func() { value = ice.Render(m, ice.RENDER_QRCODE, value) })
 				return value
@@ -135,14 +143,32 @@ func init() {
 		}},
 	})
 }
+func spideToken(m *ice.Message, api string, token, expire string, arg ...string) {
+	msg := mdb.HashSelect(m.Spawn(), m.OptionDefault(ACCESS, mdb.Config(m, ACCESS)))
+	if msg.Append(token) == "" || m.Time() > msg.Append(expire) {
+		kit.If(api != TICKET_GETTICKET, func() { arg = append(arg, msg.AppendSimple(APPID, SECRET)...) })
+		res := m.Cmd(web.SPIDE, WX, kit.Select(http.MethodGet, http.MethodPost, api == STABLE_TOKEN), api, arg)
+		if m.Warn(!kit.IsIn(res.Append("errcode"), "0", ""), res.Append("errmsg")) {
+			return
+		}
+		m.Debug("res: %v", res.FormatMeta())
+		mdb.HashModify(m, m.OptionSimple(ACCESS), expire, m.Time(kit.Format("%vs", res.Append(oauth.EXPIRES_IN))), token, res.Append(kit.Select(oauth.ACCESS_TOKEN, TICKET, api == TICKET_GETTICKET)))
+		msg = mdb.HashSelect(m.Spawn(), m.Option(ACCESS))
+	}
+	m.Echo(msg.Append(token)).Status(msg.AppendSimple(expire))
+}
 func spidePost(m *ice.Message, api string, arg ...ice.Any) *ice.Message {
 	return m.Cmd(web.SPIDE, WX, web.SPIDE_RAW, http.MethodPost, kit.MergeURL(api, oauth.ACCESS_TOKEN, m.Cmdx(ACCESS, TOKENS)), arg)
 }
 func SpidePost(m *ice.Message, api string, arg ...ice.Any) ice.Any {
-	return kit.UnMarshal(m.Cmdx(web.SPIDE, WX, web.SPIDE_RAW, http.MethodPost, kit.MergeURL(api, oauth.ACCESS_TOKEN, m.Cmdx(ACCESS, TOKENS)), arg))
+	res := kit.UnMarshal(m.Cmdx(web.SPIDE, WX, web.SPIDE_RAW, http.MethodPost, kit.MergeURL(api, oauth.ACCESS_TOKEN, m.Cmdx(ACCESS, TOKENS)), arg))
+	m.Info("res: %v", kit.Format(res))
+	return res
 }
 func SpideGet(m *ice.Message, api string, arg ...ice.Any) ice.Any {
-	return kit.UnMarshal(m.Cmdx(web.SPIDE, WX, web.SPIDE_RAW, http.MethodGet, kit.MergeURL(api, oauth.ACCESS_TOKEN, m.Cmdx(ACCESS, TOKENS)), arg))
+	res := kit.UnMarshal(m.Cmdx(web.SPIDE, WX, web.SPIDE_RAW, http.MethodGet, kit.MergeURL(api, oauth.ACCESS_TOKEN, m.Cmdx(ACCESS, TOKENS)), arg))
+	m.Info("res: %v", kit.Format(res))
+	return res
 }
 func Meta() ice.Map {
 	return kit.Dict(ice.CTX_TRANS, kit.Dict(html.INPUT, kit.Dict(

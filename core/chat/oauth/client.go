@@ -140,9 +140,8 @@ func (s Client) Login2(m *ice.Message, arg ...string) {
 	if state, code := m.Option(STATE), m.Option(CODE); !m.WarnNotValid(state == "" || code == "") {
 		s.Hash.List(m.Spawn(), m.Option(mdb.HASH, state)).Table(func(value ice.Maps) { m.Options(value) })
 		m.Options(GRANT_TYPE, AUTHORIZATION_CODE, REDIRECT_URI, s.RedirectURI(m))
-		if res := s.Get(m, m.Option(mdb.HASH), m.Option(GRANT_URL), kit.Simple(m.OptionSimple(GRANT_TYPE, CODE, CLIENT_ID),
-			"appid", m.Option(CLIENT_ID), "secret", m.Option(CLIENT_SECRET),
-		)...); !m.WarnNotValid(res == nil) {
+		m.Option(ACCESS_TOKEN, "")
+		if res := s.Get(m, m.Option(mdb.HASH), m.Option(GRANT_URL), kit.Simple(m.OptionSimple(GRANT_TYPE, CODE), "appid", m.Option(CLIENT_ID), "secret", m.Option(CLIENT_SECRET))...); !m.WarnNotValid(res == nil) {
 			kit.Value(res, EXPIRES_IN, m.Time(kit.Format("%vs", kit.Int(kit.Value(res, EXPIRES_IN)))))
 			m.Info("what %v", kit.Format(res))
 			m.Options(res)

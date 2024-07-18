@@ -206,7 +206,11 @@ func _spide_save(m *ice.Message, action, file, uri string, res *http.Response) {
 		kit.For(data[ice.MSG_APPEND], func(k string) { kit.For(data[k], func(v string) { m.Push(k, v) }) })
 		m.Resultv(data[ice.MSG_RESULT])
 	case SPIDE_SAVE:
-		_cache_download(m, res, file, m.OptionCB(SPIDE))
+		if strings.HasSuffix(file, "/") {
+			file += kit.Select("", kit.Split(m.Option("Content-Disposition"), ";="), -1)
+			m.Info("save file %v", file)
+		}
+		m.Echo(_cache_download(m, res, file, m.OptionCB(SPIDE)))
 	case SPIDE_CACHE:
 		m.Cmdy(CACHE, DOWNLOAD, res.Header.Get(html.ContentType), uri, kit.Dict(RESPONSE, res), m.OptionCB(SPIDE))
 		m.Echo(m.Append(mdb.HASH))

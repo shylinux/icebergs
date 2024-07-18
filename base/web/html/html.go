@@ -57,6 +57,8 @@ const (
 	CHECKBOX = "checkbox"
 	SELECT   = "select"
 	BUTTON   = "button"
+	IMAGE    = "image"
+	SUBMIT   = "submit"
 	CHROME   = "chrome"
 
 	STYLE  = "style"

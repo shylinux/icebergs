@@ -197,7 +197,12 @@ func (m *Message) ToastProcess(arg ...string) func(...string) {
 func (m *Message) Trans(en string, zh string) string {
 	switch strings.ToLower(kit.Select("", kit.Split(m.Option(MSG_LANGUAGE), "_-"), 0)) {
 	case "zh":
-		return zh
+		if zh == "" {
+			if h, ok := m.Target().Commands[m.CommandKey()].Actions[en]; ok {
+				return kit.Select(en, h.Help)
+			}
+		}
+		return kit.Select(en, zh)
 	default:
 		return en
 	}

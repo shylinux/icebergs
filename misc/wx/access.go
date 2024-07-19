@@ -95,7 +95,6 @@ func init() {
 				}
 			}},
 			MEDIA: {Hand: func(m *ice.Message, arg ...string) {
-				m.OptionDefault(ACCESS, mdb.Config(m, ACCESS))
 				m.Cmdy(web.SPIDE, WX, web.SPIDE_SAVE, arg[1], http.MethodGet, MEDIA_GET, oauth.ACCESS_TOKEN, m.Cmdx(ACCESS, TOKENS), "media_id", arg[0])
 			}},
 			OAUTH: {Icon: "bi bi-shield-fill-check", Hand: func(m *ice.Message, arg ...string) {
@@ -145,6 +144,7 @@ func init() {
 }
 func spideToken(m *ice.Message, api string, token, expire string, arg ...string) {
 	msg := mdb.HashSelect(m.Spawn(), m.OptionDefault(ACCESS, mdb.Config(m, ACCESS)))
+	m.Info("what token %v %v", msg.Append(expire), msg.Append(token))
 	if msg.Append(token) == "" || m.Time() > msg.Append(expire) {
 		kit.If(api != TICKET_GETTICKET, func() { arg = append(arg, msg.AppendSimple(APPID, SECRET)...) })
 		res := m.Cmd(web.SPIDE, WX, kit.Select(http.MethodGet, http.MethodPost, api == STABLE_TOKEN), api, arg)

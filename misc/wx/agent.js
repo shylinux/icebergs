@@ -1,11 +1,12 @@
 Volcanos(chat.ONIMPORT, {
 	_init: function(can, msg) {
 		if (!can.user.info.username && can.user.info._cmd != "web.chat.oauth.client" && msg.Option("oauth")) {
-			can.user.jumps(msg.Option("oauth"))
-			return
+			return can.user.jumps(msg.Option("oauth"))
 		}
 		msg.Option(ice.MSG_ACTION, ""), can.require([msg.Option(nfs.SCRIPT)], function(can) {
 			var debug = msg.isDebug() && can.user.info.userrole == aaa.TECH; debug && can.onmotion.toggle(can, can._fields, true)
+			// debug = false
+			can.onmotion.hidden(can, can._fields)
 			wx.config({debug: debug, signature: msg.Option("signature"), timestamp: msg.Option("timestamp"), nonceStr: msg.Option("noncestr"), appId: msg.Option("appid"),
 				openTagList: ["wx-open-subscribe"],
 				jsApiList: can.core.Item({
@@ -26,8 +27,13 @@ Volcanos(chat.ONIMPORT, {
 						can.base.isFunc(cb) && cb(res.serverId)
 					} }) },
 				}, function(key, value) { return can.user.agent[key] = value, key }).concat([
-					// "updateAppMessageShareData", "updateTimelineShareData",
+					"updateAppMessageShareData", "updateTimelineShareData",
 				]),
+			})
+			wx.ready(function () {
+				var p = can.misc.Resource(can, can.user.info.favicon); can.base.beginWith(p, "/") && (p = location.origin + p)
+				wx.updateAppMessageShareData({title: can.user.info.titles, desc: "车管所业务代办", link: location.href, imgUrl: p})
+				wx.updateTimelineShareData({title: can.user.info.titles, link: location.href, imgUrl: p})
 			})
 		})
 	},

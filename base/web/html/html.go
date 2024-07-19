@@ -52,6 +52,7 @@ const (
 	SPAN     = "span"
 	TEXT     = "text"
 	PLUG     = "plug"
+	FORM     = "form"
 	TEXTAREA = "textarea"
 	PASSWORD = "password"
 	CHECKBOX = "checkbox"

@@ -256,6 +256,7 @@ const ( // MSG
 	LOG_TRACEID = "log.id"
 
 	MSG_NODETYPE   = "node.type"
+	MSG_NODENAME   = "node.name"
 	MSG_FILES      = "file.system"
 	FROM_SPACE     = "from.space"
 	FROM_DAEMON    = "from.daemon"

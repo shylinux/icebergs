@@ -61,6 +61,8 @@ const (
 	IMAGE    = "image"
 	SUBMIT   = "submit"
 	CHROME   = "chrome"
+	NEED     = "need"
+	MUST     = "must"
 
 	STYLE  = "style"
 	FLOAT  = "float"

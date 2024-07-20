@@ -143,13 +143,15 @@ func init() {
 			if ice.Info.NodeType == web.WORKER {
 				return
 			}
-			m.Option(ice.MSG_NODETYPE, ice.Info.NodeType)
 			kit.If(m.Option(ice.MSG_USERPOD), func(p string) {
 				m.Option(ice.MSG_NODETYPE, m.Cmdx(web.SPACE, p, cli.RUNTIME, ice.MSG_NODETYPE))
+				m.Option(ice.MSG_NODENAME, m.Cmdx(web.SPACE, p, cli.RUNTIME, ice.MSG_NODENAME))
 				m.Option("favicon", m.Cmd(web.SPACE, m.Option(ice.MSG_USERPOD), web.SPACE, ice.INFO).Append(mdb.ICONS))
 			}, func() {
-				// m.Option("titles", ice.Info.Title())
+				m.Option(ice.MSG_NODETYPE, ice.Info.NodeType)
+				m.Option(ice.MSG_NODENAME, ice.Info.NodeName)
 				m.Option("favicon", ice.Info.NodeIcon)
+				m.Option("titles", ice.Info.Titles)
 			})
 			m.Option(aaa.LANGUAGE, strings.ReplaceAll(strings.ToLower(kit.Select("", kit.Split(kit.GetValid(
 				func() string { return kit.Select("", "zh-cn", strings.Contains(m.Option(ice.MSG_USERUA), "zh_CN")) },

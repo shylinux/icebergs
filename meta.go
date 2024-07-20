@@ -94,9 +94,9 @@ func (m *Message) Push(key string, value Any, arg ...Any) *Message {
 				if v = kit.Value(value, k); v != nil {
 					break
 				}
-				if v = kit.Value(value, kit.Keys(EXTRA, k)); v != nil {
-					break
-				}
+				// if v = kit.Value(value, kit.Keys(EXTRA, k)); v != nil {
+				// break
+				// }
 				if v = val[k]; v != nil {
 					break
 				}

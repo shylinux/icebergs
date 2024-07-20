@@ -31,6 +31,9 @@ func init() {
 			}},
 			SCAN: {Hand: func(m *ice.Message, arg ...string) {
 				msg := m.Cmd(SCAN, m.Option(ACCESS), arg[0])
+				m.Cmdy(TEXT, web.LINK, m.MergePodCmd(msg.Append(web.SPACE), msg.Append(ctx.INDEX)),
+					msg.Append(mdb.NAME), msg.Append(mdb.TEXT), msg.Append(mdb.ICONS))
+				return
 				m.Options(ice.MSG_USERPOD, msg.Append(web.SPACE))
 				link := m.Cmd(web.SHARE, mdb.CREATE, mdb.TYPE, web.FIELD, mdb.NAME, msg.Append(ctx.INDEX), mdb.TEXT, msg.Append(ctx.ARGS)).Option(web.LINK)
 				m.Cmdy(TEXT, web.LINK, link, msg.Append(mdb.NAME), msg.Append(mdb.TEXT), msg.Append(mdb.ICONS))

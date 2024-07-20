@@ -84,6 +84,9 @@ func init() {
 			AGENT: {Hand: func(m *ice.Message, arg ...string) {
 				ctx.OptionFromConfig(m, ACCESS, APPID)
 			}},
+			"user": {Name: "user openid", Hand: func(m *ice.Message, arg ...string) {
+				SpideGet(m, "user/info", "openid", m.Option("openid"))
+			}},
 			"api": {Name: "api method=GET,POST path params", Hand: func(m *ice.Message, arg ...string) {
 				switch m.Option("method") {
 				case "POST":
@@ -134,7 +137,7 @@ func init() {
 		}, gdb.EventsAction(web.SPACE_GRANT, web.SPACE_LOGIN_CLOSE), mdb.ExportHashAction(
 			mdb.SHORT, ACCESS, mdb.FIELD, "time,type,access,icons,usernick,appid,secret,token", tcp.SERVER, CGI_BIN,
 		)), Hand: func(m *ice.Message, arg ...string) {
-			mdb.HashSelect(m, arg...).PushAction(OAUTH, web.SSO, TICKET, TOKENS, STABLE_TOKEN, "api", mdb.REMOVE).StatusTimeCount(mdb.ConfigSimple(m, ACCESS, APPID), web.SERVE, m.MergeLink("/chat/wx/login/"))
+			mdb.HashSelect(m, arg...).PushAction(OAUTH, web.SSO, TICKET, TOKENS, STABLE_TOKEN, "user", "api", mdb.REMOVE).StatusTimeCount(mdb.ConfigSimple(m, ACCESS, APPID), web.SERVE, m.MergeLink("/chat/wx/login/"))
 			m.RewriteAppend(func(value, key string, index int) string {
 				kit.If(key == cli.QRCODE, func() { value = ice.Render(m, ice.RENDER_QRCODE, value) })
 				return value

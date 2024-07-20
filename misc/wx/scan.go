@@ -33,12 +33,16 @@ func init() {
 				switch arg[0] {
 				case SCENE:
 					m.Cmdy(IDE).Cut(mdb.HASH, mdb.NAME, PAGES, ctx.INDEX).RenameAppend(mdb.HASH, arg[0])
+				default:
+					mdb.HashInputs(m, arg)
 				}
 			}},
 			mdb.CREATE: {Name: "create type*=QR_STR_SCENE,QR_LIMIT_STR_SCENE name*=1 text icons expire_seconds=3600 space index* args", Hand: func(m *ice.Message, arg ...string) {
 				h := mdb.HashCreate(m.Spawn(), arg)
 				res := SpidePost(m, QRCODE_CREATE, "action_name", m.Option(mdb.TYPE), "action_info.scene.scene_str", h, m.OptionSimple(EXPIRE_SECONDS))
-				mdb.HashModify(m, mdb.HASH, h, mdb.LINK, kit.Value(res, web.URL), mdb.TIME, m.Time(kit.Format("%ss", kit.Select("60", m.Option(EXPIRE_SECONDS)))))
+				mdb.HashModify(m, mdb.HASH, h, mdb.LINK, kit.Value(res, web.URL),
+					"ticket", kit.Value(res, "ticket"),
+					mdb.TIME, m.Time(kit.Format("%ss", kit.Select("60", m.Option(EXPIRE_SECONDS)))))
 				m.EchoQRCode(kit.Format(kit.Value(res, web.URL)))
 			}},
 			UNLIMIT: {Name: "unlimit env*=develop,release,trial,develop scene* name", Help: "小程序码", Hand: func(m *ice.Message, arg ...string) {
@@ -78,6 +82,7 @@ func init() {
 				}).Action(mdb.CREATE, UNLIMIT)
 			} else {
 				kit.If(m.Time() < m.Append(mdb.TIME), func() { m.PushQRCode(cli.QRCODE, m.Append(mdb.LINK)) })
+				m.EchoImages("https://mp.weixin.qq.com/cgi-bin/showqrcode?ticket=" + m.Append("ticket"))
 			}
 		}},
 	})

@@ -102,13 +102,22 @@ func (s Client) Link(m *ice.Message, arg ...string) {
 func (s Client) User(m *ice.Message, arg ...string) {
 	if res := s.Get(m, m.Option(mdb.HASH), m.Option(USERS_URL), arg...); res != nil {
 		m.Info("what %v", kit.Format(res))
-		m.Options(res).Cmd(aaa.USER, mdb.CREATE,
-			aaa.USERROLE, kit.Select(aaa.VOID, aaa.TECH, m.Option("is_admin") == ice.TRUE),
-			aaa.USERNAME, m.Option(aaa.USERNAME, m.Option(kit.Select(aaa.USERNAME, m.Option(USER_KEY)))),
-			aaa.USERNICK, m.Option(kit.Select("full_name", m.Option(NICK_KEY))),
-			aaa.USERZONE, m.Option(web.DOMAIN),
-			aaa.AVATAR, m.Option(kit.Select(aaa.AVATAR_URL, m.Option(ICON_KEY))),
-			m.OptionSimple(aaa.LANGUAGE, aaa.EMAIL))
+		m.Options(res)
+		username := m.Option(aaa.USERNAME, m.Option(kit.Select(aaa.USERNAME, m.Option(USER_KEY))))
+		if m.Cmd(aaa.USER, username).Length() > 0 {
+			m.Cmd(aaa.USER, mdb.MODIFY, aaa.USERNAME, username,
+				aaa.USERNICK, m.Option(kit.Select("full_name", m.Option(NICK_KEY))),
+				aaa.AVATAR, m.Option(kit.Select(aaa.AVATAR_URL, m.Option(ICON_KEY))),
+			)
+		} else {
+			m.Cmd(aaa.USER, mdb.CREATE,
+				aaa.USERROLE, kit.Select(aaa.VOID, aaa.TECH, m.Option("is_admin") == ice.TRUE),
+				aaa.USERNAME, username,
+				aaa.USERNICK, m.Option(kit.Select("full_name", m.Option(NICK_KEY))),
+				aaa.USERZONE, m.Option(web.DOMAIN),
+				aaa.AVATAR, m.Option(kit.Select(aaa.AVATAR_URL, m.Option(ICON_KEY))),
+				m.OptionSimple(aaa.LANGUAGE, aaa.EMAIL))
+		}
 	}
 }
 func (s Client) Orgs(m *ice.Message, arg ...string) {}
@@ -145,7 +154,7 @@ func (s Client) Login2(m *ice.Message, arg ...string) {
 			kit.Value(res, EXPIRES_IN, m.Time(kit.Format("%vs", kit.Int(kit.Value(res, EXPIRES_IN)))))
 			m.Info("what %v", kit.Format(res))
 			m.Options(res)
-			if s.User(m, m.OptionSimple(ACCESS_TOKEN, "openid")...); !m.WarnNotValid(m.Option(aaa.USERNAME) == "") && m.R != nil {
+			if s.User(m, m.OptionSimple("openid")...); !m.WarnNotValid(m.Option(aaa.USERNAME) == "") && m.R != nil {
 				m.Cmd(aaa.USER, mdb.MODIFY, m.OptionSimple(aaa.USERNAME), kit.Simple(res))
 				web.RenderCookie(m.Message, aaa.SessCreate(m.Message, m.Option(aaa.USERNAME)))
 				m.ProcessBack("-2")

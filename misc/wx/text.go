@@ -24,7 +24,7 @@ func init() {
 			web.LINK: {Name: "link link name text icons", Hand: func(m *ice.Message, arg ...string) {
 				kit.If(m.Option(mdb.ICONS) == "", func() { m.Option(mdb.ICONS, m.Cmdv(ACCESS, m.Option(ACCESS), mdb.ICONS)) })
 				m.Option(mdb.ICONS, web.ShareLocal(m, m.Option(mdb.ICONS)))
-				m.Cmdy("", m.OptionDefault(mdb.TEXT, "工具系统"), "link.xml")
+				m.Cmdy("", m.OptionDefault(mdb.TEXT, ice.Info.Titles), "link.xml")
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			m.Echo(nfs.Template(m.Options(mdb.TEXT, arg[0]), kit.Select("welcome.xml", arg, 1))).RenderResult()

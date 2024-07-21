@@ -54,7 +54,7 @@ func toastTitle(m *ice.Message) string {
 }
 func toastContent(m *ice.Message, state string, arg ...ice.Any) string {
 	if len(arg) == 0 {
-		return kit.JoinWord(kit.Simple(Icons[state], kit.Select(ice.LIST, m.ActionKey()), state)...)
+		return kit.JoinWord(kit.Simple(Icons[state], m.Trans(kit.Select(ice.LIST, m.ActionKey()), ""), m.Trans(state, ""))...)
 	} else {
 		return kit.JoinWord(kit.Simple(Icons[state], arg)...)
 	}
@@ -121,7 +121,7 @@ func Toast(m *ice.Message, text string, arg ...ice.Any) *ice.Message { // [title
 	kit.If(len(arg) == 0, func() { arg = append(arg, "") })
 	kit.If(len(arg) > 0 && arg[0] == "", func() { arg[0] = toastTitle(m) })
 	if m.IsDebug() {
-		arg[0] = kit.Format(arg[0]) + "\t" + kit.FileLine(-1, 3)
+		// arg[0] = kit.Format(arg[0]) + "\t" + kit.FileLine(-1, 3)
 	}
 	PushNoticeToast(m, text, arg)
 	return m

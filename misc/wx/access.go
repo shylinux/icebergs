@@ -85,7 +85,7 @@ func init() {
 				ctx.OptionFromConfig(m, ACCESS, APPID)
 			}},
 			"user": {Name: "user openid", Hand: func(m *ice.Message, arg ...string) {
-				SpideGet(m, "user/info", "openid", m.Option("openid"))
+				SpideGet(m, "user/info", OPENID, m.Option(OPENID))
 			}},
 			"api": {Name: "api method=GET,POST path params", Hand: func(m *ice.Message, arg ...string) {
 				switch m.Option("method") {
@@ -154,7 +154,7 @@ func spideToken(m *ice.Message, api string, token, expire string, arg ...string)
 		if m.Warn(!kit.IsIn(res.Append("errcode"), "0", ""), res.Append("errmsg")) {
 			return
 		}
-		m.Debug("res: %v", res.FormatMeta())
+		m.Info("what res: %v", res.FormatMeta())
 		mdb.HashModify(m, m.OptionSimple(ACCESS), expire, m.Time(kit.Format("%vs", res.Append(oauth.EXPIRES_IN))), token, res.Append(kit.Select(oauth.ACCESS_TOKEN, TICKET, api == TICKET_GETTICKET)))
 		msg = mdb.HashSelect(m.Spawn(), m.Option(ACCESS))
 	}

@@ -333,6 +333,10 @@ func ParseUA(m *ice.Message) (res []string) {
 func ProxyDomain(m *ice.Message, name string) (domain string) {
 	p := path.Join(PROXY_PATH, "conf/portal", name, "server.conf")
 	if !nfs.Exists(m, p) {
+		domain := UserWeb(m).Hostname()
+		if domain == "localhost" {
+			return ""
+		}
 		if p = path.Join(PROXY_PATH, "conf/server", kit.Keys(name, kit.Slice(kit.Split(UserWeb(m).Hostname(), "."), -2))) + ".conf"; !nfs.Exists(m, p) {
 			return ""
 		}

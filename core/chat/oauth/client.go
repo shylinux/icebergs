@@ -44,7 +44,7 @@ const (
 type Client struct {
 	ice.Hash
 	short  string `data:"domain,client_id"`
-	field  string `data:"time,hash,domain,client_id,client_secret,oauth_url,grant_url,token_url,users_url,scope,login,user_key,nick_key,icon_key,api_prefix,token_prefix"`
+	field  string `data:"time,hash,domain,client_id,client_secret,oauth_url,grant_url,token_url,users_url,scope,login,user_key,user_cmd,sess_cmd,nick_key,icon_key,api_prefix,token_prefix"`
 	sso    string `name:"sso name* help icons*" help:"登录"`
 	auth   string `name:"auth" help:"授权" icon:"bi bi-person-check"`
 	user   string `name:"user" help:"用户" icon:"bi bi-person-vcard"`
@@ -103,6 +103,10 @@ func (s Client) User(m *ice.Message, arg ...string) {
 	if res := s.Get(m, m.Option(mdb.HASH), m.Option(USERS_URL), arg...); res != nil {
 		m.Info("what %v", kit.Format(res))
 		m.Options(res)
+		if m.Option("user_cmd") != "" {
+			m.Cmdy(kit.Split(m.Option("user_cmd")), kit.Simple(res))
+			return
+		}
 		username := m.Option(aaa.USERNAME, m.Option(kit.Select(aaa.USERNAME, m.Option(USER_KEY))))
 		if m.Cmd(aaa.USER, username).Length() > 0 {
 			m.Cmd(aaa.USER, mdb.MODIFY, aaa.USERNAME, username,
@@ -154,11 +158,19 @@ func (s Client) Login2(m *ice.Message, arg ...string) {
 			kit.Value(res, EXPIRES_IN, m.Time(kit.Format("%vs", kit.Int(kit.Value(res, EXPIRES_IN)))))
 			m.Info("what %v", kit.Format(res))
 			m.Options(res)
-			if s.User(m, m.OptionSimple("openid")...); !m.WarnNotValid(m.Option(aaa.USERNAME) == "") && m.R != nil {
+			if s.User(m, m.OptionSimple("openid")...); m.Option(aaa.USERNAME) != "" && m.R != nil {
+				if m.Option("sess_cmd") != "" {
+					m.Cmdy(kit.Split(m.Option("sess_cmd")), kit.Simple(res))
+					return
+				}
 				m.Cmd(aaa.USER, mdb.MODIFY, m.OptionSimple(aaa.USERNAME), kit.Simple(res))
 				web.RenderCookie(m.Message, aaa.SessCreate(m.Message, m.Option(aaa.USERNAME)))
 				m.ProcessBack("-2")
 			} else {
+				if m.Option("sess_cmd") != "" {
+					m.Cmdy(kit.Split(m.Option("sess_cmd")), kit.Simple(res))
+					return
+				}
 				m.ProcessClose()
 			}
 		}

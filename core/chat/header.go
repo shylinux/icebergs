@@ -140,19 +140,17 @@ func init() {
 				}
 			}},
 		}, web.ApiAction(), mdb.ImportantHashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,type,name,help,icons,order,link,space,index,args")), Hand: func(m *ice.Message, arg ...string) {
-			if ice.Info.NodeType == web.WORKER {
-				return
-			}
 			kit.If(m.Option(ice.MSG_USERPOD), func(p string) {
-				m.Option(ice.MSG_NODETYPE, m.Cmdx(web.SPACE, p, cli.RUNTIME, ice.MSG_NODETYPE))
-				m.Option(ice.MSG_NODENAME, m.Cmdx(web.SPACE, p, cli.RUNTIME, ice.MSG_NODENAME))
-				m.Option("favicon", m.Cmd(web.SPACE, m.Option(ice.MSG_USERPOD), web.SPACE, ice.INFO).Append(mdb.ICONS))
+				m.Cmdy(web.SPACE, p, m.PrefixKey(), ice.Maps{ice.MSG_USERPOD: ""})
 			}, func() {
 				m.Option(ice.MSG_NODETYPE, ice.Info.NodeType)
 				m.Option(ice.MSG_NODENAME, ice.Info.NodeName)
 				m.Option("favicon", ice.Info.NodeIcon)
 				m.Option("titles", ice.Info.Titles)
 			})
+			if ice.Info.NodeType == web.WORKER {
+				return
+			}
 			m.Option(aaa.LANGUAGE, strings.ReplaceAll(strings.ToLower(kit.Select("", kit.Split(kit.GetValid(
 				func() string { return kit.Select("", "zh-cn", strings.Contains(m.Option(ice.MSG_USERUA), "zh_CN")) },
 				func() string { return kit.Select("", kit.Split(m.R.Header.Get(html.AcceptLanguage), ",;"), 0) },
@@ -160,31 +158,27 @@ func init() {
 			), " ."), 0)), "_", "-"))
 			m.Option("language.list", m.Cmd(nfs.DIR, nfs.TemplatePath(m, aaa.LANGUAGE)+nfs.PS, nfs.FILE).Appendv(nfs.FILE))
 			m.Option("theme.list", m.Cmd(nfs.DIR, nfs.TemplatePath(m, aaa.THEME)+nfs.PS, nfs.FILE).Appendv(nfs.FILE))
-			m.Option(nfs.REPOS, m.Cmdv(web.SPIDE, nfs.REPOS, web.CLIENT_URL))
-			m.Option("icon.lib", mdb.Conf(m, ICON, kit.Keym(nfs.PATH)))
-			m.Option("diy", mdb.Config(m, "diy"))
-			m.Echo(mdb.Config(m, TITLE))
-			mdb.HashSelect(m, arg...).Sort(mdb.ORDER, ice.INT)
-			m.Table(func(value ice.Maps) { m.Push(mdb.STATUS, kit.Select(mdb.ENABLE, mdb.DISABLE, value[mdb.ORDER] == "")) })
-			kit.If(m.Length() == 0, func() {
-				m.Push(mdb.TIME, m.Time()).Push(mdb.NAME, cli.QRCODE).Push(mdb.HELP, "扫码登录").Push(mdb.ICONS, nfs.USR_ICONS_VOLCANOS).Push(mdb.TYPE, cli.QRCODE).Push(web.LINK, "").Push(mdb.ORDER, "10")
-			})
-			kit.If(GetSSO(m), func(p string) {
-				m.Push(mdb.TIME, m.Time()).Push(mdb.NAME, web.SERVE).Push(mdb.ICONS, nfs.USR_ICONS_ICEBERGS).Push(mdb.TYPE, "oauth").Push(web.LINK, p)
-			})
-			m.StatusTimeCount(kit.Dict(mdb.ConfigSimple(m, ice.DEMO)))
-			kit.If(kit.IsIn(m.Option(ice.MSG_USERROLE), aaa.TECH, aaa.ROOT), func() { m.Action(mdb.CREATE, ice.DEMO) })
+			if m.Option(ice.MSG_USERNAME) == "" || m.Option(ice.MSG_INDEX) == m.PrefixKey() {
+				mdb.HashSelect(m, arg...).Sort(mdb.ORDER, ice.INT)
+				m.Table(func(value ice.Maps) { m.Push(mdb.STATUS, kit.Select(mdb.ENABLE, mdb.DISABLE, value[mdb.ORDER] == "")) })
+				defer m.StatusTimeCount(kit.Dict(mdb.ConfigSimple(m, ice.DEMO)))
+			}
 			if gdb.Event(m, HEADER_AGENT); !_header_check(m, arg...) {
-				return
+				kit.If(m.Length() == 0, func() {
+					m.Push(mdb.TIME, m.Time()).Push(mdb.NAME, cli.QRCODE).Push(mdb.HELP, "扫码登录").Push(mdb.ICONS, nfs.USR_ICONS_VOLCANOS).Push(mdb.TYPE, cli.QRCODE).Push(web.LINK, "").Push(mdb.ORDER, "10")
+				})
+				kit.If(GetSSO(m), func(p string) {
+					m.Push(mdb.TIME, m.Time()).Push(mdb.NAME, web.SERVE).Push(mdb.ICONS, nfs.USR_ICONS_ICEBERGS).Push(mdb.TYPE, "oauth").Push(web.LINK, p)
+				})
+			} else {
+				kit.If(kit.IsIn(m.Option(ice.MSG_USERROLE), aaa.TECH, aaa.ROOT), func() { m.Action(mdb.CREATE, ice.DEMO) })
+				msg := m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME))
+				if role := msg.Append(aaa.USERROLE); role != m.Option(ice.MSG_USERROLE) {
+					m.Cmd(aaa.SESS, mdb.MODIFY, mdb.HASH, m.Option(ice.MSG_SESSID), aaa.USERROLE, m.Option(ice.MSG_USERROLE, role))
+				}
+				kit.For([]string{aaa.USERNICK, aaa.LANGUAGE, aaa.EMAIL}, func(k string) { kit.If(msg.Append(k), func(v string) { m.Option(k, v) }) })
+				kit.For([]string{aaa.AVATAR, aaa.BACKGROUND}, func(k string) { m.Option(k, msg.Append(k)) })
 			}
-			msg := m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME))
-			if role := msg.Append(aaa.USERROLE); role != m.Option(ice.MSG_USERROLE) {
-				m.Cmd(aaa.SESS, mdb.MODIFY, mdb.HASH, m.Option(ice.MSG_SESSID), aaa.USERROLE, role)
-				m.Option(ice.MSG_USERROLE, role)
-			}
-			kit.For([]string{aaa.USERNICK, aaa.LANGUAGE, aaa.EMAIL}, func(k string) { kit.If(msg.Append(k), func(v string) { m.Option(k, v) }) })
-			// kit.For([]string{aaa.AVATAR, aaa.BACKGROUND}, func(k string) { m.Option(k, web.RequireFile(m, msg.Append(k))) })
-			kit.For([]string{aaa.AVATAR, aaa.BACKGROUND}, func(k string) { m.Option(k, msg.Append(k)) })
 		}},
 	})
 }

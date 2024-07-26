@@ -221,6 +221,7 @@ func init() {
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				aaa.White(m, ice.MAKEFILE, ice.README_MD, ice.LICENSE)
 				aaa.White(m, ice.SRC, ice.BIN, ice.USR)
+				aaa.Black(m, ice.SRC_PRIVATE)
 				aaa.Black(m, ice.USR_LOCAL)
 			}},
 			ice.APP: {Help: "本机", Hand: func(m *ice.Message, arg ...string) {

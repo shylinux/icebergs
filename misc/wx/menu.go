@@ -33,7 +33,11 @@ func init() {
 						kit.If(value[STORM] != "1", func() { key = kit.Keys(key, "sub_button", kit.Int(value[STORM])-2) })
 						kit.If(value[mdb.TYPE] == "view", func() {
 							if value[mdb.TEXT] == "" {
-								value[mdb.TEXT] = web.C(value[ctx.INDEX])
+								if value[web.SPACE] != "" {
+									value[mdb.TEXT] = web.S(value[web.SPACE]) + web.C(value[ctx.INDEX])
+								} else {
+									value[mdb.TEXT] = web.C(value[ctx.INDEX])
+								}
 							}
 							value[mdb.TEXT] = m.MergeLink(value[mdb.TEXT])
 						})

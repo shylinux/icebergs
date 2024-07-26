@@ -58,9 +58,7 @@ func init() {
 			web.DREAM_REMOVE: {Hand: func(m *ice.Message, arg ...string) {
 				MessageInsertPlug(m, web.DREAM, "", "", web.DREAM, m.Option(mdb.NAME))
 			}},
-			web.SPACE_LOGIN: {Hand: func(m *ice.Message, arg ...string) {
-				MessageInsertPlug(m, aaa.APPLY, "", "", web.CHAT_GRANT, m.Option(mdb.NAME))
-			}},
+			// web.SPACE_LOGIN: {Hand: func(m *ice.Message, arg ...string) { MessageInsertPlug(m, aaa.APPLY, "", "", web.CHAT_GRANT, m.Option(mdb.NAME)) }},
 			aaa.OFFER_CREATE: {Hand: func(m *ice.Message, arg ...string) {
 				MessageInsertPlug(m, aaa.APPLY, "", "", aaa.OFFER, m.Option(mdb.HASH))
 			}},

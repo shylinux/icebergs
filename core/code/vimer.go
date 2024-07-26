@@ -152,7 +152,7 @@ func init() {
 					_vimer_make(m, nfs.PWD, msg)
 				}
 			}},
-			REPOS: {Hand: func(m *ice.Message, arg ...string) {
+			REPOS: {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(REPOS, ice.OptionFields(nfs.PATH)).Sort(nfs.PATH)
 			}},
 			ice.APP: {Help: "本机", Hand: func(m *ice.Message, arg ...string) {

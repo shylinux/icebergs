@@ -129,7 +129,7 @@ func _space_handle(m *ice.Message, safe bool, name string, c *websocket.Conn) {
 		}
 		msg := m.Spawn(b)
 		if safe && msg.Option(ice.MSG_UNSAFE) != ice.TRUE { // 下行权限
-			if !aaa.IsTechOrRoot(msg) {
+			if !aaa.IsTechOrRoot(msg) && msg.Option(ice.MSG_HANDLE) != ice.TRUE {
 				msg.Option(ice.MSG_USERROLE, kit.Select(msg.Option(ice.MSG_USERROLE), aaa.UserRole(msg, msg.Option(ice.MSG_USERNAME))))
 			}
 			// kit.If(kit.IsIn(msg.Option(ice.MSG_USERROLE), "", aaa.VOID), func() { msg.Option(ice.MSG_USERROLE, aaa.UserRole(msg, msg.Option(ice.MSG_USERNAME))) })
@@ -163,6 +163,8 @@ func _space_handle(m *ice.Message, safe bool, name string, c *websocket.Conn) {
 				}), SPACE, next) {
 					break
 				}
+				m.Info("what %v", m.FormatStack(1, 100))
+				m.Info("what %v", m.FormatChain())
 				m.Sleep3s()
 			}
 		}

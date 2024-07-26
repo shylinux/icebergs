@@ -40,7 +40,8 @@ func init() {
 			} else if len(arg) == 0 || arg[0] == "" {
 				web.RenderMain(m)
 			} else {
-				if m.Cmd(web.SPACE, arg[0]).Length() == 0 && nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, arg[0])) {
+				msg := m.Cmd(web.SPACE, arg[0])
+				if msg.Length() == 0 && nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, arg[0])) {
 					m.Cmd(web.DREAM, cli.START, kit.Dict(mdb.NAME, arg[0]))
 				}
 				if m.Option(ice.MSG_USERPOD, arg[0]); len(arg) == 1 {
@@ -49,8 +50,7 @@ func init() {
 					if kit.IsIn(arg[2], web.ADMIN) {
 						m.Cmdy(web.SPACE, arg[0], arg[2], arg[3:])
 					} else {
-						m.Options(m.Cmd(web.SPACE, arg[0]).AppendSimple())
-						m.Options(mdb.ICONS, "")
+						m.Options(msg.AppendSimple()).Options(mdb.ICONS, "")
 						web.RenderPodCmd(m, arg[0], arg[2], arg[3:])
 					}
 				}

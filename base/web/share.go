@@ -171,7 +171,13 @@ func ShareLocalFile(m *ice.Message, arg ...string) {
 			return
 		}
 	}
-	if m.Option(ice.POD) == "" || (kit.HasPrefix(p, ice.USR_ICONS, ice.USR_VOLCANOS, ice.USR_ICEBERGS, ice.USR_INTSHELL) && nfs.Exists(m, p)) {
+	if m.Option(ice.POD) != "" && nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, m.Option(ice.POD))) {
+		if pp := kit.Path(ice.USR_LOCAL_WORK, m.Option(ice.POD), p); nfs.Exists(m, pp) {
+			m.RenderDownload(pp)
+		} else if nfs.Exists(m, p) {
+			m.RenderDownload(p)
+		}
+	} else if m.Option(ice.POD) == "" || (kit.HasPrefix(p, ice.USR_ICONS, ice.USR_VOLCANOS, ice.USR_ICEBERGS, ice.USR_INTSHELL) && nfs.Exists(m, p)) {
 		m.RenderDownload(p)
 	} else if pp := kit.Path(ice.USR_LOCAL_WORK, m.Option(ice.POD), p); nfs.Exists(m, pp) {
 		m.RenderDownload(pp)

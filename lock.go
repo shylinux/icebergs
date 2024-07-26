@@ -63,8 +63,8 @@ func (m *Message) setDetail(key string, arg ...string) *Message {
 				m._meta[KEY][i] = m._meta[KEY][i+1]
 				m._meta[VALUE][i] = m._meta[VALUE][i+1]
 			}
-			m._meta[KEY] = m._meta[KEY][0:len(m._meta[KEY])-1]
-			m._meta[VALUE] = m._meta[VALUE][0:len(m._meta[VALUE])-1]
+			m._meta[KEY] = m._meta[KEY][0 : len(m._meta[KEY])-1]
+			m._meta[VALUE] = m._meta[VALUE][0 : len(m._meta[VALUE])-1]
 			return m
 		}
 	}
@@ -89,7 +89,11 @@ func (m *Message) Optionv(key string, arg ...Any) Any {
 		case []string:
 			m._meta[key] = v
 		default:
-			m._data[key] = v
+			if len(arg) > 1 {
+				m._data[key] = arg
+			} else {
+				m._data[key] = v
+			}
 		}
 	} else {
 		unlock = m.lock.RLock()

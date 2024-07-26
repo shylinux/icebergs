@@ -141,6 +141,7 @@ const (
 	RENAME = "rename"
 	VENDOR = "vendor"
 	PRUNE  = "prune"
+	TABLE  = "table"
 
 	PAGE = "page"
 	NEXT = "next"

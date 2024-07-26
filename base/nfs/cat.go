@@ -31,7 +31,7 @@ func _cat_line(m *ice.Message, p string) (n int) {
 	return
 }
 func _cat_list(m *ice.Message, p string) {
-	if m.Option(CAT_CONTENT) == "" && !aaa.Right(m, path.Join(m.Option(DIR_ROOT), p)) {
+	if m.Option(CAT_CONTENT) == "" && !kit.IsIn(kit.Ext(p), "css", "js") && !aaa.Right(m, path.Join(m.Option(DIR_ROOT), p)) {
 		return
 	}
 	f, e := _cat_find(m, p)

@@ -174,6 +174,7 @@ const ( // DIR
 	SRC_BINPACK_GO     = "src/binpack.go"
 	SRC_BINPACK_USR_GO = "src/binpack_usr.go"
 	SRC_TEMPLATE       = "src/template/"
+	SRC_PRIVATE        = "src/private/"
 	SRC_SCRIPT         = "src/script/"
 	USR_SCRIPT         = "usr/script/"
 	README_MD          = "README.md"

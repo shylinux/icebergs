@@ -95,7 +95,9 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	return true
 }
 func _serve_static(msg *ice.Message, w http.ResponseWriter, r *http.Request) bool {
-	ispod := kit.Contains(r.URL.String(), S(), "pod=") || kit.Contains(r.Header.Get(html.Referer), S(), "pod=")
+	_serve_params(msg, r.Header.Get(html.Referer))
+	_serve_params(msg, r.URL.String())
+	ispod := msg.Option(ice.MSG_USERPOD) != ""
 	if strings.HasPrefix(r.URL.Path, nfs.V) {
 		return Render(msg, ice.RENDER_DOWNLOAD, path.Join(ice.USR_VOLCANOS, strings.TrimPrefix(r.URL.Path, nfs.V)))
 	} else if kit.HasPrefix(r.URL.Path, nfs.P) {
@@ -103,12 +105,19 @@ func _serve_static(msg *ice.Message, w http.ResponseWriter, r *http.Request) boo
 			return false
 		}
 		p := strings.TrimPrefix(r.URL.Path, nfs.P)
+		if pp := path.Join(nfs.USR_LOCAL_WORK, msg.Option(ice.MSG_USERPOD)); ispod && nfs.Exists(msg, pp) {
+			if pp = path.Join(pp, p); nfs.Exists(msg, pp) {
+				return Render(msg, ice.RENDER_DOWNLOAD, pp)
+			} else {
+				return Render(msg, ice.RENDER_DOWNLOAD, p)
+			}
+		}
 		return (!ispod && kit.HasPrefix(p, nfs.SRC) || kit.HasPrefix(p, ice.USR_ICEBERGS, ice.USR_ICONS)) && nfs.Exists(msg, p) && Render(msg, ice.RENDER_DOWNLOAD, p)
-	} else if kit.HasPrefix(path.Base(r.URL.Path), "MP_verify_") {
-		return Render(msg, ice.RENDER_DOWNLOAD, nfs.SRC_PRIVATE+path.Base(r.URL.Path))
 	} else if kit.HasPrefix(r.URL.Path, nfs.M) {
 		p := nfs.USR_MODULES + strings.TrimPrefix(r.URL.Path, nfs.M)
 		return nfs.Exists(msg, p) && Render(msg, ice.RENDER_DOWNLOAD, p)
+	} else if kit.HasPrefix(path.Base(r.URL.Path), "MP_verify_") {
+		return Render(msg, ice.RENDER_DOWNLOAD, nfs.ETC+path.Base(r.URL.Path))
 	} else if p := path.Join(kit.Select(ice.USR_VOLCANOS, ice.USR_INTSHELL, msg.IsCliUA()), r.URL.Path); nfs.Exists(msg, p) {
 		return Render(msg, ice.RENDER_DOWNLOAD, p)
 	} else if p = path.Join(nfs.USR, r.URL.Path); kit.HasPrefix(r.URL.Path, nfs.VOLCANOS, nfs.INTSHELL) && nfs.Exists(msg, p) {
@@ -121,6 +130,19 @@ func _serve_static(msg *ice.Message, w http.ResponseWriter, r *http.Request) boo
 		return false
 	}
 }
+func _serve_params(m *ice.Message, p string) {
+	if u, e := url.Parse(p); e == nil {
+		switch arg := strings.Split(strings.TrimPrefix(u.Path, nfs.PS), nfs.PS); arg[0] {
+		case CHAT:
+			kit.For(arg[1:], func(k, v string) { m.Option(k, v) })
+		case SHARE:
+			m.Option(arg[0], arg[1])
+		case "s":
+			m.Option(ice.POD, kit.Select("", arg, 1))
+		}
+		kit.For(u.Query(), func(k string, v []string) { m.Optionv(k, v) })
+	}
+}
 func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.ResponseWriter, r *http.Request) {
 	debug := strings.Contains(r.URL.String(), "debug=true") || strings.Contains(r.Header.Get(html.Referer), "debug=true")
 	m.Options(ice.LOG_DEBUG, ice.FALSE, ice.LOG_TRACEID, r.Header.Get(ice.LOG_TRACEID))
@@ -131,19 +153,8 @@ func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.Response
 		return m
 	}
 	kit.If(r.Header.Get(html.Referer), func(p string) { _log("page", html.Referer, p) })
-	if u, e := url.Parse(r.Header.Get(html.Referer)); e == nil {
-		add := func(k, v string) { _log(nfs.PATH, k, m.Option(k, v)) }
-		switch arg := strings.Split(strings.TrimPrefix(u.Path, nfs.PS), nfs.PS); arg[0] {
-		case CHAT:
-			kit.For(arg[1:], func(k, v string) { add(k, v) })
-		case SHARE:
-			add(arg[0], arg[1])
-		case "s":
-			add(ice.POD, kit.Select("", arg, 1))
-		}
-		kit.For(u.Query(), func(k string, v []string) { m.Optionv(k, v) })
-	}
-	kit.For(kit.ParseQuery(r.URL.RawQuery), func(k string, v []string) { m.Optionv(k, v) })
+	_serve_params(m, r.Header.Get(html.Referer))
+	_serve_params(m, r.URL.String())
 	if r.Method == http.MethodGet && m.Option(ice.MSG_CMDS) != "" {
 		_log(ctx.ARGS, ice.MSG_CMDS, m.Optionv(ice.MSG_CMDS))
 	}
@@ -203,7 +214,9 @@ func _serve_auth(m *ice.Message, key string, cmds []string, w http.ResponseWrite
 		return cmds, true
 	}
 	defer func() { m.Options(ice.MSG_CMDS, "") }()
-	if aaa.SessCheck(m, m.Option(ice.MSG_SESSID)); m.Option(ice.MSG_USERNAME) == "" {
+	if strings.Contains(m.Option(ice.MSG_SESSID), " ") {
+		m.Cmdy(kit.Split(m.Option(ice.MSG_SESSID)))
+	} else if aaa.SessCheck(m, m.Option(ice.MSG_SESSID)); m.Option(ice.MSG_USERNAME) == "" {
 		if ls := kit.Simple(mdb.Cache(m, m.Option(ice.MSG_USERIP), func() ice.Any {
 			if !IsLocalHost(m) {
 				return nil

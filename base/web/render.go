@@ -83,6 +83,7 @@ func Render(m *ice.Message, cmd string, args ...ice.Any) bool {
 				"$profile", fieldset+">div.output>div.layout>div.layout>div.profile",
 				"$content", fieldset+">div.output>div.layout>div.layout>div.content",
 				"$fieldset", fieldset, "$index", m.Option(ctx.INDEX),
+				"$input", "body>div.input.float."+m.Option(ctx.INDEX),
 			)))
 			break
 		}
@@ -90,6 +91,8 @@ func Render(m *ice.Message, cmd string, args ...ice.Any) bool {
 			http.ServeFile(m.W, m.R, kit.Path(arg[0]))
 		} else if f, e := nfs.PackFile.OpenFile(arg[0]); e == nil {
 			defer f.Close()
+			t, _ := time.ParseInLocation("2006-01-02 15:04:05", ice.Info.Make.When, time.Local)
+			RenderHeader(m.W, "Last-Modified", t.UTC().Format(time.RFC1123))
 			io.Copy(m.W, f)
 		}
 	case ice.RENDER_RESULT:
@@ -162,6 +165,7 @@ func RenderPodCmd(m *ice.Message, pod, cmd string, arg ...ice.Any) {
 	} else {
 		m.OptionDefault(mdb.ICONS, m.Resource(kit.Select(ice.Info.NodeIcon, msg.Append(mdb.ICONS))))
 		if !kit.IsIn(cmd, PORTAL, DESKTOP, ADMIN) {
+			pod = kit.Select(pod, msg.Option(ice.MSG_NODENAME))
 			m.OptionDefault(TITLE, kit.Select(cmd, msg.Append(mdb.HELP)+kit.Select("", " "+pod, pod != ""), !m.IsEnglish()))
 		}
 		RenderCmds(m, kit.Dict(msg.AppendSimple(), ctx.ARGS, kit.Simple(arg), ctx.DISPLAY, m.Option(ice.MSG_DISPLAY)))

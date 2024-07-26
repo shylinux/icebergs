@@ -32,16 +32,15 @@ Volcanos(chat.ONIMPORT, {
 				]), openTagList: ["wx-open-subscribe"],
 			})
 			wx.ready(function () {
-				function share(title, icons) {
-					wx.updateAppMessageShareData({title: title, desc: can.user.info.titles, link: location.href, imgUrl: icons})
+				function share(title, icons, content) {
+					wx.updateAppMessageShareData({title: title, desc: content||can.user.info.titles, link: location.href, imgUrl: icons})
 					wx.updateTimelineShareData({title: title, link: location.href, imgUrl: icons})
 				}
 				var p = can.misc.Resource(can, can.user.info.favicon); can.base.beginWith(p, "/") && (p = location.origin + p)
-				share(document.title, p)
-				can.user.agent.init = function(can) { if (!can) { return }
+				can.user.agent.init = function(can, content) { if (!can) { return }
 					p = can.misc.Resource(can, can.Conf(mdb.ICONS))||p; can.base.beginWith(p, "/") && (p = location.origin + p)
-					share(document.title, p)
-				}, can.user.agent.init(can.user.agent.cmd)
+					share(document.title, p, content)
+				}, can.user.agent.init(can.user.agent.cmd, can.user.agent._init_content)
 			})
 		})
 	},

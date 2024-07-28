@@ -72,7 +72,7 @@ func (m *Message) MergePodCmd(pod, cmd string, arg ...Any) string {
 }
 func (m *Message) MergeLink(url string, arg ...Any) string {
 	kit.If(m.Option(DEBUG) == TRUE, func() { arg = append([]Any{DEBUG, TRUE}, arg...) })
-	return kit.MergeURL2(strings.Split(kit.Select(Info.Domain, m.Option(MSG_USERWEB)), QS)[0], url, arg...)
+	return kit.MergeURL2(strings.Split(kit.Select(Info.Domain, m.Option(MSG_USERHOST), m.Option(MSG_USERWEB)), QS)[0], url, arg...)
 }
 func (m *Message) FieldsSetDetail() {
 	m.OptionFields(FIELDS_DETAIL)

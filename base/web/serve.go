@@ -95,9 +95,9 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	return true
 }
 func _serve_static(msg *ice.Message, w http.ResponseWriter, r *http.Request) bool {
-	_serve_params(msg, r.Header.Get(html.Referer))
+	// _serve_params(msg, r.Header.Get(html.Referer))
 	_serve_params(msg, r.URL.String())
-	ispod := msg.Option(ice.MSG_USERPOD) != ""
+	ispod := msg.Option(ice.POD) != ""
 	if strings.HasPrefix(r.URL.Path, nfs.V) {
 		return Render(msg, ice.RENDER_DOWNLOAD, path.Join(ice.USR_VOLCANOS, strings.TrimPrefix(r.URL.Path, nfs.V)))
 	} else if kit.HasPrefix(r.URL.Path, nfs.P) {
@@ -105,7 +105,7 @@ func _serve_static(msg *ice.Message, w http.ResponseWriter, r *http.Request) boo
 			return false
 		}
 		p := strings.TrimPrefix(r.URL.Path, nfs.P)
-		if pp := path.Join(nfs.USR_LOCAL_WORK, msg.Option(ice.MSG_USERPOD)); ispod && nfs.Exists(msg, pp) {
+		if pp := path.Join(nfs.USR_LOCAL_WORK, msg.Option(ice.POD)); ispod && nfs.Exists(msg, pp) {
 			if pp = path.Join(pp, p); nfs.Exists(msg, pp) {
 				return Render(msg, ice.RENDER_DOWNLOAD, pp)
 			} else {

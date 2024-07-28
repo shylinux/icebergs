@@ -430,7 +430,11 @@ func init() {
 							if !kit.HasPrefix(value, nfs.PS) {
 								value = kit.MergeURL(nfs.P + value)
 							}
-							value = kit.MergeURL2(m.Appendv(mdb.TEXT)[index], value)
+							if m.Appendv(mdb.NAME)[index] == ice.OPS {
+								value = kit.MergeURL2(m.Option(ice.MSG_USERWEB), value)
+							} else {
+								value = kit.MergeURL2(m.Appendv(mdb.TEXT)[index], value)
+							}
 						} else {
 							if !kit.HasPrefix(value, nfs.PS) {
 								value = kit.MergeURL(nfs.P+value, ice.POD, kit.Keys(m.Option(ice.MSG_USERPOD), m.Appendv(mdb.NAME)[index]))

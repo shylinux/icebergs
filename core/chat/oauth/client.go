@@ -2,12 +2,12 @@ package oauth
 
 import (
 	"path"
-	"strings"
 
 	"shylinux.com/x/ice"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/lex"
+	"shylinux.com/x/icebergs/base/log"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/web"
 	"shylinux.com/x/icebergs/base/web/html"
@@ -15,6 +15,7 @@ import (
 )
 
 const (
+	OAUTH         = "oauth"
 	DOMAIN        = "domain"
 	CLIENT_ID     = "client_id"
 	CLIENT_SECRET = "client_secret"
@@ -26,6 +27,8 @@ const (
 	USER_KEY  = "user_key"
 	NICK_KEY  = "nick_key"
 	ICON_KEY  = "icon_key"
+	SESS_CMD  = "sess_cmd"
+	USER_CMD  = "user_cmd"
 
 	REDIRECT_URI       = "redirect_uri"
 	RESPONSE_TYPE      = "response_type"
@@ -89,8 +92,11 @@ func (s Client) Inputs(m *ice.Message, arg ...string) {
 		}
 	}
 }
+func (s Client) List(m *ice.Message, arg ...string) {
+	s.Hash.List(m, arg...).PushAction(s.User, s.Auth, s.Sso, s.Remove).EchoScript(s.RedirectURI(m))
+}
 func (s Client) Sso(m *ice.Message, arg ...string) {
-	m.Cmd(web.CHAT_HEADER, mdb.CREATE, "oauth", m.Option(mdb.NAME), m.Option(mdb.HELP), m.Option(mdb.ICONS), s.OAuthURL(m))
+	m.Cmd(web.CHAT_HEADER, mdb.CREATE, OAUTH, m.Option(mdb.NAME), m.Option(mdb.HELP), m.Option(mdb.ICONS), s.OAuthURL(m))
 }
 func (s Client) Auth(m *ice.Message, arg ...string) {
 	m.ProcessOpen(s.OAuthURL(m))
@@ -101,10 +107,12 @@ func (s Client) Link(m *ice.Message, arg ...string) {
 }
 func (s Client) User(m *ice.Message, arg ...string) {
 	if res := s.Get(m, m.Option(mdb.HASH), m.Option(USERS_URL), arg...); res != nil {
-		m.Info("what %v", kit.Format(res))
-		m.Options(res)
-		if m.Option("user_cmd") != "" {
-			m.Cmdy(kit.Split(m.Option("user_cmd")), kit.Simple(res))
+		if m.Options(res); m.Warn(!kit.IsIn(m.Option("errcode"), "", "0"), m.Option("errmsg")) {
+			return
+		}
+		m.Info("user info %v", kit.Format(res))
+		if m.Option(USER_CMD) != "" {
+			m.Cmdy(kit.Split(m.Option(USER_CMD)), m.OptionSimple("openid"), kit.Simple(res))
 			return
 		}
 		username := m.Option(aaa.USERNAME, m.Option(kit.Select(aaa.USERNAME, m.Option(USER_KEY))))
@@ -126,9 +134,6 @@ func (s Client) User(m *ice.Message, arg ...string) {
 }
 func (s Client) Orgs(m *ice.Message, arg ...string) {}
 func (s Client) Repo(m *ice.Message, arg ...string) {}
-func (s Client) List(m *ice.Message, arg ...string) {
-	s.Hash.List(m, arg...).PushAction(s.User, s.Auth, s.Sso, s.Remove).EchoScript(s.RedirectURI(m))
-}
 
 func init() { ice.ChatCtxCmd(Client{}) }
 
@@ -151,27 +156,21 @@ func (s Client) Login(m *ice.Message, arg ...string) {
 }
 func (s Client) Login2(m *ice.Message, arg ...string) {
 	if state, code := m.Option(STATE), m.Option(CODE); !m.WarnNotValid(state == "" || code == "") {
-		s.Hash.List(m.Spawn(), m.Option(mdb.HASH, state)).Table(func(value ice.Maps) { m.Options(value) })
-		m.Options(GRANT_TYPE, AUTHORIZATION_CODE, REDIRECT_URI, s.RedirectURI(m))
-		m.Option(ACCESS_TOKEN, "")
-		if res := s.Get(m, m.Option(mdb.HASH), m.Option(GRANT_URL), kit.Simple(m.OptionSimple(GRANT_TYPE, CODE), "appid", m.Option(CLIENT_ID), "secret", m.Option(CLIENT_SECRET))...); !m.WarnNotValid(res == nil) {
-			kit.Value(res, EXPIRES_IN, m.Time(kit.Format("%vs", kit.Int(kit.Value(res, EXPIRES_IN)))))
-			m.Info("what %v", kit.Format(res))
-			m.Options(res)
-			if s.User(m, m.OptionSimple("openid")...); m.Option(aaa.USERNAME) != "" && m.R != nil {
-				if m.Option("sess_cmd") != "" {
-					m.Cmdy(kit.Split(m.Option("sess_cmd")), kit.Simple(res))
-					return
+		msg := m.Spawn()
+		s.Hash.List(msg, m.Option(mdb.HASH, state)).Table(func(value ice.Maps) { msg.Options(value) })
+		msg.Options(GRANT_TYPE, AUTHORIZATION_CODE, REDIRECT_URI, s.RedirectURI(msg)).Option(ACCESS_TOKEN, "")
+		if res := s.Get(msg, msg.Option(mdb.HASH), msg.Option(GRANT_URL), kit.Simple(msg.OptionSimple(GRANT_TYPE, CODE), "appid", msg.Option(CLIENT_ID), "secret", msg.Option(CLIENT_SECRET))...); !m.WarnNotValid(res == nil) {
+			if msg.Options(res); m.Warn(!kit.IsIn(msg.Option("errcode"), "", "0"), msg.Option("errmsg")) {
+				return
+			}
+			m.Info("token info %v", kit.Format(res))
+			msg.Option(EXPIRES_IN, m.Time(kit.Format("%vs", kit.Int(msg.Option(EXPIRES_IN)))))
+			if s.User(msg, msg.OptionSimple("openid")...); !m.Warn(msg.Option(aaa.USERNAME) == "" && msg.Option("user_uid") == "") {
+				if msg.Option(SESS_CMD) != "" {
+					m.Cmdy(kit.Split(msg.Option(SESS_CMD)), msg.OptionSimple("user_uid"))
+				} else {
+					m.ProcessCookie(ice.MSG_SESSID, aaa.SessCreate(m.Message, msg.Option(aaa.USERNAME)), "-2")
 				}
-				m.Cmd(aaa.USER, mdb.MODIFY, m.OptionSimple(aaa.USERNAME), kit.Simple(res))
-				web.RenderCookie(m.Message, aaa.SessCreate(m.Message, m.Option(aaa.USERNAME)))
-				m.ProcessBack("-2")
-			} else {
-				if m.Option("sess_cmd") != "" {
-					m.Cmdy(kit.Split(m.Option("sess_cmd")), kit.Simple(res))
-					return
-				}
-				m.ProcessClose()
 			}
 		}
 	}
@@ -180,7 +179,7 @@ func (s Client) OAuthURL(m *ice.Message) string {
 	return kit.MergeURL2(m.Option(web.DOMAIN), m.Option(OAUTH_URL), RESPONSE_TYPE, CODE, m.OptionSimple(CLIENT_ID), REDIRECT_URI, s.RedirectURI(m), m.OptionSimple(SCOPE), STATE, m.Option(mdb.HASH))
 }
 func (s Client) RedirectURI(m *ice.Message) string {
-	return strings.Split(m.MergeLink(web.ChatCmdPath(m.Message, m.ShortKey(), ctx.ACTION, kit.Select(aaa.LOGIN, m.Option("login")))), web.QS)[0]
+	return m.MergeLink(web.ChatCmdPath(m.Message, m.ShortKey(), ctx.ACTION, kit.Select(aaa.LOGIN, m.Option(aaa.LOGIN))), log.DEBUG, m.Option(log.DEBUG))
 }
 
 func (s Client) Get(m *ice.Message, hash, api string, arg ...string) ice.Any {

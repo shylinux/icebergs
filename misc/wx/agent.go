@@ -11,6 +11,7 @@ import (
 	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/web"
 	// "shylinux.com/x/icebergs/base/web/html"
 	"shylinux.com/x/icebergs/core/chat"
 	"shylinux.com/x/icebergs/core/chat/location"
@@ -39,13 +40,15 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		AGENT: {Name: "agent auto", Help: "代理", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
 			chat.HEADER_AGENT: {Hand: func(m *ice.Message, arg ...string) {
-				kit.If(strings.Index(m.Option(ice.MSG_USERUA), "MicroMessenger") > -1, func() { m.Option(mdb.PLUGIN, m.PrefixKey()) })
+				kit.If(strings.Index(m.Option(ice.MSG_USERUA), "MicroMessenger") > -1, func() {
+					m.Optionv(mdb.PLUGIN, m.PrefixKey(), mdb.Config(m, web.SPACE))
+				})
 			}},
 			"getLocation": {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(location.LOCATION, mdb.CREATE, arg) }},
 			"scanQRCode1": {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(chat.FAVOR, mdb.CREATE, arg) }},
 			"oauth":       {Hand: func(m *ice.Message, arg ...string) { mdb.Config(m, "oauth", arg[0]) }},
 		}, gdb.EventsAction(chat.HEADER_AGENT), ctx.ConfAction(
-			"oauth", "", nfs.SCRIPT, "https://res.wx.qq.com/open/js/jweixin-1.6.0.js",
+			"space", "", "oauth", "", nfs.SCRIPT, "https://res.wx.qq.com/open/js/jweixin-1.6.0.js",
 		)), Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(ACCESS, AGENT).Options(SIGNATURE, _wx_sign(m, m.Option(NONCESTR, ice.Info.Pathname), m.Option(TIMESTAMP, kit.Format(time.Now().Unix())))).Display("")
 			ctx.OptionFromConfig(m, nfs.SCRIPT, "oauth")

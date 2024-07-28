@@ -169,6 +169,12 @@ func MergeActions(arg ...Any) Actions {
 							if !ok || h.Icon == "" {
 								kit.Value(_cmd.Meta, kit.Keys(CTX_ICONS, k), v.Icon)
 							}
+							if !ok || h.Style == "" {
+								kit.Value(_cmd.Meta, kit.Keys("_style", k), v.Style)
+							}
+							if v.Style != "" {
+								kit.Value(_cmd.Meta, kit.Keys("_style", k), v.Style)
+							}
 							if !ok || h.Help == "" {
 								if help := kit.Split(v.Help, " :："); len(help) > 0 {
 									if kit.Value(_cmd.Meta, kit.Keys(CTX_TRANS, strings.TrimPrefix(k, "_")), help[0]); len(help) > 1 {

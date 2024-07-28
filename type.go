@@ -36,12 +36,13 @@ type Config struct {
 	Value Any
 }
 type Action struct {
-	Name string
-	Help string
-	Icon string
-	Role string
-	Hand Handler
-	List List
+	Name  string
+	Help  string
+	Icon  string
+	Role  string
+	Style string
+	Hand  Handler
+	List  List
 }
 type Command struct {
 	Name    string

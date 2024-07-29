@@ -165,11 +165,13 @@ func spidePost(m *ice.Message, api string, arg ...ice.Any) *ice.Message {
 }
 func SpidePost(m *ice.Message, api string, arg ...ice.Any) ice.Any {
 	res := kit.UnMarshal(m.Cmdx(web.SPIDE, WX, web.SPIDE_RAW, http.MethodPost, kit.MergeURL(api, oauth.ACCESS_TOKEN, m.Cmdx(ACCESS, TOKENS)), arg))
+	m.Warn(!kit.IsIn(kit.Format(kit.Value(res, "errcode")), "", "0"), kit.Value(res, "errmsg"))
 	m.Info("res: %v", kit.Format(res))
 	return res
 }
 func SpideGet(m *ice.Message, api string, arg ...ice.Any) ice.Any {
 	res := kit.UnMarshal(m.Cmdx(web.SPIDE, WX, web.SPIDE_RAW, http.MethodGet, kit.MergeURL(api, oauth.ACCESS_TOKEN, m.Cmdx(ACCESS, TOKENS)), arg))
+	m.Warn(!kit.IsIn(kit.Format(kit.Value(res, "errcode")), "", "0"), kit.Value(res, "errmsg"))
 	m.Info("res: %v", kit.Format(res))
 	return res
 }

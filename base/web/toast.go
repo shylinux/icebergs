@@ -71,6 +71,9 @@ func ToastProcess(m *ice.Message, arg ...ice.Any) func(...ice.Any) {
 	Toast(m, text, "", "-1", "", h)
 	Count(m, kit.FuncName(1), toastTitle(m), text)
 	return func(_arg ...ice.Any) {
+		if m.IsErr() {
+			return
+		}
 		kit.If(len(_arg) == 0, func() { _arg = arg })
 		text := toastContent(m, ice.SUCCESS, _arg...)
 		toastUpdate(m, h, begin, mdb.TEXT, text, mdb.STATUS, TOAST_DONE)

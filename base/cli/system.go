@@ -209,7 +209,10 @@ func init() {
 		}},
 	})
 	ice.Info.SystemCmd = func(m *ice.Message, arg ...ice.Any) *ice.Message {
-		return m.Cmd(append([]ice.Any{SYSTEM}, arg...)...)
+		msg := m.Cmd(append([]ice.Any{SYSTEM}, arg...)...)
+		if m.Warn(!IsSuccess(msg), msg.Append(CMD_ERR)) {
+		}
+		return msg
 	}
 }
 

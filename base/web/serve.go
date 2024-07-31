@@ -323,6 +323,22 @@ func ServeCmdAction() ice.Actions {
 func IsLocalHost(m *ice.Message) bool {
 	return (m.R == nil || m.R.Header.Get(html.XForwardedFor) == "") && tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP))
 }
+func ParseURL(m *ice.Message, p string) []string {
+	if u, e := url.Parse(p); e == nil {
+		arg := strings.Split(strings.TrimPrefix(u.Path, nfs.PS), nfs.PS)
+		for i := 0; i < len(arg); i += 2 {
+			switch arg[i] {
+			case "s":
+				m.Option(ice.POD, kit.Select("", arg, i+1))
+			case "c":
+				m.Option(ice.CMD, kit.Select("", arg, i+1))
+			}
+		}
+		kit.For(u.Query(), func(k string, v []string) { m.Optionv(k, v) })
+		return kit.Split(u.Fragment, ":")
+	}
+	return []string{}
+}
 func ParseUA(m *ice.Message) (res []string) {
 	res = append(res, aaa.USERROLE, m.Option(ice.MSG_USERROLE))
 	res = append(res, aaa.USERNAME, m.Option(ice.MSG_USERNAME))

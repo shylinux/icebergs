@@ -112,7 +112,8 @@ func (s Client) User(m *ice.Message, arg ...string) {
 		}
 		m.Info("user info %v", kit.Format(res))
 		if m.Option(USER_CMD) != "" {
-			m.Cmdy(kit.Split(m.Option(USER_CMD)), m.OptionSimple("openid"), kit.Simple(res))
+			m.Options("open_id", m.Option("openid"), aaa.USERNICK, m.Option("nickname"), aaa.AVATAR, m.Option("headimgurl"))
+			m.Cmdy(kit.Split(m.Option(USER_CMD)), m.OptionSimple("open_id"), kit.Simple(res))
 			return
 		}
 		username := m.Option(aaa.USERNAME, m.Option(kit.Select(aaa.USERNAME, m.Option(USER_KEY))))
@@ -167,7 +168,7 @@ func (s Client) Login2(m *ice.Message, arg ...string) {
 			msg.Option(EXPIRES_IN, m.Time(kit.Format("%vs", kit.Int(msg.Option(EXPIRES_IN)))))
 			if s.User(msg, msg.OptionSimple("openid")...); !m.Warn(msg.Option(aaa.USERNAME) == "" && msg.Option("user_uid") == "") {
 				if msg.Option(SESS_CMD) != "" {
-					m.Cmdy(kit.Split(msg.Option(SESS_CMD)), msg.OptionSimple("user_uid"))
+					m.Cmdy(kit.Split(msg.Option(SESS_CMD)), kit.Dict("user_uid", msg.Option("user_uid")))
 				} else {
 					m.ProcessCookie(ice.MSG_SESSID, aaa.SessCreate(m.Message, msg.Option(aaa.USERNAME)), "-2")
 				}

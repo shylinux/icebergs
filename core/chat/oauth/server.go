@@ -4,4 +4,4 @@ import "shylinux.com/x/ice"
 
 type Server struct{ ice.Hash }
 
-func init() { ice.ChatCtxCmd(Client{}) }
+func init() { ice.Cmd("web.chat.oauth.server", Server{}) }

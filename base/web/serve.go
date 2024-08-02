@@ -169,6 +169,7 @@ func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.Response
 	m.Options(ice.MSG_METHOD, r.Method, ice.MSG_COUNT, "0")
 	m.Options(ice.MSG_REFERER, r.Header.Get(html.Referer))
 	m.Options(ice.MSG_USERWEB, _serve_domain(m), ice.MSG_USERPOD, m.Option(ice.POD))
+	// m.Option(ice.POD, "")
 	m.Options(ice.MSG_USERUA, r.Header.Get(html.UserAgent), ice.MSG_USERIP, r.Header.Get(ice.MSG_USERIP))
 	m.Options(ice.MSG_SESSID, kit.Select(m.Option(ice.MSG_SESSID), m.Option(CookieName(m.Option(ice.MSG_USERWEB)))))
 	kit.If(m.Optionv(ice.MSG_CMDS) == nil, func() {

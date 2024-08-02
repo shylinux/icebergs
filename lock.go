@@ -85,7 +85,15 @@ func (m *Message) Optionv(key string, arg ...Any) Any {
 		case nil:
 			delete(m._meta, key)
 		case string:
-			m._meta[key] = kit.Simple(arg...)
+			func() {
+				for i := 0; i < len(arg); i++ {
+					if _, ok := arg[i].(string); !ok {
+						m._data[key] = arg
+						return
+					}
+				}
+				m._meta[key] = kit.Simple(arg...)
+			}()
 		case []string:
 			m._meta[key] = v
 		default:

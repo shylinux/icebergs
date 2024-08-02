@@ -37,10 +37,10 @@ Volcanos(chat.ONIMPORT, {
 					wx.updateTimelineShareData({title: title, link: location.href, imgUrl: icons})
 				}
 				var p = can.misc.Resource(can, can.user.info.favicon); can.base.beginWith(p, "/") && (p = location.origin + p)
-				can.user.agent.init = function(can, content) { if (!can) { return }
-					p = can.misc.Resource(can, can.Conf(mdb.ICONS))||p; can.base.beginWith(p, "/") && (p = location.origin + p)
+				can.user.agent.init = function(can, content, icons) { if (!can) { return }
+					p = can.misc.Resource(can, icons||can.Conf(mdb.ICONS))||p; can.base.beginWith(p, "/") && (p = location.origin + p)
 					share(document.title, p, content)
-				}, can.user.agent.init(can.user.agent.cmd, can.user.agent._init_content)
+				}, can.user.agent.init(can.user.agent.cmd, can.user.agent._init_content, can.user.agent._init_icons)
 			})
 		})
 	},

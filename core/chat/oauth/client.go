@@ -136,7 +136,7 @@ func (s Client) User(m *ice.Message, arg ...string) {
 func (s Client) Orgs(m *ice.Message, arg ...string) {}
 func (s Client) Repo(m *ice.Message, arg ...string) {}
 
-func init() { ice.ChatCtxCmd(Client{}) }
+func init() { ice.Cmd("web.chat.oauth.client", Client{}) }
 
 func (s Client) Login(m *ice.Message, arg ...string) {
 	if state, code := m.Option(STATE), m.Option(CODE); !m.WarnNotValid(state == "" || code == "") {

@@ -147,27 +147,33 @@ func _dream_start(m *ice.Message, name string) {
 }
 func _dream_check(m *ice.Message, name string) string {
 	p := path.Join(ice.USR_LOCAL_WORK, name)
+	msg := m.Spawn(kit.Dict(ice.MSG_USERROLE, aaa.ROOT))
 	if pp := path.Join(p, ice.VAR_LOG_ICE_PID); nfs.Exists(m, pp) {
-		for i := 0; i < 5; i++ {
-			pid := m.Cmdx(nfs.CAT, pp, kit.Dict(ice.MSG_USERROLE, aaa.TECH))
+		for i := 0; i < 10; i++ {
+			pid := msg.Cmdx(nfs.CAT, pp)
 			if pid == "" {
 				return p
 			}
-			if runtime.GOOS == cli.LINUX && !kit.HasPrefix(m.Cmdx(nfs.CAT, "/proc/"+pid+"/cmdline"), kit.Path("bin/ice.bin"), kit.Path(p, "bin/ice.bin")) {
-				return p
-			}
-			if nfs.Exists(m, "/proc/"+pid) {
-				m.Info("already exists %v", pid)
-			} else if gdb.SignalProcess(m, pid) {
-				m.Info("already exists %v", pid)
-			} else if m.Cmd(SPACE, name).Length() > 0 {
+			m.Sleep("1s")
+			if m.Cmd(SPACE, name).Length() > 0 {
 				m.Info("already exists %v", name)
-			} else {
+				return ""
+			}
+			if runtime.GOOS == cli.LINUX && !nfs.Exists(m, "/proc/"+pid) {
 				return p
 			}
-			m.Sleep300ms()
+			if nfs.Exists(m, "/proc/"+pid) && runtime.GOOS == cli.LINUX {
+				if !kit.HasPrefix(msg.Cmdx(nfs.CAT, "/proc/"+pid+"/cmdline"), kit.Path("bin/ice.bin"), kit.Path(p, "bin/ice.bin")) {
+					return p
+				} else {
+					return ""
+				}
+			}
+			if gdb.SignalProcess(m, pid) {
+				m.Info("already exists %v", pid)
+				return ""
+			}
 		}
-		return ""
 	}
 	return p
 }

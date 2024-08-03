@@ -123,7 +123,7 @@ func Toast(m *ice.Message, text string, arg ...ice.Any) *ice.Message { // [title
 	}
 	kit.If(len(arg) == 0, func() { arg = append(arg, "") })
 	kit.If(len(arg) > 0 && arg[0] == "", func() { arg[0] = toastTitle(m) })
-	PushNoticeToast(m, text, arg)
+	PushNoticeToast(m.Spawn("space.noecho", "true"), text, arg)
 	return m
 }
 func PushNoticeGrowXterm(m *ice.Message, title string, cmd ...ice.Any) {

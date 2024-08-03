@@ -15,6 +15,7 @@ func (m *Message) Set(key string, arg ...string) *Message {
 	case MSG_OPTION, MSG_APPEND:
 		if m.FieldsIsDetail() {
 			if len(arg) > 0 {
+				m.delete(arg[0])
 				m.setDetail(arg[0], arg[1:]...)
 			} else {
 				m.delete(KEY, VALUE, MSG_APPEND)
@@ -52,7 +53,16 @@ func (m *Message) Set(key string, arg ...string) *Message {
 	return m.Add(key, arg...)
 }
 func (m *Message) Cut(fields ...string) *Message {
-	m.value(MSG_APPEND, kit.Split(kit.Join(fields))...)
+	if m.FieldsIsDetail() {
+		m.Table(func(value Maps) {
+			m.Set(MSG_APPEND).FieldsSetDetail()
+			for _, k := range kit.Split(kit.Join(fields)) {
+				m.Push(k, value[k])
+			}
+		})
+	} else {
+		m.value(MSG_APPEND, kit.Split(kit.Join(fields))...)
+	}
 	return m
 }
 func (m *Message) CutTo(key, to string) *Message {

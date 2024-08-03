@@ -163,8 +163,11 @@ func _space_handle(m *ice.Message, safe bool, name string, c *websocket.Conn) {
 				}), SPACE, next) {
 					break
 				}
-				m.Info("what %v", m.FormatStack(1, 100))
-				m.Info("what %v", m.FormatChain())
+				m.Info("what %v", msg.FormatStack(1, 100))
+				m.Info("what %v", msg.FormatChain())
+				if msg.Option("space.noecho") == "true" {
+					break
+				}
 				m.Sleep3s()
 			}
 		}

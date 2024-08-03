@@ -79,7 +79,7 @@ func (m *Message) FieldsSetDetail() {
 }
 func (m *Message) FieldsIsDetail() bool {
 	ls := m.value(MSG_APPEND)
-	return len(ls) == 2 && ls[0] == KEY && ls[1] == VALUE || m.OptionFields() == FIELDS_DETAIL
+	return len(ls) == 2 && ls[0] == KEY && ls[1] == VALUE || len(ls) == 0 && m.OptionFields() == FIELDS_DETAIL
 }
 func (m *Message) Fields(length int, fields ...string) string {
 	kit.If(length >= len(fields), func() { m.Option(MSG_FIELDS, FIELDS_DETAIL) })

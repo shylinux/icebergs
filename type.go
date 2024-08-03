@@ -401,10 +401,16 @@ func (m *Message) Design(action Any, help string, input ...Any) {
 			m.ErrorNotImplement(input)
 		}
 	}
-	k := kit.Format(action)
-	if a, ok := m._cmd.Actions[k]; ok {
+	if k := kit.Format(action); k == LIST {
+		m._cmd.Meta[k], m._cmd.List = list, list
+		if help != "" {
+			kit.Value(m._cmd.Meta, kit.Keys(CTX_TRANS, k), help)
+		}
+	} else if a, ok := m._cmd.Actions[k]; ok {
 		m._cmd.Meta[k], a.List = list, list
-		kit.Value(m._cmd.Meta, kit.Keys(CTX_TRANS, k), help)
+		if help != "" {
+			kit.Value(m._cmd.Meta, kit.Keys(CTX_TRANS, k), help)
+		}
 	}
 }
 func (m *Message) Actions(key string) *Action   { return m._cmd.Actions[key] }

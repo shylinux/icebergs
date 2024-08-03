@@ -28,6 +28,7 @@ func (m *Message) delete(key ...string) {
 	defer m.lock.Lock()()
 	for _, key := range key {
 		delete(m._meta, key)
+		delete(m._data, key)
 	}
 }
 

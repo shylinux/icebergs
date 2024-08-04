@@ -426,9 +426,11 @@ func init() {
 			return p + kit.Select("", nfs.PS, len(arg) == 0)
 		} else {
 			p := m.FileURI(ctx.GetCmdFile(m, m.PrefixKey()))
-			if p := kit.TrimPrefix(path.Join(path.Dir(p), path.Join(arg...)), nfs.P, nfs.REQUIRE); nfs.Exists(m, p) {
-				return p
+			m.Info("what %v", p)
+			if pp := kit.TrimPrefix(path.Join(path.Dir(p), path.Join(arg...)), nfs.P, nfs.REQUIRE); nfs.Exists(m, pp) {
+				return pp
 			}
+			m.Info("what %v", ice.Info.Important)
 			if ice.Info.Important {
 				return kit.MergeURL2(SpideOrigin(m, ice.OPS)+p, path.Join(arg...))
 			}

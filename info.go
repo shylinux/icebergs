@@ -143,7 +143,7 @@ func MergeActions(arg ...Any) Actions {
 					h.Hand = MergeHand(v.Hand, h.Hand)
 				} else if k == CTX_EXIT {
 					h.Hand = MergeHand(h.Hand, v.Hand)
-				} else if h.Name, h.Help, h.Icon = kit.Select(v.Name, h.Name), kit.Select(v.Help, h.Help), kit.Select(v.Icon, h.Icon); h.Hand == nil {
+				} else if h.Name, h.Help, h.Icon, h.Style = kit.Select(v.Name, h.Name), kit.Select(v.Help, h.Help), kit.Select(v.Icon, h.Icon), kit.Select(v.Style, h.Style); h.Hand == nil {
 					h.Hand = v.Hand
 				}
 			}

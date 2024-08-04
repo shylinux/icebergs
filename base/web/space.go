@@ -165,6 +165,9 @@ func _space_handle(m *ice.Message, safe bool, name string, c *websocket.Conn) {
 				}
 				m.Info("what %v", msg.FormatStack(1, 100))
 				m.Info("what %v", msg.FormatChain())
+				if kit.HasPrefixList(msg.Detailv(), "toast") {
+					break
+				}
 				if msg.Option("space.noecho") == "true" {
 					break
 				}

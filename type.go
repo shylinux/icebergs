@@ -170,6 +170,7 @@ func (c *Context) Merge(s *Context) *Context {
 				}
 			}
 			kit.Value(cmd.Meta, kit.Keys(CTX_ICONS, sub), action.Icon)
+			kit.Value(cmd.Meta, kit.Keys(CTX_STYLE, sub), action.Style)
 			if action.Hand == nil {
 				continue
 			}

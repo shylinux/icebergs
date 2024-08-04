@@ -326,6 +326,7 @@ const ( // CTX
 	CTX_TITLE = "_title"
 	CTX_TRANS = "_trans"
 	CTX_ICONS = "_icons"
+	CTX_STYLE = "_style"
 )
 const ( // LOG
 	LOG_CMDS  = "cmds"

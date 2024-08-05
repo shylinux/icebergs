@@ -300,6 +300,8 @@ func init() {
 				m.Cmd("", mdb.CREATE, kit.Select("http://localhost:20000", conf[cli.CTX_DEMO]), ice.DEMO, nfs.USR_ICONS_VOLCANOS)
 				m.Cmd("", mdb.CREATE, kit.Select("https://mail.shylinux.com", conf[cli.CTX_MAIL]), ice.MAIL, "usr/icons/Mail.png")
 				m.Cmd("", mdb.CREATE, kit.Select("https://user.shylinux.com"), aaa.USER, "usr/icons/Mail.png")
+				m.Cmd("", mdb.CREATE, "https://2023-contexts.shylinux.com", "2023-contexts", ice.SRC_MAIN_ICO, nfs.REPOS)
+				m.Cmd("", mdb.CREATE, "https://2024-contexts.shylinux.com", "2024-contexts", ice.SRC_MAIN_ICO, nfs.REPOS)
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if mdb.IsSearchPreview(m, arg) {
@@ -426,11 +428,9 @@ func init() {
 			return p + kit.Select("", nfs.PS, len(arg) == 0)
 		} else {
 			p := m.FileURI(ctx.GetCmdFile(m, m.PrefixKey()))
-			m.Info("what %v", p)
 			if pp := kit.TrimPrefix(path.Join(path.Dir(p), path.Join(arg...)), nfs.P, nfs.REQUIRE); nfs.Exists(m, pp) {
 				return pp
 			}
-			m.Info("what %v", ice.Info.Important)
 			if ice.Info.Important {
 				return kit.MergeURL2(SpideOrigin(m, ice.OPS)+p, path.Join(arg...))
 			}

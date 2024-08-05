@@ -40,12 +40,9 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		AGENT: {Name: "agent auto", Help: "代理", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
 			chat.HEADER_AGENT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Info("what %v", m.Option(ice.MSG_USERUA))
 				kit.If(strings.Index(m.Option(ice.MSG_USERUA), "MicroMessenger") > -1, func() {
-					m.Info("what %v", m.Option(ice.MSG_USERUA))
 					m.Optionv(mdb.PLUGIN, m.PrefixKey(), mdb.Config(m, web.SPACE))
 				})
-				m.Info("what %v", m.FormatMeta())
 			}},
 			"getLocation": {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(location.LOCATION, mdb.CREATE, arg) }},
 			"scanQRCode1": {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(chat.FAVOR, mdb.CREATE, arg) }},

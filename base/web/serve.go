@@ -96,6 +96,9 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 }
 func _serve_static(msg *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	// _serve_params(msg, r.Header.Get(html.Referer))
+	if strings.HasPrefix(r.URL.Path, "/.git/") {
+		return false
+	}
 	_serve_params(msg, r.URL.String())
 	ispod := msg.Option(ice.POD) != ""
 	if strings.HasPrefix(r.URL.Path, nfs.V) {
@@ -122,7 +125,10 @@ func _serve_static(msg *ice.Message, w http.ResponseWriter, r *http.Request) boo
 		return Render(msg, ice.RENDER_DOWNLOAD, p)
 	} else if p = path.Join(nfs.USR, r.URL.Path); kit.HasPrefix(r.URL.Path, nfs.VOLCANOS, nfs.INTSHELL) && nfs.Exists(msg, p) {
 		return Render(msg, ice.RENDER_DOWNLOAD, p)
-	} else if p = strings.TrimPrefix(r.URL.Path, nfs.REQUIRE); kit.HasPrefix(r.URL.Path, nfs.REQUIRE_SRC, nfs.REQUIRE+ice.USR_ICONS, nfs.REQUIRE+ice.USR_ICEBERGS) && nfs.Exists(msg, p) {
+	}
+	return false
+	p := ""
+	if p = strings.TrimPrefix(r.URL.Path, nfs.REQUIRE); kit.HasPrefix(r.URL.Path, nfs.REQUIRE_SRC, nfs.REQUIRE+ice.USR_ICONS, nfs.REQUIRE+ice.USR_ICEBERGS) && nfs.Exists(msg, p) {
 		return !ispod && Render(msg, ice.RENDER_DOWNLOAD, p)
 	} else if p = path.Join(nfs.USR_MODULES, strings.TrimPrefix(r.URL.Path, nfs.REQUIRE_MODULES)); kit.HasPrefix(r.URL.Path, nfs.REQUIRE_MODULES) && nfs.Exists(msg, p) {
 		return Render(msg, ice.RENDER_DOWNLOAD, p)
@@ -165,11 +171,10 @@ func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.Response
 		r.ParseMultipartForm(kit.Int64(kit.Select("4096", r.Header.Get(html.ContentLength))))
 		kit.For(r.PostForm, func(k string, v []string) { _log(FORM, k, kit.Join(v, lex.SP)).Optionv(k, v) })
 	}
-	kit.For(r.Cookies(), func(k, v string) { _log("cookie", k, v); m.Optionv(k, v) })
+	kit.For(r.Cookies(), func(k, v string) { m.Optionv(k, v) })
 	m.Options(ice.MSG_METHOD, r.Method, ice.MSG_COUNT, "0")
 	m.Options(ice.MSG_REFERER, r.Header.Get(html.Referer))
 	m.Options(ice.MSG_USERWEB, _serve_domain(m), ice.MSG_USERPOD, m.Option(ice.POD))
-	// m.Option(ice.POD, "")
 	m.Options(ice.MSG_USERUA, r.Header.Get(html.UserAgent), ice.MSG_USERIP, r.Header.Get(ice.MSG_USERIP))
 	m.Options(ice.MSG_SESSID, kit.Select(m.Option(ice.MSG_SESSID), m.Option(CookieName(m.Option(ice.MSG_USERWEB)))))
 	kit.If(m.Optionv(ice.MSG_CMDS) == nil, func() {
@@ -213,6 +218,9 @@ func _serve_auth(m *ice.Message, key string, cmds []string, w http.ResponseWrite
 	if r.URL.Path == PP(SPACE) {
 		aaa.SessCheck(m, m.Option(ice.MSG_SESSID))
 		return cmds, true
+	}
+	if !aaa.IsTechOrRoot(m) {
+		m.Option("user_uid", "")
 	}
 	defer func() { m.Options(ice.MSG_CMDS, "") }()
 	if strings.Contains(m.Option(ice.MSG_SESSID), " ") {

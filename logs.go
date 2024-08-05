@@ -63,7 +63,7 @@ func (m *Message) log(level string, str string, arg ...Any) *Message {
 		}
 		args = append(args, v)
 	}
-	_source := logs.FileLineMeta(3)
+	_source := logs.Meta{logs.FILELINE, kit.FileLine(-1, 2)}
 	kit.If(Info.Log != nil, func() { Info.Log(m, m.FormatPrefix(traceid), level, logs.Format(str, append(args, _source)...)) })
 	if !strings.Contains(Info.Make.Domain, "debug=true") {
 		return m

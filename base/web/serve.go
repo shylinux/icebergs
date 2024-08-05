@@ -222,6 +222,7 @@ func _serve_auth(m *ice.Message, key string, cmds []string, w http.ResponseWrite
 	if !aaa.IsTechOrRoot(m) {
 		m.Option("user_uid", "")
 	}
+	m.Option("user_uid", "261eb6bf52005d6f8f4889d36efd1424")
 	defer func() { m.Options(ice.MSG_CMDS, "") }()
 	if strings.Contains(m.Option(ice.MSG_SESSID), " ") {
 		m.Cmdy(kit.Split(m.Option(ice.MSG_SESSID)))

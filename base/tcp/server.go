@@ -56,6 +56,7 @@ const (
 	HOSTPORT  = "hostport"
 	HOSTNAME  = "hostname"
 	NODENAME  = "nodename"
+	NODETYPE  = "nodetype"
 	BANDWIDTH = "bandwidth"
 	ADDRESS   = "address"
 )

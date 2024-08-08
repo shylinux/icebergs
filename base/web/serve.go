@@ -215,14 +215,11 @@ func _serve_domain(m *ice.Message) string {
 }
 func _serve_auth(m *ice.Message, key string, cmds []string, w http.ResponseWriter, r *http.Request) ([]string, bool) {
 	kit.If(len(cmds) > 0, func() { cmds = append(kit.Split(cmds[0], ","), cmds[1:]...) })
+	kit.If(!aaa.IsTechOrRoot(m), func() { m.Option("user_uid", "") })
 	if r.URL.Path == PP(SPACE) {
 		aaa.SessCheck(m, m.Option(ice.MSG_SESSID))
 		return cmds, true
 	}
-	if !aaa.IsTechOrRoot(m) {
-		m.Option("user_uid", "")
-	}
-	m.Option("user_uid", "261eb6bf52005d6f8f4889d36efd1424")
 	defer func() { m.Options(ice.MSG_CMDS, "") }()
 	if strings.Contains(m.Option(ice.MSG_SESSID), " ") {
 		m.Cmdy(kit.Split(m.Option(ice.MSG_SESSID)))

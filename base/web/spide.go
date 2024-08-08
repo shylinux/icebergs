@@ -415,7 +415,8 @@ func init() {
 		}},
 	})
 	nfs.TemplateText = func(m *ice.Message, p string) string {
-		if p := kit.Select(nfs.TemplatePath(m, path.Base(p)), m.Option("_template")); kit.HasPrefix(p, nfs.P, nfs.REQUIRE, ice.HTTP) {
+		// if p := kit.Select(nfs.TemplatePath(m, path.Base(p)), m.Option("_template")); kit.HasPrefix(p, nfs.P, nfs.REQUIRE, ice.HTTP) {
+		if p := kit.Select(nfs.TemplatePath(m, p), m.Option("_template")); kit.HasPrefix(p, nfs.P, nfs.REQUIRE, ice.HTTP) {
 			return m.Cmdx(SPIDE, ice.OPS, SPIDE_RAW, http.MethodGet, p)
 		} else if p == "" {
 			return ""

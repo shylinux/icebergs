@@ -74,9 +74,9 @@ func _autogen_version(m *ice.Message) string {
 		defer m.Cmd(REPOS, ADD, kit.Dict(nfs.REPOS, path.Base(mod), nfs.FILE, nfs.SRC))
 	}
 	m.Cmd(nfs.DEFS, ".gitignore", nfs.Template(m, "gitignore"))
-	m.Cmd(nfs.DEFS, ice.SRC_BINPACK_USR_GO, nfs.Template(m, ice.SRC_BINPACK_GO))
-	m.Cmd(nfs.DEFS, ice.SRC_BINPACK_GO, nfs.Template(m, ice.SRC_BINPACK_GO))
-	m.Cmd(nfs.SAVE, ice.SRC_VERSION_GO, kit.Format(nfs.Template(m, ice.SRC_VERSION_GO), _autogen_gits(m)))
+	m.Cmd(nfs.DEFS, ice.SRC_BINPACK_USR_GO, nfs.Template(m, "binpack.go"))
+	m.Cmd(nfs.DEFS, ice.SRC_BINPACK_GO, nfs.Template(m, "binpack.go"))
+	m.Cmd(nfs.SAVE, ice.SRC_VERSION_GO, kit.Format(nfs.Template(m, "version.go"), _autogen_gits(m)))
 	m.Cmdy(nfs.DIR, ice.SRC_BINPACK_USR_GO)
 	m.Cmdy(nfs.DIR, ice.SRC_BINPACK_GO)
 	m.Cmdy(nfs.DIR, ice.SRC_VERSION_GO)
@@ -213,4 +213,10 @@ func init() {
 }
 func isReleaseContexts(m *ice.Message) bool {
 	return nfs.Exists(m, ice.USR_RELEASE) && nfs.Exists(m, ice.USR_VOLCANOS) && nfs.Exists(m, ice.USR_INTSHELL) && ice.Info.Make.Module == "shylinux.com/x/contexts"
+}
+func AutogenMod(m *ice.Message) string {
+	return _autogen_mod(m, ice.GO_MOD)
+}
+func AutogenImport(m *ice.Message, zone string) {
+	_autogen_import(m, ice.SRC_MAIN_GO, zone, _autogen_mod(m, ice.GO_MOD))
 }

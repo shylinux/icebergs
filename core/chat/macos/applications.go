@@ -36,6 +36,9 @@ func install(m *ice.Message, cmd, icon, index string, arg ...string) string {
 		}
 	}
 	name := kit.TrimExt(path.Base(icon), nfs.PNG, nfs.JPG, nfs.JPEG)
+	if !strings.HasPrefix(icon, nfs.USR_ICONS) {
+		name = kit.Select("", kit.Split(index, "."), -1)
+	}
 	m.Cmd(Prefix(cmd), mdb.CREATE, mdb.NAME, name, mdb.ICON, icon, ctx.INDEX, index, arg)
 	return icon
 }

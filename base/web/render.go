@@ -193,6 +193,7 @@ const (
 	VIMER   = "vimer"
 	XTERM   = "xterm"
 	GRANT   = "grant"
+	OAUTH   = "oauth"
 	DESKTOP = "desktop"
 	MESSAGE = "message"
 
@@ -222,6 +223,7 @@ const (
 	WIKI_PORTAL       = "web.wiki.portal"
 	CHAT_OAUTH_CLIENT = "web.chat.oauth.client"
 	CHAT_WX_ACCESS    = "web.chat.wx.access"
+	CHAT_WX_AGENT     = "web.chat.wx.agent"
 	CHAT_WX_TEMPLATE  = "web.chat.wx.template"
 	CHAT_WX_OCR       = "web.chat.wx.ocr"
 	CHAT_MESSAGE      = "web.chat.message"

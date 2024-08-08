@@ -117,10 +117,11 @@ func (m *Message) CmdHand(cmd *Command, key string, arg ...string) *Message {
 	if m._cmd, m._key, m._sub = cmd, key, LIST; cmd == nil {
 		return m
 	}
+	level := LOG_CMDS
 	if m._target = cmd.FileLines(); key == SELECT {
-		m.Log(LOG_CMDS, "%s.%s %v %v", m.Target().Name, key, formatArg(arg...), m.Optionv(MSG_FIELDS), logs.FileLineMeta(m._fileline()))
+		m.Log(level, "%s.%s %v %v", m.Target().Name, key, formatArg(arg...), m.Optionv(MSG_FIELDS), logs.FileLineMeta(m._fileline()))
 	} else {
-		m.Log(LOG_CMDS, "%s.%s %v", m.Target().Name, key, formatArg(arg...), logs.FileLineMeta(m._fileline()))
+		m.Log(level, "%s.%s %v", m.Target().Name, key, formatArg(arg...), logs.FileLineMeta(m._fileline()))
 	}
 	if cmd.Hand != nil {
 		cmd.Hand(m, arg...)
@@ -233,7 +234,9 @@ func (c *Context) _action(m *Message, cmd *Command, key string, sub string, h *A
 		}
 	}
 	m._target = kit.Select(logs.FileLine(h.Hand), cmd.FileLines(), cmd.RawHand != nil)
-	m.Log(LOG_CMDS, "%s.%s %s %v", c.Name, key, sub, formatArg(arg...), logs.FileLineMeta(m._fileline()))
+	level := LOG_CMDS
+	kit.If(key == "role" && sub == "right", func() { level = LOG_AUTH })
+	m.Log(level, "%s.%s %s %v", c.Name, key, sub, formatArg(arg...), logs.FileLineMeta(m._fileline()))
 	h.Hand(m, arg...)
 	return m
 }

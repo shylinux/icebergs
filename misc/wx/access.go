@@ -107,6 +107,7 @@ func init() {
 					"grant_url", "/sns/oauth2/access_token",
 					"token_url", "/sns/oauth2/refresh_token",
 					"users_url", "/sns/userinfo", "user_key", "openid", "nick_key", "nickname", "icon_key", "headimgurl",
+					m.OptionSimple("user_cmd", "sess_cmd"),
 				)
 				m.Cmd(AGENT, OAUTH, m.Cmdx("web.chat.oauth.client", web.LINK, oauth))
 			}},

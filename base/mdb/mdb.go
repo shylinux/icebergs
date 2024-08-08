@@ -142,6 +142,7 @@ const (
 	VENDOR = "vendor"
 	PRUNE  = "prune"
 	TABLE  = "table"
+	CLASS  = "class"
 
 	PAGE = "page"
 	NEXT = "next"

@@ -496,7 +496,11 @@ func init() {
 		case ctx.INDEX, ice.CMD:
 			m.OptionFields(ctx.INDEX)
 			if space := m.Option(SPACE); space != "" {
-				m.Options(SPACE, []string{}).Cmdy(SPACE, space, ctx.COMMAND)
+				if ice.Info.NodeType == WORKER {
+					m.Options(SPACE, []string{}).Cmdy(SPACE, kit.Keys(ice.OPS, space), ctx.COMMAND)
+				} else {
+					m.Options(SPACE, []string{}).Cmdy(SPACE, space, ctx.COMMAND)
+				}
 			} else {
 				m.Cmdy(ctx.COMMAND)
 			}

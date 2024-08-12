@@ -481,7 +481,7 @@ func init() {
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == VERSION {
-					ls := kit.Split(kit.Split(strings.TrimPrefix(m.Option(VERSION), "v"), "-")[0], ".")
+					ls := kit.Split(kit.Select("", kit.Split(strings.TrimPrefix(m.Option(VERSION), "v"), "-"), 0), ".")
 					if len(ls) > 2 {
 						m.Push(arg[0], kit.Format("v%d.%d.%d", kit.Int(ls[0]), kit.Int(ls[1]), kit.Int(ls[2])+1))
 						m.Push(arg[0], kit.Format("v%d.%d.%d", kit.Int(ls[0]), kit.Int(ls[1])+1, 0))
@@ -671,7 +671,7 @@ func init() {
 		}, web.StatsAction("", "代码库总数"), web.DreamAction(), mdb.HashAction(mdb.SHORT, REPOS, mdb.FIELD, "time,repos,branch,version,message,origin"), mdb.ClearOnExitHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				mdb.HashSelect(m, arg...).Table(func(value ice.Maps) {
-					if strings.Contains(value[VERSION], "-") {
+					if strings.Contains(value[VERSION], "-") || value[VERSION] == "" {
 						m.PushButton(STATUS, TAG, mdb.REMOVE)
 					} else {
 						m.PushButton(STATUS, mdb.REMOVE)

@@ -310,6 +310,7 @@ func (m *Message) FileURI(dir string) string {
 	ppp := strings.Split(Info.Make.Path, USR_LOCAL_WORK)[0]
 	if strings.Contains(dir, PKG_MOD) {
 		dir = strings.Split(dir, PKG_MOD)[1]
+		dir = "/require/" + dir
 	} else if Info.Make.Path != "" && strings.HasPrefix(dir, Info.Make.Path) {
 		dir = strings.TrimPrefix(dir, Info.Make.Path)
 	} else if strings.HasPrefix(dir, p) {

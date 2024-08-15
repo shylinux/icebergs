@@ -398,6 +398,7 @@ func init() {
 		web.PP(ice.REQUIRE): {Name: "/require/shylinux.com/x/volcanos@v0.0.1/proto.js", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				kit.If(cli.SystemFind(m, code.GO), func() { cache = code.GoCache(m) })
+				aaa.White(m, "require")
 			}},
 		}), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 4 {

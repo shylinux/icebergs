@@ -116,7 +116,7 @@ func _dir_list(m *ice.Message, root string, dir string, level int, deep bool, di
 					if m.IsCliUA() || m.Option(ice.MSG_USERROLE) == aaa.VOID {
 						break
 					}
-					m.PushButton(mdb.SHOW, TRASH)
+					m.PushButton(mdb.SHOW, "rename", TRASH)
 				default:
 					m.Push(field, "")
 				}
@@ -236,7 +236,12 @@ func init() {
 			SIZE: {Hand: func(m *ice.Message, arg ...string) {
 				m.Echo(kit.Select("", kit.Split(m.System("du", "-sh").Result()), 0))
 			}},
-			TRASH: {Hand: func(m *ice.Message, arg ...string) { m.Cmd(TRASH, mdb.CREATE, m.Option(PATH)) }},
+			"rename": {Name: "rename to", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(MOVE, path.Join(path.Dir(m.Option(PATH)), m.Option(TO)), m.Option(PATH))
+			}},
+			TRASH: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(TRASH, mdb.CREATE, m.Option(PATH))
+			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			root, dir := kit.Select(PWD, m.Option(DIR_ROOT)), kit.Select(PWD, arg, 0)
 			kit.If(strings.HasPrefix(dir, PS), func() { root = "" })

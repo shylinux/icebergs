@@ -114,7 +114,7 @@ func init() {
 					}
 				}
 			}},
-			nfs.MODULE: {Name: "module name*=hi help type*=Hash,Zone,Code main*=main.go zone top", Help: "创建模块", Hand: func(m *ice.Message, arg ...string) {
+			nfs.MODULE: {Name: "module name*=hi help type*=Hash,Zone,Code main*=main.go zone* top", Help: "创建模块", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(AUTOGEN, nfs.MODULE, arg)
 			}},
 			nfs.SCRIPT: {Name: "script file*", Help: "脚本", Hand: func(m *ice.Message, arg ...string) {

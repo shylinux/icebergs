@@ -74,7 +74,7 @@ func init() {
 				// m.OptionDefault(SIZE, kit.Select("360", "280", m.IsMobileUA()))
 				m.Option(FG, kit.Select(m.Option(ice.MSG_FG), arg, 1))
 				m.Option(BG, kit.Select(m.Option(ice.MSG_BG), arg, 2))
-				m.Option(SIZE, kit.Select(m.OptionDefault(SIZE, "360"), arg, 3))
+				m.Option(SIZE, kit.Select(m.OptionDefault(SIZE, "320"), arg, 3))
 				switch m.Option(ice.MSG_THEME) {
 				case LIGHT, WHITE:
 					m.OptionDefault(FG, BLACK, BG, WHITE)

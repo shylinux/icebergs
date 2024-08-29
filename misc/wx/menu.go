@@ -48,6 +48,7 @@ func init() {
 				m.ProcessHold()
 			}},
 		}, mdb.ExportHashAction(mdb.SHORT, "scene,river,storm", mdb.FIELD, "time,hash,scene,river,storm,type,name,text,icons,space,index,args")), Hand: func(m *ice.Message, arg ...string) {
+			m.Option("cache.limit", "-1")
 			if len(arg) == 0 {
 				m.Cmdy(ACCESS).PushAction("").Option(ice.MSG_ACTION, "")
 			} else if mdb.HashSelect(m, arg[1:]...).Sort(mdb.Config(m, mdb.SHORT), ice.STR, ice.INT, ice.INT); len(arg) == 1 {

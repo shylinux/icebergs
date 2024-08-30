@@ -218,7 +218,7 @@ func (m *Message) PushDownload(key string, arg ...string) *Message {
 
 func (m *Message) EchoInfoButton(info string, arg ...Any) *Message {
 	kit.If(info == "", func() { info = Info.Template(m, m.ActionKey()+".html") })
-	kit.If(len(arg) == 0, func() { arg = append(arg, m.ActionKey()) })
+	kit.If(len(arg) == 0, func() { arg = append(arg, kit.Select(CREATE, m.ActionKey())) })
 	m.Display("/plugin/table.js", "style", "form")
 	return m.Echo(html.Format("div", info, "class", "info", "style", kit.JoinCSS())).EchoButton(arg...).Echo(NL).Action(arg...)
 }

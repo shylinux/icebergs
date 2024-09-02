@@ -1,6 +1,7 @@
 package mdb
 
 import (
+	"time"
 	"sync"
 
 	ice "shylinux.com/x/icebergs"
@@ -18,8 +19,44 @@ func getLock(m *ice.Message, arg ...string) *task.Lock {
 	kit.If(!ok, func() { l = &task.Lock{}; _locks[key] = l })
 	return l
 }
-func Lock(m *ice.Message, arg ...string) func()  { return getLock(m, arg...).Lock() }
-func RLock(m *ice.Message, arg ...string) func() { return getLock(m, arg...).RLock() }
+func Lock(m *ice.Message, arg ...string) func() {
+	return getLock(m, arg...).Lock()
+	key := kit.Select(m.PrefixKey(), kit.Keys(arg))
+	m.Info("what %v", key)
+	cb := getLock(m, arg...).Lock()
+	m.Info("what %v", key)
+	go func() {
+		time.Sleep(30*time.Second)
+		if cb == nil {
+			return
+		}
+		cb()
+		m.Warn("lock time out %v %v", key, m.FormatStack(1, 100))
+	}()
+	return func() {
+		cb()
+		cb = nil
+	}
+}
+func RLock(m *ice.Message, arg ...string) func() {
+	return getLock(m, arg...).RLock()
+	key := kit.Select(m.PrefixKey(), kit.Keys(arg))
+	m.Info("what %v", key)
+	cb := getLock(m, arg...).RLock()
+	m.Info("what %v", key)
+	go func() {
+		time.Sleep(30*time.Second)
+		if cb == nil {
+			return
+		}
+		cb()
+		m.Warn("lock time out %v %v", key, m.FormatStack(1, 100))
+	}()
+	return func() {
+		cb()
+		cb = nil
+	}
+}
 
 func ConfigSimple(m *ice.Message, key ...string) (res []string) {
 	for _, key := range key {

@@ -61,7 +61,7 @@ func (f *Frame) Start(m *ice.Message, arg ...string) {
 				view := mdb.Confm(m, VIEW, m.Conf(SHOW, kit.Keys(l.l, VIEW)))
 				kit.If(ice.Info.Colors || l.c, func() { bio.WriteString(kit.Format(view[PREFIX])) })
 				defer kit.If(ice.Info.Colors || l.c, func() { bio.WriteString(kit.Format(view[SUFFIX])) })
-				fmt.Fprint(bio, l.l, lex.SP, l.s)
+				fmt.Fprint(bio, l.l, lex.SP, l.s+kit.Format("what %v", len(f.p)))
 			})
 		}
 	}

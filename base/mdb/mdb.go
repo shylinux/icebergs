@@ -226,26 +226,22 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: ice.Commands
 	EXPORT: {Name: "export index auto", Help: "导出数据", Actions: ice.MergeActions(ice.Actions{
 		IMPORT: {Hand: func(m *ice.Message, arg ...string) {
 			HashSelect(m).Table(func(value ice.Maps) {
-				if value[STATUS] != DISABLE {
+				if value[ENABLE] != ice.FALSE {
 					m.Cmd(IMPORT, value[INDEX], "", value[TYPE])
 				}
 			})
 		}},
 		EXPORT: {Hand: func(m *ice.Message, arg ...string) {
 			HashSelect(m).Table(func(value ice.Maps) {
-				if value[STATUS] != DISABLE {
+				if value[ENABLE] != ice.FALSE {
 					m.Cmd(EXPORT, value[INDEX], "", value[TYPE])
 				}
 			})
 		}},
-		ENABLE:  {Hand: func(m *ice.Message, arg ...string) { HashModify(m, STATUS, ENABLE) }},
-		DISABLE: {Hand: func(m *ice.Message, arg ...string) { HashModify(m, STATUS, DISABLE) }},
-	}, ExportHashAction(SHORT, INDEX, FIELD, "time,index,type,status")), Hand: func(m *ice.Message, arg ...string) {
+	}, ExportHashAction(SHORT, INDEX, FIELD, "time,index,type,enable")), Hand: func(m *ice.Message, arg ...string) {
 		if len(arg) < 2 {
-			HashSelect(m, arg...).RewriteAppend(func(value, key string, index int) string {
-				kit.If(key == STATUS, func() { value = kit.Select(ENABLE, value) })
-				return value
-			}).PushAction()
+			HashSelect(m, arg...)
+			m.PushAction(REMOVE)
 			if len(arg) == 1 {
 				m.Cmdy("nfs.cat", "usr/local/export/"+arg[0]+"/hash.json")
 			}

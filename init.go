@@ -73,10 +73,10 @@ var Index = &Context{Name: ICE, Help: "冰山模块", Commands: Commands{
 		m.GoSleep300ms(func() {
 			m.root.Option(EXIT, kit.Select("0", arg, 0))
 			m.Cmd(SOURCE, ETC_EXIT_SHY)
+			m.Cmd(CTX_EXIT)
 			if HasUsr() {
 				m.Cmd(EXPORT, EXPORT)
 			}
-			m.Cmd(CTX_EXIT)
 			removeImportant(m)
 		})
 	}},

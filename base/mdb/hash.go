@@ -115,7 +115,7 @@ func _hash_export(m *ice.Message, prefix, chain, file string) {
 	m.Logs(EXPORT, KEY, path.Join(prefix, chain), FILE, p)
 	en := json.NewEncoder(f)
 	if en.SetIndent("", "  "); !m.WarnNotValid(en.Encode(m.Confv(prefix, kit.Keys(chain, HASH))), EXPORT, prefix) {
-		m.Conf(prefix, kit.Keys(chain, HASH), "")
+		// m.Conf(prefix, kit.Keys(chain, HASH), "")
 	}
 }
 func _hash_import(m *ice.Message, prefix, chain, file string) {

@@ -110,6 +110,7 @@ func init() {
 					m.OptionSimple("user_cmd", "sess_cmd"),
 				)
 				m.Cmd(AGENT, OAUTH, m.Cmdx("web.chat.oauth.client", web.LINK, oauth))
+				m.Cmd(web.SPACE, ice.OPS, ctx.CONFIG, "web.chat.header", OAUTH, m.Cmdx("web.chat.oauth.client", web.LINK, oauth))
 			}},
 			web.SSO: {Name: "sso name*=weixin help*=微信扫码 order=11 env=release,trial,develop wifi", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(web.CHAT_HEADER, mdb.CREATE, mdb.TYPE, mdb.PLUGIN, m.OptionSimple(mdb.NAME, mdb.HELP, mdb.ORDER),

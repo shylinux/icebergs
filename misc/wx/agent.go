@@ -40,6 +40,9 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		AGENT: {Name: "agent auto", Help: "代理", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
 			chat.HEADER_AGENT: {Hand: func(m *ice.Message, arg ...string) {
+				if m.Option(ice.MSG_USERNAME) == "" && mdb.Config(m, "oauth") != "" {
+					m.ProcessOpen(mdb.Config(m, "oauth"))
+				}
 				kit.If(strings.Index(m.Option(ice.MSG_USERUA), "MicroMessenger") > -1, func() {
 					m.Optionv(mdb.PLUGIN, m.PrefixKey(), mdb.Config(m, web.SPACE))
 				})

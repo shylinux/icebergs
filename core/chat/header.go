@@ -140,9 +140,11 @@ func init() {
 				}
 			}},
 		}, web.ApiAction(), mdb.ImportantHashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,type,name,help,icons,order,link,space,index,args")), Hand: func(m *ice.Message, arg ...string) {
-			if m.Option(ice.MSG_USERNAME) == "" && m.Option("code") == "" && mdb.Config(m, "oauth") != "" {
-				m.ProcessOpen(mdb.Config(m, "oauth"))
-				return
+			if kit.Contains(m.Option(ice.MSG_USERUA), "MicroMessenger") {
+				if m.Option(ice.MSG_USERNAME) == "" && m.Option("code") == "" && mdb.Config(m, "oauth") != "" {
+					m.ProcessOpen(mdb.Config(m, "oauth"))
+					return
+				}
 			}
 			kit.If(m.Option(ice.MSG_USERPOD), func(p string) {
 				m.Cmdy(web.SPACE, p, m.PrefixKey(), ice.Maps{ice.MSG_USERPOD: ""})

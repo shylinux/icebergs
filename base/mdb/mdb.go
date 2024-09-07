@@ -241,11 +241,7 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: ice.Commands
 		}},
 	}, ExportHashAction(SHORT, INDEX, FIELD, "time,index,type,enable")), Hand: func(m *ice.Message, arg ...string) {
 		if len(arg) < 2 {
-			HashSelect(m, arg...)
-			m.PushAction(REMOVE)
-			if len(arg) == 1 {
-				m.Cmdy("nfs.cat", "usr/local/export/"+arg[0]+"/hash.json")
-			}
+			HashSelect(m, arg...).PushAction(REMOVE)
 			return
 		}
 		m.OptionDefault(CACHE_LIMIT, "-1")

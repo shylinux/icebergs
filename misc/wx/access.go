@@ -149,14 +149,13 @@ func init() {
 }
 func spideToken(m *ice.Message, api string, token, expire string, arg ...string) {
 	msg := mdb.HashSelect(m.Spawn(), m.OptionDefault(ACCESS, mdb.Config(m, ACCESS)))
-	m.Info("what token %v %v", msg.Append(expire), msg.Append(token))
 	if msg.Append(token) == "" || m.Time() > msg.Append(expire) {
 		kit.If(api != TICKET_GETTICKET, func() { arg = append(arg, msg.AppendSimple(APPID, SECRET)...) })
 		res := m.Cmd(web.SPIDE, WX, kit.Select(http.MethodGet, http.MethodPost, api == STABLE_TOKEN), api, arg)
 		if m.Warn(!kit.IsIn(res.Append("errcode"), "0", ""), res.Append("errmsg")) {
 			return
 		}
-		m.Info("what res: %v", res.FormatMeta())
+		m.Info("res: %v", res.FormatMeta())
 		mdb.HashModify(m, m.OptionSimple(ACCESS), expire, m.Time(kit.Format("%vs", res.Append(oauth.EXPIRES_IN))), token, res.Append(kit.Select(oauth.ACCESS_TOKEN, TICKET, api == TICKET_GETTICKET)))
 		msg = mdb.HashSelect(m.Spawn(), m.Option(ACCESS))
 	}

@@ -174,12 +174,11 @@ func RenderPodCmd(m *ice.Message, pod, cmd string, arg ...ice.Any) {
 func RenderCmd(m *ice.Message, cmd string, arg ...ice.Any) { RenderPodCmd(m, "", cmd, arg...) }
 
 func RenderVersion(m *ice.Message) string {
-	if ice.Info.Make.Hash == "" {
-		return ""
-	}
-	ls := []string{ice.Info.Make.Version, ice.Info.Make.Forword, ice.Info.Make.Hash[:6]}
-	if m.Option(log.DEBUG) == ice.TRUE || m.R != nil && strings.Contains(m.R.URL.RawQuery, "debug=true") {
-		ls = append(ls, kit.Format("%d", time.Now().Unix()-kit.Time(ice.Info.Make.When)/int64(time.Second)))
+	ls := []string{ice.Info.Make.Versions()}
+	if strings.Contains(ice.Info.Make.Domain, "debug=true") {
+		if m.Option(log.DEBUG) == ice.TRUE || m.R != nil && strings.Contains(m.R.URL.RawQuery, "debug=true") {
+			ls = append(ls, kit.Format("%d", time.Now().Unix()-kit.Time(ice.Info.Make.When)/int64(time.Second)))
+		}
 	}
 	return "?" + kit.JoinQuery(kit.Simple(kit.Dict("_v", strings.Join(ls, "-"), ice.POD, m.Option(ice.MSG_USERPOD)))...)
 }

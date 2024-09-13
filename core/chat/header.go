@@ -143,11 +143,11 @@ func init() {
 			if kit.Contains(m.Option(ice.MSG_USERUA), "MicroMessenger") {
 				if m.Option(ice.MSG_USERNAME) == "" && m.Option("code") == "" && mdb.Config(m, "oauth") != "" {
 					m.ProcessOpen(mdb.Config(m, "oauth"))
-					return
+					// return
 				}
 			}
-			kit.If(m.Option(ice.MSG_USERPOD), func(p string) {
-				m.Cmdy(web.SPACE, p, m.PrefixKey(), ice.Maps{ice.MSG_USERPOD: ""})
+			kit.If(kit.Select(m.Option(ice.POD), m.Option(ice.MSG_USERPOD)), func(p string) {
+				m.Cmdy(web.SPACE, p, m.PrefixKey(), ice.Maps{ice.MSG_USERPOD: "", ice.POD: ""})
 			}, func() {
 				m.Option(ice.MSG_NODETYPE, ice.Info.NodeType)
 				m.Option(ice.MSG_NODENAME, ice.Info.NodeName)

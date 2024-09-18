@@ -107,8 +107,11 @@ func _serve_static(msg *ice.Message, w http.ResponseWriter, r *http.Request) boo
 		if kit.Contains(r.URL.String(), "render=replace") {
 			return false
 		}
-		p := strings.TrimPrefix(r.URL.Path, nfs.P)
+		p := path.Join(strings.TrimPrefix(r.URL.Path, nfs.P))
 		if pp := path.Join(nfs.USR_LOCAL_WORK, msg.Option(ice.POD)); ispod && nfs.Exists(msg, pp) {
+			if kit.HasPrefix(p, "var/", "usr/local/") {
+				return false
+			}
 			if pp = path.Join(pp, p); nfs.Exists(msg, pp) {
 				return Render(msg, ice.RENDER_DOWNLOAD, pp)
 			} else {

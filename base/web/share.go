@@ -169,6 +169,16 @@ func ShareLocalFile(m *ice.Message, arg ...string) {
 
 		} else if m.Option(ice.POD) == "" && !aaa.Right(m, ls) {
 			return
+		} else {
+			if m.Option(ice.POD) != "" && !strings.Contains(p, "/src/") && !strings.HasPrefix(p, "src/") {
+				if strings.HasPrefix(p, "usr/local/storage/") {
+					if m.Cmd(SPACE, "20240903-operation", "web.team.storage.file", aaa.RIGHT, ls[3:]).IsErr() {
+						return
+					}
+				} else if m.WarnNotRight(m.Cmdx(SPACE, m.Option(ice.POD), aaa.ROLE, aaa.RIGHT, aaa.VOID, p) != ice.OK) {
+					return
+				}
+			}
 		}
 	}
 	if m.Option(ice.POD) != "" && nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, m.Option(ice.POD))) {

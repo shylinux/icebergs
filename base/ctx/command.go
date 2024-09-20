@@ -18,6 +18,7 @@ func _command_list(m *ice.Message, name string) *ice.Message {
 		return m.Push(mdb.INDEX, name).Push(mdb.NAME, name).Push(mdb.HELP, "").Push(mdb.META, "").Push(mdb.LIST, "")
 	}
 	m.Option(ice.MSG_NODENAME, ice.Info.Titles)
+	m.Option(ice.MSG_NODEICON, m.Resource(ice.Info.NodeIcon))
 	m.Spawn(m.Source()).Search(name, func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
 		icon := kit.Format(kit.Value(cmd.Meta, kit.Keys(ice.CTX_ICONS, key)))
 		m.Push(mdb.INDEX, kit.Keys(s.Prefix(), key))

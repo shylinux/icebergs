@@ -163,6 +163,9 @@ func RenderPodCmd(m *ice.Message, pod, cmd string, arg ...ice.Any) {
 	if msg := m.Cmd(Space(m, pod), ctx.COMMAND, kit.Select(m.ShortKey(), cmd)); msg.Length() == 0 {
 		RenderResult(m, kit.Format("not found command %s", cmd))
 	} else {
+		if msg.Append(ctx.INDEX) == "web.code.vimer" {
+			m.Option(mdb.ICONS, msg.Option(ice.MSG_NODEICON))
+		}
 		m.OptionDefault(mdb.ICONS, m.Resource(kit.Select(ice.Info.NodeIcon, msg.Append(mdb.ICONS))))
 		if !kit.IsIn(cmd, PORTAL, DESKTOP, ADMIN) {
 			pod = kit.Select(pod, msg.Option(ice.MSG_NODENAME))

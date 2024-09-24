@@ -531,7 +531,7 @@ func init() {
 		Upload(m)
 		if pod := m.Option(ice.POD); pod != "" {
 			if ls := kit.Simple(m.Optionv(ice.MSG_UPLOAD)); len(ls) > 1 {
-				m.Cmd(SPACE, pod, SPIDE, ice.DEV, CACHE, SHARE_CACHE+ls[0])
+				// m.Cmd(SPACE, pod, SPIDE, ice.DEV, CACHE, SHARE_CACHE+ls[0])
 			}
 			m.Options(ice.POD, []string{}, ice.MSG_USERPOD, strings.TrimPrefix(pod, "ops.")).Cmdy(append(kit.List(ice.SPACE, pod), arg...)...)
 			return true

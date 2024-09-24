@@ -187,7 +187,12 @@ func init() {
 func Upload(m *ice.Message) []string {
 	if up := kit.Simple(m.Optionv(ice.MSG_UPLOAD)); len(up) == 1 {
 		if m.Cmdy(CACHE, UPLOAD).Optionv(ice.MSG_UPLOAD, kit.Simple(m.Append(mdb.HASH), m.Append(mdb.NAME), m.Append(nfs.SIZE))); m.Option(ice.MSG_USERPOD) != "" {
-			m.Cmd(SPACE, m.Option(ice.MSG_USERPOD), SPIDE, ice.DEV, SPIDE_CACHE, http.MethodGet, tcp.PublishLocalhost(m, m.MergeLink(PP(SHARE, CACHE, m.Append(mdb.HASH)))))
+			if nfs.Exists(m, "usr/local/work/"+m.Option(ice.MSG_USERPOD)) {
+				m.Cmd(nfs.LINK, path.Join("usr/local/work/"+m.Option(ice.MSG_USERPOD), m.Append(nfs.FILE)), m.Append(nfs.FILE))
+				m.Cmd(SPACE, m.Option(ice.MSG_USERPOD), CACHE, mdb.CREATE, m.AppendSimple(mdb.NAME, mdb.TEXT, nfs.FILE, nfs.SIZE))
+			} else {
+				m.Cmd(SPACE, m.Option(ice.MSG_USERPOD), SPIDE, ice.DEV, SPIDE_CACHE, http.MethodGet, tcp.PublishLocalhost(m, m.MergeLink(PP(SHARE, CACHE, m.Append(mdb.HASH)))))
+			}
 		}
 		return kit.Simple(m.Optionv(ice.MSG_UPLOAD))
 	} else {

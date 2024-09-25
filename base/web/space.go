@@ -450,13 +450,12 @@ func init() {
 				})
 				m.Sort("", kit.Simple(aaa.LOGIN, WEIXIN, PORTAL, WORKER, SERVER, ORIGIN))
 			} else {
-				if kit.IsIn(arg[0], "", ice.CONTEXTS) {
+				if kit.IsIn(arg[0], "", ice.CONTEXTS, ice.Info.NodeName) {
 					m.Cmdy(arg[1:])
 					return
 				}
 				if ice.Info.NodeType == WORKER && !strings.HasPrefix(arg[0], ice.OPS) {
 					arg[0] = kit.Keys(ice.OPS, arg[0])
-
 				}
 				for i := 0; i < 5; i++ {
 					if _space_send(m, arg[0], kit.Simple(kit.Split(arg[1]), arg[2:])...); !m.IsErrNotFoundSpace() {

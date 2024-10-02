@@ -7,6 +7,7 @@ import (
 	"path"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
@@ -70,6 +71,7 @@ func _cache_upload(m *ice.Message, r *http.Request) (mime, name, file, size stri
 	return "", "", "", "0"
 }
 func _cache_download(m *ice.Message, r *http.Response, file string, cb ice.Any) string {
+	m.Option(ice.MSG_USERROLE, aaa.TECH)
 	if f, p, e := miss.CreateFile(file); !m.WarnNotValid(e, DOWNLOAD) {
 		defer func() {
 			if s, e := os.Stat(file); e == nil && s.Size() == 0 {

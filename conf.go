@@ -262,6 +262,7 @@ const ( // MSG
 	MSG_FILES      = "file.system"
 	FROM_SPACE     = "from.space"
 	FROM_DAEMON    = "from.daemon"
+	FIELD_OPTION   = "field.option"
 	TABLE_CHECKBOX = "table.checkbox"
 	TOAST_DURATION = "toast.duration"
 	DREAM_SIMPLE   = "dream.simple"

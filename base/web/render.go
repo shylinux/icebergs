@@ -208,6 +208,7 @@ const (
 	INSTALL = "install"
 
 	CODE_MYSQL_CLIENT        = "web.code.mysql.client"
+	CODE_MYSQL_QUERY         = "web.code.mysql.query"
 	CODE_GIT_SERVICE         = "web.code.git.service"
 	CODE_GIT_SEARCH          = "web.code.git.search"
 	CODE_GIT_STATUS          = "web.code.git.status"

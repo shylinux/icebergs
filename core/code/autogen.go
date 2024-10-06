@@ -42,7 +42,7 @@ func _autogen_module(m *ice.Message, file string) {
 func _autogen_defs(m *ice.Message, arg ...string) {
 	kit.For(arg, func(p string) { m.Cmd(nfs.DEFS, p, m.Cmdx(nfs.CAT, p)); ReposAddFile(m, "", p) })
 }
-func _autogen_import(m *ice.Message, main string, ctx string, mod string) {
+func _autogen_import(m *ice.Message, main string, ctx string, mod string) string {
 	m.Cmd(nfs.DEFS, ice.ETC_MISS_SH, m.Template("miss.sh"))
 	_autogen_defs(m, ice.README_MD, ice.MAKEFILE, ice.LICENSE)
 	_autogen_defs(m, ice.SRC_MAIN_GO, ice.ETC_MISS_SH, ice.README_MD, ice.MAKEFILE, ice.LICENSE)
@@ -66,6 +66,7 @@ func _autogen_import(m *ice.Message, main string, ctx string, mod string) {
 	m.Cmd(nfs.SAVE, main, kit.Join(list, lex.NL))
 	GoImports(m, main)
 	ReposAddFile(m, "", main)
+	return path.Join(mod, "src", ctx)
 }
 func _autogen_version(m *ice.Message) string {
 	if mod := _autogen_mod(m, ice.GO_MOD); !nfs.Exists(m, ".git") {
@@ -191,6 +192,9 @@ func init() {
 					nfs.Trash(m, ice.GO_WORK)
 				}
 			}},
+			IMPORT: {Hand: func(m *ice.Message, arg ...string) {
+				_autogen_import(m, ice.SRC_MAIN_GO, arg[0], kit.Select(_autogen_mod(m, ice.GO_MOD), arg, 1))
+			}},
 			BINPACK: {Help: "打包", Hand: func(m *ice.Message, arg ...string) {
 				const (
 					USR_RELEASE_CONF_GO    = "usr/release/conf.go"
@@ -217,6 +221,6 @@ func isReleaseContexts(m *ice.Message) bool {
 func AutogenMod(m *ice.Message) string {
 	return _autogen_mod(m, ice.GO_MOD)
 }
-func AutogenImport(m *ice.Message, zone string) {
-	_autogen_import(m, ice.SRC_MAIN_GO, zone, _autogen_mod(m, ice.GO_MOD))
+func AutogenImport(m *ice.Message, zone string) string {
+	return _autogen_import(m, ice.SRC_MAIN_GO, zone, _autogen_mod(m, ice.GO_MOD))
 }

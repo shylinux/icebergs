@@ -22,6 +22,12 @@ func _js_show(m *ice.Message, arg ...string) {
 			ctx.ProcessField(m, kit.Select(ice.CAN_PLUGIN, "web."+strings.Replace(strings.TrimSuffix(strings.TrimPrefix(arg[1], "plugin/local/"), nfs.PT+JS), nfs.PS, nfs.PT, -1)), nil)
 		}
 	} else {
+		if p := path.Join(path.Dir(path.Join(arg[2], arg[1])), "portal.go"); nfs.Exists(m, p) {
+			if cmd := ctx.GetFileCmd(p); cmd != "" {
+				ctx.ProcessField(m, cmd, kit.Simple())
+				return
+			}
+		}
 		ctx.DisplayBase(m, require(arg[2], arg[1]))
 		ctx.ProcessField(m, kit.Select(ice.CAN_PLUGIN, ctx.GetFileCmd(kit.ExtChange(path.Join(arg[2], arg[1]), GO))), kit.Simple())
 	}

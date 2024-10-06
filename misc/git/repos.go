@@ -439,6 +439,9 @@ func init() {
 				m.Cmd(nfs.DIR, nfs.USR_LOCAL_WORK, func(value ice.Maps) { _repos_insert(m, value[nfs.PATH]) })
 				m.ProcessRefresh().ToastSuccess()
 			}},
+			mdb.CREATE: {Hand: func(m *ice.Message, arg ...string) {
+				_repos_insert(m, arg[0])
+			}},
 			INIT: {Name: "init remote*", Help: "初始化", Hand: func(m *ice.Message, arg ...string) {
 				m.OptionDefault(nfs.PATH, kit.Path(""))
 				m.Cmd(nfs.DEFS, path.Join(m.Option(nfs.PATH), ".git/config"), kit.Format(nfs.Template(m, CONFIG), m.Option(REMOTE)))

@@ -1,6 +1,7 @@
 package log
 
 import (
+	"regexp"
 	"strings"
 	"time"
 	"unicode"
@@ -32,6 +33,7 @@ func init() {
 				cli.OpenCmds(m, kit.Format("cd %s", kit.Path("")), "tail -f var/log/bench.log")
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
+			r := regexp.MustCompile("{.*}")
 			offset, limit := kit.Int(kit.Select("0", arg, 1)), kit.Int(kit.Select("100", arg, 2))
 			switch arg[0] {
 			case BENCH, ERROR, DEBUG:
@@ -65,6 +67,10 @@ func init() {
 							_ls := strings.SplitN(ls[7], lex.SP, 2)
 							ls[6], ls[7] = ls[6]+lex.SP+_ls[0], _ls[1]
 						}
+					}
+					switch ls[6] {
+					case "recv", "done", "send", "echo":
+						ls[7] += "\n" + kit.Formats(kit.UnMarshal(r.FindString(ls[7])))
 					}
 					m.Push(ctx.SHIP, ls[5]).Push(LEVEL, ls[6]).Push(nfs.CONTENT, ls[7])
 				})

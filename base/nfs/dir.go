@@ -147,6 +147,8 @@ const (
 	SCAN   = "scan"
 	GOWORK = "gowork"
 
+	PORTAL_GO           = "portal.go"
+	PORTAL_JSON         = "portal.json"
 	ETC_LOCAL_SH        = "etc/local.sh"
 	ETC_CERT_KEY        = "etc/cert/cert.key"
 	ETC_CERT_PEM        = "etc/cert/cert.pem"
@@ -196,8 +198,8 @@ const (
 	TYPE_BOTH = "both"
 
 	DIR_ROOT = "dir_root"
-	DIR_TYPE = "dir_type"
 	DIR_DEEP = "dir_deep"
+	DIR_TYPE = "dir_type"
 	DIR_REG  = "dir_reg"
 
 	DIR_DEF_FIELDS = "time,path,size,action"

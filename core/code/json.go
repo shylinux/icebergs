@@ -20,6 +20,12 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		JSON: {Actions: ice.MergeActions(ice.Actions{
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
+				if path.Base(arg[1]) == "portal.json" {
+					if cmd := ctx.GetFileCmd(path.Join(arg[2], arg[1])); cmd != "" {
+						ctx.ProcessField(m, cmd, kit.Simple("table"))
+						return
+					}
+				}
 				m.FieldsSetDetail()
 				kit.For(kit.KeyValue(nil, "", kit.UnMarshal(m.Cmdx(nfs.CAT, path.Join(arg[2], arg[1])))), func(key, value string) {
 					m.Push(key, value)

@@ -68,7 +68,18 @@ func _go_show(m *ice.Message, arg ...string) {
 		ctx.ProcessField(m, cli.RUNTIME, kit.Simple())
 	} else if arg[1] == "binpack.go" {
 		ctx.ProcessField(m, nfs.PACK, kit.Simple())
+	} else if path.Base(arg[1]) == "model.go" {
+		ctx.ProcessField(m, "web.code.mysql.query", kit.Simple("mysql", kit.Split(arg[1], "/", "/")[0]))
+	} else if path.Base(arg[1]) == "common.go" {
+		// ctx.ProcessField(m, "web.code.xterm", kit.Simple())
+		ctx.ProcessField(m, "log.debug", kit.Simple("bench"))
 	} else if cmd := ctx.GetFileCmd(path.Join(arg[2], arg[1])); cmd != "" {
+		if p := path.Join(path.Dir(path.Join(arg[2], arg[1])), "portal.go"); path.Base(arg[1]) != "portal.go" && nfs.Exists(m, p) {
+			if cmd := ctx.GetFileCmd(p); cmd != "" {
+				ctx.ProcessField(m, cmd, kit.Simple())
+				return
+			}
+		}
 		ctx.ProcessField(m, cmd, kit.Simple())
 	} else if msg := m.Cmd(yac.STACK, path.Join(arg[2], arg[1])); msg.Option("__index") != "" {
 		ctx.ProcessField(m, msg.Option("__index"), kit.Simple())

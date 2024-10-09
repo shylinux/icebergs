@@ -21,11 +21,15 @@ func init() {
 			if m.IsCliUA() {
 				if len(arg) == 0 || arg[0] == "" {
 					m.Option(ice.MSG_USERROLE, aaa.TECH)
+					list := m.CmdMap(web.DREAM, mdb.NAME)
 					m.Cmd(web.SPACE, func(value ice.Maps) {
 						msg := m.Cmd(nfs.DIR, path.Join(ice.USR_LOCAL_WORK, value[mdb.NAME], ice.USR_PUBLISH, kit.Keys(ice.ICE, m.OptionDefault(cli.GOOS, cli.LINUX), m.OptionDefault(cli.GOARCH, cli.AMD64))))
-						kit.If(msg.Length() > 0, func() { m.Push(mdb.NAME, value[mdb.NAME]).Copy(msg) })
+						kit.If(msg.Length() > 0, func() {
+							m.Push(mdb.ICONS, list[value[mdb.NAME]][mdb.ICONS])
+							m.Push(mdb.NAME, value[mdb.NAME]).Copy(msg)
+						})
 					})
-					m.Cut("name,size,time")
+					m.Cut("icons,name,size,time")
 					m.RenderResult()
 				} else if len(arg) > 1 {
 					m.Option(ice.MSG_USERPOD, arg[0])

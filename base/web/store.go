@@ -73,6 +73,7 @@ func init() {
 						}
 					})
 				})
+				m.SortStrR(mdb.NAME)
 				if ice.Info.NodeType == WORKER || !aaa.IsTechOrRoot(m) {
 					m.Action()
 				} else {

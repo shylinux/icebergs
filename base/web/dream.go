@@ -256,15 +256,19 @@ func init() {
 						_dream_list(m, true).Cut("name,status,time")
 					case mdb.ICONS:
 						mdb.HashInputs(m, arg)
-					case nfs.BINARY:
-						m.Cmdy(nfs.DIR, ice.BIN, "path,size,time", kit.Dict(nfs.DIR_TYPE, nfs.TYPE_BIN))
-						m.Cmd(nfs.DIR, ice.USR_LOCAL_WORK, kit.Dict(nfs.DIR_TYPE, nfs.TYPE_BOTH), func(value ice.Maps) {
-							m.Cmdy(nfs.DIR, path.Join(value[nfs.PATH], ice.BIN), "path,size,time", kit.Dict(nfs.DIR_TYPE, nfs.TYPE_BIN))
+					case nfs.REPOS:
+						defer ctx.DisplayInputKey(m, ctx.STYLE, "_nameicon")
+						m.Cmd(STORE).Table(func(value ice.Maps) {
+							m.Spawn().SplitIndex(m.Cmdx(SPIDE, value[mdb.NAME], SPIDE_RAW, http.MethodGet, C(DREAM))).Table(func(value ice.Maps) {
+								m.PushRecord(value, mdb.ICONS, nfs.REPOS, nfs.VERSION, mdb.NAME)
+							})
 						})
-						m.RenameAppend(nfs.PATH, arg[0])
-						DreamListSpide(m, []string{ice.DEV}, ORIGIN, func(dev, origin string) {
-							m.Spawn().SplitIndex(m.Cmdx(SPIDE, dev, SPIDE_RAW, http.MethodGet, S(), cli.GOOS, runtime.GOOS, cli.GOARCH, runtime.GOARCH)).Table(func(value ice.Maps) {
-								m.Push(arg[0], origin+S(value[mdb.NAME])).Push(nfs.SIZE, value[nfs.SIZE]).Push(mdb.TIME, value[mdb.TIME])
+					case nfs.BINARY:
+						defer ctx.DisplayInputKey(m, ctx.STYLE, "_nameicon")
+						m.Cmd(STORE).Table(func(val ice.Maps) {
+							m.Spawn().SplitIndex(m.Cmdx(SPIDE, val[mdb.NAME], SPIDE_RAW, http.MethodGet, S(), cli.GOOS, runtime.GOOS, cli.GOARCH, runtime.GOARCH)).Table(func(value ice.Maps) {
+								m.Push(mdb.ICONS, value[mdb.ICONS])
+								m.Push(arg[0], val[ORIGIN]+S(value[mdb.NAME])).Push(nfs.SIZE, value[nfs.SIZE]).Push(mdb.TIME, value[mdb.TIME])
 							})
 						})
 					}

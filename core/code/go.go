@@ -74,7 +74,7 @@ func _go_show(m *ice.Message, arg ...string) {
 		// ctx.ProcessField(m, "web.code.xterm", kit.Simple())
 		ctx.ProcessField(m, "log.debug", kit.Simple("bench"))
 	} else if cmd := ctx.GetFileCmd(path.Join(arg[2], arg[1])); cmd != "" {
-		if p := path.Join(path.Dir(path.Join(arg[2], arg[1])), "portal.go"); path.Base(arg[1]) != "portal.go" && nfs.Exists(m, p) {
+		if p := path.Join(path.Dir(path.Join(arg[2], arg[1])), "portal.go"); path.Base(arg[1]) != "portal.go" && nfs.Exists(m, p) && arg[1] != "gonganxitong/user.go" {
 			if cmd := ctx.GetFileCmd(p); cmd != "" {
 				ctx.ProcessField(m, cmd, kit.Simple())
 				return

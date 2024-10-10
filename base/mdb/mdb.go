@@ -296,6 +296,8 @@ func AutoConfig(arg ...Any) *ice.Action {
 				})
 				return
 			}
+			kit.If(cmd.Meta[CREATE] == nil, func() { m.Design(CREATE, "", add(kit.Split(HashField(m)))...) })
+			return
 			if cmd.Actions[INSERT] != nil {
 				kit.If(cmd.Meta[INSERT] == nil, func() { m.Design(INSERT, "", add(kit.Simple(Config(m, SHORT), kit.Split(ListField(m))))...) })
 				kit.If(cmd.Meta[CREATE] == nil, func() { m.Design(CREATE, "", add(kit.Split(Config(m, SHORT)))...) })

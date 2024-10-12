@@ -448,7 +448,8 @@ func init() {
 				// kit.If(m.IsDebug(), func() { list = append(list, cli.RUNTIME) })
 				switch m.Option(mdb.TYPE) {
 				case WORKER:
-					list = append(list, "settings", nfs.COPY, tcp.SEND)
+					list = append(list, "settings")
+					// list = append(list, "settings", nfs.COPY, tcp.SEND)
 				case SERVER:
 					list = append(list, "settoken", DREAM)
 				default:

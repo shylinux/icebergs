@@ -51,6 +51,9 @@ func (s info) Title() string {
 	return p
 	return kit.Capital(p)
 }
+func (s info) IconTitle() string {
+	return kit.Format("<img src='%s'/><span>%s</span>", Pulse.Resource(s.NodeIcon), s.Title())
+}
 
 type info struct {
 	Make MakeInfo

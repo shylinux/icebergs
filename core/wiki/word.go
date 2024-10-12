@@ -42,6 +42,11 @@ func init() {
 				WordAlias(m, LABEL, CHART, LABEL)
 				WordAlias(m, CHAIN, CHART, CHAIN)
 				WordAlias(m, SEQUENCE, CHART, SEQUENCE)
+				if ls := kit.SplitLine(m.Cmdx(nfs.CAT, ice.SRC_MAIN_SHY)); len(ls) > 0 {
+					if list := kit.SplitWord(ls[0]); len(list) > 0 && list[0] == TITLE {
+						ice.Info.Titles = list[1]
+					}
+				}
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if mdb.IsSearchPreview(m, arg) {

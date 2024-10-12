@@ -215,7 +215,7 @@ func ProxyUpload(m *ice.Message, pod string, p string) string {
 		size, cache = s.Size(), s.ModTime()
 	}
 	if m.Cmdv(SPACE, pod, mdb.TYPE) == ORIGIN {
-		m.Cmd(SPIDE, pod, SPIDE_SAVE, pp, p)
+		m.Cmd(SPIDE, pod, SPIDE_SAVE, pp, "/p/"+p)
 	} else {
 		kit.If(p == ice.BIN_ICE_BIN, func() { m.Option(ice.MSG_USERROLE, aaa.TECH) })
 		share := m.Cmdx(SHARE, mdb.CREATE, mdb.TYPE, PROXY, mdb.NAME, p, mdb.TEXT, pod)

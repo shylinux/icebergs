@@ -12,11 +12,6 @@ Volcanos(chat.ONIMPORT, {
 		}
 		can.ui = can.onappend.layout(can, [html.HEADER, [html.NAV, html.MAIN, html.ASIDE]], html.FLOW), can.onimport._scroll(can)
 		can.ui.header.innerHTML = msg.Append(html.HEADER), can.ui.nav.innerHTML = msg.Append(html.NAV)
-		can.onmotion.delay(can, function() {
-			can.page.Select(can, can.ui.header, "div.item:first-child>span", function(target, index) {
-				index == 0 && can.page.insertBefore(can, [{img: can.misc.ResourceFavicon(can, can.user.info.favicon), style: {height: 42}}], target)
-			})
-		}, 300)
 		if (msg.Append(html.NAV) == "") {
 			can.onmotion.hidden(can, can.ui.nav), can.onmotion.hidden(can, can.ui.aside)
 		} else {
@@ -46,6 +41,9 @@ Volcanos(chat.ONIMPORT, {
 		}: function(target, item) { can.db.nav[can.base.trimPrefix(item.meta.link, nfs.USR_LEARNING_PORTAL, nfs.SRC_DOCUMENT)] = target
 			location.hash || item.list && item.list.length > 0 || link || (link = can.onaction.route({}, can, item.meta.link, true))
 		}, target)
+		can.page.Select(can, can.ui.header, "div.item:first-child>span", function(target, index) {
+			can.page.insertBefore(can, [{img: can.misc.ResourceFavicon(can, can.user.info.favicon), style: {height: 42}}], target)
+		})
 	},
 	content: function(can, file) {
 		can.runActionCommand(event, web.WIKI_WORD, [(can.base.beginWith(file, nfs.USR, nfs.SRC)? "": nfs.USR_LEARNING_PORTAL+can.db.current)+file], function(msg) { can.ui.main.innerHTML = msg.Result(), can.onmotion.clear(can, can.ui.aside)

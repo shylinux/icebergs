@@ -9,7 +9,10 @@ Volcanos(chat.ONIMPORT, {_init: function(can, msg) { can.page.style(can, can._ou
 			{img: can.misc.ResourceFavicon(can, msg.Option(html.FAVICON), can.ConfSpace())},
 			{text: decodeURIComponent(can.ConfSpace()||can.misc.Search(can, ice.POD)||location.host)},
 		], onclick: function(event) { can.sup.onexport.record(can, html.DESKTOP) }},
-		{view: [[html.MENU, mdb.ICON, web.REFRESH], "", can.page.unicode.refresh], onclick: function(event) { can.user.reload(true) }},
+		{view: [[html.MENU, mdb.ICON, web.REFRESH], "", can.page.unicode.refresh], onclick: function(event) {
+			can.sup.onexport.record(can, "reload")
+			// can.user.reload(true)
+		}},
 		{view: [[html.MENU, mdb.ICON, mdb.CREATE], "", can.page.unicode.create], onclick: function(event) { can.sup.onexport.record(can, mdb.CREATE) }},
 	]))
 }})

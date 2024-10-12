@@ -52,7 +52,9 @@ Volcanos(chat.ONIMPORT, {
 				if (value.module == item.module) { worker = value }
 			})
 		}
-		return !worker? html.NOTICE: (worker.status != cli.STOP && item.status != cli.STOP && (item.version != worker.version || item.time < worker.time))? html.DANGER: ""
+		return !worker? html.NOTICE: (worker.status != cli.STOP && item.status != cli.STOP && (item.version != worker.version ||
+			(item["server.type"] == "origin"? item.time > worker.time: item.time < worker.time)
+		))? html.DANGER: ""
 	},
 }, [""])
 Volcanos(chat.ONACTION, {

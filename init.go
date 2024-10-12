@@ -65,6 +65,11 @@ var Index = &Context{Name: ICE, Help: "冰山模块", Commands: Commands{
 		m.Cmd(SOURCE, ETC_INIT_SHY)
 		loadImportant(m)
 		m.Cmd(CTX_OPEN)
+		m.Travel(func(p *Context, c *Context, key string, cmd *Command) {
+			if h, ok := cmd.Actions["afterInit"]; ok {
+				h.Hand(m.Spawn(c, key, cmd), arg...)
+			}
+		})
 	}},
 	QUIT: {Hand: func(m *Message, arg ...string) {
 		m.GoSleep300ms(func() { os.Exit(kit.Int(kit.Select("0", arg, 0))) })

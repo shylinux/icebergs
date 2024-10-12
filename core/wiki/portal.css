@@ -33,14 +33,15 @@ fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column b { fon
 fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column input[type=button] { box-shadow:var(--th-box-shadow); border:0; background-color:var(--notice-bg-color); color:var(--notice-fg-color); }
 fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column input[type=button]:hover { box-shadow:var(--notice-box-shadow); }
 fieldset.web.wiki.portal>div.output>div.layout>div.main fieldset.desktop>legend { display:none; }
-fieldset.web.wiki.portal>div.output>div.layout>div.main fieldset.inner.output div.content { background-color:var(--code-bg-color); color:var(--code-fg-color); padding:var(--input-padding) 0;
-   	--code-keyword:orange; --code-comment:silver;
-	--code-function:cyan; --code-constant:silver; --code-string:silver;
-   	--code-package:silver; --code-datatype:silver; --code-object:silver;
+fieldset.web.wiki.portal>div.output>div.layout>div.main fieldset.inner.output div.content {
+	padding:var(--input-padding) 0;
 }
-fieldset.web.wiki.portal>div.output>div.layout>div.main div.story[data-type=spark][data-name=shell] { box-shadow:var(--th-box-shadow); border:0; border-left:var(--box-notice3); }
+fieldset.web.wiki.portal>div.output>div.layout>div.main div.story[data-type=spark][data-name=shell] {
+box-shadow:var(--th-box-shadow); border:var(--box-border); border-left:var(--box-notice3); }
 fieldset.web.wiki.portal>div.output>div.layout>div.main div.story[data-type=spark][data-name=shell]:hover { box-shadow:var(--notice-box-shadow); }
-fieldset.web.wiki.portal>div.output>div.layout>div.main div.story[data-type=spark][data-name=shell] { background-color:var(--code-bg-color); color:var(--code-fg-color); padding:var(--button-padding); margin-top:var(--button-margin); }
+fieldset.web.wiki.portal>div.output>div.layout>div.main div.story[data-type=spark][data-name=shell] {
+	padding:var(--button-padding); margin-top:var(--button-margin);
+}
 fieldset.web.wiki.portal>div.output>div.layout>div.main table.content div.story[data-type=spark][data-name=shell] { margin-top:unset; }
 fieldset.web.wiki.portal.home>div.output>div.layout>div.main p { white-space:pre-wrap; text-align:center; }
 fieldset.web.wiki.portal.home>div.output>div.layout>div.main p:hover { background-color:var(--hover-bg-color); color:var(--hover-fg-color); }
@@ -49,7 +50,7 @@ body.dark fieldset.web.wiki.portal>div.output>div.header div.story[data-name=nav
 body.dark fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.item.select { background-color:var(--plugin-bg-color); }
 body.dark fieldset.web.wiki.portal>div.output>div.layout { background-color:var(--plugin-bg-color); --code-bg-color:var(--output-bg-color); }
 body.dark fieldset.web.wiki.portal>div.output>div.layout>div.main fieldset:not(.macos) { border:var(--plugin-border); }
-body.dark fieldset.web.wiki.portal>div.output>div.layout>div.main fieldset.output>div.output { border-radius:var(--plugin-radius); }
+body.dark fieldset.web.wiki.portal>div.output>div.layout>div.main fieldset { border-radius:0; }
 body.dark fieldset.web.wiki.portal>div.output>div.layout>div.main div.story[data-type=spark][data-name=shell] { border-left:var(--box-notice3); }
 // body.dark fieldset.web.wiki.portal>div.output>div.layout>div.main div.story[data-type=spark][data-name=shell] { border:var(--box-border); }
 body.white fieldset.web.wiki.portal>div.output>div.header { color:silver; }

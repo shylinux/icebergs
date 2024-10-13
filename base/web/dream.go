@@ -73,8 +73,6 @@ func _dream_list_icon(m *ice.Message) {
 				return m.Spawn(kit.Dict(ice.MSG_USERPOD, m.Appendv(mdb.NAME)[index])).FileURI(value)
 			} else if nfs.ExistsFile(m, value) {
 				return m.FileURI(value)
-			} else {
-				return m.FileURI(nfs.USR_ICONS_ICEBERGS)
 			}
 		}
 		return value
@@ -233,7 +231,7 @@ func init() {
 		DREAM: {Name: "dream refresh", Help: "梦想家", Icon: "Launchpad.png", Role: aaa.VOID, Meta: kit.Dict(
 			ice.CTX_TRANS, kit.Dict(html.INPUT, kit.Dict(WORKER, "空间", SERVER, "门户", ORIGIN, "主机")),
 		), Actions: ice.MergeActions(ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+			ice.AFTER_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				AddPortalProduct(m, "云空间", `
 比虚拟机和容器，更加轻量，每个空间都是一个完整的系统，拥有各种软件与独立的环境。
 空间内所有的软件、配置、数据以源码库形式保存，每个空间都可以随时启动、停止、上传、下载、分享。

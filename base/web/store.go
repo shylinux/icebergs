@@ -16,7 +16,7 @@ const STORE = "store"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		STORE: {Name: "store refresh", Help: "商店", Icon: "App Store.png", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+			ice.AFTER_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				AddPortalProduct(m, "云商店", `
 每个用户都可以将自己的空间列表，以系统商店的方式分享给其它用户。
 同样的每个用户，也可以添加任意多个商店，直接将空间下载到本机使用。

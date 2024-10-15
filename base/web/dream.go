@@ -33,8 +33,12 @@ func _dream_list(m *ice.Message, simple bool) *ice.Message {
 			m.Push("", value, kit.Slice(head, 0, -1))
 			if m.IsCliUA() || simple {
 				m.Push(mdb.TYPE, space[mdb.TYPE]).Push(cli.STATUS, cli.START)
-				m.Push(nfs.MODULE, space[nfs.MODULE]).Push(nfs.VERSION, space[nfs.VERSION]).Push(mdb.TEXT, DreamStat(m, value[mdb.NAME]))
-				kit.If(aaa.IsTechOrRoot(m), func() { m.PushButton(cli.STOP) }, func() { m.PushButton() })
+				m.Push(nfs.MODULE, space[nfs.MODULE]).Push(nfs.VERSION, space[nfs.VERSION])
+				// m.Push(mdb.TEXT, DreamStat(m, value[mdb.NAME]))
+				m.Push(mdb.TEXT, "")
+				button := []ice.Any{PORTAL, DESKTOP, ADMIN, WORD, OPEN}
+				kit.If(aaa.IsTechOrRoot(m), func() { button = append(button, cli.STOP) })
+				m.PushButton(button...)
 			} else {
 				msg := gdb.Event(m.Spawn(value, space), DREAM_TABLES)
 				kit.If(aaa.IsTechOrRoot(m), func() { msg.Copy(m.Spawn().PushButton(cli.STOP)) })
@@ -83,11 +87,12 @@ func _dream_list_more(m *ice.Message, simple bool) *ice.Message {
 		value[nfs.REPOS] = "https://" + value[nfs.MODULE]
 		value[aaa.ACCESS] = kit.Select("", value[aaa.USERROLE], value[aaa.USERROLE] != aaa.VOID)
 		value[mdb.STATUS] = cli.START
+		button := []ice.Any{PORTAL, DESKTOP, ADMIN, WORD, DREAM, OPEN}
 		switch value[mdb.TYPE] {
 		case SERVER:
 			value[mdb.TEXT] = kit.JoinLine(value[nfs.MODULE], value[mdb.TEXT])
 			if simple {
-				defer m.PushButton("")
+				defer m.PushButton(button...)
 			} else {
 				msg := gdb.Event(m.Spawn(value), DREAM_TABLES)
 				defer m.PushButton(strings.Join(msg.Appendv(ctx.ACTION), ""))
@@ -95,7 +100,7 @@ func _dream_list_more(m *ice.Message, simple bool) *ice.Message {
 		case ORIGIN:
 			value[mdb.TEXT] = kit.JoinLine(value[nfs.MODULE], value[mdb.TEXT])
 			if simple {
-				defer m.PushButton("")
+				defer m.PushButton(button...)
 			} else if value[aaa.ACCESS] == "" {
 				defer m.PushButton(PORTAL)
 			} else {
@@ -117,9 +122,7 @@ func _dream_start(m *ice.Message, name string) {
 		return
 	}
 	if !m.IsCliUA() {
-		// defer m.ProcessOpenAndRefresh(m.MergePod(name))
 		defer m.ProcessRefresh()
-		// defer ToastProcess(m, mdb.CREATE, name)()
 	}
 	defer mdb.Lock(m, m.PrefixKey(), cli.START, name)()
 	p := _dream_check(m, name)
@@ -300,7 +303,6 @@ func init() {
 				kit.If(mdb.Config(m, nfs.BINARY), func(p string) { m.OptionDefault(nfs.BINARY, p+m.Option(mdb.NAME)) })
 				kit.If(mdb.Config(m, nfs.REPOS), func(p string) { m.OptionDefault(nfs.REPOS, p+m.Option(mdb.NAME)) })
 				m.Option(nfs.REPOS, kit.Select("", kit.Split(m.Option(nfs.REPOS)), -1))
-				// m.OptionDefault(mdb.ICONS, nfs.USR_ICONS_CONTEXTS)
 				if mdb.HashCreate(m); ice.Info.Important == true {
 					_dream_start(m, m.Option(mdb.NAME))
 					StreamPushRefreshConfirm(m, m.Trans("refresh for new space ", "刷新列表查看新空间 ")+m.Option(mdb.NAME))
@@ -438,23 +440,18 @@ func init() {
 				})
 			}},
 			DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
-				if !aaa.IsTechOrRoot(m) {
-					m.PushButton(OPEN)
-					return
-				}
 				list := []ice.Any{}
-				// kit.If(m.IsDebug(), func() { list = append(list, cli.RUNTIME) })
-				switch m.Option(mdb.TYPE) {
-				case WORKER:
-					list = append(list, "settings")
-					// list = append(list, "settings", nfs.COPY, tcp.SEND)
-				case SERVER:
-					list = append(list, "settoken", DREAM)
-				default:
-					list = append(list, TOKEN, DREAM)
+				if aaa.IsTechOrRoot(m) {
+					switch m.Option(mdb.TYPE) {
+					case WORKER:
+						list = append(list, "settings")
+					case SERVER:
+						list = append(list, "settoken", DREAM)
+					default:
+						list = append(list, TOKEN, DREAM)
+					}
 				}
-				list = append(list, OPEN)
-				m.PushButton(list...)
+				m.PushButton(append(list, OPEN)...)
 			}},
 			STATS_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				if msg := _dream_list(m.Spawn(), true); msg.Length() > 0 {
@@ -520,7 +517,7 @@ func init() {
 			ONLINE, ice.TRUE,
 		)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
-				simple := m.Option(ice.DREAM_SIMPLE) == ice.TRUE
+				simple := m.Option(ice.DREAM_SIMPLE) == ice.TRUE || m.Option(ice.MSG_DEBUG) != ice.TRUE
 				if ice.Info.NodeType != WORKER {
 					_dream_list(m, simple)
 					_dream_list_icon(m)

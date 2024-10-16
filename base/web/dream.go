@@ -150,7 +150,7 @@ func _dream_check(m *ice.Message, name string) string {
 	p := path.Join(ice.USR_LOCAL_WORK, name)
 	msg := m.Spawn(kit.Dict(ice.MSG_USERROLE, aaa.ROOT))
 	if pp := path.Join(p, ice.VAR_LOG_ICE_PID); nfs.Exists(m, pp) {
-		for i := 0; i < 10; i++ {
+		for i := 0; i < 5; i++ {
 			pid := msg.Cmdx(nfs.CAT, pp)
 			if pid == "" {
 				return p
@@ -164,7 +164,7 @@ func _dream_check(m *ice.Message, name string) string {
 				return p
 			}
 			if nfs.Exists(m, "/proc/"+pid) && runtime.GOOS == cli.LINUX {
-				if !kit.HasPrefix(msg.Cmdx(nfs.CAT, "/proc/"+pid+"/cmdline"), kit.Path("bin/ice.bin"), kit.Path(p, "bin/ice.bin")) {
+				if !kit.HasPrefix(msg.Cmdx(nfs.CAT, "/proc/"+pid+"/cmdline"), kit.Path(ice.BIN_ICE_BIN), kit.Path(p, ice.BIN_ICE_BIN)) {
 					return p
 				} else {
 					return ""
@@ -468,7 +468,7 @@ func init() {
 					m.Cmd(gdb.EVENT, gdb.LISTEN, gdb.EVENT, DREAM_ACTION, ice.CMD, cmd)
 					aaa.White(m, kit.Keys(m.ShortKey(), ctx.ACTION, cmd))
 				}
-				mdb.HashSelects(m.Spawn()).Table(func(value ice.Maps) {
+				mdb.HashSelects(m.Spawn()).SortStrR(mdb.NAME).Table(func(value ice.Maps) {
 					if value[cli.RESTART] == ALWAYS && nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK+value[mdb.NAME])) {
 						m.Cmd(DREAM, cli.START, kit.Dict(mdb.NAME, value[mdb.NAME]))
 					}

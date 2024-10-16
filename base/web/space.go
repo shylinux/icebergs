@@ -115,7 +115,7 @@ func _space_fork(m *ice.Message) {
 					SpaceEvent(m.Spawn(ice.MSG_USERROLE, aaa.TECH), OPS_SERVER_OPEN, name, args...)
 				})
 			}
-			_space_handle(m, safe, name, c)
+			_space_handle(m.Spawn(), safe, name, c)
 		}, kit.JoinWord(SPACE, name))
 	}
 }

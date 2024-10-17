@@ -292,12 +292,12 @@ func init() {
 		))), Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				conf := mdb.Confm(m, cli.RUNTIME, cli.CONF)
-				dev := kit.Select("https://2021.shylinux.com", ice.Info.Make.Domain, conf[cli.CTX_DEV])
-				m.Cmd("", mdb.CREATE, kit.Select("https://shylinux.com", conf[cli.CTX_SHY]), ice.SHY, "", nfs.REPOS)
+				dev := kit.Select("https://dev.shylinux.com", ice.Info.Make.Domain, conf[cli.CTX_DEV])
 				m.Cmd("", mdb.CREATE, dev, ice.DEV, ice.SRC_MAIN_ICO, nfs.REPOS)
-				m.Cmd("", mdb.CREATE, kit.Select(dev, os.Getenv("ctx_dev_ip")), ice.DEV_IP)
-				m.Cmd("", mdb.CREATE, kit.Select("http://localhost:9020", conf[cli.CTX_OPS]), ice.OPS, nfs.USR_ICONS_CONTEXTS, nfs.REPOS)
-				m.Cmd("", mdb.CREATE, kit.Select("http://localhost:20000", conf[cli.CTX_DEMO]), ice.DEMO, nfs.USR_ICONS_VOLCANOS)
+				m.Cmd("", mdb.CREATE, kit.Select(dev, os.Getenv("ctx_dev_ip")), ice.DEV_IP, ice.SRC_MAIN_ICO)
+				m.Cmd("", mdb.CREATE, kit.Select("https://shylinux.com", conf[cli.CTX_SHY]), ice.SHY, ice.SRC_MAIN_ICO, nfs.REPOS)
+				m.Cmd("", mdb.CREATE, kit.Select("http://localhost:9020", conf[cli.CTX_OPS]), ice.OPS, ice.SRC_MAIN_ICO, nfs.REPOS)
+				m.Cmd("", mdb.CREATE, kit.Select("http://localhost:20000", conf[cli.CTX_DEMO]), ice.DEMO, ice.SRC_MAIN_ICO)
 				m.Cmd("", mdb.CREATE, kit.Select("https://mail.shylinux.com", conf[cli.CTX_MAIL]), ice.MAIL, "usr/icons/Mail.png")
 				m.Cmd("", mdb.CREATE, kit.Select("https://user.shylinux.com"), aaa.USER, "usr/icons/Mail.png")
 				m.Cmd("", mdb.CREATE, "https://2023-contexts.shylinux.com", "2023-contexts", ice.SRC_MAIN_ICO, nfs.REPOS)

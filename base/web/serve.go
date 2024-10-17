@@ -284,7 +284,7 @@ func init() {
 			SERVE_START: {Hand: func(m *ice.Message, arg ...string) {
 				kit.If(m.Option(ice.DEMO) == ice.TRUE, func() { m.Cmd(CHAT_HEADER, ice.DEMO) })
 				kit.If(os.Getenv(cli.TERM), func() { m.Go(func() { ssh.PrintQRCode(m, tcp.PublishLocalhost(m, _serve_address(m))) }) })
-				m.Cmd(SPIDE, mdb.CREATE, HostPort(m, tcp.LOCALHOST, m.Option(tcp.PORT)), ice.OPS, nfs.USR_ICONS_CONTEXTS, nfs.REPOS, "")
+				m.Cmd(SPIDE, mdb.CREATE, HostPort(m, tcp.LOCALHOST, m.Option(tcp.PORT)), ice.OPS, ice.SRC_MAIN_ICO, nfs.REPOS, "")
 				m.Cmds(SPIDE).Table(func(value ice.Maps) {
 					kit.If(value[CLIENT_NAME] != ice.OPS && value[TOKEN] != "", func() {
 						m.Cmd(SPACE, tcp.DIAL, ice.DEV, value[CLIENT_NAME], TOKEN, value[TOKEN], mdb.TYPE, SERVER)

@@ -38,7 +38,7 @@ func ProcessHashPodCmd(m *ice.Message, arg ...string) (msg *ice.Message) {
 	return ctx.ProcessFloat(m.Options(ice.POD, msg.Append(SPACE)), msg.Append(ctx.INDEX), kit.Split(msg.Append(ctx.ARGS)), arg...)
 }
 func processSpace(m *ice.Message, pod string, arg ...string) {
-	m.ProcessField(ctx.ACTION, m.ActionKey(), ctx.RUN, arg)
+	m.ProcessField(kit.TransArgs(kit.Simple(ctx.ACTION, m.ActionKey(), ctx.RUN, arg))...)
 	m.RewriteAppend(func(value, key string, index int) string { return kit.Select("", value, key != SPACE) })
 	m.Push(ice.MSG_SPACE, strings.TrimPrefix(pod, "ops."))
 }

@@ -52,7 +52,13 @@ Volcanos(chat.ONIMPORT, {
 		} }
 	}) },
 	_dock: function(can) { can.onappend.plugin(can, {index: "web.chat.macos.dock", style: html.OUTPUT}, function(sub) { can.ui.dock = sub
-		sub.onexport.output = function(sub, msg) { can.onmotion.delay(can, function() { can.onimport.layout(can) }) }
+		can.onimport.layout(can)
+		sub.onexport.output = function(sub, msg) {
+			can.onimport.layout(can)
+			can.onmotion.delay(can, function() {
+				can.onimport.layout(can)
+			})
+		}
 		sub.onexport.record = function(sub, value, key, item) { can.onimport._window(can, item) }
 	}) },
 	_desktop: function(can, msg, name) { var target = can.page.Append(can, can._output, [html.DESKTOP])._target; can.ui.desktop = target
@@ -122,9 +128,9 @@ Volcanos(chat.ONIMPORT, {
 	},
 	layout: function(can) {
 		can.page.style(can, can._output, html.HEIGHT, can.ConfHeight(), html.WIDTH, can.ConfWidth())
-		can.ui.dock && can.page.style(can, can.ui.dock._output, "position", "")
-		can.ui.dock && can.page.style(can, can.ui.dock._target, html.LEFT, can.base.Min((can.ConfWidth()-(can.ui.dock._target.offsetWidth||502))/2, 0))
 		can.ui.menu && can.ui.menu.onimport.size(can.ui.menu, html.DESKTOP_MENU_HEIHGT, can.ConfWidth(), false)
+		can.ui.dock && can.page.style(can, can.ui.dock._target, html.LEFT, can.base.Min((can.ConfWidth()-can.ui.dock._target.offsetWidth)/2, 0))
+		can.ui.dock && can.page.style(can, can.ui.dock._output, "position", "")
 	},
 }, [""])
 Volcanos(chat.ONACTION, {

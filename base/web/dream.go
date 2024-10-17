@@ -298,6 +298,14 @@ func init() {
 					}
 				}
 			}},
+			nfs.SCAN: {Hand: func(m *ice.Message, arg ...string) {
+				list := m.CmdMap(CODE_GIT_REPOS, nfs.REPOS)
+				GoToastTable(m.Cmd(nfs.DIR, nfs.USR_LOCAL_WORK, mdb.NAME), mdb.NAME, func(value ice.Maps) {
+					if repos, ok := list[value[mdb.NAME]]; ok {
+						m.Cmd("", mdb.CREATE, value[mdb.NAME], repos[ORIGIN])
+					}
+				})
+			}},
 			mdb.CREATE: {Name: "create name*=hi repos binary", Hand: func(m *ice.Message, arg ...string) {
 				kit.If(!strings.Contains(m.Option(mdb.NAME), "-") || !strings.HasPrefix(m.Option(mdb.NAME), "20"), func() { m.Option(mdb.NAME, m.Time("20060102-")+m.Option(mdb.NAME)) })
 				kit.If(mdb.Config(m, nfs.BINARY), func(p string) { m.OptionDefault(nfs.BINARY, p+m.Option(mdb.NAME)) })
@@ -395,44 +403,48 @@ func init() {
 			cli.RUNTIME: {Hand: func(m *ice.Message, arg ...string) {
 				ProcessPodCmd(m, m.Option(mdb.NAME), "", nil, arg...)
 			}},
-			"settings": {Name: "settings restart=manual,always access=public,private", Help: "设置", Icon: "bi bi-gear", Hand: func(m *ice.Message, arg ...string) {
-				kit.If(m.Option(cli.RESTART) == "manual", func() { m.Option(cli.RESTART, "") })
-				kit.If(m.Option(aaa.ACCESS) == aaa.PUBLIC, func() { m.Option(aaa.ACCESS, "") })
-				mdb.HashModify(m, m.OptionSimple(mdb.NAME, cli.RESTART, aaa.ACCESS))
+			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
+				gdb.Event(m, DREAM_TRASH, arg)
+				nfs.Trash(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME)))
+			}},
+			nfs.COPY: {Name: "copy to*", Help: "复制", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy("", mdb.CREATE, mdb.NAME, m.Option(nfs.TO), nfs.BINARY, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME), ice.BIN_ICE_BIN))
 			}},
 			tcp.SEND: {Name: "send to*", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(SPACE, m.Option(nfs.TO), DREAM, mdb.CREATE, m.OptionSimple(mdb.NAME, mdb.ICONS, nfs.REPOS, nfs.BINARY))
 				m.Cmd(SPACE, m.Option(nfs.TO), DREAM, cli.START, m.OptionSimple(mdb.NAME))
 				ProcessIframe(m, "", m.MergePod(kit.Keys(m.Option(nfs.TO), m.Option(mdb.NAME))))
 			}},
-			nfs.COPY: {Name: "copy to*", Help: "复制", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy("", mdb.CREATE, mdb.NAME, m.Option(nfs.TO), nfs.BINARY, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME), ice.BIN_ICE_BIN))
+			"settings": {Name: "settings restart=manual,always access=public,private", Help: "设置", Style: "danger", Hand: func(m *ice.Message, arg ...string) {
+				kit.If(m.Option(cli.RESTART) == "manual", func() { m.Option(cli.RESTART, "") })
+				kit.If(m.Option(aaa.ACCESS) == aaa.PUBLIC, func() { m.Option(aaa.ACCESS, "") })
+				mdb.HashModify(m, m.OptionSimple(mdb.NAME, cli.RESTART, aaa.ACCESS))
 			}},
-			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
-				gdb.Event(m, DREAM_TRASH, arg)
-				nfs.Trash(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME)))
+			"settoken": {Name: "settoken nodename* username*", Help: "令牌", Style: "danger", Hand: func(m *ice.Message, arg ...string) {
+				token := m.Cmdx(TOKEN, mdb.CREATE, mdb.TYPE, SERVER, mdb.NAME, m.Option(aaa.USERNAME), mdb.TEXT, m.Option(tcp.NODENAME))
+				m.Cmd(SPACE, m.Option(mdb.NAME), SPIDE, DEV_CREATE_TOKEN, ice.Maps{CLIENT_NAME: ice.DEV, TOKEN: token})
+			}},
+			"gettoken": {Help: "令牌", Style: "danger", Hand: func(m *ice.Message, arg ...string) {
+				m.Options(m.Cmd(SPIDE, m.Option(mdb.NAME)).AppendSimple()).Cmdy(SPIDE, mdb.DEV_REQUEST)
 			}},
 			GRANT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(CHAT_GRANT, aaa.CONFIRM, kit.Dict(SPACE, m.Option(mdb.NAME)))
 			}},
-			TOKEN: {Hand: func(m *ice.Message, arg ...string) {
-				m.Options(m.Cmd(SPIDE, m.Option(mdb.NAME)).AppendSimple()).Cmdy(SPIDE, mdb.DEV_REQUEST)
-			}},
-			"settoken": {Name: "settoken nodename* username*", Help: "令牌", Icon: "bi bi-person-fill-down", Hand: func(m *ice.Message, arg ...string) {
-				token := m.Cmdx(TOKEN, mdb.CREATE, mdb.TYPE, SERVER, mdb.NAME, m.Option(aaa.USERNAME), mdb.TEXT, m.Option(tcp.NODENAME))
-				m.Cmd(SPACE, m.Option(mdb.NAME), SPIDE, DEV_CREATE_TOKEN, ice.Maps{CLIENT_NAME: ice.DEV, TOKEN: token})
-			}},
-			OPEN: {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
-				if kit.IsIn(m.Option(mdb.NAME), "20240724-community") || kit.HasPrefixList(arg, ctx.RUN) {
+			OPEN: {Style: "notice", Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
+				if kit.IsIn(m.Option(mdb.NAME),
+					"20240724-community",
+					"20240724-education",
+					"20240724-enterprise",
+					"20240903-operation",
+				) || kit.HasPrefixList(arg, ctx.RUN) {
 					if !kit.HasPrefixList(arg, ctx.RUN) {
 						defer m.Push(TITLE, m.Option(mdb.NAME))
 						defer m.Push("_width", "390")
 						defer m.Push("_height", "844")
+						defer m.Push("_icon", m.Option(mdb.ICON))
 					}
 					ctx.ProcessFloat(m, CHAT_IFRAME, S(m.Option(mdb.NAME)), arg...)
-					return
-				}
-				if m.Option(mdb.TYPE) == ORIGIN {
+				} else if m.Option(mdb.TYPE) == ORIGIN {
 					m.ProcessOpen(SpideOrigin(m, m.Option(mdb.NAME)))
 				} else if p := ProxyDomain(m, m.Option(mdb.NAME)); p != "" {
 					m.ProcessOpen(p)
@@ -449,27 +461,20 @@ func init() {
 				})
 			}},
 			DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
-				list := []ice.Any{}
+				button := []ice.Any{}
 				if aaa.IsTechOrRoot(m) {
 					switch m.Option(mdb.TYPE) {
 					case WORKER:
-						list = append(list, "settings")
+						button = append(button, OPEN, "settings")
 					case SERVER:
-						list = append(list, "settoken", DREAM)
+						button = append(button, DREAM, OPEN, "settoken")
 					default:
-						list = append(list, TOKEN, DREAM)
+						button = append(button, DREAM, OPEN, "gettoken")
 					}
+				} else {
+					button = append(button, OPEN)
 				}
-				m.PushButton(append(list, OPEN)...)
-			}},
-			STATS_TABLES: {Hand: func(m *ice.Message, arg ...string) {
-				if msg := _dream_list(m.Spawn(), true); msg.Length() > 0 {
-					stat := map[string]int{}
-					msg.Table(func(value ice.Maps) { stat[value[mdb.TYPE]]++; stat[value[mdb.STATUS]]++ })
-					PushStats(m, kit.Keys(m.CommandKey(), cli.START), stat[cli.START], "", "已启动空间")
-					PushStats(m, kit.Keys(m.CommandKey(), SERVER), stat[SERVER], "", "已连接机器")
-					PushStats(m, kit.Keys(m.CommandKey(), ORIGIN), stat[ORIGIN], "", "已连接主机")
-				}
+				m.PushButton(button...)
 			}},
 			SERVE_START: {Hand: func(m *ice.Message, arg ...string) {
 				for _, cmd := range kit.Reverse(kit.Split(mdb.Config(m, html.BUTTON))) {
@@ -482,6 +487,15 @@ func init() {
 						m.Cmd(DREAM, cli.START, kit.Dict(mdb.NAME, value[mdb.NAME]))
 					}
 				})
+			}},
+			STATS_TABLES: {Hand: func(m *ice.Message, arg ...string) {
+				if msg := _dream_list(m.Spawn(), true); msg.Length() > 0 {
+					stat := map[string]int{}
+					msg.Table(func(value ice.Maps) { stat[value[mdb.TYPE]]++; stat[value[mdb.STATUS]]++ })
+					PushStats(m, kit.Keys(m.CommandKey(), cli.START), stat[cli.START], "", "已启动空间")
+					PushStats(m, kit.Keys(m.CommandKey(), SERVER), stat[SERVER], "", "已连接机器")
+					PushStats(m, kit.Keys(m.CommandKey(), ORIGIN), stat[ORIGIN], "", "已连接主机")
+				}
 			}},
 			ORIGIN: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(SPACE).Table(func(value ice.Maps, index int, head []string) {
@@ -511,14 +525,6 @@ func init() {
 				m.Cmd(cli.SYSTEM, cli.GO, "work", "init")
 				kit.For([]string{".", nfs.USR_RELEASE, nfs.USR_ICEBERGS, nfs.USR_TOOLKITS}, func(p string) { m.Cmd(cli.SYSTEM, cli.GO, "work", "use", p) })
 				DreamEach(m, m.Option(mdb.NAME), "", func(name string) { m.Cmd(cli.SYSTEM, cli.GO, "work", "use", path.Join(ice.USR_LOCAL_WORK, name)) })
-			}},
-			nfs.SCAN: {Hand: func(m *ice.Message, arg ...string) {
-				list := m.CmdMap(CODE_GIT_REPOS, nfs.REPOS)
-				GoToastTable(m.Cmd(nfs.DIR, nfs.USR_LOCAL_WORK, mdb.NAME), mdb.NAME, func(value ice.Maps) {
-					if repos, ok := list[value[mdb.NAME]]; ok {
-						m.Cmd("", mdb.CREATE, value[mdb.NAME], repos[ORIGIN])
-					}
-				})
 			}},
 		}, StatsAction(), DreamAction(), DreamTablesAction(), mdb.ImportantHashAction(
 			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icons,repos,binary,template,restart,access",
@@ -594,7 +600,8 @@ func DreamProcessIframe(m *ice.Message, arg ...string) {
 		return
 	}
 	if len(arg) == 2 {
-		defer m.Push(TITLE, kit.Keys(m.Option(mdb.NAME), m.ShortKey()))
+		defer m.Push(TITLE, kit.Keys(m.Option(mdb.NAME), m.ShortKey())+kit.Format("(%s)", m.Command().Help))
+		defer m.Push("_icon", m.Option(mdb.ICON))
 	}
 	DreamProcess(m, CHAT_IFRAME, func() string {
 		p := S(kit.Keys(m.Option(ice.MSG_USERPOD), m.Option(mdb.NAME)))

@@ -73,6 +73,7 @@ fieldset.macos.menu>div.output>div.menu { padding:0 var(--input-padding); float:
 fieldset.macos.menu>div.output>div.tabs { font-style:italic; padding:0 var(--input-padding); float:left; }
 fieldset.macos.menu.cmd>div.output>div.tabs { padding:0 var(--button-padding); }
 fieldset.macos.menu>div.output>div.tabs.select { background-color:var(--panel-hover-bg-color); color:var(--panel-hover-fg-color); }
+fieldset.macos.dock { transition:left 1s; }
 fieldset.macos.dock>div.output { height:var(--desktop-icon-size); display:flex; overflow:auto; }
 fieldset.macos.dock>div.output>div.space { background-color:#ececec36; margin:var(--button-margin); height:calc(100% - 20px); width:2px; }
 fieldset.macos.dock>div.output>div.item { text-align:center; align-self:baseline; transition:margin-top 0.3s; }

@@ -242,6 +242,7 @@ func (m *Message) Time(arg ...string) string {
 func (m *Message) Message() *Message { return m.message }
 func (m *Message) Source() *Context  { return m.source }
 func (m *Message) Target() *Context  { return m.target }
+func (m *Message) Command() *Command { return m._cmd }
 func (m *Message) _fileline() string {
 	switch m.target.Name {
 	case MDB, AAA, GDB:

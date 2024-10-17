@@ -423,6 +423,15 @@ func init() {
 				m.Cmd(SPACE, m.Option(mdb.NAME), SPIDE, DEV_CREATE_TOKEN, ice.Maps{CLIENT_NAME: ice.DEV, TOKEN: token})
 			}},
 			OPEN: {Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
+				if kit.IsIn(m.Option(mdb.NAME), "20240724-community") || kit.HasPrefixList(arg, ctx.RUN) {
+					if !kit.HasPrefixList(arg, ctx.RUN) {
+						defer m.Push(TITLE, m.Option(mdb.NAME))
+						defer m.Push("_width", "390")
+						defer m.Push("_height", "844")
+					}
+					ctx.ProcessFloat(m, CHAT_IFRAME, S(m.Option(mdb.NAME)), arg...)
+					return
+				}
 				if m.Option(mdb.TYPE) == ORIGIN {
 					m.ProcessOpen(SpideOrigin(m, m.Option(mdb.NAME)))
 				} else if p := ProxyDomain(m, m.Option(mdb.NAME)); p != "" {

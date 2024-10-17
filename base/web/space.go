@@ -304,6 +304,10 @@ const SPACE = "space"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		"p": {Help: "资源", Actions: ApiWhiteAction(), Hand: func(m *ice.Message, arg ...string) {
+			if arg[0] == "require" {
+				m.Cmdy("/require/", arg[1:])
+				return
+			}
 			if kit.IsIn(arg[0], ice.SRC, ice.USR) {
 				ShareLocalFile(m, arg...)
 			} else {

@@ -98,9 +98,9 @@ func init() {
 				list := m.Spawn(ice.Maps{ice.MSG_FIELDS: ""}).CmdMap(SPACE, mdb.NAME)
 				m.SetAppend().Spawn().SplitIndex(m.Cmdx(SPIDE, arg[0], dream, kit.Dict(mdb.ConfigSimple(m, CLIENT_TIMEOUT)))).Table(func(value ice.Maps) {
 					stat[value[mdb.TYPE]]++
-					if value[nfs.BINARY] == "" {
-						value[nfs.BINARY] = origin + S(value[mdb.NAME])
-					}
+					// if value[nfs.BINARY] == "" {
+					value[nfs.BINARY] = origin + S(value[mdb.NAME])
+					// }
 					m.Push("", value, kit.Split("time,type,name,icons,repos,binary,module,version"))
 					if _, ok := list[value[mdb.NAME]]; ok {
 						m.Push("exists", ice.TRUE)

@@ -108,7 +108,7 @@ func _serve_static(msg *ice.Message, w http.ResponseWriter, r *http.Request) boo
 			return false
 		}
 		p := path.Join(strings.TrimPrefix(r.URL.Path, nfs.P))
-		if pp := path.Join(nfs.USR_LOCAL_WORK, msg.Option(ice.POD)); ispod && nfs.Exists(msg, pp) {
+		if pp := path.Join(nfs.USR_LOCAL_WORK, msg.Option(ice.POD)); ispod && nfs.Exists(msg, pp) && !strings.HasPrefix(p, "require/") {
 			if kit.HasPrefix(p, "var/", "usr/local/") {
 				return false
 			}

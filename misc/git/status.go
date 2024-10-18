@@ -78,7 +78,7 @@ func init() {
 				m.Cmd(CONFIGS, mdb.CREATE, "credential.helper", "store")
 				m.ProcessClose()
 			}},
-		}, ctx.ConfAction(ctx.TOOLS, "xterm,compile"), web.DreamTablesAction(), web.DevTokenAction(web.ORIGIN, web.ORIGIN), Prefix(REPOS)), Hand: func(m *ice.Message, arg ...string) {
+		}, web.DreamTablesAction(), web.DevTokenAction(web.ORIGIN, web.ORIGIN), Prefix(REPOS)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 && arg[0] == ctx.ACTION {
 				m.Cmdy(REPOS, arg)
 			} else if config, err := config.LoadConfig(config.GlobalScope); err == nil && config.User.Email == "" && mdb.Config(m, aaa.EMAIL) == "" {

@@ -119,7 +119,7 @@ func init() {
 			}},
 		}, ctx.ConfAction(
 			mdb.FIELD, "time,domain,status,type,name,text,icons,repos,binary,module,version,access",
-			ctx.TOOLS, kit.Simple(SPIDE, VERSION, STATUS), ONLINE, ice.TRUE, cli.TIMEOUT, "10s",
+			ctx.TOOLS, kit.Simple(VERSION), ONLINE, ice.TRUE, cli.TIMEOUT, "10s",
 		)), Hand: func(m *ice.Message, arg ...string) {
 			if kit.HasPrefixList(arg, ctx.ACTION) {
 				_matrix_action(m, arg[1], arg[2:]...)

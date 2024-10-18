@@ -29,6 +29,7 @@ func _dream_list(m *ice.Message, simple bool) *ice.Message {
 			return
 		}
 		if space, ok := list[value[mdb.NAME]]; ok {
+			value[ice.MAIN] = space[ice.MAIN]
 			value[mdb.ICONS] = space[mdb.ICONS]
 			m.Push("", value, kit.Slice(head, 0, -1))
 			if m.IsCliUA() || simple {
@@ -83,6 +84,7 @@ func _dream_list_icon(m *ice.Message) {
 	})
 }
 func _dream_list_more(m *ice.Message, simple bool) *ice.Message {
+	field := kit.Split(mdb.Config(m, mdb.FIELD) + ",type,status,module,version,text")
 	m.Cmds(SPACE).Table(func(value ice.Maps) {
 		value[nfs.REPOS] = "https://" + value[nfs.MODULE]
 		value[aaa.ACCESS] = kit.Select("", value[aaa.USERROLE], value[aaa.USERROLE] != aaa.VOID)
@@ -113,7 +115,7 @@ func _dream_list_more(m *ice.Message, simple bool) *ice.Message {
 		default:
 			return
 		}
-		m.Push("", value, kit.Split(mdb.Config(m, mdb.FIELD)+",type,status,module,version,text"))
+		m.Push("", value, field)
 	})
 	return m
 }
@@ -431,17 +433,13 @@ func init() {
 				m.Cmd(CHAT_GRANT, aaa.CONFIRM, kit.Dict(SPACE, m.Option(mdb.NAME)))
 			}},
 			OPEN: {Style: "notice", Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
-				if kit.IsIn(m.Option(mdb.NAME),
-					"20240724-community",
-					"20240724-education",
-					"20240724-enterprise",
-					"20240903-operation",
-				) || kit.HasPrefixList(arg, ctx.RUN) {
+				if strings.HasSuffix(m.Option(ice.MAIN), ".portal") || kit.HasPrefixList(arg, ctx.RUN) {
 					if !kit.HasPrefixList(arg, ctx.RUN) {
 						defer m.Push(TITLE, m.Option(mdb.NAME))
-						defer m.Push("_width", "390")
-						defer m.Push("_height", "844")
 						defer m.Push("_icon", m.Option(mdb.ICON))
+						defer m.Push("_style", "portal")
+						defer m.Push("_height", "844")
+						defer m.Push("_width", "390")
 					}
 					ctx.ProcessFloat(m, CHAT_IFRAME, S(m.Option(mdb.NAME)), arg...)
 				} else if m.Option(mdb.TYPE) == ORIGIN {
@@ -527,7 +525,7 @@ func init() {
 				DreamEach(m, m.Option(mdb.NAME), "", func(name string) { m.Cmd(cli.SYSTEM, cli.GO, "work", "use", path.Join(ice.USR_LOCAL_WORK, name)) })
 			}},
 		}, StatsAction(), DreamAction(), DreamTablesAction(), mdb.ImportantHashAction(
-			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,icons,repos,binary,template,restart,access",
+			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,main,icons,repos,binary,template,restart,access",
 			html.BUTTON, kit.JoinWord(PORTAL, DESKTOP, ADMIN, WORD, STATUS, VIMER, COMPILE, XTERM, DREAM),
 			ONLINE, ice.TRUE,
 		)), Hand: func(m *ice.Message, arg ...string) {

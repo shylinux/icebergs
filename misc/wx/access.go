@@ -144,6 +144,9 @@ func init() {
 				kit.If(key == cli.QRCODE, func() { value = ice.Render(m, ice.RENDER_QRCODE, value) })
 				return value
 			})
+			if m.Length() == 0 {
+				m.EchoInfoButton("请添加公众号或小程序", mdb.CREATE)
+			}
 		}},
 	})
 }

@@ -153,7 +153,7 @@ func RenderMain(m *ice.Message) *ice.Message {
 	}
 	m.Options(nfs.SCRIPT, ice.SRC_MAIN_JS, nfs.VERSION, RenderVersion(m))
 	m.OptionDefault(mdb.ICONS, strings.Split(m.Resource(ice.Info.NodeIcon), "?")[0]+m.Option(nfs.VERSION))
-	m.OptionDefault(TITLE, kit.Select("localhost:9020", UserWeb(m).Host, m.Option(ice.MSG_USERPOD), kit.Select("", ice.Info.Titles, ice.Info.Titles != "ContextOS")))
+	m.OptionDefault(TITLE, kit.Select("localhost:9020", UserWeb(m).Host, kit.Select("", ice.Info.Titles, m.Option(ice.MSG_USERPOD) != "")))
 	return m.RenderResult(kit.Renders(m.Cmdx(nfs.CAT, ice.SRC_MAIN_HTML), m))
 }
 func RenderCmds(m *ice.Message, cmds ...ice.Any) {
@@ -163,14 +163,13 @@ func RenderPodCmd(m *ice.Message, pod, cmd string, arg ...ice.Any) {
 	if msg := m.Cmd(Space(m, pod), ctx.COMMAND, kit.Select(m.ShortKey(), cmd)); msg.Length() == 0 {
 		RenderResult(m, kit.Format("not found command %s", cmd))
 	} else {
-		if msg.Append(ctx.INDEX) == "web.code.vimer" {
+		if kit.IsIn(msg.Append(ctx.INDEX), "word", "vimer", "web.wiki.word", "web.code.vimer") {
 			m.Option(mdb.ICONS, msg.Option(ice.MSG_NODEICON))
 		}
 		m.OptionDefault(mdb.ICONS, m.Resource(kit.Select(ice.Info.NodeIcon, msg.Option(ice.MSG_NODEICON), msg.Append(mdb.ICONS))))
-		if !kit.IsIn(cmd, PORTAL, DESKTOP, ADMIN) {
-			pod = kit.Select(pod, msg.Option(ice.MSG_NODENAME))
-			m.OptionDefault(TITLE, kit.Select(cmd, msg.Append(mdb.HELP)+kit.Select("", " "+pod, pod != ""), !m.IsEnglish()))
-		}
+		serve := kit.Select("localhost:9020", UserWeb(m).Host)
+		pod = kit.Select(pod, msg.Option(ice.MSG_NODENAME), m.Option(ice.MSG_USERPOD) != "")
+		m.OptionDefault(TITLE, kit.Select(cmd, msg.Append(mdb.HELP), !m.IsEnglish())+" "+kit.Select(serve, pod))
 		RenderCmds(m, kit.Dict(msg.AppendSimple(), ctx.ARGS, kit.Simple(arg), ctx.DISPLAY, m.Option(ice.MSG_DISPLAY)))
 	}
 }

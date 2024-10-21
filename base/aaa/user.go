@@ -62,7 +62,7 @@ func init() {
 					m.Option(ice.TABLE_CHECKBOX, ice.TRUE)
 				}
 			}},
-			mdb.CREATE: {Name: "create userrole=void,tech username* usernick language userzone email", Hand: func(m *ice.Message, arg ...string) {
+			mdb.CREATE: {Name: "create userrole=void,tech username* usernick language userzone email avatar", Hand: func(m *ice.Message, arg ...string) {
 				_user_create(m, m.Option(USERNAME), m.OptionSimple(USERROLE, USERNICK, LANGUAGE, AVATAR, BACKGROUND, USERZONE, EMAIL)...)
 			}},
 			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) { _user_remove(m, m.Option(USERNAME)) }},

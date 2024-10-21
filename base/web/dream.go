@@ -293,8 +293,13 @@ func init() {
 					case tcp.NODENAME:
 						m.Cmdy(SPACE, m.Option(mdb.NAME), SPACE, ice.INFO).CutTo(mdb.NAME, tcp.NODENAME)
 					case aaa.USERNAME:
-						m.Push(arg[0], m.Option(tcp.NODENAME))
-						m.Push(arg[0], m.Option(ice.MSG_USERNAME))
+						if aaa.IsTechOrRoot(m) && m.Option(ctx.ACTION) == GRANT {
+							m.Cmdy(aaa.USER).Cut(aaa.USERNAME, aaa.USERNICK)
+							m.Option(ice.TABLE_CHECKBOX, ice.FALSE)
+						} else {
+							m.Push(arg[0], m.Option(ice.MSG_USERNAME))
+							m.Push(arg[0], m.Option(tcp.NODENAME))
+						}
 					default:
 						gdb.Event(m, DREAM_INPUTS, arg)
 					}
@@ -429,7 +434,10 @@ func init() {
 			"gettoken": {Help: "令牌", Style: "danger", Hand: func(m *ice.Message, arg ...string) {
 				m.Options(m.Cmd(SPIDE, m.Option(mdb.NAME)).AppendSimple()).Cmdy(SPIDE, mdb.DEV_REQUEST)
 			}},
-			GRANT: {Hand: func(m *ice.Message, arg ...string) {
+			GRANT: {Name: "grant username", Hand: func(m *ice.Message, arg ...string) {
+				if aaa.IsTechOrRoot(m) && m.Option(aaa.USERNAME) != "" {
+					m.Option(ice.MSG_USERNAME, m.Option(aaa.USERNAME))
+				}
 				m.Cmd(CHAT_GRANT, aaa.CONFIRM, kit.Dict(SPACE, m.Option(mdb.NAME)))
 			}},
 			OPEN: {Style: "notice", Role: aaa.VOID, Hand: func(m *ice.Message, arg ...string) {
@@ -450,7 +458,6 @@ func init() {
 					m.ProcessOpen(S(m.Option(mdb.NAME)))
 				}
 			}},
-			DREAM_OPEN: {Hand: func(m *ice.Message, arg ...string) {}},
 			DREAM_CLOSE: {Hand: func(m *ice.Message, arg ...string) {
 				kit.For(arg, func(k, v string) {
 					if k == cli.DAEMON && v == ice.OPS && m.Cmdv(SPACE, m.Option(mdb.NAME), mdb.STATUS) != cli.STOP {

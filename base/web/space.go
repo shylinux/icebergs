@@ -106,7 +106,7 @@ func _space_fork(m *ice.Message) {
 				safe = true
 				m.Go(func() {
 					SpacePwd(m, name, kit.Path(""))
-					SpaceEvent(m, OPS_SERVER_OPEN, name, args...)
+					// SpaceEvent(m, OPS_DREAM_OPEN, name, args...)
 				})
 			case SERVER:
 				defer gdb.EventDeferEvent(m, SPACE_OPEN, args)(SPACE_CLOSE, args)
@@ -203,7 +203,7 @@ func _space_exec(m *ice.Message, name string, source, target []string, c *websoc
 		args := m.OptionSimple(mdb.ICONS, mdb.TIME, nfs.MODULE, nfs.VERSION, AGENT, cli.SYSTEM)
 		kit.If(name == ice.OPS, func() { args = append(args, m.OptionSimple(mdb.TEXT)...) })
 		mdb.HashModify(m, mdb.HASH, name, ParseUA(m), args)
-		SpaceEvent(m, OPS_ORIGIN_OPEN, name, kit.Simple(mdb.NAME, name, args)...)
+		// SpaceEvent(m, OPS_ORIGIN_OPEN, name, kit.Simple(mdb.NAME, name, args)...)
 	default:
 		if m.IsErr() {
 			return
@@ -290,6 +290,7 @@ const (
 	OPS_ORIGIN_OPEN = "ops.origin.open"
 	OPS_SERVER_OPEN = "ops.server.open"
 	OPS_DREAM_SPAWN = "ops.dream.spawn"
+	OPS_DREAM_OPEN  = "ops.dream.open"
 
 	SPACE_LOGIN       = "space.login"
 	SPACE_LOGIN_CLOSE = "space.login.close"
@@ -496,9 +497,11 @@ func init() {
 			m.SetAppend().Push(arg[0], SpideOrigin(m, ice.DEV))
 			m.Copy(m.Cmd(SPIDE, kit.Dict(ice.MSG_FIELDS, CLIENT_ORIGIN)).CutTo(CLIENT_ORIGIN, arg[0]).Sort(arg[0]))
 		case mdb.ICONS:
-			m.Options(nfs.DIR_REG, kit.ExtReg(nfs.PNG, nfs.JPG, nfs.JPEG), nfs.DIR_DEEP, ice.TRUE)
+			m.Options(nfs.DIR_DEEP, ice.TRUE, nfs.DIR_REG, kit.ExtReg(nfs.PNG, nfs.JPG, nfs.JPEG))
 			m.Cmdy(nfs.DIR, nfs.SRC, nfs.PATH)
-			m.Cmdy(nfs.DIR, ice.USR_LOCAL_IMAGE, nfs.PATH)
+			if aaa.IsTechOrRoot(m) {
+				m.Cmdy(nfs.DIR, ice.USR_LOCAL_IMAGE, nfs.PATH)
+			}
 			m.Cmdy(nfs.DIR, ice.USR_ICONS, nfs.PATH)
 			m.CutTo(nfs.PATH, arg[0])
 		case ctx.INDEX, ice.CMD:

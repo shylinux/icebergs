@@ -458,6 +458,7 @@ func init() {
 					m.ProcessOpen(S(m.Option(mdb.NAME)))
 				}
 			}},
+			DREAM_OPEN: {Hand: func(m *ice.Message, arg ...string) {}},
 			DREAM_CLOSE: {Hand: func(m *ice.Message, arg ...string) {
 				kit.For(arg, func(k, v string) {
 					if k == cli.DAEMON && v == ice.OPS && m.Cmdv(SPACE, m.Option(mdb.NAME), mdb.STATUS) != cli.STOP {

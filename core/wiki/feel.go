@@ -85,7 +85,7 @@ func init() {
 					m.ProcessInner()
 				}
 			}},
-		}, chat.FavorAction(), WikiAction("", "ico|png|PNG|jpg|JPG|jpeg|mp4|m4v|mov|MOV|webm|mp3"), mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path,name,cover")), Hand: func(m *ice.Message, arg ...string) {
+		}, chat.FavorAction(), WikiAction("", "ico|png|PNG|gif|jpg|JPG|jpeg|mp4|m4v|mov|MOV|webm|mp3"), mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path,name,cover")), Hand: func(m *ice.Message, arg ...string) {
 			if len(kit.Slice(arg, 0, 1)) == 0 {
 				if mdb.HashSelect(m); aaa.IsTechOrRoot(m) {
 					m.Push(nfs.PATH, USR_AVATAR).Push(mdb.NAME, "头像库").Push(COVER, USR_ICONS_AVATAR)

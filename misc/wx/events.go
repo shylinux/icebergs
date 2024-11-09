@@ -20,12 +20,13 @@ func init() {
 		CLICK            = "click"
 	)
 	Index.MergeCommands(ice.Commands{
-		EVENTS: {Help: "事件", Actions: ice.Actions{
+		EVENTS: {Help: "事件", Actions: ice.MergeActions(ice.Actions{
 			SUBSCRIBE: {Hand: func(m *ice.Message, arg ...string) {
 				m.Option(mdb.NAME, ice.Info.Titles)
-				m.Option(mdb.TEXT, "欢迎光临")
+				// m.Option(mdb.TEXT, "无边界的扩张业务\n无极限的扩大规模")
+				m.Option(mdb.TEXT, "ContextOS-SaaS-AI\n软件平台免费提供各种各样的软件系统。")
 				m.Option(mdb.ICONS, m.MergeLink(m.Resource(ice.Info.NodeIcon)))
-				m.Cmdy(TEXT, web.LINK, m.MergeLink(nfs.PS))
+				m.Cmdy(TEXT, web.LINK, m.MergeLink(mdb.Config(m, SUBSCRIBE)))
 			}},
 			UNSUBSCRIBE: {Hand: func(m *ice.Message, arg ...string) {
 			}},
@@ -57,6 +58,6 @@ func init() {
 					m.Cmdy(TEXT, web.LINK, m.MergePodCmd("", msg.Append(ctx.INDEX), kit.Split(msg.Append(ctx.ARGS))))
 				}
 			}},
-		}},
+		}, mdb.HashAction(SUBSCRIBE, "/s/20240724-enterprise/c/web.team.guanlixitong.portal"))},
 	})
 }

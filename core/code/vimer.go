@@ -55,6 +55,13 @@ const VIMER = "vimer"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		VIMER: {Name: "vimer path=src/ file=main.go line=1 list", Help: "编辑器", Icon: "vimer.png", Role: aaa.VOID, Actions: ice.MergeActions(ice.Actions{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				if ice.Info.CodeMain != "" {
+					ls := nfs.SplitPath(m, ice.Info.CodeMain)
+					kit.Value(m.Command().List, "0.value", ls[0])
+					kit.Value(m.Command().List, "1.value", ls[1])
+				}
+			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch m.Option(ctx.ACTION) {
 				case nfs.MODULE:

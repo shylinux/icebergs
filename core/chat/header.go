@@ -174,7 +174,7 @@ func init() {
 					m.Push(mdb.TIME, m.Time()).Push(mdb.NAME, cli.QRCODE).Push(mdb.HELP, "扫码登录").Push(mdb.ICONS, nfs.USR_ICONS_VOLCANOS).Push(mdb.TYPE, cli.QRCODE).Push(web.LINK, "").Push(mdb.ORDER, "10")
 				})
 				kit.If(GetSSO(m), func(p string) {
-					m.Push(mdb.TIME, m.Time()).Push(mdb.NAME, web.SERVE).Push(mdb.ICONS, nfs.USR_ICONS_ICEBERGS).Push(mdb.TYPE, "oauth").Push(web.LINK, p)
+					m.Push(mdb.TIME, m.Time()).Push(mdb.NAME, web.SERVE).Push(mdb.ICONS, nfs.USR_ICONS_ICEBERGS).Push(mdb.TYPE, "oauth").Push(web.LINK, p).Push(mdb.ORDER, "100")
 				})
 			} else {
 				kit.If(kit.IsIn(m.Option(ice.MSG_USERROLE), aaa.TECH, aaa.ROOT), func() { m.Action(mdb.CREATE, ice.DEMO) })

@@ -74,9 +74,7 @@ func init() {
 		CSS: {Actions: ice.MergeActions(ice.Actions{
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _css_show(m, arg...) }},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _css_exec(m, arg...) }},
-			TEMPLATE: {Hand: func(m *ice.Message, arg ...string) {
-				m.Echo(kit.Format(nfs.Template(m, DEMO_CSS), kit.Select(mdb.PLUGIN, ctx.GetFileCmd(kit.ExtChange(path.Join(arg[2], arg[1]), GO)))))
-			}},
+			TEMPLATE:   {Hand: func(m *ice.Message, arg ...string) { m.Echo(nfs.Template(m, DEMO_CSS)) }},
 		}, PlugAction())},
 	})
 }

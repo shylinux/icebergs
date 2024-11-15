@@ -368,7 +368,7 @@ func init() {
 			PROXY: {Name: "proxy url size cache upload", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(SPIDE, ice.DEV, SPIDE_RAW, http.MethodPost, m.Option(URL), SPIDE_PART, arg[2:])
 			}},
-			"disconn": {Help: "断连", Icon: "bi bi-person-x", Hand: func(m *ice.Message, arg ...string) {
+			"disconn": {Help: "断连", Icon: "bi bi-person-x", Style: "danger", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(SPACE, cli.CLOSE, kit.Dict(mdb.NAME, m.Option(CLIENT_NAME)))
 				mdb.HashModify(m, mdb.NAME, m.Option(CLIENT_NAME), TOKEN, "")
 			}},
@@ -388,7 +388,7 @@ func init() {
 				m.Table(func(value ice.Maps) {
 					if value[CLIENT_TYPE] == nfs.REPOS {
 						if _, ok := list[value[CLIENT_NAME]]; ok {
-							m.Push(mdb.STATUS, ONLINE).PushButton("disconn", mdb.DEV_REQUEST, mdb.REMOVE)
+							m.Push(mdb.STATUS, ONLINE).PushButton(mdb.DEV_REQUEST, "disconn", mdb.REMOVE)
 						} else {
 							m.Push(mdb.STATUS, "").PushButton(mdb.DEV_REQUEST, mdb.REMOVE)
 						}

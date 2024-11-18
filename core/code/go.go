@@ -77,7 +77,17 @@ func _go_show(m *ice.Message, arg ...string) {
 		if p := path.Join(path.Dir(path.Join(arg[2], arg[1])), "portal.go"); path.Base(arg[1]) != "portal.go" && nfs.Exists(m, p) &&
 			!kit.IsIn(arg[1], "gonganxitong/user.go", "gonganxitong/domain.go") {
 			if cmd := ctx.GetFileCmd(p); cmd != "" {
-				ctx.ProcessField(m, cmd, kit.Simple())
+				if m.ActionKey() == mdb.RENDER {
+					ctx.ProcessField(m, cmd, kit.Simple())
+				} else {
+					ls := kit.Split(strings.TrimSuffix(arg[1], ".go"), "/")
+					if kit.HasSuffix(ls[1], "y") {
+						ls[1] = ls[1][:len(ls[1])-1] + "ies"
+					} else {
+						ls[1] = ls[1] + "s"
+					}
+					ctx.ProcessField(m, "web.code.mysql.query", kit.Simple("mysql", ls[0], ls[1]))
+				}
 				return
 			}
 		}

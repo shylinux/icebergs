@@ -55,6 +55,9 @@ func init() {
 		)), Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(ACCESS, AGENT).Options(SIGNATURE, _wx_sign(m, m.Option(NONCESTR, ice.Info.Pathname), m.Option(TIMESTAMP, kit.Format(time.Now().Unix())))).Display("")
 			ctx.OptionFromConfig(m, nfs.SCRIPT, "oauth")
+			m.Option("oauth", strings.ReplaceAll(m.Option("oauth"),
+				"https%3A%2F%2Fyunxuanlinghang.com", strings.ReplaceAll(m.Option(ice.MSG_USERHOST), "://", "%3A%2F%2F"),
+			))
 		}},
 	})
 }

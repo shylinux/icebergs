@@ -74,19 +74,24 @@ func _go_show(m *ice.Message, arg ...string) {
 		// ctx.ProcessField(m, "web.code.xterm", kit.Simple())
 		ctx.ProcessField(m, "log.debug", kit.Simple("bench"))
 	} else if cmd := ctx.GetFileCmd(path.Join(arg[2], arg[1])); cmd != "" {
-		if p := path.Join(path.Dir(path.Join(arg[2], arg[1])), "portal.go"); path.Base(arg[1]) != "portal.go" && nfs.Exists(m, p) &&
-			!kit.IsIn(arg[1], "gonganxitong/user.go", "gonganxitong/domain.go") {
+		if p := path.Join(arg[2], strings.Split(arg[1], "/")[0], "portal.go"); path.Base(arg[1]) != "portal.go" && nfs.Exists(m, p) &&
+			!kit.IsIn(arg[1],
+				"gonganxitong/user.go",
+				"gonganxitong/domain.go",
+				"gonganxitong/command.go",
+			) {
 			if cmd := ctx.GetFileCmd(p); cmd != "" {
 				if m.ActionKey() == mdb.RENDER {
 					ctx.ProcessField(m, cmd, kit.Simple())
 				} else {
 					ls := kit.Split(strings.TrimSuffix(arg[1], ".go"), "/")
-					if kit.HasSuffix(ls[1], "y") {
-						ls[1] = ls[1][:len(ls[1])-1] + "ies"
+					table := kit.Select("", ls, -1)
+					if kit.HasSuffix(table, "y") {
+						table = table[:len(table)-1] + "ies"
 					} else {
-						ls[1] = ls[1] + "s"
+						table = table + "s"
 					}
-					ctx.ProcessField(m, "web.code.mysql.query", kit.Simple("mysql", ls[0], ls[1]))
+					ctx.ProcessField(m, "web.code.mysql.query", kit.Simple("mysql", ls[0], table))
 				}
 				return
 			}

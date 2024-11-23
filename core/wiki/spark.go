@@ -115,19 +115,23 @@ func init() {
 	})
 }
 func _spark_project(m *ice.Message, arg ...string) {
-	defer m.Cmdy(STYLE, FLEX).Cmdy(STYLE, END)
-	m.Cmdy(STYLE, COLUMN)
-	m.Cmdy(TITLE, ice.Info.Title())
-	m.Cmdy(SPARK, TITLE, arg[0]).Cmdy(ORDER, arg[1])
-	m.Cmdy(STYLE, FLEX)
-	m.Cmdy(SPARK, html.BUTTON, "体 验", ROUTE, web.SpideOrigin(m, ice.DEMO))
-	m.Cmdy(SPARK, html.BUTTON, "下 载", ROUTE, "download/")
-	m.Cmdy(SPARK, html.BUTTON, "文 档", ROUTE, "started/")
-	m.Cmdy(STYLE, END)
-	m.Cmdy(STYLE, END)
-	m.Cmdy(STYLE, COLUMN, FLEX, "0 0 500px", "padding", "10px")
-	m.Cmdy(SPARK, INNER, ice.SRC_MAIN_GO, html.WIDTH, "480px")
-	m.Cmdy(SPARK, SHELL, kit.Renders(`
+	func() {
+		defer m.Cmdy(STYLE, FLEX).Cmdy(STYLE, END)
+		func() {
+			defer m.Cmdy(STYLE, COLUMN).Cmdy(STYLE, END)
+			m.Cmdy(TITLE, ice.Info.Title())
+			m.Cmdy(SPARK, TITLE, arg[0]).Cmdy(ORDER, arg[1])
+			func() {
+				defer m.Cmdy(STYLE, FLEX).Cmdy(STYLE, END)
+				m.Cmdy(SPARK, html.BUTTON, "体 验", ROUTE, web.SpideOrigin(m, ice.DEMO))
+				m.Cmdy(SPARK, html.BUTTON, "下 载", ROUTE, "download/")
+				m.Cmdy(SPARK, html.BUTTON, "文 档", ROUTE, "started/")
+			}()
+		}()
+		func() {
+			defer m.Cmdy(STYLE, COLUMN, FLEX, "0 0 500px", "padding", "10px").Cmdy(STYLE, END)
+			m.Cmdy(SPARK, INNER, ice.SRC_MAIN_GO, html.WIDTH, "480px")
+			m.Cmdy(SPARK, SHELL, kit.Renders(`
 git clone {{ .Make.Remote }}
 cd {{ .Make.Remote | Base }} && source etc/miss.sh
 
@@ -135,7 +139,12 @@ cd {{ .Make.Remote | Base }} && source etc/miss.sh
 
 open http://localhost:9020
 `, ice.Info), "style.width", "480px")
-	m.Cmdy(STYLE, END)
+		}()
+	}()
+	if nfs.Exists(m, "src/qrcode.jpg") {
+		m.Cmdy(IMAGE, "src/qrcode.jpg")
+		m.Cmdy(SPARK, "请使用微信扫码，打开公众号体验服务")
+	}
 }
 func _spark_product(m *ice.Message, arg ...string) {
 	if len(arg) == 0 {

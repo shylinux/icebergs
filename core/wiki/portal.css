@@ -5,10 +5,12 @@ fieldset.web.wiki.portal>div.output { padding:0; }
 fieldset.web.wiki.portal>div.output>div.header { background-color:var(--panel-bg-color); height:var(--portal-header-height); --hover-bg-color:var(--plugin-bg-color); }
 fieldset.web.wiki.portal>div.output>div.header div.list { display:flex; }
 fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] { --hover-fg-color:white; }
+fieldset.web.wiki.portal>div.output>div.header div.story div.item span { white-space:pre; overflow:hidden; }
 fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] { display:flex; justify-content:center; }
 fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.item { text-align:center; padding:var(--legend-padding); height:var(--portal-header-height); }
 fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.item { display:flex; align-items:center; }
 fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.item:first-child { padding:var(--input-padding); }
+body.mobile fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.item:first-child span { display:none; font-size:18px; max-width:160px;  }
 fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.item:first-child { line-height:calc(var(--portal-header-height) - 2 * var(--legend-padding)); font-size:24px; font-weight:bold; font-style:italic; }
 fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.item:first-child img { margin-right:var(--button-margin); }
 fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.item.select { background-color:var(--output-bg-color); }
@@ -25,8 +27,11 @@ fieldset.web.wiki.portal>div.output>div.layout>div.aside div.item.section { padd
 fieldset.web.wiki.portal>div.output>div.layout>div.main { padding:var(--portal-main-padding); height:600px; min-width:390px; max-width:var(--portal-max-width); overflow:auto; overflow-x:hidden; }
 fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column { display:flex; flex-direction:column; justify-content:center; }
 fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column fieldset.inner>div.output>div.layout>div.layout div.content div.tips { top:5px; right:10px; }
-fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column h1 { font-size:48px; font-style:italic; margin-top:0; }
+fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column h1 { font-size:24px; font-style:italic; margin-top:0; }
+body.mobile fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column h2 { font-size:18px; }
+body:not(.mobile) fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column h1 { font-size:32px; }
 fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column h2 { margin:0 !important; }
+fieldset.web.wiki.portal>div.output>div.layout>div.main img { margin-top:20px; width:240px !important; }
 fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column li { margin:10px 0; }
 fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column ul { margin:10px; }
 fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column b { font-size:22px; }

@@ -24,7 +24,7 @@ func _binpack_file(m *ice.Message, files map[string]bool, w io.Writer, arg ...st
 		return
 	} else if kit.Contains(arg[0], "/bin/", "/log/") {
 		return
-	} else if kit.HasPrefix(arg[0], "usr/volcanos/publish/", "etc/conf/cert/") && !strings.HasSuffix(arg[0], "/proto.js") {
+	} else if kit.HasPrefix(arg[0], "usr/volcanos/publish/", "etc/conf/cert/", "src/private/") && !strings.HasSuffix(arg[0], "/proto.js") {
 		return
 	}
 	switch arg[0] {

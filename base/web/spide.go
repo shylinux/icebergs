@@ -114,8 +114,9 @@ func _spide_body(m *ice.Message, method string, arg ...string) (io.Reader, ice.M
 	head := ice.Maps{}
 	switch kit.If(len(arg) == 1, func() { arg = []string{SPIDE_DATA, arg[0]} }); arg[0] {
 	case SPIDE_FORM:
-		arg = kit.Simple(arg, func(v string) string { return url.QueryEscape(v) })
+		// arg = kit.Simple(arg, func(v string) string { return url.QueryEscape(v) })
 		head[html.ContentType], body = html.ApplicationForm, bytes.NewBufferString(kit.JoinQuery(arg[1:]...))
+		m.Info("debug what %v", kit.JoinQuery(arg[1:]...))
 	case SPIDE_PART:
 		head[html.ContentType], body = _spide_part(m, arg...)
 	case SPIDE_FILE:

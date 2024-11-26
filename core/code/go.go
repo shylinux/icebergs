@@ -85,13 +85,7 @@ func _go_show(m *ice.Message, arg ...string) {
 					ctx.ProcessField(m, cmd, kit.Simple())
 				} else {
 					ls := kit.Split(strings.TrimSuffix(arg[1], ".go"), "/")
-					table := kit.Select("", ls, -1)
-					if kit.HasSuffix(table, "y") {
-						table = table[:len(table)-1] + "ies"
-					} else {
-						table = table + "s"
-					}
-					ctx.ProcessField(m, "web.code.mysql.query", kit.Simple("mysql", ls[0], table))
+					ctx.ProcessField(m, "web.code.mysql.query", kit.Simple("mysql", ls[0], TableName(kit.Select("", ls, -1))))
 				}
 				return
 			}
@@ -224,4 +218,21 @@ func GoImports(m *ice.Message, p string) { m.Cmd(cli.SYSTEM, GOIMPORTS, "-w", p)
 func GoVersion(m *ice.Message) string    { return m.Cmdx(cli.SYSTEM, GO, VERSION) }
 func GoBuild(m *ice.Message, target string, arg ...string) *ice.Message {
 	return m.Cmdy(cli.SYSTEM, GO, cli.BUILD, "-ldflags", "-w -s", "-o", target, arg)
+}
+func TableName(model string) string {
+	if strings.Contains("0123456789", model[len(model)-1:]) {
+		return model
+	}
+	if kit.IsIn(model, "sms", "equipment") {
+
+	} else if kit.HasSuffix(model, "y") {
+		model = model[:len(model)-1] + "ies"
+	} else if kit.HasSuffix(model, "s") {
+		if !kit.HasSuffix(model, "os") {
+			model = model + "es"
+		}
+	} else {
+		model = model + "s"
+	}
+	return model
 }

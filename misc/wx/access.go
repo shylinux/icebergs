@@ -139,7 +139,7 @@ func init() {
 		}, gdb.EventsAction(web.SPACE_GRANT, web.SPACE_LOGIN_CLOSE), mdb.ExportHashAction(
 			mdb.SHORT, ACCESS, mdb.FIELD, "time,type,access,icons,usernick,appid,secret,token", tcp.SERVER, CGI_BIN,
 		)), Hand: func(m *ice.Message, arg ...string) {
-			mdb.HashSelect(m, arg...).PushAction(OAUTH, web.SSO, TICKET, TOKENS, STABLE_TOKEN, "user", "api", mdb.REMOVE).StatusTimeCount(mdb.ConfigSimple(m, ACCESS, APPID), web.SERVE, m.MergeLink("/chat/wx/login/"))
+			mdb.HashSelect(m, arg...).PushAction(OAUTH, web.SSO, mdb.REMOVE).StatusTimeCount(mdb.ConfigSimple(m, ACCESS, APPID), web.SERVE, m.MergeLink("/chat/wx/login/"))
 			m.RewriteAppend(func(value, key string, index int) string {
 				kit.If(key == cli.QRCODE, func() { value = ice.Render(m, ice.RENDER_QRCODE, value) })
 				return value

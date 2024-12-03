@@ -92,7 +92,7 @@ func _spide_show(m *ice.Message, name string, arg ...string) {
 			}
 		})
 	})
-	if m.WarnNotValid(res.StatusCode != http.StatusOK && res.StatusCode != http.StatusCreated, uri, cli.STATUS, res.Status) {
+	if m.WarnNotValid(res.StatusCode != http.StatusOK && res.StatusCode != http.StatusCreated && res.StatusCode != http.StatusNoContent, uri, cli.STATUS, res.Status) {
 		switch res.StatusCode {
 		case http.StatusNotFound, http.StatusUnauthorized:
 			return

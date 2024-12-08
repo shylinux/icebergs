@@ -79,6 +79,7 @@ func _go_show(m *ice.Message, arg ...string) {
 				"gonganxitong/user.go",
 				"gonganxitong/domain.go",
 				"gonganxitong/command.go",
+				"gonganxitong/quotalist.go",
 			) {
 			if cmd := ctx.GetFileCmd(p); cmd != "" {
 				if m.ActionKey() == mdb.RENDER {

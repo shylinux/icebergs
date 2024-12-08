@@ -1,6 +1,7 @@
 package web
 
 import (
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -169,7 +170,9 @@ func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.Response
 	}
 	switch kit.Select("", kit.Split(r.Header.Get(html.ContentType)), 0) {
 	case html.ApplicationJSON:
-		kit.For(kit.UnMarshal(r.Body), func(k string, v ice.Any) { m.Optionv(k, v) })
+		buf, _ := ioutil.ReadAll(r.Body)
+		m.Option("request.data", string(buf))
+		kit.For(kit.UnMarshal(string(buf)), func(k string, v ice.Any) { m.Optionv(k, v) })
 	default:
 		r.ParseMultipartForm(kit.Int64(kit.Select("4096", r.Header.Get(html.ContentLength))))
 		kit.For(r.PostForm, func(k string, v []string) { _log(FORM, k, kit.Join(v, lex.SP)).Optionv(k, v) })

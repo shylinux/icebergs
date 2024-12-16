@@ -31,7 +31,7 @@ fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column h1 { fo
 body.mobile fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column h2 { font-size:18px; }
 body:not(.mobile) fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column h1 { font-size:32px; }
 fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column h2 { margin:0 !important; }
-fieldset.web.wiki.portal>div.output>div.layout>div.main img { margin-top:20px; width:240px !important; }
+fieldset.web.wiki.portal>div.output>div.layout>div.main img[data-name="qrcode"] { margin-top:20px; width:240px !important; }
 fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column li { margin:10px 0; }
 fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column ul { margin:10px; }
 fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column b { font-size:22px; }

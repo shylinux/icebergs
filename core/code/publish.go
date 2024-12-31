@@ -63,7 +63,7 @@ func _publish_contexts(m *ice.Message, arg ...string) {
 			// fallthrough
 		case nfs.BINARY, ice.APP:
 			if host := msg.Append(tcp.HOSTPORT); !strings.HasPrefix(host, m.Option(web.DOMAIN)) {
-				env = append(env, cli.CTX_DEV_IP, strings.Split(host, "?")[0])
+				// env = append(env, cli.CTX_DEV_IP, strings.Split(host, "?")[0])
 			}
 			if m.Option(ice.MSG_USERPOD) != "" {
 				env = append(env, cli.CTX_POD, m.Option(ice.MSG_USERPOD))

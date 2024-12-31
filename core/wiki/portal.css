@@ -19,10 +19,12 @@ fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.
 fieldset.web.wiki.portal>div.output>div.layout { display:flex; justify-content:center; }
 fieldset.web.wiki.portal>div.output>div.layout>div.nav { border-right:var(--box-border); padding:var(--portal-main-padding); padding-right:var(--button-padding); min-width:var(--project-width); overflow:auto; }
 fieldset.web.wiki.portal>div.output>div.layout>div.nav div.story[data-name=navmenu] div.item { padding:var(--input-padding); }
+fieldset.web.wiki.portal>div.output>div.layout>div.nav div.story[data-name=navmenu] div.item.select { border-right:var(--box-notice); }
 fieldset.web.wiki.portal>div.output>div.layout>div.nav div.story[data-name=navmenu]>div.item { border-bottom:var(--box-border); margin-top:var(--button-margin); }
 fieldset.web.wiki.portal>div.output>div.layout>div.nav div.story[data-name=navmenu] div.list { padding-left:var(--legend-padding); }
 fieldset.web.wiki.portal>div.output>div.layout>div.aside { padding:var(--portal-main-padding); padding-left:var(--button-padding); min-width:var(--project-width); overflow:auto; }
 fieldset.web.wiki.portal>div.output>div.layout>div.aside div.item { padding:var(--input-padding); }
+fieldset.web.wiki.portal>div.output>div.layout>div.aside div.item.select { border-left:var(--box-notice); }
 fieldset.web.wiki.portal>div.output>div.layout>div.aside div.item.section { padding-left:var(--legend-padding); }
 fieldset.web.wiki.portal>div.output>div.layout>div.main { padding:var(--portal-main-padding); height:600px; min-width:390px; max-width:var(--portal-max-width); overflow:auto; overflow-x:hidden; }
 fieldset.web.wiki.portal>div.output>div.layout>div.main div.story.column { display:flex; flex-direction:column; justify-content:center; }

@@ -15,7 +15,6 @@ import (
 	"time"
 
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/log"
@@ -295,12 +294,11 @@ func init() {
 				conf := mdb.Confm(m, cli.RUNTIME, cli.CONF)
 				dev := kit.Select("https://dev.shylinux.com", ice.Info.Make.Domain, conf[cli.CTX_DEV])
 				m.Cmd("", mdb.CREATE, dev, ice.DEV, ice.SRC_MAIN_ICO, nfs.REPOS)
-				m.Cmd("", mdb.CREATE, kit.Select(dev, os.Getenv("ctx_dev_ip")), ice.DEV_IP, ice.SRC_MAIN_ICO)
-				m.Cmd("", mdb.CREATE, kit.Select("https://shylinux.com", conf[cli.CTX_SHY]), ice.SHY, ice.SRC_MAIN_ICO, nfs.REPOS)
+				m.Cmd("", mdb.CREATE, kit.Select(dev, os.Getenv("ctx_dev_ip")), ice.DEV_IP, ice.SRC_MAIN_ICO, "dev_ip")
 				m.Cmd("", mdb.CREATE, kit.Select("http://localhost:9020", conf[cli.CTX_OPS]), ice.OPS, ice.SRC_MAIN_ICO, nfs.REPOS)
-				m.Cmd("", mdb.CREATE, kit.Select("http://localhost:20000", conf[cli.CTX_DEMO]), ice.DEMO, ice.SRC_MAIN_ICO)
-				m.Cmd("", mdb.CREATE, kit.Select("https://mail.shylinux.com", conf[cli.CTX_MAIL]), ice.MAIL, "usr/icons/Mail.png")
-				m.Cmd("", mdb.CREATE, kit.Select("https://user.shylinux.com"), aaa.USER, "usr/icons/Mail.png")
+				m.Cmd("", mdb.CREATE, kit.Select("https://shylinux.com", conf[cli.CTX_SHY]), ice.SHY, ice.SRC_MAIN_ICO, nfs.REPOS)
+				m.Cmd("", mdb.CREATE, kit.Select("https://mail.shylinux.com", conf[cli.CTX_MAIL]), ice.MAIL, "usr/icons/Mail.png", "mail")
+				m.Cmd("", mdb.CREATE, kit.Select("https://demo.shylinux.com", conf[cli.CTX_DEMO]), ice.DEMO, ice.SRC_MAIN_ICO, "demo")
 				m.Cmd("", mdb.CREATE, "https://2023-contexts.shylinux.com", "2023-contexts", ice.SRC_MAIN_ICO, nfs.REPOS)
 				m.Cmd("", mdb.CREATE, "https://2024-contexts.shylinux.com", "2024-contexts", ice.SRC_MAIN_ICO, nfs.REPOS)
 			}},
@@ -343,19 +341,20 @@ func init() {
 				}
 			}},
 			mdb.CREATE: {Name: "create origin* name icons type token", Hand: func(m *ice.Message, arg ...string) {
-				if m.Option(mdb.NAME) == "" && m.Option(mdb.ICONS) == "" {
-					msg := m.Spawn().SplitIndex(m.Cmdx(SPIDE, ice.DEV, kit.MergeURL2(m.Option(ORIGIN), C(SPACE, "info"))))
-					m.Option(mdb.ICONS, m.Resource(msg.Append(mdb.ICONS), msg.Append(ORIGIN)))
-					m.Option(mdb.NAME, msg.Append(mdb.NAME))
-					m.OptionDefault(mdb.TYPE, nfs.REPOS)
+				if m.Option(mdb.NAME) == "" || m.Option(mdb.ICONS) == "" {
+					msg := m.Spawn().SplitIndex(m.Cmdx(SPIDE, ice.DEV, kit.MergeURL2(m.Option(ORIGIN), C(SPACE, ice.INFO))))
+					if m.OptionDefault(mdb.NAME, msg.Append(mdb.NAME)); msg.Append(mdb.ICONS) != "" {
+						m.OptionDefault(mdb.ICONS, m.Resource(msg.Append(mdb.ICONS), msg.Append(ORIGIN)))
+						m.OptionDefault(mdb.TYPE, nfs.REPOS)
+					}
 				}
-				if u, e := url.Parse(m.Option(ORIGIN)); m.Warn(e != nil || u.Host == "", ice.ErrNotValid, m.Option(ORIGIN)) {
+				if u, e := url.Parse(m.Option(ORIGIN)); m.WarnNotValid(e != nil || u.Host == "", m.Option(ORIGIN)) {
 					return
 				} else {
 					m.OptionDefault(mdb.NAME, kit.Split(u.Host, ".:")[0])
 					kit.If(u.Query().Get(TOKEN), func(p string) { m.OptionDefault(TOKEN, p) })
+					_spide_create(m, m.Option(ORIGIN), m.Option(mdb.TYPE), m.Option(mdb.NAME), m.Option(mdb.ICONS), m.Option(TOKEN))
 				}
-				_spide_create(m, m.Option(ORIGIN), m.Option(mdb.TYPE), m.Option(mdb.NAME), m.OptionDefault(mdb.ICONS, nfs.USR_ICONS_VOLCANOS), m.Option(TOKEN))
 			}},
 			COOKIE: {Name: "cookie key* value", Help: "状态量", Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashModify(m, m.OptionSimple(CLIENT_NAME), kit.Keys(COOKIE, m.Option(mdb.KEY)), m.Option(mdb.VALUE))
@@ -373,20 +372,15 @@ func init() {
 				m.Cmd(SPACE, cli.CLOSE, kit.Dict(mdb.NAME, m.Option(CLIENT_NAME)))
 				mdb.HashModify(m, mdb.NAME, m.Option(CLIENT_NAME), TOKEN, "")
 			}},
-			DEV_REQUEST_TEXT: {Hand: func(m *ice.Message, arg ...string) { m.Echo(SpaceName(ice.Info.NodeName)) }},
 			DEV_CREATE_TOKEN: {Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashModify(m, m.OptionSimple(CLIENT_NAME, TOKEN))
 				m.Cmd(SPACE, tcp.DIAL, ice.DEV, m.Option(CLIENT_NAME), m.OptionSimple(TOKEN)).Sleep300ms()
 			}},
+			DEV_REQUEST_TEXT: {Hand: func(m *ice.Message, arg ...string) { m.Echo(SpaceName(ice.Info.NodeName)) }},
 		}, DevTokenAction(CLIENT_NAME, CLIENT_URL), mdb.ImportantHashAction(mdb.SHORT, CLIENT_NAME, mdb.FIELD, "time,icons,client.name,client.url,client.type,token")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 || arg[0] == "" || (len(arg) > 3 && arg[3] == "") {
 				list := m.CmdMap(SPACE, mdb.NAME)
-				mdb.HashSelect(m, kit.Slice(arg, 0, 1)...).Sort("client.type,client.name", []string{nfs.REPOS, ""})
-				m.RewriteAppend(func(value, key string, index int) string {
-					kit.If(key == CLIENT_URL, func() { value = kit.MergeURL(value, m.OptionSimple(ice.MSG_DEBUG)) })
-					return value
-				})
-				m.Table(func(value ice.Maps) {
+				mdb.HashSelect(m, kit.Slice(arg, 0, 1)...).Table(func(value ice.Maps) {
 					if value[CLIENT_TYPE] == nfs.REPOS {
 						if _, ok := list[value[CLIENT_NAME]]; ok {
 							m.Push(mdb.STATUS, ONLINE).PushButton(mdb.DEV_REQUEST, "disconn", mdb.REMOVE)
@@ -398,20 +392,21 @@ func init() {
 					}
 				})
 				kit.If(len(arg) > 0 && arg[0] != "", func() { m.Action(COOKIE, HEADER) })
+				m.Sort("client.type,client.name", []string{nfs.REPOS, "dev_ip", "demo", "mail"})
 			} else {
 				_spide_show(m, arg[0], arg[1:]...)
 			}
 		}},
-		http.MethodGet: {Name: "GET url key value run", Help: "蜘蛛侠", Hand: func(m *ice.Message, arg ...string) {
+		http.MethodGet: {Name: "GET url key value run", Hand: func(m *ice.Message, arg ...string) {
 			m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx(SPIDE, ice.DEV, SPIDE_RAW, http.MethodGet, arg[0], arg[1:]))))
 		}},
-		http.MethodPut: {Name: "PUT url key value run", Help: "蜘蛛侠", Hand: func(m *ice.Message, arg ...string) {
+		http.MethodPut: {Name: "PUT url key value run", Hand: func(m *ice.Message, arg ...string) {
 			m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx(SPIDE, ice.DEV, SPIDE_RAW, http.MethodPut, arg[0], arg[1:]))))
 		}},
-		http.MethodPost: {Name: "POST url key value run", Help: "蜘蛛侠", Hand: func(m *ice.Message, arg ...string) {
+		http.MethodPost: {Name: "POST url key value run", Hand: func(m *ice.Message, arg ...string) {
 			m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx(SPIDE, ice.DEV, SPIDE_RAW, http.MethodPost, arg[0], arg[1:]))))
 		}},
-		http.MethodDelete: {Name: "DELETE url key value run", Help: "蜘蛛侠", Hand: func(m *ice.Message, arg ...string) {
+		http.MethodDelete: {Name: "DELETE url key value run", Hand: func(m *ice.Message, arg ...string) {
 			m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx(SPIDE, ice.DEV, SPIDE_RAW, http.MethodDelete, arg[0], arg[1:]))))
 		}},
 	})
@@ -454,6 +449,51 @@ func init() {
 	}
 }
 
+func SpideGet(m *ice.Message, arg ...ice.Any) ice.Any {
+	return kit.UnMarshal(m.Cmdx(http.MethodGet, arg))
+}
+func SpidePut(m *ice.Message, arg ...ice.Any) ice.Any {
+	return kit.UnMarshal(m.Cmdx(http.MethodPut, arg))
+}
+func SpidePost(m *ice.Message, arg ...ice.Any) ice.Any {
+	return kit.UnMarshal(m.Cmdx(http.MethodPost, arg))
+}
+func SpideDelete(m *ice.Message, arg ...ice.Any) ice.Any {
+	return kit.UnMarshal(m.Cmdx(http.MethodDelete, arg))
+}
+func SpideCache(m *ice.Message, link string) *ice.Message {
+	return m.Cmd(Prefix(SPIDE), ice.DEV_IP, SPIDE_CACHE, http.MethodGet, link)
+}
+func SpideSave(m *ice.Message, file, link string, cb func(count, total, value int)) *ice.Message {
+	for _, p := range []string{ice.DEV_IP, ice.DEV} {
+		msg := m.Cmd(Prefix(SPIDE), p, SPIDE_SAVE, file, http.MethodGet, link, cb)
+		if !msg.IsErr() {
+			return msg
+		}
+	}
+	return m
+}
+func SpideOrigin(m *ice.Message, name string) string { return m.Cmdv(SPIDE, name, CLIENT_ORIGIN) }
+func SpideURL(m *ice.Message, name string) string    { return m.Cmdv(SPIDE, name, CLIENT_URL) }
+func SpideList(m *ice.Message) *ice.Message          { return m.Copy(AdminCmd(m, SPIDE)) }
+func SpideReposList(m *ice.Message) *ice.Message {
+	AdminCmd(m, SPIDE).Table(func(value ice.Maps) {
+		if value[CLIENT_TYPE] == nfs.REPOS {
+			m.Push(mdb.NAME, value[CLIENT_NAME])
+			m.Push(mdb.ICONS, value[mdb.ICONS])
+		}
+	})
+	ctx.DisplayInputKey(m, "style", "_nameicon")
+	return m
+}
+func PublicIP(m *ice.Message, arg ...string) ice.Any {
+	if len(arg) == 0 {
+		return SpideGet(m, "http://ip-api.com/json")
+	}
+	return mdb.Cache(m, "web.spide.location."+arg[0], func() ice.Any {
+		return kit.Format(kit.Value(SpideGet(m, "http://opendata.baidu.com/api.php?co=&resource_id=6006&oe=utf8", "query", arg[0]), "data.0.location"))
+	})
+}
 func HostPort(m *ice.Message, host, port string, arg ...string) string {
 	p := ""
 	if len(arg) > 0 {
@@ -471,49 +511,4 @@ func HostPort(m *ice.Message, host, port string, arg ...string) string {
 	} else {
 		return kit.Format("http://%s:%s", host, port) + p
 	}
-}
-func PublicIP(m *ice.Message, arg ...string) ice.Any {
-	if len(arg) == 0 {
-		return SpideGet(m, "http://ip-api.com/json")
-	}
-	return mdb.Cache(m, "web.spide.location."+arg[0], func() ice.Any {
-		return kit.Format(kit.Value(SpideGet(m, "http://opendata.baidu.com/api.php?co=&resource_id=6006&oe=utf8", "query", arg[0]), "data.0.location"))
-	})
-}
-func SpideGet(m *ice.Message, arg ...ice.Any) ice.Any {
-	return kit.UnMarshal(m.Cmdx(http.MethodGet, arg))
-}
-func SpidePut(m *ice.Message, arg ...ice.Any) ice.Any {
-	return kit.UnMarshal(m.Cmdx(http.MethodPut, arg))
-}
-func SpidePost(m *ice.Message, arg ...ice.Any) ice.Any {
-	return kit.UnMarshal(m.Cmdx(http.MethodPost, arg))
-}
-func SpideDelete(m *ice.Message, arg ...ice.Any) ice.Any {
-	return kit.UnMarshal(m.Cmdx(http.MethodDelete, arg))
-}
-func SpideSave(m *ice.Message, file, link string, cb func(count, total, value int)) *ice.Message {
-	for _, p := range []string{ice.DEV_IP, ice.DEV} {
-		msg := m.Cmd(Prefix(SPIDE), p, SPIDE_SAVE, file, http.MethodGet, link, cb)
-		if !msg.IsErr() {
-			return msg
-		}
-	}
-	return m
-}
-func SpideCache(m *ice.Message, link string) *ice.Message {
-	return m.Cmd(Prefix(SPIDE), ice.DEV_IP, SPIDE_CACHE, http.MethodGet, link)
-}
-func SpideOrigin(m *ice.Message, name string) string { return m.Cmdv(SPIDE, name, CLIENT_ORIGIN) }
-func SpideURL(m *ice.Message, name string) string    { return m.Cmdv(SPIDE, name, CLIENT_URL) }
-func SpideList(m *ice.Message) *ice.Message          { return m.Copy(AdminCmd(m, SPIDE)) }
-func SpideReposList(m *ice.Message) *ice.Message {
-	AdminCmd(m, SPIDE).Table(func(value ice.Maps) {
-		if value[CLIENT_TYPE] == nfs.REPOS {
-			m.Push(mdb.NAME, value[CLIENT_NAME])
-			m.Push(mdb.ICONS, value[mdb.ICONS])
-		}
-	})
-	ctx.DisplayInputKey(m, "style", "_nameicon")
-	return m
 }

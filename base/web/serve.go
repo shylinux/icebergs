@@ -42,6 +42,7 @@ func _serve_start(m *ice.Message) {
 	kit.For(kit.Split(m.Option(ice.DEV)), func(dev string) {
 		if strings.HasPrefix(dev, HTTP) {
 			m.Cmd(SPIDE, mdb.CREATE, dev, ice.DEV, "", nfs.REPOS)
+			m.Cmd(SPIDE, mdb.CREATE, dev, "dev_ip", "", "dev_ip")
 			dev = ice.DEV
 		}
 		if msg := m.Cmds(SPIDE, dev); msg.Append(TOKEN) == "" {

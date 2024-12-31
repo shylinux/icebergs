@@ -69,6 +69,7 @@ func init() {
 		FEEL, DRAW, DATA, WORD, PORTAL, STYLE,
 		TITLE, BRIEF, REFER, SPARK, FIELD,
 		ORDER, TABLE, CHART, IMAGE, VIDEO, AUDIO,
+		// IFRAME,
 	)
 }
 func Prefix(arg ...string) string { return web.Prefix(WIKI, kit.Keys(arg)) }

@@ -25,6 +25,9 @@ Volcanos(chat.ONIMPORT, {
 				can.core.CallFunc([can.onimport, can.onimport[meta.name]? meta.name: meta.type||target.tagName.toLowerCase()], [can, meta, target])
 				meta.style && can.page.style(can, target, can.base.Obj(meta.style))
 			}); var nav = can.db.nav[file]; nav? nav.click(): can.onimport.content(can, "content.shy")
+			can.page.Select(can, can.ui.header, "div.item:first-child>span", function(target, index) {
+				can.page.insertBefore(can, [{img: can.misc.ResourceFavicon(can, can.user.info.favicon), style: {height: 42}}], target)
+			})
 		}, 300)
 	},
 	_scroll: function(can) { can.ui.main.onscroll = function(event) { var top = can.ui.main.scrollTop, select
@@ -34,16 +37,14 @@ Volcanos(chat.ONIMPORT, {
 	} },
 	navmenu: function(can, meta, target) { var link
 		can.onimport.list(can, can.base.Obj(meta.data), function(event, item) {
-			can.page.Select(can, target, html.DIV_ITEM, function(target) { target != event.target && can.page.ClassList.del(can, target, html.SELECT) })
+			can.page.Select(can, target, html.DIV_ITEM, function(target) { target != event.currentTarget && can.page.ClassList.del(can, target, html.SELECT) })
 			item.list && item.list.length > 0 || can.onaction.route(event, can, item.meta.link)
+			can.onimport.layout(can)
 		}, can.page.ClassList.has(can, target.parentNode, html.HEADER)? function(target, item) {
 			item.meta.link == nfs.USR_LEARNING_PORTAL+can.db.current && can.onappend.style(can, html.SELECT, target)
 		}: function(target, item) { can.db.nav[can.base.trimPrefix(item.meta.link, nfs.USR_LEARNING_PORTAL, nfs.SRC_DOCUMENT)] = target
 			location.hash || item.list && item.list.length > 0 || link || (link = can.onaction.route({}, can, item.meta.link, true))
 		}, target)
-		can.page.Select(can, can.ui.header, "div.item:first-child>span", function(target, index) {
-			can.page.insertBefore(can, [{img: can.misc.ResourceFavicon(can, can.user.info.favicon), style: {height: 42}}], target)
-		})
 	},
 	content: function(can, file) {
 		can.runActionCommand(event, web.WIKI_WORD, [(can.base.beginWith(file, nfs.USR, nfs.SRC)? "": nfs.USR_LEARNING_PORTAL+can.db.current)+file], function(msg) { can.ui.main.innerHTML = msg.Result(), can.onmotion.clear(can, can.ui.aside)
@@ -61,7 +62,9 @@ Volcanos(chat.ONIMPORT, {
 			can.page.style(can, can.ui.nav, html.HEIGHT, "", html.WIDTH, can.page.width())
 			can.page.style(can, can.ui.main, html.HEIGHT, "", html.WIDTH, can.page.width())
 		}
-		can.core.List(can._plugins, function(sub) { sub.onimport.size(sub, can.base.Min(html.FLOAT_HEIGHT, can.ConfHeight()/2, can.ConfHeight()), (can.ConfWidth()-2*padding), true) })
+		can.core.List(can._plugins, function(sub) {
+			sub.onimport.size(sub, can.base.Min(html.FLOAT_HEIGHT, can.ConfHeight()/2, can.ConfHeight()), (can.ConfWidth()-2*padding), true)
+		})
 	},
 }, [""])
 Volcanos(chat.ONACTION, {
@@ -76,7 +79,7 @@ Volcanos(chat.ONACTION, {
 		}
 		var file = can.base.trimPrefix(link, can.db.current); can.isCmdMode() && can.user.jumps("#"+file)
 		if (can.onmotion.cache(can, function(save, load) { save({plugins: can._plugins})
-			return load(file, function(bak) { can._plugins = bak.file })
+			return load(file, function(bak) { can._plugins = bak.plugins })
 		}, can.ui.main, can.ui.aside)) { return file } can.onimport.content(can, file)
 		return link
 	},

@@ -348,7 +348,7 @@ func (s relay) Login(m *ice.Message, arg ...string) {
 		)), func(res string) { m.Echo(res) })
 		m.ProcessOpen(m.Option(mdb.LINK))
 	} else if m.Option(ice.MSG_METHOD) == http.MethodGet {
-		m.EchoInfoButton("")
+		m.EchoInfoButton("请授权登录 " + m.Option(MACHINE))
 	} else {
 		defer m.ToastProcess()()
 		ssh.CombinedOutput(m.Message, s.admins(m, kit.JoinCmds(web.SHARE, mdb.CREATE, mdb.TYPE, aaa.LOGIN, "--", mdb.TEXT, m.Option(ice.BACK))), func(res string) {

@@ -62,7 +62,7 @@ func (f *Frame) Start(m *ice.Message, arg ...string) {
 	default:
 		m.Cmd(tcp.SERVER, tcp.LISTEN, mdb.TYPE, HTTP, mdb.NAME, logs.FileLine(1), m.OptionSimple(tcp.HOST, tcp.PORT), func(l net.Listener) {
 			defer mdb.HashCreateDeferRemove(m, m.OptionSimple(mdb.NAME, tcp.PROTO), arg, cli.STATUS, tcp.START)()
-			m.Go(func() { gdb.Event(m.Spawn(), SERVE_START, arg) })
+			m.GoSleep("300ms", func() { gdb.Event(m.Spawn(), SERVE_START, arg) })
 			if m.Option(tcp.PORT) == tcp.PORT_443 {
 				m.WarnNotValid(f.Server.ServeTLS(l, nfs.ETC_CERT_PEM, nfs.ETC_CERT_KEY))
 			} else {

@@ -79,7 +79,7 @@ type relay struct {
 	pushbin  string `name:"pushbin dream portal nodename dev" icon:"bi bi-box-arrow-in-up"`
 	adminCmd string `name:"adminCmd cmd" icon:"bi bi-terminal-plus"`
 	pushkey  string `name:"pushkey server" icon:"bi bi-person-fill-up"`
-	setIcon  string `name:"setIcon icons*"`
+	setIcon  string `name:"setIcon icons*" help:"图标"`
 }
 
 func (s relay) Init(m *ice.Message, arg ...string) {

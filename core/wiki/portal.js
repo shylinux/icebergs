@@ -1,17 +1,18 @@
 Volcanos(chat.ONIMPORT, {
 	_init: function(can, msg, cb) { can.require(["/plugin/local/wiki/word.js"])
-		var p = "/cmd/"+web.PORTAL; can.db.prefix = location.pathname.indexOf(p) > -1? location.pathname.split(p)[0]+p: nfs.WIKI_PORTAL
 		var p = "/c/"+web.PORTAL; can.db.prefix = location.pathname.indexOf(p) > -1? location.pathname.split(p)[0]+p: nfs.WIKI_PORTAL
+		var p = "/cmd/"+web.PORTAL; can.db.prefix = location.pathname.indexOf(p) > -1? location.pathname.split(p)[0]+p: nfs.WIKI_PORTAL
 		can.db.current = can.isCmdMode()? can.base.trimPrefix(location.pathname, can.db.prefix+nfs.PS, can.db.prefix): can.Option(nfs.PATH)
 		if (can.base.isIn(can.db.current, "", nfs.PS)) {
-			can.page.ClassList.add(can, can._fields, ice.HOME)
-			can.page.ClassList.add(can, can._root.Action._target, ice.HOME)
+			can.page.ClassList.add(can, can._fields, ice.HOME), can.page.ClassList.add(can, can._root.Action._target, ice.HOME)
 		} else {
-			can.page.ClassList.del(can, can._fields, ice.HOME)
-			can.page.ClassList.del(can, can._root.Action._target, ice.HOME)
+			can.page.ClassList.del(can, can._fields, ice.HOME), can.page.ClassList.del(can, can._root.Action._target, ice.HOME)
 		}
 		can.ui = can.onappend.layout(can, [html.HEADER, [html.NAV, html.MAIN, html.ASIDE]], html.FLOW), can.onimport._scroll(can)
 		can.ui.header.innerHTML = msg.Append(html.HEADER), can.ui.nav.innerHTML = msg.Append(html.NAV)
+		can.page.Select(can, can.ui.header, "div.item:first-child>span", function(target, index) {
+			can.page.insertBefore(can, [{img: can.misc.ResourceFavicon(can, can.user.info.favicon), style: {height: 42}}], target)
+		})
 		if (msg.Append(html.NAV) == "") {
 			can.onmotion.hidden(can, can.ui.nav), can.onmotion.hidden(can, can.ui.aside)
 		} else {
@@ -20,14 +21,11 @@ Volcanos(chat.ONIMPORT, {
 		}
 		can.onmotion.delay(can, function() { cb && cb(msg), can.Conf(html.PADDING, can.page.styleValueInt(can, "--portal-main-padding", can._output)||(can.user.isMobile? 5: 40))
 			can.user.isMobile && can.Conf(html.PADDING, can.isCmdMode()? 5: 15)
-			var file = can.isCmdMode()? can.db.hash[0]: can.Option(nfs.FILE); can.base.beginWith(file, nfs.SRC, nfs.USR) || (file = can.db.current+file)
+			var file = can.isCmdMode()? can.db.hash[0]: can.Option(nfs.FILE); can.base.beginWith(file, nfs.SRC, nfs.USR) || (file = can.db.current+(file||""))
 			can.db.nav = {}, can.page.Select(can, can._output, wiki.STORY_ITEM, function(target) { var meta = target.dataset||{}
 				can.core.CallFunc([can.onimport, can.onimport[meta.name]? meta.name: meta.type||target.tagName.toLowerCase()], [can, meta, target])
 				meta.style && can.page.style(can, target, can.base.Obj(meta.style))
 			}); var nav = can.db.nav[file]; nav? nav.click(): can.onimport.content(can, "content.shy")
-			can.page.Select(can, can.ui.header, "div.item:first-child>span", function(target, index) {
-				can.page.insertBefore(can, [{img: can.misc.ResourceFavicon(can, can.user.info.favicon), style: {height: 42}}], target)
-			})
 		}, 300)
 	},
 	_scroll: function(can) { can.ui.main.onscroll = function(event) { var top = can.ui.main.scrollTop, select
@@ -35,18 +33,23 @@ Volcanos(chat.ONIMPORT, {
 			select = target, can.onmotion.select(can, can.ui.aside, html.DIV_ITEM, target._menu)
 		} })
 	} },
-	navmenu: function(can, meta, target) { var link
+	navmenu: function(can, meta, target) { var link, _target
 		can.onimport.list(can, can.base.Obj(meta.data), function(event, item) {
 			can.page.Select(can, target, html.DIV_ITEM, function(target) { target != event.currentTarget && can.page.ClassList.del(can, target, html.SELECT) })
-			item.list && item.list.length > 0 || can.onaction.route(event, can, item.meta.link)
-			can.onimport.layout(can)
+			item.list && item.list.length > 0 || can.onaction.route(event, can, item.meta.link), can.onimport.layout(can)
 		}, can.page.ClassList.has(can, target.parentNode, html.HEADER)? function(target, item) {
-			item.meta.link == nfs.USR_LEARNING_PORTAL+can.db.current && can.onappend.style(can, html.SELECT, target)
+			item.meta.link == nfs.SRC_DOCUMENT+can.db.current && can.onmotion.delay(can, function() { can.onappend.style(can, html.SELECT, target) })
 		}: function(target, item) { can.db.nav[can.base.trimPrefix(item.meta.link, nfs.USR_LEARNING_PORTAL, nfs.SRC_DOCUMENT)] = target
-			location.hash || item.list && item.list.length > 0 || link || (link = can.onaction.route({}, can, item.meta.link, true))
-		}, target)
+			location.hash || item.list && item.list.length > 0 || link || (
+				link = can.onaction.route({}, can, item.meta.link, true),
+				_target = _target||target
+			)
+			item.meta.link == nfs.USR_LEARNING_PORTAL+can.db.current+can.db.hash[0] && (_target = target)
+			// _target = _target||target
+		}, target), _target && can.onmotion.delay(can, function() { can.onappend.style(can, html.SELECT, _target) })
 	},
 	content: function(can, file) {
+		can.request(event, {_method: "GET"})
 		can.runActionCommand(event, web.WIKI_WORD, [(can.base.beginWith(file, nfs.USR, nfs.SRC)? "": nfs.USR_LEARNING_PORTAL+can.db.current)+file], function(msg) { can.ui.main.innerHTML = msg.Result(), can.onmotion.clear(can, can.ui.aside)
 			can.onimport._content(can, can.ui.main, function(target, meta) {
 				meta.type == wiki.TITLE && can.onappend.style(can, meta.name, target._menu = can.onimport.item(can, {name: meta.text}, function(event) { target.scrollIntoView() }, function() {}, can.ui.aside))

@@ -216,7 +216,7 @@ func init() {
 	})
 }
 func isReleaseContexts(m *ice.Message) bool {
-	return nfs.Exists(m, ice.USR_RELEASE) && nfs.Exists(m, ice.USR_VOLCANOS) && nfs.Exists(m, ice.USR_INTSHELL) && ice.Info.Make.Module == "shylinux.com/x/contexts"
+	return ice.Info.Make.Module == "shylinux.com/x/ContextOS" && nfs.Exists(m, ice.USR_RELEASE) && nfs.Exists(m, ice.USR_VOLCANOS) && nfs.Exists(m, ice.USR_INTSHELL)
 }
 func AutogenMod(m *ice.Message) string {
 	return _autogen_mod(m, ice.GO_MOD)

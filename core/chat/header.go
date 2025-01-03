@@ -164,7 +164,7 @@ func init() {
 			), " ."), 0)), "_", "-"))
 			m.Option("language.list", m.Cmd(nfs.DIR, nfs.TemplatePath(m, aaa.LANGUAGE)+nfs.PS, nfs.FILE).Appendv(nfs.FILE))
 			m.Option("theme.list", m.Cmd(nfs.DIR, nfs.TemplatePath(m, aaa.THEME)+nfs.PS, nfs.FILE).Appendv(nfs.FILE))
-			if m.Option(ice.MSG_USERNAME) == "" || m.Option(ice.MSG_INDEX) == m.PrefixKey() {
+			if m.Option(ice.MSG_USERNAME) == "" || kit.IsIn(m.Option(ice.MSG_INDEX), m.PrefixKey(), m.CommandKey()) {
 				mdb.HashSelect(m, arg...).Sort(mdb.ORDER, ice.INT)
 				m.Table(func(value ice.Maps) { m.Push(mdb.STATUS, kit.Select(mdb.ENABLE, mdb.DISABLE, value[mdb.ORDER] == "")) })
 				defer m.StatusTimeCount(kit.Dict(mdb.ConfigSimple(m, ice.DEMO)))

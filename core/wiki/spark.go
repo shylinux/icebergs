@@ -81,8 +81,8 @@ func init() {
 				if aaa.Right(m.Spawn(), arg[0]) {
 					m.Cmdy(FIELD, "", arg[0], arg[1:])
 				} else {
-					p := kit.Format("http://localhost:9020/chat/cmd/%s", arg[0])
-					m.Cmdy(SPARK, p, arg[1:]).Cmdy(IFRAME, p, arg[1:])
+					p := kit.Format("https://demo.shylinux.com/c/%s", arg[0])
+					m.Cmdy(SPARK, p, arg[1:]).Cmdy("web.wiki.iframe", p, arg[1:])
 				}
 			}},
 			INNER: {Hand: func(m *ice.Message, arg ...string) {

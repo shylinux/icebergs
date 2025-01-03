@@ -74,4 +74,4 @@ body.mobile fieldset.web.wiki.portal.home>div.output>div.layout>div.main h2 { ma
 body.mobile fieldset.web.wiki.portal>div.output>div.layout>div.main p { padding:var(--input-padding); margin:0; }
 body.width2 fieldset.web.wiki.portal>div.output>div.layout>div.main>div.flex { flex-direction:column; }
 body.web.wiki.portal fieldset.Action.home>div.toast { display:none; }
-body.web.wiki.portal.cmd { background-color:rgb(22 31 49); }
+// body.web.wiki.portal.cmd { background-color:rgb(22 31 49); }

@@ -48,7 +48,8 @@ func _ssh_open(m *ice.Message, arg ...string) {
 	}, arg...)
 }
 func _ssh_dial(m *ice.Message, cb func(net.Conn), arg ...string) {
-	p := kit.HomePath(".ssh", fmt.Sprintf("%s@%s:%s", m.Option(aaa.USERNAME), m.Option(tcp.HOST), m.Option(tcp.PORT)))
+	os.Mkdir(kit.HomePath(".ssh/sess"), 0755)
+	p := kit.HomePath(".ssh/sess", fmt.Sprintf("%s@%s:%s", m.Option(aaa.USERNAME), m.Option(tcp.HOST), m.Option(tcp.PORT)))
 	if nfs.Exists(m, p) {
 		if c, e := net.Dial(tcp.UNIX, p); e == nil {
 			cb(c)
@@ -322,5 +323,5 @@ func PushShell(m *ice.Message, cmds []string, cb func(string)) {
 func RunConnect(arg ...string) string {
 	defer func() { recover() }()
 	kit.If(len(arg) == 0, func() { arg = append(arg, os.Args...) })
-	return ice.Run(kit.Simple("ssh.connect", "open", AUTHFILE, kit.HomePath(".ssh/", path.Base(arg[0])+".json"), arg[1:])...)
+	return ice.Run(kit.Simple("ssh.connect", "open", AUTHFILE, kit.HomePath(".ssh/host/", path.Base(arg[0])+".json"), arg[1:])...)
 }

@@ -23,7 +23,7 @@ func init() {
 		IMAGE: {Name: "image path", Help: "图片", Actions: ice.Actions{
 			"material": {Hand: func(m *ice.Message, arg ...string) {
 				m.Info("what %v", m.FormatChain())
-				m.Cmdy("", path.Join("usr/material", strings.TrimPrefix(path.Dir(m.Option("_script")), "usr/"), arg[0]))
+				m.Cmdy(IMAGE, path.Join("usr/material", strings.TrimPrefix(path.Dir(m.Option("_script")), "usr/"), arg[0]))
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			arg = _name(m, arg)

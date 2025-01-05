@@ -2,6 +2,7 @@ package wiki
 
 import (
 	"path"
+	"strings"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -19,7 +20,12 @@ const IMAGE = "image"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		IMAGE: {Name: "image path", Help: "图片", Hand: func(m *ice.Message, arg ...string) {
+		IMAGE: {Name: "image path", Help: "图片", Actions: ice.Actions{
+			"material": {Hand: func(m *ice.Message, arg ...string) {
+				m.Info("what %v", m.FormatChain())
+				m.Cmdy("", path.Join("usr/material", strings.TrimPrefix(path.Dir(m.Option("_script")), "usr/"), arg[0]))
+			}},
+		}, Hand: func(m *ice.Message, arg ...string) {
 			arg = _name(m, arg)
 			_image_show(m, arg[0], arg[1], arg[2:]...)
 		}},

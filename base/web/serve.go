@@ -309,6 +309,7 @@ func init() {
 					for _, p := range []string{"server.conf", "location.conf", "upstream.conf"} {
 						m.Cmd(nfs.SAVE, kit.Format("%s/conf/portal/%s/%s", dir, m.Option(mdb.NAME), p), m.Template(p)+lex.NL)
 					}
+					m.Cmd(cli.SYSTEM, "sudo", kit.Path("usr/local/daemon/10000/sbin/nginx"), "-p", kit.Path("usr/local/daemon/10000/"), "-s", "reload")
 				}
 			}},
 		}, gdb.EventsAction(SERVE_START), mdb.HashAction(

@@ -2,7 +2,9 @@ fieldset.web.wiki.portal { --portal-max-width:1200px; --portal-header-height:64p
 fieldset.web.wiki.portal.home { --portal-max-width:1500px; }
 fieldset.web.wiki.portal>div.header { display:none; }
 fieldset.web.wiki.portal>div.output { padding:0; }
-fieldset.web.wiki.portal>div.output>div.header { background-color:var(--panel-bg-color); height:var(--portal-header-height); --hover-bg-color:var(--plugin-bg-color); }
+fieldset.web.wiki.portal>div.output>div.header {
+	border-bottom:var(--box-border);
+background-color:var(--panel-bg-color); height:var(--portal-header-height); --hover-bg-color:var(--plugin-bg-color); }
 fieldset.web.wiki.portal>div.output>div.header div.list { display:flex; }
 fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] { --hover-fg-color:white; }
 fieldset.web.wiki.portal>div.output>div.header div.story div.item span { white-space:pre; overflow:hidden; }

@@ -87,6 +87,7 @@ func init() {
 						roleHandle(m, role, list...)
 					})
 				})
+				m.Cmd(ROLE, WHITE, VOID, ROLE, "action", RIGHT)
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == mdb.KEY {

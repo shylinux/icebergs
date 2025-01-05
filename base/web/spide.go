@@ -299,9 +299,9 @@ func init() {
 				m.Cmd("", mdb.CREATE, kit.Select("https://shylinux.com", conf[cli.CTX_SHY]), ice.SHY, ice.SRC_MAIN_ICO, nfs.REPOS)
 				m.Cmd("", mdb.CREATE, kit.Select("https://mail.shylinux.com", conf[cli.CTX_MAIL]), ice.MAIL, "usr/icons/Mail.png", "mail")
 				m.Cmd("", mdb.CREATE, kit.Select("https://demo.shylinux.com", conf[cli.CTX_DEMO]), ice.DEMO, ice.SRC_MAIN_ICO, "demo")
-				m.Cmd("", mdb.CREATE, "https://2023-ContextOS.shylinux.com", "2023-ContextOS", ice.SRC_MAIN_ICO, nfs.REPOS)
-				m.Cmd("", mdb.CREATE, "https://2024-ContextOS.shylinux.com", "2024-ContextOS", ice.SRC_MAIN_ICO, nfs.REPOS)
-				m.Cmd("", mdb.CREATE, "https://2025-ContextOS.shylinux.com", "2025-ContextOS", ice.SRC_MAIN_ICO, nfs.REPOS)
+				m.Cmd("", mdb.CREATE, "https://2023.shylinux.com", "2023-ContextOS", ice.SRC_MAIN_ICO, nfs.REPOS)
+				m.Cmd("", mdb.CREATE, "https://2024.shylinux.com", "2024-ContextOS", ice.SRC_MAIN_ICO, nfs.REPOS)
+				m.Cmd("", mdb.CREATE, "https://2025.shylinux.com", "2025-ContextOS", ice.SRC_MAIN_ICO, nfs.REPOS)
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if mdb.IsSearchPreview(m, arg) {

@@ -458,6 +458,10 @@ func init() {
 				})
 				m.Sort("", kit.Simple(aaa.LOGIN, WEIXIN, PORTAL, WORKER, SERVER, ORIGIN))
 			} else {
+				if ice.Info.NodeType != WORKER && arg[0] == ice.OPS {
+					m.Cmdy(arg[1:])
+					return
+				}
 				if kit.IsIn(arg[0], "", ice.CONTEXTS, ice.Info.NodeName) {
 					m.Cmdy(arg[1:])
 					return

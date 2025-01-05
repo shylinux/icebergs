@@ -448,6 +448,8 @@ func init() {
 				m.Cmd(nfs.DEFS, path.Join(m.Option(nfs.PATH), _GITIGNORE), nfs.Template(m, IGNORE))
 				git.PlainInit(m.Option(nfs.PATH), false)
 				_repos_insert(m, m.Option(nfs.PATH))
+				m.Cmd(code.AUTOGEN, nfs.REPOS)
+				m.Cmd(STATUS, web.DEV_CREATE_TOKEN, kit.Dict(web.ORIGIN, web.UserHost(m), web.TOKEN, m.Cmdx(web.SPACE, ice.OPS, web.TOKEN, mdb.CREATE, mdb.TYPE, STATUS, mdb.NAME, m.Option(ice.MSG_USERNAME), mdb.TEXT, web.UserHost(m))))
 				m.ProcessRefresh()
 			}},
 			INSTEADOF: {Name: "insteadof remote", Help: "代理", Icon: "bi bi-clouds", Hand: func(m *ice.Message, arg ...string) {

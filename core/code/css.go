@@ -22,6 +22,11 @@ func _css_show(m *ice.Message, arg ...string) {
 		m.EchoIFrame(m.MergePodCmd("", web.ADMIN))
 		return
 	}
+	cmd := kit.Select(ice.CAN_PLUGIN, ctx.GetFileCmd(kit.ExtChange(path.Join(arg[2], arg[1]), GO)))
+	ctx.DisplayBaseCSS(m, require(arg[2], arg[1]), "render", "replace", ctx.INDEX, cmd, ice.POD, m.Option(ice.MSG_USERPOD))
+	ctx.DisplayBase(m, require(arg[2], arg[1]))
+	ctx.ProcessField(m, cmd, kit.Simple())
+	return
 	zone, stats_key, stats_value := "", map[string]int{}, map[string]int{}
 	m.Cmd(nfs.CAT, path.Join(arg[2], arg[1]), func(line string) {
 		if line = strings.TrimSpace(line); line == "" || strings.HasPrefix(line, "//") || strings.HasPrefix(line, "/*") {

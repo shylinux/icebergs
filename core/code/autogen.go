@@ -2,6 +2,7 @@ package code
 
 import (
 	"bytes"
+	"os"
 	"path"
 	"strings"
 
@@ -201,6 +202,11 @@ func init() {
 				_autogen_import(m, ice.SRC_MAIN_GO, arg[0], kit.Select(_autogen_mod(m, ice.GO_MOD), arg, 1))
 			}},
 			BINPACK: {Help: "打包", Hand: func(m *ice.Message, arg ...string) {
+				kit.For([]string{"intshell", "volcanos", "node_modules", "learning", "icons"}, func(p string) {
+					if _, e := os.Stat("usr/" + p); os.IsNotExist(e) {
+						m.Cmd("web.code.git.repos", "clone", "https://shylinux.com/x/"+p, p, "usr/"+p+"/")
+					}
+				})
 				const (
 					USR_RELEASE_CONF_GO    = "usr/release/conf.go"
 					USR_RELEASE_BINPACK_GO = "usr/release/binpack.go"

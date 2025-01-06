@@ -81,6 +81,10 @@ func DisplayBase(m *ice.Message, file string, arg ...ice.Any) *ice.Message {
 	m.Option(ice.MSG_DISPLAY, kit.MergeURL(kit.Select(kit.ExtChange(file, nfs.JS), file, strings.Contains(file, mdb.QS)), arg...))
 	return Toolkit(m, "")
 }
+func DisplayBaseCSS(m *ice.Message, file string, arg ...ice.Any) *ice.Message {
+	m.Option(ice.MSG_DISPLAY_CSS, kit.MergeURL(kit.Select(kit.ExtChange(file, nfs.CSS), file, strings.Contains(file, mdb.QS)), arg...))
+	return m
+}
 func Toolkit(m *ice.Message, arg ...string) *ice.Message {
 	m.OptionDefault(ice.MSG_ONLINE, mdb.Config(m, "online"))
 	return m.Options(ice.MSG_TOOLKIT, kit.Select(mdb.Config(m, mdb.TOOLS), kit.Fields(arg)))

@@ -153,7 +153,9 @@ func RenderMain(m *ice.Message) *ice.Message {
 	}
 	m.Options(nfs.SCRIPT, ice.SRC_MAIN_JS, nfs.VERSION, RenderVersion(m))
 	m.OptionDefault(mdb.ICONS, strings.Split(m.Resource(ice.Info.NodeIcon), "?")[0]+m.Option(nfs.VERSION))
-	m.OptionDefault(TITLE, kit.Select("localhost:9020", UserWeb(m).Host, kit.Select("", ice.Info.Titles, m.Option(ice.MSG_USERPOD) != "")))
+	m.OptionDefault(TITLE, kit.Select("", ice.Info.Titles, ice.Info.Titles != "ContextOS"))
+	kit.If(ice.Info.NodeType == WORKER, func() { m.OptionDefault(TITLE, m.Option(ice.MSG_USERPOD)) })
+	m.OptionDefault(TITLE, kit.Select("ContextOS", UserWeb(m).Host))
 	return m.RenderResult(kit.Renders(m.Cmdx(nfs.CAT, ice.SRC_MAIN_HTML), m))
 }
 func RenderCmds(m *ice.Message, cmds ...ice.Any) {

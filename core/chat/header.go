@@ -152,6 +152,9 @@ func init() {
 				m.Option(ice.MSG_NODETYPE, ice.Info.NodeType)
 				m.Option(ice.MSG_NODENAME, ice.Info.NodeName)
 				m.Option("favicon", ice.Info.NodeIcon)
+				if ice.Info.NodeType == web.WORKER && ice.Info.Titles == "ContextOS" {
+					return
+				}
 				m.Option("titles", ice.Info.Titles)
 			})
 			if ice.Info.NodeType == web.WORKER {

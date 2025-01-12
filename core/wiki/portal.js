@@ -1,7 +1,6 @@
 Volcanos(chat.ONIMPORT, {
 	_init: function(can, msg, cb) { can.require(["/plugin/local/wiki/word.js"])
 		var p = "/c/"+web.PORTAL; can.db.prefix = location.pathname.indexOf(p) > -1? location.pathname.split(p)[0]+p: nfs.WIKI_PORTAL
-		var p = "/cmd/"+web.PORTAL; can.db.prefix = location.pathname.indexOf(p) > -1? location.pathname.split(p)[0]+p: nfs.WIKI_PORTAL
 		can.db.current = can.isCmdMode()? can.base.trimPrefix(location.pathname, can.db.prefix+nfs.PS, can.db.prefix): can.Option(nfs.PATH)
 		if (can.base.isIn(can.db.current, "", nfs.PS)) {
 			can.page.ClassList.add(can, can._fields, ice.HOME), can.page.ClassList.add(can, can._root.Action._target, ice.HOME)
@@ -41,15 +40,17 @@ Volcanos(chat.ONIMPORT, {
 			item.meta.link == nfs.SRC_DOCUMENT+can.db.current && can.onmotion.delay(can, function() { can.onappend.style(can, html.SELECT, target) })
 		}: function(target, item) { can.db.nav[can.base.trimPrefix(item.meta.link, nfs.USR_LEARNING_PORTAL, nfs.SRC_DOCUMENT)] = target
 			location.hash || item.list && item.list.length > 0 || link || (
-				link = can.onaction.route({}, can, item.meta.link, true),
+				// link = can.onaction.route({}, can, item.meta.link, true),
 				_target = _target||target
 			)
 			item.meta.link == nfs.USR_LEARNING_PORTAL+can.db.current+can.db.hash[0] && (_target = target)
 			// _target = _target||target
-		}, target), _target && can.onmotion.delay(can, function() { can.onappend.style(can, html.SELECT, _target) })
+		}, target), _target && can.onmotion.delay(can, function() {
+			can.onappend.style(can, html.SELECT, _target)
+			_target.click()
+		}, 0)
 	},
-	content: function(can, file) {
-		can.request(event, {_method: "GET"})
+	content: function(can, file) { can.request(event, {_method: "GET"})
 		can.runActionCommand(event, web.WIKI_WORD, [(can.base.beginWith(file, nfs.USR, nfs.SRC)? "": nfs.USR_LEARNING_PORTAL+can.db.current)+file], function(msg) { can.ui.main.innerHTML = msg.Result(), can.onmotion.clear(can, can.ui.aside)
 			can.onimport._content(can, can.ui.main, function(target, meta) {
 				meta.type == wiki.TITLE && can.onappend.style(can, meta.name, target._menu = can.onimport.item(can, {name: meta.text}, function(event) { target.scrollIntoView() }, function() {}, can.ui.aside))

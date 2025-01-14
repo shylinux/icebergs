@@ -38,7 +38,7 @@ func init() {
 					m.ProcessHold()
 				}
 			}},
-		}, mdb.HashAction(mdb.SHORT, SSID, mdb.FIELD, "time,ssid,password")), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.ExportHashAction(mdb.SHORT, SSID, mdb.FIELD, "time,ssid,password")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...).PushAction(CONNECT, mdb.REMOVE); len(arg) > 0 {
 				m.EchoQRCode(kit.Format("WIFI:T:WPA;S:%s;P:%s;H:false;;", m.Append(SSID), m.Append(aaa.PASSWORD)))
 			}

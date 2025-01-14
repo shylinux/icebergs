@@ -1,7 +1,7 @@
 (function() {
 Volcanos(chat.ONIMPORT, {
 	_init: function(can, msg) { can.isCmdMode() && can.onappend.style(can, html.OUTPUT)
-		can.onlayout.background(can, can.misc.ResourceIcons(can, can.user.info.background||"/p/usr/icons/background.jpg"), can._fields)
+		can.onlayout.background(can, can.misc.ResourceIcons(can, can.user.info.background||"usr/icons/background.png"), can._fields)
 		can.onimport._menu(can), can.onimport._notifications(can), can.onimport._searchs(can), can.onimport._dock(can)
 		can.sup.onexport.link = function() { return can.misc.MergeURL(can, {pod: can.ConfSpace()||can.misc.Search(can, ice.POD), cmd: web.DESKTOP}) }
 		can.onexport.title(can, can.ConfHelp(), can.user.titles)

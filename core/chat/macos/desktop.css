@@ -67,9 +67,15 @@ fieldset.desktop>div.output>div.desktop>fieldset.web.chat.macos.finder>div.statu
 fieldset.desktop>div.output>div.desktop>fieldset.web.chat.macos.finder>div.output div.item.disable { display:none; }
 fieldset.desktop>div.output>fieldset.web.chat.macos.dock>div.output div.item.disable { display:none; }
 fieldset.desktop>div.output>div.desktop>div.item.disable { display:none; }
-fieldset.macos.menu>div.output>div.item { padding:0 var(--input-padding); height:var(--desktop-menu-height); float:right; }
+fieldset.macos.menu>div.output>div.item { padding:0 var(--button-padding); height:var(--desktop-menu-height); float:right; }
+body.mobile fieldset.macos.menu>div.output>div.item { padding:0 var(--input-padding); }
+body.mobile fieldset.macos.menu>div.output>div.tabs { display:none; }
+body.mobile fieldset.macos.menu>div.output>div.icon.create { display:none; }
+body.mobile fieldset.macos.menu>div.output>div.item.search { display:none; }
+body.mobile fieldset.macos.menu>div.output>div.item.notify { display:none; }
 fieldset.macos.menu>div.output>div.item.avatar>img { padding:0; height:var(--desktop-menu-height); }
-fieldset.macos.menu>div.output>div.menu { padding:0 var(--input-padding); float:left; }
+fieldset.macos.menu>div.output>div.menu { padding:0 var(--button-padding); float:left; }
+body.mobile fieldset.macos.menu>div.output>div.menu { padding:0 var(--input-padding); }
 fieldset.macos.menu>div.output>div.tabs { font-style:italic; padding:0 var(--input-padding); float:left; }
 fieldset.macos.menu.cmd>div.output>div.tabs { padding:0 var(--button-padding); }
 fieldset.macos.menu>div.output>div.tabs.select { background-color:var(--panel-hover-bg-color); color:var(--panel-hover-fg-color); }

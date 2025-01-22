@@ -13,6 +13,10 @@ type password struct {
 	list   string `name:"list refresh" help:"密码登录" role:"void"`
 }
 
+func (s password) Init(m *ice.Message, arg ...string) {
+	m.Cmd(web.HEADER, mdb.CREATE, mdb.TYPE, "qrcode", mdb.NAME, "qrcode", mdb.HELP, "扫码登录", mdb.ORDER, "10")
+	m.Cmd(web.HEADER, mdb.CREATE, mdb.TYPE, "plugin", mdb.NAME, m.CommandKey(), mdb.HELP, "密码登录", mdb.ORDER, "11", mdb.INDEX, m.PrefixKey())
+}
 func (s password) Change(m *ice.Message, arg ...string) {
 	m.Cmd(aaa.USER, mdb.MODIFY, aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.PASSWORD, arg[1])
 }

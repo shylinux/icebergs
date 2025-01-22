@@ -47,9 +47,9 @@ func _serve_start(m *ice.Message) {
 		}
 		if msg := m.Cmd(SPIDE, dev); msg.Append(TOKEN) == "" {
 			if m.Option(TOKEN) != "" {
-				m.Sleep30ms(SPACE, tcp.DIAL, ice.DEV, dev, TOKEN, m.Option(TOKEN))
+				m.Sleep300ms(SPACE, tcp.DIAL, ice.DEV, dev, TOKEN, m.Option(TOKEN))
 			} else {
-				m.Sleep30ms(SPACE, tcp.DIAL, ice.DEV, dev)
+				m.Sleep300ms(SPACE, tcp.DIAL, ice.DEV, dev)
 			}
 		}
 	})

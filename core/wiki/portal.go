@@ -6,6 +6,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
 )
@@ -33,6 +34,7 @@ func init() {
 			}},
 			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) { web.DreamProcessIframe(m, arg...) }},
 		}, web.ServeCmdAction(), web.DreamTablesAction()), Hand: func(m *ice.Message, arg ...string) {
+			m.Option(mdb.ICONS, ice.Info.NodeIcon)
 			if m.Push(HEADER, m.Cmdx(WORD, _portal_path(m, INDEX_SHY))); len(arg) > 0 {
 				m.Push(NAV, m.Cmdx(WORD, _portal_path(m, path.Join(arg...), INDEX_SHY)))
 			}

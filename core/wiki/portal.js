@@ -9,9 +9,6 @@ Volcanos(chat.ONIMPORT, {
 		}
 		can.ui = can.onappend.layout(can, [html.HEADER, [html.NAV, html.MAIN, html.ASIDE]], html.FLOW), can.onimport._scroll(can)
 		can.ui.header.innerHTML = msg.Append(html.HEADER), can.ui.nav.innerHTML = msg.Append(html.NAV)
-		can.page.Select(can, can.ui.header, "div.item:first-child>span", function(target, index) {
-			can.page.insertBefore(can, [{img: can.misc.ResourceFavicon(can, can.user.info.favicon), style: {height: 42}}], target)
-		})
 		if (msg.Append(html.NAV) == "") {
 			can.onmotion.hidden(can, can.ui.nav), can.onmotion.hidden(can, can.ui.aside)
 		} else {
@@ -25,6 +22,9 @@ Volcanos(chat.ONIMPORT, {
 				can.core.CallFunc([can.onimport, can.onimport[meta.name]? meta.name: meta.type||target.tagName.toLowerCase()], [can, meta, target])
 				meta.style && can.page.style(can, target, can.base.Obj(meta.style))
 			}); var nav = can.db.nav[file]; nav? nav.click(): can.onimport.content(can, "content.shy")
+			can.page.Select(can, can.ui.header, "div.item:first-child>span", function(target, index) {
+				can.page.insertBefore(can, [{img: can.misc.ResourceFavicon(can, can.user.info.favicon), style: {height: 42}}], target)
+			})
 		}, 300)
 	},
 	_scroll: function(can) { can.ui.main.onscroll = function(event) { var top = can.ui.main.scrollTop, select

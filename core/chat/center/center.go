@@ -10,7 +10,7 @@ import (
 )
 
 type center struct {
-	list string `name:"list name auto" help:"示例"`
+	list string `name:"list name auto" help:"云游"`
 }
 
 func (s center) List(m *ice.Message, arg ...string) {

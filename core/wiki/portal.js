@@ -23,7 +23,7 @@ Volcanos(chat.ONIMPORT, {
 				meta.style && can.page.style(can, target, can.base.Obj(meta.style))
 			}); var nav = can.db.nav[file]; nav? nav.click(): can.onimport.content(can, "content.shy")
 			can.page.Select(can, can.ui.header, "div.item:first-child>span", function(target, index) {
-				can.page.insertBefore(can, [{img: msg.Option(mdb.ICONS)||can.misc.ResourceFavicon(can, can.user.info.favicon), style: {height: 42}}], target)
+				can.page.insertBefore(can, [{img: can.misc.ResourceFavicon(can, msg.Option(mdb.ICONS)||can.user.info.favicon), style: {height: 42}}], target)
 			})
 		}, 300)
 	},

@@ -1,7 +1,6 @@
 package git
 
 import (
-	"path"
 	"strings"
 
 	"shylinux.com/x/go-git/v5/config"
@@ -60,7 +59,8 @@ func init() {
 				m.ProcessHold()
 			}},
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
-				if !m.IsDebug() || !aaa.IsTechOrRoot(m) || !nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME), _GIT)) {
+				// if !m.IsDebug() || !aaa.IsTechOrRoot(m) || !nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME), _GIT)) {
+				if !m.IsDebug() || !aaa.IsTechOrRoot(m) {
 					m.Push(mdb.TEXT, "")
 					return
 				}

@@ -107,7 +107,8 @@ func init() {
 				m.Cmdy(INSTALL, web.DOWNLOAD, kit.Format("%s/go%s.%s-%s.%s", m.Option(SERVICE), m.Option(VERSION), runtime.GOOS, runtime.GOARCH, kit.Select("tar.gz", "zip", runtime.GOOS == cli.WINDOWS)), ice.USR_LOCAL)
 			}},
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
-				kit.If(m.IsDebug() && aaa.IsTechOrRoot(m) && m.Option(mdb.TYPE) == web.WORKER && nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME), ice.SRC_MAIN_GO)), func() {
+				// kit.If(m.IsDebug() && aaa.IsTechOrRoot(m) && m.Option(mdb.TYPE) == web.WORKER && nfs.Exists(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME), ice.SRC_MAIN_GO)), func() {
+				kit.If(m.IsDebug() && aaa.IsTechOrRoot(m), func() {
 					kit.If(cli.SystemFindGo(m), func() { m.PushButton(kit.Dict(m.CommandKey(), m.Commands("").Help)) })
 				})
 			}},

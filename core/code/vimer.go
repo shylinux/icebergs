@@ -171,7 +171,7 @@ func init() {
 					m.PushButton(kit.Dict(m.CommandKey(), "编程"))
 				})
 			}},
-		}, web.DreamTablesAction("编程"), ctx.ConfAction(ctx.TOOLS, "compile,runtime,xterm", web.ONLINE, ice.TRUE)), Hand: func(m *ice.Message, arg ...string) {
+		}, web.DreamTablesAction("编程"), ctx.ConfAction(ctx.TOOLS, "xterm,runtime,compile", web.ONLINE, ice.TRUE)), Hand: func(m *ice.Message, arg ...string) {
 			if m.Cmdy(INNER, arg); arg[0] == ctx.ACTION {
 				return
 			} else if len(arg) == 1 {

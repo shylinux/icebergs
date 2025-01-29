@@ -335,8 +335,8 @@ func init() {
 				aaa.White(m, SPACE, ice.MAIN)
 				if kit.IsIn(ice.Info.NodeIcon, "src/main.ico", "") {
 					nfs.Exists(m, "src/main.ico", func(p string) { ice.Info.NodeIcon = p })
-					nfs.Exists(m, "src/main.png", func(p string) { ice.Info.NodeIcon = p })
 					nfs.Exists(m, "src/main.jpg", func(p string) { ice.Info.NodeIcon = p })
+					nfs.Exists(m, "src/main.png", func(p string) { ice.Info.NodeIcon = p })
 				}
 			}},
 			mdb.ICONS: {Hand: func(m *ice.Message, arg ...string) {
@@ -504,9 +504,10 @@ func init() {
 			m.Options(nfs.DIR_DEEP, ice.TRUE, nfs.DIR_REG, kit.ExtReg(nfs.PNG, nfs.JPG, nfs.JPEG))
 			m.Cmdy(nfs.DIR, nfs.SRC, nfs.PATH)
 			if aaa.IsTechOrRoot(m) {
-				m.Cmdy(nfs.DIR, ice.USR_LOCAL_IMAGE, nfs.PATH)
+				m.Cmdy(nfs.DIR, nfs.USR_LOCAL_IMAGE, nfs.PATH)
 			}
-			m.Cmdy(nfs.DIR, ice.USR_ICONS, nfs.PATH)
+			m.Cmdy(nfs.DIR, nfs.USR_IMAGE, nfs.PATH)
+			m.Cmdy(nfs.DIR, nfs.USR_ICONS, nfs.PATH)
 			m.CutTo(nfs.PATH, arg[0])
 		case ctx.INDEX, ice.CMD:
 			m.OptionFields(ctx.INDEX)

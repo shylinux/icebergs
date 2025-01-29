@@ -511,13 +511,17 @@ func init() {
 				case INIT:
 					m.Push(arg[0], ice.Info.Make.Remote)
 					m.Push(arg[0], kit.MergeURL2(web.UserHost(m), web.X(path.Base(kit.Path("")))))
-					m.Cmd(web.SPIDE, ice.OptionFields(web.CLIENT_ORIGIN)).Sort(web.CLIENT_ORIGIN).Table(func(value ice.Maps) {
-						m.Push(arg[0], value[web.CLIENT_ORIGIN]+web.X(path.Base(kit.Path(""))))
+					m.Cmd(web.SPIDE, ice.OptionFields(web.CLIENT_ORIGIN, web.CLIENT_TYPE)).Sort(web.CLIENT_ORIGIN).Table(func(value ice.Maps) {
+						if value[web.CLIENT_TYPE] == nfs.REPOS {
+							m.Push(arg[0], value[web.CLIENT_ORIGIN]+web.X(path.Base(kit.Path(""))))
+						}
 					})
 				case INSTEADOF:
 					m.Push(arg[0], kit.MergeURL2(web.UserHost(m), web.X()))
-					m.Cmd(web.SPIDE, ice.OptionFields(web.CLIENT_ORIGIN)).Sort(web.CLIENT_ORIGIN).Table(func(value ice.Maps) {
-						m.Push(arg[0], value[web.CLIENT_ORIGIN]+web.X())
+					m.Cmd(web.SPIDE, ice.OptionFields(web.CLIENT_ORIGIN, web.CLIENT_TYPE)).Sort(web.CLIENT_ORIGIN).Table(func(value ice.Maps) {
+						if value[web.CLIENT_TYPE] == nfs.REPOS {
+							m.Push(arg[0], value[web.CLIENT_ORIGIN]+web.X())
+						}
 					})
 				default:
 					switch arg[0] {

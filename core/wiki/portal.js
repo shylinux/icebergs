@@ -25,6 +25,9 @@ Volcanos(chat.ONIMPORT, {
 			can.page.Select(can, can.ui.header, "div.item:first-child>span", function(target, index) {
 				can.page.insertBefore(can, [{img: can.misc.ResourceFavicon(can, msg.Option(mdb.ICONS)||can.user.info.favicon), style: {height: 42}}], target)
 			})
+			can.isCmdMode() && can.misc.isDebug(can) && can.page.Append(can, can.ui.header.firstChild, [{view: html.ITEM, list: [{text: "后台"}], onclick: function() {
+				can.user.open(can.misc.MergePodCmd(can, {cmd: web.ADMIN}))
+			}}])
 		}, 300)
 	},
 	_scroll: function(can) { can.ui.main.onscroll = function(event) { var top = can.ui.main.scrollTop, select

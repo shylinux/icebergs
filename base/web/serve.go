@@ -116,11 +116,16 @@ func _serve_static(msg *ice.Message, w http.ResponseWriter, r *http.Request) boo
 			}
 			if pp = path.Join(pp, p); nfs.Exists(msg, pp) {
 				return Render(msg, ice.RENDER_DOWNLOAD, pp)
-			} else {
+			} else if nfs.Exists(msg, p) {
 				return Render(msg, ice.RENDER_DOWNLOAD, p)
 			}
 		}
-		return (!ispod && kit.HasPrefix(p, nfs.SRC) || kit.HasPrefix(p, ice.USR_ICEBERGS, ice.USR_ICONS)) && nfs.Exists(msg, p) && Render(msg, ice.RENDER_DOWNLOAD, p)
+		if kit.HasPrefix(p, ice.USR_ICEBERGS, ice.USR_ICONS) && nfs.Exists(msg, p) {
+			return Render(msg, ice.RENDER_DOWNLOAD, p)
+		}
+		if !ispod {
+			return (kit.HasPrefix(p, nfs.SRC) && nfs.Exists(msg, p)) && Render(msg, ice.RENDER_DOWNLOAD, p)
+		}
 	} else if kit.HasPrefix(r.URL.Path, nfs.M) {
 		p := nfs.USR_MODULES + strings.TrimPrefix(r.URL.Path, nfs.M)
 		return nfs.Exists(msg, p) && Render(msg, ice.RENDER_DOWNLOAD, p)

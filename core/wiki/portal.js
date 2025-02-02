@@ -21,14 +21,15 @@ Volcanos(chat.ONIMPORT, {
 			can.db.nav = {}, can.page.Select(can, can._output, wiki.STORY_ITEM, function(target) { var meta = target.dataset||{}
 				can.core.CallFunc([can.onimport, can.onimport[meta.name]? meta.name: meta.type||target.tagName.toLowerCase()], [can, meta, target])
 				meta.style && can.page.style(can, target, can.base.Obj(meta.style))
-			}); var nav = can.db.nav[file]; nav? nav.click(): can.onimport.content(can, "content.shy")
+			})
+			var nav = can.db.nav[file]; nav? nav.click(): can.ui.nav.innerHTML == "" && can.onimport.content(can, "content.shy")
 			can.page.Select(can, can.ui.header, "div.item:first-child>span", function(target, index) {
 				can.page.insertBefore(can, [{img: can.misc.ResourceFavicon(can, msg.Option(mdb.ICONS)||can.user.info.favicon), style: {height: 42}}], target)
 			})
 			can.isCmdMode() && can.misc.isDebug(can) && can.page.Append(can, can.ui.header.firstChild, [{view: html.ITEM, list: [{text: "后台"}], onclick: function() {
 				can.user.open(can.misc.MergePodCmd(can, {cmd: web.ADMIN}))
 			}}])
-		}, 300)
+		}, 100)
 	},
 	_scroll: function(can) { can.ui.main.onscroll = function(event) { var top = can.ui.main.scrollTop, select
 		can.page.SelectChild(can, can.ui.main, "h1,h2,h3", function(target) { if (!select && target.offsetTop > top) {
@@ -42,15 +43,10 @@ Volcanos(chat.ONIMPORT, {
 		}, can.page.ClassList.has(can, target.parentNode, html.HEADER)? function(target, item) {
 			item.meta.link == nfs.SRC_DOCUMENT+can.db.current && can.onmotion.delay(can, function() { can.onappend.style(can, html.SELECT, target) })
 		}: function(target, item) { can.db.nav[can.base.trimPrefix(item.meta.link, nfs.USR_LEARNING_PORTAL, nfs.SRC_DOCUMENT)] = target
-			location.hash || item.list && item.list.length > 0 || link || (
-				// link = can.onaction.route({}, can, item.meta.link, true),
-				_target = _target||target
-			)
+			location.hash || item.list && item.list.length > 0 || link || (_target = _target||target)
 			item.meta.link == nfs.USR_LEARNING_PORTAL+can.db.current+can.db.hash[0] && (_target = target)
-			// _target = _target||target
 		}, target), _target && can.onmotion.delay(can, function() {
-			can.onappend.style(can, html.SELECT, _target)
-			_target.click()
+			can.onappend.style(can, html.SELECT, _target), _target.click()
 		}, 0)
 	},
 	content: function(can, file) { can.request(event, {_method: "GET"})

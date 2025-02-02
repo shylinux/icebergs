@@ -117,7 +117,9 @@ func init() {
 				link := tcp.PublishLocalhost(m, m.OptionDefault(mdb.LINK, m.Option(ice.MSG_USERWEB)))
 				m.Push(mdb.NAME, link).PushQRCode(mdb.TEXT, kit.MergeURL(link, ice.FROM_DAEMON, m.Option(ice.MSG_DAEMON)))
 			}},
-			mdb.CREATE: {Name: "create type*=plugin,qrcode,oauth name* help icons link order space index args", Hand: func(m *ice.Message, arg ...string) { mdb.HashCreate(m, m.OptionSimple()) }},
+			mdb.CREATE: {Name: "create type*=plugin,qrcode,oauth name* help icons link order space index args"},
+			// Hand: func(m *ice.Message, arg ...string) { mdb.HashCreate(m, m.OptionSimple())},
+
 			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) { mdb.HashRemove(m, m.OptionSimple(mdb.NAME)) }},
 			mdb.MODIFY: {Hand: func(m *ice.Message, arg ...string) { mdb.HashModify(m, m.OptionSimple(mdb.NAME), arg) }},
 			ice.DEMO: {Help: "体验", Icon: "bi bi-shield-fill-check", Hand: func(m *ice.Message, arg ...string) {

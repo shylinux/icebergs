@@ -21,6 +21,7 @@ const (
 	USR_IMAGE            = "usr/image/"
 	USR_COVER            = "usr/cover/"
 	USR_AVATAR           = "usr/avatar/"
+	USR_MATERIAL         = "usr/material/"
 	USR_ICONS            = "usr/icons/"
 	USR_ICONS_AVATAR     = "usr/icons/avatar.jpg"
 	USR_ICONS_BACKGROUND = "usr/icons/background.jpg"
@@ -88,11 +89,12 @@ func init() {
 		}, chat.FavorAction(), WikiAction("", "ico|png|PNG|gif|jpg|JPG|jpeg|mp4|m4v|mov|MOV|webm|mp3"), mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path,name,cover")), Hand: func(m *ice.Message, arg ...string) {
 			if len(kit.Slice(arg, 0, 1)) == 0 {
 				if mdb.HashSelect(m); aaa.IsTechOrRoot(m) {
-					m.Push(nfs.PATH, USR_AVATAR).Push(mdb.NAME, "头像库").Push(COVER, USR_ICONS_AVATAR)
+					// m.Push(nfs.PATH, USR_AVATAR).Push(mdb.NAME, "头像库").Push(COVER, USR_ICONS_AVATAR)
 					m.Push(nfs.PATH, USR_LOCAL_IMAGE).Push(mdb.NAME, "私有库").Push(COVER, USR_ICONS_BACKGROUND)
 				}
 				m.Push(nfs.PATH, USR_IMAGE).Push(mdb.NAME, "图片库").Push(COVER, USR_ICONS_BACKGROUND)
 				m.Push(nfs.PATH, USR_COVER).Push(mdb.NAME, "封面库").Push(COVER, USR_ICONS_BACKGROUND)
+				m.Push(nfs.PATH, USR_MATERIAL).Push(mdb.NAME, "素材库").Push(COVER, SRC_MAIN)
 				m.Push(nfs.PATH, USR_ICONS).Push(mdb.NAME, "图标库").Push(COVER, SRC_MAIN)
 			} else {
 				if _wiki_list(m, kit.Slice(arg, 0, 1)...); arg[0] == USR_ICONS {

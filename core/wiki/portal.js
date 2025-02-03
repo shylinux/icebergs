@@ -1,6 +1,6 @@
 Volcanos(chat.ONIMPORT, {
 	_init: function(can, msg, cb) { can.require(["/plugin/local/wiki/word.js"])
-		var p = "/c/"+web.PORTAL; can.db.prefix = location.pathname.indexOf(p) > -1? location.pathname.split(p)[0]+p: nfs.WIKI_PORTAL
+		var p = "/c/portal"; can.db.prefix = location.pathname.indexOf(p) > -1? location.pathname.split(p)[0]+p: p
 		can.db.current = can.isCmdMode()? can.base.trimPrefix(location.pathname, can.db.prefix+nfs.PS, can.db.prefix): can.Option(nfs.PATH)
 		if (can.base.isIn(can.db.current, "", nfs.PS)) {
 			can.page.ClassList.add(can, can._fields, ice.HOME), can.page.ClassList.add(can, can._root.Action._target, ice.HOME)

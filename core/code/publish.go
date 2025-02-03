@@ -110,13 +110,18 @@ func init() {
 				)
 			}},
 			nfs.VERSION: {Hand: func(m *ice.Message, arg ...string) {
-				defer m.Echo("<table>").Echo("</table>")
-				kit.For([]string{cli.AMD64, cli.X86, cli.ARM}, func(cpu string) {
-					defer m.Echo("<tr>").Echo("</tr>")
+				echo := func(p string) func() { m.Echo("<" + p + ">"); return func() { m.Echo("</" + p + ">") } }
+				defer echo("table")()
+				kit.For([]string{cli.AMD64, cli.X86, cli.ARM, cli.ARM64}, func(cpu string) {
+					defer echo("tr")()
 					kit.For([]string{cli.LINUX, cli.WINDOWS, cli.DARWIN}, func(sys string) {
-						defer m.Echo("<td>").Echo("</td>")
+						defer echo("td")()
 						if file := fmt.Sprintf("ice.%s.%s", sys, cpu); nfs.Exists(m, ice.USR_PUBLISH+file) {
-							m.EchoAnchor(file, "/publish/"+file)
+							if sys == cli.WINDOWS {
+								m.EchoAnchor(file, "/publish/"+file+"?filename=ice.exe")
+							} else {
+								m.EchoAnchor(file, "/publish/"+file)
+							}
 						}
 					})
 				})

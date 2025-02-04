@@ -455,7 +455,7 @@ func init() {
 				} else if p := ProxyDomain(m, m.Option(mdb.NAME)); p != "" {
 					m.ProcessOpen(p)
 				} else {
-					m.ProcessOpen(S(m.Option(mdb.NAME)))
+					m.ProcessOpen(S(kit.Keys(m.Option(ice.MSG_USERPOD), m.Option(mdb.NAME))))
 				}
 			}},
 			DREAM_OPEN: {Hand: func(m *ice.Message, arg ...string) {}},

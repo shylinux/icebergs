@@ -22,8 +22,9 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		IMAGE: {Name: "image path", Help: "图片", Actions: ice.Actions{
 			"material": {Hand: func(m *ice.Message, arg ...string) {
-				m.Info("what %v", m.FormatChain())
-				m.Cmdy(IMAGE, path.Join("usr/material", strings.TrimPrefix(path.Dir(m.Option("_script")), "usr/"), arg[0]))
+				if nfs.Exists(m, nfs.USR_MATERIAL) {
+					m.Cmdy(IMAGE, path.Join(nfs.USR_MATERIAL, strings.TrimPrefix(path.Dir(m.Option("_script")), nfs.USR), arg[0]))
+				}
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			arg = _name(m, arg)

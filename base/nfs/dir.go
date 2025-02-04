@@ -162,6 +162,7 @@ const (
 	USR_LOCAL           = ice.USR_LOCAL
 	USR_LOCAL_WORK      = ice.USR_LOCAL_WORK
 	USR_IMAGE           = "usr/image/"
+	USR_MATERIAL        = "usr/material/"
 	USR_LOCAL_IMAGE     = "usr/local/image/"
 	USR_LEARNING_PORTAL = "usr/learning/portal/"
 	USR_MODULES         = "usr/node_modules/"

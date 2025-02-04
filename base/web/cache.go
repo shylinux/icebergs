@@ -176,11 +176,14 @@ func init() {
 			action.Hand = ice.MergeHand(func(m *ice.Message, arg ...string) {
 				up := Upload(m)
 				m.Assert(len(up) > 1)
-				if m.Cmd(CACHE, m.Option(ice.MSG_UPLOAD)).Table(func(value ice.Maps) { m.Options(value) }).Length() == 0 {
+				msg := m.Cmd(CACHE, m.Option(ice.MSG_UPLOAD))
+				// if m.Cmd(CACHE, m.Option(ice.MSG_UPLOAD)).Table(func(value ice.Maps) { m.Options(value) }).Length() == 0 {
+				if msg.Length() == 0 {
 					SpideCache(m.Spawn(), m.MergeLink(SHARE_CACHE+up[0]))
 				}
-				if m.Options(mdb.HASH, up[0], mdb.NAME, up[1]); watch {
-					m.Cmdy(CACHE, WATCH, m.Option(mdb.HASH), path.Join(m.Option(nfs.PATH), up[1]))
+				// if m.Options(mdb.HASH, up[0], mdb.NAME, up[1]); watch {
+				if watch {
+					m.Cmdy(CACHE, WATCH, up[0], path.Join(msg.Append(nfs.PATH), up[1]))
 				}
 			}, action.Hand)
 		}
@@ -188,12 +191,13 @@ func init() {
 }
 func Upload(m *ice.Message) []string {
 	if up := kit.Simple(m.Optionv(ice.MSG_UPLOAD)); len(up) == 1 {
-		if m.Cmdy(CACHE, UPLOAD).Optionv(ice.MSG_UPLOAD, kit.Simple(m.Append(mdb.HASH), m.Append(mdb.NAME), m.Append(nfs.SIZE))); m.Option(ice.MSG_USERPOD) != "" {
-			if nfs.Exists(m, "usr/local/work/"+m.Option(ice.MSG_USERPOD)) {
-				m.Cmd(nfs.LINK, path.Join("usr/local/work/"+m.Option(ice.MSG_USERPOD), m.Append(nfs.FILE)), m.Append(nfs.FILE))
-				m.Cmd(SPACE, m.Option(ice.MSG_USERPOD), CACHE, mdb.CREATE, m.AppendSimple(mdb.NAME, mdb.TEXT, nfs.FILE, nfs.SIZE))
+		msg := m.Cmd(CACHE, UPLOAD)
+		if m.Optionv(ice.MSG_UPLOAD, kit.Simple(msg.Append(mdb.HASH), msg.Append(mdb.NAME), msg.Append(nfs.SIZE))); m.Option(ice.MSG_USERPOD) != "" {
+			if nfs.Exists(m, nfs.USR_LOCAL_WORK+m.Option(ice.MSG_USERPOD)) {
+				m.Cmd(nfs.LINK, path.Join(nfs.USR_LOCAL_WORK+m.Option(ice.MSG_USERPOD), msg.Append(nfs.FILE)), msg.Append(nfs.FILE))
+				m.Cmd(SPACE, m.Option(ice.MSG_USERPOD), CACHE, mdb.CREATE, msg.AppendSimple(mdb.NAME, mdb.TEXT, nfs.FILE, nfs.SIZE))
 			} else {
-				m.Cmd(SPACE, m.Option(ice.MSG_USERPOD), SPIDE, ice.DEV, SPIDE_CACHE, http.MethodGet, tcp.PublishLocalhost(m, m.MergeLink(PP(SHARE, CACHE, m.Append(mdb.HASH)))))
+				m.Cmd(SPACE, m.Option(ice.MSG_USERPOD), SPIDE, ice.DEV, SPIDE_CACHE, http.MethodGet, tcp.PublishLocalhost(m, m.MergeLink(PP(SHARE, CACHE, msg.Append(mdb.HASH)))))
 			}
 		}
 		return kit.Simple(m.Optionv(ice.MSG_UPLOAD))

@@ -2,8 +2,10 @@ package publish
 
 import (
 	"shylinux.com/x/ice"
+	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/core/code"
 )
 
 type server struct {
@@ -15,20 +17,20 @@ type server struct {
 
 func (s server) Inputs(m *ice.Message, arg ...string) {
 	switch arg[0] {
-	case "path":
+	case nfs.PATH:
 		m.Cmdy(nfs.DIR, nfs.USR_PUBLISH, nfs.PATH)
-	case "compile":
+	case code.COMPILE:
 		m.Push(arg[0], "go")
 		m.Push(arg[0], "javac")
-	case "runtime":
+	case cli.RUNTIME:
 		m.Push(arg[0], "python")
 		m.Push(arg[0], "java")
 		m.Push(arg[0], "php")
-	case "os":
+	case cli.OS:
 		m.Push(arg[0], "Linux")
 		m.Push(arg[0], "macOS")
 		m.Push(arg[0], "Windows")
-	case "cpu":
+	case cli.CPU:
 		m.Push(arg[0], "amd64")
 		m.Push(arg[0], "x86")
 		m.Push(arg[0], "arm")

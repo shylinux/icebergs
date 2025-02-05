@@ -47,7 +47,8 @@ fieldset.web.wiki.portal>div.output>div.layout>div.main div.story[data-type=spar
 fieldset.web.wiki.portal>div.output>div.layout>div.main div.story[data-type=spark][data-name=shell]:hover { box-shadow:var(--notice-box-shadow); }
 fieldset.web.wiki.portal>div.output>div.layout>div.main div.story[data-type=spark][data-name=shell] { padding:var(--button-padding); margin-top:var(--button-margin); }
 fieldset.web.wiki.portal>div.output>div.layout>div.main table.content div.story[data-type=spark][data-name=shell] { margin-top:unset; }
-fieldset.web.wiki.portal.home>div.output>div.layout>div.main p { white-space:pre-wrap; text-align:center; }
+fieldset.web.wiki.portal.home>div.output>div.layout>div.main p { white-space:pre-wrap; }
+div.story[data-type=qrcode] { text-align:center; }
 fieldset.web.wiki.portal.home>div.output>div.layout>div.main p:hover { background-color:var(--hover-bg-color); color:var(--hover-fg-color); }
 body.dark fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.item:hover { background-color:var(--output-bg-color); }
 body.dark fieldset.web.wiki.portal>div.output>div.header div.story[data-name=navmenu] div.item.select { background-color:var(--output-bg-color); }

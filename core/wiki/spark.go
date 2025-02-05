@@ -142,6 +142,7 @@ open http://localhost:9020
 		}()
 	}()
 	if nfs.Exists(m, "src/qrcode.jpg") {
+		defer m.Echo(`<div class="story" data-type="qrcode">`).Echo("</div>")
 		m.Cmdy(IMAGE, "qrcode", "src/qrcode.jpg")
 		m.Cmdy(SPARK, "请使用微信扫码，打开公众号体验服务")
 	}

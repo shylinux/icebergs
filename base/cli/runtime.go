@@ -134,6 +134,8 @@ const (
 
 	KERNEL = "kernel"
 	ARCH   = "arch"
+	CPU    = "cpu"
+	OS     = "os"
 )
 const (
 	PATH  = "PATH"

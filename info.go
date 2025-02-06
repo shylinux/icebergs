@@ -21,15 +21,17 @@ type MakeInfo struct {
 	Git      string
 	Go       string
 
-	Remote  string
-	Branch  string
-	Version string
-	Forword string
-	Message string
-	Author  string
-	Email   string
-	Hash    string
-	When    string
+	Icebergs string
+	Release  string
+	Remote   string
+	Branch   string
+	Version  string
+	Forword  string
+	Message  string
+	Author   string
+	Email    string
+	Hash     string
+	When     string
 }
 
 func (s MakeInfo) Versions() string {

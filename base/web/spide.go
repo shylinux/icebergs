@@ -40,7 +40,7 @@ func _spide_create(m *ice.Message, link, types, name, icons, token string) {
 }
 func _spide_show(m *ice.Message, name string, arg ...string) {
 	file := ""
-	action, arg := _spide_args(m, arg, SPIDE_RAW, SPIDE_DETAIL, SPIDE_MSG, SPIDE_SAVE, SPIDE_CACHE)
+	action, arg := _spide_args(m, arg, SPIDE_RAW, SPIDE_DETAIL, SPIDE_MSG, SPIDE_SAVE, SPIDE_CACHE, SPIDE_STREAM)
 	kit.If(action == SPIDE_SAVE, func() { file, arg = arg[0], arg[1:] })
 	msg := mdb.HashSelects(m.Spawn(), name)
 	method, arg := _spide_args(m, arg, http.MethodGet, http.MethodPut, http.MethodPost, http.MethodDelete)
@@ -214,6 +214,17 @@ func _spide_save(m *ice.Message, action, file, uri string, res *http.Response) {
 	case SPIDE_CACHE:
 		m.Cmdy(CACHE, DOWNLOAD, res.Header.Get(html.ContentType), uri, kit.Dict(RESPONSE, res), m.OptionCB(SPIDE))
 		m.Echo(m.Append(mdb.HASH))
+	case SPIDE_STREAM:
+		b := make([]byte, 1024)
+		cb := m.Optionv(SPIDE_STREAM).(func(string))
+		for {
+			n, e := res.Body.Read(b)
+			if e != nil {
+				break
+			}
+			m.Info("what %v", string(b[:n]))
+			cb(string(b[:n]))
+		}
 	default:
 		var data ice.Any
 		if b, e := ioutil.ReadAll(res.Body); !m.WarnNotFound(e) {
@@ -232,6 +243,7 @@ const (
 	SPIDE_MSG    = "msg"
 	SPIDE_SAVE   = "save"
 	SPIDE_CACHE  = "cache"
+	SPIDE_STREAM = "stream"
 
 	SPIDE_BODY = "body"
 	SPIDE_FORM = "form"

@@ -46,7 +46,7 @@ func init() {
 			}},
 			web.UPLOAD: {Hand: func(m *ice.Message, arg ...string) {
 				up := kit.Simple(m.Optionv(ice.MSG_UPLOAD))
-				m.Cmdy(web.CACHE, web.WATCH, m.Option(mdb.HASH), path.Join(m.Option(nfs.PATH), up[1]))
+				m.Cmdy(web.CACHE, web.WATCH, up[0], path.Join(m.Option(nfs.PATH), up[1]))
 			}},
 			mdb.RENAME: {Name: "rename name*", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(nfs.MOVE, path.Join(path.Dir(m.Option(nfs.PATH)), m.Option(mdb.NAME)), m.Option(nfs.PATH))

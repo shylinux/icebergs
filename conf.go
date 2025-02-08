@@ -28,6 +28,7 @@ const (
 	MAIL  = "mail"
 	HELP  = "help"
 	INFO  = "info"
+	SHOW  = "show"
 	MAIN  = "main"
 	AUTO  = "auto"
 	LIST  = "list"
